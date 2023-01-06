@@ -1,4 +1,11 @@
-# Portfolio
+<div align="center">
+  <img src="Logo.png" />
+  <h1>Ali Reza</h1>
+  <div>
+    <img src="https://img.shields.io/badge/MADE%20BY%20React-61DBFB.svg?style=for-the-badge&logo=react&labelColor=000" />
+    <img src="https://img.shields.io/badge/Used%20TailwindCSS-61DBFB.svg?style=for-the-badge&logo=tailwindcss&labelColor=000" />
+  </div>
+</div>
 
 ## My Journey for building my *Portfolio*
 
