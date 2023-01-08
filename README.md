@@ -16,3 +16,12 @@
 - I've designed the Skills ✅
 
 ### `01/07/2023`
+- I've designed the About ✅
+- I've designed the Projects ✅
+- I've designed the Contact ✅
+- I've designed the Footer ✅
+- I've made the website for Tablet
+- I've made the website for Mobile
+- I'm going to use TailwindCSS, and I've typed all the classes that I need for this project [here](https://www.figma.com/file/ttikGrStgEATuF32JIpLb2/Untitled?node-id=27%3A256&t=ukc473FauIFrTNZZ-1)
+
+### `01/08/2023`
