@@ -27,3 +27,17 @@
 - I'm going to use TailwindCSS, and I've typed all the classes that I need for this project [here](https://www.figma.com/file/ttikGrStgEATuF32JIpLb2/Untitled?node-id=27%3A256&t=ukc473FauIFrTNZZ-1)
 
 ### `01/08/2023`
+
+- I've added two texts for the image in the `about` section.
+- I've added a large logo because of the quality.
+- I've added 3d shapes in the header section.
+- I've downloaded the following things:
+   - Vite
+   - TailwindCSS
+   - Prettier
+   - Lint
+   - Husky
+   - Github Folder for issue & Pull Request
+
+
+
