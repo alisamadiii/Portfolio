@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import Logo from "../../public/Logo.png";
+import Logo from "../assets/Logo.png";
 import { AiFillGithub, AiFillTwitterCircle } from "react-icons/ai";
 import { RiMenu3Fill } from "react-icons/ri";
 
@@ -14,7 +14,7 @@ const Navbar = () => {
   }
 
   return (
-    <div className="md:fixed top-0 left-0 w-full h-16 border-b-2 bg-dark border-light-20">
+    <div className="fixed top-0 left-0 w-full h-16 border-b-2 bg-dark border-light-20">
       <div className="w-full h-full max-w-[1536px] mx-auto px-4 md:px-16 lg:px-24 flex justify-between items-center">
         <img src={Logo} width="34px" height="34px" alt="" />
 

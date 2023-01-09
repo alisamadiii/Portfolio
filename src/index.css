@@ -24,12 +24,12 @@
     .responsive__navbar {
       @apply text-xl w-full absolute bottom-0 left-0 flex-col gap-1 items-start p-4 bg-dark -z-10;
       height: calc(100vh - 64px);
-      transform: translateY(-100%);
+      transform: translateX(100%) translateY(100%);
       transition: background-color 0.1s, transform 0.5s ease-out;
     }
     .navbar__active {
       background-color: #111;
-      transform: translateY(0%);
+      transform: translateX(0) translateY(100%);
       z-index: 0;
     }
   }
