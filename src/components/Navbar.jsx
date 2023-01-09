@@ -7,17 +7,21 @@ import { RiMenu3Fill } from "react-icons/ri";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  if (isOpen) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
+  }
+
   return (
-    <div className="fixed top-0 left-0 w-full h-16 border-b-2 border-light-20">
+    <div className="md:fixed top-0 left-0 w-full h-16 border-b-2 bg-dark border-light-20">
       <div className="w-full h-full max-w-[1536px] mx-auto px-4 md:px-16 lg:px-24 flex justify-between items-center">
         <img src={Logo} width="34px" height="34px" alt="" />
 
         <ul
-          className={`flex items-center gap-8 text-link ${
-            isOpen == true ? "navbar__active" : ""
-          }`}
-          onClick={() => setIsOpen(!isOpen)}
-          id="responsive__navbar">
+          className={`flex items-center gap-4 md:gap-8 text-link responsive__navbar ${
+            isOpen ? "navbar__active" : ""
+          }`}>
           <a
             href="#"
             className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
