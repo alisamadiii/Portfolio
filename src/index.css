@@ -22,11 +22,13 @@
 
   @media (max-width: 768px) {
     #responsive__navbar {
-      @apply text-xl w-full absolute bottom-0 left-0 flex-col gap-2 items-start p-4 bg-[#111111] -z-10 duration-500 ease-out;
+      @apply text-xl w-full absolute bottom-0 left-0 flex-col gap-2 items-start p-4 bg-[#111111] -z-10;
       height: calc(100vh - 64px);
       transform: translateY(100%);
+      transition: background-color 0.1s, transform 0.5s ease-out;
     }
     .navbar__active {
+      background-color: #000 !important;
       transform: translateY(0) !important;
     }
   }
