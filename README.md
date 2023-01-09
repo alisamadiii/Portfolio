@@ -1,6 +1,7 @@
 <div align="center">
   <img src="./public/Logo.png" width="141px" height="141px" />
   <h1>Ali Reza</h1>
+  <img src="./public/portfolio banner.png" /> 
   <div>
     <img src="https://img.shields.io/badge/MADE%20BY%20React-61DBFB.svg?style=for-the-badge&logo=react&labelColor=000" />
     <img src="https://img.shields.io/badge/Used%20TailwindCSS-61DBFB.svg?style=for-the-badge&logo=tailwindcss&labelColor=000" />
@@ -39,5 +40,4 @@
    - Husky
    - Github Folder for issue & Pull Request
 
-
-
+### `01/09/2023`
