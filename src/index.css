@@ -22,9 +22,9 @@
 
   @media (max-width: 768px) {
     #responsive__navbar {
-      @apply text-xl w-full absolute bottom-0 left-0 flex-col gap-2 items-start p-4 bg-[#111111] -z-10 duration-300 ease-out;
+      @apply text-xl w-full absolute bottom-0 left-0 flex-col gap-2 items-start p-4 bg-[#111111] -z-10 duration-500 ease-out;
       height: calc(100vh - 64px);
-      transform: translateY(calc(-100% + -64px));
+      transform: translateY(100%);
     }
     .navbar__active {
       transform: translateY(0) !important;
