@@ -48,3 +48,14 @@
    - Hover Effect
    
 ### `01/10/2023`
+
+- I made the home
+   - Design
+   - Responsive
+   - Animation (Intro)
+   - Added two SVG with animation
+- I added the background gradient
+- I added a component for Button
+- For text gradient, I didn't use tailwind, I used vanilla CSS
+
+### `01/11/2023`
