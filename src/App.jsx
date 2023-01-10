@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Navbar } from "./components";
+import { Navbar, BackgroundGradient } from "./components";
 import { Home } from "./container";
 
 function App() {
@@ -8,6 +8,7 @@ function App() {
     <div className="overflow-x-hidden">
       <Navbar />
       <Home />
+      <BackgroundGradient />
     </div>
   );
 }
