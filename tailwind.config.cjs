@@ -10,7 +10,12 @@ module.exports = {
       "light-20": "#FFFFFF20",
       link: "#AAAAAA",
     },
-    extend: {},
+    extend: {
+      animation: {
+        "bounce-slower": "bounce 4s linear infinite",
+        "bounce-slow": "bounce 2s linear infinite",
+      },
+    },
   },
   plugins: [],
 };

@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Navbar, BackgroundGradient } from "./components";
-import { Home } from "./container";
+import { Home, About } from "./container";
 
 function App() {
   return (
@@ -9,6 +9,7 @@ function App() {
       <Navbar />
       <Home />
       <BackgroundGradient />
+      <About />
     </div>
   );
 }
