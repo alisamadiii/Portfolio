@@ -14,6 +14,17 @@
     font-family: "Space Grotesk", sans-serif;
   }
 
+  .text-gradient {
+    background: linear-gradient(rgba(255, 255, 255, 1), rgba(170, 170, 170, 1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .sub-text-gradient {
+    @apply bg-primary;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
   @media (hover: none) {
     #link {
       color: white;
