@@ -41,3 +41,10 @@
    - Github Folder for issue & Pull Request
 
 ### `01/09/2023`
+
+- I made the navbar
+   - Design
+   - Responsive
+   - Hover Effect
+   
+### `01/10/2023`
