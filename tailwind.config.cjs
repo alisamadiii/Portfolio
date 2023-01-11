@@ -9,6 +9,7 @@ module.exports = {
       light: "#FFFFFF",
       "light-20": "#FFFFFF20",
       link: "#AAAAAA",
+      transparent: "transparent",
     },
     extend: {
       animation: {
