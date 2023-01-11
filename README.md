@@ -42,14 +42,14 @@
 
 ### `01/09/2023`
 
-- I made the navbar
+- I made the `Navbar`
    - Design
    - Responsive
    - Hover Effect
    
 ### `01/10/2023`
 
-- I made the home
+- I made the `Home`
    - Design
    - Responsive
    - Animation (Intro)
@@ -59,3 +59,15 @@
 - For text gradient, I didn't use tailwind, I used vanilla CSS
 
 ### `01/11/2023`
+
+- I made the `About` 
+- I made the background grandient and border gradient
+- I made the `Projects`
+   - 3 buttons
+   - one showing case
+- I made the `Skills`
+
+### `01/12/2023`
+
+- I added some cool animation on each button when clicked
+- I made the `Contact`
