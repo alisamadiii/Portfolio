@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { PROJECTS } from "../content/Projects";
-import { IoMdArrowDropright } from "react-icons/io";
+import { BsFillArrowRightSquareFill } from "react-icons/bs";
 
 import SectionGradient from "../components/Section-Gradient";
 import Project from "../components/Project";
@@ -19,28 +19,28 @@ function Projects() {
           Projects
         </h3>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="flex flex-col gap-4 text-2xl">
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div className="flex flex-col gap-4 text-sm md:text-lg lg:text-2xl">
             <button
               onClick={() => setProjectId(1)}
               className={`flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 ${
                 projectId == 1 && "bg-light bg-opacity-10"
               }`}>
-              Todo Website <IoMdArrowDropright />
+              Todo Website <BsFillArrowRightSquareFill />
             </button>
             <button
               onClick={() => setProjectId(2)}
               className={`flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 ${
                 projectId == 2 && "bg-light bg-opacity-10"
               }`}>
-              Asakatsu <IoMdArrowDropright />
+              Asakatsu <BsFillArrowRightSquareFill />
             </button>
             <button
               onClick={() => setProjectId(3)}
               className={`flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 ${
                 projectId == 3 && "bg-light bg-opacity-10"
               }`}>
-              E-Commerce Website <IoMdArrowDropright />
+              E-Commerce Website <BsFillArrowRightSquareFill />
             </button>
           </div>
 

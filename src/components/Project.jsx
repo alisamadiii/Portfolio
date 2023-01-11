@@ -21,13 +21,13 @@ const Project = ({ project }) => {
         <motion.h4
           animate={{ opacity: [0, 1], x: [-100, 10, 0] }}
           transition={{ duration: 1 }}
-          className="text-2xl mb-2">
+          className="text-lg lg:text-2xl mb-2">
           {project.name}
         </motion.h4>
         <motion.p
           animate={{ opacity: [0, 1], x: [-100, 10, 0] }}
           transition={{ duration: 1, delay: 0.1 }}
-          className="text-light text-opacity-70">
+          className="text-xs md:text-base text-light text-opacity-70">
           {project.description}
         </motion.p>
       </div>
