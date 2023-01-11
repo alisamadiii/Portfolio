@@ -9,6 +9,7 @@ module.exports = {
       light: "#FFFFFF",
       "light-20": "#FFFFFF20",
       link: "#AAAAAA",
+      linkedIn: "#0077b5",
       transparent: "transparent",
     },
     extend: {

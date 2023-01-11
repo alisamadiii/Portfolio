@@ -29,6 +29,45 @@
     -webkit-text-fill-color: transparent;
   }
 
+  .link__active::before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.099);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: skewX(-30deg) translateX(-110%);
+    z-index: -1;
+    animation: linkActive 1s forwards;
+    pointer-events: none;
+  }
+  @keyframes linkActive {
+    100% {
+      transform: skewX(0deg) translateX(0%);
+    }
+  }
+
+  .link__active::after {
+    content: "";
+    width: 50px;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.099);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: skewX(-30deg) translateX(-130%);
+    z-index: -1;
+    animation: linkActive2 3s infinite linear 0.7s;
+    pointer-events: none;
+  }
+  @keyframes linkActive2 {
+    50%,
+    100% {
+      transform: skewX(-30deg) translateX(1300%);
+    }
+  }
+
   @media (hover: none) {
     #link {
       color: white;

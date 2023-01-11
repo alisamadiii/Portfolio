@@ -23,22 +23,22 @@ function Projects() {
           <div className="flex flex-col gap-4 text-sm md:text-lg lg:text-2xl">
             <button
               onClick={() => setProjectId(1)}
-              className={`flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 ${
-                projectId == 1 && "bg-light bg-opacity-10"
+              className={`relative flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 overflow-hidden ${
+                projectId == 1 && "link__active"
               }`}>
               Todo Website <BsFillArrowRightSquareFill />
             </button>
             <button
               onClick={() => setProjectId(2)}
-              className={`flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 ${
-                projectId == 2 && "bg-light bg-opacity-10"
+              className={`relative flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 overflow-hidden ${
+                projectId == 2 && "link__active"
               }`}>
               Asakatsu <BsFillArrowRightSquareFill />
             </button>
             <button
               onClick={() => setProjectId(3)}
-              className={`flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 ${
-                projectId == 3 && "bg-light bg-opacity-10"
+              className={`relative flex justify-between items-center border-b-2 border-light border-opacity-60 p-2 overflow-hidden ${
+                projectId == 3 && "link__active"
               }`}>
               E-Commerce Website <BsFillArrowRightSquareFill />
             </button>
