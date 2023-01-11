@@ -5,6 +5,10 @@
 @tailwind utilities;
 
 @layer components {
+  * {
+    @apply scroll-smooth;
+  }
+
   body {
     @apply bg-dark text-light;
     font-family: "Inter", sans-serif;

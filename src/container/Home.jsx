@@ -9,7 +9,7 @@ import { ReactComponent as Cute_2 } from "../assets/Cube-2.svg";
 
 function Home() {
   return (
-    <div className="w-full h-screen flex justify-center items-center p-4">
+    <div className="w-full h-screen 2xl:h-auto 2xl:py-24 flex justify-center items-center p-4">
       <div className="relative w-full max-w-[900px] flex flex-col items-center gap-4 md:gap-8 md:text-center">
         <motion.img
           animate={{ opacity: [0, 1], y: [30, 0], scale: [0.9, 1] }}
