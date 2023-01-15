@@ -64,7 +64,7 @@
   @keyframes linkActive2 {
     50%,
     100% {
-      transform: skewX(-30deg) translateX(1300%);
+      transform: skewX(-30deg) translateX(1600%);
     }
   }
 

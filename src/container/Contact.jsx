@@ -4,7 +4,9 @@ import Button from "../components/Button";
 const Contact = () => {
   return (
     <div className="flex flex-col justify-center items-center gap-12 py-24 px-4">
-      <Button />
+      <a href="mailto:webdeve1083@gmail.com">
+        <Button />
+      </a>
       <h4 className="text-2xl md:text-3xl lg:text-4xl text-center">
         Want me building stuff for you? Hit me on{" "}
         <a
@@ -14,6 +16,7 @@ const Contact = () => {
           LinkedIn
         </a>
       </h4>
+      <h4 className="text-light text-opacity-70">webdeve1083@gmail.com</h4>
     </div>
   );
 };

@@ -9,8 +9,8 @@ export const PROJECTS = [
       "My todo website is a simple and convenient tool for managing tasks and staying organized. With our user-friendly interface, you can easily add new tasks, mark tasks as completed.",
     tech_stacks: ["react", "tailwind", "firebase"],
     img: TodoIMG,
-    github: "#",
-    website: "#",
+    github: "https://github.com/AliReza1083/TODO",
+    website: "https://todo-83.netlify.app/",
     isDone: true,
   },
   {
@@ -20,8 +20,8 @@ export const PROJECTS = [
       "A project where you can keep track of your goal's progress, and contribute to open source in the same time.",
     tech_stacks: ["react", "tailwind", "firebase"],
     img: AsakatsuIMG,
-    github: "#",
-    website: "#",
+    github: "https://github.com/asakatsuOrg/Asakatsu-Website",
+    website: "https://asakatsu-website.netlify.app/",
     isDone: true,
   },
   {

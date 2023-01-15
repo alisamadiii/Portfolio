@@ -42,15 +42,19 @@ const Navbar = () => {
           </a>
           <li className="flex gap-2 md:gap-4 text-3xl md:text-2xl mx-auto md:mx-0 mt-8 md:mt-0">
             <a
-              href="#"
+              href="https://github.com/AliReza1083"
+              target={"_blank"}
               className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
-              id="link">
+              id="link"
+              rel="noreferrer">
               <AiFillGithub />
             </a>
             <a
-              href="#"
+              href="https://twitter.com/Ali_Developer05"
+              target={"_blank"}
               className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
-              id="link">
+              id="link"
+              rel="noreferrer">
               <AiFillTwitterCircle />
             </a>
           </li>
