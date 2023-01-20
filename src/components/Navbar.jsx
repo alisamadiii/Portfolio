@@ -7,12 +7,6 @@ import { RiMenu3Fill } from "react-icons/ri";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (isOpen) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "auto";
-  }
-
   return (
     <div className="fixed top-0 left-0 w-full h-16 bg-dark bg-opacity-70 backdrop-blur-md border-b-2 border-light-20 z-50">
       <div className="w-full h-full max-w-[1536px] mx-auto px-4 md:px-16 lg:px-24 flex justify-between items-center">
@@ -25,18 +19,21 @@ const Navbar = () => {
           <a
             href="#about"
             className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
+            onClick={() => setIsOpen(!isOpen)}
             id="link">
             About
           </a>
           <a
             href="#projects"
             className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
+            onClick={() => setIsOpen(!isOpen)}
             id="link">
             Projects
           </a>
           <a
             href="#contents"
             className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
+            onClick={() => setIsOpen(!isOpen)}
             id="link">
             Contents
           </a>
@@ -46,6 +43,7 @@ const Navbar = () => {
               target={"_blank"}
               className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
               id="link"
+              onClick={() => setIsOpen(!isOpen)}
               rel="noreferrer">
               <AiFillGithub />
             </a>
@@ -54,6 +52,7 @@ const Navbar = () => {
               target={"_blank"}
               className="w-full hover:bg-[#222222] md:hover:bg-opacity-0 py-2 px-4 md:p-0 rounded-md hover:text-light"
               id="link"
+              onClick={() => setIsOpen(!isOpen)}
               rel="noreferrer">
               <AiFillTwitterCircle />
             </a>

@@ -33,7 +33,9 @@ function Home() {
           I have a strong foundation in HTML, CSS, and JavaScript, and I am
           skilled in creating interactive and visually appealing websites.
         </motion.h2>
-        <Button />
+        <a href="#contact">
+          <Button />
+        </a>
 
         <Cute_1 className="hidden xl:block absolute top-1/2 -right-[200px] animate-bounce-slower" />
         <Cute_2 className="hidden xl:block absolute top-[100px] -left-[250px] animate-bounce-slow" />

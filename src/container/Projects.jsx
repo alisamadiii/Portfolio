@@ -11,7 +11,7 @@ function Projects() {
 
   return (
     <div
-      id="about"
+      id="projects"
       className="relative h-auto lg:h-screen 2xl:h-auto py-12 lg:py-0 2xl:py-24 flex justify-center px-4 lg:px-40 overflow-hidden">
       <SectionGradient />
       <div className="w-full max-w-[1536px] flex flex-col justify-center">

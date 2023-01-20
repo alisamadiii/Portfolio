@@ -3,7 +3,9 @@ import Button from "../components/Button";
 
 const Contact = () => {
   return (
-    <div className="flex flex-col justify-center items-center gap-12 py-24 px-4">
+    <div
+      id="contact"
+      className="flex flex-col justify-center items-center gap-12 py-24 px-4">
       <a href="mailto:webdeve1083@gmail.com">
         <Button />
       </a>
