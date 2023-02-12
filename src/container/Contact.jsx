@@ -13,8 +13,10 @@ const Contact = () => {
         Want me building stuff for you? Hit me on{" "}
         <a
           id="linkedIn"
-          href="#"
-          className="inline-block bg-linkedIn px-4 py-2 rounded-lg">
+          href="https://www.linkedin.com/in/alireza17/"
+          target={"_blank"}
+          className="inline-block bg-linkedIn px-4 py-2 rounded-lg"
+          rel="noreferrer">
           LinkedIn
         </a>
       </h4>
