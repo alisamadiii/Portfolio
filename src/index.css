@@ -1,0 +1,90 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  * {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-dark text-light;
+    font-family: "Inter", sans-serif;
+  }
+
+  .space-grotesk {
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .text-gradient {
+    background: linear-gradient(rgba(255, 255, 255, 1), rgba(170, 170, 170, 1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .sub-text-gradient {
+    @apply bg-primary;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .link__active::before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.099);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: skewX(-30deg) translateX(-110%);
+    z-index: -1;
+    animation: linkActive 1s forwards;
+    pointer-events: none;
+  }
+  @keyframes linkActive {
+    100% {
+      transform: skewX(0deg) translateX(0%);
+    }
+  }
+
+  .link__active::after {
+    content: "";
+    width: 50px;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.099);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: skewX(-30deg) translateX(-130%);
+    z-index: -1;
+    animation: linkActive2 3s infinite linear 0.7s;
+    pointer-events: none;
+  }
+  @keyframes linkActive2 {
+    50%,
+    100% {
+      transform: skewX(-30deg) translateX(1600%);
+    }
+  }
+
+  @media (hover: none) {
+    #link {
+      color: white;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .responsive__navbar {
+      @apply text-xl w-full absolute bottom-0 left-0 flex-col gap-1 items-start p-4 bg-dark -z-10;
+      height: calc(100vh - 64px);
+      transform: translateX(100%) translateY(100%);
+      transition: background-color 0.1s, transform 0.5s ease-out;
+    }
+    .navbar__active {
+      background-color: #111;
+      transform: translateX(0) translateY(100%);
+      z-index: 0;
+    }
+  }
+}
