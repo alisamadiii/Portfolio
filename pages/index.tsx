@@ -16,7 +16,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="">
+      <main className="mt-6">
         <h1 className="text-2xl font-bold tracking-tight">
           As a front-end developer, I specialize in building and maintaining the
           user interface of web applications.
@@ -36,6 +36,7 @@ export default function Home() {
           <a
             href="https://github.com/AliReza1083"
             target={"_blank"}
+            aria-label="Check out my GitHub profile"
             className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
           >
             <AiFillGithub />
@@ -44,6 +45,7 @@ export default function Home() {
           <a
             href="https://twitter.com/Ali_Developer05"
             target={"_blank"}
+            aria-label="Check out my Twitter profile"
             className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
           >
             <AiFillTwitterCircle />
@@ -52,6 +54,7 @@ export default function Home() {
           <a
             href="https://www.linkedin.com/in/alireza17"
             target={"_blank"}
+            aria-label="Check out my LinkedIn profile"
             className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
           >
             <AiFillLinkedin />

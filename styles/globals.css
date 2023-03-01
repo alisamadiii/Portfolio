@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  #project::after {
+    content: attr(data-project);
+    position: absolute;
+    transform: translateX(10px) rotate(-10deg);
+    opacity: 0.7;
+  }
+}

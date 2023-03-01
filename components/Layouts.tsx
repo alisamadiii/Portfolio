@@ -31,6 +31,7 @@ export default function Layouts({ children }: Props) {
         />
         <Navbar />
       </div>
+      <hr />
       <main>{children}</main>
     </div>
   );

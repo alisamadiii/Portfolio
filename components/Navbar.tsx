@@ -8,7 +8,7 @@ export default function Navbar({}: Props) {
   const router = useRouter();
 
   return (
-    <nav className="flex flex-wrap gap-3 my-8 mb-12">
+    <nav className="flex flex-wrap gap-3 my-8 mb-6">
       <Link
         href={"/"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
