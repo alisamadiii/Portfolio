@@ -16,11 +16,15 @@
     "eslint": "8.35.0",
     "eslint-config-next": "13.2.1",
     "gray-matter": "^4.0.3",
+    "highlight.js": "^11.7.0",
     "luxon": "^3.2.1",
     "next": "13.2.1",
+    "next-mdx-remote": "^4.4.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-icons": "^4.7.1",
+    "rehype-code-titles": "^1.2.0",
+    "rehype-highlight": "^6.0.0",
     "typescript": "4.9.5"
   },
   "devDependencies": {
