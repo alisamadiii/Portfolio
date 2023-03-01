@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer components {
+  body {
+    @apply bg-[#F5F5F5];
+  }
+
   #project::after {
     content: attr(data-project);
     position: absolute;
