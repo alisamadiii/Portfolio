@@ -34,21 +34,24 @@ export default function Home() {
         </p>
         <div className="flex flex-wrap gap-4 text-[#525252] mt-8">
           <a
-            href="#"
+            href="https://github.com/AliReza1083"
+            target={"_blank"}
             className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
           >
             <AiFillGithub />
             <FiArrowUpRight />
           </a>
           <a
-            href="#"
+            href="https://twitter.com/Ali_Developer05"
+            target={"_blank"}
             className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
           >
             <AiFillTwitterCircle />
             <FiArrowUpRight />
           </a>
           <a
-            href="#"
+            href="https://www.linkedin.com/in/alireza17"
+            target={"_blank"}
             className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
           >
             <AiFillLinkedin />
