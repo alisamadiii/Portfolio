@@ -36,17 +36,19 @@ export default function Layouts({ children }: Props) {
     <div
       className={`${domine.className} w-full max-w-[948px] mx-auto p-4 text-black`}
     >
-      <div>
+      <div className="flex flex-col items-start">
         <p className="text-sm md:text-base opacity-70">
-          {myTime} - Asia/Makassar
+          {myTime} - Asia/Makassar - WITA
         </p>
-        <Image
-          src={MyImage}
-          width={154}
-          height={154}
-          alt=""
-          className="rounded-full"
-        />
+        <div className="mt-4 overflow-hidden rounded-full bg-[#E1E1E1] group">
+          <Image
+            src={MyImage}
+            width={154}
+            height={154}
+            alt=""
+            className="duration-200 group-hover:scale-125 group-hover:translate-y-4"
+          />
+        </div>
         <Navbar />
       </div>
       <hr />

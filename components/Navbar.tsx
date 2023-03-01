@@ -20,7 +20,7 @@ export default function Navbar({}: Props) {
       <Link
         href={"/blogs"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
-          router.pathname == "/blogs" && "bg-[#E1E1E1] shadow-button"
+          router.pathname.includes("/blogs") && "bg-[#E1E1E1] shadow-button"
         }`}
       >
         blogs
