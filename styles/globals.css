@@ -13,4 +13,18 @@
     transform: translateX(10px) rotate(-10deg);
     opacity: 0.7;
   }
+
+  #content img {
+    @apply my-12 border-2 shadow-xl rounded-2xl;
+  }
+
+  @media (hover: hover) {
+    #content img {
+      filter: grayscale(100%);
+      transition: 0.3s;
+    }
+    #content img:hover {
+      filter: grayscale(0);
+    }
+  }
 }

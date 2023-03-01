@@ -8,6 +8,7 @@ import { serialize } from "next-mdx-remote/serialize";
 import { MDXRemote } from "next-mdx-remote";
 import rehypeHighlight from "rehype-highlight";
 import rehypeCodeTitles from "rehype-code-titles";
+import { Components } from "@/components/blogs/MDXComponents";
 
 type Props = {
   mdxSource: any;
@@ -17,8 +18,8 @@ export default function Slug({ mdxSource }: Props) {
   return (
     <>
       <HeadTag title="Testimonial" />
-      <div className="mt-6">
-        <MDXRemote {...mdxSource}></MDXRemote>
+      <div className="mt-6" id="content">
+        <MDXRemote {...mdxSource} components={Components}></MDXRemote>
       </div>
     </>
   );
