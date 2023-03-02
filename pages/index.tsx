@@ -27,12 +27,12 @@ export default function Home() {
           grow as a developer, and I am excited to work on new and challenging
           projects
         </p>
-        <div className="flex flex-wrap gap-4 text-[#525252] mt-8">
+        <div className="flex flex-wrap gap-4 text-[#525252] dark:text-slate-300 mt-8">
           <a
             href="https://github.com/AliReza1083"
             target={"_blank"}
             aria-label="Check out my GitHub profile"
-            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
+            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
           >
             <AiFillGithub />
             <FiArrowUpRight />
@@ -41,7 +41,7 @@ export default function Home() {
             href="https://twitter.com/Ali_Developer05"
             target={"_blank"}
             aria-label="Check out my Twitter profile"
-            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
+            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
           >
             <AiFillTwitterCircle />
             <FiArrowUpRight />
@@ -50,7 +50,7 @@ export default function Home() {
             href="https://www.linkedin.com/in/alireza17"
             target={"_blank"}
             aria-label="Check out my LinkedIn profile"
-            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
+            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
           >
             <AiFillLinkedin />
             <FiArrowUpRight />

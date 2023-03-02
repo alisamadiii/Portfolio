@@ -9,17 +9,27 @@ import { MDXRemote } from "next-mdx-remote";
 import rehypeHighlight from "rehype-highlight";
 import rehypeCodeTitles from "rehype-code-titles";
 import { Components } from "@/components/blogs/MDXComponents";
+import confetti from "canvas-confetti";
 
 type Props = {
   mdxSource: any;
 };
 
 export default function Slug({ mdxSource }: Props) {
+  const onClickHandler = () => {
+    confetti();
+  };
   return (
     <>
       <HeadTag title="Testimonial" />
       <div className="mt-6" id="content">
         <MDXRemote {...mdxSource} components={Components}></MDXRemote>
+        <button
+          onClick={onClickHandler}
+          className="px-4 py-2 font-sans rounded-md bg-slate-300 dark:bg-slate-800"
+        >
+          Was it helpful?
+        </button>
       </div>
     </>
   );

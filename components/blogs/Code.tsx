@@ -5,5 +5,9 @@ type Props = {
 };
 
 export default function Code({ children }: Props) {
-  return <code className="p-1 rounded-md bg-[#e1e1e1]">{children}</code>;
+  return (
+    <code className="p-1 rounded-md bg-[#e1e1e1] dark:bg-slate-800">
+      {children}
+    </code>
+  );
 }

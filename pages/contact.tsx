@@ -19,7 +19,7 @@ export default function Contact({}: Props) {
           href="https://www.linkedin.com/in/alireza17"
           target={"_blank"}
           aria-label="Check out my LinkedIn profile"
-          className="w-[176px] p-4 text-2xl flex justify-between border-2 mt-8 text-[#525252] rounded-lg border-social-media hover:bg-[#EFEFEF] duration-100"
+          className="w-[176px] mt-8 p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
         >
           <AiFillLinkedin />
           <FiArrowUpRight />
