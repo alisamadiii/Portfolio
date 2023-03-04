@@ -1,4 +1,6 @@
 import HeadTag from "@/components/Head";
+import { useEffect } from "react";
+import { motion } from "framer-motion";
 
 import {
   AiFillGithub,
@@ -8,10 +10,33 @@ import {
 import { FiArrowUpRight } from "react-icons/fi";
 
 export default function Home() {
+  useEffect(() => {
+    const sendingData = async () => {
+      const res = await fetch("/api/hello", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nameTesting: "Ali Reza" }),
+      });
+
+      console.log("send");
+
+      const data = await res.json();
+      console.log(data);
+    };
+
+    sendingData();
+  }, []);
   return (
     <>
       <HeadTag title="Ali Reza" />
-      <main className="mt-6">
+      <motion.main
+        className="mt-6"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+      >
         <h1 className="text-2xl font-bold tracking-tight">
           As a front-end developer, I specialize in building and maintaining the
           user interface of web applications.
@@ -56,7 +81,7 @@ export default function Home() {
             <FiArrowUpRight />
           </a>
         </div>
-      </main>
+      </motion.main>
     </>
   );
 }

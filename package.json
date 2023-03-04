@@ -16,6 +16,7 @@
     "date-fns": "^2.29.3",
     "eslint": "8.35.0",
     "eslint-config-next": "13.2.1",
+    "framer-motion": "^10.0.1",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.7.0",
     "luxon": "^3.2.1",

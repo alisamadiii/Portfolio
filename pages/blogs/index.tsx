@@ -3,6 +3,7 @@ import React from "react";
 import fs from "fs";
 import path from "path";
 import formatDistance from "date-fns/formatDistance";
+import { motion } from "framer-motion";
 
 import { fileNames, pathFiles } from "@/utils/MDXFiles";
 import matter from "gray-matter";
@@ -33,7 +34,12 @@ export default function Blogs({ blogs }: Props) {
   return (
     <>
       <HeadTag title="Blogs" />
-      <div className="mt-6">
+      <motion.div
+        className="mt-6"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+      >
         {sortingBlogs.map((d) => (
           <Link
             key={d.data.order}
@@ -51,7 +57,7 @@ export default function Blogs({ blogs }: Props) {
             <p>{d.data.bio}</p>
           </Link>
         ))}
-      </div>
+      </motion.div>
     </>
   );
 }

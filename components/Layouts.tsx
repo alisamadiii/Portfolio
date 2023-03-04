@@ -40,13 +40,13 @@ export default function Layouts({ children }: Props) {
           <p className="text-sm md:text-base opacity-70">
             {myTime} - Asia/Makassar - WITA
           </p>
-          <div className="mt-4 overflow-hidden rounded-full bg-[#E1E1E1] dark:bg-black group">
+          <div className="mt-4 overflow-hidden rounded-full bg-[#E1E1E1] dark:bg-[#1e1e1e] group">
             <Image
               src={MyImage}
               width={154}
               height={154}
               alt=""
-              className="duration-200 group-hover:scale-125 group-hover:translate-y-4"
+              className="duration-200 group-hover:scale-125 group-hover:translate-y-4 dark:grayscale dark:contrast-125"
             />
           </div>
           <Navbar />

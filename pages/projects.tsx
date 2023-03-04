@@ -1,5 +1,6 @@
 import HeadTag from "@/components/Head";
 import React from "react";
+import { motion } from "framer-motion";
 
 type Props = {};
 
@@ -7,7 +8,12 @@ export default function Projects({}: Props) {
   return (
     <>
       <HeadTag title="Projects" />
-      <div className="mt-6 space-y-8">
+      <motion.div
+        className="mt-6 space-y-8"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+      >
         <p className="font-bold leading-7">
           Hi everyone, I&apos;d like to showcase some of my recent projects.
           These are projects that I&apos;ve been working on and I&apos;m excited
@@ -44,7 +50,7 @@ export default function Projects({}: Props) {
             contribute to open source in the same time.
           </p>
         </a>
-      </div>
+      </motion.div>
     </>
   );
 }
