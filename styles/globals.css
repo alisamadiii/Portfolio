@@ -4,7 +4,7 @@
 
 @layer components {
   body {
-    @apply bg-[#F5F5F5] dark:bg-[#212121] text-black dark:text-white;
+    @apply bg-[#F5F5F5] dark:bg-[#212121] text-black dark:text-gray-300;
   }
 
   #project::after {
@@ -18,13 +18,11 @@
     @apply my-12 border-2 shadow-xl rounded-2xl;
   }
 
-  @media (hover: hover) {
-    #content img {
-      filter: grayscale(100%);
-      transition: 0.3s;
-    }
-    #content img:hover {
-      filter: grayscale(0);
-    }
+  #anchor::after {
+    @apply absolute bottom-0 left-0 w-full h-0 duration-150 bg-blue-700 rounded-md -z-10;
+    content: "";
+  }
+  #anchor:hover::after {
+    @apply h-full;
   }
 }

@@ -30,6 +30,7 @@ export default function Contact({}: Props) {
           <AiFillLinkedin />
           <FiArrowUpRight />
         </a>
+        <p className="py-12 text-center opacity-70">webdeve1083@gmail.com</p>
       </motion.div>
     </>
   );

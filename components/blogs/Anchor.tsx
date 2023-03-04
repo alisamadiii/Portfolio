@@ -7,7 +7,8 @@ type Props = {
 export default function Anchor({ ...props }: Props) {
   return (
     <a
-      className="px-[3px] py-1 font-bold text-blue-700 rounded-md hover:bg-blue-700 hover:text-white duration-100"
+      id="anchor"
+      className="relative px-[3px] py-1 font-bold text-blue-700 rounded-md hover:text-white duration-100 overflow-hidden"
       {...props}
       target="_blank"
     />
