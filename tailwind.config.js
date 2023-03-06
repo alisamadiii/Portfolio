@@ -18,6 +18,15 @@ module.exports = {
       borderColor: {
         "social-media": "#C5C5C5",
       },
+      animation: {
+        "wavy-circle": "wavy-circle 1s infinite",
+      },
+      keyframes: {
+        "wavy-circle": {
+          "0%": { transform: "translateZ(-120px)" },
+          "100%": { transform: "translateZ(100px)" },
+        },
+      },
     },
   },
   plugins: [],

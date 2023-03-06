@@ -11,6 +11,7 @@ type Props = {
 };
 
 import { Domine } from "next/font/google";
+import WavyCircle from "./WavyCircle";
 
 const domine = Domine({
   weight: ["400", "500", "600", "700"],
@@ -35,12 +36,15 @@ export default function Layouts({ children }: Props) {
 
   return (
     <ThemeProvider>
-      <div className={`${domine.className} w-full max-w-[948px] mx-auto p-4`}>
+      <div
+        className={`${domine.className} relative w-full max-w-[948px] mx-auto p-4`}
+      >
         <div className="flex flex-col items-start">
           <p className="text-sm md:text-base opacity-70">
             {myTime} - Asia/Makassar - WITA
           </p>
-          <div className="mt-4 overflow-hidden rounded-full bg-[#E1E1E1] dark:bg-[#1e1e1e] group">
+          <div className="relative mt-4 overflow-hidden rounded-full bg-[#E1E1E1] dark:bg-[#1e1e1e] group isolate">
+            <WavyCircle />
             <Image
               src={MyImage}
               width={154}
