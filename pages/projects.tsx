@@ -1,7 +1,7 @@
 import HeadTag from "@/components/Head";
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { PROJECTS } from "@/Projects";
+import { PROJECTS } from "@/contents/Projects";
 import Image from "next/image";
 
 type Props = {};
@@ -10,7 +10,8 @@ type OneProjectType = {
   project: number;
   name: string;
   description: string;
-  banner: string;
+  banner: string | null;
+  tech_stacks: string[];
   started_at: string;
   github: string;
   website: string;
@@ -65,7 +66,8 @@ type EachProjectType = {
     project: number;
     name: string;
     description: string;
-    banner: string;
+    banner: string | null;
+    tech_stacks: string[];
     started_at: string;
     github: string;
     website: string;
@@ -88,7 +90,7 @@ export const EachProject = ({ project, setProject }: EachProjectType) => {
         className="w-full max-w-[500px] bg-white dark:bg-[#212121] p-4 rounded-md shadow-xl"
       >
         <Image
-          src={project.banner}
+          src={project.banner || ""}
           width={800}
           height={400}
           className="object-cover rounded-lg aspect-video dark:grayscale-[50%] dark:contrast-125"
@@ -96,6 +98,16 @@ export const EachProject = ({ project, setProject }: EachProjectType) => {
         />
         <h1 className="mt-4 mb-3 text-xl font-bold">{project.name}</h1>
         <p className="text-sm opacity-90">{project.description}</p>
+        <div className="flex flex-wrap items-center gap-2 my-4">
+          {project.tech_stacks.map((stack, index) => (
+            <p
+              key={index}
+              className="px-4 py-1 bg-gray-300 rounded-md dark:bg-gray-700"
+            >
+              {stack}
+            </p>
+          ))}
+        </div>
         <div className="flex justify-end gap-2 mt-8 text-2xl">
           <a
             href={project.github}
@@ -123,5 +135,5 @@ const project_motion = {
   initial: { opacity: 0 },
   animate: { opacity: 1, y: [100, -20, 0] },
   exit: { opacity: 0, y: [0, -20, 100] },
-  transition: { duration: 0.5 },
+  transition: { duration: 0.3 },
 };
