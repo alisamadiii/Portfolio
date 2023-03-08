@@ -9,7 +9,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        black: "#121212",
+        black: "#212121",
       },
       boxShadow: {
         button: "0 4px 0px rgba(0, 0, 0, .3)",
@@ -26,6 +26,9 @@ module.exports = {
           "0%": { transform: "translateZ(-120px)" },
           "100%": { transform: "translateZ(100px)" },
         },
+      },
+      aspectRatio: {
+        banner: "16/8",
       },
     },
   },

@@ -25,4 +25,29 @@
   #anchor:hover::after {
     @apply h-full;
   }
+
+  pre {
+    @apply relative bg-[#1c1c1c] text-white p-4 rounded-b-lg border-2 border-white border-opacity-10 overflow-hidden isolate;
+  }
+
+  pre::after {
+    content: "";
+    width: 50%;
+    height: 200px;
+    background-color: rgba(29, 79, 216, 0.101);
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+  }
+
+  pre > code {
+    @apply !bg-transparent !p-0;
+  }
+}
+
+.rehype-code-title {
+  @apply relative bg-[#1c1c1c] text-white p-2 px-4 rounded-t-lg border-2 border-white border-b-0 border-opacity-10 overflow-hidden isolate;
 }

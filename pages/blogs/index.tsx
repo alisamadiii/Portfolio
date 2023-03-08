@@ -35,7 +35,7 @@ export default function Blogs({ blogs }: Props) {
     <>
       <HeadTag title="Blogs" />
       <motion.div
-        className="mt-6"
+        className="flex flex-col gap-8 mt-6"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
