@@ -102,7 +102,7 @@ export const EachProject = ({ project, setProject }: EachProjectType) => {
           {project.tech_stacks.map((stack, index) => (
             <p
               key={index}
-              className="px-4 py-1 bg-gray-300 rounded-md dark:bg-gray-700"
+              className="px-4 py-1 bg-gray-300 rounded-md dark:bg-secondary dark:bg-opacity-30"
             >
               {stack}
             </p>

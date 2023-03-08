@@ -31,10 +31,10 @@
   }
 
   pre::after {
+    @apply bg-opacity-20 bg-secondary;
     content: "";
     width: 50%;
     height: 200px;
-    background-color: rgba(29, 79, 216, 0.101);
     position: absolute;
     top: 0;
     right: 0;

@@ -29,8 +29,7 @@ export default function Navbar({}: Props) {
       <Link
         href={"/"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
-          router.pathname == "/" &&
-          "bg-[#E1E1E1] shadow-button dark:bg-slate-800"
+          router.pathname == "/" && "bg-primary shadow-button dark:bg-secondary"
         }`}
       >
         about
@@ -39,7 +38,7 @@ export default function Navbar({}: Props) {
         href={"/blogs"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
           router.pathname.includes("/blogs") &&
-          "bg-[#E1E1E1] shadow-button dark:bg-slate-800"
+          "bg-primary shadow-button dark:bg-secondary"
         }`}
       >
         blogs
@@ -48,7 +47,7 @@ export default function Navbar({}: Props) {
         href={"/projects"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
           router.pathname == "/projects" &&
-          "bg-[#E1E1E1] shadow-button dark:bg-slate-800"
+          "bg-primary shadow-button dark:bg-secondary"
         }`}
       >
         projects
@@ -57,7 +56,7 @@ export default function Navbar({}: Props) {
         href={"/testimonial"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
           router.pathname == "/testimonial" &&
-          "bg-[#E1E1E1] shadow-button dark:bg-slate-800"
+          "bg-primary shadow-button dark:bg-secondary"
         }`}
       >
         testimonial
@@ -66,7 +65,7 @@ export default function Navbar({}: Props) {
         href={"/contact"}
         className={`inline-block px-6 py-[5px] rounded-md duration-200 ${
           router.pathname == "/contact" &&
-          "bg-[#E1E1E1] shadow-button dark:bg-slate-800"
+          "bg-primary shadow-button dark:bg-secondary"
         }`}
       >
         contact
