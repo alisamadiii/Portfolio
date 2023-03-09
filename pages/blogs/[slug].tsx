@@ -18,6 +18,9 @@ type Props = {
   mdxSource: any;
   data: {
     title: string;
+    img: string;
+    author: string;
+    headline: string;
     banner: string;
     bio: string;
     published: string;
@@ -32,7 +35,7 @@ export default function Slug({ mdxSource, data }: Props) {
   return (
     <>
       <HeadTag title="Testimonial" />
-      <div className="mt-6" id="content">
+      <div className="mt-6">
         <div className="py-8 border-b-2 border-gray-400">
           <Image
             src={data.banner}
@@ -46,8 +49,23 @@ export default function Slug({ mdxSource, data }: Props) {
           </h1>
           <p className="text-sm text-center md:text-xl">{data.bio}</p>
           <p className="mt-3 text-center opacity-70">{data.published}</p>
+          <div>
+            <div className="flex items-center gap-2">
+              <Image
+                src={data.img}
+                width={100}
+                height={100}
+                alt=""
+                className="w-12 h-12 rounded-full"
+              />
+              <div>
+                <h1 className="font-bold leading-5">{data.author}</h1>
+                <small className="opacity-75">{data.headline}</small>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="mt-8">
+        <div className="mt-8" id="content">
           <MDXRemote {...mdxSource} components={Components}></MDXRemote>
         </div>
         <button

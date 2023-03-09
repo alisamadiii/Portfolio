@@ -57,7 +57,7 @@ export default function Home() {
             href="https://github.com/AliReza1083"
             target={"_blank"}
             aria-label="Check out my GitHub profile"
-            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
+            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-primary/40 hover:border-primary hover:bg-primary/30 dark:hover:bg-secondary/10 dark:border-secondary duration-100"
           >
             <AiFillGithub />
             <FiArrowUpRight />
@@ -66,7 +66,7 @@ export default function Home() {
             href="https://twitter.com/Ali_Developer05"
             target={"_blank"}
             aria-label="Check out my Twitter profile"
-            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
+            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-primary/40 hover:border-primary hover:bg-primary/30 dark:hover:bg-secondary/10 dark:border-secondary duration-100"
           >
             <AiFillTwitterCircle />
             <FiArrowUpRight />
@@ -75,7 +75,7 @@ export default function Home() {
             href="https://www.linkedin.com/in/alireza17"
             target={"_blank"}
             aria-label="Check out my LinkedIn profile"
-            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-social-media hover:bg-[#EFEFEF] dark:hover:bg-[#1b1b1b] duration-100"
+            className="basis-[176px] p-4 text-2xl flex justify-between border-2 rounded-lg border-primary/40 hover:border-primary hover:bg-primary/30 dark:hover:bg-secondary/10 dark:border-secondary duration-100"
           >
             <AiFillLinkedin />
             <FiArrowUpRight />
