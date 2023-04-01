@@ -1,13 +1,31 @@
 import React, { ReactNode } from "react";
 
+import { Lobster } from "next/font/google";
+
 type Props = {
   children: ReactNode;
 };
 
+const lobster = Lobster({
+  weight: ["400"],
+  display: "swap",
+  subsets: ["latin"],
+});
+
 export function Heading1({ children }: Props) {
-  return <h1>{children}</h1>;
+  return (
+    <h1
+      className={`${lobster.className} text-transparent text-9xl bg-clip-text bg-gradient-to-r from-primary to-secondary`}
+    >
+      {children}
+    </h1>
+  );
 }
 
 export function Heading2({ children }: Props) {
-  return <h2>{children}</h2>;
+  return (
+    <h2 className={`${lobster.className} text-4xl text-dark-blue-2`}>
+      {children}
+    </h2>
+  );
 }
