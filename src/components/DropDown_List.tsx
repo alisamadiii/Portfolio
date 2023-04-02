@@ -1,10 +1,11 @@
 import React from "react";
 import { Variants, motion } from "framer-motion";
 
-import { LINKS } from "@/contents/Links";
+import { LinksType } from "@/contents/Links";
 
 type Props = {
   className?: string;
+  data: LinksType;
 };
 
 import { FiArrowUpRight } from "react-icons/fi";
@@ -21,7 +22,7 @@ const Links_Variants: Variants = {
   exit: { opacity: 0, x: 10 },
 };
 
-export default function DropDown_List({ className }: Props) {
+export default function DropDown_List({ className, data }: Props) {
   return (
     <motion.div
       variants={DropDown_List_Variants}
@@ -30,21 +31,21 @@ export default function DropDown_List({ className }: Props) {
       exit="exit"
       className={`${className} bg-white rounded-xl shadow-container py-2 flex flex-col`}
     >
-      {LINKS.map((link, index) => {
-        const Icons = link.icon;
+      {data.map((d, index) => {
+        const Icons = d.icon;
 
         return (
           <motion.a
-            key={link.id}
+            key={d.id}
             variants={Links_Variants}
             transition={{ delay: index * 0.05 }}
-            href="#"
+            href={d.href}
             id="link"
             className="flex items-center justify-between px-4 py-2 text-sm font-medium hover:bg-[#EFEFEF] overflow-hidden"
           >
             <span className="flex items-center gap-2">
               <Icons />
-              {link.name}
+              {d.name}
             </span>
             <span>
               <FiArrowUpRight />

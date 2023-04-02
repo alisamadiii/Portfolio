@@ -10,6 +10,7 @@ import { Navbar_Context } from "@/context/Navbar_Context";
 import Logo from "@/assets/logo.jpg";
 import { FiChevronDown } from "react-icons/fi";
 import DropDown_List from "./DropDown_List";
+import { LINKS } from "@/contents/Links";
 
 const ButtonVariants: Variants = {
   hidden: { scale: 0.5, opacity: 0 },
@@ -50,7 +51,10 @@ export default function Navbar({}: Props) {
 
               <AnimatePresence>
                 {isMenu && (
-                  <DropDown_List className="absolute right-0 w-56 translate-y-3" />
+                  <DropDown_List
+                    className="absolute right-0 w-56 translate-y-3"
+                    data={LINKS}
+                  />
                 )}
               </AnimatePresence>
             </div>

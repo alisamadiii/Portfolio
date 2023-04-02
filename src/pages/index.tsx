@@ -3,16 +3,18 @@ import { useInView } from "react-intersection-observer";
 
 import { Navbar_Context } from "@/context/Navbar_Context";
 import Container from "@/layout/Container";
-import { DropDown_List, Heading1 } from "@/components";
-import { FiChevronDown } from "react-icons/fi";
+import { DropDown_List, Heading1, Heading2, Project } from "@/components";
 import { AnimatePresence } from "framer-motion";
+import { PROJECTS } from "@/contents/Projects";
+
+import { FiChevronDown } from "react-icons/fi";
+import { LINKS } from "@/contents/Links";
 
 export default function Home() {
   const [isMenu, setIsMenu] = useState<boolean>(false);
-  const [isProjectInfo, setIsProjectInfo] = useState<boolean>(false);
   const { setIsButton } = useContext(Navbar_Context);
 
-  const { ref, inView, entry } = useInView();
+  const { ref, inView } = useInView();
 
   useEffect(() => {
     inView == true ? setIsButton(false) : setIsButton(true);
@@ -22,7 +24,7 @@ export default function Home() {
     <>
       <main>
         {/* Header */}
-        <header className="relative w-full py-56 overflow-hidden" ref={ref}>
+        <header className="relative w-full py-56 overflow-x-hidden" ref={ref}>
           <div className="scale-x-110 absolute top-0 left-0 w-full h-full -translate-y-[100px] md:rounded-b-[20%] lg:rounded-b-[100%] bg-light-blue-2 -z-50 overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gradient-to-t from-primary to-secondary blur-3xl opacity-30"></div>
             <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
@@ -46,7 +48,9 @@ export default function Home() {
                 </span>
               </div>
               <AnimatePresence>
-                {isMenu && <DropDown_List className="absolute w-48" />}
+                {isMenu && (
+                  <DropDown_List className="absolute w-48" data={LINKS} />
+                )}
               </AnimatePresence>
             </div>
           </Container>
@@ -56,7 +60,16 @@ export default function Home() {
         <section id="about" className="w-full h-screen"></section>
 
         {/* Projects */}
-        <section id="projects" className="w-full h-screen"></section>
+        <section id="projects">
+          <Container className="space-y-12">
+            <Heading2>Projects</Heading2>
+            <div className="grid grid-cols-2 gap-4">
+              {PROJECTS.map((project) => (
+                <Project key={project.id} project={project} />
+              ))}
+            </div>
+          </Container>
+        </section>
 
         {/* Blogs */}
         <section id="blogs" className="w-full h-screen"></section>
