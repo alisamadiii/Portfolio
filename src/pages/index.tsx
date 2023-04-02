@@ -63,7 +63,7 @@ export default function Home() {
         <section id="projects">
           <Container className="space-y-12">
             <Heading2>Projects</Heading2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {PROJECTS.map((project) => (
                 <Project key={project.id} project={project} />
               ))}

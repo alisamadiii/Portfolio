@@ -4,6 +4,7 @@ import { BiDotsVerticalRounded } from "react-icons/bi";
 import { ProjectType } from "@/contents/Projects";
 import DropDown_List from "./DropDown_List";
 import { AnimatePresence } from "framer-motion";
+import Review_Project from "./Review_Project";
 
 type Props = {
   project: ProjectType;
@@ -11,6 +12,8 @@ type Props = {
 
 export default function Project({ project }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  console.log(isOpen);
 
   return (
     <div className="relative px-4 py-6 bg-white rounded-xl shadow-container">
@@ -22,7 +25,14 @@ export default function Project({ project }: Props) {
             {isOpen && (
               <DropDown_List
                 data={project.links}
-                className="absolute w-48 translate-y-2 right-4"
+                className="absolute hidden w-48 translate-y-2 md:block right-4"
+              />
+            )}
+            {isOpen && (
+              <Review_Project
+                key={project.id}
+                data={project.links}
+                setIsOpen={setIsOpen}
               />
             )}
           </AnimatePresence>
