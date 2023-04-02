@@ -15,7 +15,7 @@ const lobster = Lobster({
 export function Heading1({ children }: Props) {
   return (
     <h1
-      className={`${lobster.className} text-transparent text-9xl bg-clip-text bg-gradient-to-r from-primary to-secondary`}
+      className={`${lobster.className} text-transparent text-6xl lg:text-8xl bg-clip-text bg-gradient-to-r from-secondary to-primary`}
     >
       {children}
     </h1>

@@ -22,7 +22,7 @@ export default function Navbar({}: Props) {
   const [isMenu, setIsMenu] = useState<boolean>(false);
 
   return (
-    <nav className="fixed top-0 left-0 w-full h-20 bg-light-blue">
+    <nav className="fixed top-0 left-0 z-50 w-full h-20 bg-light-blue">
       <Container className="flex items-center justify-between h-full">
         <Image
           src={Logo}
@@ -50,7 +50,7 @@ export default function Navbar({}: Props) {
 
               <AnimatePresence>
                 {isMenu && (
-                  <DropDown_List className="absolute right-0 translate-y-3" />
+                  <DropDown_List className="absolute right-0 w-56 translate-y-3" />
                 )}
               </AnimatePresence>
             </div>

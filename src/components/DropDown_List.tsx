@@ -28,7 +28,7 @@ export default function DropDown_List({ className }: Props) {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className={`${className} bg-white w-56 rounded-xl shadow-container py-2 flex flex-col`}
+      className={`${className} bg-white rounded-xl shadow-container py-2 flex flex-col`}
     >
       {LINKS.map((link, index) => {
         const Icons = link.icon;
