@@ -5,3 +5,10 @@
 body {
   @apply bg-light-blue text-dark-blue;
 }
+
+#link {
+  transition: opacity 0.3s;
+}
+#link:hover ~ #link {
+  opacity: 0.5 !important;
+}
