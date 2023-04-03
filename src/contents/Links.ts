@@ -16,7 +16,7 @@ export const LINKS: LinksType = [
     id: 1,
     name: "About",
     icon: FaUserAlt,
-    href: "#",
+    href: "#about",
   },
   {
     id: 2,

@@ -57,7 +57,27 @@ export default function Home() {
         </header>
 
         {/* About */}
-        <section id="about" className="w-full h-screen"></section>
+        <section id="about" className="pt-12 pb-40">
+          <Container className="space-y-12">
+            <Heading2>About</Heading2>
+            <div className="grid md:grid-cols-2">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold">
+                  As a front-end developer, I specialize in building and
+                  maintaining the user interface of web applications.
+                </h3>
+                <p className="font-medium">
+                  Hi, my name is Ali Reza and I am a web developer with over 2
+                  years of experience in the field. I specialize in front-end
+                  development and have a strong background in ReactJS. I am
+                  always looking to learn and grow as a developer, and I am
+                  excited to work on new and challenging projects
+                </p>
+              </div>
+              <div></div>
+            </div>
+          </Container>
+        </section>
 
         {/* Projects */}
         <section id="projects" className="relative pb-96">
