@@ -10,6 +10,9 @@ import { PROJECTS } from "@/contents/Projects";
 import { FiChevronDown } from "react-icons/fi";
 import { LINKS } from "@/contents/Links";
 
+import MyImage from "@/assets/my image.png";
+import Image from "next/image";
+
 export default function Home() {
   const [isMenu, setIsMenu] = useState<boolean>(false);
   const { setIsButton } = useContext(Navbar_Context);
@@ -60,7 +63,7 @@ export default function Home() {
         <section id="about" className="pt-12 pb-40">
           <Container className="space-y-12">
             <Heading2>About</Heading2>
-            <div className="grid md:grid-cols-2">
+            <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold">
                   As a front-end developer, I specialize in building and
@@ -74,13 +77,21 @@ export default function Home() {
                   excited to work on new and challenging projects
                 </p>
               </div>
-              <div></div>
+              <div>
+                <Image
+                  src={MyImage}
+                  width={500}
+                  height={500}
+                  alt="my image"
+                  className="mx-auto"
+                />
+              </div>
             </div>
           </Container>
         </section>
 
         {/* Projects */}
-        <section id="projects" className="relative pb-96">
+        <section id="projects" className="relative">
           <Container className="space-y-12">
             <Heading2>Projects</Heading2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -92,10 +103,18 @@ export default function Home() {
         </section>
 
         {/* Blogs */}
-        <section id="blogs" className="w-full h-screen"></section>
+        <section id="blogs">
+          <Container>
+            <Heading2>Blogs</Heading2>
+          </Container>
+        </section>
 
         {/* Testimonial */}
-        <section id="testimonial"></section>
+        <section id="testimonial">
+          <Container>
+            <Heading2>Testimonial</Heading2>
+          </Container>
+        </section>
       </main>
     </>
   );

@@ -23,7 +23,7 @@ export default function Navbar({}: Props) {
   const [isMenu, setIsMenu] = useState<boolean>(false);
 
   return (
-    <nav className="fixed top-0 left-0 z-50 w-full h-20 bg-light-blue">
+    <nav className="fixed top-0 left-0 z-50 w-full h-20 bg-light-blue/50 backdrop-blur-md">
       <Container className="flex items-center justify-between h-full">
         <Image
           src={Logo}
