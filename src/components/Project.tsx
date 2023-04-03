@@ -23,17 +23,17 @@ export default function Project({ project }: Props) {
           <BiDotsVerticalRounded onClick={() => setIsOpen(!isOpen)} />
           <AnimatePresence>
             {isOpen && (
-              <DropDown_List
-                data={project.links}
-                className="absolute hidden w-48 translate-y-2 md:block right-4"
-              />
-            )}
-            {isOpen && (
-              <Review_Project
-                key={project.id}
-                data={project.links}
-                setIsOpen={setIsOpen}
-              />
+              <>
+                <DropDown_List
+                  data={project.links}
+                  className="absolute hidden w-48 translate-y-2 md:block right-4"
+                />
+                <Review_Project
+                  key={project.id}
+                  data={project.links}
+                  setIsOpen={setIsOpen}
+                />
+              </>
             )}
           </AnimatePresence>
         </div>
