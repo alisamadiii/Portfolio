@@ -9,6 +9,7 @@ import { PROJECTS } from "@/contents/Projects";
 
 import { FiChevronDown } from "react-icons/fi";
 import { LINKS } from "@/contents/Links";
+import Project_Image from "@/components/Project_Image";
 
 export default function Home() {
   const [isMenu, setIsMenu] = useState<boolean>(false);
@@ -60,7 +61,7 @@ export default function Home() {
         <section id="about" className="w-full h-screen"></section>
 
         {/* Projects */}
-        <section id="projects">
+        <section id="projects" className="relative pb-96">
           <Container className="space-y-12">
             <Heading2>Projects</Heading2>
             <div className="grid gap-4 md:grid-cols-2">

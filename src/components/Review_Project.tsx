@@ -2,10 +2,12 @@ import React from "react";
 import { Variants, motion } from "framer-motion";
 import { FiArrowUpRight } from "react-icons/fi";
 import { LinksType } from "@/contents/Links";
+import Image from "next/image";
 
 type Props = {
   data: LinksType;
   setIsOpen: (a: boolean) => void;
+  image: string;
 };
 
 const BackgroundVariants: Variants = {
@@ -19,7 +21,7 @@ const ListVariants: Variants = {
   exit: { y: 1000, transition: { duration: 1 } },
 };
 
-export default function Review_Project({ data, setIsOpen }: Props) {
+export default function Review_Project({ data, setIsOpen, image }: Props) {
   const closing = (event: any, info: any) => {
     info.offset.y > 200 ? setIsOpen(false) : setIsOpen(true);
   };
@@ -41,9 +43,18 @@ export default function Review_Project({ data, setIsOpen }: Props) {
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         onDragEnd={closing}
-        className="relative w-full py-8 bg-white shadow-xl"
+        className="relative w-full p-2 py-8 bg-white shadow-xl"
       >
         <div className="absolute w-16 h-2 -translate-x-1/2 rounded-full bg-gray-200/70 top-4 left-1/2"></div>
+
+        <Image
+          src={image}
+          width={300}
+          height={300}
+          alt=""
+          className="object-cover w-full my-4 rounded-md aspect-video"
+        />
+
         {data.map((d, index) => {
           const Icons = d.icon;
 
@@ -53,7 +64,7 @@ export default function Review_Project({ data, setIsOpen }: Props) {
               transition={{ delay: index * 0.05 }}
               href={d.href}
               id="link"
-              className="flex items-center justify-between px-4 py-4 text-xl font-medium hover:bg-[#EFEFEF] overflow-hidden"
+              className="flex items-center justify-between px-4 py-2 text-base font-medium hover:bg-[#EFEFEF] overflow-hidden"
             >
               <span className="flex items-center gap-2">
                 <Icons />
