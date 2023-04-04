@@ -34,8 +34,7 @@ export const PROJECTS: ProjectsType = [
     name: "AniLearn.dev",
     description:
       "We provide the best content to learn something very easily. The visual descriptions of development principles that We create are very clear.",
-    image:
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8bmF0dXJlfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60",
+    image: "https://pbs.twimg.com/media/FsImrWuXwAArZa7?format=jpg&name=large",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,
@@ -72,8 +71,7 @@ export const PROJECTS: ProjectsType = [
     name: "Asakatsu",
     description:
       "A project where you can keep track of your goal's progress, and contribute to open source in the same time.",
-    image:
-      "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTF8fG5hdHVyZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
+    image: "https://pbs.twimg.com/media/Fr-SdoVWAAIk8v_?format=jpg&name=large",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,

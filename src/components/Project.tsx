@@ -24,7 +24,9 @@ export default function Project({ project }: Props) {
         <div className="flex items-center justify-between text-2xl font-bold">
           <h3>{project.name}</h3>
           <div>
-            <BiDotsVerticalRounded onClick={() => setIsOpen(!isOpen)} />
+            <span onClick={() => setIsOpen(!isOpen)} className="inline-block">
+              <BiDotsVerticalRounded />
+            </span>
             <AnimatePresence>
               {isOpen && (
                 <>

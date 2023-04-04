@@ -32,7 +32,7 @@ export default function Review_Project({ data, setIsOpen, image }: Props) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="absolute top-0 left-0 w-full h-full bg-light-blue/50 -z-10"
+        className="absolute top-0 left-0 w-full h-full bg-light-blue/50 -z-10 backdrop-blur-sm"
         onClick={() => setIsOpen(false)}
       ></motion.div>
       <motion.div

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 * {
-  scroll-behavior: smooth;
+  @apply scroll-smooth;
 }
 
 body {
@@ -15,4 +15,8 @@ body {
 }
 #link:hover ~ #link {
   opacity: 0.5 !important;
+}
+
+::selection {
+  @apply text-white bg-dark-blue-2;
 }
