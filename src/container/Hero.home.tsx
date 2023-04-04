@@ -9,6 +9,7 @@ import { LINKS } from "@/contents/Links";
 import { Navbar_Context } from "@/context/Navbar_Context";
 
 import { FiChevronDown } from "react-icons/fi";
+import { AiOutlineTwitter } from "react-icons/ai";
 
 type Props = {};
 
@@ -28,10 +29,17 @@ export default function Hero({}: Props) {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gradient-to-t from-primary to-secondary blur-3xl opacity-30"></div>
         <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
       </div>
-      <Container className="flex flex-col items-center justify-center gap-8">
-        <div></div>
+      <Container className="flex flex-col items-center justify-center gap-4">
+        <a
+          href="https://twitter.com/Ali_Developer05"
+          target="_blank"
+          className="flex items-center gap-2 px-4 py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white"
+        >
+          <AiOutlineTwitter />
+          <span>Twitter</span>
+        </a>
         <Heading1>Ali Reza</Heading1>
-        <p className="text-base font-medium text-center md:text-lg">
+        <p className="mb-4 text-base font-medium text-center md:text-lg">
           I have a strong foundation in HTML, CSS, and JavaScript, and I am
           skilled in creating <br /> interactive and visually appealing
           websites.

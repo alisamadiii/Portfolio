@@ -17,7 +17,7 @@ const BackgroundVariants: Variants = {
 };
 const ListVariants: Variants = {
   hidden: { y: 1000 },
-  visible: { y: 0, transition: { type: "tween", duration: 0.4 } },
+  visible: { y: 0, transition: { type: "tween", duration: 0.2 } },
   exit: { y: 1000, transition: { duration: 1 } },
 };
 
