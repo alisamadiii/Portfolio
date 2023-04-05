@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 type Props = {};
@@ -26,13 +27,15 @@ export default function Navbar({}: Props) {
     <nav className="fixed top-0 left-0 z-50 w-full h-20 bg-light-blue/50 backdrop-blur-md">
       <div className="absolute bottom-0 left-0 w-full h-1 opacity-50 bg-gradient-to-l from-primary to-secondary"></div>
       <Container className="flex items-center justify-between h-full">
-        <Image
-          src={Logo}
-          width={100}
-          height={100}
-          alt="Logo Image"
-          className="w-12 rounded-full"
-        />
+        <Link href={"/"}>
+          <Image
+            src={Logo}
+            width={100}
+            height={100}
+            alt="Logo Image"
+            className="w-12 rounded-full"
+          />
+        </Link>
         <AnimatePresence>
           {isButton && (
             <div className="relative">

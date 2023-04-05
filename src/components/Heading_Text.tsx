@@ -4,6 +4,7 @@ import { Lobster } from "next/font/google";
 
 type Props = {
   children: ReactNode;
+  className?: string;
 };
 
 const lobster = Lobster({
@@ -12,10 +13,10 @@ const lobster = Lobster({
   subsets: ["latin"],
 });
 
-export function Heading1({ children }: Props) {
+export function Heading1({ children, className }: Props) {
   return (
     <h1
-      className={`${lobster.className} text-transparent text-6xl lg:text-8xl bg-clip-text bg-gradient-to-r from-secondary to-primary`}
+      className={`${lobster.className} text-transparent text-6xl lg:text-8xl bg-clip-text bg-gradient-to-r from-secondary to-primary ${className}`}
     >
       {children}
     </h1>

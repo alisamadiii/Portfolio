@@ -1,5 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
+import readingTime from "reading-time";
+import formatDistance from "date-fns/formatDistance";
 
 import { FiArrowUpRight } from "react-icons/fi";
 
@@ -18,8 +21,19 @@ type Props = {
 };
 
 export default function Blog_Link({ blogs_data }: Props) {
+  const stats = readingTime(blogs_data.blogContent);
+
+  const timeFormat = (date: string) => {
+    return formatDistance(new Date(date), new Date());
+  }; // yyyy/mm/dd
+
   return (
-    <div className="flex flex-col overflow-hidden font-medium duration-150 bg-white hover:-translate-y-1 md:gap-8 md:items-center md:flex-row rounded-xl shadow-container">
+    <Link
+      href={`/blog/${blogs_data.data.title
+        .replaceAll(" ", "-")
+        .toLocaleLowerCase()}`}
+      className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container"
+    >
       <Image
         src={blogs_data.data.image}
         width={1000}
@@ -43,9 +57,13 @@ export default function Blog_Link({ blogs_data }: Props) {
               </span>
             ))}
           </div>
-          <small>3 months ago</small>
+          <small>{timeFormat(blogs_data.data.createdAt)}</small>
+          <small>{stats.text}</small>
         </div>
       </div>
-    </div>
+      <div className="absolute text-6xl duration-300 opacity-0 -translate-y-1/3 right-8 top-1/2 group-hover:opacity-100 group-hover:-translate-y-1/2">
+        <FiArrowUpRight />
+      </div>
+    </Link>
   );
 }
