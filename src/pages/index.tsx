@@ -1,6 +1,7 @@
 import React from "react";
 import path from "path";
 import fs from "fs";
+import matter from "gray-matter";
 
 import { PROJECTS } from "@/contents/Projects";
 
@@ -8,7 +9,20 @@ import Container from "@/layout/Container";
 import { Heading2, Project, Blog_Link } from "@/components";
 import { Hero, About } from "@/container";
 
-export default function Home() {
+type Props = {
+  blogs: {
+    blogs_data: {
+      data: {
+        title: string;
+        author: string;
+        createdAt: string;
+      };
+      blogContent: any;
+    };
+  }[];
+};
+
+export default function Home({ blogs }: Props) {
   return (
     <>
       <main>
@@ -36,15 +50,21 @@ export default function Home() {
 
         {/* Blogs */}
         <section id="blogs" className="py-12">
-          <Container>
+          <Container className="space-y-12">
             <Heading2>Blogs</Heading2>
-            <Blog_Link />
+            <div className="space-y-5">
+              {blogs.map((blog) => (
+                // @ts-ignore-start
+                <Blog_Link key={blog.data.blog} blogs_data={blog} />
+                // @ts-ignore-end
+              ))}
+            </div>
           </Container>
         </section>
 
         {/* Testimonial */}
         <section id="testimonial">
-          <Container>
+          <Container className="space-y-12">
             <Heading2>Testimonial</Heading2>
           </Container>
         </section>
@@ -54,11 +74,26 @@ export default function Home() {
 }
 
 export async function getStaticProps() {
-  const blogPathFiles = path.join(process.cwd(), "blog");
+  const blogPathFiles = path.join(process.cwd(), "src/blog");
+  const fileNames = fs.readdirSync(blogPathFiles);
+
+  const blogs = fileNames
+    .map((name) => {
+      const content = fs.readFileSync(`${blogPathFiles}/${name}`);
+      const { data, content: blogContent } = matter(content);
+
+      return {
+        data,
+        blogContent,
+      };
+    })
+    .sort((a, b) => {
+      return a.data.blog - b.data.blog;
+    });
 
   return {
     props: {
-      blogs: "working",
-    }, // will be passed to the page component as props
+      blogs,
+    },
   };
 }

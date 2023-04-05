@@ -28,7 +28,7 @@ export const LINKS: LinksType = [
     id: 3,
     name: "Blogs",
     icon: FaBlog,
-    href: "#",
+    href: "#blogs",
   },
   {
     id: 4,

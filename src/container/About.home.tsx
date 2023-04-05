@@ -33,6 +33,7 @@ export default function About({}: Props) {
             height={500}
             alt="my image"
             className="mx-auto"
+            priority={true}
           />
         </div>
       </div>
