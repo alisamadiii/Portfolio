@@ -3,6 +3,7 @@ import Link from "next/link";
 import React from "react";
 import readingTime from "reading-time";
 import formatDistance from "date-fns/formatDistance";
+import slugify from "@sindresorhus/slugify";
 
 import { FiArrowUpRight } from "react-icons/fi";
 
@@ -29,9 +30,7 @@ export default function Blog_Link({ blogs_data }: Props) {
 
   return (
     <Link
-      href={`/blog/${blogs_data.data.title
-        .replaceAll(" ", "-")
-        .toLocaleLowerCase()}`}
+      href={`/blog/${slugify(blogs_data.data.title)}`}
       className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container"
     >
       <Image
