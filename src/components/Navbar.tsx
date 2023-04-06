@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 type Props = {};
@@ -23,8 +24,14 @@ export default function Navbar({}: Props) {
   const { isButton } = useContext(Navbar_Context);
   const [isMenu, setIsMenu] = useState<boolean>(false);
 
+  const router = useRouter();
+
   return (
-    <nav className="fixed top-0 left-0 z-50 w-full h-20 bg-light-blue/50 backdrop-blur-md">
+    <nav
+      className={`${
+        router.pathname.includes("blog") ? "absolute" : "fixed"
+      } top-0 left-0 z-50 w-full h-20 bg-light-blue/50 backdrop-blur-md`}
+    >
       <div className="absolute bottom-0 left-0 w-full h-1 opacity-50 bg-gradient-to-l from-primary to-secondary"></div>
       <Container className="flex items-center justify-between h-full">
         <Link href={"/"}>

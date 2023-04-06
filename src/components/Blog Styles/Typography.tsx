@@ -4,12 +4,20 @@ type Props = {
   children: ReactNode;
 };
 
-export function Heading1({ children }: Props) {
-  return <h1 className="mb-6 text-4xl font-black">{children}</h1>;
+export function Heading1({ children, ...props }: Props) {
+  return (
+    <h1 className="mb-6 text-4xl font-black" {...props}>
+      {children}
+    </h1>
+  );
 }
 
-export function Heading2({ children }: Props) {
-  return <h1 className="mt-8 mb-4 text-3xl font-extrabold">{children}</h1>;
+export function Heading2({ children, ...props }: Props) {
+  return (
+    <h1 className="mt-8 mb-4 text-3xl font-extrabold" {...props}>
+      {children}
+    </h1>
+  );
 }
 
 export function Text({ children }: Props) {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import path from "path";
 import fs from "fs";
 import matter from "gray-matter";
@@ -10,6 +10,8 @@ import remarkGfm from "remark-gfm";
 import rehypePrism from "rehype-prism-plus";
 
 import { Components } from "@/components/Blog Styles/MDXCompnents";
+import Arrow from "@/assets/Arrow";
+import { AnimatePresence } from "framer-motion";
 
 type Props = {
   data: any;
@@ -17,13 +19,20 @@ type Props = {
 };
 
 export default function Slug({ data, mdxSource }: Props) {
-  console.log(data);
+  const [visible, setVisible] = useState<boolean>(false);
+  useEffect(() => {
+    document.addEventListener("scroll", (e) => {
+      const value = window.scrollY;
+      value > 200 ? setVisible(true) : setVisible(false);
+    });
+  }, []);
   return (
-    <div className="mt-24 max-w-[700px] mx-auto px-4">
+    <div className="mt-24 max-w-[700px] mx-auto px-4" id="back-to-top">
       {/* <Heading1 className="py-4">{data.title}</Heading1> */}
       <div>
         <MDXRemote {...mdxSource} components={Components} />
       </div>
+      <AnimatePresence>{visible && <Arrow />}</AnimatePresence>
     </div>
   );
 }
