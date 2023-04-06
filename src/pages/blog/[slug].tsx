@@ -4,11 +4,12 @@ import fs from "fs";
 import matter from "gray-matter";
 import { serialize } from "next-mdx-remote/serialize";
 import { MDXRemote } from "next-mdx-remote";
-import { Heading1 } from "@/components";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import rehypePrism from "rehype-prism-plus";
+
+import { Components } from "@/components/Blog Styles/MDXCompnents";
 
 type Props = {
   data: any;
@@ -18,10 +19,10 @@ type Props = {
 export default function Slug({ data, mdxSource }: Props) {
   console.log(data);
   return (
-    <div className="mt-24 max-w-[1200px] mx-auto">
+    <div className="mt-24 max-w-[700px] mx-auto px-4">
       {/* <Heading1 className="py-4">{data.title}</Heading1> */}
       <div>
-        <MDXRemote {...mdxSource} />
+        <MDXRemote {...mdxSource} components={Components} />
       </div>
     </div>
   );

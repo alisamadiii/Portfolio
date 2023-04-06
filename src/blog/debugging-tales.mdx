@@ -8,24 +8,58 @@ image: https://cdn.hashnode.com/res/hashnode/image/upload/v1677105369366/9cfd870
 createdAt: 2023/03/01
 ---
 
-# Hello World
+# Debugging Tales
 
-Are you doing great?
+Throughout the past two weeks, I've been learning MDX with Nextjs.
 
-www.dadashreza.com
+- MDX - allows you to use JSX in your markdown content.
 
-```js {1,4} showLineNumbers
-const name = "Ali Reza";
-console.log(name);
-console.log(name);
-console.log(name);
-console.log(name);
+- Nextjs - is a React framework that gives you the building blocks to create web applications.
+
+Because it was my first time using MDX, I did not know what MDX was.
+
+So I searched "MDX & Nextjs" on google, and I clicked the first link which was from Nextjs Official website.
+
+I followed all the steps that the documentation instructed me to do, and I thought to myself:
+
+> I did it...Let's goooooo
+
+However, my work was not done yet as I did not know how to style them and make them look visually appealing. Therefore, I searched for a solution and eventually resolved the problem.
+
+Everything was going as planned until I encountered an issue with highlighting the code syntax. I searched for a solution, but I couldn't find a satisfactory answer because everyone was saying something different and I couldn't understand what they meant. As a result, it was a challenging problem for me.
+
+I was pressed for time and needed to learn how to use them for my website. However, the process was becoming overwhelming for me.
+
+I was frustrated because of the errors that I was getting all the time.
+
+## Meeting
+
+I searched everywhere (YouTube, Google) to solve my problem, but I found it difficult to understand the solutions I came across. However, I eventually stumbled upon a repository where they were using MDX and Next.js.
+
+I found their Twitter profile and DMed them to teach me about MDX & Nextjs.
+
+> I do not care who that person is, I just seek knowledge.
+
+We arranged a meeting, and they explained things very well.
+
+During the meeting, I learned
+
+1. How to get the folder's path by using import path from "path"
+
+1. How to read the files using import fs from "fs"
+
+1. How to convert MDX to JSX by using import matter from "gray-matter"
+
+1. and ...
+
+```jsx {1,2} showLineNumbers
+import fs from "fs";
+import path from "path";
+
+const pathFiles = path.join(process.cwd(), "blog"); // Folder Path
+const fileNames = fs.readdirSync(pathFiles); // All the names of files that exist in a folder.
 ```
 
-```css {4} showLineNumbers
-* {
-  margin: 0;
-  padding: 0;
-+ box-sizing: border-box;
-}
-```
+This helped me a lot with getting all the files and rendering them on the page, but still, I was struggling to add `syntax highlighter`, Like the following image:
+
+<img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1677113900303/3e701870-826d-4832-8744-9b05c504e583.png?auto=compress,format&format=webp" />

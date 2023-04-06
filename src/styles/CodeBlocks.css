@@ -1,5 +1,6 @@
 code[class*="language-"],
 pre[class*="language-"] {
+  @apply text-xs sm:text-sm md:text-base;
   display: inline-block;
   width: 100%;
   color: #e3eaf2;
@@ -240,8 +241,19 @@ pre code {
   flex-direction: column;
 }
 pre code > span {
-  padding: 0.1em 1em;
+  position: relative;
+  padding: 0.1em 3em;
 }
+pre code > span::after {
+  content: attr(line);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 10px;
+  border-right: 2px solid rgba(0, 0, 255, 0.225);
+  padding: 0 0.5em 0 0;
+}
+
 .highlight-line.highlight-line {
   position: relative;
   width: 100%;
@@ -250,8 +262,7 @@ pre code > span {
   /* background: linear-gradient(to right, #3c526d5f 70%, #3c526d55); */
 }
 
-.highlight-line.highlight-line:before,
-.highlight-line.highlight-line[data-end]:after {
+.highlight-line.highlight-line:before {
   content: "";
   width: 100%;
   height: 100%;
@@ -330,4 +341,37 @@ pre > code.diff-highlight .token.token.inserted:not(.prefix) {
 
 .command-line .command-line-prompt > span:before {
   color: #8da1b9da;
+}
+
+/* Icons */
+.icon::after {
+  content: "#";
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: 0.3s ease;
+}
+:is(h1, h2, h3, h4, h5, h6) {
+  position: relative;
+}
+:is(h1, h2, h3, h4, h5, h6):hover .icon::after {
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+/* Codes */
+pre::-webkit-scrollbar {
+  height: 10px;
+}
+pre::-webkit-scrollbar-thumb {
+  background-color: #2b343f;
+  border-radius: 9999px;
+}
+
+:is(h1, h2, h3, h4, h5, h6, p, blockquote) code {
+  @apply inline-block px-1 rounded-md bg-gradient-to-tr from-primary/40 to-secondary/40;
+}
+:is(h1, h2, h3, h4, h5, h6, p, blockquote) code:hover {
+  @apply text-white from-primary to-secondary;
 }
