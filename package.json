@@ -19,7 +19,9 @@
     "eslint-config-next": "13.2.4",
     "framer-motion": "^10.10.0",
     "gray-matter": "^4.0.3",
+    "highlight.js": "^11.7.0",
     "next": "13.2.4",
+    "next-mdx-remote": "^4.4.1",
     "react": "18.2.0",
     "react-countdown": "^2.3.5",
     "react-countup": "^6.4.2",
@@ -27,6 +29,10 @@
     "react-icons": "^4.8.0",
     "react-intersection-observer": "^9.4.3",
     "reading-time": "^1.5.0",
+    "rehype-autolink-headings": "^6.1.1",
+    "rehype-prism-plus": "^1.5.1",
+    "rehype-slug": "^5.1.0",
+    "remark-gfm": "^3.0.1",
     "typescript": "5.0.3"
   },
   "devDependencies": {

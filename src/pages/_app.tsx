@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import "@/styles/CodeBlocks.css";
 import type { AppProps } from "next/app";
 
 import Router from "next/router";
