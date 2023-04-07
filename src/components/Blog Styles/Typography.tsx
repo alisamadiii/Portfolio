@@ -14,9 +14,9 @@ export function Heading1({ children, ...props }: Props) {
 
 export function Heading2({ children, ...props }: Props) {
   return (
-    <h1 className="mt-8 mb-4 text-3xl font-extrabold" {...props}>
+    <h2 className="mt-8 mb-4 text-3xl font-extrabold" {...props}>
       {children}
-    </h1>
+    </h2>
   );
 }
 

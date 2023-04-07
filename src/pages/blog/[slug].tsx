@@ -8,6 +8,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import rehypePrism from "rehype-prism-plus";
+import rehypeCodeTitles from "rehype-code-titles";
 
 import { Components } from "@/components/Blog Styles/MDXCompnents";
 import Arrow from "@/assets/Arrow";
@@ -23,7 +24,7 @@ export default function Slug({ data, mdxSource }: Props) {
   useEffect(() => {
     document.addEventListener("scroll", (e) => {
       const value = window.scrollY;
-      value > 200 ? setVisible(true) : setVisible(false);
+      value >= 300 ? setVisible(true) : setVisible(false);
     });
   }, []);
   return (
@@ -46,7 +47,12 @@ export const getServerSideProps = async (context: any) => {
     scope: {},
     mdxOptions: {
       remarkPlugins: [remarkGfm],
-      rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings, rehypePrism],
+      rehypePlugins: [
+        rehypeSlug,
+        rehypeAutolinkHeadings,
+        rehypeCodeTitles,
+        rehypePrism,
+      ],
       format: "mdx",
     },
     parseFrontmatter: false,

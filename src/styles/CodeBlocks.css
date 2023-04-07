@@ -37,7 +37,7 @@ code[class*="language-  "] ::selection {
 
 /* Code blocks */
 pre[class*="language-"] {
-  margin: 0.5em 0;
+  /* margin: 0.5em 0; */
   overflow: auto;
 }
 
@@ -233,8 +233,9 @@ div.code-toolbar > .toolbar.toolbar > .toolbar-item > span:focus {
 
 pre {
   padding: 1em 0 !important;
-  border-radius: 0.5em;
+  border-radius: 0 0.5em 0.5em 0.5em;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.252);
+  margin-bottom: 1em;
 }
 pre code {
   display: flex !important;
@@ -374,4 +375,13 @@ pre::-webkit-scrollbar-thumb {
 }
 :is(h1, h2, h3, h4, h5, h6, p, blockquote) code:hover {
   @apply text-white from-primary to-secondary;
+}
+
+.rehype-code-title {
+  background-color: #111b27;
+  color: white;
+  display: inline-block;
+  padding: 0.3em 1em;
+  border-radius: 0.5em 0.5em 0 0;
+  margin-top: 1em;
 }
