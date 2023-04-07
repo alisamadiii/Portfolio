@@ -8,6 +8,8 @@ import { PROJECTS } from "@/contents/Projects";
 import Container from "@/layout/Container";
 import { Heading2, Project, Blog_Link } from "@/components";
 import { Hero, About } from "@/container";
+import { PRODUCTS } from "@/contents/Products";
+import Product from "@/components/Product";
 
 type Props = {
   blogs: {
@@ -27,7 +29,7 @@ export default function Home({ blogs }: Props) {
     <>
       <main>
         {/* Header */}
-        <header className="relative w-full py-56 overflow-x-hidden">
+        <header className="relative w-full py-56">
           <Hero />
         </header>
 
@@ -62,8 +64,20 @@ export default function Home({ blogs }: Props) {
           </Container>
         </section>
 
+        {/* Products */}
+        <section id="products" className="py-12">
+          <Container className="space-y-12">
+            <Heading2>Products</Heading2>
+            <div className="space-y-5">
+              {PRODUCTS.map((product) => (
+                <Product key={product.product} product={product} />
+              ))}
+            </div>
+          </Container>
+        </section>
+
         {/* Testimonial */}
-        <section id="testimonial">
+        <section id="testimonial" className="py-12">
           <Container className="space-y-12">
             <Heading2>Testimonial</Heading2>
           </Container>

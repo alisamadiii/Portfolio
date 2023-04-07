@@ -6,7 +6,7 @@ type Props = {
 
 export function Heading1({ children, ...props }: Props) {
   return (
-    <h1 className="mb-6 text-4xl font-black" {...props}>
+    <h1 className="mb-6 text-4xl font-black tracking-tight" {...props}>
       {children}
     </h1>
   );
@@ -22,6 +22,17 @@ export function Heading2({ children, ...props }: Props) {
 
 export function Text({ children }: Props) {
   return <p className="my-2 text-sm/7 md:text-lg/8">{children}</p>;
+}
+
+export function Anchor({ children, ...props }: Props) {
+  return (
+    <a
+      {...props}
+      className="px-4 py-2 my-4 text-lg italic border-l-4 border-secondary bg-secondary/10 rounded-r-xl"
+    >
+      {children}
+    </a>
+  );
 }
 
 export function BlockQuotes({ children }: Props) {

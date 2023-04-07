@@ -19,6 +19,8 @@ module.exports = {
       boxShadow: {
         button: "0 4px 15px rgba(0, 0, 0, .25)",
         container: "0 10px 65px rgba(0, 0, 0, .09)",
+        success: "0 10px 65px",
+        warning: "0 10px 65px",
       },
       backgroundImage: {
         pattern: `linear-gradient(#E7EDFB 2px, transparent 2px), linear-gradient(90deg, #E7EDFB 1px, transparent 1px);`,
