@@ -32,15 +32,4 @@ export const PRODUCTS: ProductsType = [
     discount: null,
     discountData: null,
   },
-  {
-    product: 2,
-    name: "How to Make Animated Content: A Beginner's Guide",
-    description:
-      "This will help you to make animated contents for your social medias with PowerPoint.",
-    tags: ["animated", "content"],
-    image: "https://public-files.gumroad.com/f6f9ir9pcog81pzburhbmyh9yfky",
-    price: 5,
-    discount: null,
-    discountData: null,
-  },
 ];

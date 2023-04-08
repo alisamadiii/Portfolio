@@ -28,7 +28,7 @@ export function Anchor({ children, ...props }: Props) {
   return (
     <a
       {...props}
-      className="px-4 py-2 my-4 text-lg italic border-l-4 border-secondary bg-secondary/10 rounded-r-xl"
+      className="px-1 font-medium text-blue-800 underline duration-100 rounded-md hover:bg-blue-800/10"
     >
       {children}
     </a>

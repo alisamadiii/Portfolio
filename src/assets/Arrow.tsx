@@ -5,7 +5,7 @@ type Props = {};
 
 export default function Arrow({}: Props) {
   return (
-    <a href="#back-to-top">
+    <a href="#back-to-top" className="z-[9999]">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="32"

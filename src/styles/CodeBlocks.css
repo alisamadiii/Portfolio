@@ -345,20 +345,30 @@ pre > code.diff-highlight .token.token.inserted:not(.prefix) {
 }
 
 /* Icons */
-.icon::after {
-  content: "#";
-  position: absolute;
-  right: 0;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: 0.3s ease;
-}
 :is(h1, h2, h3, h4, h5, h6) {
   position: relative;
 }
-:is(h1, h2, h3, h4, h5, h6):hover .icon::after {
+
+:is(h1, h2, h3, h4, h5, h6) > a {
+  @apply !text-dark-blue;
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  text-decoration: none !important;
+  transform: translateY(10px);
+  border-radius: 0.2em;
+  transition: 0.5s ease !important;
+}
+:is(h1, h2, h3, h4, h5, h6):hover > a {
   opacity: 1;
   transform: translateY(0px);
+  transition: 0.2s ease !important;
+}
+
+.icon::after {
+  content: "#";
+  font-weight: bolder;
+  transition: 0.3s ease;
 }
 
 /* Codes */
@@ -384,4 +394,8 @@ pre::-webkit-scrollbar-thumb {
   padding: 0.3em 1em;
   border-radius: 0.5em 0.5em 0 0;
   margin-top: 1em;
+}
+
+#mdx img {
+  @apply my-8 shadow-md md:shadow-xl rounded-xl;
 }

@@ -12,7 +12,7 @@ export const Components = {
   h1: Heading1,
   h2: Heading2,
   p: Text,
-  // a: Anchor,
+  a: Anchor,
   blockquote: BlockQuotes,
   ul: Unordered_List,
   ol: Ordered_List,

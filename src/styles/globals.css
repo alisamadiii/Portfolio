@@ -6,8 +6,12 @@
   @apply scroll-smooth;
 }
 
+html {
+  height: 100%;
+}
+
 body {
-  @apply bg-light-blue text-dark-blue;
+  @apply relative min-h-full pb-24 bg-light-blue text-dark-blue;
 }
 
 #link {
@@ -15,28 +19,9 @@ body {
 }
 #link:hover ~ #link {
   opacity: 0.5 !important;
+  filter: blur(1px);
 }
 
 ::selection {
   @apply text-white bg-dark-blue-2;
-}
-
-.Arrow {
-  line-height: normal;
-  font-variant-ligatures: normal;
-  font-variant-position: normal;
-  font-variant-caps: normal;
-  font-variant-numeric: normal;
-  font-variant-alternates: normal;
-  font-feature-settings: normal;
-  text-indent: 0;
-  text-align: start;
-  text-decoration-line: none;
-  text-decoration-style: solid;
-  text-decoration-color: #000;
-  text-transform: none;
-  text-orientation: mixed;
-  shape-padding: 0;
-  isolation: auto;
-  mix-blend-mode: normal;
 }

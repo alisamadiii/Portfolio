@@ -30,7 +30,7 @@ export default function Slug({ data, mdxSource }: Props) {
   return (
     <div className="mt-24 max-w-[700px] mx-auto px-4" id="back-to-top">
       {/* <Heading1 className="py-4">{data.title}</Heading1> */}
-      <div>
+      <div id="mdx">
         <MDXRemote {...mdxSource} components={Components} />
       </div>
       <AnimatePresence>{visible && <Arrow />}</AnimatePresence>

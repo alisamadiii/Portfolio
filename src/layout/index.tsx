@@ -12,7 +12,9 @@ export default function Layout({ children }: Props) {
     <Navbar_Provider>
       <Navbar />
       <main className="overflow-hidden">{children}</main>
-      <footer>Footer</footer>
+      <footer className="absolute bottom-0 left-0 flex justify-center w-full py-4 -z-10">
+        webdeve1083@gmail.com
+      </footer>
     </Navbar_Provider>
   );
 }
