@@ -10,6 +10,7 @@ import { Navbar_Context } from "@/context/Navbar_Context";
 
 import { FiChevronDown } from "react-icons/fi";
 import { AiOutlineTwitter } from "react-icons/ai";
+import Link from "next/link";
 
 type Props = {};
 
@@ -30,14 +31,22 @@ export default function Hero({}: Props) {
         <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
       </div>
       <Container className="flex flex-col items-center justify-center gap-4">
-        <a
-          href="https://twitter.com/Ali_Developer05"
-          target="_blank"
-          className="flex items-center gap-2 px-4 py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white"
-        >
-          <AiOutlineTwitter />
-          <span>Twitter</span>
-        </a>
+        <div className="flex gap-4 text-sm">
+          <a
+            href="https://twitter.com/Ali_Developer05"
+            target="_blank"
+            className="flex items-center gap-2 px-4 py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white"
+          >
+            <AiOutlineTwitter />
+            <span>Twitter</span>
+          </a>
+          <Link
+            href="/twitter-activity"
+            className="flex items-center gap-2 px-4 py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white"
+          >
+            <span>Twitter Activity</span>
+          </Link>
+        </div>
         <Heading1>Ali Reza</Heading1>
         <p className="mb-4 text-base font-medium text-center md:text-lg">
           I have a strong foundation in HTML, CSS, and JavaScript, and I am

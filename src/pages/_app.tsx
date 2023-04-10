@@ -22,8 +22,7 @@ Router.events.on("routeChangeError", () => progress.finish());
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <Layout>
-      <Intro />
-
+      {/* <Intro /> */}
       <Component {...pageProps} />
     </Layout>
   );
