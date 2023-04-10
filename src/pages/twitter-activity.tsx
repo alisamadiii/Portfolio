@@ -107,6 +107,9 @@ export default function Twitter_Activity({}: Props) {
           ))}
         </AnimatePresence>
       </motion.div>
+      <h2 className="text-2xl font-bold text-center animate-pulse">
+        I will be adding more...
+      </h2>
     </div>
   );
 }

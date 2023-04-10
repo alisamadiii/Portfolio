@@ -11,7 +11,8 @@ type Props = {
 export default function Product({ product }: Props) {
   return (
     <Link
-      href="#"
+      href={product.link}
+      target="_blank"
       className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container"
     >
       <div className="relative">
