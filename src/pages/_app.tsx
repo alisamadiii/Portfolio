@@ -6,6 +6,7 @@ import Router from "next/router";
 import ProgressBar from "@badrap/bar-of-progress";
 
 import Layout from "@/layout";
+import Intro from "@/components/Intro";
 
 const progress = new ProgressBar({
   size: 2,
@@ -21,6 +22,8 @@ Router.events.on("routeChangeError", () => progress.finish());
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <Layout>
+      <Intro />
+
       <Component {...pageProps} />
     </Layout>
   );

@@ -10,7 +10,7 @@ import { Heading2, Project, Blog_Link } from "@/components";
 import { Hero, About } from "@/container";
 import { PRODUCTS } from "@/contents/Products";
 import Product from "@/components/Product";
-import Intro from "@/components/Intro";
+import Meta_Tag from "@/layout/Head";
 
 type Props = {
   blogs: {
@@ -28,9 +28,8 @@ type Props = {
 export default function Home({ blogs }: Props) {
   return (
     <>
+      <Meta_Tag />
       <main>
-        <Intro />
-
         {/* Header */}
         <header className="relative w-full py-56">
           <Hero />
