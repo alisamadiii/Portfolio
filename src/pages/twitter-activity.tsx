@@ -11,6 +11,8 @@ export default function Twitter_Activity({}: Props) {
   const [contents, setContents] = useState(ANIMATED_CONTENTS);
   const [filter, setFilter] = useState(contents);
 
+  const [option, setOption] = useState(0);
+
   useEffect(() => {
     const filterContents = contents.filter((content) =>
       content.name.toLocaleLowerCase().includes(searchField.toLocaleLowerCase())
@@ -18,6 +20,14 @@ export default function Twitter_Activity({}: Props) {
 
     setFilter(filterContents);
   }, [searchField]);
+
+  useEffect(() => {
+    const filterContents = contents.filter((content) =>
+      content.technology.includes(option)
+    );
+
+    setFilter(filterContents);
+  }, [option]);
 
   return (
     <div className="mt-28 w-full max-w-[700px] mx-auto px-4">
@@ -35,6 +45,32 @@ export default function Twitter_Activity({}: Props) {
         value={searchField}
         onChange={(e) => setSearchField(e.target.value)}
       />
+      <div className="flex flex-wrap gap-2 mt-2">
+        <button
+          onClick={() => setOption(0)}
+          className={`rounded-full text-xs md:text-sm py-1 md:py-[2px] duration-200 ${
+            option == 0 && "bg-primary text-white px-4"
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setOption(1)}
+          className={`rounded-full text-xs md:text-sm py-1 md:py-[2px] duration-200 ${
+            option == 1 && "bg-primary text-white px-4"
+          }`}
+        >
+          HTML
+        </button>
+        <button
+          onClick={() => setOption(2)}
+          className={`rounded-full text-xs md:text-sm py-1 md:py-[2px] duration-200 ${
+            option == 2 && "bg-primary text-white px-4"
+          }`}
+        >
+          CSS
+        </button>
+      </div>
       <motion.div layout="size" className="pb-24 mt-8 space-y-3">
         <AnimatePresence>
           {filter.map((content) => (
@@ -47,7 +83,13 @@ export default function Twitter_Activity({}: Props) {
               }}
               exit={{ opacity: 0 }}
               key={content.content}
-              className="flex items-center justify-between gap-4 px-4 py-2 border-l-4 rounded-r-lg group border-primary hover:bg-primary/5"
+              className={`flex items-center justify-between gap-4 px-4 py-2 border-l-4 rounded-r-lg group ${
+                content.technology.includes(2)
+                  ? "border-primary hover:bg-primary/5"
+                  : content.technology.includes(1)
+                  ? "border-secondary hover:bg-secondary/5"
+                  : ""
+              }`}
               style={{ transition: "background .3s" }}
             >
               <div>
