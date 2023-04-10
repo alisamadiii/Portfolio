@@ -33,6 +33,7 @@ export default function Project({ project }: Props) {
                   <DropDown_List
                     data={project.links}
                     className="absolute hidden w-48 translate-y-2 md:block right-4"
+                    targetLink={true}
                   />
                   <Review_Project
                     key={project.id}

@@ -4,6 +4,7 @@
 
 * {
   @apply scroll-smooth;
+  scroll-padding-top: 50px;
 }
 
 html {

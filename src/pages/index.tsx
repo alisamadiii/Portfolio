@@ -80,6 +80,9 @@ export default function Home({ blogs }: Props) {
         <section id="testimonial" className="py-12">
           <Container className="space-y-12">
             <Heading2>Testimonial</Heading2>
+            <h2 className="text-3xl text-center animate-pulse">
+              Coming soon...
+            </h2>
           </Container>
         </section>
       </main>

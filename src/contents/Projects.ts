@@ -34,7 +34,8 @@ export const PROJECTS: ProjectsType = [
     name: "AniLearn.dev",
     description:
       "We provide the best content to learn something very easily. The visual descriptions of development principles that We create are very clear.",
-    image: "https://pbs.twimg.com/media/FsImrWuXwAArZa7?format=jpg&name=large",
+    image:
+      "https://img.freepik.com/free-vector/search-concept-yellow-folder-magnifier-icons-hand-drawn-cartoon-art-illustration_56104-891.jpg?w=900&t=st=1681102085~exp=1681102685~hmac=bafca06cf9f7eb50ffe8d640e5a84447abfc42d4f543f0ccffa6893bc10abfed",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,
@@ -44,13 +45,13 @@ export const PROJECTS: ProjectsType = [
         id: 1,
         name: "Website",
         icon: BiWorld,
-        href: "#",
+        href: "https://www.anilearn.dev",
       },
       {
         id: 2,
         name: "GitHub",
         icon: AiFillGithub,
-        href: "#",
+        href: "https://github.com/AliReza1083/AniLearn.dev",
       },
       // {
       //   id: 3,
@@ -58,12 +59,12 @@ export const PROJECTS: ProjectsType = [
       //   icon: FaProductHunt,
       //   href: "#",
       // },
-      {
-        id: 3,
-        name: "Twitter",
-        icon: AiOutlineTwitter,
-        href: "#",
-      },
+      // {
+      //   id: 3,
+      //   name: "Twitter",
+      //   icon: AiOutlineTwitter,
+      //   href: "#",
+      // },
     ],
   },
   {
@@ -71,7 +72,8 @@ export const PROJECTS: ProjectsType = [
     name: "Asakatsu",
     description:
       "A project where you can keep track of your goal's progress, and contribute to open source in the same time.",
-    image: "https://pbs.twimg.com/media/Fr-SdoVWAAIk8v_?format=jpg&name=large",
+    image:
+      "https://img.freepik.com/free-vector/search-concept-yellow-folder-magnifier-icons-hand-drawn-cartoon-art-illustration_56104-891.jpg?w=900&t=st=1681102085~exp=1681102685~hmac=bafca06cf9f7eb50ffe8d640e5a84447abfc42d4f543f0ccffa6893bc10abfed",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,
@@ -81,13 +83,13 @@ export const PROJECTS: ProjectsType = [
         id: 1,
         name: "Website",
         icon: BiWorld,
-        href: "#",
+        href: "https://asakatsu-website.netlify.app/",
       },
       {
         id: 2,
         name: "GitHub",
         icon: AiFillGithub,
-        href: "#",
+        href: "https://github.com/asakatsuOrg/Asakatsu-Website",
       },
       // {
       //   id: 3,
@@ -99,7 +101,7 @@ export const PROJECTS: ProjectsType = [
         id: 3,
         name: "Twitter",
         icon: AiOutlineTwitter,
-        href: "#",
+        href: "https://twitter.com/Ali_Developer05/status/1607304669491257345?t=_mCwr4PEncWJaVjchmUZng&s=19",
       },
     ],
   },

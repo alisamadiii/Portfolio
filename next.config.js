@@ -7,6 +7,7 @@ const nextConfig = {
       "pbs.twimg.com",
       "cdn.hashnode.com",
       "public-files.gumroad.com",
+      "img.freepik.com",
     ],
   },
 };

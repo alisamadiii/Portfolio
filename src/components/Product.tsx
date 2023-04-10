@@ -48,7 +48,7 @@ export default function Product({ product }: Props) {
           </div>
         </div>
       </div>
-      <div className="absolute text-6xl duration-300 opacity-0 -translate-y-1/3 right-8 top-1/2 group-hover:opacity-100 group-hover:-translate-y-1/2">
+      <div className="absolute hidden text-6xl duration-300 opacity-0 xl:block -translate-y-1/3 right-8 top-1/2 group-hover:opacity-100 group-hover:-translate-y-1/2">
         <FiArrowUpRight />
       </div>
     </Link>

@@ -25,6 +25,7 @@ export default function Review_Project({ data, setIsOpen, image }: Props) {
   const closing = (event: any, info: any) => {
     info.offset.y > 200 ? setIsOpen(false) : setIsOpen(true);
   };
+
   return (
     <div className="fixed top-0 left-0 z-50 flex items-end w-full h-full md:hidden isolate">
       <motion.div
@@ -63,6 +64,7 @@ export default function Review_Project({ data, setIsOpen, image }: Props) {
               key={d.id}
               transition={{ delay: index * 0.05 }}
               href={d.href}
+              target={"_blank"}
               id="link"
               className="flex items-center justify-between px-4 py-2 text-base font-medium hover:bg-[#EFEFEF] overflow-hidden"
             >

@@ -6,6 +6,7 @@ import { LinksType } from "@/contents/Links";
 type Props = {
   className?: string;
   data: LinksType;
+  targetLink?: any;
 };
 
 import { FiArrowUpRight } from "react-icons/fi";
@@ -22,7 +23,7 @@ const Links_Variants: Variants = {
   exit: { opacity: 0, x: 10 },
 };
 
-export default function DropDown_List({ className, data }: Props) {
+export default function DropDown_List({ className, data, targetLink }: Props) {
   return (
     <motion.div
       variants={DropDown_List_Variants}
@@ -40,6 +41,7 @@ export default function DropDown_List({ className, data }: Props) {
             variants={Links_Variants}
             transition={{ delay: index * 0.05 }}
             href={d.href}
+            target={targetLink && "_blank"}
             id="link"
             className="flex items-center justify-between px-4 py-2 text-sm font-medium hover:bg-[#EFEFEF] overflow-hidden"
           >
