@@ -10,6 +10,7 @@ import { Heading2, Project, Blog_Link } from "@/components";
 import { Hero, About } from "@/container";
 import { PRODUCTS } from "@/contents/Products";
 import Product from "@/components/Product";
+import Intro from "@/components/Intro";
 
 type Props = {
   blogs: {
@@ -28,6 +29,8 @@ export default function Home({ blogs }: Props) {
   return (
     <>
       <main>
+        <Intro />
+
         {/* Header */}
         <header className="relative w-full py-56">
           <Hero />
