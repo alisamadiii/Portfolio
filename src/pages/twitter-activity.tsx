@@ -1,6 +1,7 @@
 import { ANIMATED_CONTENTS } from "@/contents/Animated_Contents";
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import useMeasure from "react-use-measure";
 
 type Props = {};
 
@@ -10,6 +11,7 @@ export default function Twitter_Activity({}: Props) {
   const [searchField, setSearchField] = useState("");
   const [contents, setContents] = useState(ANIMATED_CONTENTS);
   const [filter, setFilter] = useState(contents);
+  const [ref, bounds] = useMeasure();
 
   const [option, setOption] = useState(0);
 
@@ -29,6 +31,8 @@ export default function Twitter_Activity({}: Props) {
     setFilter(filterContents);
   }, [option]);
 
+  console.log(bounds);
+
   return (
     <div className="mt-28 w-full max-w-[700px] mx-auto px-4">
       <h1 className="text-3xl font-extrabold tracking-tight">
@@ -45,6 +49,29 @@ export default function Twitter_Activity({}: Props) {
         value={searchField}
         onChange={(e) => setSearchField(e.target.value)}
       />
+      <AnimatePresence>
+        {searchField.length >= 1 && filter.length !== 0 && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            {filter.length == 1
+              ? `${filter.length} has been found`
+              : `${filter.length} have been found`}
+          </motion.p>
+        )}
+        {filter.length == 0 && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="text-sm text-red-800"
+          >
+            There is nothing for now...
+          </motion.p>
+        )}
+      </AnimatePresence>
       <div className="flex flex-wrap gap-2 mt-2">
         <button
           onClick={() => setOption(0)}
@@ -71,7 +98,11 @@ export default function Twitter_Activity({}: Props) {
           CSS
         </button>
       </div>
-      <motion.div layout="size" className="pb-24 mt-8 space-y-3">
+      <motion.div
+        className="pb-24 mt-8 space-y-3 bg-red-200"
+        ref={ref}
+        animate={{ height: bounds.height }}
+      >
         <AnimatePresence>
           {filter.map((content) => (
             <motion.div
@@ -82,6 +113,7 @@ export default function Twitter_Activity({}: Props) {
                 transition: { delay: content.content * 0.05 },
               }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
               key={content.content}
               className={`flex items-center justify-between gap-4 px-4 py-2 border-l-4 rounded-r-lg group ${
                 content.technology.includes(2)
