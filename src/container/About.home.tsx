@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 import { Heading2 } from "@/components";
 import Container from "@/layout/Container";
@@ -13,7 +14,13 @@ export default function About({}: Props) {
     <Container className="space-y-12">
       <Heading2>About</Heading2>
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="space-y-2">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+          className="space-y-2"
+        >
           <h3 className="text-2xl font-bold">
             As a front-end developer, I specialize in building and maintaining
             the user interface of web applications.
@@ -25,8 +32,13 @@ export default function About({}: Props) {
             learn and grow as a developer, and I am excited to work on new and
             challenging projects
           </p>
-        </div>
-        <div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.1 }}
+        >
           <Image
             src={MyImage}
             width={500}
@@ -35,7 +47,7 @@ export default function About({}: Props) {
             className="mx-auto"
             priority={true}
           />
-        </div>
+        </motion.div>
       </div>
     </Container>
   );

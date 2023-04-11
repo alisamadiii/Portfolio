@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, Variants, motion } from "framer-motion";
 
 import { DropDown_List, Heading1 } from "@/components";
 import Container from "@/layout/Container";
@@ -13,6 +13,11 @@ import { AiOutlineTwitter } from "react-icons/ai";
 import Link from "next/link";
 
 type Props = {};
+
+const HeroItemVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export default function Hero({}: Props) {
   const [isMenu, setIsMenu] = useState<boolean>(false);
@@ -31,7 +36,13 @@ export default function Hero({}: Props) {
         <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
       </div>
       <Container className="flex flex-col items-center justify-center gap-4">
-        <div className="flex gap-4 text-sm">
+        <motion.div
+          variants={HeroItemVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 1 }}
+          className="flex gap-4 text-sm"
+        >
           <a
             href="https://twitter.com/Ali_Developer05"
             target="_blank"
@@ -46,28 +57,38 @@ export default function Hero({}: Props) {
           >
             <span>Twitter Activity</span>
           </Link>
-        </div>
-        <Heading1>Ali Reza</Heading1>
-        <p className="mb-4 text-base font-medium text-center md:text-lg">
-          I have a strong foundation in HTML, CSS, and JavaScript, and I am
-          skilled in creating <br /> interactive and visually appealing
-          websites.
-        </p>
-        <div className="space-y-4">
-          <div
-            className="w-48 flex items-center justify-between gap-4 px-4 py-2 font-medium duration-150 bg-white border-2 rounded-lg active:!scale-95 cursor-pointer"
-            onClick={() => setIsMenu(!isMenu)}
-            ref={ref}
-          >
-            <span>Menu</span>
-            <span className={`${isMenu && "rotate-180"} duration-200`}>
-              <FiChevronDown />
-            </span>
+        </motion.div>
+        <motion.div
+          variants={HeroItemVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 1, delay: 0.1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <Heading1>Ali Reza</Heading1>
+          <p className="mb-4 text-base font-medium text-center md:text-lg">
+            I have a strong foundation in HTML, CSS, and JavaScript, and I am
+            skilled in creating <br /> interactive and visually appealing
+            websites.
+          </p>
+          <div className="space-y-4">
+            <div
+              className="w-48 flex items-center justify-between gap-4 px-4 py-2 font-medium duration-150 bg-white border-2 rounded-lg active:!scale-95 cursor-pointer"
+              onClick={() => setIsMenu(!isMenu)}
+              ref={ref}
+            >
+              <span>Menu</span>
+              <span className={`${isMenu && "rotate-180"} duration-200`}>
+                <FiChevronDown />
+              </span>
+            </div>
+            <AnimatePresence>
+              {isMenu && (
+                <DropDown_List className="absolute w-48" data={LINKS} />
+              )}
+            </AnimatePresence>
           </div>
-          <AnimatePresence>
-            {isMenu && <DropDown_List className="absolute w-48" data={LINKS} />}
-          </AnimatePresence>
-        </div>
+        </motion.div>
       </Container>
     </>
   );

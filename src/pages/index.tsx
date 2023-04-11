@@ -2,6 +2,7 @@ import React from "react";
 import path from "path";
 import fs from "fs";
 import matter from "gray-matter";
+import { motion } from "framer-motion";
 
 import { PROJECTS } from "@/contents/Projects";
 
@@ -14,18 +15,21 @@ import Meta_Tag from "@/layout/Head";
 
 type Props = {
   blogs: {
-    blogs_data: {
-      data: {
-        title: string;
-        author: string;
-        createdAt: string;
-      };
-      blogContent: any;
+    data: {
+      blog: number;
+      title: string;
+      description: string;
+      tags: string[];
+      image: string;
+      author: string;
+      createdAt: string;
     };
+    blogContent: any;
   }[];
 };
 
 export default function Home({ blogs }: Props) {
+  console.log(blogs);
   return (
     <>
       <Meta_Tag />
@@ -46,7 +50,15 @@ export default function Home({ blogs }: Props) {
             <Heading2>Projects</Heading2>
             <div className="grid gap-4 md:grid-cols-2">
               {PROJECTS.map((project) => (
-                <Project key={project.id} project={project} />
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  key={project.id}
+                >
+                  <Project project={project} />
+                </motion.div>
               ))}
             </div>
           </Container>
@@ -58,9 +70,15 @@ export default function Home({ blogs }: Props) {
             <Heading2>Blogs</Heading2>
             <div className="space-y-5">
               {blogs.map((blog) => (
-                // @ts-ignore-start
-                <Blog_Link key={blog.data.blog} blogs_data={blog} />
-                // @ts-ignore-end
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  key={blog.data.blog}
+                >
+                  <Blog_Link blogs_data={blog} />
+                </motion.div>
               ))}
             </div>
           </Container>
@@ -72,7 +90,15 @@ export default function Home({ blogs }: Props) {
             <Heading2>Products</Heading2>
             <div className="space-y-5">
               {PRODUCTS.map((product) => (
-                <Product key={product.product} product={product} />
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  key={product.product}
+                >
+                  <Product product={product} />
+                </motion.div>
               ))}
             </div>
           </Container>

@@ -7,6 +7,7 @@ specifiers:
   '@types/react': 18.0.31
   '@types/react-dom': 18.0.11
   autoprefixer: ^10.4.14
+  canvas-confetti: ^1.6.0
   date-fns: ^2.29.3
   eslint: 8.37.0
   eslint-config-next: 13.2.4
@@ -38,6 +39,7 @@ dependencies:
   '@types/node': 18.15.11
   '@types/react': 18.0.31
   '@types/react-dom': 18.0.11
+  canvas-confetti: 1.6.0
   date-fns: 2.29.3
   eslint: 8.37.0
   eslint-config-next: 13.2.4_vwh6htx42aidho2qgfca5u5rwm
@@ -783,6 +785,10 @@ packages:
 
   /caniuse-lite/1.0.30001473:
     resolution: {integrity: sha512-ewDad7+D2vlyy+E4UJuVfiBsU69IL+8oVmTuZnH5Q6CIUbxNfI50uVpRHbUPDD6SUaN2o0Lh4DhTrvLG/Tn1yg==}
+
+  /canvas-confetti/1.6.0:
+    resolution: {integrity: sha512-ej+w/m8Jzpv9Z7W7uJZer14Ke8P2ogsjg4ZMGIuq4iqUOqY2Jq8BNW42iGmNfRwREaaEfFIczLuZZiEVSYNHAA==}
+    dev: false
 
   /ccount/2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}

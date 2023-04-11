@@ -10,6 +10,7 @@ import { FiArrowUpRight } from "react-icons/fi";
 type Props = {
   blogs_data: {
     data: {
+      blog: number;
       title: string;
       description: string;
       tags: string[];
