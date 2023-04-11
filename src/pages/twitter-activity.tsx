@@ -98,11 +98,7 @@ export default function Twitter_Activity({}: Props) {
           CSS
         </button>
       </div>
-      <motion.div
-        className="pb-24 mt-8 space-y-3 bg-red-200"
-        ref={ref}
-        animate={{ height: bounds.height }}
-      >
+      <motion.div className="pb-24 mt-8 space-y-3">
         <AnimatePresence>
           {filter.map((content) => (
             <motion.div
