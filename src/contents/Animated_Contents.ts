@@ -114,4 +114,65 @@ export const ANIMATED_CONTENTS = [
     description: "You can center a div by using Flex, Grid, Position & Margin.",
     link: "https://twitter.com/Ali_Developer05/status/1621072217491795968?s=20&t=A_PuPnh4A43kwI__tVTHig",
   },
+  {
+    content: 15,
+    technology: [0, 2],
+    name: "CSS short way",
+    description: "Make your work easy by learning short way of writing CSS.",
+    link: "https://twitter.com/Ali_Developer05/status/1615998664610283522?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
+  {
+    content: 16,
+    technology: [0, 2],
+    name: "different way of using padding and margin",
+    description:
+      "You will learn about padding-inline/block & margin-inline/block.",
+    link: "https://twitter.com/Ali_Developer05/status/1620709031114584064?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
+  {
+    content: 17,
+    technology: [0, 2],
+    name: "min-width & max-width",
+    description:
+      "These CSS properties set the minimum and maximum width of an element.",
+    link: "https://twitter.com/Ali_Developer05/status/1617085704215093250?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
+  {
+    content: 18,
+    technology: [0, 2],
+    name: "Clip-Path",
+    description:
+      "The clip-path CSS property creates a clipping region that sets what part of an element should be shown.",
+    link: "https://twitter.com/Ali_Developer05/status/1625057270517366784?s=20&t=Ym-7UGFP0bt2uE9STvHluA",
+  },
+  {
+    content: 19,
+    technology: [0, 2],
+    name: "calc()",
+    description:
+      "The calc() CSS function lets you perform calculations when specifying CSS property values.",
+    link: "https://twitter.com/Ali_Developer05/status/1619983939313213442?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
+  {
+    content: 20,
+    technology: [0, 2],
+    name: "Media Queries",
+    description: "It is used for making your website responsive.",
+    link: "https://twitter.com/Ali_Developer05/status/1616722384681316352?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
+  {
+    content: 21,
+    technology: [0, 2],
+    name: "Hover (Media Queries)",
+    description:
+      "when hover is supported, Watch the video, You will understand.",
+    link: "https://twitter.com/Ali_Developer05/status/1613461326080376835?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
+  {
+    content: 22,
+    technology: [0, 2],
+    name: "CSS Pseudo",
+    description: "You will learn about :is() & :has().",
+    link: "https://twitter.com/Ali_Developer05/status/1612739431303360517?s=20&t=A_PuPnh4A43kwI__tVTHig",
+  },
 ];

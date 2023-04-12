@@ -1,9 +1,10 @@
-import { ANIMATED_CONTENTS } from "@/contents/Animated_Contents";
 import React, { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, Variants, motion } from "framer-motion";
 import useMeasure from "react-use-measure";
 
 type Props = {};
+
+import { ANIMATED_CONTENTS } from "@/contents/Animated_Contents";
 
 import { AiOutlineTwitter } from "react-icons/ai";
 
@@ -11,7 +12,6 @@ export default function Twitter_Activity({}: Props) {
   const [searchField, setSearchField] = useState("");
   const [contents, setContents] = useState(ANIMATED_CONTENTS);
   const [filter, setFilter] = useState(contents);
-  const [ref, bounds] = useMeasure();
 
   const [option, setOption] = useState(0);
 
@@ -31,10 +31,8 @@ export default function Twitter_Activity({}: Props) {
     setFilter(filterContents);
   }, [option]);
 
-  console.log(bounds);
-
   return (
-    <div className="mt-28 w-full max-w-[700px] mx-auto px-4">
+    <div className="relative mt-28 w-full max-w-[700px] mx-auto px-4">
       <h1 className="text-3xl font-extrabold tracking-tight">
         My Twitter Activities
       </h1>
@@ -135,9 +133,36 @@ export default function Twitter_Activity({}: Props) {
           ))}
         </AnimatePresence>
       </motion.div>
-      <h2 className="text-2xl font-bold text-center animate-pulse">
-        I will be adding more...
-      </h2>
+
+      <motion.div
+        variants={rectangularVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 1 }}
+        drag
+        dragConstraints={{ bottom: 0, right: 0, top: 0, left: 0 }}
+        dragElastic={1}
+        className="fixed hidden rotate-45 xl:block -right-52 top-96 w-96 h-96 bg-gradient-to-t from-primary to-secondary rounded-[70px]"
+      ></motion.div>
+      <motion.div
+        variants={rectangularVariants2}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 1.2 }}
+        drag
+        dragConstraints={{ bottom: 0, right: 0, top: 0, left: 0 }}
+        dragElastic={1}
+        className="fixed hidden xl:block rotate-12 -left-52 top-32 w-96 h-96 bg-gradient-to-tr from-primary to-secondary rounded-[70px]"
+      ></motion.div>
     </div>
   );
 }
+
+const rectangularVariants: Variants = {
+  hidden: { opacity: 0, scale: 0, rotate: 20 },
+  visible: { opacity: 1, scale: 1, rotate: 45 },
+};
+const rectangularVariants2: Variants = {
+  hidden: { opacity: 0, scale: 0, rotate: 0 },
+  visible: { opacity: 1, scale: 1, rotate: 12 },
+};
