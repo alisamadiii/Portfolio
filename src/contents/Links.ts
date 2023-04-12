@@ -2,6 +2,7 @@ import { FaUserAlt, FaLaptopCode, FaBlog } from "react-icons/fa";
 import { TbMessage2 } from "react-icons/tb";
 import { MdOutlineConnectWithoutContact } from "react-icons/md";
 import { AiOutlineShoppingCart } from "react-icons/ai";
+import { BsWechat } from "react-icons/bs";
 
 import { IconType } from "react-icons";
 
@@ -41,12 +42,18 @@ export const LINKS: LinksType = [
     id: 5,
     name: "Testimonial",
     icon: TbMessage2,
-    href: "#",
+    href: "#testimonial",
   },
   {
     id: 6,
     name: "Contact",
     icon: MdOutlineConnectWithoutContact,
-    href: "#",
+    href: "#contact",
+  },
+  {
+    id: 7,
+    name: "Chat Community",
+    icon: BsWechat,
+    href: "/chat-community",
   },
 ];

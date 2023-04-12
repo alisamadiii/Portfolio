@@ -43,34 +43,44 @@ export default function Navbar({}: Props) {
             className="w-12 rounded-full"
           />
         </Link>
-        <AnimatePresence>
-          {isButton && (
-            <div className="relative">
-              <motion.div
-                variants={ButtonVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="flex items-center gap-4 px-4 py-2 font-medium duration-150 bg-white border-2 rounded-lg active:!scale-95 cursor-pointer"
-                onClick={() => setIsMenu(!isMenu)}
-              >
-                <span>Menu</span>
-                <span className={`${isMenu && "rotate-180"} duration-200`}>
-                  <FiChevronDown />
-                </span>
-              </motion.div>
+        <div className="flex items-center gap-4">
+          <motion.div layout>
+            <Link
+              href="/chat-community"
+              className="hidden font-medium md:block"
+            >
+              Chat Community
+            </Link>
+          </motion.div>
+          <AnimatePresence>
+            {isButton && (
+              <div className="relative">
+                <motion.div
+                  variants={ButtonVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="flex items-center gap-4 px-4 py-2 font-medium duration-150 bg-white border-2 rounded-lg active:!scale-95 cursor-pointer"
+                  onClick={() => setIsMenu(!isMenu)}
+                >
+                  <span>Menu</span>
+                  <span className={`${isMenu && "rotate-180"} duration-200`}>
+                    <FiChevronDown />
+                  </span>
+                </motion.div>
 
-              <AnimatePresence>
-                {isMenu && (
-                  <DropDown_List
-                    className="absolute right-0 w-56 translate-y-3"
-                    data={LINKS}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </AnimatePresence>
+                <AnimatePresence>
+                  {isMenu && (
+                    <DropDown_List
+                      className="absolute right-0 w-56 translate-y-3"
+                      data={LINKS}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
       </Container>
     </nav>
   );
