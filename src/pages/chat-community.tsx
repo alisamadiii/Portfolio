@@ -25,6 +25,7 @@ import { COMMENTS } from "@/Types/User";
 
 import { BsFillTrash3Fill } from "react-icons/bs";
 import LogIn from "@/components/LogIn";
+import Meta_Tag from "@/layout/Head";
 
 type Props = {};
 
@@ -92,73 +93,76 @@ export default function Chat_Community({}: Props) {
   };
 
   return (
-    <div className="max-w-[1000px] flex items-center flex-col mt-24 justify-center w-full gap-4 mx-auto p-4">
-      <div
-        ref={listComments}
-        className="flex flex-col w-full gap-3 p-4 overflow-y-auto bg-light-blue-2 rounded-xl h-96"
-      >
-        {comments &&
-          comments.map((comment) => (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              layout="position"
-              className="flex items-center gap-4"
-              key={comment.id}
-            >
+    <>
+      <Meta_Tag />
+      <div className="max-w-[1000px] flex items-center flex-col mt-24 justify-center w-full gap-4 mx-auto p-4">
+        <div
+          ref={listComments}
+          className="flex flex-col w-full gap-3 p-4 overflow-y-auto bg-light-blue-2 rounded-xl h-96"
+        >
+          {comments &&
+            comments.map((comment) => (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                layout="position"
+                className="flex items-center gap-4"
+                key={comment.id}
+              >
+                <Image
+                  src={comment.image}
+                  width={100}
+                  height={100}
+                  alt=""
+                  className="self-start w-8 h-8 rounded-full"
+                />
+                <div className="grow">
+                  <small className="italic opacity-60">{comment.name}</small>
+                  <p>{comment.message}</p>
+                  {/* <small>{timeFormat(comment.createdAt.seconds)}</small> */}
+                </div>
+                <div
+                  onClick={() => deletingComment(comment.id)}
+                  className="flex gap-2"
+                >
+                  {currentUser?.uid === comment.userId && (
+                    <p className="p-1 text-red-700 rounded-md cursor-pointer bg-red-700/10">
+                      <BsFillTrash3Fill />
+                    </p>
+                  )}
+                  {currentUser?.uid === process.env.NEXT_PUBLIC_OWNER && (
+                    <p className="p-1 text-green-700 rounded-md cursor-pointer bg-green-700/10">
+                      <BsFillTrash3Fill />
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+        </div>
+        <form onSubmit={submitHandler} className="w-full gap-2 mt-auto">
+          <div className="flex items-center p-2 border-2 rounded-md border-primary">
+            {currentUser && (
               <Image
-                src={comment.image}
+                src={currentUser.photoURL}
                 width={100}
                 height={100}
                 alt=""
-                className="self-start w-8 h-8 rounded-full"
+                className="w-8 h-8 rounded-full"
               />
-              <div className="grow">
-                <small className="italic opacity-60">{comment.name}</small>
-                <p>{comment.message}</p>
-                {/* <small>{timeFormat(comment.createdAt.seconds)}</small> */}
-              </div>
-              <div
-                onClick={() => deletingComment(comment.id)}
-                className="flex gap-2"
-              >
-                {currentUser?.uid === comment.userId && (
-                  <p className="p-1 text-red-700 rounded-md cursor-pointer bg-red-700/10">
-                    <BsFillTrash3Fill />
-                  </p>
-                )}
-                {currentUser?.uid === process.env.NEXT_PUBLIC_OWNER && (
-                  <p className="p-1 text-green-700 rounded-md cursor-pointer bg-green-700/10">
-                    <BsFillTrash3Fill />
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          ))}
-      </div>
-      <form onSubmit={submitHandler} className="w-full gap-2 mt-auto">
-        <div className="flex items-center p-2 border-2 rounded-md border-primary">
-          {currentUser && (
-            <Image
-              src={currentUser.photoURL}
-              width={100}
-              height={100}
-              alt=""
-              className="w-8 h-8 rounded-full"
+            )}
+            <input
+              value={inputField}
+              onChange={(e) => setInputField(e.target.value)}
+              type="text"
+              className="w-full p-2 bg-transparent rounded-md outline-none"
+              placeholder="write"
             />
-          )}
-          <input
-            value={inputField}
-            onChange={(e) => setInputField(e.target.value)}
-            type="text"
-            className="w-full p-2 bg-transparent rounded-md outline-none"
-            placeholder="write"
-          />
-        </div>
-        <small>Please, Do not spam the chat...</small>
-      </form>
+          </div>
+          <small>Please, Do not spam the chat...</small>
+        </form>
 
-      {errorHandle && <LogIn />}
-    </div>
+        {errorHandle && <LogIn />}
+      </div>
+    </>
   );
 }
