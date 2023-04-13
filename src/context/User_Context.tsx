@@ -3,7 +3,7 @@ import { ReactNode, createContext, useState } from "react";
 
 type UserContext = {
   currentUser: null | CURRENT_USER_TYPE;
-  setCurrentUser: (a: {}) => void;
+  setCurrentUser: any;
 };
 
 export const User_Context = createContext<UserContext>({
