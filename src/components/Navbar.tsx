@@ -16,6 +16,8 @@ import { LINKS } from "@/contents/Links";
 import { User_Context } from "@/context/User_Context";
 
 import { VscVerifiedFilled } from "react-icons/vsc";
+import { AiFillGithub } from "react-icons/ai";
+import { signInWithGithub } from "@/utils/Firebase";
 
 const ButtonVariants: Variants = {
   hidden: { scale: 0.5, opacity: 0 },
@@ -29,6 +31,10 @@ export default function Navbar({}: Props) {
   const [isMenu, setIsMenu] = useState<boolean>(false);
 
   const router = useRouter();
+
+  const signIn = async () => {
+    const res = await signInWithGithub();
+  };
 
   return (
     <nav
@@ -62,7 +68,17 @@ export default function Navbar({}: Props) {
             (currentUser ? (
               <VscVerifiedFilled className="text-2xl text-blue-600" />
             ) : (
-              <p className="font-medium">Sign In</p>
+              <div>
+                <button
+                  onClick={signIn}
+                  className="flex items-center gap-2 px-4 py-2 text-xl bg-white rounded-md shadow-button"
+                >
+                  <AiFillGithub />
+                  <span className="text-sm font-medium">
+                    Sign In with GitHub
+                  </span>
+                </button>
+              </div>
             ))}
           <AnimatePresence>
             {isButton && (

@@ -13,20 +13,14 @@ import {
   serverTimestamp,
   query,
   orderBy,
-  doc,
-  deleteDoc,
 } from "firebase/firestore";
-import { motion } from "framer-motion";
 import { formatDistance } from "date-fns";
+import toast, { Toaster } from "react-hot-toast";
 
 import { User_Context } from "@/context/User_Context";
 import { authStateChanged, db, signInWithGithub } from "@/utils/Firebase";
 import { COMMENTS } from "@/Types/User";
 
-import { BsFillTrash3Fill } from "react-icons/bs";
-import { AiFillStar } from "react-icons/ai";
-
-import LogIn from "@/components/LogIn";
 import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
 
@@ -35,7 +29,6 @@ type Props = {};
 export default function Chat_Community({}: Props) {
   const [inputField, setInputField] = useState("");
   const [comments, setComments] = useState<null | COMMENTS>(null);
-  const [errorHandle, setErrorHandle] = useState<boolean>(false);
 
   const listComments = useRef<HTMLDivElement>(null);
 
@@ -50,9 +43,7 @@ export default function Chat_Community({}: Props) {
   const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (currentUser == null) {
-      return setErrorHandle(true);
-    }
+    if (currentUser == null) return toast("You have to be Signed In");
 
     await addDoc(collection(db, "comments"), {
       name: currentUser!.displayName,
@@ -125,9 +116,21 @@ export default function Chat_Community({}: Props) {
           </div>
           <small>Please, Do not spam the chat...</small>
         </form>
-
-        {errorHandle && <LogIn />}
       </div>
+
+      <Toaster
+        position="bottom-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          style: {
+            border: "1px solid red",
+            padding: "8px",
+            color: "red",
+            boxShadow: "0 4px 10px rgba(0, 0, 0, .01)",
+          },
+        }}
+      />
     </>
   );
 }
