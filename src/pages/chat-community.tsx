@@ -18,11 +18,12 @@ import { formatDistance } from "date-fns";
 import toast, { Toaster } from "react-hot-toast";
 
 import { User_Context } from "@/context/User_Context";
-import { authStateChanged, db, signInWithGithub } from "@/utils/Firebase";
-import { COMMENTS } from "@/Types/User";
+import { authStateChanged, db } from "@/utils/Firebase";
+import { COMMENT, COMMENTS } from "@/Types/User";
 
 import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
+import EditComment from "@/components/EditComment";
 
 type Props = {};
 
