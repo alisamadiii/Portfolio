@@ -24,8 +24,11 @@ import { authStateChanged, db, signInWithGithub } from "@/utils/Firebase";
 import { COMMENTS } from "@/Types/User";
 
 import { BsFillTrash3Fill } from "react-icons/bs";
+import { AiFillStar } from "react-icons/ai";
+
 import LogIn from "@/components/LogIn";
 import Meta_Tag from "@/layout/Head";
+import Comment from "@/components/Comment";
 
 type Props = {};
 
@@ -57,6 +60,7 @@ export default function Chat_Community({}: Props) {
       image: currentUser!.photoURL,
       createdAt: serverTimestamp(),
       userId: currentUser?.uid,
+      likes: [],
     });
     setInputField("");
   };
@@ -87,11 +91,6 @@ export default function Chat_Community({}: Props) {
     return formatDistance(new Date(date), new Date());
   }; // yyyy/mm/dd
 
-  const deletingComment = async (id: string) => {
-    const docRef = doc(db, "comments", id);
-    await deleteDoc(docRef);
-  };
-
   return (
     <>
       <Meta_Tag />
@@ -102,41 +101,7 @@ export default function Chat_Community({}: Props) {
         >
           {comments &&
             comments.map((comment) => (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                layout="position"
-                className="flex items-center gap-4"
-                key={comment.id}
-              >
-                <Image
-                  src={comment.image}
-                  width={100}
-                  height={100}
-                  alt=""
-                  className="self-start w-8 h-8 rounded-full"
-                />
-                <div className="grow">
-                  <small className="italic opacity-60">{comment.name}</small>
-                  <p>{comment.message}</p>
-                  {/* <small>{timeFormat(comment.createdAt.seconds)}</small> */}
-                </div>
-                <div
-                  onClick={() => deletingComment(comment.id)}
-                  className="flex gap-2"
-                >
-                  {currentUser?.uid === comment.userId && (
-                    <p className="p-1 text-red-700 rounded-md cursor-pointer bg-red-700/10">
-                      <BsFillTrash3Fill />
-                    </p>
-                  )}
-                  {currentUser?.uid === process.env.NEXT_PUBLIC_OWNER && (
-                    <p className="p-1 text-green-700 rounded-md cursor-pointer bg-green-700/10">
-                      <BsFillTrash3Fill />
-                    </p>
-                  )}
-                </div>
-              </motion.div>
+              <Comment key={comment.id} comment={comment} />
             ))}
         </div>
         <form onSubmit={submitHandler} className="w-full gap-2 mt-auto">

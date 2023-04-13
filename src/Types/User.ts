@@ -25,4 +25,14 @@ export type COMMENTS = {
   message: string;
   name: string;
   userId: string;
+  likes: { id: string; name: string }[];
 }[];
+export type COMMENT = {
+  createdAt: any;
+  id: string;
+  image: string;
+  message: string;
+  name: string;
+  userId: string;
+  likes: { id: string; name: string }[];
+};
