@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import path from "path";
 import fs from "fs";
 import matter from "gray-matter";
@@ -12,6 +12,7 @@ import { Hero, About } from "@/container";
 import { PRODUCTS } from "@/contents/Products";
 import Product from "@/components/Product";
 import Meta_Tag from "@/layout/Head";
+import { User_Context } from "@/context/User_Context";
 
 type Props = {
   blogs: {
@@ -29,7 +30,8 @@ type Props = {
 };
 
 export default function Home({ blogs }: Props) {
-  console.log(blogs);
+  const { currentUser } = useContext(User_Context);
+  console.log(currentUser);
   return (
     <>
       <Meta_Tag />

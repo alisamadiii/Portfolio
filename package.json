@@ -18,6 +18,7 @@
     "date-fns": "^2.29.3",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
+    "firebase": "^9.19.1",
     "framer-motion": "^10.10.0",
     "gray-matter": "^4.0.3",
     "next": "13.2.4",

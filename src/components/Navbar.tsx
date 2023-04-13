@@ -13,6 +13,9 @@ import Logo from "@/assets/logo.jpg";
 import { FiChevronDown } from "react-icons/fi";
 import DropDown_List from "./DropDown_List";
 import { LINKS } from "@/contents/Links";
+import { User_Context } from "@/context/User_Context";
+
+import { VscVerifiedFilled } from "react-icons/vsc";
 
 const ButtonVariants: Variants = {
   hidden: { scale: 0.5, opacity: 0 },
@@ -22,6 +25,7 @@ const ButtonVariants: Variants = {
 
 export default function Navbar({}: Props) {
   const { isButton } = useContext(Navbar_Context);
+  const { currentUser } = useContext(User_Context);
   const [isMenu, setIsMenu] = useState<boolean>(false);
 
   const router = useRouter();
@@ -29,7 +33,9 @@ export default function Navbar({}: Props) {
   return (
     <nav
       className={`${
-        router.pathname.includes("blog") ? "absolute" : "fixed"
+        router.pathname.includes("blog") || router.pathname.includes("chat")
+          ? "absolute"
+          : "fixed"
       } top-0 left-0 z-50 w-full h-20 bg-light-blue/50 backdrop-blur-md`}
     >
       <div className="absolute bottom-0 left-0 w-full h-1 opacity-50 bg-gradient-to-l from-primary to-secondary"></div>
@@ -44,14 +50,20 @@ export default function Navbar({}: Props) {
           />
         </Link>
         <div className="flex items-center gap-4">
-          <motion.div layout>
+          <motion.p layout>
             <Link
               href="/chat-community"
               className="hidden font-medium md:block"
             >
               Chat Community
             </Link>
-          </motion.div>
+          </motion.p>
+          {router.pathname.includes("chat-community") &&
+            (currentUser ? (
+              <VscVerifiedFilled className="text-2xl text-blue-600" />
+            ) : (
+              <p className="font-medium">Sign In</p>
+            ))}
           <AnimatePresence>
             {isButton && (
               <div className="relative">

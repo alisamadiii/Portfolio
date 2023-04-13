@@ -8,6 +8,7 @@ const nextConfig = {
       "cdn.hashnode.com",
       "public-files.gumroad.com",
       "img.freepik.com",
+      "avatars.githubusercontent.com",
     ],
   },
 };
