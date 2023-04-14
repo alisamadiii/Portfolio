@@ -136,8 +136,6 @@ export default function Chat_Community({}: Props) {
         </form>
       </div>
 
-      <button onClick={signInWithGoogle}>Sign In With Google</button>
-
       <Toaster
         position="bottom-right"
         reverseOrder={false}

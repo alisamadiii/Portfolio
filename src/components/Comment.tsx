@@ -64,7 +64,7 @@ export default function Comment({ comment }: Props) {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         layout="position"
-        className="flex items-center gap-4 px-4 py-2 hover:bg-dark-blue-2/10"
+        className="flex flex-wrap items-center gap-4 px-4 py-2 hover:bg-dark-blue-2/10"
       >
         <div className="relative self-start w-8 h-8">
           <Image
@@ -86,7 +86,7 @@ export default function Comment({ comment }: Props) {
         </div>
         <div className="grow">
           <small className="italic opacity-60">{comment.name}</small>
-          <p>{comment.message}</p>
+          <p className="text-sm md:text-base">{comment.message}</p>
           {/* <small>{timeFormat(comment.createdAt.seconds)}</small> */}
         </div>
         <div className="flex items-center gap-2">
@@ -124,6 +124,7 @@ export default function Comment({ comment }: Props) {
             </p>
           )}
         </div>
+
         <Toaster
           position="bottom-right"
           reverseOrder={false}
