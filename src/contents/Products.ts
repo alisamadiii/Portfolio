@@ -39,7 +39,20 @@ export const PRODUCTS: ProductsType = [
     rate: 5,
   },
   {
-    product: 2,
+    product: 3,
+    name: "Flexbox Mastery: Build Modern and Responsive Layouts with CSS Flexbox",
+    description:
+      "In this package, you'll learn everything you need to know about Flexbox, from the basics to advanced techniques.",
+    tags: ["animated", "content"],
+    image: "https://public-files.gumroad.com/1keapcgypyjok386hdiiyilzoo2e",
+    price: 2,
+    link: "https://alireza05.gumroad.com/l/flex-box",
+    discount: null,
+    discountData: null,
+    rate: 0,
+  },
+  {
+    product: 3,
     name: "Plan and then Make",
     description:
       "The best place where you can write your tasks/bugs and start coding it with your teams",

@@ -13,7 +13,7 @@ export default function Product({ product }: Props) {
     <Link
       href={product.link}
       target="_blank"
-      className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container"
+      className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container hover:bg-light-blue-2"
     >
       <div className="relative">
         <Image
@@ -48,9 +48,6 @@ export default function Product({ product }: Props) {
             ))}
           </div>
         </div>
-      </div>
-      <div className="absolute hidden text-6xl duration-300 opacity-0 xl:block -translate-y-1/3 right-8 top-1/2 group-hover:opacity-100 group-hover:-translate-y-1/2">
-        <FiArrowUpRight />
       </div>
     </Link>
   );
