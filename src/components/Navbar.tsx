@@ -17,7 +17,9 @@ import { User_Context } from "@/context/User_Context";
 
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { AiFillGithub } from "react-icons/ai";
-import { signInWithGithub } from "@/utils/Firebase";
+import { FcGoogle } from "react-icons/fc";
+
+import { signInWithGithub, signInWithGoogle } from "@/utils/Firebase";
 
 const ButtonVariants: Variants = {
   hidden: { scale: 0.5, opacity: 0 },
@@ -29,6 +31,7 @@ export default function Navbar({}: Props) {
   const { isButton } = useContext(Navbar_Context);
   const { currentUser } = useContext(User_Context);
   const [isMenu, setIsMenu] = useState<boolean>(false);
+  const [isSignIn, setIsSignIn] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -68,16 +71,26 @@ export default function Navbar({}: Props) {
             (currentUser ? (
               <VscVerifiedFilled className="text-2xl text-blue-600" />
             ) : (
-              <div>
-                <button
-                  onClick={signIn}
-                  className="flex items-center gap-2 px-4 py-2 text-xl bg-white rounded-md shadow-button"
-                >
-                  <AiFillGithub />
-                  <span className="text-sm font-medium">
-                    Sign In with GitHub
-                  </span>
-                </button>
+              <div className="relative">
+                <button onClick={() => setIsSignIn(!isSignIn)}>Sign In</button>
+                {isSignIn && (
+                  <ul className="absolute right-0 overflow-hidden translate-y-8 bg-white rounded-md w-52">
+                    <li
+                      className="flex items-center gap-2 p-2 text-sm font-medium cursor-pointer hover:bg-gray-300/10"
+                      onClick={signInWithGithub}
+                    >
+                      <AiFillGithub />
+                      Sign In With GitHub
+                    </li>
+                    <li
+                      className="flex items-center gap-2 p-2 text-sm font-medium cursor-pointer hover:bg-gray-300/10"
+                      onClick={signInWithGoogle}
+                    >
+                      <FcGoogle />
+                      Sign In With Google
+                    </li>
+                  </ul>
+                )}
               </div>
             ))}
           <AnimatePresence>

@@ -18,12 +18,11 @@ import { formatDistance } from "date-fns";
 import toast, { Toaster } from "react-hot-toast";
 
 import { User_Context } from "@/context/User_Context";
-import { authStateChanged, db } from "@/utils/Firebase";
+import { authStateChanged, db, signInWithGoogle } from "@/utils/Firebase";
 import { COMMENT, COMMENTS } from "@/Types/User";
 
 import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
-import EditComment from "@/components/EditComment";
 
 type Props = {};
 
@@ -53,6 +52,7 @@ export default function Chat_Community({}: Props) {
       createdAt: serverTimestamp(),
       userId: currentUser?.uid,
       likes: [],
+      from: currentUser?.email == null ? "github" : "google",
     });
     setInputField("");
   };
@@ -89,7 +89,7 @@ export default function Chat_Community({}: Props) {
       <div className="max-w-[1000px] flex items-center flex-col mt-24 justify-center w-full gap-4 mx-auto p-4">
         <div
           ref={listComments}
-          className="flex flex-col w-full gap-3 p-4 overflow-y-auto bg-light-blue-2 rounded-xl h-96"
+          className="flex flex-col w-full overflow-x-hidden overflow-y-auto bg-light-blue-2 rounded-xl h-96"
         >
           {comments ? (
             comments.map((comment) => (
@@ -135,6 +135,8 @@ export default function Chat_Community({}: Props) {
           <small>Please, Do not spam the chat...</small>
         </form>
       </div>
+
+      <button onClick={signInWithGoogle}>Sign In With Google</button>
 
       <Toaster
         position="bottom-right"

@@ -26,6 +26,7 @@ export type COMMENTS = {
   name: string;
   userId: string;
   likes: { id: string; name: string }[];
+  from: "github" | "google";
 }[];
 export type COMMENT = {
   createdAt: any;
@@ -35,4 +36,5 @@ export type COMMENT = {
   name: string;
   userId: string;
   likes: { id: string; name: string }[];
+  from: "github" | "google";
 };

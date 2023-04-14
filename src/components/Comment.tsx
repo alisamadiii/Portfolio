@@ -4,12 +4,14 @@ import toast, { Toaster } from "react-hot-toast";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { BsFillTrash3Fill } from "react-icons/bs";
-import { AiFillLike, AiFillEdit } from "react-icons/ai";
+import { AiFillLike, AiFillEdit, AiFillGithub } from "react-icons/ai";
 import { User_Context } from "@/context/User_Context";
 import { COMMENT } from "@/Types/User";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/utils/Firebase";
 import EditComment from "./EditComment";
+
+import { FcGoogle } from "react-icons/fc";
 
 type Props = {
   comment: COMMENT;
@@ -54,21 +56,34 @@ export default function Comment({ comment }: Props) {
     (like) => like.id === currentUser?.uid
   );
 
+  console.log(currentUser);
+
   return (
     <>
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         layout="position"
-        className="flex items-center gap-4"
+        className="flex items-center gap-4 px-4 py-2 hover:bg-dark-blue-2/10"
       >
-        <Image
-          src={comment.image}
-          width={100}
-          height={100}
-          alt=""
-          className="self-start w-8 h-8 rounded-full"
-        />
+        <div className="relative self-start w-8 h-8">
+          <Image
+            src={comment.image}
+            width={100}
+            height={100}
+            alt=""
+            className="rounded-full"
+          />
+          {comment.from == "github" ? (
+            <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 backdrop-blur-sm">
+              <AiFillGithub />
+            </div>
+          ) : (
+            <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 backdrop-blur-sm">
+              <FcGoogle />
+            </div>
+          )}
+        </div>
         <div className="grow">
           <small className="italic opacity-60">{comment.name}</small>
           <p>{comment.message}</p>

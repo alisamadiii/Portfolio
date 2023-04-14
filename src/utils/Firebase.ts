@@ -4,6 +4,7 @@ import {
   GithubAuthProvider,
   signInWithRedirect,
   onAuthStateChanged,
+  GoogleAuthProvider,
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -21,10 +22,16 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth();
 
-const provider = new GithubAuthProvider();
-provider.addScope("repo");
+const githubProvider = new GithubAuthProvider();
+githubProvider.addScope("repo");
 
-export const signInWithGithub = () => signInWithRedirect(auth, provider);
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+});
+
+export const signInWithGithub = () => signInWithRedirect(auth, githubProvider);
+export const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
 
 export const authStateChanged = (callback: (a: any) => void) => {
   onAuthStateChanged(auth, callback);

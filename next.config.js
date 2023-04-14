@@ -9,6 +9,7 @@ const nextConfig = {
       "public-files.gumroad.com",
       "img.freepik.com",
       "avatars.githubusercontent.com",
+      "lh3.googleusercontent.com",
     ],
   },
 };
