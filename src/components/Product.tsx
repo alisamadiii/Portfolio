@@ -2,7 +2,6 @@ import { ProductType } from "@/contents/Products";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { FiArrowUpRight } from "react-icons/fi";
 
 type Props = {
   product: ProductType;
@@ -13,7 +12,11 @@ export default function Product({ product }: Props) {
     <Link
       href={product.link}
       target="_blank"
-      className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container hover:bg-light-blue-2"
+      className={`relative flex flex-col font-medium duration-150 group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container ${
+        product.valuable
+          ? "bg-primary product text-white hover:bg-primary/90"
+          : "bg-white hover:bg-light-blue-2"
+      }`}
     >
       <div className="relative">
         <Image
@@ -21,7 +24,11 @@ export default function Product({ product }: Props) {
           width={1000}
           height={700}
           alt=""
-          className="w-full md:max-w-[300px]"
+          className={`w-full md:max-w-[300px] ${
+            product.valuable
+              ? "md:rounded-l-xl rounded-tr-xl md:rounded-t-none"
+              : "rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
+          }`}
         />
         <p
           className={`absolute top-2 left-2 px-2 rounded-sm backdrop-blur-sm ${
@@ -41,7 +48,11 @@ export default function Product({ product }: Props) {
             {product.tags.map((tag, index) => (
               <span
                 key={index}
-                className="inline-block px-3 py-1 rounded-md bg-success/10 text-success"
+                className={`inline-block px-3 py-1 rounded-md ${
+                  product.valuable
+                    ? "bg-white text-primary"
+                    : " bg-success/10 text-success"
+                }`}
               >
                 {tag}
               </span>

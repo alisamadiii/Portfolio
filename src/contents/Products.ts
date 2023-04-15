@@ -9,6 +9,7 @@ type ProductsType = {
   discount: null | number;
   discountData: null | string;
   rate: number;
+  valuable: boolean;
 }[];
 
 export type ProductType = {
@@ -22,6 +23,7 @@ export type ProductType = {
   discount: null | number;
   discountData: null | string;
   rate: number;
+  valuable: boolean;
 };
 
 export const PRODUCTS: ProductsType = [
@@ -37,6 +39,7 @@ export const PRODUCTS: ProductsType = [
     discount: null,
     discountData: null,
     rate: 5,
+    valuable: true,
   },
   {
     product: 3,
@@ -50,6 +53,7 @@ export const PRODUCTS: ProductsType = [
     discount: null,
     discountData: null,
     rate: 0,
+    valuable: false,
   },
   {
     product: 3,
@@ -63,5 +67,6 @@ export const PRODUCTS: ProductsType = [
     discount: null,
     discountData: null,
     rate: 0,
+    valuable: false,
   },
 ];

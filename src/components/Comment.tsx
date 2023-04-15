@@ -12,6 +12,7 @@ import { db } from "@/utils/Firebase";
 import EditComment from "./EditComment";
 
 import { FcGoogle } from "react-icons/fc";
+import { BiCrown } from "react-icons/bi";
 
 type Props = {
   comment: COMMENT;
@@ -56,8 +57,6 @@ export default function Comment({ comment }: Props) {
     (like) => like.id === currentUser?.uid
   );
 
-  console.log(currentUser);
-
   return (
     <>
       <motion.div
@@ -81,6 +80,11 @@ export default function Comment({ comment }: Props) {
           ) : (
             <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 backdrop-blur-sm">
               <FcGoogle />
+            </div>
+          )}
+          {comment.userId === process.env.NEXT_PUBLIC_OWNER && (
+            <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 text-yellow-500 backdrop-blur-sm">
+              <BiCrown />
             </div>
           )}
         </div>
