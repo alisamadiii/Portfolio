@@ -59,7 +59,7 @@ export default function Navbar({}: Props) {
           />
         </Link>
         <div className="flex items-center gap-4">
-          <motion.p layout>
+          <motion.p layoutId="chat">
             <Link
               href="/chat-community"
               className="hidden font-medium md:block"

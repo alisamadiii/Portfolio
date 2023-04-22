@@ -6,14 +6,22 @@ import { Heading2 } from "@/components";
 import Container from "@/layout/Container";
 
 import MyImage from "@/assets/my image.png";
+import Skill from "@/components/Skill";
 
 type Props = {};
 
+// Icons
+import { AiFillHtml5 } from "react-icons/ai";
+import { IoLogoCss3, IoLogoJavascript } from "react-icons/io";
+import { FaReact } from "react-icons/fa";
+import { SiNextdotjs, SiFirebase, SiRedux } from "react-icons/si";
+import { FiFigma } from "react-icons/fi";
+
 export default function About({}: Props) {
   return (
-    <Container className="space-y-12">
+    <Container className="flex flex-col gap-8">
       <Heading2>About</Heading2>
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-16 md:gap-8 md:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -32,6 +40,17 @@ export default function About({}: Props) {
             learn and grow as a developer, and I am excited to work on new and
             challenging projects
           </p>
+
+          <div className="flex flex-wrap gap-4 !mt-8">
+            <Skill technology="HTML" Icon={AiFillHtml5} />
+            <Skill technology="CSS" Icon={IoLogoCss3} />
+            <Skill technology="JavaScript" Icon={IoLogoJavascript} />
+            <Skill technology="React.js" Icon={FaReact} />
+            <Skill technology="Next.js" Icon={SiNextdotjs} />
+            <Skill technology="Redux" Icon={SiRedux} />
+            <Skill technology="Firebase" Icon={SiFirebase} />
+            <Skill technology="Figma" Icon={FiFigma} />
+          </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
