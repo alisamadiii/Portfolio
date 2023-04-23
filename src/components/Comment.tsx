@@ -1,6 +1,5 @@
 import Image from "next/image";
 import React, { useContext, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { BsFillTrash3Fill } from "react-icons/bs";
@@ -13,6 +12,7 @@ import EditComment from "./EditComment";
 
 import { FcGoogle } from "react-icons/fc";
 import { BiCrown } from "react-icons/bi";
+import { createToast } from "vercel-toast";
 
 type Props = {
   comment: COMMENT;
@@ -28,7 +28,11 @@ export default function Comment({ comment }: Props) {
   };
 
   const updatingLikes = (comment: COMMENT) => {
-    if (currentUser == null) return toast("You have to be Signed In");
+    if (currentUser == null)
+      return createToast("You must be Signed In", {
+        timeout: 3000,
+        type: "error",
+      });
 
     const docRef = doc(db, "comments", comment.id);
 
@@ -128,20 +132,6 @@ export default function Comment({ comment }: Props) {
             </p>
           )}
         </div>
-
-        <Toaster
-          position="bottom-right"
-          reverseOrder={false}
-          toastOptions={{
-            className: "",
-            style: {
-              border: "1px solid red",
-              padding: "8px",
-              color: "red",
-              boxShadow: "0 4px 10px rgba(0, 0, 0, .01)",
-            },
-          }}
-        />
       </motion.div>
 
       <AnimatePresence>

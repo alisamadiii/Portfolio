@@ -27,7 +27,6 @@
     "react-countdown": "^2.3.5",
     "react-countup": "^6.4.2",
     "react-dom": "18.2.0",
-    "react-hot-toast": "^2.4.0",
     "react-icons": "^4.8.0",
     "react-intersection-observer": "^9.4.3",
     "react-use-measure": "^2.1.1",
@@ -38,7 +37,8 @@
     "rehype-prism-plus": "^1.5.1",
     "rehype-slug": "^5.1.0",
     "remark-gfm": "^3.0.1",
-    "typescript": "5.0.3"
+    "typescript": "5.0.3",
+    "vercel-toast": "^1.7.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",

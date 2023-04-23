@@ -21,7 +21,6 @@ specifiers:
   react-countdown: ^2.3.5
   react-countup: ^6.4.2
   react-dom: 18.2.0
-  react-hot-toast: ^2.4.0
   react-icons: ^4.8.0
   react-intersection-observer: ^9.4.3
   react-use-measure: ^2.1.1
@@ -34,6 +33,7 @@ specifiers:
   remark-gfm: ^3.0.1
   tailwindcss: ^3.3.1
   typescript: 5.0.3
+  vercel-toast: ^1.7.1
 
 dependencies:
   '@badrap/bar-of-progress': 0.2.2
@@ -54,7 +54,6 @@ dependencies:
   react-countdown: 2.3.5_biqbaboplfbrettd7655fr4n2y
   react-countup: 6.4.2_react@18.2.0
   react-dom: 18.2.0_react@18.2.0
-  react-hot-toast: 2.4.0_biqbaboplfbrettd7655fr4n2y
   react-icons: 4.8.0_react@18.2.0
   react-intersection-observer: 9.4.3_react@18.2.0
   react-use-measure: 2.1.1_biqbaboplfbrettd7655fr4n2y
@@ -66,6 +65,7 @@ dependencies:
   rehype-slug: 5.1.0
   remark-gfm: 3.0.1
   typescript: 5.0.3
+  vercel-toast: 1.7.1
 
 devDependencies:
   autoprefixer: 10.4.14_postcss@8.4.21
@@ -2309,12 +2309,6 @@ packages:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
     dev: false
 
-  /goober/2.1.12:
-    resolution: {integrity: sha512-yXHAvO08FU1JgTXX6Zn6sYCUFfB/OJSX8HHjDSgerZHZmFKAb08cykp5LBw5QnmyMcZyPRMqkdyHUSSzge788Q==}
-    peerDependencies:
-      csstype: ^3.0.10
-    dev: false
-
   /gopd/1.0.1:
     resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
     dependencies:
@@ -3908,20 +3902,6 @@ packages:
       scheduler: 0.23.0
     dev: false
 
-  /react-hot-toast/2.4.0_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-qnnVbXropKuwUpriVVosgo8QrB+IaPJCpL8oBI6Ov84uvHZ5QQcTp2qg6ku2wNfgJl6rlQXJIQU5q+5lmPOutA==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: '>=16'
-      react-dom: '>=16'
-    dependencies:
-      goober: 2.1.12
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    transitivePeerDependencies:
-      - csstype
-    dev: false
-
   /react-icons/4.8.0_react@18.2.0:
     resolution: {integrity: sha512-N6+kOLcihDiAnj5Czu637waJqSnwlMNROzVZMhfX68V/9bu9qHaMIJC4UdozWoOk57gahFCNHwVvWzm0MTzRjg==}
     peerDependencies:
@@ -4636,6 +4616,10 @@ packages:
       diff: 5.1.0
       kleur: 4.1.5
       sade: 1.8.1
+    dev: false
+
+  /vercel-toast/1.7.1:
+    resolution: {integrity: sha512-FHXPwQV5Flk1hMG0edCIXwP7t7+wq0pvtOCx7SP/0CU477qCTkhGqK9Nk7DjswhfU/SITia8numaxnvKYCRfng==}
     dev: false
 
   /vfile-location/4.1.0:

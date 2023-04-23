@@ -100,13 +100,11 @@ export default function Twitter_Activity({}: Props) {
         <AnimatePresence>
           {filter.map((content) => (
             <motion.div
-              layout="position"
               initial={{ opacity: 0 }}
               animate={{
                 opacity: 1,
                 transition: { delay: content.content * 0.05 },
               }}
-              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               key={content.content}
               className={`flex items-center justify-between gap-4 px-4 py-2 border-l-4 rounded-r-lg group ${

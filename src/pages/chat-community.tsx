@@ -15,11 +15,12 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { formatDistance } from "date-fns";
-import toast, { Toaster } from "react-hot-toast";
+import "vercel-toast/css";
+import { createToast } from "vercel-toast";
 
 import { User_Context } from "@/context/User_Context";
 import { authStateChanged, db, signInWithGoogle } from "@/utils/Firebase";
-import { COMMENT, COMMENTS } from "@/Types/User";
+import { COMMENTS } from "@/Types/User";
 
 import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
@@ -43,7 +44,11 @@ export default function Chat_Community({}: Props) {
   const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (currentUser == null) return toast("You have to be Signed In");
+    if (currentUser == null)
+      return createToast("You must be Signed In", {
+        timeout: 3000,
+        type: "error",
+      });
 
     await addDoc(collection(db, "comments"), {
       name: currentUser!.displayName,
@@ -135,20 +140,6 @@ export default function Chat_Community({}: Props) {
           <small>Please, Do not spam the chat...</small>
         </form>
       </div>
-
-      <Toaster
-        position="bottom-right"
-        reverseOrder={false}
-        toastOptions={{
-          className: "",
-          style: {
-            border: "1px solid red",
-            padding: "8px",
-            color: "red",
-            boxShadow: "0 4px 10px rgba(0, 0, 0, .01)",
-          },
-        }}
-      />
     </>
   );
 }
