@@ -47,11 +47,15 @@ export default function Blog_Link({ blogs_data }: Props) {
         </h3>
         <p className="text-sm md:text-base">{blogs_data.data.description}</p>
         <div className="flex items-center gap-2 text-xs md:text-sm">
-          <div>
+          <div className="flex flex-wrap gap-2">
             {blogs_data.data.tags.map((tag, index) => (
               <span
                 key={index}
-                className="inline-block px-3 py-1 rounded-md bg-warning/10 text-warning"
+                className={`inline-block px-3 py-1 rounded-md ${
+                  tag == "Information"
+                    ? "bg-warning/10 text-warning"
+                    : "bg-success/10 text-success"
+                }`}
               >
                 {tag}
               </span>
