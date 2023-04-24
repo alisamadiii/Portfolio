@@ -90,7 +90,10 @@ export default function Chat_Community({}: Props) {
 
   return (
     <>
-      <Meta_Tag />
+      <Meta_Tag
+        title="Chat Community"
+        description="This is the place where you can chat and have conversation with me."
+      />
       <div className="max-w-[1000px] flex items-center flex-col mt-24 justify-center w-full gap-4 mx-auto p-4">
         <div
           ref={listComments}

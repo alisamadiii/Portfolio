@@ -31,7 +31,10 @@ type Props = {
 export default function Home({ blogs }: Props) {
   return (
     <>
-      <Meta_Tag />
+      <Meta_Tag
+        title="Ali Reza | Portfolio"
+        description="As a front-end developer, I specialize in building and maintaining the user interface of web applications."
+      />
       <main>
         {/* Header */}
         <header className="relative w-full py-56">

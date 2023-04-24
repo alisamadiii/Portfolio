@@ -1,24 +1,21 @@
 import Head from "next/head";
 import React from "react";
 
-type Props = {};
+type Props = {
+  title: string;
+  description: string;
+};
 
-export default function Meta_Tag({}: Props) {
+export default function Meta_Tag({ title, description }: Props) {
   return (
     <Head>
-      <title>Ali Reza | Portfolio</title>
-      <meta
-        name="description"
-        content="As a front-end developer, I specialize in building and maintaining the user interface of web applications."
-      />
+      <title>{title}</title>
+      <meta name="description" content={description} />
 
       <meta property="og:url" content="https://www.alirezasamadi.com/" />
       <meta property="og:type" content="website" />
-      <meta property="og:title" content="Ali Reza | Portfolio" />
-      <meta
-        property="og:description"
-        content="As a front-end developer, I specialize in building and maintaining the user interface of web applications."
-      />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
       <meta
         property="og:image"
         content="https://i.ibb.co/9hyw1rL/Meta-Tag.png"
@@ -27,15 +24,13 @@ export default function Meta_Tag({}: Props) {
       <meta name="twitter:card" content="summary_large_image" />
       <meta property="twitter:domain" content="alirezasamadi.com" />
       <meta property="twitter:url" content="https://www.alirezasamadi.com/" />
-      <meta name="twitter:title" content="Ali Reza | Portfolio" />
-      <meta
-        name="twitter:description"
-        content="As a front-end developer, I specialize in building and maintaining the user interface of web applications."
-      />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
       <meta
         name="twitter:image"
         content="https://i.ibb.co/9hyw1rL/Meta-Tag.png"
       />
+      <link rel="shortcut icon" href="logo.jpg" type="image/x-icon" />
     </Head>
   );
 }

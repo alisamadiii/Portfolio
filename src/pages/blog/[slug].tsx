@@ -13,8 +13,7 @@ import rehypeCodeTitles from "rehype-code-titles";
 import { Components } from "@/components/Blog Styles/MDXCompnents";
 import Arrow from "@/assets/Arrow";
 import { AnimatePresence } from "framer-motion";
-import { doc, setDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/utils/Firebase";
+import Meta_Tag from "@/layout/Head";
 
 type Props = {
   data: any;
@@ -31,27 +30,30 @@ export default function Slug({ data, mdxSource }: Props) {
   }, []);
 
   return (
-    <div className="mt-24 max-w-[700px] mx-auto px-4" id="back-to-top">
-      {/* <Heading1 className="py-4">{data.title}</Heading1> */}
-      <div id="mdx">
-        <MDXRemote {...mdxSource} components={Components} />
-      </div>
-      <div className="flex flex-col items-center gap-3 mt-12">
-        <h2 className="text-xl font-bold">Was it Helpful?</h2>
-        <div className="flex gap-2 text-3xl">
-          <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
-            😩
-          </p>
-          <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
-            😀
-          </p>
-          <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
-            🤩
-          </p>
+    <>
+      <Meta_Tag title={data.title} description={data.description} />
+      <div className="mt-24 max-w-[700px] mx-auto px-4" id="back-to-top">
+        {/* <Heading1 className="py-4">{data.title}</Heading1> */}
+        <div id="mdx">
+          <MDXRemote {...mdxSource} components={Components} />
         </div>
+        <div className="flex flex-col items-center gap-3 mt-12">
+          <h2 className="text-xl font-bold">Was it Helpful?</h2>
+          <div className="flex gap-2 text-3xl">
+            <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
+              😩
+            </p>
+            <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
+              😀
+            </p>
+            <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
+              🤩
+            </p>
+          </div>
+        </div>
+        <AnimatePresence>{visible && <Arrow />}</AnimatePresence>
       </div>
-      <AnimatePresence>{visible && <Arrow />}</AnimatePresence>
-    </div>
+    </>
   );
 }
 
