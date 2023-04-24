@@ -50,8 +50,8 @@ export default function Review_Project({ data, setIsOpen, image }: Props) {
 
         <Image
           src={image}
-          width={300}
-          height={300}
+          width={1000}
+          height={1000}
           alt=""
           className="object-cover w-full my-4 rounded-md aspect-video"
         />

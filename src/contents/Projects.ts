@@ -4,10 +4,12 @@ import { BiWorld } from "react-icons/bi";
 import { AiOutlineTwitter, AiFillGithub } from "react-icons/ai";
 import { FaProductHunt } from "react-icons/fa";
 
+import AniLearn_IMG from "../assets/anilearn.png";
+
 type ProjectsType = {
   id: number;
   name: string;
-  image: string;
+  image: any;
   description: string;
   website: string;
   github: string;
@@ -19,7 +21,7 @@ type ProjectsType = {
 export type ProjectType = {
   id: number;
   name: string;
-  image: string;
+  image: any;
   description: string;
   website: string;
   github: string;
@@ -34,8 +36,7 @@ export const PROJECTS: ProjectsType = [
     name: "AniLearn.dev",
     description:
       "We provide the best content to learn something very easily. The visual descriptions of development principles that We create are very clear.",
-    image:
-      "https://img.freepik.com/free-vector/search-concept-yellow-folder-magnifier-icons-hand-drawn-cartoon-art-illustration_56104-891.jpg?w=900&t=st=1681102085~exp=1681102685~hmac=bafca06cf9f7eb50ffe8d640e5a84447abfc42d4f543f0ccffa6893bc10abfed",
+    image: AniLearn_IMG,
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,
