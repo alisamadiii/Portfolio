@@ -12,6 +12,7 @@ import { Hero, About } from "@/container";
 import { PRODUCTS } from "@/contents/Products";
 import Product from "@/components/Product";
 import Meta_Tag from "@/layout/Head";
+import { DAILY_APPLICATIONS } from "@/contents/Daily_Applications";
 
 type Props = {
   blogs: {
@@ -44,6 +45,34 @@ export default function Home({ blogs }: Props) {
         {/* About */}
         <section id="about" className="py-12">
           <About />
+        </section>
+
+        {/* Application */}
+        <section id="projects" className="relative py-12">
+          <Container className="space-y-12">
+            <Heading2>Daily Applications</Heading2>
+            <div className="flex flex-wrap gap-8">
+              {DAILY_APPLICATIONS.map((app) => {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1, delay: app.app * 0.05 }}
+                    key={app.app}
+                    className="p-6 basis-[200px] grow flex flex-col justify-center items-center gap-2 shadow-lg rounded-xl border"
+                  >
+                    <img
+                      src={app.img}
+                      className="object-contain w-12 h-12"
+                      alt=""
+                    />
+                    <h3 className="font-medium">{app.name}</h3>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </Container>
         </section>
 
         {/* Projects */}

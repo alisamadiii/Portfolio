@@ -4,8 +4,6 @@ import { BiWorld } from "react-icons/bi";
 import { AiOutlineTwitter, AiFillGithub } from "react-icons/ai";
 import { FaProductHunt } from "react-icons/fa";
 
-import AniLearn_IMG from "../assets/anilearn.png";
-
 type ProjectsType = {
   id: number;
   name: string;
@@ -36,7 +34,7 @@ export const PROJECTS: ProjectsType = [
     name: "AniLearn.dev",
     description:
       "We provide the best content to learn something very easily. The visual descriptions of development principles that We create are very clear.",
-    image: AniLearn_IMG,
+    image: "https://i.ibb.co/WgPrQ28/anilearn.png",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,
