@@ -26,6 +26,8 @@ export default function Review_Project({ data, setIsOpen, image }: Props) {
     info.offset.y > 200 ? setIsOpen(false) : setIsOpen(true);
   };
 
+  console.log(image);
+
   return (
     <div className="fixed top-0 left-0 z-50 flex items-end w-full h-full md:hidden isolate">
       <motion.div

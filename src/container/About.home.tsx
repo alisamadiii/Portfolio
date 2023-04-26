@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Heading2 } from "@/components";
 import Container from "@/layout/Container";
 
-import MyImage from "@/assets/my image.png";
+import MyImage from "@/assets/logo.jpg";
 import Skill from "@/components/Skill";
 
 type Props = {};
@@ -57,15 +57,17 @@ export default function About({}: Props) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1, delay: 0.1 }}
+          className="relative"
         >
           <Image
             src={MyImage}
-            width={500}
-            height={500}
+            width={700}
+            height={700}
             alt="my image"
-            className="mx-auto"
+            className="object-cover mx-auto h-72 w-96 mix-blend-multiply"
             priority={true}
           />
+          <div className="absolute bottom-0 left-0 w-full h-1/5 bg-gradient-to-b from-transparent to-light-blue"></div>
         </motion.div>
       </div>
     </Container>
