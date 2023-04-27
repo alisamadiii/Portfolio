@@ -32,6 +32,21 @@ module.exports = {
       backgroundPosition: {
         pattern: "-2px -2px, -2px -2px, -1px -1px, -1px -1px",
       },
+      animation: {
+        hoverMe: "hover-me 2s infinite",
+      },
+      keyframes: {
+        "hover-me": {
+          "0%": {
+            scale: "0",
+            opacity: "1",
+          },
+          "50%, 100%": {
+            scale: "3",
+            opacity: "0",
+          },
+        },
+      },
     },
   },
   plugins: [],

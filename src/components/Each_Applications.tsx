@@ -53,6 +53,9 @@ export default function Each_Applications({ app }: Props) {
         )}
       </AnimatePresence>
       <div className="absolute inset-0 duration-200 opacity-0 bg-gradient-to-tr from-primary to-secondary group-hover:opacity-20 -z-20"></div>
+      {app.app == 1 && (
+        <div className="absolute w-24 h-24 rounded-full bg-light-blue animate-hoverMe"></div>
+      )}
     </motion.div>
   );
 }
