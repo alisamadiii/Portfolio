@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Heading2 } from "@/components";
 import Container from "@/layout/Container";
 
-import MyImage from "@/assets/logo.jpg";
+import MyImage from "@/assets/about.png";
 import Skill from "@/components/Skill";
 
 type Props = {};
