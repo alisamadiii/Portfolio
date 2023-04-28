@@ -95,7 +95,9 @@ export default function Navbar({}: Props) {
             ))}
           <AnimatePresence>
             {isButton && (
-              <div className="relative">
+              <div
+                className={`relative ${router.pathname == "/" ? "" : "hidden"}`}
+              >
                 <motion.div
                   variants={ButtonVariants}
                   initial="hidden"
