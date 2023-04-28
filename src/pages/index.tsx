@@ -52,6 +52,7 @@ export default function Home({ blogs }: Props) {
         <section id="projects" className="relative py-12">
           <Container className="space-y-12">
             <Heading2>Daily Applications</Heading2>
+            <small className="italic">Hover on each Items *</small>
             <div className="flex flex-wrap items-start gap-8">
               {DAILY_APPLICATIONS.map((app) => {
                 return <Each_Applications key={app.app} app={app} />;

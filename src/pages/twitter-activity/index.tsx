@@ -1,15 +1,21 @@
 import Container from "@/layout/Container";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 type Props = {};
 
+import { BsCircleFill } from "react-icons/bs";
+
 // Images
 import Introduction_IMG from "../../assets/Introduction - AnimatedContent.png";
 import TwitterInformation_IMG from "../../assets/twitter-information.png";
+import Each_Testimonial from "@/components/Each_Testimonial";
+import { ANILEARN_TESTIMONIAL } from "@/contents/Anilearn_Testimonial";
 
 export default function TwitterActivity({}: Props) {
+  const [selectedTestimonial, setSelectedTestimonial] = useState<number>(0);
+
   return (
     <>
       <Container className="mt-24">
@@ -111,6 +117,63 @@ export default function TwitterActivity({}: Props) {
           >
             Get Now
           </a>
+        </div>
+      </Container>
+
+      <Container className="py-12">
+        <h2 className="mb-4 text-3xl font-black md:text-3xl">
+          What people say about my Animated Contents
+        </h2>
+        <Each_Testimonial
+          testimonial={ANILEARN_TESTIMONIAL[selectedTestimonial]}
+        />
+
+        <div className="flex justify-center gap-2">
+          <button
+            value={0}
+            onClick={() => setSelectedTestimonial(0)}
+            className={`duration-200 ${
+              selectedTestimonial == 0 ? "" : "text-gray-300"
+            }`}
+          >
+            <BsCircleFill />
+          </button>
+          <button
+            value={1}
+            onClick={() => setSelectedTestimonial(1)}
+            className={`duration-200 ${
+              selectedTestimonial == 1 ? "" : "text-gray-300"
+            }`}
+          >
+            <BsCircleFill />
+          </button>
+          <button
+            value={2}
+            onClick={() => setSelectedTestimonial(2)}
+            className={`duration-200 ${
+              selectedTestimonial == 2 ? "" : "text-gray-300"
+            }`}
+          >
+            <BsCircleFill />
+          </button>
+          <button
+            value={3}
+            onClick={() => setSelectedTestimonial(3)}
+            className={`duration-200 ${
+              selectedTestimonial == 3 ? "" : "text-gray-300"
+            }`}
+          >
+            <BsCircleFill />
+          </button>
+          <button
+            value={4}
+            onClick={() => setSelectedTestimonial(4)}
+            className={`duration-200 ${
+              selectedTestimonial == 4 ? "" : "text-gray-300"
+            }`}
+          >
+            <BsCircleFill />
+          </button>
         </div>
       </Container>
     </>
