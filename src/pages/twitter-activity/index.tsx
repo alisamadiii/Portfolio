@@ -122,7 +122,7 @@ export default function TwitterActivity({}: Props) {
 
       <Container className="py-12">
         <h2 className="mb-4 text-3xl font-black md:text-3xl">
-          What people say about my Animated Contents
+          What people say about my Animated Contents ❤️
         </h2>
         <Each_Testimonial
           testimonial={ANILEARN_TESTIMONIAL[selectedTestimonial]}

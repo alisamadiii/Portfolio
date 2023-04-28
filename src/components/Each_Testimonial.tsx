@@ -9,6 +9,8 @@ type Props = {
   testimonial: EachTestimonialTypes;
 };
 
+import { ImQuotesRight } from "react-icons/im";
+
 export default function Each_Testimonial({ testimonial }: Props) {
   const [ref, { height }] = useMeasure();
 
@@ -16,8 +18,9 @@ export default function Each_Testimonial({ testimonial }: Props) {
     <motion.div
       key={testimonial.id}
       //   exit={{ opacity: 0, y: 20 }}
-      className="w-full max-w-[700px] bg-white p-4 rounded-lg mx-auto my-8 shadow-xl overflow-hidden"
+      className="relative w-full max-w-[700px] bg-white p-4 rounded-lg mx-auto my-8 shadow-xl overflow-hidden border"
     >
+      <ImQuotesRight className="absolute -top-8 text-9xl right-4 opacity-10" />
       <div className="flex items-center gap-2">
         <Image
           src={testimonial.image}
@@ -34,13 +37,13 @@ export default function Each_Testimonial({ testimonial }: Props) {
         </div>
       </div>
       <motion.p
-        className="mt-3 text-xl italic"
+        className="mt-3 italic text-center text-lg/8"
         initial={{ height: height, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
         exit={{ opacity: 0 }}
         ref={ref}
       >
-        " {testimonial.message} "
+        {testimonial.message}
       </motion.p>
     </motion.div>
   );
