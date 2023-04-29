@@ -34,6 +34,7 @@ module.exports = {
       },
       animation: {
         hoverMe: "hover-me 2s infinite",
+        spin: "spin 20s linear infinite;",
       },
       keyframes: {
         "hover-me": {

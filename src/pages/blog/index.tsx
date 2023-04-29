@@ -27,10 +27,13 @@ import My_Journey_Image from "../../assets/blog-my-journey.jpg";
 
 export default function Blogs({ blogs }: Props) {
   return (
-    <Container className="mt-24">
-      <header className="grid items-center gap-4 p-4 md:grid-cols-2 bg-light-blue-2 rounded-xl">
+    <Container className="relative mt-24">
+      <div className="absolute top-0 w-96 h-96 bg-primary/30 -z-10 blur-3xl animate-spin"></div>
+      <header className="grid items-center gap-4 p-4 border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md">
         <div className="order-2 w-full md:px-6 lg:px-12 md:order-1">
-          <p>How am I?</p>
+          <p className="inline-block px-4 py-1 text-xs text-white rounded-md bg-dark-blue">
+            Who am I?
+          </p>
           <h1 className="text-2xl font-medium tracking-tight lg:text-3xl">
             Passionate coder & creator of animated content. Skilled in Next.js,
             Framer-Motion & TailwindCSS.
