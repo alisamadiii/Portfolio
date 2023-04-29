@@ -1,13 +1,10 @@
 import React from "react";
-import path from "path";
-import fs from "fs";
-import matter from "gray-matter";
 import { motion } from "framer-motion";
 
 import { PROJECTS } from "@/contents/Projects";
 
 import Container from "@/layout/Container";
-import { Heading2, Project, Blog_Link } from "@/components";
+import { Heading2, Project } from "@/components";
 import { Hero, About } from "@/container";
 import { PRODUCTS } from "@/contents/Products";
 import Product from "@/components/Product";
@@ -30,7 +27,7 @@ type Props = {
   }[];
 };
 
-export default function Home({ blogs }: Props) {
+export default function Home({}: Props) {
   return (
     <>
       <Meta_Tag
@@ -81,26 +78,6 @@ export default function Home({ blogs }: Props) {
           </Container>
         </section>
 
-        {/* Blogs */}
-        <section id="blogs" className="py-12">
-          <Container className="space-y-12">
-            <Heading2>Blogs</Heading2>
-            <div className="space-y-5">
-              {blogs.map((blog) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1 }}
-                  key={blog.data.blog}
-                >
-                  <Blog_Link blogs_data={blog} />
-                </motion.div>
-              ))}
-            </div>
-          </Container>
-        </section>
-
         {/* Products */}
         <section id="products" className="py-12">
           <Container className="space-y-12">
@@ -134,29 +111,4 @@ export default function Home({ blogs }: Props) {
       </main>
     </>
   );
-}
-
-export async function getStaticProps() {
-  const blogPathFiles = path.join(process.cwd(), "src/blog");
-  const fileNames = fs.readdirSync(blogPathFiles);
-
-  const blogs = fileNames
-    .map((name) => {
-      const content = fs.readFileSync(`${blogPathFiles}/${name}`);
-      const { data, content: blogContent } = matter(content);
-
-      return {
-        data,
-        blogContent,
-      };
-    })
-    .sort((a, b) => {
-      return a.data.blog - b.data.blog;
-    });
-
-  return {
-    props: {
-      blogs,
-    },
-  };
 }
