@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,12 @@ import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 
 export default function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    isOpen
+      ? (document.body.style.overflow = "hidden")
+      : (document.body.style.overflow = "auto");
+  });
 
   return (
     <nav
@@ -139,7 +145,6 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
         >
           <Link
             href={"/blog"}
-            scroll={false}
             className="inline-block w-full px-4 py-2 font-medium border-b"
           >
             Blogs

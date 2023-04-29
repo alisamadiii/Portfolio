@@ -24,12 +24,14 @@ import { COMMENTS } from "@/Types/User";
 
 import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
+import SignIn from "@/components/SignIn";
 
 type Props = {};
 
 export default function Chat_Community({}: Props) {
   const [inputField, setInputField] = useState("");
   const [comments, setComments] = useState<null | COMMENTS>(null);
+  const [isNotSigned, setIsNotSigned] = useState<boolean>(false);
 
   const listComments = useRef<HTMLDivElement>(null);
 
@@ -44,11 +46,13 @@ export default function Chat_Community({}: Props) {
   const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (currentUser == null)
+    if (currentUser == null) {
+      setIsNotSigned(true);
       return createToast("You must be Signed In", {
         timeout: 3000,
         type: "error",
       });
+    }
 
     await addDoc(collection(db, "comments"), {
       name: currentUser!.displayName,
@@ -143,6 +147,7 @@ export default function Chat_Community({}: Props) {
           <small>Please, Do not spam the chat...</small>
         </form>
       </div>
+      {isNotSigned && <SignIn />}
     </>
   );
 }
