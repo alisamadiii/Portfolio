@@ -15,7 +15,7 @@ export default function Product({ product }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
-    <div>
+    <div className="relative">
       <div className={`relative duration-200 ${isOpen && "p-4"}`}>
         <Image
           src={product.image}
@@ -30,6 +30,18 @@ export default function Product({ product }: Props) {
         >
           <FiChevronDown className={`duration-200 ${isOpen && "rotate-180"}`} />
         </div>
+        <AnimatePresence>
+          {isOpen == false && product.valuable && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute bottom-0 left-0 px-6 py-2 font-medium text-white rounded-tr-md bg-primary/70 backdrop-blur-sm"
+            >
+              Popular
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <AnimatePresence>
         {isOpen && (
@@ -42,7 +54,8 @@ export default function Product({ product }: Props) {
             <h3 className="text-xl font-medium">{product.name}</h3>
             <p className="mt-1 mb-3 text-sm">{product.description}</p>
             <a
-              href="#"
+              href={product.link}
+              target="_blank"
               className="inline-block px-4 py-2 text-white rounded-md bg-gradient-to-tr from-primary to-secondary"
             >
               But Now
