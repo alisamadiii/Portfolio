@@ -105,7 +105,7 @@ export default function Home({ blogs }: Props) {
         <section id="products" className="py-12">
           <Container className="space-y-12">
             <Heading2>Products</Heading2>
-            <div className="space-y-5">
+            <div className="flex flex-wrap items-start gap-4">
               {PRODUCTS.map((product) => (
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
@@ -113,6 +113,7 @@ export default function Home({ blogs }: Props) {
                   viewport={{ once: true }}
                   transition={{ duration: 1 }}
                   key={product.product}
+                  className="basis-[300px] grow rounded-3xl shadow-lg border overflow-hidden"
                 >
                   <Product product={product} />
                 </motion.div>
