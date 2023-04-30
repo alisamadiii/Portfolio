@@ -19,7 +19,7 @@ import "vercel-toast/css";
 import { createToast } from "vercel-toast";
 
 import { User_Context } from "@/context/User_Context";
-import { authStateChanged, db, signInWithGoogle } from "@/utils/Firebase";
+import { authStateChanged, db } from "@/utils/Firebase";
 import { COMMENTS } from "@/Types/User";
 
 import Meta_Tag from "@/layout/Head";
@@ -105,7 +105,11 @@ export default function Chat_Community({}: Props) {
         >
           {comments ? (
             comments.map((comment) => (
-              <Comment key={comment.id} comment={comment} />
+              <Comment
+                key={comment.id}
+                comment={comment}
+                setIsNotSigned={setIsNotSigned}
+              />
             ))
           ) : (
             <div className="self-center">

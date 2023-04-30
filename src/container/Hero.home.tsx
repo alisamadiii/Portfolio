@@ -18,8 +18,6 @@ const HeroItemVariants: Variants = {
 };
 
 export default function Hero({}: Props) {
-  const { setIsButton } = useContext(Navbar_Context);
-
   return (
     <>
       <div className="scale-x-110 absolute top-0 left-0 w-full h-full -translate-y-[100px] md:rounded-b-[20%] lg:rounded-b-[100%] bg-light-blue-2 -z-50 overflow-hidden">
@@ -62,12 +60,13 @@ export default function Hero({}: Props) {
             skilled in creating <br /> interactive and visually appealing
             websites.
           </p>
-          <a
+          <Link
             href="/#about"
+            scroll={false}
             className="p-2 text-xl duration-200 border rounded-full border-dark-blue animate-bounce hover:bg-dark-blue hover:text-white"
           >
             <HiOutlineArrowLongDown />
-          </a>
+          </Link>
         </motion.div>
       </Container>
     </>

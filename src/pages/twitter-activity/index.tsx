@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+import Meta_Tag from "@/layout/Head";
+
 type Props = {};
 
 import { BsCircleFill } from "react-icons/bs";
@@ -18,6 +20,10 @@ export default function TwitterActivity({}: Props) {
 
   return (
     <>
+      <Meta_Tag
+        title="Twitter Activity"
+        description="How did I find +14k audience on Twitter in one month?"
+      />
       <Container className="mt-24">
         <header className="grid items-center lg:grid-cols-2">
           <div>

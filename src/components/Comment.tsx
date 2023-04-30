@@ -16,9 +16,10 @@ import { createToast } from "vercel-toast";
 
 type Props = {
   comment: COMMENT;
+  setIsNotSigned: (a: boolean) => void;
 };
 
-export default function Comment({ comment }: Props) {
+export default function Comment({ comment, setIsNotSigned }: Props) {
   const { currentUser } = useContext(User_Context);
   const [editOpen, setEditOpen] = useState<boolean>(false);
 
@@ -28,11 +29,13 @@ export default function Comment({ comment }: Props) {
   };
 
   const updatingLikes = (comment: COMMENT) => {
-    if (currentUser == null)
+    if (currentUser == null) {
+      setIsNotSigned(true);
       return createToast("You must be Signed In", {
         timeout: 3000,
         type: "error",
       });
+    }
 
     const docRef = doc(db, "comments", comment.id);
 
