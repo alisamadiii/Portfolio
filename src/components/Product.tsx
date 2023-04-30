@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { ProductType } from "@/contents/Products";
@@ -58,7 +57,7 @@ export default function Product({ product }: Props) {
               target="_blank"
               className="inline-block px-4 py-2 text-white rounded-md bg-gradient-to-tr from-primary to-secondary"
             >
-              But Now
+              Buy Now
             </a>
             <div className="h-4"></div>
           </motion.div>
