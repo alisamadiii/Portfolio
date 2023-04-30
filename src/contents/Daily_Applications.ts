@@ -63,6 +63,12 @@ export const DAILY_APPLICATIONS = [
     app: 9,
     name: "YouTube",
     img: "https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png",
-    useCase: ["Walking Series, Tutorials & Speechs"],
+    useCase: ["Walking Series", "Tutorials & Speechs"],
+  },
+  {
+    app: 10,
+    name: "GitHub",
+    img: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+    useCase: ["Collabration", "Storing my Codes"],
   },
 ];
