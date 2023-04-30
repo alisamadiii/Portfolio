@@ -75,7 +75,7 @@ type Links_SmallScreen_Props = {
 
 export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
   return (
-    <div className="absolute inset-0 w-full h-screen bg-light-blue md:hidden">
+    <div className="absolute inset-0 flex flex-col w-full h-screen bg-light-blue md:hidden">
       <div className="flex items-center justify-between w-full px-4 py-2 border-b-2 border-dark-blue/20">
         <Link href={"/"}>
           <Image
@@ -151,6 +151,12 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
           </Link>
         </motion.li>
       </ul>
+      <Link
+        href={"/chat-community"}
+        className="inline-block w-full px-4 py-2 mt-auto font-medium text-center text-white border-b bg-gradient-to-tr from-primary to-secondary"
+      >
+        Chat Now
+      </Link>
     </div>
   );
 }
