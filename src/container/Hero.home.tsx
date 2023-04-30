@@ -1,16 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useInView } from "react-intersection-observer";
-import { AnimatePresence, Variants, motion } from "framer-motion";
+import { Variants, motion } from "framer-motion";
+import Link from "next/link";
 
-import { DropDown_List, Heading1 } from "@/components";
+import { Heading1 } from "@/components";
 import Container from "@/layout/Container";
 
-import { LINKS } from "@/contents/Links";
 import { Navbar_Context } from "@/context/Navbar_Context";
 
-import { FiChevronDown } from "react-icons/fi";
 import { AiOutlineTwitter } from "react-icons/ai";
-import Link from "next/link";
+import { HiOutlineArrowLongDown } from "react-icons/hi2";
 
 type Props = {};
 
@@ -20,14 +18,7 @@ const HeroItemVariants: Variants = {
 };
 
 export default function Hero({}: Props) {
-  const [isMenu, setIsMenu] = useState<boolean>(false);
   const { setIsButton } = useContext(Navbar_Context);
-
-  const { ref, inView } = useInView();
-
-  useEffect(() => {
-    inView == true ? setIsButton(false) : setIsButton(true);
-  }, [inView]);
 
   return (
     <>
@@ -71,23 +62,12 @@ export default function Hero({}: Props) {
             skilled in creating <br /> interactive and visually appealing
             websites.
           </p>
-          <div className="space-y-4">
-            <div
-              className="w-48 flex items-center justify-between gap-4 px-4 py-2 font-medium duration-150 bg-white border-2 rounded-lg active:!scale-95 cursor-pointer"
-              onClick={() => setIsMenu(!isMenu)}
-              ref={ref}
-            >
-              <span>Menu</span>
-              <span className={`${isMenu && "rotate-180"} duration-200`}>
-                <FiChevronDown />
-              </span>
-            </div>
-            <AnimatePresence>
-              {isMenu && (
-                <DropDown_List className="absolute w-48" data={LINKS} />
-              )}
-            </AnimatePresence>
-          </div>
+          <a
+            href="/#about"
+            className="p-2 text-xl duration-200 border rounded-full border-dark-blue animate-bounce hover:bg-dark-blue hover:text-white"
+          >
+            <HiOutlineArrowLongDown />
+          </a>
         </motion.div>
       </Container>
     </>
