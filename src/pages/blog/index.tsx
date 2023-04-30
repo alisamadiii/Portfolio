@@ -25,7 +25,7 @@ type Props = {
 };
 
 // Images
-import My_Journey_Image from "../../assets/blog-my-journey.jpg";
+import My_Journey_Image from "../../assets/blog-my-journey-2.jpg";
 
 export default function Blogs({ blogs }: Props) {
   return (
@@ -52,7 +52,7 @@ export default function Blogs({ blogs }: Props) {
               Read More
             </Link>
           </div>
-          <div className="order-1 p-2 shadow-sm bg-light-blue rounded-xl md:order-2">
+          <div className="relative order-1 p-2 overflow-hidden shadow-sm bg-light-blue rounded-xl md:order-2 isolate">
             <Image
               src={My_Journey_Image}
               width={1000}
@@ -60,6 +60,7 @@ export default function Blogs({ blogs }: Props) {
               alt=""
               className="object-cover aspect-video rounded-xl"
             />
+            <div className="absolute left-0 w-full h-24 bottom-1/2 bg-gradient-to-b from-transparent via-primary/20 to-transparent -z-10" />
           </div>
         </header>
 

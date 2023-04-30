@@ -73,7 +73,7 @@ export default function About({}: Props) {
             whileInView={{ opacity: 1, scale: 1, rotate: 12 }}
             transition={{ duration: 1 }}
             className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-t from-primary to-[#432e96]"
-            style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%);" }}
+            style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
           ></motion.div>
           <motion.div
             initial={{ opacity: 0, scale: 0, rotate: 0 }}

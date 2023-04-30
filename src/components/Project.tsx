@@ -17,7 +17,7 @@ export default function Project({ project }: Props) {
   return (
     <>
       <div
-        className="relative px-4 py-6 bg-white rounded-xl shadow-container"
+        className="relative px-4 py-6 border bg-gradient-to-br from-white via-secondary/5 to-white rounded-xl shadow-container"
         onMouseEnter={() => setData(project)}
         onMouseLeave={() => setData(null)}
       >
