@@ -15,10 +15,10 @@ export default function Each_Applications({ app }: Props) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 100 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 1, delay: app.app * 0.05 }}
+      transition={{ duration: 1, delay: app.app * 0.05, ease: "easeInOut" }}
       key={app.app}
       className="relative py-6 basis-[150px] grow flex flex-col justify-center items-center shadow-lg rounded-xl border overflow-hidden group"
       onMouseEnter={() => setIsHovered(true)}

@@ -23,10 +23,13 @@ export default function About({}: Props) {
       <Heading2>About</Heading2>
       <div className="grid gap-16 md:gap-8 md:grid-cols-2">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 100 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1 }}
+          transition={{
+            duration: 1,
+            ease: "easeInOut",
+          }}
           className="space-y-2"
         >
           <h3 className="text-2xl font-bold">
@@ -53,10 +56,10 @@ export default function About({}: Props) {
           </div>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 100 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.1 }}
+          transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
           className="relative"
         >
           <Image
