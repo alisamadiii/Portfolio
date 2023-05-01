@@ -37,7 +37,7 @@ export default function Each_Testimonial({ testimonial }: Props) {
         </div>
       </div>
       <motion.p
-        className="mt-3 italic text-center text-lg/8"
+        className="mt-3 text-lg/7"
         initial={{ height: height, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
         exit={{ opacity: 0 }}

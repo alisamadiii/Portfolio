@@ -126,61 +126,16 @@ export default function TwitterActivity({}: Props) {
         </div>
       </Container>
 
-      <Container className="py-12 mt-24">
+      <Container className="relative py-12 mt-24">
         <h2 className="mb-4 text-3xl font-black md:text-3xl">
           What people are saying ❤️
         </h2>
-        <Each_Testimonial
-          testimonial={ANILEARN_TESTIMONIAL[selectedTestimonial]}
-        />
-
-        <div className="flex justify-center gap-2">
-          <button
-            value={0}
-            onClick={() => setSelectedTestimonial(0)}
-            className={`duration-200 ${
-              selectedTestimonial == 0 ? "" : "text-gray-300"
-            }`}
-          >
-            <BsCircleFill />
-          </button>
-          <button
-            value={1}
-            onClick={() => setSelectedTestimonial(1)}
-            className={`duration-200 ${
-              selectedTestimonial == 1 ? "" : "text-gray-300"
-            }`}
-          >
-            <BsCircleFill />
-          </button>
-          <button
-            value={2}
-            onClick={() => setSelectedTestimonial(2)}
-            className={`duration-200 ${
-              selectedTestimonial == 2 ? "" : "text-gray-300"
-            }`}
-          >
-            <BsCircleFill />
-          </button>
-          <button
-            value={3}
-            onClick={() => setSelectedTestimonial(3)}
-            className={`duration-200 ${
-              selectedTestimonial == 3 ? "" : "text-gray-300"
-            }`}
-          >
-            <BsCircleFill />
-          </button>
-          <button
-            value={4}
-            onClick={() => setSelectedTestimonial(4)}
-            className={`duration-200 ${
-              selectedTestimonial == 4 ? "" : "text-gray-300"
-            }`}
-          >
-            <BsCircleFill />
-          </button>
+        <div className="relative grid grid-flow-col auto-cols-[300px] md:auto-cols-[400px] items-start gap-4 overflow-x-auto">
+          {ANILEARN_TESTIMONIAL.map((testimonial) => (
+            <Each_Testimonial key={testimonial.id} testimonial={testimonial} />
+          ))}
         </div>
+        <div className="absolute top-0 right-0 w-1/6 h-full bg-gradient-to-r from-transparent to-light-blue"></div>
       </Container>
     </>
   );

@@ -29,6 +29,15 @@ export const ANILEARN_TESTIMONIAL: AnilearnTestimonialTypes = [
   },
   {
     id: 2,
+    name: "Swapna Kumar Panda",
+    headline: "Tech Writer",
+    message: "Your animated tutorials are top-notch.",
+    twitter: "https://twitter.com/swapnakpanda",
+    image:
+      "https://pbs.twimg.com/profile_images/1621910730227449856/iW8AGVCr_400x400.jpg",
+  },
+  {
+    id: 3,
     name: "GrahamTheDev",
     headline: "DevRel",
     message:
@@ -38,7 +47,7 @@ export const ANILEARN_TESTIMONIAL: AnilearnTestimonialTypes = [
       "https://pbs.twimg.com/profile_images/1643171320190980096/tXJgdOcP_400x400.jpg",
   },
   {
-    id: 3,
+    id: 4,
     name: "Savio Martin",
     headline: null,
     message:
@@ -48,7 +57,7 @@ export const ANILEARN_TESTIMONIAL: AnilearnTestimonialTypes = [
       "https://pbs.twimg.com/profile_images/1617899739172995072/qF-3t5w8_400x400.jpg",
   },
   {
-    id: 4,
+    id: 5,
     name: "Madza",
     headline: "Tech Writer and Frontend Developer",
     message:
@@ -58,7 +67,7 @@ export const ANILEARN_TESTIMONIAL: AnilearnTestimonialTypes = [
       "https://pbs.twimg.com/profile_images/1526471322762715136/w25QtNnl_400x400.jpg",
   },
   {
-    id: 5,
+    id: 6,
     name: "Avie",
     headline: "Bridge Systems Engineer/Community Manager",
     message:
