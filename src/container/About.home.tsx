@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Heading2 } from "@/components";
 import Container from "@/layout/Container";
 
-import MyImage from "@/assets/about.png";
+import MyImage from "@/assets/about-2.png";
 import Skill from "@/components/Skill";
 
 type Props = {};
@@ -64,15 +64,15 @@ export default function About({}: Props) {
             width={700}
             height={700}
             alt="my image"
-            className="object-cover mx-auto h-72 w-96"
+            className="object-cover w-full mx-auto max-w-[400px]"
             priority={true}
           />
-          <div className="absolute bottom-0 left-0 w-full h-1/5 bg-gradient-to-b from-transparent to-light-blue"></div>
+          <div className="absolute bottom-0 left-0 w-full h-3/5 bg-gradient-to-b from-transparent to-light-blue"></div>
           <motion.div
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 12 }}
             transition={{ duration: 1 }}
-            className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-t from-primary to-[#432e96]"
+            className="absolute bottom-0 left-24 w-24 h-24 bg-gradient-to-t from-primary to-[#432e96]"
             style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
           ></motion.div>
           <motion.div
