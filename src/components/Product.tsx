@@ -29,6 +29,12 @@ export default function Product({ product }: Props) {
         >
           <FiChevronDown className={`duration-200 ${isOpen && "rotate-180"}`} />
         </div>
+        <div
+          className="absolute px-1 text-sm font-medium text-white rounded-sm cursor-pointer bg-green-500/50 back backdrop-blur-sm top-4 left-4"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {product.price == "FREE" ? "FREE" : `$${product.price}`}
+        </div>
         <AnimatePresence>
           {isOpen == false && product.valuable && (
             <motion.div

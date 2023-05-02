@@ -14,13 +14,17 @@ import { Components } from "@/components/Blog Styles/MDXCompnents";
 import Arrow from "@/assets/Arrow";
 import { AnimatePresence } from "framer-motion";
 import Meta_Tag from "@/layout/Head";
+import { AiOutlineConsoleSql } from "react-icons/ai";
+import WorkingIllustration from "@/assets/Working_Illustration";
+import { Heading1, Heading2 } from "@/components";
 
 type Props = {
   data: any;
   mdxSource: any;
+  writing: boolean;
 };
 
-export default function Slug({ data, mdxSource }: Props) {
+export default function Slug({ data, mdxSource, writing }: Props) {
   const [visible, setVisible] = useState<boolean>(false);
   useEffect(() => {
     document.addEventListener("scroll", (e) => {
@@ -37,20 +41,31 @@ export default function Slug({ data, mdxSource }: Props) {
         <div id="mdx">
           <MDXRemote {...mdxSource} components={Components} />
         </div>
-        <div className="flex flex-col items-center gap-3 mt-12">
-          <h2 className="text-xl font-bold">Was it Helpful?</h2>
-          <div className="flex gap-2 text-3xl">
-            <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
-              😩
+        {writing && (
+          <>
+            <Heading2>Writing...</Heading2>
+            <p className="inline-block px-2 py-1 text-xs text-white rounded-md bg-dark-blue">
+              Coming Soon
             </p>
-            <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
-              😀
-            </p>
-            <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
-              🤩
-            </p>
+            <WorkingIllustration />
+          </>
+        )}
+        {writing == false && (
+          <div className="flex flex-col items-center gap-3 mt-12">
+            <h2 className="text-xl font-bold">Was it Helpful?</h2>
+            <div className="flex gap-2 text-3xl">
+              <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
+                😩
+              </p>
+              <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
+                😀
+              </p>
+              <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
+                🤩
+              </p>
+            </div>
           </div>
-        </div>
+        )}
         <AnimatePresence>{visible && <Arrow />}</AnimatePresence>
       </div>
     </>
@@ -77,10 +92,13 @@ export const getServerSideProps = async (context: any) => {
     parseFrontmatter: false,
   });
 
+  console.log(content.length);
+
   return {
     props: {
       data,
       mdxSource,
+      writing: content.length == 0 ? true : false,
     },
   };
 };

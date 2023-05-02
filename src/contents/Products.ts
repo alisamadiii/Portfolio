@@ -48,7 +48,7 @@ export const PRODUCTS: ProductsType = [
       "In this package, you'll learn everything you need to know about Flexbox, from the basics to advanced techniques.",
     tags: ["animated", "content"],
     image: "https://public-files.gumroad.com/bxn4mr5g4mub3qw9w4fpr30olc7s",
-    price: 2,
+    price: "FREE",
     link: "https://alireza05.gumroad.com/l/flex-box",
     discount: null,
     discountData: null,
