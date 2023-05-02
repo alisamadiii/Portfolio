@@ -46,7 +46,7 @@ export default function Home({}: Props) {
         </section>
 
         {/* Application */}
-        <section id="projects" className="relative py-12">
+        <section className="relative py-12">
           <Container className="space-y-12">
             <Heading2>Daily Applications</Heading2>
             <small className="italic">Hover on each Items *</small>
