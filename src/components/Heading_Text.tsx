@@ -1,7 +1,6 @@
 import React, { ReactNode } from "react";
 
-import { Lobster } from "next/font/google";
-import { Bebas_Neue } from "next/font/google";
+import { Lobster, Bebas_Neue } from "next/font/google";
 
 type Props = {
   children: ReactNode;

@@ -4,9 +4,18 @@ type Props = {
   children: ReactNode;
 };
 
+// Fonts
+import { Bebas_Neue } from "next/font/google";
+
+const bebas = Bebas_Neue({
+  weight: ["400"],
+  display: "swap",
+  subsets: ["latin"],
+});
+
 export function Heading1({ children, ...props }: Props) {
   return (
-    <h1 className="mb-6 text-4xl font-black tracking-tight" {...props}>
+    <h1 className="pt-8 mb-6 text-4xl font-black tracking-tight" {...props}>
       {children}
     </h1>
   );
@@ -14,7 +23,7 @@ export function Heading1({ children, ...props }: Props) {
 
 export function Heading2({ children, ...props }: Props) {
   return (
-    <h2 className="pt-8 mb-4 text-3xl font-extrabold" {...props}>
+    <h2 className="pt-8 mb-4 text-3xl font-bold" {...props}>
       {children}
     </h2>
   );
