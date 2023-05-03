@@ -14,9 +14,8 @@ import { Components } from "@/components/Blog Styles/MDXCompnents";
 import Arrow from "@/assets/Arrow";
 import { AnimatePresence } from "framer-motion";
 import Meta_Tag from "@/layout/Head";
-import { AiOutlineConsoleSql } from "react-icons/ai";
 import WorkingIllustration from "@/assets/Working_Illustration";
-import { Heading1, Heading2 } from "@/components";
+import { Heading2 } from "@/components";
 
 type Props = {
   data: any;
@@ -26,11 +25,18 @@ type Props = {
 
 export default function Slug({ data, mdxSource, writing }: Props) {
   const [visible, setVisible] = useState<boolean>(false);
+  const [headingElements, setHeadingElements] = useState<any>(null);
+
   useEffect(() => {
     document.addEventListener("scroll", (e) => {
       const value = window.scrollY;
       value >= 300 ? setVisible(true) : setVisible(false);
     });
+  }, []);
+
+  useEffect(() => {
+    const headings = document.querySelectorAll("h1, h2, h3, h4");
+    setHeadingElements(headings);
   }, []);
 
   return (
@@ -39,8 +45,24 @@ export default function Slug({ data, mdxSource, writing }: Props) {
       <div className="mt-24 max-w-[700px] mx-auto px-4" id="back-to-top">
         {/* <Heading1 className="py-4">{data.title}</Heading1> */}
         <div id="mdx">
+          <div className="flex flex-col gap-1 p-4 mb-8 border rounded-lg">
+            <h2 className="mb-3 text-2xl font-black tracking-tight">
+              Table Of Content
+            </h2>
+            {headingElements &&
+              [...headingElements].map((heading, index) => (
+                <a
+                  key={index}
+                  href={`#${heading.id}`}
+                  className="px-2 duration-100 rounded-md hover:bg-gray-200"
+                >
+                  {heading.textContent}
+                </a>
+              ))}
+          </div>
           <MDXRemote {...mdxSource} components={Components} />
         </div>
+
         {writing && (
           <>
             <Heading2>Writing...</Heading2>
@@ -52,7 +74,7 @@ export default function Slug({ data, mdxSource, writing }: Props) {
         )}
         {writing == false && (
           <div className="flex flex-col items-center gap-3 mt-12">
-            <h2 className="text-xl font-bold">Was it Helpful?</h2>
+            <p className="text-xl font-bold">Was it Helpful?</p>
             <div className="flex gap-2 text-3xl">
               <p className="duration-200 cursor-pointer grayscale hover:grayscale-0 hover:scale-105">
                 😩
