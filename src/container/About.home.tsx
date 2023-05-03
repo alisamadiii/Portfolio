@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 import { Heading2 } from "@/components";
 import Container from "@/layout/Container";
@@ -18,10 +18,14 @@ import { SiNextdotjs, SiFirebase, SiRedux } from "react-icons/si";
 import { FiFigma } from "react-icons/fi";
 
 export default function About({}: Props) {
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], ["-30%", "50%"]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.7]);
+
   return (
     <Container className="flex flex-col gap-8">
       <Heading2>About</Heading2>
-      <div className="grid gap-16 md:gap-8 md:grid-cols-2">
+      <div className="grid gap-24 md:gap-8 md:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 100 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -56,11 +60,12 @@ export default function About({}: Props) {
           </div>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
+          // initial={{ opacity: 0, y: 100 }}
+          // whileInView={{ opacity: 1, y: 0 }}
+          // viewport={{ once: true }}
+          // transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
           className="relative"
+          style={{ y, scale }}
         >
           <Image
             src={MyImage}
