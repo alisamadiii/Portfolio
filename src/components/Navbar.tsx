@@ -8,10 +8,18 @@ type Props = {};
 import Container from "@/layout/Container";
 
 import Logo from "@/assets/logo.jpg";
-import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
+import {
+  AiOutlineMenu,
+  AiOutlineClose,
+  AiOutlineTwitter,
+  AiFillLinkedin,
+  AiFillGithub,
+} from "react-icons/ai";
+import { IoIosArrowDown } from "react-icons/io";
 
 export default function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isSocialMedia, setIsSocialMedia] = useState<boolean>(true);
 
   useEffect(() => {
     isOpen
@@ -19,20 +27,77 @@ export default function Navbar({}: Props) {
       : (document.body.style.overflow = "auto");
   });
 
+  const SOCIAL_MEDIA = [
+    {
+      id: 1,
+      name: "Twitter",
+      icon: AiOutlineTwitter,
+      link: "https://twitter.com/Ali_Developer05",
+    },
+    {
+      id: 2,
+      name: "LinkedIn",
+      icon: AiFillLinkedin,
+      link: "https://www.linkedin.com/in/alireza17/",
+    },
+    {
+      id: 3,
+      name: "GitHub",
+      icon: AiFillGithub,
+      link: "https://github.com/AliReza1083",
+    },
+  ];
+
   return (
     <nav
       className={`fixed top-0 left-0 z-50 w-full h-16 bg-light-blue/50 backdrop-blur-md border-b-2`}
     >
       <Container className="flex items-center h-full gap-12">
-        <Link href={"/"}>
-          <Image
-            src={Logo}
-            width={100}
-            height={100}
-            alt="logo"
-            className="w-10 rounded-full"
-          />
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link href={"/"}>
+            <Image
+              src={Logo}
+              width={100}
+              height={100}
+              alt="logo"
+              className="w-10 rounded-full"
+            />
+          </Link>
+          <div
+            className="p-1 bg-gray-100 rounded-sm cursor-pointer"
+            onClick={() => setIsSocialMedia(!isSocialMedia)}
+          >
+            <IoIosArrowDown
+              className={`duration-200 ${isSocialMedia && "rotate-180"}`}
+            />
+          </div>
+          <AnimatePresence>
+            {isSocialMedia && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                animate={{ opacity: 1, y: 70, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="absolute top-0 w-full bg-white translate-y-[70px] max-w-[200px] p-1 rounded-md shadow-sm border"
+              >
+                {SOCIAL_MEDIA.map((socialMedia) => {
+                  const Icon = socialMedia.icon;
+                  return (
+                    <a
+                      key={socialMedia.id}
+                      href={socialMedia.link}
+                      target="_blank"
+                      className={`flex items-center gap-2 hover:bg-gray-100 duration-100 p-1 rounded-md`}
+                    >
+                      <Icon />
+                      <p>{socialMedia.name}</p>
+                    </a>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
         <ul className="hidden gap-8 md:flex">
           <Link href={"/#about"} scroll={false} className="font-medium">
             About
