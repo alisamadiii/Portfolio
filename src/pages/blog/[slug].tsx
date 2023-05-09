@@ -103,13 +103,13 @@ export default function Slug({ data, mdxSource, writing }: Props) {
         </div>
 
         {writing && (
-          <>
+          <div className="mt-8">
             <Heading2>Writing...</Heading2>
             <p className="inline-block px-2 py-1 text-xs text-white rounded-md bg-dark-blue">
               Coming Soon
             </p>
             <WorkingIllustration />
-          </>
+          </div>
         )}
         {writing == false && (
           <div className="flex flex-col items-center gap-3 mt-12">
@@ -133,8 +133,26 @@ export default function Slug({ data, mdxSource, writing }: Props) {
   );
 }
 
-export const getServerSideProps = async (context: any) => {
-  const { slug } = context.query;
+export const getStaticPaths = async () => {
+  const blogPathFiles = path.join(process.cwd(), "src/blog");
+  const fileNames = fs.readdirSync(blogPathFiles);
+
+  const paths = fileNames.map((fileName) => {
+    return {
+      params: {
+        slug: fileName.replace(".mdx", ""),
+      },
+    };
+  });
+
+  return {
+    paths,
+    fallback: false,
+  };
+};
+
+export const getStaticProps = async ({ params }: any) => {
+  const { slug } = params;
   const singleBlogPathFiles = path.join(process.cwd(), `src/blog/${slug}.mdx`);
   const singleBlogFileName = fs.readFileSync(singleBlogPathFiles);
   const { data, content } = matter(singleBlogFileName);
@@ -152,8 +170,6 @@ export const getServerSideProps = async (context: any) => {
     },
     parseFrontmatter: false,
   });
-
-  console.log(content.length);
 
   return {
     props: {
