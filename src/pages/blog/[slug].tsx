@@ -79,9 +79,10 @@ export default function Slug({ data, mdxSource, writing }: Props) {
                   animate={{
                     height: "auto",
                     opacity: 1,
-                    transition: { type: "spring" },
+                    transition: { duration: 0.5, type: "spring" },
                   }}
                   exit={{ height: 0 }}
+                  transition={{ duration: 0.2 }}
                   className="flex flex-col gap-1 overflow-hidden"
                 >
                   {headingElements &&

@@ -19,7 +19,7 @@ import { IoIosArrowDown } from "react-icons/io";
 
 export default function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isSocialMedia, setIsSocialMedia] = useState<boolean>(true);
+  const [isSocialMedia, setIsSocialMedia] = useState<boolean>(false);
 
   useEffect(() => {
     isOpen
