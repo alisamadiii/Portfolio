@@ -83,7 +83,7 @@ export default function Chat_Community({}: Props) {
   useEffect(() => {
     const scrollToLastMessage = () => {
       const lastElement = listComments.current!.lastElementChild;
-      lastElement?.scrollIntoView({});
+      lastElement?.scrollIntoView({ behavior: "smooth" });
     };
     scrollToLastMessage();
   }, [comments]);
@@ -98,10 +98,10 @@ export default function Chat_Community({}: Props) {
         title="Chat Community"
         description="This is the place where you can chat and have conversation with me."
       />
-      <div className="max-w-[1000px] flex items-center flex-col mt-24 justify-center w-full gap-4 mx-auto p-4">
+      <div className="max-w-[1000px] flex items-center flex-col mt-24 gap-3 justify-center w-full mx-auto p-4">
         <div
           ref={listComments}
-          className="flex flex-col w-full overflow-x-hidden overflow-y-auto bg-light-blue-2 rounded-xl h-96"
+          className="flex flex-col w-full overflow-x-hidden overflow-y-auto rounded-t-xl bg-light-blue-2 h-[450px]"
         >
           {comments ? (
             comments.map((comment) => (
@@ -129,8 +129,8 @@ export default function Chat_Community({}: Props) {
             </div>
           )}
         </div>
-        <form onSubmit={submitHandler} className="w-full gap-2 mt-auto">
-          <div className="flex items-center p-2 border-2 rounded-md border-primary">
+        <form onSubmit={submitHandler} className="w-full gap-2 group">
+          <div className="relative flex items-center p-2 border-b-2 before:w-0 before:h-[2px] before:absolute before:bottom-0 before:left-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:duration-200 group-focus-within:before:w-full">
             {currentUser && (
               <Image
                 src={currentUser.photoURL}
@@ -145,7 +145,7 @@ export default function Chat_Community({}: Props) {
               onChange={(e) => setInputField(e.target.value)}
               type="text"
               className="w-full p-2 bg-transparent rounded-md outline-none"
-              placeholder="write"
+              placeholder="say HI... 👋"
             />
           </div>
           <small>Please, Do not spam the chat...</small>
