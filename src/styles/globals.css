@@ -23,6 +23,21 @@ body {
   filter: blur(1px);
 }
 
+#whoami::after {
+  @apply content-[""] absolute top-0 left-0 w-full h-12 bg-light-blue/10;
+  animation: skeleton-effect 5s infinite linear;
+}
+
+@keyframes skeleton-effect {
+  0% {
+    transform: translateY(-100%) skewY(-5deg);
+  }
+  20%,
+  100% {
+    transform: translateY(900%) skewY(-5deg);
+  }
+}
+
 ::selection {
   @apply text-white bg-dark-blue-2;
 }

@@ -36,7 +36,10 @@ export default function Blogs({ blogs }: Props) {
       />
       <Container className="relative mt-24">
         <div className="absolute top-0 w-96 h-96 bg-primary/30 -z-10 blur-3xl animate-spin"></div>
-        <header className="grid items-center gap-4 p-4 border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md">
+        <header
+          id="whoami"
+          className="grid items-center gap-4 p-4 border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md"
+        >
           <div className="order-2 w-full md:px-6 lg:px-12 md:order-1">
             <p className="inline-block px-4 py-1 text-xs text-white rounded-md bg-dark-blue">
               Who am I?
@@ -74,19 +77,23 @@ export default function Blogs({ blogs }: Props) {
             <Link
               key={blog.data.blog}
               href={`blog/${slugify(blog.data.title)}`}
-              className="pb-3 duration-200 hover:bg-light-blue-2 rounded-b-xl hover:scale-[.98]"
+              className="relative p-[2px] isolate overflow-hidden duration-200 rounded-xl bg-light-blue before:absolute before:inset-0 before:bg-gradient-to-tr before:from-primary before:to-secondary before:-z-10 before:animate-spin before:opacity-0 hover:before:opacity-100 before:duration-200"
             >
-              <Image
-                src={blog.data.image}
-                width={1000}
-                height={700}
-                alt={`image from - ${blog.data.title}`}
-                className="rounded-lg"
-              />
-              <h2 className="mt-2 mb-1 text-2xl font-bold tracking-tight">
-                {blog.data.title}
-              </h2>
-              <p>{blog.data.description}</p>
+              <div className="bg-light-blue rounded-xl">
+                <Image
+                  src={blog.data.image}
+                  width={1000}
+                  height={700}
+                  alt={`image from - ${blog.data.title}`}
+                  className="rounded-xl"
+                />
+                <div className="px-2 pb-2">
+                  <h2 className="mt-2 mb-1 text-2xl font-bold tracking-tight">
+                    {blog.data.title}
+                  </h2>
+                  <p>{blog.data.description}</p>
+                </div>
+              </div>
             </Link>
           ))}
         </section>
