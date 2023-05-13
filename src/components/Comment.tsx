@@ -24,6 +24,10 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
   const { currentUser } = useContext(User_Context);
   const [editOpen, setEditOpen] = useState<boolean>(false);
   const [isChangeComment, setIsChangeComment] = useState<boolean>(false);
+  const [isAnswer, setIsAnswer] = useState<[boolean, COMMENT | null]>([
+    false,
+    null,
+  ]);
 
   const deletingComment = async (id: string) => {
     const docRef = doc(db, "comments", id);
@@ -79,7 +83,7 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         layout="position"
-        className={`relative flex items-center gap-4 px-4 py-2 hover:bg-dark-blue-2/5 isolate ${
+        className={`relative flex items-start gap-4 px-4 py-2 hover:bg-dark-blue-2/5 isolate ${
           currentUser?.uid == comment.userId && "bg-dark-blue-2/10"
         } ${
           comment.chatType == "question" && "!bg-secondary/20"
@@ -87,34 +91,14 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
           isChangeComment ? "before:opacity-100" : "before:opacity-0"
         }`}
       >
-        {/* <div className="relative self-start w-8 h-8">
-          <Image
-            src={comment.image}
-            width={100}
-            height={100}
-            alt=""
-            className="rounded-full"
-          />
-          {comment.from == "github" ? (
-            <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 backdrop-blur-sm">
-              <AiFillGithub />
-            </div>
-          ) : (
-            <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 backdrop-blur-sm">
-              <FcGoogle />
-            </div>
-          )}
-          {comment.userId === process.env.NEXT_PUBLIC_OWNER && (
-            <div className="absolute bottom-0 right-0 p-[2px] rounded-sm text-xs translate-y-2 bg-white/50 text-yellow-500 backdrop-blur-sm">
-              <BiCrown />
-            </div>
-          )}
-        </div> */}
+        {/* Icons for Question */}
         {comment.chatType == "question" && (
           <div className="text-secondary">
             <BsQuestionDiamondFill />
           </div>
         )}
+
+        {/* Name + messages */}
         <div className="grow">
           <div
             className={`${
@@ -128,8 +112,33 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
             </small> */}
           </div>
           <p className="text-sm md:text-base">{comment.message}</p>
-          {/* <small>{timeFormat(comment.createdAt.seconds)}</small> */}
+
+          {/* Answering */}
+          {comment.chatType == "question" && (
+            <button
+              className="text-sm italic underline"
+              onClick={() => setIsAnswer([true, comment])}
+            >
+              Answer It
+            </button>
+          )}
+
+          {comment.answers && (
+            <div className="mt-3 space-y-2">
+              {comment.answers.map((answer, index) => (
+                <div
+                  key={index}
+                  className="flex items-center w-full gap-2 p-2 rounded-lg bg-secondary/10"
+                >
+                  <small className="italic opacity-60">{answer.name}</small>
+                  <h3>{answer.answer}</h3>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Icons for liking */}
         <p
           className={`${
             findingComment && "text-blue-600"
@@ -140,6 +149,7 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
           <span className="text-xs">{comment.likes.length}</span>
         </p>
 
+        {/* Icons for bringing changes */}
         <AnimatePresence>
           {isChangeComment && (
             <motion.div
@@ -176,6 +186,7 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
           )}
         </AnimatePresence>
 
+        {/* 3 Dots for opening and closing */}
         {currentUser?.uid == comment.userId ? (
           <div
             className={`p-1 rounded-md ${
@@ -208,6 +219,79 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
           <EditComment comment={comment} setEditOpen={setEditOpen} />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isAnswer[1] && comment.chatType == "question" && (
+          <Answering_Question
+            comment={isAnswer}
+            setIsAnswer={setIsAnswer}
+            currentUserId={currentUser!.uid}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
+
+type Answering_QuestionProps = {
+  comment: [boolean, COMMENT | null];
+  setIsAnswer: (a: [boolean, null]) => void;
+  currentUserId: string;
+};
+
+// Answering
+export const Answering_Question = ({
+  comment,
+  setIsAnswer,
+  currentUserId,
+}: Answering_QuestionProps) => {
+  const [answer, setAnswer] = useState("");
+
+  const addingAnswerFunctions = async (commentId: string) => {
+    const docRef = doc(db, "comments", commentId);
+    await updateDoc(docRef, {
+      answers: [
+        ...comment[1]!.answers,
+        { userId: currentUserId, name: comment[1]!.name, answer },
+      ],
+    });
+    setIsAnswer([false, null]);
+  };
+
+  return (
+    <div className="fixed top-0 left-0 z-50 flex items-center justify-center w-full h-full">
+      <div
+        className="absolute inset-0 bg-slate-700/10 -z-10"
+        onClick={() => setIsAnswer([false, null])}
+      />
+      <div className="w-full max-w-[400px] bg-white rounded-xl shadow-container p-4 space-y-5">
+        {/* Question */}
+        <div className="flex flex-col items-start gap-1">
+          <span className="px-2 py-1 text-sm text-white rounded-md bg-slate-800">
+            Question
+          </span>
+          {comment[1]?.message}
+        </div>
+        {/* Answer */}
+        <div className="flex flex-col items-start gap-2">
+          <span className="px-2 py-1 text-sm text-white rounded-md bg-slate-800">
+            Answer
+          </span>
+          <input
+            type="text"
+            placeholder="your answer"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            className="w-full p-2 duration-200 border-2 rounded-md outline-none border-slate-400 focus:border-slate-800"
+          />
+          <button
+            className="px-3 py-1 text-white rounded-md bg-slate-800"
+            onClick={() => addingAnswerFunctions(comment[1]!.id)}
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

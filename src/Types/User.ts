@@ -27,6 +27,7 @@ export type COMMENTS = {
   userId: string;
   likes: { id: string; name: string }[];
   chatType: "question" | "chat";
+  answers: { id: string; name: string; answer: string }[];
   from: "github" | "google";
 }[];
 export type COMMENT = {
@@ -38,5 +39,6 @@ export type COMMENT = {
   userId: string;
   likes: { id: string; name: string }[];
   chatType: "question" | "chat";
+  answers: { id: string; name: string; answer: string }[];
   from: "github" | "google";
 };

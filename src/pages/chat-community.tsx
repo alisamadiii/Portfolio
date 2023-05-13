@@ -63,6 +63,7 @@ export default function Chat_Community({}: Props) {
       userId: currentUser?.uid,
       likes: [],
       chatType,
+      answers: [],
       from: currentUser?.email == null ? "github" : "google",
     });
     setInputField("");
