@@ -38,7 +38,7 @@ export default function Blogs({ blogs }: Props) {
         <div className="absolute top-0 w-96 h-96 bg-primary/30 -z-10 blur-3xl animate-spin"></div>
         <header
           id="whoami"
-          className="grid items-center gap-4 p-4 border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md"
+          className="grid items-center gap-4 p-4 overflow-hidden border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md"
         >
           <div className="order-2 w-full md:px-6 lg:px-12 md:order-1">
             <p className="inline-block px-4 py-1 text-xs text-white rounded-md bg-dark-blue">

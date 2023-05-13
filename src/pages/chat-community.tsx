@@ -32,6 +32,7 @@ export default function Chat_Community({}: Props) {
   const [inputField, setInputField] = useState("");
   const [comments, setComments] = useState<null | COMMENTS>(null);
   const [isNotSigned, setIsNotSigned] = useState<boolean>(false);
+  const [chatType, setChatType] = useState<"chat" | "question">("chat");
 
   const listComments = useRef<HTMLDivElement>(null);
 
@@ -61,6 +62,7 @@ export default function Chat_Community({}: Props) {
       createdAt: serverTimestamp(),
       userId: currentUser?.uid,
       likes: [],
+      chatType,
       from: currentUser?.email == null ? "github" : "google",
     });
     setInputField("");
@@ -129,26 +131,44 @@ export default function Chat_Community({}: Props) {
             </div>
           )}
         </div>
-        <form onSubmit={submitHandler} className="w-full gap-2 group">
-          <div className="relative flex items-center p-2 border-b-2 before:w-0 before:h-[2px] before:absolute before:bottom-0 before:left-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:duration-200 group-focus-within:before:w-full">
-            {currentUser && (
-              <Image
-                src={currentUser.photoURL}
-                width={100}
-                height={100}
-                alt=""
-                className="w-8 h-8 rounded-full"
+        <form onSubmit={submitHandler} className="w-full group">
+          <div className="relative flex flex-col md:flex-row gap-4 items-center p-2 border-b-2 before:w-0 before:h-[2px] before:absolute before:bottom-0 before:left-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:duration-200 group-focus-within:before:w-full">
+            <div>
+              <select
+                name=""
+                id=""
+                onChange={(e: any) => setChatType(e.target.value)}
+                className="bg-transparent focus:outline-primary"
+              >
+                <option value="chat">Chat</option>
+                <option value="question">Question</option>
+              </select>
+            </div>
+            <div className="flex items-center w-full">
+              {currentUser && (
+                <Image
+                  src={currentUser.photoURL}
+                  width={100}
+                  height={100}
+                  alt=""
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <input
+                value={inputField}
+                onChange={(e) => setInputField(e.target.value)}
+                type="text"
+                className="w-full p-2 bg-transparent rounded-md outline-none"
+                placeholder="say HI... 👋"
               />
-            )}
-            <input
-              value={inputField}
-              onChange={(e) => setInputField(e.target.value)}
-              type="text"
-              className="w-full p-2 bg-transparent rounded-md outline-none"
-              placeholder="say HI... 👋"
-            />
+            </div>
           </div>
-          <small>Please, Do not spam the chat...</small>
+          <p className="mt-2 text-xs">
+            Please, Do not spam the chat...{" "}
+            <span className="inline-block px-2 py-[2px] text-white rounded-sm bg-primary">
+              Total Messages: {comments?.length}
+            </span>
+          </p>
         </form>
       </div>
       {isNotSigned && <SignIn />}

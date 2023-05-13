@@ -29,6 +29,7 @@ type Props = {
 
 // Fonts
 import { Bebas_Neue } from "next/font/google";
+import Table_Contents from "@/components/Table_Contents";
 
 const bebas = Bebas_Neue({
   weight: ["400"],
@@ -83,18 +84,9 @@ export default function Slug({ data, mdxSource, writing }: Props) {
                   }}
                   exit={{ height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col gap-1 overflow-hidden"
+                  className="overflow-hidden"
                 >
-                  {headingElements &&
-                    [...headingElements].map((heading, index) => (
-                      <a
-                        key={index}
-                        href={`#${heading.id}`}
-                        className="px-2 duration-100 rounded-md hover:bg-gray-200"
-                      >
-                        {heading.textContent}
-                      </a>
-                    ))}
+                  <Table_Contents headingElements={headingElements} />
                 </motion.div>
               )}
             </AnimatePresence>

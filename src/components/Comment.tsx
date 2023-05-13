@@ -1,18 +1,18 @@
-import Image from "next/image";
 import React, { useContext, useState } from "react";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { BsFillTrash3Fill } from "react-icons/bs";
-import { AiFillLike, AiFillEdit, AiFillGithub } from "react-icons/ai";
+import { AiFillLike, AiFillEdit } from "react-icons/ai";
 import { User_Context } from "@/context/User_Context";
 import { COMMENT } from "@/Types/User";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/utils/Firebase";
 import EditComment from "./EditComment";
 
-import { FcGoogle } from "react-icons/fc";
-import { BiCrown } from "react-icons/bi";
 import { createToast } from "vercel-toast";
+
+// Icons
+import { BsQuestionDiamondFill } from "react-icons/bs";
 
 type Props = {
   comment: COMMENT;
@@ -79,7 +79,7 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
         layout="position"
         className={`flex items-center gap-4 px-4 py-2 hover:bg-dark-blue-2/10 ${
           currentUser?.uid == comment.userId && "bg-dark-blue-2/10"
-        }`}
+        } ${comment.chatType == "question" && "!bg-secondary/20"}`}
       >
         {/* <div className="relative self-start w-8 h-8">
           <Image
@@ -104,6 +104,11 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
             </div>
           )}
         </div> */}
+        {comment.chatType == "question" && (
+          <div className="text-secondary">
+            <BsQuestionDiamondFill />
+          </div>
+        )}
         <div className="grow">
           <div>
             <small className="italic opacity-60">{comment.name}</small>
