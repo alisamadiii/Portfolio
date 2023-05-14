@@ -78,6 +78,8 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
     return dateFormat;
   }
 
+  console.log(comment.answers);
+
   return (
     <>
       <motion.div
@@ -124,7 +126,7 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
                 Answer It
               </button>
             )}
-            {comment!.answers && (
+            {comment!.answers !== undefined && comment.answers.length != 0 && (
               <button
                 className="italic underline"
                 onClick={() => setToggleAnswer(!toggleAnswer)}
