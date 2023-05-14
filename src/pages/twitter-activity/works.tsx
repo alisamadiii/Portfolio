@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, Variants, motion } from "framer-motion";
-import useMeasure from "react-use-measure";
 
 type Props = {};
 
@@ -147,7 +146,7 @@ export default function Twitter_Activity({}: Props) {
           dragConstraints={{ bottom: 0, right: 0, top: 0, left: 0 }}
           dragElastic={1}
           className="fixed hidden rotate-45 xl:block -right-52 top-96 w-96 h-96 bg-gradient-to-t from-primary to-secondary rounded-[70px]"
-        ></motion.div>
+        />
         <motion.div
           variants={rectangularVariants2}
           initial="hidden"
@@ -157,7 +156,7 @@ export default function Twitter_Activity({}: Props) {
           dragConstraints={{ bottom: 0, right: 0, top: 0, left: 0 }}
           dragElastic={1}
           className="fixed hidden xl:block rotate-12 -left-52 top-32 w-96 h-96 bg-gradient-to-tr from-primary to-secondary rounded-[70px]"
-        ></motion.div>
+        />
       </div>
     </>
   );

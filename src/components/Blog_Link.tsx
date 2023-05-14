@@ -5,68 +5,43 @@ import readingTime from "reading-time";
 import formatDistance from "date-fns/formatDistance";
 import slugify from "@sindresorhus/slugify";
 
-import { FiArrowUpRight } from "react-icons/fi";
+import { DATA_Type } from "@/Types/Blogs";
 
 type Props = {
-  blogs_data: {
-    data: {
-      blog: number;
-      title: string;
-      description: string;
-      tags: string[];
-      image: string;
-      author: string;
-      createdAt: string;
-    };
+  blog: {
+    data: DATA_Type;
     blogContent: any;
   };
 };
 
-export default function Blog_Link({ blogs_data }: Props) {
-  const stats = readingTime(blogs_data.blogContent);
+export default function Blog_Link({ blog }: Props) {
+  const durationForReading = readingTime(blog.blogContent); // EX. 4 minutes
 
   const timeFormat = (date: string) => {
     return formatDistance(new Date(date), new Date());
   }; // yyyy/mm/dd
 
+  const { title, image, description } = blog.data;
+
   return (
     <Link
-      href={`/blog/${slugify(blogs_data.data.title)}`}
-      className="relative flex flex-col overflow-hidden font-medium duration-150 bg-white group md:gap-8 md:items-center md:flex-row rounded-xl shadow-container"
+      href={`blog/${slugify(title)}`}
+      className="relative p-[2px] isolate overflow-hidden duration-200 rounded-xl bg-light-blue before:absolute before:inset-0 before:bg-gradient-to-tr before:from-primary before:to-secondary before:-z-10 before:animate-spin before:opacity-0 hover:before:opacity-100 before:duration-200"
     >
-      <Image
-        src={blogs_data.data.image}
-        width={1000}
-        height={700}
-        alt=""
-        className="w-full md:max-w-[300px]"
-      />
-      <div className="p-4 space-y-3 md:p-0">
-        <h3 className="text-xl font-bold md:text-2xl">
-          {blogs_data.data.title}
-        </h3>
-        <p className="text-sm md:text-base">{blogs_data.data.description}</p>
-        <div className="flex items-center gap-2 text-xs md:text-sm">
-          <div className="flex flex-wrap gap-2">
-            {blogs_data.data.tags.map((tag, index) => (
-              <span
-                key={index}
-                className={`inline-block px-3 py-1 rounded-md ${
-                  tag == "Information"
-                    ? "bg-warning/10 text-warning"
-                    : "bg-success/10 text-success"
-                }`}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-          <small>{timeFormat(blogs_data.data.createdAt)}</small>
-          <small>{stats.text}</small>
+      <div className="bg-light-blue rounded-xl">
+        <Image
+          src={image}
+          width={1000}
+          height={700}
+          alt={`image from - ${title}`}
+          className="rounded-xl"
+        />
+        <div className="px-2 pb-2">
+          <h2 className="mt-2 mb-1 text-2xl font-bold tracking-tight">
+            {title}
+          </h2>
+          <p>{description}</p>
         </div>
-      </div>
-      <div className="absolute hidden text-6xl duration-300 opacity-0 xl:block -translate-y-1/3 right-8 top-1/2 group-hover:opacity-100 group-hover:-translate-y-1/2">
-        <FiArrowUpRight />
       </div>
     </Link>
   );

@@ -42,7 +42,7 @@ export const PRODUCTS: ProductsType = [
     valuable: true,
   },
   {
-    product: 3,
+    product: 2,
     name: "Flexbox Mastery: Build Modern and Responsive Layouts with CSS Flexbox",
     description:
       "In this package, you'll learn everything you need to know about Flexbox, from the basics to advanced techniques.",

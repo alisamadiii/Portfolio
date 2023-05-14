@@ -108,7 +108,7 @@ export default function Navbar({}: Props) {
           <Link href={"/#products"} scroll={false} className="font-medium">
             Products
           </Link>
-          <Link href={"/blog"} scroll={false} className="font-medium">
+          <Link href={"/blog"} className="font-medium">
             Blogs
           </Link>
         </ul>

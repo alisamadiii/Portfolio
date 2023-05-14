@@ -1,12 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Variants, motion } from "framer-motion";
+import React from "react";
 import Link from "next/link";
+import { Variants, motion } from "framer-motion";
 
 import { Heading1 } from "@/components";
 import Container from "@/layout/Container";
 
-import { Navbar_Context } from "@/context/Navbar_Context";
-
+// Icons
 import { AiOutlineTwitter } from "react-icons/ai";
 import { HiOutlineArrowLongDown } from "react-icons/hi2";
 
@@ -20,11 +19,13 @@ const HeroItemVariants: Variants = {
 export default function Hero({}: Props) {
   return (
     <>
+      {/* Background color + Gradient */}
       <div className="scale-x-110 absolute top-0 left-0 w-full h-full -translate-y-[100px] md:rounded-b-[20%] lg:rounded-b-[100%] bg-light-blue-2 -z-50 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gradient-to-t from-primary to-secondary blur-3xl opacity-30"></div>
         <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
       </div>
       <Container className="flex flex-col items-center justify-center gap-4">
+        {/* Twitter Link + Twitter Activities */}
         <motion.div
           variants={HeroItemVariants}
           initial="hidden"

@@ -1,5 +1,5 @@
 import Container from "@/layout/Container";
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -7,17 +7,14 @@ import Meta_Tag from "@/layout/Head";
 
 type Props = {};
 
-import { BsCircleFill } from "react-icons/bs";
-
 // Images
 import Introduction_IMG from "../../assets/Introduction - AnimatedContent.png";
 import TwitterInformation_IMG from "../../assets/twitter-information.png";
+
 import Each_Testimonial from "@/components/Each_Testimonial";
 import { ANILEARN_TESTIMONIAL } from "@/contents/Anilearn_Testimonial";
 
 export default function TwitterActivity({}: Props) {
-  const [selectedTestimonial, setSelectedTestimonial] = useState<number>(0);
-
   return (
     <>
       <Meta_Tag
@@ -135,7 +132,7 @@ export default function TwitterActivity({}: Props) {
             <Each_Testimonial key={testimonial.id} testimonial={testimonial} />
           ))}
         </div>
-        <div className="absolute top-0 right-0 w-1/6 h-full bg-gradient-to-r from-transparent to-light-blue"></div>
+        <div className="absolute top-0 right-0 w-1/6 h-full bg-gradient-to-r from-transparent to-light-blue" />
       </Container>
     </>
   );

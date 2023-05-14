@@ -8,6 +8,7 @@ type Props = {
   product: ProductType;
 };
 
+// Icons
 import { FiChevronDown } from "react-icons/fi";
 
 export default function Product({ product }: Props) {

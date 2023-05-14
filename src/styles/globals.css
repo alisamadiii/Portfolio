@@ -7,14 +7,6 @@
   scroll-padding-top: 50px;
 }
 
-html {
-  height: 100%;
-}
-
-body {
-  @apply relative min-h-full pb-24 bg-light-blue text-dark-blue;
-}
-
 #link {
   transition: opacity 0.3s;
 }

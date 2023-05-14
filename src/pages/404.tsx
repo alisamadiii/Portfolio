@@ -1,8 +1,8 @@
-import { Heading1, Heading2 } from "@/components";
-import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import Countdown from "react-countdown";
+import { useRouter } from "next/router";
 import CountUp from "react-countup";
+
+import { Heading1 } from "@/components";
 
 type Props = {};
 

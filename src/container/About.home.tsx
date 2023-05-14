@@ -82,19 +82,19 @@ export default function About({}: Props) {
             transition={{ duration: 1 }}
             className="absolute bottom-0 left-24 w-24 h-24 bg-gradient-to-t from-primary to-[#432e96]"
             style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
-          ></motion.div>
+          />
           <motion.div
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 12 }}
             transition={{ duration: 1, delay: 0.3 }}
             className="absolute w-32 h-32 rounded-full left-12 top-12 bg-gradient-to-t from-primary to-secondary -z-10"
-          ></motion.div>
+          />
           <motion.div
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             whileInView={{ opacity: 1, scale: 1, rotate: -12 }}
             transition={{ duration: 1, delay: 0.5 }}
             className="absolute right-0 w-12 h-12 top-1/2 bg-gradient-to-t from-secondary to-[#c77935] rounded-md"
-          ></motion.div>
+          />
         </motion.div>
       </div>
     </Container>

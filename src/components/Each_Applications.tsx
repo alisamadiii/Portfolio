@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { DAILY_APPLICATION_Type } from "@/contents/Daily_Applications";
+
 type Props = {
-  app: {
-    app: number;
-    name: string;
-    img: string;
-    useCase: string[];
-  };
+  app: DAILY_APPLICATION_Type;
 };
 
 export default function Each_Applications({ app }: Props) {
@@ -18,17 +15,13 @@ export default function Each_Applications({ app }: Props) {
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 1, delay: app.app * 0.05, ease: "easeInOut" }}
+      transition={{ duration: 0.4, delay: app.app * 0.05, ease: "easeInOut" }}
       key={app.app}
-      className="relative py-6 basis-[150px] grow flex flex-col justify-center items-center shadow-lg rounded-xl border overflow-hidden group"
+      className="relative py-6 basis-[150px] grow flex flex-col justify-center items-center shadow-lg rounded-xl border overflow-hidden group before:absolute before:inset-0 before:bg-gradient-to-tr before:from-primary before:to-secondary before:opacity-0 hover:before:opacity-20 duration-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <img
-        src={app.img}
-        className="object-contain w-12 h-12 mix-blend-multiply"
-        alt=""
-      />
+      <img src={app.img} className="object-contain w-12 h-12" alt={app.name} />
       <h3 className="my-2 font-medium">{app.name}</h3>
       <AnimatePresence>
         {isHovered && (
@@ -41,10 +34,10 @@ export default function Each_Applications({ app }: Props) {
             {app.useCase.map((uses, index) => (
               <motion.li
                 key={index}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.4 }}
               >
                 {uses}
               </motion.li>
@@ -52,9 +45,8 @@ export default function Each_Applications({ app }: Props) {
           </motion.ul>
         )}
       </AnimatePresence>
-      <div className="absolute inset-0 duration-200 opacity-0 bg-gradient-to-tr from-primary to-secondary group-hover:opacity-20 -z-20"></div>
       {app.app == 1 && (
-        <div className="absolute w-24 h-24 rounded-full bg-light-blue animate-hoverMe"></div>
+        <div className="absolute w-24 h-24 rounded-full bg-light-blue animate-hoverMe" />
       )}
     </motion.div>
   );

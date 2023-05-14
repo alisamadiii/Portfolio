@@ -11,21 +11,15 @@ import Meta_Tag from "@/layout/Head";
 
 type Props = {
   blogs: {
-    data: {
-      blog: number;
-      title: string;
-      description: string;
-      tags: string[];
-      image: string;
-      author: string;
-      createdAt: string;
-    };
+    data: DATA_Type;
     blogContent: any;
   }[];
 };
 
 // Images
 import My_Journey_Image from "../../assets/blog-my-journey-2.jpg";
+import { DATA_Type } from "@/Types/Blogs";
+import { Blog_Link } from "@/components";
 
 export default function Blogs({ blogs }: Props) {
   return (
@@ -36,6 +30,7 @@ export default function Blogs({ blogs }: Props) {
       />
       <Container className="relative mt-24">
         <div className="absolute top-0 w-96 h-96 bg-primary/30 -z-10 blur-3xl animate-spin"></div>
+        {/* WHOAMI */}
         <header
           id="whoami"
           className="grid items-center gap-4 p-4 overflow-hidden border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md"
@@ -72,29 +67,10 @@ export default function Blogs({ blogs }: Props) {
           <p>This section is specifically dedicated to blogs. </p>
         </div>
 
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Blogs */}
+        <section className="grid items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
           {blogs.map((blog) => (
-            <Link
-              key={blog.data.blog}
-              href={`blog/${slugify(blog.data.title)}`}
-              className="relative p-[2px] isolate overflow-hidden duration-200 rounded-xl bg-light-blue before:absolute before:inset-0 before:bg-gradient-to-tr before:from-primary before:to-secondary before:-z-10 before:animate-spin before:opacity-0 hover:before:opacity-100 before:duration-200"
-            >
-              <div className="bg-light-blue rounded-xl">
-                <Image
-                  src={blog.data.image}
-                  width={1000}
-                  height={700}
-                  alt={`image from - ${blog.data.title}`}
-                  className="rounded-xl"
-                />
-                <div className="px-2 pb-2">
-                  <h2 className="mt-2 mb-1 text-2xl font-bold tracking-tight">
-                    {blog.data.title}
-                  </h2>
-                  <p>{blog.data.description}</p>
-                </div>
-              </div>
-            </Link>
+            <Blog_Link key={blog.data.blog} blog={blog} />
           ))}
         </section>
       </Container>
