@@ -3,38 +3,9 @@
 @tailwind utilities;
 
 * {
-  @apply scroll-smooth;
-  scroll-padding-top: 50px;
-}
-
-#link {
-  transition: opacity 0.3s;
-}
-#link:hover ~ #link {
-  opacity: 0.5 !important;
-  filter: blur(1px);
-}
-
-#whoami::after {
-  @apply content-[""] absolute top-0 left-0 w-full h-12 bg-light-blue/10;
-  animation: skeleton-effect 5s infinite linear;
-}
-
-@keyframes skeleton-effect {
-  0% {
-    transform: translateY(-100%) skewY(-5deg);
-  }
-  20%,
-  100% {
-    transform: translateY(900%) skewY(-5deg);
-  }
+  @apply scroll-smooth scroll-pt-12;
 }
 
 ::selection {
   @apply text-white bg-dark-blue-2;
-}
-
-.product::after {
-  @apply absolute top-0 left-0 px-4 py-1 text-white -translate-y-8 bg-primary rounded-t-xl -z-10;
-  content: "Valuable";
 }

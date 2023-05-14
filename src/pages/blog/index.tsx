@@ -31,10 +31,7 @@ export default function Blogs({ blogs }: Props) {
       <Container className="relative mt-24">
         <div className="absolute top-0 w-96 h-96 bg-primary/30 -z-10 blur-3xl animate-spin"></div>
         {/* WHOAMI */}
-        <header
-          id="whoami"
-          className="grid items-center gap-4 p-4 overflow-hidden border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md"
-        >
+        <header className="grid items-center gap-4 p-4 overflow-hidden border md:grid-cols-2 bg-light-blue-2/50 rounded-xl backdrop-blur-md before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-12 before:bg-light-blue/10 before:animate-skeleton-effect before:z-20 before:pointer-events-none">
           <div className="order-2 w-full md:px-6 lg:px-12 md:order-1">
             <p className="inline-block px-4 py-1 text-xs text-white rounded-md bg-dark-blue">
               Who am I?

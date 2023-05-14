@@ -74,24 +74,28 @@ export default function Navbar({}: Props) {
           <AnimatePresence>
             {isSocialMedia && (
               <motion.div
-                initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                animate={{ opacity: 1, y: 70, scale: 1 }}
-                exit={{ opacity: 0, y: 50, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="absolute top-0 w-full bg-white translate-y-[70px] max-w-[200px] p-1 rounded-md shadow-sm border"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-0 w-full bg-white translate-y-[70px] max-w-[200px] rounded-md shadow-sm border overflow-hidden"
               >
                 {SOCIAL_MEDIA.map((socialMedia) => {
                   const Icon = socialMedia.icon;
                   return (
-                    <a
+                    <motion.a
                       key={socialMedia.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
                       href={socialMedia.link}
                       target="_blank"
-                      className={`flex items-center gap-2 hover:bg-gray-100 duration-100 p-1 rounded-md`}
+                      className={`flex items-center gap-2 hover:bg-gray-100 duration-100 p-1 rounded-md m-1`}
                     >
                       <Icon />
                       <p>{socialMedia.name}</p>
-                    </a>
+                    </motion.a>
                   );
                 })}
               </motion.div>

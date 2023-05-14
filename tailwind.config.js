@@ -35,6 +35,7 @@ module.exports = {
       animation: {
         hoverMe: "hover-me 2s infinite",
         spin: "spin 20s linear infinite;",
+        "skeleton-effect": "skeleton-effect 5s infinite linear",
       },
       keyframes: {
         "hover-me": {
@@ -45,6 +46,14 @@ module.exports = {
           "50%, 100%": {
             scale: "3",
             opacity: "0",
+          },
+        },
+        "skeleton-effect": {
+          "0% ": {
+            transform: "translateY(-100%) skewY(-5deg)",
+          },
+          "20%, 100%": {
+            transform: "translateY(900%) skewY(-5deg)",
           },
         },
       },
