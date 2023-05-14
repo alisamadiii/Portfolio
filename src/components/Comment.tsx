@@ -28,6 +28,7 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
     false,
     null,
   ]);
+  const [toggleAnswer, setToggleAnswer] = useState(false);
 
   const deletingComment = async (id: string) => {
     const docRef = doc(db, "comments", id);
@@ -114,28 +115,24 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
           <p className="text-sm md:text-base">{comment.message}</p>
 
           {/* Answering */}
-          {comment.chatType == "question" && (
-            <button
-              className="text-sm italic underline"
-              onClick={() => setIsAnswer([true, comment])}
-            >
-              Answer It
-            </button>
-          )}
-
-          {comment.answers && (
-            <div className="mt-3 space-y-2">
-              {comment.answers.map((answer, index) => (
-                <div
-                  key={index}
-                  className="flex items-center w-full gap-2 p-2 rounded-lg bg-secondary/10"
-                >
-                  <small className="italic opacity-60">{answer.name}</small>
-                  <h3>{answer.answer}</h3>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex gap-2 py-2 text-xs md:text-sm">
+            {comment.chatType == "question" && (
+              <button
+                className="italic underline"
+                onClick={() => setIsAnswer([true, comment])}
+              >
+                Answer It
+              </button>
+            )}
+            {comment!.answers && (
+              <button
+                className="italic underline"
+                onClick={() => setToggleAnswer(!toggleAnswer)}
+              >
+                Show Replies
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Icons for liking */}
@@ -227,6 +224,22 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
             setIsAnswer={setIsAnswer}
             currentUserId={currentUser!.uid}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toggleAnswer && (
+          <div>
+            {comment.answers.map((answer, index) => (
+              <div
+                key={index}
+                className="flex items-center w-full gap-2 p-2 bg-green-200"
+              >
+                <small className="italic opacity-60">{answer.name}</small>
+                <p className="text-sm md:text-base">{answer.answer}</p>
+              </div>
+            ))}
+          </div>
         )}
       </AnimatePresence>
     </>

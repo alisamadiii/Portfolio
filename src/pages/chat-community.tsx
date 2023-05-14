@@ -26,6 +26,8 @@ import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
 import SignIn from "@/components/SignIn";
 
+import { AiOutlineSend } from "react-icons/ai";
+
 type Props = {};
 
 export default function Chat_Community({}: Props) {
@@ -44,8 +46,10 @@ export default function Chat_Community({}: Props) {
     });
   }, []);
 
-  const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
+  const submitHandler = async (e: any) => {
     e.preventDefault();
+
+    if (inputField.length == 0) return;
 
     if (currentUser == null) {
       setIsNotSigned(true);
@@ -136,8 +140,6 @@ export default function Chat_Community({}: Props) {
           <div className="relative flex flex-col md:flex-row gap-4 items-center p-2 border-b-2 before:w-0 before:h-[2px] before:absolute before:bottom-0 before:left-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:duration-200 group-focus-within:before:w-full">
             <div>
               <select
-                name=""
-                id=""
                 onChange={(e: any) => setChatType(e.target.value)}
                 className="bg-transparent focus:outline-primary"
               >
@@ -162,6 +164,12 @@ export default function Chat_Community({}: Props) {
                 className="w-full p-2 bg-transparent rounded-md outline-none"
                 placeholder="say HI... 👋"
               />
+              <div
+                className="p-2 text-xl rounded-md bg-slate-200"
+                onClick={submitHandler}
+              >
+                <AiOutlineSend />
+              </div>
             </div>
           </div>
           <p className="mt-2 text-xs">
