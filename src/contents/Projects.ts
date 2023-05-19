@@ -72,7 +72,7 @@ export const PROJECTS: ProjectsType = [
     description:
       "A project where you can keep track of your goal's progress, and contribute to open source in the same time.",
     image:
-      "https://img.freepik.com/free-vector/search-concept-yellow-folder-magnifier-icons-hand-drawn-cartoon-art-illustration_56104-891.jpg?w=900&t=st=1681102085~exp=1681102685~hmac=bafca06cf9f7eb50ffe8d640e5a84447abfc42d4f543f0ccffa6893bc10abfed",
+      "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,

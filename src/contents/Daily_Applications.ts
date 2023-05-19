@@ -40,7 +40,7 @@ export const DAILY_APPLICATIONS: DAILY_APPLICATIONS_Type = [
   {
     app: 5,
     name: "Twitter",
-    img: "https://assets.stickpng.com/images/580b57fcd9996e24bc43c53e.png",
+    img: "https://www.freepnglogos.com/uploads/twitter-logo-png/twitter-logo-vector-png-clipart-1.png",
     useCase: ["Sharing my Journey", "Sharing Animated Contents"],
   },
   {
