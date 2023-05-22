@@ -3,13 +3,7 @@ import path from "path";
 import fs from "fs";
 import matter from "gray-matter";
 import { motion, AnimatePresence } from "framer-motion";
-import { serialize } from "next-mdx-remote/serialize";
 import { MDXRemote } from "next-mdx-remote";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeSlug from "rehype-slug";
-import remarkGfm from "remark-gfm";
-import rehypePrism from "rehype-prism-plus";
-import rehypeCodeTitles from "rehype-code-titles";
 
 import { Components } from "@/components/Blog Styles/MDXCompnents";
 import Meta_Tag from "@/layout/Head";
@@ -30,6 +24,7 @@ type Props = {
 import { Bebas_Neue } from "next/font/google";
 import Table_Contents from "@/components/Table_Contents";
 import { DATA_Type } from "@/Types/Blogs";
+import { mdxStyling } from "@/utils/MDXFile";
 
 const bebas = Bebas_Neue({
   weight: ["400"],
@@ -150,20 +145,7 @@ export const getStaticProps = async ({ params }: any) => {
   const singleBlogPathFiles = path.join(process.cwd(), `src/blog/${slug}.mdx`);
   const singleBlogFileName = fs.readFileSync(singleBlogPathFiles);
   const { data, content } = matter(singleBlogFileName);
-  const mdxSource = await serialize(content, {
-    scope: {},
-    mdxOptions: {
-      remarkPlugins: [remarkGfm],
-      rehypePlugins: [
-        rehypeSlug,
-        rehypeAutolinkHeadings,
-        rehypeCodeTitles,
-        rehypePrism,
-      ],
-      format: "mdx",
-    },
-    parseFrontmatter: false,
-  });
+  const mdxSource = await mdxStyling(content);
 
   return {
     props: {

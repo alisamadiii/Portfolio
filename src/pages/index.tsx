@@ -62,18 +62,9 @@ export default function Home({}: Props) {
         <section id="projects" className="relative py-12">
           <Container className="space-y-12">
             <Heading2>Projects</Heading2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-wrap gap-4">
               {PROJECTS.map((project) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1 }}
-                  key={project.id}
-                  className={`${project.id == 1 && "lg:col-span-2"}`}
-                >
-                  <Project project={project} />
-                </motion.div>
+                <Project key={project.id} project={project} />
               ))}
             </div>
           </Container>
