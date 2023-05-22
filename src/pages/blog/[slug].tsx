@@ -25,6 +25,7 @@ import { Bebas_Neue } from "next/font/google";
 import Table_Contents from "@/components/Table_Contents";
 import { DATA_Type } from "@/Types/Blogs";
 import { mdxStyling } from "@/utils/MDXFile";
+import Image from "next/image";
 
 const bebas = Bebas_Neue({
   weight: ["400"],
@@ -52,8 +53,9 @@ export default function Slug({ data, mdxSource, writing }: Props) {
   return (
     <>
       <Meta_Tag title={data.title} description={data.description} />
+
       <div className="mt-24 max-w-[700px] mx-auto px-4" id="back-to-top">
-        <div id="mdx">
+        <div>
           {/* Table of Contents */}
           <div className="relative p-4 border rounded-lg shadow-lg bg-white/10">
             <div className="absolute top-0 left-0 bg-primary/20 h-52 w-96 blur-3xl -z-10"></div>
@@ -86,8 +88,23 @@ export default function Slug({ data, mdxSource, writing }: Props) {
               )}
             </AnimatePresence>
           </div>
+          {/* Extra Information */}
+          <div className="overflow-hidden rounded-lg aspect-[4/2] mt-12">
+            <motion.img
+              src={data.image}
+              initial={{ scale: 2, filter: "blur(10px)" }}
+              animate={{ scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 0.5, ease: "easeIn" }}
+              width={1000}
+              height={500}
+              alt=""
+              className="object-cover w-full h-full"
+            />
+          </div>
           {/* Contents */}
-          <MDXRemote {...mdxSource} components={Components} />
+          <div id="mdx">
+            <MDXRemote {...mdxSource} components={Components} />
+          </div>
         </div>
 
         {/* If the blog is being written */}
