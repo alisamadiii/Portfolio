@@ -1,82 +1,59 @@
-import React, { useState } from "react";
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
 
-import { BiDotsVerticalRounded } from "react-icons/bi";
 import { ProjectType } from "@/contents/Projects";
-import DropDown_List from "./DropDown_List";
-import { AnimatePresence, motion } from "framer-motion";
-import Review_Project from "./Review_Project";
 
 type Props = {
   project: ProjectType;
 };
 
 export default function Project({ project }: Props) {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [data, setData] = useState<null | ProjectType>(null);
+  const { logo } = project;
 
-  return (
-    <>
-      <div
-        className="relative px-4 py-6 border bg-gradient-to-br from-white via-secondary/5 to-white rounded-xl shadow-container"
-        onMouseEnter={() => setData(project)}
-        onMouseLeave={() => setData(null)}
-      >
-        <div className="flex items-center justify-between text-2xl font-bold">
-          <h3>{project.name}</h3>
-          <div>
-            <span onClick={() => setIsOpen(!isOpen)} className="inline-block">
-              <BiDotsVerticalRounded />
-            </span>
-            <AnimatePresence>
-              {isOpen && (
-                <>
-                  <DropDown_List
-                    data={project.links}
-                    className="absolute hidden w-48 translate-y-2 md:block right-4"
-                    targetLink={true}
-                  />
-                  <Review_Project
-                    key={project.id}
-                    data={project.links}
-                    image={project.image}
-                    setIsOpen={setIsOpen}
-                  />
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-        <p className="mt-2 font-medium">{project.description}</p>
-      </div>
-      <AnimatePresence>
-        {data && <Project_Image image={data.image} />}
-      </AnimatePresence>
-    </>
-  );
-}
-
-type Image_Props = {
-  image: string;
-};
-
-export function Project_Image({ image }: Image_Props) {
-  return (
-    <motion.div className="fixed z-50 hidden p-2 overflow-hidden bg-white rounded-md md:block right-4 bottom-4">
-      <motion.img
-        initial={{ height: 0, scale: 2, opacity: 0 }}
-        animate={{
-          height: "auto",
-          scale: 1,
-          opacity: 1,
-          transition: { scale: { duration: 0.5 } },
+  if (project.name.length > 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{
+          duration: 0.4,
+          ease: "easeInOut",
         }}
-        exit={{ height: 0 }}
-        src={image}
-        width={400}
-        height={300}
-        alt=""
-        className="object-cover rounded-md aspect-video"
-      />
-    </motion.div>
-  );
+        className="relative w-full p-4 overflow-hidden bg-center bg-cover border grow sm:grow-0 basis-80 group rounded-xl shadow-container"
+      >
+        <Image src={logo} width={30} height={30} alt="" />
+        <h3 className="mt-2 mb-1 text-lg font-medium">{project.name}</h3>
+        <p className="text-sm">{project.description}</p>
+        <div className="flex items-center gap-2 mt-3 text-xl">
+          {project.links.map((link, index) => {
+            const { icon: Icon } = link;
+
+            return (
+              <a key={index} href={link.href} target="_blank" title={link.name}>
+                <Icon />
+              </a>
+            );
+          })}
+        </div>
+      </motion.div>
+    );
+  } else {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{
+          duration: 0.4,
+          delay: project.id * 0.05,
+          ease: "easeInOut",
+        }}
+        className="relative flex items-center justify-center w-full p-4 overflow-hidden bg-center bg-cover border grow sm:grow-0 basis-80 group rounded-xl shadow-container"
+      >
+        <h3 className="text-3xl font-medium opacity-25">Coming...</h3>
+      </motion.div>
+    );
+  }
 }
