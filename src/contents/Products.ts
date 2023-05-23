@@ -55,18 +55,18 @@ export const PRODUCTS: ProductsType = [
     rate: 0,
     valuable: false,
   },
-  {
-    product: 3,
-    name: "Plan and then Make",
-    description:
-      "The best place where you can write your tasks/bugs and start coding it with your teams",
-    tags: ["animated", "content"],
-    image: "https://public-files.gumroad.com/aiyf5z39rdlspqc5bq8ao1ej41wt",
-    price: 5,
-    link: "https://alireza05.gumroad.com/l/plan-and-then-make",
-    discount: null,
-    discountData: null,
-    rate: 0,
-    valuable: false,
-  },
+  // {
+  //   product: 3,
+  //   name: "Plan and then Make",
+  //   description:
+  //     "The best place where you can write your tasks/bugs and start coding it with your teams",
+  //   tags: ["animated", "content"],
+  //   image: "https://public-files.gumroad.com/aiyf5z39rdlspqc5bq8ao1ej41wt",
+  //   price: 5,
+  //   link: "https://alireza05.gumroad.com/l/plan-and-then-make",
+  //   discount: null,
+  //   discountData: null,
+  //   rate: 0,
+  //   valuable: false,
+  // },
 ];

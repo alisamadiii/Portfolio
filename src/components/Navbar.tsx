@@ -20,6 +20,7 @@ import { IoIosArrowDown } from "react-icons/io";
 export default function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isSocialMedia, setIsSocialMedia] = useState<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState<boolean>(true); // True: Visible || False: Not Visible
 
   useEffect(() => {
     isOpen
@@ -48,9 +49,23 @@ export default function Navbar({}: Props) {
     },
   ];
 
+  useEffect(() => {
+    let prevScroll = window.pageYOffset;
+
+    window.addEventListener("scroll", (e) => {
+      const currentScroll = window.pageYOffset;
+
+      prevScroll > currentScroll ? setIsScrolled(true) : setIsScrolled(false);
+
+      prevScroll = currentScroll;
+    });
+  }, []);
+
   return (
     <nav
-      className={`fixed top-0 left-0 z-50 w-full h-16 bg-light-blue/50 backdrop-blur-md border-b-2`}
+      className={`fixed top-0 left-0 z-50 w-full h-16 bg-light-blue/50 backdrop-blur-md border-b-2 duration-200 ${
+        isScrolled ? "-translate-y-0" : "-translate-y-full"
+      }`}
     >
       <Container className="flex items-center h-full gap-12">
         <div className="flex items-center gap-1">
