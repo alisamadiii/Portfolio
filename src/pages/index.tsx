@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { PROJECTS } from "@/contents/Projects";
 
@@ -28,6 +28,16 @@ type Props = {
 };
 
 export default function Home({}: Props) {
+  const [heroBackground, setHeroBackground] = useState<boolean>(true);
+
+  useEffect(() => {
+    window.addEventListener("scroll", () => {
+      const { scrollY } = window;
+
+      scrollY > 100 ? setHeroBackground(false) : setHeroBackground(true);
+    });
+  }, []);
+
   return (
     <>
       <Meta_Tag
@@ -36,7 +46,17 @@ export default function Home({}: Props) {
       />
       <main>
         {/* Header */}
-        <header className="relative w-full py-56">
+        <header className="relative z-20 w-full py-60">
+          <AnimatePresence>
+            {heroBackground && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-center bg-cover -z-20 bg-hero-background"
+              />
+            )}
+          </AnimatePresence>
           <Hero />
         </header>
 

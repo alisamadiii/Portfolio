@@ -19,8 +19,8 @@ import { FiFigma } from "react-icons/fi";
 
 export default function About({}: Props) {
   const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], ["-30%", "50%"]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.7]);
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "-70%"]);
+  // const scale = useTransform(scrollYProgress, [0, 1], [1, 0.7]);
 
   return (
     <Container className="flex flex-col gap-8">
@@ -65,7 +65,7 @@ export default function About({}: Props) {
           // viewport={{ once: true }}
           // transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
           className="relative"
-          style={{ y, scale }}
+          style={{ y }}
         >
           <Image
             src={MyImage}

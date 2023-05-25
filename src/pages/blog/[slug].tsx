@@ -25,7 +25,6 @@ import { Bebas_Neue } from "next/font/google";
 import Table_Contents from "@/components/Table_Contents";
 import { DATA_Type } from "@/Types/Blogs";
 import { mdxStyling } from "@/utils/MDXFile";
-import Image from "next/image";
 
 const bebas = Bebas_Neue({
   weight: ["400"],

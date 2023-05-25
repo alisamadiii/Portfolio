@@ -20,10 +20,10 @@ export default function Hero({}: Props) {
   return (
     <>
       {/* Background color + Gradient */}
-      <div className="scale-x-110 absolute top-0 left-0 w-full h-full -translate-y-[100px] md:rounded-b-[20%] lg:rounded-b-[100%] bg-light-blue-2 -z-50 overflow-hidden">
+      {/* <div className="scale-x-110 absolute top-0 left-0 w-full h-full -translate-y-[100px] md:rounded-b-[20%] lg:rounded-b-[100%] bg-light-blue-2 -z-50 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gradient-to-t from-primary to-secondary blur-3xl opacity-30"></div>
         <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
-      </div>
+      </div> */}
       <Container className="flex flex-col items-center justify-center gap-4">
         {/* Twitter Link + Twitter Activities */}
         <motion.div
