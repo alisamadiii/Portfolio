@@ -16,6 +16,7 @@ import {
   AiFillGithub,
 } from "react-icons/ai";
 import { IoIosArrowDown } from "react-icons/io";
+import { SiGumroad, SiHashnode } from "react-icons/si";
 
 export default function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -118,24 +119,23 @@ export default function Navbar({}: Props) {
           </AnimatePresence>
         </div>
         <ul className="hidden gap-8 md:flex">
-          <Link href={"/#about"} scroll={false} className="font-medium">
-            About
-          </Link>
-          <Link href={"/#project"} scroll={false} className="font-medium">
-            Projects
+          <Link href={"/service"} className="font-medium">
+            Service
           </Link>
           <Link
             href={"https://store.alirezasamadi.com/"}
             target="_blank"
-            className="font-medium"
+            className="flex items-center gap-2 font-medium"
           >
+            <SiGumroad />
             Products
           </Link>
           <Link
             href={"https://blog.alirezasamadi.com/"}
             target="_blank"
-            className="font-medium"
+            className="flex items-center gap-2 font-medium"
           >
+            <SiHashnode />
             Blogs
           </Link>
         </ul>
@@ -187,30 +187,14 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0, transition: { duration: 0.1 } }}
-          transition={{ duration: 0.5, type: "spring" }}
-          onClick={() => setIsOpen(false)}
-        >
-          <Link
-            href={"/#about"}
-            scroll={false}
-            className="inline-block w-full px-4 py-2 font-medium border-b"
-          >
-            About
-          </Link>
-        </motion.li>
-        <motion.li
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 20, opacity: 0, transition: { duration: 0.1 } }}
           transition={{ duration: 0.5, type: "spring", delay: 0.1 }}
           onClick={() => setIsOpen(false)}
         >
           <Link
-            href={"/#projects"}
-            scroll={false}
+            href={"/service"}
             className="inline-block w-full px-4 py-2 font-medium border-b"
           >
-            Projects
+            Service
           </Link>
         </motion.li>
         <motion.li
@@ -223,8 +207,9 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
           <Link
             href={"https://store.alirezasamadi.com/"}
             target="_blank"
-            className="inline-block w-full px-4 py-2 font-medium border-b"
+            className="flex items-center w-full gap-2 px-4 py-2 font-medium border-b"
           >
+            <SiGumroad />
             Products
           </Link>
         </motion.li>
@@ -237,8 +222,9 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
         >
           <Link
             href={"/blog"}
-            className="inline-block w-full px-4 py-2 font-medium border-b"
+            className="flex items-center w-full gap-2 px-4 py-2 font-medium border-b"
           >
+            <SiHashnode />
             Blogs
           </Link>
         </motion.li>
