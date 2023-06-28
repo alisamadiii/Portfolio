@@ -25,6 +25,7 @@ import { COMMENTS } from "@/Types/User";
 import Meta_Tag from "@/layout/Head";
 import Comment from "@/components/Comment";
 import SignIn from "@/components/SignIn";
+import * as SelectList from "@/components/Select";
 
 import { AiOutlineSend } from "react-icons/ai";
 
@@ -108,7 +109,7 @@ export default function Chat_Community({}: Props) {
       <div className="max-w-[1000px] flex items-center flex-col mt-24 gap-3 justify-center w-full mx-auto p-4">
         <div
           ref={listComments}
-          className="flex flex-col w-full overflow-x-hidden overflow-y-auto rounded-t-xl bg-light-blue-2 h-[450px]"
+          className="flex flex-col w-full overflow-y-auto rounded-t-xl bg-light-blue-2 h-[450px]"
         >
           {comments ? (
             comments.map((comment) => (
@@ -139,13 +140,21 @@ export default function Chat_Community({}: Props) {
         <form onSubmit={submitHandler} className="w-full group">
           <div className="relative flex flex-col md:flex-row gap-4 items-center p-2 border-b-2 before:w-0 before:h-[2px] before:absolute before:bottom-0 before:left-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:duration-200 group-focus-within:before:w-full">
             <div>
-              <select
+              {/* <select
                 onChange={(e: any) => setChatType(e.target.value)}
                 className="bg-transparent focus:outline-primary"
               >
                 <option value="chat">Chat</option>
                 <option value="question">Question</option>
-              </select>
+              </select> */}
+              <SelectList.Select className="w-32">
+                <SelectList.SelectContent
+                  placeholder="Choose"
+                  contents={["chat", "question"]}
+                  value={setChatType}
+                  direction="top"
+                />
+              </SelectList.Select>
             </div>
             <div className="flex items-center w-full">
               {currentUser && (
