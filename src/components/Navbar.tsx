@@ -17,6 +17,7 @@ import {
 } from "react-icons/ai";
 import { IoIosArrowDown } from "react-icons/io";
 import { SiGumroad, SiHashnode } from "react-icons/si";
+import { buttonVariants } from "./Button";
 
 export default function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -90,28 +91,23 @@ export default function Navbar({}: Props) {
           <AnimatePresence>
             {isSocialMedia && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ y: 65, scale: 0.98 }}
+                animate={{ y: 70, scale: 1 }}
                 transition={{ duration: 0.2 }}
                 className="absolute top-0 w-full bg-white translate-y-[70px] max-w-[200px] rounded-md shadow-sm border overflow-hidden"
               >
                 {SOCIAL_MEDIA.map((socialMedia) => {
                   const Icon = socialMedia.icon;
                   return (
-                    <motion.a
+                    <a
                       key={socialMedia.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
                       href={socialMedia.link}
                       target="_blank"
                       className={`flex items-center gap-2 hover:bg-gray-100 duration-100 p-1 rounded-md m-1`}
                     >
                       <Icon />
                       <p>{socialMedia.name}</p>
-                    </motion.a>
+                    </a>
                   );
                 })}
               </motion.div>
@@ -142,7 +138,7 @@ export default function Navbar({}: Props) {
         <ul className="hidden ml-auto md:block">
           <Link
             href={"/chat-community"}
-            className="px-4 py-2 font-medium text-white border-b rounded-md bg-gradient-to-tr from-primary to-secondary"
+            className={buttonVariants({ variant: "default" })}
           >
             Chat Now
           </Link>

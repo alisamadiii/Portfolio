@@ -15,6 +15,8 @@
     "@types/react": "18.0.31",
     "@types/react-dom": "18.0.11",
     "canvas-confetti": "^1.6.0",
+    "class-variance-authority": "^0.6.1",
+    "clsx": "^1.2.1",
     "date-fns": "^2.29.3",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
@@ -30,6 +32,7 @@
     "react-icons": "^4.8.0",
     "react-use-measure": "^2.1.1",
     "reading-time": "^1.5.0",
+    "tailwind-merge": "^1.13.2",
     "typescript": "5.0.3",
     "vercel-toast": "^1.7.1"
   },

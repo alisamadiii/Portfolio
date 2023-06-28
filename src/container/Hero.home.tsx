@@ -8,6 +8,8 @@ import Container from "@/layout/Container";
 // Icons
 import { AiOutlineTwitter } from "react-icons/ai";
 import { HiOutlineArrowLongDown } from "react-icons/hi2";
+import { Button } from "@/components/Button";
+import { useRouter } from "next/router";
 
 type Props = {};
 
@@ -17,6 +19,8 @@ const HeroItemVariants: Variants = {
 };
 
 export default function Hero({}: Props) {
+  const router = useRouter();
+
   return (
     <>
       <Container className="relative flex flex-col items-center justify-center gap-4">
@@ -39,20 +43,21 @@ export default function Hero({}: Props) {
           transition={{ duration: 1 }}
           className="flex gap-4 text-sm"
         >
-          <a
-            href="https://twitter.com/Ali_Developer05"
-            target="_blank"
-            className="flex items-center gap-2 px-4 py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white"
+          <Button
+            variant={"twitter"}
+            onClick={() =>
+              window.open("https://twitter.com/Ali_Developer05")?.focus()
+            }
           >
             <AiOutlineTwitter />
             <span>Twitter</span>
-          </a>
-          <Link
-            href="/twitter-activity"
-            className="flex items-center gap-2 px-4 py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white"
+          </Button>
+          <Button
+            variant={"twitter"}
+            onClick={() => router.push("/twitter-activity")}
           >
             <span>Twitter Activity</span>
-          </Link>
+          </Button>
         </motion.div>
         <motion.div
           variants={HeroItemVariants}
