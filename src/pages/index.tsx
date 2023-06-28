@@ -92,7 +92,7 @@ export default function Home({}: Props) {
         </section>
 
         {/* Products */}
-        <section id="products" className="py-12">
+        {/* <section id="products" className="py-12">
           <Container className="space-y-12">
             <Heading2>Products</Heading2>
             <div className="flex flex-wrap items-start gap-4">
@@ -110,7 +110,7 @@ export default function Home({}: Props) {
               ))}
             </div>
           </Container>
-        </section>
+        </section> */}
 
         {/* Testimonial */}
         <section id="testimonial" className="py-12">

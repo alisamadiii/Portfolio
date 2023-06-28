@@ -121,10 +121,14 @@ export default function Navbar({}: Props) {
           <Link href={"/#about"} scroll={false} className="font-medium">
             About
           </Link>
-          <Link href={"/#projects"} scroll={false} className="font-medium">
+          <Link href={"/#project"} scroll={false} className="font-medium">
             Projects
           </Link>
-          <Link href={"/#products"} scroll={false} className="font-medium">
+          <Link
+            href={"https://store.alirezasamadi.com/"}
+            target="_blank"
+            className="font-medium"
+          >
             Products
           </Link>
           <Link
@@ -217,8 +221,8 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
           onClick={() => setIsOpen(false)}
         >
           <Link
-            href={"/#products"}
-            scroll={false}
+            href={"https://store.alirezasamadi.com/"}
+            target="_blank"
             className="inline-block w-full px-4 py-2 font-medium border-b"
           >
             Products
