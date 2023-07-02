@@ -2,19 +2,22 @@ import React, { ButtonHTMLAttributes, forwardRef } from "react";
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/utils";
 
-const buttonVariants = cva("px-4 flex items-center gap-2", {
-  variants: {
-    variant: {
-      default:
-        "py-2 font-medium rounded-md text-white border-b bg-gradient-to-tr from-primary to-secondary",
-      twitter:
-        "py-1 font-bold duration-150 rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white",
+const buttonVariants = cva(
+  "px-4 flex items-center gap-2 duration-150 active:scale-95",
+  {
+    variants: {
+      variant: {
+        default:
+          "py-2 font-medium rounded-md text-white border-b bg-gradient-to-tr from-primary to-secondary",
+        twitter:
+          "py-1 font-bold rounded-full text-twitter bg-twitter/10 hover:bg-twitter hover:text-white",
+      },
     },
-  },
-  defaultVariants: {
-    variant: "default",
-  },
-});
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
 interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,

@@ -16,7 +16,6 @@ import { IoLogoCss3, IoLogoJavascript } from "react-icons/io";
 import { FaReact } from "react-icons/fa";
 import { SiNextdotjs, SiFirebase, SiRedux } from "react-icons/si";
 import { FiFigma } from "react-icons/fi";
-import * as SelectList from "@/components/Select";
 
 export default function About({}: Props) {
   const { scrollYProgress } = useScroll();

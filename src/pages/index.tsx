@@ -6,8 +6,6 @@ import { PROJECTS } from "@/contents/Projects";
 import Container from "@/layout/Container";
 import { Heading2, Project } from "@/components";
 import { Hero, About } from "@/container";
-import { PRODUCTS } from "@/contents/Products";
-import Product from "@/components/Product";
 import Meta_Tag from "@/layout/Head";
 import { DAILY_APPLICATIONS } from "@/contents/Daily_Applications";
 import Each_Applications from "@/components/Each_Applications";
@@ -90,27 +88,6 @@ export default function Home({}: Props) {
             </div>
           </Container>
         </section>
-
-        {/* Products */}
-        {/* <section id="products" className="py-12">
-          <Container className="space-y-12">
-            <Heading2>Products</Heading2>
-            <div className="flex flex-wrap items-start gap-4">
-              {PRODUCTS.map((product) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1 }}
-                  key={product.product}
-                  className="basis-[300px] grow rounded-3xl shadow-lg border overflow-hidden"
-                >
-                  <Product product={product} />
-                </motion.div>
-              ))}
-            </div>
-          </Container>
-        </section> */}
 
         {/* Testimonial */}
         <section id="testimonial" className="py-12">

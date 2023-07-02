@@ -135,7 +135,7 @@ export default function Navbar({}: Props) {
             Blogs
           </Link>
         </ul>
-        <ul className="hidden ml-auto md:block">
+        <ul className="items-center hidden gap-3 ml-auto md:flex">
           <Link
             href={"/chat-community"}
             className={buttonVariants({ variant: "default" })}

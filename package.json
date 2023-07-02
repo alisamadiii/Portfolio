@@ -34,7 +34,8 @@
     "reading-time": "^1.5.0",
     "tailwind-merge": "^1.13.2",
     "typescript": "5.0.3",
-    "vercel-toast": "^1.7.1"
+    "vercel-toast": "^1.7.1",
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
