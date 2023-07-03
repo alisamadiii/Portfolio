@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 
 import { Lobster, Bebas_Neue } from "next/font/google";
+import { twMerge } from "tailwind-merge";
 
 type Props = {
   children: ReactNode;
@@ -30,11 +31,14 @@ export function Heading1({ children, className }: Props) {
   );
 }
 
-export function Heading2({ children, lineUnder = true }: Props) {
+export function Heading2({ children, lineUnder = true, className }: Props) {
   return (
     <div className="relative">
       <h2
-        className={`${bebas.className} text-4xl text-dark-blue-2 inline-block`}
+        className={twMerge(
+          `${bebas.className} text-4xl text-dark-blue-2 inline-block`,
+          className
+        )}
       >
         {children}
         {lineUnder && (

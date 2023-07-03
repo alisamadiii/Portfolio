@@ -4,6 +4,6 @@ import UnderConstruction from "@/components/UnderConstruction";
 
 type Props = {};
 
-export default function BuildingWebsite({}: Props) {
+export default function Sponsor({}: Props) {
   return <UnderConstruction />;
 }
