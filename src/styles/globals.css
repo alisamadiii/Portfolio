@@ -17,3 +17,7 @@
   background-color: #c4c4c4;
   border-radius: 9999px;
 }
+
+.cookie-consent {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 60px) !important;
+}
