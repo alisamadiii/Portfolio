@@ -16,7 +16,6 @@ type Props = {};
 export default function Chat_Community({}: Props) {
   const [isNotSigned, setIsNotSigned] = useState<boolean>(false);
   const { setComments } = useCommentsStore();
-
   const { setCurrentUser } = useContext(User_Context);
 
   useEffect(() => {
@@ -55,6 +54,7 @@ export default function Chat_Community({}: Props) {
         <Header />
         <Comments />
         <Input setIsNotSigned={setIsNotSigned} />
+        <p className="px-4 text-xs opacity-80">Press ctrl to delete comment</p>
       </div>
       {isNotSigned && <SignIn />}
     </>
