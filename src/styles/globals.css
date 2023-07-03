@@ -9,3 +9,11 @@
 ::selection {
   @apply text-white bg-dark-blue-2;
 }
+
+#chat::-webkit-scrollbar {
+  width: 5px;
+}
+#chat::-webkit-scrollbar-thumb {
+  background-color: #c4c4c4;
+  border-radius: 9999px;
+}

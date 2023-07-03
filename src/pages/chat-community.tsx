@@ -1,11 +1,6 @@
 import Image from "next/image";
-import React, {
-  ChangeEvent,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   collection,
   onSnapshot,
@@ -17,6 +12,7 @@ import {
 import { formatDistance } from "date-fns";
 import "vercel-toast/css";
 import { createToast } from "vercel-toast";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { User_Context } from "@/context/User_Context";
 import { authStateChanged, db } from "@/utils/Firebase";
@@ -27,7 +23,9 @@ import Comment from "@/components/Comment";
 import SignIn from "@/components/SignIn";
 import * as SelectList from "@/components/Select";
 
-import { AiOutlineSend } from "react-icons/ai";
+import { BiLeftArrowAlt, BiMessageRounded } from "react-icons/bi";
+import { IoMdSend } from "react-icons/io";
+import Logo from "@/assets/logo.jpg";
 
 type Props = {};
 
@@ -37,7 +35,7 @@ export default function Chat_Community({}: Props) {
   const [isNotSigned, setIsNotSigned] = useState<boolean>(false);
   const [chatType, setChatType] = useState<"chat" | "question">("chat");
 
-  const listComments = useRef<HTMLDivElement>(null);
+  const listComments = useRef<HTMLUListElement>(null);
 
   const { currentUser, setCurrentUser } = useContext(User_Context);
 
@@ -91,7 +89,7 @@ export default function Chat_Community({}: Props) {
   useEffect(() => {
     const scrollToLastMessage = () => {
       const lastElement = listComments.current!.lastElementChild;
-      lastElement?.scrollIntoView({ behavior: "smooth" });
+      lastElement?.scrollIntoView();
     };
     scrollToLastMessage();
   }, [comments]);
@@ -106,87 +104,73 @@ export default function Chat_Community({}: Props) {
         title="Chat Community"
         description="This is the place where you can chat and have conversation with me."
       />
-      <div className="max-w-[1000px] flex items-center flex-col mt-24 gap-3 justify-center w-full mx-auto p-4">
-        <div
+      <div className="relative mt-24 w-full max-w-[452px] mx-auto bg-white shadow-container rounded-xl overflow-hidden">
+        <header className="sticky top-0 flex items-center p-2 text-2xl text-white bg-primary">
+          <Link href={"/"}>
+            <BiLeftArrowAlt />
+          </Link>
+          <Image
+            src={Logo}
+            width={100}
+            height={100}
+            alt="logo"
+            className="w-8 rounded-full"
+          />
+          <small className="ml-2 font-medium">Community Chat</small>
+        </header>
+        <ul
+          id="chat"
           ref={listComments}
-          className="flex flex-col w-full overflow-y-auto rounded-t-xl bg-light-blue-2 h-[450px]"
+          className="flex flex-col items-start gap-2 p-2 h-[500px] overflow-auto"
         >
-          {comments ? (
+          {comments &&
             comments.map((comment) => (
-              <Comment
+              <li
                 key={comment.id}
-                comment={comment}
-                setIsNotSigned={setIsNotSigned}
-              />
-            ))
-          ) : (
-            <div className="self-center">
-              <svg
-                fill="none"
-                className="w-16 text-primary h-1w-16 animate-spin"
-                viewBox="0 0 32 32"
-                xmlns="http://www.w3.org/2000/svg"
+                className={` text-white p-2 rounded-xl max-w-[300px] min-w-[100px] ${
+                  comment.userId == currentUser?.uid
+                    ? "self-end rounded-tr-none bg-[#00B871]"
+                    : "rounded-tl-none bg-primary"
+                }`}
               >
-                <path
-                  clipRule="evenodd"
-                  d="M15.165 8.53a.5.5 0 01-.404.58A7 7 0 1023 16a.5.5 0 011 0 8 8 0 11-9.416-7.874.5.5 0 01.58.404z"
-                  fill="currentColor"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
-          )}
-        </div>
-        <form onSubmit={submitHandler} className="w-full group">
-          <div className="relative flex flex-col md:flex-row gap-4 items-center p-2 border-b-2 before:w-0 before:h-[2px] before:absolute before:bottom-0 before:left-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:duration-200 group-focus-within:before:w-full">
-            <div>
-              {/* <select
-                onChange={(e: any) => setChatType(e.target.value)}
-                className="bg-transparent focus:outline-primary"
-              >
-                <option value="chat">Chat</option>
-                <option value="question">Question</option>
-              </select> */}
-              <SelectList.Select className="w-32">
-                <SelectList.SelectContent
-                  placeholder="Choose"
-                  contents={["chat", "question"]}
-                  value={setChatType}
-                  direction="top"
-                />
-              </SelectList.Select>
-            </div>
-            <div className="flex items-center w-full">
-              {currentUser && (
-                <Image
-                  src={currentUser.photoURL}
-                  width={100}
-                  height={100}
-                  alt=""
-                  className="w-8 h-8 rounded-full"
-                />
+                {comment.message}
+              </li>
+            ))}
+        </ul>
+        <form
+          className="flex items-center gap-2 p-2"
+          onSubmit={(e) => submitHandler(e)}
+        >
+          <input
+            type="text"
+            className="bg-[#EBEBEB] grow p-2 rounded-full outline-none focus:ring-2 ring-[#00B871] duration-150"
+            placeholder="Message"
+            value={inputField}
+            onChange={(e) => setInputField(e.target.value)}
+          />
+          <button className="bg-[#00B871] text-white p-2 rounded-full text-2xl">
+            <AnimatePresence mode="wait" initial={false}>
+              {inputField.length == 0 ? (
+                <motion.p
+                  key={"empty"}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.8 }}
+                >
+                  <BiMessageRounded />
+                </motion.p>
+              ) : (
+                <motion.p
+                  key={"send"}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.8 }}
+                >
+                  <IoMdSend />
+                </motion.p>
               )}
-              <input
-                value={inputField}
-                onChange={(e) => setInputField(e.target.value)}
-                type="text"
-                className="w-full p-2 bg-transparent rounded-md outline-none"
-                placeholder="say HI... 👋"
-              />
-              <div
-                className="p-2 text-xl rounded-md bg-slate-200"
-                onClick={submitHandler}
-              >
-                <AiOutlineSend />
-              </div>
-            </div>
-          </div>
-          <p className="mt-2 text-xs">
-            Please, Do not spam the chat...{" "}
-            <span className="inline-block px-2 py-[2px] text-white rounded-sm bg-primary">
-              Total Messages: {comments?.length}
-            </span>
-          </p>
+            </AnimatePresence>
+          </button>
         </form>
       </div>
       {isNotSigned && <SignIn />}
