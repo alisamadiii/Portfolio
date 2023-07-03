@@ -117,8 +117,8 @@ export default function Chat_Community({}: Props) {
         title="Chat Community"
         description="This is the place where you can chat and have conversation with me."
       />
-      <div className="relative mt-24 w-full max-w-[452px] mx-auto bg-white shadow-container rounded-xl overflow-hidden">
-        <header className="sticky top-0 flex items-center p-2 text-2xl text-white bg-primary">
+      <div className="fixed inset-0 md:relative w-full md:mt-12 md:max-w-[452px] h-screen md:h-[600px] mx-auto bg-white shadow-container md:rounded-xl overflow-hidden">
+        <header className="sticky top-0 z-20 flex items-center p-2 text-2xl text-white bg-primary">
           <Link href={"/"}>
             <BiLeftArrowAlt />
           </Link>
@@ -134,7 +134,7 @@ export default function Chat_Community({}: Props) {
         <ul
           id="chat"
           ref={listComments}
-          className="flex flex-col items-start gap-2 p-2 h-[500px] overflow-auto"
+          className="flex flex-col items-start h-full gap-2 p-2 overflow-auto"
         >
           {comments &&
             comments.map((comment) => (
