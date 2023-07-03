@@ -8,6 +8,8 @@ import {
   serverTimestamp,
   query,
   orderBy,
+  doc,
+  deleteDoc,
 } from "firebase/firestore";
 import { formatDistance } from "date-fns";
 import "vercel-toast/css";
@@ -26,6 +28,8 @@ import * as SelectList from "@/components/Select";
 import { BiLeftArrowAlt, BiMessageRounded } from "react-icons/bi";
 import { IoMdSend } from "react-icons/io";
 import Logo from "@/assets/logo.jpg";
+import { convertTimestampToDateTime } from "@/utils";
+import { BsFillTrash3Fill } from "react-icons/bs";
 
 type Props = {};
 
@@ -33,6 +37,7 @@ export default function Chat_Community({}: Props) {
   const [inputField, setInputField] = useState("");
   const [comments, setComments] = useState<null | COMMENTS>(null);
   const [isNotSigned, setIsNotSigned] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [chatType, setChatType] = useState<"chat" | "question">("chat");
 
   const listComments = useRef<HTMLUListElement>(null);
@@ -76,14 +81,17 @@ export default function Chat_Community({}: Props) {
     const colRef = collection(db, "comments");
     const q = query(colRef, orderBy("createdAt"));
 
-    onSnapshot(q, (snapshot: any) => {
-      setComments(
-        snapshot.docs.map((comment: any) => ({
-          ...comment.data(),
-          id: comment.id,
-        }))
-      );
-    });
+    setTimeout(() => {
+      onSnapshot(q, (snapshot: any) => {
+        setComments(
+          snapshot.docs.map((comment: any) => ({
+            ...comment.data(),
+            id: comment.id,
+          }))
+        );
+      });
+      setIsLoading(false);
+    }, 1000);
   }, []);
 
   useEffect(() => {
@@ -97,6 +105,11 @@ export default function Chat_Community({}: Props) {
   const timeFormat = (date: string) => {
     return formatDistance(new Date(date), new Date());
   }; // yyyy/mm/dd
+
+  const deletingComment = async (id: string) => {
+    const docRef = doc(db, "comments", id);
+    await deleteDoc(docRef);
+  };
 
   return (
     <>
@@ -125,17 +138,34 @@ export default function Chat_Community({}: Props) {
         >
           {comments &&
             comments.map((comment) => (
-              <li
-                key={comment.id}
-                className={` text-white p-2 rounded-xl max-w-[300px] min-w-[100px] ${
-                  comment.userId == currentUser?.uid
-                    ? "self-end rounded-tr-none bg-[#00B871]"
-                    : "rounded-tl-none bg-primary"
-                }`}
-              >
-                {comment.message}
-              </li>
+              <>
+                <li
+                  key={comment.id}
+                  className={` text-white p-2 rounded-xl max-w-[300px] min-w-[100px] ${
+                    comment.userId == currentUser?.uid
+                      ? "self-end rounded-tr-none bg-[#00B871]"
+                      : "rounded-tl-none bg-primary"
+                  }`}
+                >
+                  <span>{comment.message}</span>
+                  <span className="float-right mt-2 ml-2 text-xs opacity-80">
+                    {currentUser?.uid !== comment.userId &&
+                      `${comment.name} - `}
+                    {comment.createdAt &&
+                      convertTimestampToDateTime(comment.createdAt.seconds)}
+                  </span>
+                </li>
+                {currentUser?.uid == comment.userId && (
+                  <p
+                    onClick={() => deletingComment(comment.id)}
+                    className="p-1 ml-auto text-red-700 rounded-md cursor-pointer bg-red-700/10"
+                  >
+                    <BsFillTrash3Fill />
+                  </p>
+                )}
+              </>
             ))}
+          {isLoading && <div>loading...</div>}
         </ul>
         <form
           className="flex items-center gap-2 p-2"
