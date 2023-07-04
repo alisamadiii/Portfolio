@@ -121,6 +121,15 @@ export default function Comments({}: Props) {
             </motion.li>
           );
         })}
+
+      {comments.length == 0 && (
+        <div className="flex flex-col w-full gap-3 p-2 rounded-md">
+          {/* @ts-ignore */}
+          {[...Array(10).keys()].map((_, index) => (
+            <div key={index} className="w-full h-12 bg-white animate-pulse" />
+          ))}
+        </div>
+      )}
     </ul>
   );
 }
