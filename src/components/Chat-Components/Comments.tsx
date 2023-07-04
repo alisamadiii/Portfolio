@@ -53,6 +53,25 @@ export default function Comments({}: Props) {
 
   let previousUser: any = null;
 
+  const [isPressing, setIsPressing] = useState(false);
+  const [pressStartTime, setPressStartTime] = useState(0);
+
+  const handleMouseDown = () => {
+    setPressStartTime(Date.now());
+    setIsPressing(true);
+  };
+
+  const handleMouseUp = (id: string) => {
+    setIsPressing(false);
+
+    const pressEndTime = Date.now();
+    const pressDuration = pressEndTime - pressStartTime;
+
+    if (pressDuration >= 3000) {
+      deletingComment(id);
+    }
+  };
+
   return (
     <ul
       id="chat"
@@ -116,6 +135,8 @@ export default function Comments({}: Props) {
                         process.env.NEXT_PUBLIC_OWNER == currentUser?.uid) &&
                       deletingComment(comment.id);
                   }}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={() => handleMouseUp(comment.id)}
                 >
                   <span>{comment.message}</span>
                   <span className="float-right mt-2 ml-2 text-xs opacity-80">

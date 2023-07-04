@@ -57,7 +57,11 @@ export default function index({}: Props) {
                 harness the power of social media to drive your business
                 forward.
               </p>
-              <Link href={"/service/sponsor"} className="opacity-70">
+              <Link
+                href={"https://sponsor.alirezasamadi.com/"}
+                target="_blank"
+                className="opacity-70"
+              >
                 Read more
               </Link>
               <AiOutlineTwitter className="absolute bottom-0 right-0 translate-y-8 text-9xl text-twitter" />

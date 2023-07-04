@@ -78,7 +78,10 @@ export default function Input({ setIsNotSigned }: Props) {
           onChange={(e) => setInputField(e.target.value)}
         />
       </div>
-      <button className="bg-[#00B871] text-white p-2 rounded-full text-2xl">
+      <motion.button
+        layout="position"
+        className="bg-[#00B871] text-white p-2 rounded-full text-2xl"
+      >
         <AnimatePresence mode="wait" initial={false}>
           {inputField.length == 0 ? (
             <motion.p
@@ -100,7 +103,7 @@ export default function Input({ setIsNotSigned }: Props) {
             </motion.p>
           )}
         </AnimatePresence>
-      </button>
+      </motion.button>
     </form>
   );
 }
