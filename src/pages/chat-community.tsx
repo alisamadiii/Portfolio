@@ -50,7 +50,13 @@ export default function Chat_Community({}: Props) {
         title="Chat Community"
         description="This is the place where you can chat and have conversation with me."
       />
-      <div className="cookie-consent flex flex-col fixed inset-0 md:relative w-full md:mt-12 md:max-w-[452px] h-screen md:h-[600px] mx-auto bg-white shadow-container md:rounded-xl overflow-hidden">
+      {/* <img
+        className="absolute inset-0 object-cover w-full h-full -z-50"
+        src="https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+      /> */}
+      <div className="absolute inset-0 w-full h-full bg-center bg-cover bg-hero-background" />
+      <div className="absolute inset-0 w-full h-full bg-pattern" />
+      <div className="cookie-consent flex flex-col fixed inset-0 md:relative w-full md:mt-12 md:max-w-[452px] h-screen md:h-[600px] mx-auto shadow-container md:rounded-xl overflow-hidden">
         <Header />
         <Comments />
         <Input setIsNotSigned={setIsNotSigned} />
