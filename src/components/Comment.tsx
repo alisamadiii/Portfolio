@@ -78,8 +78,6 @@ export default function Comment({ comment, setIsNotSigned }: Props) {
     return dateFormat;
   }
 
-  console.log(comment.answers);
-
   return (
     <>
       <motion.div

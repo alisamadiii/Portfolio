@@ -3,10 +3,13 @@ import { deleteDoc, doc } from "firebase/firestore";
 import { motion } from "framer-motion";
 
 import { BsFillTrash3Fill } from "react-icons/bs";
+import { AiFillLike } from "react-icons/ai";
 import { useCommentsStore } from "@/context/Comments";
 import { User_Context } from "@/context/User_Context";
 import { convertTimestampToDateTime } from "@/utils";
 import { db } from "@/utils/Firebase";
+import { COMMENT } from "@/Types/User";
+import Like from "./Like";
 
 type Props = {};
 
@@ -46,6 +49,11 @@ export default function Comments({}: Props) {
     document.addEventListener("keyup", handleKeyUp);
   }, []);
 
+  // Finding comments
+  const findingComment = (comment: COMMENT) => {
+    return comment.likes.find((like) => like.id === currentUser?.uid);
+  };
+
   return (
     <ul
       id="chat"
@@ -54,44 +62,42 @@ export default function Comments({}: Props) {
     >
       {comments &&
         comments.map((comment) => (
-          <li
+          <motion.li
             key={comment.id}
-            className={`h-full ${
-              comment.userId == currentUser?.uid ? "self-end" : ""
+            layout
+            className={`group relative text-white p-2 rounded-xl max-w-[300px] min-w-[100px] transition-colors duration-150 ${
+              comment.userId == currentUser?.uid
+                ? `self-end rounded-tr-none ${
+                    isCtrlPressed ? "bg-red-600 cursor-pointer" : "bg-[#00B871]"
+                  }`
+                : "rounded-tl-none bg-primary"
+            } ${
+              process.env.NEXT_PUBLIC_OWNER == comment.userId &&
+              "!bg-orange-500"
             }`}
+            onClick={() => {
+              isCtrlPressed &&
+                (currentUser?.uid == comment.userId ||
+                  process.env.NEXT_PUBLIC_OWNER == currentUser?.uid) &&
+                deletingComment(comment.id);
+            }}
           >
+            <span>{comment.message}</span>
+            <span className="float-right mt-2 ml-2 text-xs opacity-80">
+              {currentUser?.uid !== comment.userId && `${comment.name} - `}
+              {comment.createdAt &&
+                convertTimestampToDateTime(comment.createdAt.seconds)}
+            </span>
             <div
-              className={` text-white p-2 rounded-xl max-w-[300px] min-w-[100px] transition-colors duration-150 ${
-                comment.userId == currentUser?.uid
-                  ? `rounded-tr-none ${
-                      isCtrlPressed
-                        ? "bg-red-600 cursor-pointer"
-                        : "bg-[#00B871]"
-                    }`
-                  : "rounded-tl-none bg-primary"
+              className={`absolute top-1/2 flex items-center gap-2 -translate-y-1/2 opacity-0 group-hover:opacity-100 ${
+                currentUser?.uid == comment.userId
+                  ? "left-0 -translate-x-[calc(100%+10px)]"
+                  : "right-0 translate-x-[calc(100%+10px)]"
               }`}
-              onClick={() => {
-                isCtrlPressed &&
-                  comment.userId == currentUser?.uid &&
-                  deletingComment(comment.id);
-              }}
             >
-              <span>{comment.message}</span>
-              <span className="float-right mt-2 ml-2 text-xs opacity-80">
-                {currentUser?.uid !== comment.userId && `${comment.name} - `}
-                {comment.createdAt &&
-                  convertTimestampToDateTime(comment.createdAt.seconds)}
-              </span>
+              <Like comment={comment} />
             </div>
-            {/* {currentUser?.uid == comment.userId && (
-              <p
-                onClick={() => deletingComment(comment.id)}
-                className="p-1 ml-auto text-red-700 rounded-md cursor-pointer bg-red-700/10"
-              >
-                <BsFillTrash3Fill />
-              </p>
-            )} */}
-          </li>
+          </motion.li>
         ))}
     </ul>
   );
