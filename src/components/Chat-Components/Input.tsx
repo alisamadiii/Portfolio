@@ -1,10 +1,11 @@
+import { useReplyStore } from "@/context/Reply";
 import { User_Context } from "@/context/User_Context";
 import { db } from "@/utils/Firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useContext, useState } from "react";
 import { BiMessageRounded } from "react-icons/bi";
-import { IoMdSend } from "react-icons/io";
+import { IoMdSend, IoMdCloseCircle } from "react-icons/io";
 import { createToast } from "vercel-toast";
 
 type Props = {
@@ -16,6 +17,7 @@ export default function Input({ setIsNotSigned }: Props) {
   const [chatType, setChatType] = useState<"chat" | "question">("chat");
 
   const { currentUser } = useContext(User_Context);
+  const { replyComment, setReplyComment } = useReplyStore();
 
   const submitHandler = async (e: any) => {
     e.preventDefault();
@@ -33,6 +35,7 @@ export default function Input({ setIsNotSigned }: Props) {
     await addDoc(collection(db, "comments"), {
       name: currentUser!.displayName,
       message: inputField,
+      reply: replyComment,
       image: currentUser!.photoURL,
       createdAt: serverTimestamp(),
       userId: currentUser?.uid,
@@ -42,6 +45,7 @@ export default function Input({ setIsNotSigned }: Props) {
       from: currentUser?.email == null ? "github" : "google",
     });
     setInputField("");
+    setReplyComment(null);
   };
 
   return (
@@ -49,13 +53,31 @@ export default function Input({ setIsNotSigned }: Props) {
       className="flex items-center gap-2 p-2 "
       onSubmit={(e) => submitHandler(e)}
     >
-      <input
-        type="text"
-        className="bg-[#EBEBEB] grow p-2 rounded-full outline-none focus:ring-2 ring-[#00B871] duration-150"
-        placeholder="Message"
-        value={inputField}
-        onChange={(e) => setInputField(e.target.value)}
-      />
+      <div className="grow">
+        {replyComment && (
+          <div className="bg-[#EBEBEB] rounded-t-xl p-2 text-xs flex items-center">
+            <div className="grow">
+              <small>{replyComment.name}</small>
+              <p className="line-clamp-1">{replyComment.message}</p>
+            </div>
+            <div className="text-xl">
+              <IoMdCloseCircle
+                onClick={() => setReplyComment(null)}
+                className=""
+              />
+            </div>
+          </div>
+        )}
+        <input
+          type="text"
+          className={`bg-[#EBEBEB] w-full p-2 outline-none focus:ring-2 ring-[#00B871] transition-[box-shadow] duration-150 ${
+            replyComment ? "rounded-b-xl" : "rounded-full"
+          }`}
+          placeholder={replyComment ? "Reply" : "Message"}
+          value={inputField}
+          onChange={(e) => setInputField(e.target.value)}
+        />
+      </div>
       <button className="bg-[#00B871] text-white p-2 rounded-full text-2xl">
         <AnimatePresence mode="wait" initial={false}>
           {inputField.length == 0 ? (

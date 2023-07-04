@@ -23,6 +23,7 @@ export type COMMENTS = {
   id: string;
   image: string;
   message: string;
+  reply: COMMENT;
   name: string;
   userId: string;
   likes: { id: string; name: string }[];
@@ -35,6 +36,7 @@ export type COMMENT = {
   id: string;
   image: string;
   message: string;
+  reply: COMMENT;
   name: string;
   userId: string;
   likes: { id: string; name: string }[];

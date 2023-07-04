@@ -8,6 +8,7 @@ import { convertTimestampToDateTime, firstName } from "@/utils";
 import { db } from "@/utils/Firebase";
 import Like from "./Like";
 import Image from "next/image";
+import Reply from "./Reply";
 
 type Props = {};
 
@@ -85,38 +86,51 @@ export default function Comments({}: Props) {
               )}
               {isSameUser && <div className="w-7" />}
               {/* Comment */}
-              <div
-                className={`group relative text-white p-2 rounded-xl max-w-[300px] min-w-[100px] duration-150 ${
-                  comment.userId == currentUser?.uid
-                    ? `self-end ${
-                        isCtrlPressed
-                          ? "bg-red-600 cursor-pointer"
-                          : "bg-[#00B871]"
-                      } ${!isSameUser ? "rounded-tr-none" : ""}`
-                    : `bg-primary ${!isSameUser ? "rounded-tl-none" : ""}`
-                } ${
-                  process.env.NEXT_PUBLIC_OWNER == comment?.userId &&
-                  "!bg-orange-600"
-                } `}
-                onClick={() => {
-                  isCtrlPressed &&
-                    (currentUser?.uid == comment.userId ||
-                      process.env.NEXT_PUBLIC_OWNER == currentUser?.uid) &&
-                    deletingComment(comment.id);
-                }}
-              >
-                <span>{comment.message}</span>
-                <span className="float-right mt-2 ml-2 text-xs opacity-80">
-                  {currentUser?.uid !== comment.userId &&
-                    !isSameUser &&
-                    `${firstName(comment.name)} - `}
-                  {comment.createdAt &&
-                    convertTimestampToDateTime(comment.createdAt.seconds)}
-                </span>
+              <div className="flex flex-col -space-y-1">
+                {comment.reply && (
+                  <a
+                    href={`#${comment.reply.id}`}
+                    className="inline-block max-w-[300px] min-w-[100px] text-xs bg-[#EBEBEB] hover:bg-white opacity-80 rounded-xl p-1"
+                  >
+                    <small>{firstName(comment.reply.name)}</small>
+                    <p className="line-clamp-2">{comment.reply.message}</p>
+                  </a>
+                )}
+                <div
+                  id={comment.id}
+                  className={`group relative text-white p-2 rounded-xl max-w-[300px] min-w-[100px] duration-150 ${
+                    comment.userId == currentUser?.uid
+                      ? `self-end ${
+                          isCtrlPressed
+                            ? "bg-red-600 cursor-pointer"
+                            : "bg-[#00B871]"
+                        } ${!isSameUser ? "rounded-tr-none" : ""}`
+                      : `bg-primary ${!isSameUser ? "rounded-tl-none" : ""}`
+                  } ${
+                    process.env.NEXT_PUBLIC_OWNER == comment?.userId &&
+                    "!bg-orange-600"
+                  } `}
+                  onClick={() => {
+                    isCtrlPressed &&
+                      (currentUser?.uid == comment.userId ||
+                        process.env.NEXT_PUBLIC_OWNER == currentUser?.uid) &&
+                      deletingComment(comment.id);
+                  }}
+                >
+                  <span>{comment.message}</span>
+                  <span className="float-right mt-2 ml-2 text-xs opacity-80">
+                    {currentUser?.uid !== comment.userId &&
+                      !isSameUser &&
+                      `${firstName(comment.name)} - `}
+                    {comment.createdAt &&
+                      convertTimestampToDateTime(comment.createdAt.seconds)}
+                  </span>
+                </div>
               </div>
               {/* Edit */}
-              <div className="duration-200 opacity-0 group-hover:opacity-100">
+              <div className="flex items-center gap-2 duration-200 opacity-0 group-hover:opacity-100">
                 <Like comment={comment} />
+                <Reply comment={comment} />
               </div>
             </motion.li>
           );
