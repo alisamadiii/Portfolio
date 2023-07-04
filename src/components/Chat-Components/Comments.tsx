@@ -54,13 +54,16 @@ export default function Comments({}: Props) {
     >
       {comments &&
         comments.map((comment) => (
-          <>
-            <motion.li
-              key={comment.id}
-              layout
+          <li
+            key={comment.id}
+            className={`h-full ${
+              comment.userId == currentUser?.uid ? "self-end" : ""
+            }`}
+          >
+            <div
               className={` text-white p-2 rounded-xl max-w-[300px] min-w-[100px] transition-colors duration-150 ${
                 comment.userId == currentUser?.uid
-                  ? `self-end rounded-tr-none ${
+                  ? `rounded-tr-none ${
                       isCtrlPressed
                         ? "bg-red-600 cursor-pointer"
                         : "bg-[#00B871]"
@@ -68,7 +71,9 @@ export default function Comments({}: Props) {
                   : "rounded-tl-none bg-primary"
               }`}
               onClick={() => {
-                isCtrlPressed && deletingComment(comment.id);
+                isCtrlPressed &&
+                  comment.userId == currentUser?.uid &&
+                  deletingComment(comment.id);
               }}
             >
               <span>{comment.message}</span>
@@ -77,7 +82,7 @@ export default function Comments({}: Props) {
                 {comment.createdAt &&
                   convertTimestampToDateTime(comment.createdAt.seconds)}
               </span>
-            </motion.li>
+            </div>
             {/* {currentUser?.uid == comment.userId && (
               <p
                 onClick={() => deletingComment(comment.id)}
@@ -86,7 +91,7 @@ export default function Comments({}: Props) {
                 <BsFillTrash3Fill />
               </p>
             )} */}
-          </>
+          </li>
         ))}
     </ul>
   );
