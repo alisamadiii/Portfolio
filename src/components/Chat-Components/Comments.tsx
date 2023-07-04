@@ -9,6 +9,7 @@ import { db } from "@/utils/Firebase";
 import Like from "./Like";
 import Image from "next/image";
 import Reply from "./Reply";
+import Delete from "./Delete";
 
 type Props = {};
 
@@ -52,25 +53,6 @@ export default function Comments({}: Props) {
   }
 
   let previousUser: any = null;
-
-  const [isPressing, setIsPressing] = useState(false);
-  const [pressStartTime, setPressStartTime] = useState(0);
-
-  const handleMouseDown = () => {
-    setPressStartTime(Date.now());
-    setIsPressing(true);
-  };
-
-  const handleMouseUp = (id: string) => {
-    setIsPressing(false);
-
-    const pressEndTime = Date.now();
-    const pressDuration = pressEndTime - pressStartTime;
-
-    if (pressDuration >= 3000) {
-      deletingComment(id);
-    }
-  };
 
   return (
     <ul
@@ -135,10 +117,10 @@ export default function Comments({}: Props) {
                         process.env.NEXT_PUBLIC_OWNER == currentUser?.uid) &&
                       deletingComment(comment.id);
                   }}
-                  onMouseDown={handleMouseDown}
-                  onMouseUp={() => handleMouseUp(comment.id)}
                 >
-                  <span>{comment.message}</span>
+                  <span className="inline-block leading-6">
+                    {comment.message}
+                  </span>
                   <span className="float-right mt-2 ml-2 text-xs opacity-80">
                     {currentUser?.uid !== comment.userId &&
                       !isSameUser &&
@@ -152,6 +134,10 @@ export default function Comments({}: Props) {
               <div className="flex items-center gap-2 duration-200 opacity-0 group-hover:opacity-100">
                 <Like comment={comment} />
                 <Reply comment={comment} />
+                {(currentUser?.uid == comment.userId ||
+                  process.env.NEXT_PUBLIC_OWNER == currentUser?.uid) && (
+                  <Delete commentId={comment.id} />
+                )}
               </div>
             </motion.li>
           );

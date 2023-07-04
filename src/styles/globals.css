@@ -18,8 +18,12 @@
   border-radius: 9999px;
 }
 
-@media (max-width: 768px) {
+.cookie-consent {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 60px) !important;
+}
+
+@media (hover: hover) {
   .cookie-consent {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 60px) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0px) !important;
   }
 }
