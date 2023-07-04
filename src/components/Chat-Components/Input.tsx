@@ -46,7 +46,7 @@ export default function Input({ setIsNotSigned }: Props) {
 
   return (
     <form
-      className="flex items-center gap-2 p-2"
+      className="flex items-center gap-2 p-2 "
       onSubmit={(e) => submitHandler(e)}
     >
       <input

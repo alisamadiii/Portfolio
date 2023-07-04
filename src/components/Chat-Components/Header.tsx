@@ -9,7 +9,7 @@ type Props = {};
 
 export default function Header({}: Props) {
   return (
-    <header className="sticky top-0 z-20 flex items-center p-2 text-2xl text-white bg-primary">
+    <header className="z-20 flex items-center p-2 text-2xl text-white bg-primary">
       <Link href={"/"}>
         <BiLeftArrowAlt />
       </Link>

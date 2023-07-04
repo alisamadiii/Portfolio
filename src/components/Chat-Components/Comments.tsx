@@ -15,20 +15,10 @@ export default function Comments({}: Props) {
   const { comments } = useCommentsStore();
   const { currentUser } = useContext(User_Context);
 
-  const listComments = useRef<HTMLUListElement>(null);
-
   const deletingComment = async (id: string) => {
     const docRef = doc(db, "comments", id);
     await deleteDoc(docRef);
   };
-
-  useEffect(() => {
-    const scrollToLastMessage = () => {
-      const lastElement = listComments.current!.lastElementChild;
-      lastElement?.scrollIntoView();
-    };
-    scrollToLastMessage();
-  }, [comments]);
 
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
@@ -47,11 +37,24 @@ export default function Comments({}: Props) {
     document.addEventListener("keyup", handleKeyUp);
   }, []);
 
+  const chatContainerRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [comments]);
+
+  function scrollToBottom() {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }
+
   return (
     <ul
       id="chat"
-      ref={listComments}
-      className="flex flex-col items-start h-full gap-2 p-2 overflow-auto"
+      ref={chatContainerRef}
+      className="flex flex-col items-start gap-2 p-2 overflow-auto grow h-96"
     >
       {comments &&
         comments.map((comment) => (
@@ -71,7 +74,7 @@ export default function Comments({}: Props) {
                 width={40}
                 height={40}
                 alt={currentUser.displayName}
-                className="self-start rounded-full w-7"
+                className="self-start -translate-y-3 rounded-full w-7"
               />
             )}
             {/* Comment */}

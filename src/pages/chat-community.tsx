@@ -50,7 +50,7 @@ export default function Chat_Community({}: Props) {
         title="Chat Community"
         description="This is the place where you can chat and have conversation with me."
       />
-      <div className="cookie-consent fixed inset-0 md:relative w-full md:mt-12 md:max-w-[452px] h-screen md:h-[600px] mx-auto bg-white shadow-container md:rounded-xl overflow-hidden">
+      <div className="cookie-consent flex flex-col fixed inset-0 md:relative w-full md:mt-12 md:max-w-[452px] h-screen md:h-[600px] mx-auto bg-white shadow-container md:rounded-xl overflow-hidden">
         <Header />
         <Comments />
         <Input setIsNotSigned={setIsNotSigned} />

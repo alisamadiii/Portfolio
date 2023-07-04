@@ -2,9 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
+/* * {
   @apply scroll-smooth;
-}
+} */
 
 ::selection {
   @apply text-white bg-dark-blue-2;
