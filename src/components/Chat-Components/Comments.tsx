@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 import { useCommentsStore } from "@/context/Comments";
 import { User_Context } from "@/context/User_Context";
-import { convertTimestampToDateTime } from "@/utils";
+import { convertTimestampToDateTime, firstName } from "@/utils";
 import { db } from "@/utils/Firebase";
 import Like from "./Like";
 import Image from "next/image";
@@ -56,7 +56,7 @@ export default function Comments({}: Props) {
     <ul
       id="chat"
       ref={chatContainerRef}
-      className="flex flex-col items-start gap-2 p-2 overflow-auto grow h-96"
+      className="flex flex-col items-start gap-2 p-2 pt-6 overflow-auto grow h-96"
     >
       {comments &&
         comments.map((comment) => {
@@ -109,7 +109,7 @@ export default function Comments({}: Props) {
                 <span className="float-right mt-2 ml-2 text-xs opacity-80">
                   {currentUser?.uid !== comment.userId &&
                     !isSameUser &&
-                    `${comment.name} - `}
+                    `${firstName(comment.name)} - `}
                   {comment.createdAt &&
                     convertTimestampToDateTime(comment.createdAt.seconds)}
                 </span>

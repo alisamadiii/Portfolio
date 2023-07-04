@@ -27,3 +27,8 @@ export function convertTimestampToDateTime(timestamp: number) {
 function addLeadingZero(value: number, length: number = 2): string {
   return value.toString().padStart(length, "0");
 }
+
+// First Name of a User
+export const firstName = (value: string): string => {
+  return value.split(" ")[0];
+};
