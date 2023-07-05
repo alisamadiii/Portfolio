@@ -217,7 +217,8 @@ export function Links_SmallScreen({ setIsOpen }: Links_SmallScreen_Props) {
           onClick={() => setIsOpen(false)}
         >
           <Link
-            href={"/blog"}
+            href={"https://blog.alirezasamadi.com/"}
+            target="_blank"
             className="flex items-center w-full gap-2 px-4 py-2 font-medium border-b"
           >
             <SiHashnode />
