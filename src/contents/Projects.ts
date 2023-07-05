@@ -9,6 +9,7 @@ type ProjectsType = {
   name: string;
   logo: any;
   description: string;
+  video: string;
   website: string;
   github: string;
   product_hunt: null | string;
@@ -21,6 +22,7 @@ export type ProjectType = {
   name: string;
   logo: any;
   description: string;
+  video: string;
   website: string;
   github: string;
   product_hunt: null | string;
@@ -34,9 +36,10 @@ export const PROJECTS: ProjectsType = [
   {
     id: 1,
     name: "AniLearn.dev",
+    logo: AniLearnLogo,
     description:
       "We offer top-notch content for easy learning, with clear visual development principles.",
-    logo: AniLearnLogo,
+    video: "./anilearn.mp4",
     website: "https://www.anilearn.dev/",
     github: "https://github.com/AliReza1083/AniLearn.dev",
     product_hunt: null,
@@ -71,8 +74,9 @@ export const PROJECTS: ProjectsType = [
   {
     id: 2,
     name: "",
-    description: "",
     logo: "",
+    description: "",
+    video: "",
     website: "",
     github: "",
     product_hunt: null,
