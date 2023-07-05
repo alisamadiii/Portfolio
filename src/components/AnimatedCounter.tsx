@@ -1,15 +1,15 @@
 import { MotionValue, motion, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 
-const fontSize = 30;
-const padding = 15;
+const fontSize = 24;
+const padding = 0;
 const height = fontSize + padding;
 
 export default function Counter({ value }: { value: number }) {
   return (
     <div
       style={{ fontSize }}
-      className="flex px-2 space-x-3 overflow-hidden leading-none text-gray-900 bg-white rounded"
+      className="flex px-2 space-x-3 overflow-hidden leading-none text-gray-900 rounded"
     >
       <Digit place={100} value={value} />
       <Digit place={10} value={value} />
@@ -27,7 +27,7 @@ function Digit({ place, value }: { place: number; value: number }) {
   }, [animatedValue, valueRoundedToPlace]);
 
   return (
-    <div style={{ height }} className="relative w-[1ch] tabular-nums">
+    <div style={{ height }} className="relative w-[.2ch]">
       {/* @ts-ignore */}
       {[...Array(10).keys()].map((i) => (
         <Number key={i} mv={animatedValue} number={i} />

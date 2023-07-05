@@ -16,9 +16,18 @@ import Nextjs from "@/assets/Technology/next";
 import Redux from "@/assets/Technology/redux";
 import Firebase from "@/assets/Technology/firebase";
 
+import { Front_End_Services } from "@/contents/Service";
+import Counter from "@/components/AnimatedCounter";
+import { Button } from "@/components/Button";
+import { usePagePriceStore } from "@/context/PagePrice";
+
+import { Card, PageCounter } from "@/components/Service";
+
 type Props = {};
 
 export default function BuildingWebsite({}: Props) {
+  const { pagePrice } = usePagePriceStore();
+
   return (
     <>
       <Meta_Tag title="Service" description="" />
@@ -52,6 +61,18 @@ export default function BuildingWebsite({}: Props) {
               <Nextjs />
               <Redux />
               <Firebase />
+            </div>
+          </section>
+          <section>
+            <Heading2 lineUnder={false} className="w-full text-3xl">
+              Front-End Developer
+            </Heading2>
+            {/* button */}
+            <PageCounter />
+            <div className="flex flex-wrap gap-4">
+              {Front_End_Services.map((service) => (
+                <Card key={service.level} service={service} />
+              ))}
             </div>
           </section>
         </Container>
