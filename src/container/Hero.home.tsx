@@ -52,12 +52,12 @@ export default function Hero({}: Props) {
             <AiOutlineTwitter />
             <span>Twitter</span>
           </Button>
-          <Button
+          {/* <Button
             variant={"twitter"}
             onClick={() => router.push("/twitter-activity")}
           >
             <span>Twitter Activity</span>
-          </Button>
+          </Button> */}
         </motion.div>
         <motion.div
           variants={HeroItemVariants}

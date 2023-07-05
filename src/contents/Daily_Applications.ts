@@ -41,7 +41,19 @@ export const DAILY_APPLICATIONS: DAILY_APPLICATIONS_Type = [
     app: 5,
     name: "Twitter",
     img: "https://www.freepnglogos.com/uploads/twitter-logo-png/twitter-logo-vector-png-clipart-1.png",
-    useCase: ["Sharing my Journey", "Sharing Animated Contents"],
+    useCase: ["Sharing insights about AI and Web Development"],
+  },
+  {
+    app: 13,
+    name: "LinkedIn",
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_initials.png/800px-LinkedIn_logo_initials.png",
+    useCase: ["Sharing my Daily Works", "Sharing Animated Contents"],
+  },
+  {
+    app: 14,
+    name: "Hashnode",
+    img: "https://cdn.hashnode.com/res/hashnode/image/upload/v1611902473383/CDyAuTy75.png?auto=compress",
+    useCase: ["Writing Blogs"],
   },
   {
     app: 6,
@@ -83,6 +95,12 @@ export const DAILY_APPLICATIONS: DAILY_APPLICATIONS_Type = [
     app: 12,
     name: "GitHub",
     img: "https://cdn-icons-png.flaticon.com/512/25/25231.png",
-    useCase: ["Collabration", "Storing my Codes"],
+    useCase: ["Collaboration", "Storing my Codes"],
+  },
+  {
+    app: 15,
+    name: "Vercel",
+    img: "https://pipedream.com/s.v0/app_XaLh2x/logo/orig",
+    useCase: ["Hosting Websites"],
   },
 ];

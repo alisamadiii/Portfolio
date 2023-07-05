@@ -22,9 +22,9 @@ export default function Layout({ children }: Props) {
     return (
       <User_Provider>
         <Navbar_Provider>
-          {(router.asPath == "/" || router.pathname.includes("/service")) && (
-            <Navbar />
-          )}
+          {(router.asPath == "/" ||
+            router.pathname.includes("/service") ||
+            router.pathname.includes("/twitter")) && <Navbar />}
           <main className="overflow-hidden">{children}</main>
           {router.asPath == "/" && (
             <footer className="absolute bottom-0 left-0 flex justify-center w-full py-4 text-sm -z-10">

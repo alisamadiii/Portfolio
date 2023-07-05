@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 
@@ -19,11 +19,8 @@ import { FiFigma } from "react-icons/fi";
 
 export default function About({}: Props) {
   const { scrollYProgress } = useScroll();
-  const [list, setList] = useState("");
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "-70%"]);
   // const scale = useTransform(scrollYProgress, [0, 1], [1, 0.7]);
-
-  console.log(list);
 
   return (
     <Container className="flex flex-col gap-8">

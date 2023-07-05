@@ -18,7 +18,7 @@ export default function Each_Testimonial({ testimonial }: Props) {
     <motion.div
       key={testimonial.id}
       //   exit={{ opacity: 0, y: 20 }}
-      className="relative w-full max-w-[700px] bg-white p-4 rounded-lg mx-auto my-8 shadow-xl overflow-hidden border"
+      className="relative w-full max-w-[700px] bg-white p-4 rounded-lg mx-auto my-8 shadow-xl overflow-hidden border snap-start"
     >
       <ImQuotesRight className="absolute -top-8 text-9xl right-4 opacity-10" />
       <div className="flex items-center gap-2">

@@ -127,7 +127,7 @@ export default function TwitterActivity({}: Props) {
         <h2 className="mb-4 text-3xl font-black md:text-3xl">
           What people are saying ❤️
         </h2>
-        <div className="relative grid grid-flow-col auto-cols-[300px] md:auto-cols-[400px] items-start gap-4 overflow-x-auto">
+        <div className="relative grid grid-flow-col auto-cols-[300px] md:auto-cols-[400px] items-start gap-4 overflow-x-auto snap-x snap-mandatory">
           {ANILEARN_TESTIMONIAL.map((testimonial) => (
             <Each_Testimonial key={testimonial.id} testimonial={testimonial} />
           ))}

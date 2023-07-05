@@ -89,7 +89,7 @@ export default function Home({}: Props) {
           </Container>
         </section>
 
-        {/* Testimonial */}
+        {/* Testimonial
         <section id="testimonial" className="py-12">
           <Container className="space-y-12">
             <Heading2>Testimonial</Heading2>
@@ -97,7 +97,7 @@ export default function Home({}: Props) {
               Coming soon...
             </h2>
           </Container>
-        </section>
+        </section> */}
       </main>
     </>
   );
