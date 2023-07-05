@@ -3,9 +3,9 @@ import "node_modules/video-react/dist/video-react.css"; // import css
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Player, BigPlayButton, ControlBar, LoadingSpinner } from "video-react";
 
 import { ProjectType } from "@/contents/Projects";
+import Video from "./Video";
 
 type Props = {
   project: ProjectType;
@@ -30,12 +30,7 @@ export default function Project({ project }: Props) {
         <h3 className="mt-2 mb-1 text-lg font-medium">{project.name}</h3>
         <p className="text-sm">{project.description}</p>
         <div className="my-3 overflow-hidden bg-red-800 rounded-lg">
-          <Player>
-            <source src={project.video} />
-            <LoadingSpinner />
-            <BigPlayButton position="center" />
-            <ControlBar autoHide={true} />
-          </Player>
+          <Video path={project.video} />
         </div>
         <div className="flex items-center gap-2 mt-3 text-xl">
           {project.links.map((link, index) => {
