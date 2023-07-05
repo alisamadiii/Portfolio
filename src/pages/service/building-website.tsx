@@ -16,22 +16,16 @@ import Nextjs from "@/assets/Technology/next";
 import Redux from "@/assets/Technology/redux";
 import Firebase from "@/assets/Technology/firebase";
 
-import { Front_End_Services } from "@/contents/Service";
-import Counter from "@/components/AnimatedCounter";
-import { Button } from "@/components/Button";
-import { usePagePriceStore } from "@/context/PagePrice";
-
-import { Card, PageCounter } from "@/components/Service";
+import { Front_End_Services, Testimonial_Service } from "@/contents/Service";
+import { Card, PageCounter, Testimonial } from "@/components/Service";
 
 type Props = {};
 
 export default function BuildingWebsite({}: Props) {
-  const { pagePrice } = usePagePriceStore();
-
   return (
     <>
       <Meta_Tag title="Service" description="" />
-      <div className="py-24">
+      <div className="pt-24">
         <Container>
           <Heading2 lineUnder={false} className="w-full text-center">
             Building Website
@@ -72,6 +66,21 @@ export default function BuildingWebsite({}: Props) {
             <div className="flex flex-wrap gap-4">
               {Front_End_Services.map((service) => (
                 <Card key={service.level} service={service} />
+              ))}
+            </div>
+          </section>
+          <section className="my-16">
+            <Heading2 lineUnder={false} className="w-full text-3xl">
+              Full-Stack Developer
+            </Heading2>
+          </section>
+          <section>
+            <Heading2 lineUnder={false} className="w-full text-3xl">
+              what clients are saying
+            </Heading2>
+            <div className="grid mt-12 grid-flow-col gap-4 auto-cols-[368px] overflow-x-auto scroll-bar snap-x snap-mandatory py-4">
+              {Testimonial_Service.map((testimonial) => (
+                <Testimonial key={testimonial.id} testimonial={testimonial} />
               ))}
             </div>
           </section>

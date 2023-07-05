@@ -56,9 +56,8 @@ export default function Comments({}: Props) {
 
   return (
     <ul
-      id="chat"
       ref={chatContainerRef}
-      className="flex flex-col items-start gap-2 p-2 pt-6 overflow-auto grow h-96"
+      className="flex flex-col items-start gap-2 p-2 pt-6 overflow-auto grow h-96 scroll-bar"
     >
       {comments &&
         comments.map((comment) => {

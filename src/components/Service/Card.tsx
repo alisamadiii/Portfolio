@@ -29,7 +29,7 @@ export default function Card({ service }: Props) {
         />
       )}
       {/* image */}
-      <div className="relative flex items-center justify-center rounded-lg isolate aspect-video">
+      <div className="relative flex items-center justify-center rounded-lg shadow-md isolate aspect-video">
         <p className="text-2xl font-bold text-center capitalize">
           {service.job.join(" ").replaceAll(" ", " + ")}
         </p>
@@ -80,7 +80,14 @@ export default function Card({ service }: Props) {
         </p>
       </div>
       {/* Button */}
-      <Button className="w-full mt-4">Contact Me</Button>
+      <Button
+        className="w-full mt-4"
+        onClick={() =>
+          window.open("https://twitter.com/Ali_Developer05")?.focus()
+        }
+      >
+        Contact Me
+      </Button>
     </div>
   );
 }
