@@ -19,6 +19,7 @@ import Firebase from "@/assets/Technology/firebase";
 
 import { Front_End_Services, Testimonial_Service } from "@/contents/Service";
 import { Card, PageCounter, Testimonial } from "@/components/Service";
+import { Button } from "@/components/Button";
 
 type Props = {};
 
@@ -103,6 +104,18 @@ export default function BuildingWebsite({}: Props) {
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Full-Stack Developer
             </Heading2>
+            <div className="mt-12 space-y-4">
+              <video autoPlay muted loop className="rounded-xl">
+                <source src="/Service - Full Stack Developer.mp4" />
+              </video>
+              <Button
+                onClick={() =>
+                  window.open("https://twitter.com/Ali_Developer05")?.focus()
+                }
+              >
+                Contact Now
+              </Button>
+            </div>
           </section>
           <section>
             <Heading2 lineUnder={false} className="w-full text-3xl">

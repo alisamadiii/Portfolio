@@ -9,6 +9,7 @@ type Props = {};
 
 import Building_Website_IMG from "../../assets/building website.png";
 import { AiOutlineTwitter } from "react-icons/ai";
+import { TfiVideoClapper } from "react-icons/tfi";
 
 export default function index({}: Props) {
   return (
@@ -65,6 +66,20 @@ export default function index({}: Props) {
                 Read more
               </Link>
               <AiOutlineTwitter className="absolute bottom-0 right-0 translate-y-8 text-9xl text-twitter" />
+            </div>
+            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-hero-background before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
+              <h2 className="text-3xl font-bold">Video Showcase</h2>
+              <p className="my-3">
+                Leverage my +25k Twitter following with our "Promotional Tweet"
+                service. Engage a wide audience and amplify your brand, product,
+                or service through targeted and captivating tweets. Let's
+                harness the power of social media to drive your business
+                forward.
+              </p>
+              <Link href={"/service/video-showcase"} className="opacity-70">
+                Read more
+              </Link>
+              <TfiVideoClapper className="absolute bottom-0 translate-y-3 rotate-12 right-4 text-9xl text-twitter" />
             </div>
           </section>
         </Container>
