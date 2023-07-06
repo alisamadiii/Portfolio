@@ -51,23 +51,28 @@ export default function Testimonial({ testimonial }: Props) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "tween" }}
-            className="absolute inset-0 flex flex-col gap-4 p-4 overflow-y-auto bg-white/50 backdrop-blur-sm scroll-bar"
+            className="absolute inset-0 flex flex-col gap-4 p-4 overflow-y-auto bg-white/90 backdrop-blur-sm scroll-bar"
             onClick={() => setIsClicked(false)}
             title="click for closing"
           >
-            {testimonial.project_image.map((image) => (
+            {testimonial.project_review.map((project) => (
               <motion.div
+                key={project.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, type: "tween" }}
               >
                 <Image
-                  src={image}
+                  src={project.image}
                   width={300}
                   height={200}
                   alt={`${testimonial.name} - Project`}
                   className="w-full rounded-lg"
                 />
+                <div className="flex flex-col mt-1 -space-y-1">
+                  <small className="font-medium">{project.pageName}</small>
+                  {project.note && <small>{project.note}</small>}
+                </div>
               </motion.div>
             ))}
           </motion.div>
