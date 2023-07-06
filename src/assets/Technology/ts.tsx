@@ -1,15 +1,16 @@
-import React from "react";
+import React, { HTMLAttributes } from "react";
+import { twMerge } from "tailwind-merge";
 
-type Props = {};
+interface Props extends HTMLAttributes<HTMLOrSVGElement> {}
 
-export default function TS({}: Props) {
+export default function TS({ className, ...props }: Props) {
   return (
     <svg
-      width="66"
-      height="65"
       viewBox="0 0 66 65"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={twMerge("h-16", className)}
+      {...props}
     >
       <path
         d="M50.2694 0H16.0493C7.71136 0 0.952148 6.75921 0.952148 15.0971V49.3173C0.952148 57.6552 7.71136 64.4144 16.0493 64.4144H50.2694C58.6073 64.4144 65.3665 57.6552 65.3665 49.3173V15.0971C65.3665 6.75921 58.6073 0 50.2694 0Z"

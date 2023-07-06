@@ -1,7 +1,8 @@
-import React from "react";
+import React, { HTMLAttributes } from "react";
+import { twMerge } from "tailwind-merge";
 
-type Props = {};
+interface Props extends HTMLAttributes<HTMLOrSVGElement> {}
 
-export default function FramerMotion({}: Props) {
+export default function FramerMotion({ className, ...props }: Props) {
   return <div>FramerMotion</div>;
 }

@@ -1,15 +1,16 @@
-import React from "react";
+import React, { HTMLAttributes } from "react";
+import { twMerge } from "tailwind-merge";
 
-type Props = {};
+interface Props extends HTMLAttributes<HTMLOrSVGElement> {}
 
-export default function Firebase({}: Props) {
+export default function Firebase({ className, ...props }: Props) {
   return (
     <svg
-      width="48"
-      height="65"
       viewBox="0 0 48 65"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={twMerge("h-16", className)}
+      {...props}
     >
       <path
         d="M0.780762 51.9927L1.17187 51.4475L19.6228 16.4459L19.6619 16.0755L11.5293 0.799355C11.3804 0.520007 11.1474 0.294546 10.8633 0.154869C10.5793 0.0151923 10.2585 -0.0316285 9.94634 0.0210305C9.63421 0.0736894 9.34653 0.223162 9.12401 0.448302C8.90149 0.673442 8.75539 0.96285 8.70639 1.27558L0.780762 51.9927Z"

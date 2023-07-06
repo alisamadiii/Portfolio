@@ -26,6 +26,10 @@ type Props = {};
 
 export default function BuildingWebsite({}: Props) {
   const [filterSkills, setFilterSkills] = useState("all");
+
+  const SVGSize = "h-12";
+  const SVGSize2 = "h-8";
+
   return (
     <>
       <Meta_Tag title="Service" description="" />
@@ -58,33 +62,33 @@ export default function BuildingWebsite({}: Props) {
             <div className="flex flex-wrap items-center gap-6">
               {filterSkills == "all" ? (
                 <>
-                  <Figma />
-                  <HTML />
-                  <CSS />
-                  <JS />
-                  <TS />
-                  <Tailwind />
-                  <Reactjs />
-                  <Nextjs />
-                  <Redux />
-                  <Firebase />
+                  <Figma className={SVGSize} />
+                  <HTML className={SVGSize} />
+                  <CSS className={SVGSize} />
+                  <JS className={SVGSize} />
+                  <TS className={SVGSize} />
+                  <Tailwind className={SVGSize} />
+                  <Reactjs className={SVGSize} />
+                  <Nextjs className={SVGSize} />
+                  <Redux className={SVGSize} />
+                  <Firebase className={SVGSize} />
                 </>
               ) : filterSkills == "front-end" ? (
                 <>
-                  <Figma />
-                  <HTML />
-                  <CSS />
-                  <JS />
-                  <TS />
-                  <Tailwind />
-                  <Reactjs />
-                  <Nextjs />
-                  <Redux />
+                  <Figma className={SVGSize} />
+                  <HTML className={SVGSize} />
+                  <CSS className={SVGSize} />
+                  <JS className={SVGSize} />
+                  <TS className={SVGSize} />
+                  <Tailwind className={SVGSize} />
+                  <Reactjs className={SVGSize} />
+                  <Nextjs className={SVGSize} />
+                  <Redux className={SVGSize} />
                 </>
               ) : (
                 <>
-                  <Nextjs />
-                  <Firebase />
+                  <Nextjs className={SVGSize} />
+                  <Firebase className={SVGSize} />
                 </>
               )}
             </div>
@@ -107,12 +111,21 @@ export default function BuildingWebsite({}: Props) {
             </Heading2>
             <div className="grid gap-4 mt-12 md:grid-cols-2">
               <div>
-                <p className="mb-4 md:text-xl">
+                <p className="md:text-xl">
                   In today's digital world, a captivating online presence is
                   crucial for success. Introducing this section, where we bring
                   your vision to life with our exceptional full stack web
                   development service!
                 </p>
+                <div className="flex flex-wrap items-center gap-4 my-4">
+                  <Figma className={SVGSize2} />
+                  <JS className={SVGSize2} />
+                  <TS className={SVGSize2} />
+                  <Tailwind className={SVGSize2} />
+                  <Nextjs className={SVGSize2} />
+                  <Redux className={SVGSize2} />
+                  <Firebase className={SVGSize2} />
+                </div>
                 <Button
                   onClick={() =>
                     window.open("https://twitter.com/Ali_Developer05")?.focus()
