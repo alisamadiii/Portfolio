@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 
 import Meta_Tag from "@/layout/Head";
 import Container from "@/layout/Container";
 import { Heading2 } from "@/components";
+import * as Select from "@/components/Select";
 
 // Icons
 import Figma from "@/assets/Technology/figma";
@@ -22,6 +23,7 @@ import { Card, PageCounter, Testimonial } from "@/components/Service";
 type Props = {};
 
 export default function BuildingWebsite({}: Props) {
+  const [filterSkills, setFilterSkills] = useState("all");
   return (
     <>
       <Meta_Tag title="Service" description="" />
@@ -44,17 +46,45 @@ export default function BuildingWebsite({}: Props) {
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Technologies I am good at
             </Heading2>
-            <div className="flex flex-wrap items-center gap-6 mt-12">
-              <Figma />
-              <HTML />
-              <CSS />
-              <JS />
-              <TS />
-              <Tailwind />
-              <Reactjs />
-              <Nextjs />
-              <Redux />
-              <Firebase />
+            <Select.Select className="my-6">
+              <Select.SelectContent
+                placeholder="Filter"
+                contents={["all", "front-end", "back-end"]}
+                value={setFilterSkills}
+              />
+            </Select.Select>
+            <div className="flex flex-wrap items-center gap-6">
+              {filterSkills == "all" ? (
+                <>
+                  <Figma />
+                  <HTML />
+                  <CSS />
+                  <JS />
+                  <TS />
+                  <Tailwind />
+                  <Reactjs />
+                  <Nextjs />
+                  <Redux />
+                  <Firebase />
+                </>
+              ) : filterSkills == "front-end" ? (
+                <>
+                  <Figma />
+                  <HTML />
+                  <CSS />
+                  <JS />
+                  <TS />
+                  <Tailwind />
+                  <Reactjs />
+                  <Nextjs />
+                  <Redux />
+                </>
+              ) : (
+                <>
+                  <Nextjs />
+                  <Firebase />
+                </>
+              )}
             </div>
           </section>
           <section>
