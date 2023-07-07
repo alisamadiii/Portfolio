@@ -48,6 +48,10 @@ const VideoShowcase = [
     id: 5,
     video: "/Service/design-5.mp4",
   },
+  {
+    id: 6,
+    video: "/Service/design-6.mp4",
+  },
 ];
 
 export default function BuildingWebsite({}: Props) {
@@ -59,7 +63,6 @@ export default function BuildingWebsite({}: Props) {
 
   const SVGSize = "h-12";
   const SVGSize2 = "h-8";
-  const SVGSize3 = "h-10";
 
   return (
     <>
@@ -201,7 +204,7 @@ export default function BuildingWebsite({}: Props) {
               </div>
             </div>
           </motion.section>
-          <motion.section layout>
+          <motion.section layout className="mb-8">
             <Heading2 lineUnder={false} className="w-full text-3xl">
               what clients are saying
             </Heading2>
