@@ -26,6 +26,7 @@ type Props = {};
 
 export default function BuildingWebsite({}: Props) {
   const [filterSkills, setFilterSkills] = useState("all");
+  const [selectVideo, setSelectVideo] = useState(0);
 
   const SVGSize = "h-12";
   const SVGSize2 = "h-8";
@@ -48,7 +49,21 @@ export default function BuildingWebsite({}: Props) {
             collaborate and build a captivating online presence that sets you
             apart from the competition.
           </p>
-          <section className="my-16">
+          <div className="grid grid-cols-3 gap-4 my-16">
+            <video muted autoPlay loop className="rounded-xl shadow-container">
+              <source src="/Service/design-1.mp4" />
+            </video>
+            <video muted autoPlay loop className="rounded-xl shadow-container">
+              <source src="/Service/design-2.mp4" />
+            </video>
+            <video muted autoPlay loop className="rounded-xl shadow-container">
+              <source src="/Service/design-3.mp4" />
+            </video>
+            <video muted autoPlay loop className="rounded-xl shadow-container">
+              <source src="/Service/design-4.mp4" />
+            </video>
+          </div>
+          <section className="mb-16">
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Technologies I am good at
             </Heading2>
