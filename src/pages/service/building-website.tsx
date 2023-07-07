@@ -76,49 +76,34 @@ export default function BuildingWebsite({}: Props) {
             collaborate and build a captivating online presence that sets you
             apart from the competition.
           </p>
-          <div className="grid gap-4 my-16 md:grid-cols-2 lg:grid-cols-3">
-            {VideoShowcase.map((video) => (
-              <motion.video
-                layout
-                muted
-                autoPlay
-                loop
-                className={`cursor-pointer rounded-xl shadow-container ${
-                  selectVideo?.id == video.id
-                    ? "col-span-2 row-span-2"
-                    : `${selectVideo !== null && "opacity-80"}`
-                }`}
-                key={video.id}
-                onClick={() => {
-                  setSelectVideo(video);
-                  if (selectVideo?.id == video.id) setSelectVideo(null);
-                }}
-              >
-                <source src={video.video} />
-              </motion.video>
-            ))}
-          </div>
-          {/* Big Video
-          {selectVideo && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center h-screen">
-              <div
-                onClick={() => setSelectVideo(null)}
-                className="absolute inset-0 bg-light-blue-2/30 -z-10"
-              />
-              <motion.video
-                layoutId={selectVideo.id.toString()}
-                layout="position"
-                muted
-                autoPlay
-                loop
-                className="cursor-pointer rounded-xl w-full max-w-[700px] shadow-container"
-                key={selectVideo.id}
-              >
-                <source src={selectVideo.video} />
-              </motion.video>
+          <section className="my-16 space-y-3">
+            <p className="text-base md:text-base">
+              Click each Video and see the magic
+            </p>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {VideoShowcase.map((video) => (
+                <motion.video
+                  layout
+                  muted
+                  autoPlay
+                  loop
+                  className={`cursor-pointer rounded-xl shadow-container ${
+                    selectVideo?.id == video.id
+                      ? "col-span-2 row-span-2"
+                      : `${selectVideo !== null && "opacity-80"}`
+                  }`}
+                  key={video.id}
+                  onClick={() => {
+                    setSelectVideo(video);
+                    if (selectVideo?.id == video.id) setSelectVideo(null);
+                  }}
+                >
+                  <source src={video.video} />
+                </motion.video>
+              ))}
             </div>
-          )} */}
-          <section className="mb-16">
+          </section>
+          <motion.section layout className="mb-16">
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Technologies I am good at
             </Heading2>
@@ -162,8 +147,8 @@ export default function BuildingWebsite({}: Props) {
                 </>
               )}
             </div>
-          </section>
-          <section>
+          </motion.section>
+          <motion.section layout>
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Front-End Developer
             </Heading2>
@@ -174,8 +159,8 @@ export default function BuildingWebsite({}: Props) {
                 <Card key={service.level} service={service} />
               ))}
             </div>
-          </section>
-          <section className="my-16">
+          </motion.section>
+          <motion.section layout className="my-16">
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Full-Stack Developer
             </Heading2>
@@ -183,8 +168,8 @@ export default function BuildingWebsite({}: Props) {
               <div>
                 <p className="md:text-xl">
                   In today's digital world, a captivating online presence is
-                  crucial for success. Introducing this section, where we bring
-                  your vision to life with our exceptional full stack web
+                  crucial for success. Introducing this motion.section, where we
+                  bring your vision to life with our exceptional full stack web
                   development service!
                 </p>
                 <div className="flex flex-wrap items-center gap-4 my-4">
@@ -211,8 +196,8 @@ export default function BuildingWebsite({}: Props) {
                 />
               </div>
             </div>
-          </section>
-          <section>
+          </motion.section>
+          <motion.section layout>
             <Heading2 lineUnder={false} className="w-full text-3xl">
               what clients are saying
             </Heading2>
@@ -221,7 +206,7 @@ export default function BuildingWebsite({}: Props) {
                 <Testimonial key={testimonial.id} testimonial={testimonial} />
               ))}
             </div>
-          </section>
+          </motion.section>
         </Container>
       </div>
     </>
