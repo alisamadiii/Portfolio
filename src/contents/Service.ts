@@ -118,14 +118,28 @@ export const Testimonial_Service: TESTIMONIAL_SERVICES = [
       },
     ],
   },
-
-  // {
-  //   id: 2,
-  //   name: "",
-  //   headline: "",
-  //   star: 5,
-  //   client_image: "",
-  //   message: "",
-  //   project_review: [{}],
-  // },
+  {
+    id: 2,
+    name: "Muzzammil",
+    headline: "AI Buff",
+    star: 5,
+    client_image:
+      "https://pbs.twimg.com/profile_images/1661986917871919104/6Rn00NvG_400x400.jpg",
+    message:
+      "I needed a site and contacted Ali, then had a call and the next day my site was full ready and was published. I was literally shocked and amazed by the speed and energy of Ali. If you want are in need of a site development, Ali is your man",
+    project_review: [
+      {
+        id: 1,
+        image: "/Client/Muzzammil - image 1.png",
+        pageName: "Home Page",
+        note: "This is the homepage of the website.",
+      },
+      {
+        id: 2,
+        image: "/Client/Muzzammil - image 2.png",
+        pageName: "Sponsored Post Offers",
+        note: null,
+      },
+    ],
+  },
 ];
