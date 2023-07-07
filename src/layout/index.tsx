@@ -1,13 +1,19 @@
 import React, { ReactNode } from "react";
 
 import { Navbar_Provider } from "@/context/Navbar_Context";
-import Navbar from "@/components/Navbar";
 import { User_Provider } from "@/context/User_Context";
 import { useRouter } from "next/router";
+
+import Navbar from "@/components/Navbar";
+import Container from "./Container";
 
 type Props = {
   children: ReactNode;
 };
+
+import { SiNextdotjs, SiTailwindcss } from "react-icons/si";
+import { TbBrandFramerMotion } from "react-icons/tb";
+import { SiJest } from "react-icons/si";
 
 export default function Layout({ children }: Props) {
   const router = useRouter();
@@ -22,13 +28,24 @@ export default function Layout({ children }: Props) {
     return (
       <User_Provider>
         <Navbar_Provider>
-          {(router.asPath == "/" ||
-            router.pathname.includes("/service") ||
-            router.pathname.includes("/twitter")) && <Navbar />}
+          {router.pathname.includes("/chat-community") ? <></> : <Navbar />}
           <main className="overflow-hidden">{children}</main>
-          {router.asPath == "/" && (
-            <footer className="absolute bottom-0 left-0 flex justify-center w-full py-4 text-sm -z-10">
-              Designed & Developed by Ali Reza &#169; 2023;
+          {router.pathname.includes("/chat-community") ? (
+            <></>
+          ) : (
+            <footer className="absolute bottom-0 left-0 w-full text-sm border-t-2 py-7">
+              <Container className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+                <div className="flex items-center gap-4 md:text-xl">
+                  <p>Made by: </p>
+                  <div className="flex items-center gap-4 text-3xl">
+                    <SiNextdotjs />
+                    <SiTailwindcss />
+                    <TbBrandFramerMotion />
+                    <SiJest />
+                  </div>
+                </div>
+                Designed & Developed by Ali Reza &#169; 2023;
+              </Container>
             </footer>
           )}
         </Navbar_Provider>

@@ -23,6 +23,8 @@ import { Card, PageCounter, Testimonial } from "@/components/Service";
 import { Button } from "@/components/Button";
 import Video from "@/components/Video";
 
+import { GiClick } from "react-icons/gi";
+
 type Props = {};
 
 const VideoShowcase = [
@@ -57,6 +59,7 @@ export default function BuildingWebsite({}: Props) {
 
   const SVGSize = "h-12";
   const SVGSize2 = "h-8";
+  const SVGSize3 = "h-10";
 
   return (
     <>
@@ -77,8 +80,9 @@ export default function BuildingWebsite({}: Props) {
             apart from the competition.
           </p>
           <section className="my-16 space-y-3">
-            <p className="text-base md:text-base">
-              Click each Video and see the magic
+            <p className="flex items-center gap-1 text-base md:text-base">
+              <GiClick className="text-3xl" /> Click each Video and see the
+              magic
             </p>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {VideoShowcase.map((video) => (
