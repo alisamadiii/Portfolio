@@ -42,6 +42,10 @@ const VideoShowcase = [
     id: 4,
     video: "/Service/design-4.mp4",
   },
+  {
+    id: 5,
+    video: "/Service/design-5.mp4",
+  },
 ];
 
 export default function BuildingWebsite({}: Props) {
