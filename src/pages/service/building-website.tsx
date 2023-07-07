@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 
 import Meta_Tag from "@/layout/Head";
 import Container from "@/layout/Container";
@@ -24,9 +25,31 @@ import Video from "@/components/Video";
 
 type Props = {};
 
+const VideoShowcase = [
+  {
+    id: 1,
+    video: "/Service/design-1.mp4",
+  },
+  {
+    id: 2,
+    video: "/Service/design-2.mp4",
+  },
+  {
+    id: 3,
+    video: "/Service/design-3.mp4",
+  },
+  {
+    id: 4,
+    video: "/Service/design-4.mp4",
+  },
+];
+
 export default function BuildingWebsite({}: Props) {
   const [filterSkills, setFilterSkills] = useState("all");
-  const [selectVideo, setSelectVideo] = useState(0);
+  const [selectVideo, setSelectVideo] = useState<null | {
+    id: number;
+    video: string;
+  }>(null);
 
   const SVGSize = "h-12";
   const SVGSize2 = "h-8";
@@ -49,20 +72,48 @@ export default function BuildingWebsite({}: Props) {
             collaborate and build a captivating online presence that sets you
             apart from the competition.
           </p>
-          <div className="grid grid-cols-3 gap-4 my-16">
-            <video muted autoPlay loop className="rounded-xl shadow-container">
-              <source src="/Service/design-1.mp4" />
-            </video>
-            <video muted autoPlay loop className="rounded-xl shadow-container">
-              <source src="/Service/design-2.mp4" />
-            </video>
-            <video muted autoPlay loop className="rounded-xl shadow-container">
-              <source src="/Service/design-3.mp4" />
-            </video>
-            <video muted autoPlay loop className="rounded-xl shadow-container">
-              <source src="/Service/design-4.mp4" />
-            </video>
+          <div className="grid gap-4 my-16 md:grid-cols-2 lg:grid-cols-3">
+            {VideoShowcase.map((video) => (
+              <motion.video
+                layout
+                muted
+                autoPlay
+                loop
+                className={`cursor-pointer rounded-xl shadow-container ${
+                  selectVideo?.id == video.id
+                    ? "col-span-2 row-span-2"
+                    : `${selectVideo !== null && "opacity-80"}`
+                }`}
+                key={video.id}
+                onClick={() => {
+                  setSelectVideo(video);
+                  if (selectVideo?.id == video.id) setSelectVideo(null);
+                }}
+              >
+                <source src={video.video} />
+              </motion.video>
+            ))}
           </div>
+          {/* Big Video
+          {selectVideo && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center h-screen">
+              <div
+                onClick={() => setSelectVideo(null)}
+                className="absolute inset-0 bg-light-blue-2/30 -z-10"
+              />
+              <motion.video
+                layoutId={selectVideo.id.toString()}
+                layout="position"
+                muted
+                autoPlay
+                loop
+                className="cursor-pointer rounded-xl w-full max-w-[700px] shadow-container"
+                key={selectVideo.id}
+              >
+                <source src={selectVideo.video} />
+              </motion.video>
+            </div>
+          )} */}
           <section className="mb-16">
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Technologies I am good at
