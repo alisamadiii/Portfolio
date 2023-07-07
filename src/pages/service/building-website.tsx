@@ -135,7 +135,10 @@ export default function BuildingWebsite({}: Props) {
                 </Button>
               </div>
               <div className="overflow-hidden rounded-xl shadow-container">
-                <Video path="/Service - Full Stack Developer.mp4" />
+                <Video
+                  path="/Service - Full Stack Developer.mp4"
+                  poster="https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80"
+                />
               </div>
             </div>
           </section>
