@@ -212,7 +212,9 @@ export default function BuildingWebsite({}: Props) {
             <Heading2 lineUnder={false} className="w-full text-3xl">
               what clients are saying
             </Heading2>
-            <div className="grid mt-12 grid-flow-col gap-4 auto-cols-[90%] md:auto-cols-[368px] overflow-x-auto scroll-bar snap-x snap-mandatory py-4">
+            <div
+              className={`items-start grid mt-12 grid-flow-col gap-4 auto-cols-[90%] md:auto-cols-[368px] overflow-x-auto scroll-bar snap-x snap-mandatory py-4`}
+            >
               {Testimonial_Service.map((testimonial) => (
                 <Testimonial key={testimonial.id} testimonial={testimonial} />
               ))}

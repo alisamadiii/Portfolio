@@ -12,6 +12,7 @@ type Props = {
 
 export default function Testimonial({ testimonial }: Props) {
   const [isClicked, setIsClicked] = useState(false);
+  const [fullMessage, setFullMessage] = useState(false);
 
   return (
     <div className="relative flex flex-col gap-3 p-4 overflow-hidden bg-white rounded-lg snap-start">
@@ -31,7 +32,17 @@ export default function Testimonial({ testimonial }: Props) {
       </div>
       {/* testimonial */}
       <div>
-        <p className="font-medium">{testimonial.message}</p>
+        <p className={`font-medium ${fullMessage ? "" : "line-clamp-6"}`}>
+          {testimonial.message}
+        </p>
+        {testimonial.message.length > 300 && (
+          <p
+            onClick={() => setFullMessage(!fullMessage)}
+            className="mt-2 text-xs cursor-pointer"
+          >
+            {fullMessage ? "Show Less" : "Show More"}
+          </p>
+        )}
       </div>
       {/* star */}
       <div className="flex items-center text-2xl text-yellow-500">
@@ -65,13 +76,15 @@ export default function Testimonial({ testimonial }: Props) {
                 <Image
                   src={project.image}
                   width={300}
-                  height={200}
+                  height={100}
                   alt={`${testimonial.name} - Project`}
                   className="w-full rounded-lg"
                 />
-                <div className="flex flex-col mt-1 -space-y-1">
+                <div className="flex flex-col mt-1 -space-y-[2px]">
                   <small className="font-medium">{project.pageName}</small>
-                  {project.note && <small>{project.note}</small>}
+                  {project.note && (
+                    <small className="mt-2 leading-4">{project.note}</small>
+                  )}
                 </div>
               </motion.div>
             ))}
