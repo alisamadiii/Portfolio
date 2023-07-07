@@ -52,6 +52,10 @@ const VideoShowcase = [
     id: 6,
     video: "/Service/design-6.mp4",
   },
+  {
+    id: 7,
+    video: "/Service/design-7.mp4",
+  },
 ];
 
 export default function BuildingWebsite({}: Props) {
@@ -94,7 +98,7 @@ export default function BuildingWebsite({}: Props) {
                   muted
                   autoPlay
                   loop
-                  className={`cursor-pointer rounded-xl shadow-container ${
+                  className={`cursor-pointer rounded-xl shadow-container transition-[opacity] duration-200 ${
                     selectVideo?.id == video.id
                       ? "col-span-2 row-span-2"
                       : `${selectVideo !== null && "opacity-80"}`
