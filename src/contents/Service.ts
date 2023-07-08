@@ -197,25 +197,25 @@ export const Faq: FAQs = [
     id: 1,
     question: "What is website development?",
     answer:
-      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.",
+      "<p class='mt-4 opacity-80 mb-2'>Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.</p><img class='rounded-xl' src='https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80' />",
   },
   {
     id: 2,
     question: "Why do I need a website for my business?",
     answer:
-      "A website is essential for businesses as it serves as a powerful online presence, enabling you to reach a wider audience and showcase your products or services 24/7. It helps establish credibility, enhances brand visibility, facilitates customer engagement, and can even generate leads and sales.",
+      "<p class='mt-4 opacity-80 mb-2'>A website is essential for businesses as it serves as a powerful online presence, enabling you to reach a wider audience and showcase your products or services 24/7. It helps establish credibility, enhances brand visibility, facilitates customer engagement, and can even generate leads and sales.</p>",
   },
   {
     id: 3,
     question: "How much does it cost to create a website?",
     answer:
-      "The cost of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.",
+      "<p class='mt-4 opacity-80 mb-2'>The <a href='#cost' class='text-blue-700 underline hover:no-underline'>cost</a> of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.</p>",
   },
   {
     id: 4,
     question: "How long does it take to build a website?",
     answer:
-      "The timeframe for building a website depends on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.",
+      "<p class='mt-4 opacity-80 mb-2'>The timeframe for building a website <a href='#'>depends</a> on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.</p>",
   },
   {
     id: 5,

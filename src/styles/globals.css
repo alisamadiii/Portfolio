@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 * {
-  @apply scroll-smooth scroll-pt-4;
+  @apply scroll-smooth scroll-pt-16;
 }
 
 ::selection {

@@ -26,7 +26,11 @@ export default function SingleFaq({ singleFAQ }: Props) {
         onClick={() => singleFAQ.answer != "writing" && setIsOpen(!isOpen)}
       >
         <p className="md:text-lg">{singleFAQ.question}</p>
-        <div>{isOpen ? <AiOutlineMinusCircle /> : <AiOutlinePlusCircle />}</div>
+        <div>
+          <AiOutlinePlusCircle
+            className={`duration-200 ${isOpen && "rotate-45"}`}
+          />
+        </div>
       </div>
       <AnimatePresence>
         {isOpen && (
@@ -35,11 +39,8 @@ export default function SingleFaq({ singleFAQ }: Props) {
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
             className="overflow-hidden"
-          >
-            <p className="mt-4 text-sm md:text-base opacity-80">
-              {singleFAQ.answer}
-            </p>
-          </motion.div>
+            dangerouslySetInnerHTML={{ __html: singleFAQ.answer }}
+          ></motion.div>
         )}
       </AnimatePresence>
     </div>

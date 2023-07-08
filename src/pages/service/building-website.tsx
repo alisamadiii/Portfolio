@@ -164,7 +164,7 @@ export default function BuildingWebsite({}: Props) {
               )}
             </div>
           </motion.section>
-          <motion.section layout>
+          <motion.section layout id="cost">
             <Heading2 lineUnder={false} className="w-full text-3xl">
               Front-End Developer
             </Heading2>
