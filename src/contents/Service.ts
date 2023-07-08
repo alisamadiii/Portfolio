@@ -179,3 +179,79 @@ export const Testimonial_Service: TESTIMONIAL_SERVICES = [
     ],
   },
 ];
+
+export type FAQs = {
+  id: number;
+  question: string;
+  answer: string;
+}[];
+
+export type FAQ = {
+  id: number;
+  question: string;
+  answer: string;
+};
+
+export const Faq: FAQs = [
+  {
+    id: 1,
+    question: "What is website development?",
+    answer:
+      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.",
+  },
+  {
+    id: 2,
+    question: "Why do I need a website for my business?",
+    answer:
+      "A website is essential for businesses as it serves as a powerful online presence, enabling you to reach a wider audience and showcase your products or services 24/7. It helps establish credibility, enhances brand visibility, facilitates customer engagement, and can even generate leads and sales.",
+  },
+  {
+    id: 3,
+    question: "How much does it cost to create a website?",
+    answer:
+      "The cost of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.",
+  },
+  {
+    id: 4,
+    question: "How long does it take to build a website?",
+    answer:
+      "The timeframe for building a website depends on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.",
+  },
+  {
+    id: 5,
+    question: "Can you help me with website design as well?",
+    answer: "writing",
+  },
+  {
+    id: 6,
+    question: "Do you offer responsive design for mobile devices?",
+    answer: "writing",
+  },
+  {
+    id: 7,
+    question: "Will my website be compatible with different browsers?",
+    answer: "writing",
+  },
+  {
+    id: 8,
+    question: "Can you assist with domain registration and hosting setup?",
+    answer: "writing",
+  },
+  {
+    id: 9,
+    question:
+      "Can you provide references or examples of websites you have developed?",
+    answer: "writing",
+  },
+  {
+    id: 10,
+    question: "Can you redesign an existing website?",
+    answer: "writing",
+  },
+  {
+    id: 11,
+    question:
+      "Will my website be customizable and easy to update in the future?",
+    answer: "writing",
+  },
+];

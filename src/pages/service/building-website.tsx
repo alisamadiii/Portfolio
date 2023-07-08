@@ -18,12 +18,17 @@ import Nextjs from "@/assets/Technology/next";
 import Redux from "@/assets/Technology/redux";
 import Firebase from "@/assets/Technology/firebase";
 
-import { Front_End_Services, Testimonial_Service } from "@/contents/Service";
+import {
+  Faq,
+  Front_End_Services,
+  Testimonial_Service,
+} from "@/contents/Service";
 import { Card, PageCounter, Testimonial } from "@/components/Service";
 import { Button } from "@/components/Button";
 import Video from "@/components/Video";
 
 import { GiClick } from "react-icons/gi";
+import SingleFaq from "@/components/Service/SingleFaq";
 
 type Props = {};
 
@@ -206,6 +211,16 @@ export default function BuildingWebsite({}: Props) {
                   poster="https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80"
                 />
               </div>
+            </div>
+          </motion.section>
+          <motion.section layout className="mb-16">
+            <Heading2 lineUnder={false} className="w-full text-3xl">
+              frequently asked questions
+            </Heading2>
+            <div className="flex flex-col items-center gap-2 mt-12">
+              {Faq.map((f) => (
+                <SingleFaq key={f.id} singleFAQ={f} />
+              ))}
             </div>
           </motion.section>
           <motion.section layout className="mb-8">
