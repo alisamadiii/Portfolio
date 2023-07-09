@@ -4,13 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 
 type Props = {
   singleFAQ: FAQ;
+  num: number;
+  setNum: (a: number) => void;
 };
 
 import { AiOutlinePlusCircle, AiOutlineMinusCircle } from "react-icons/ai";
 
-export default function SingleFaq({ singleFAQ }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
-
+export default function SingleFaq({ singleFAQ, num, setNum }: Props) {
   return (
     <div
       className={`w-full max-w-[700px] p-2 md:p-4 border-b border-dark-blue-2 ${
@@ -23,17 +23,17 @@ export default function SingleFaq({ singleFAQ }: Props) {
             ? "cursor-not-allowed"
             : "cursor-pointer"
         }`}
-        onClick={() => singleFAQ.answer != "writing" && setIsOpen(!isOpen)}
+        onClick={() => singleFAQ.answer !== "writing" && setNum(singleFAQ.id)}
       >
         <p className="md:text-lg">{singleFAQ.question}</p>
         <div>
           <AiOutlinePlusCircle
-            className={`duration-200 ${isOpen && "rotate-45"}`}
+            className={`duration-200 ${num == singleFAQ.id && "rotate-45"}`}
           />
         </div>
       </div>
       <AnimatePresence>
-        {isOpen && (
+        {num == singleFAQ.id && (
           <motion.div
             initial={{ height: 0 }}
             animate={{ height: "auto" }}

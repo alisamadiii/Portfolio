@@ -197,7 +197,7 @@ export const Faq: FAQs = [
     id: 1,
     question: "What is website development?",
     answer:
-      "<p class='mt-4 opacity-80 mb-2'>Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.</p><img class='rounded-xl' src='https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80' />",
+      "<p class='mt-4 opacity-80 mb-2'>Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.</p><img class='rounded-xl aspect-video object-cover' src='https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80' />",
   },
   {
     id: 2,

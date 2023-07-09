@@ -69,6 +69,7 @@ export default function BuildingWebsite({}: Props) {
     id: number;
     video: string;
   }>(null);
+  const [FAQNum, setFAQNum] = useState(1);
 
   const SVGSize = "h-12";
   const SVGSize2 = "h-8";
@@ -208,7 +209,7 @@ export default function BuildingWebsite({}: Props) {
               <div className="overflow-hidden rounded-xl shadow-container">
                 <Video
                   path="/Service - Full Stack Developer.mp4"
-                  poster="https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80"
+                  poster="https://www.crio.do/blog/content/images/2021/04/Full-stack-web-developer.png"
                 />
               </div>
             </div>
@@ -219,7 +220,12 @@ export default function BuildingWebsite({}: Props) {
             </Heading2>
             <div className="flex flex-col items-center gap-2 mt-12">
               {Faq.map((f) => (
-                <SingleFaq key={f.id} singleFAQ={f} />
+                <SingleFaq
+                  key={f.id}
+                  singleFAQ={f}
+                  num={FAQNum}
+                  setNum={setFAQNum}
+                />
               ))}
             </div>
           </motion.section>
