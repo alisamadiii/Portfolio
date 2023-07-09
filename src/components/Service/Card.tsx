@@ -83,7 +83,7 @@ export default function Card({ service }: Props) {
       <Button
         className="w-full mt-4"
         onClick={() =>
-          window.open("https://twitter.com/Ali_Developer05")?.focus()
+          window.open("https://wa.me/message/MNYH64MBHSXKN1")?.focus()
         }
       >
         Contact Me

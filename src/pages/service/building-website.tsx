@@ -200,7 +200,7 @@ export default function BuildingWebsite({}: Props) {
                 </div>
                 <Button
                   onClick={() =>
-                    window.open("https://twitter.com/Ali_Developer05")?.focus()
+                    window.open("https://wa.me/message/MNYH64MBHSXKN1")?.focus()
                   }
                 >
                   Contact Now

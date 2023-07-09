@@ -8,7 +8,7 @@ type Props = {
   setNum: (a: number) => void;
 };
 
-import { AiOutlinePlusCircle, AiOutlineMinusCircle } from "react-icons/ai";
+import { AiOutlinePlusCircle } from "react-icons/ai";
 
 export default function SingleFaq({ singleFAQ, num, setNum }: Props) {
   return (
