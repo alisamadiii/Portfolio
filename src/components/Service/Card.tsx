@@ -16,7 +16,7 @@ export default function Card({ service }: Props) {
 
   return (
     <div
-      className="relative p-4 bg-white rounded-lg isolate grow basis-72 shadow-container"
+      className="relative p-4 overflow-hidden bg-white rounded-lg isolate grow basis-72 shadow-container"
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -24,12 +24,12 @@ export default function Card({ service }: Props) {
         <motion.div
           layoutId={service.level.toString()}
           initial={{ opacity: 1 }}
-          animate={{ opacity: 0.5 }}
-          className="absolute inset-0 bg-center bg-cover rounded-lg pointer-events-none bg-hero-background -z-10"
+          animate={{ opacity: 0.2 }}
+          className="absolute bg-center bg-cover rounded-lg pointer-events-none -inset-12 bg-hero-background -z-10"
         />
       )}
       {/* image */}
-      <div className="relative flex items-center justify-center rounded-lg shadow-md isolate aspect-video">
+      <div className="relative flex items-center justify-center rounded-lg shadow-md isolate aspect-video -z-20">
         <p className="text-2xl font-bold text-center capitalize">
           {service.job.join(" ").replaceAll(" ", " + ")}
         </p>
