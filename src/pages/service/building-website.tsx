@@ -71,7 +71,7 @@ export default function BuildingWebsite({}: Props) {
   }>(null);
   const [FAQNum, setFAQNum] = useState(1);
 
-  const SVGSize = "h-12";
+  const SVGSize = "h-8 md:h-12";
   const SVGSize2 = "h-8";
 
   return (
@@ -131,7 +131,7 @@ export default function BuildingWebsite({}: Props) {
                 value={setFilterSkills}
               />
             </Select.Select>
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap items-center gap-3 md:gap-6">
               {filterSkills == "all" ? (
                 <>
                   <Figma className={SVGSize} />

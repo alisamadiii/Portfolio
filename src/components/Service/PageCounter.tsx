@@ -16,7 +16,7 @@ export default function PageCounter({}: Props) {
         <button
           className="px-4 py-1 duration-150 bg-white shadow-2xl rounded-tr-xl focus:ring-2 ring-primary"
           onClick={() => {
-            pagePrice > 7 ? setPagePrice(8) : setPagePrice(pagePrice + 1);
+            pagePrice != 8 && setPagePrice(pagePrice + 1);
           }}
         >
           <IoIosArrowUp />
@@ -24,7 +24,7 @@ export default function PageCounter({}: Props) {
         <button
           className="px-4 py-1 duration-150 bg-white shadow-2xl rounded-br-xl focus:ring-2 ring-primary"
           onClick={() => {
-            pagePrice < 2 ? setPagePrice(1) : setPagePrice(pagePrice - 1);
+            pagePrice != 1 && setPagePrice(pagePrice - 1);
           }}
         >
           <IoIosArrowDown />

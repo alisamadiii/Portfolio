@@ -197,7 +197,7 @@ export const Faq: FAQs = [
     id: 1,
     question: "What is website development?",
     answer:
-      "<p class='mt-4 opacity-80 mb-2'>Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.</p><img class='rounded-xl aspect-video object-cover' src='https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80' />",
+      "<p class='mt-4 opacity-80 mb-2'>Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.</p>",
   },
   {
     id: 2,
@@ -216,6 +216,17 @@ export const Faq: FAQs = [
     question: "How long does it take to build a website?",
     answer:
       "<p class='mt-4 opacity-80 mb-2'>The timeframe for building a website <a href='#'>depends</a> on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.</p>",
+  },
+  {
+    id: 12,
+    question: "Which payment method do you use?",
+    answer: `<!-- PayPal Logo --><table border="0" cellpadding="6"><tr><td align="center"></td></tr><tr><td align="center"><a href="https://www.paypal.com/c2/webapps/mpp/home?locale.x=en_C2" title="PayPal" onclick="javascript:window.open('https://www.paypal.com/c2/webapps/mpp/home?locale.x=en_C2','WIPaypal','toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=1060, height=700'); return false;"><img src="https://www.paypalobjects.com/digitalassets/c/website/marketing/apac/C2/logos-buttons/optimize/26_Grey_PayPal_Pill_Button.png" alt="PayPal" /></a></td></tr></table><!-- PayPal Logo -->`,
+  },
+  {
+    id: 13,
+    question: "They are too expensive.",
+    answer:
+      "<p class='mt-4 opacity-80 mb-2 flex items-center gap-1'><img class='w-8' src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/2044px-WhatsApp.svg.png' /><a href='https://wa.me/message/MNYH64MBHSXKN1' target='_blank' class='text-blue-700 underline hover:no-underline'>Contact Now!</a> We can talk about it.</p>",
   },
   {
     id: 5,
