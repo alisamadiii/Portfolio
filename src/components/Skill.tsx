@@ -8,7 +8,7 @@ type Props = {
 
 export default function Skill({ Icon, technology }: Props) {
   return (
-    <div className="flex flex-col items-center group">
+    <div className="flex flex-col items-center group" role="skills">
       <span className="text-4xl">
         <Icon />
       </span>

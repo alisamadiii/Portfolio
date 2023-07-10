@@ -9,7 +9,6 @@ import Container from "@/layout/Container";
 import { AiOutlineTwitter } from "react-icons/ai";
 import { HiOutlineArrowLongDown } from "react-icons/hi2";
 import { Button } from "@/components/Button";
-import { useRouter } from "next/router";
 
 type Props = {};
 
@@ -19,8 +18,6 @@ const HeroItemVariants: Variants = {
 };
 
 export default function Hero({}: Props) {
-  const router = useRouter();
-
   return (
     <>
       <Container className="relative flex flex-col items-center justify-center gap-4">
@@ -48,6 +45,7 @@ export default function Hero({}: Props) {
             onClick={() =>
               window.open("https://twitter.com/Ali_Developer05")?.focus()
             }
+            role="twitter-link"
           >
             <AiOutlineTwitter />
             <span>Twitter</span>

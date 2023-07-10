@@ -6,14 +6,13 @@ describe("Navbar", () => {
     render(<Navbar />);
 
     const logo = screen.getByAltText("logo");
-    const LinkAbout = screen.getByRole("link", { name: /about/i });
-    const LinkProject = screen.getByRole("link", { name: /project/i });
+    const LinkService = screen.getByRole("link", { name: /service/i });
     const LinkProducts = screen.getByRole("link", { name: /products/i });
     const LinkBlogs = screen.getByRole("link", { name: /blogs/i });
     const button = screen.getByText("Chat Now");
 
     expect(
-      logo && button && LinkAbout && LinkProject && LinkProducts && LinkBlogs
+      logo && button && LinkService && LinkProducts && LinkBlogs
     ).toBeInTheDocument();
   });
 });

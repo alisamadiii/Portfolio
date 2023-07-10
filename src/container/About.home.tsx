@@ -71,7 +71,7 @@ export default function About({}: Props) {
             src={MyImage}
             width={700}
             height={700}
-            alt="my image"
+            alt="my-image"
             className="object-cover w-full mx-auto max-w-[400px]"
             priority={true}
           />
