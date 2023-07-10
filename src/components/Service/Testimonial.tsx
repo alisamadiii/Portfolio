@@ -15,7 +15,11 @@ export default function Testimonial({ testimonial }: Props) {
   const [fullMessage, setFullMessage] = useState(false);
 
   return (
-    <div className="relative flex flex-col gap-3 p-4 overflow-hidden bg-white rounded-lg snap-start">
+    <div
+      className={`relative flex flex-col gap-3 p-4 overflow-hidden rounded-lg snap-start duration-200 ${
+        isClicked ? "bg-primary" : "bg-white"
+      }`}
+    >
       {/* Client Details */}
       <div className="flex items-center gap-2">
         <Image
@@ -58,11 +62,11 @@ export default function Testimonial({ testimonial }: Props) {
       <AnimatePresence>
         {isClicked && (
           <motion.div
-            initial={{ y: "-100%" }}
+            initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "tween" }}
-            className="absolute inset-0 flex flex-col gap-4 p-4 overflow-y-auto bg-white/90 backdrop-blur-sm scroll-bar"
+            className="absolute bottom-0 flex flex-col gap-4 p-3 overflow-y-auto bg-white rounded-t-lg inset-4 scroll-bar"
             onClick={() => setIsClicked(false)}
             title="click for closing"
           >
