@@ -25,7 +25,7 @@ export default function Card({ service }: Props) {
           layoutId={service.level.toString()}
           initial={{ opacity: 1 }}
           animate={{ opacity: 0.2 }}
-          className="absolute bg-center bg-cover rounded-lg pointer-events-none -inset-12 bg-hero-background -z-10"
+          className="absolute bg-center bg-cover rounded-lg pointer-events-none -inset-12 bg-grainy-gradient -z-10"
         />
       )}
       {/* image */}
@@ -36,7 +36,7 @@ export default function Card({ service }: Props) {
         {isHover == false && (
           <motion.div
             layoutId={service.level.toString()}
-            className="absolute inset-0 bg-center bg-cover rounded-lg pointer-events-none bg-hero-background -z-10"
+            className="absolute inset-0 bg-center bg-cover rounded-lg pointer-events-none bg-grainy-gradient -z-10"
           />
         )}
       </div>

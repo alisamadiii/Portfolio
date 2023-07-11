@@ -25,7 +25,7 @@ module.exports = {
       backgroundImage: {
         pattern: `linear-gradient(rgba(241, 245, 255, .2) 2px, transparent 2px), linear-gradient(90deg, rgba(241, 245, 255, .2) 1px, transparent 1px);`,
         gradient: "url('../assets/Gradient.png')",
-        "hero-background": "url(../assets/Hero background.png)",
+        "grainy-gradient": "url('/Gradient background.png')",
       },
       backgroundSize: {
         pattern: "40px 40px, 40px 40px, 20px 20px, 20px 20px",

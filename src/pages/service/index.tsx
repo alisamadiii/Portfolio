@@ -29,7 +29,7 @@ export default function index({}: Props) {
             presence. Join me on this route to success in the digital realm.
           </p>
           <section className="grid gap-5 mt-16 md:grid-cols-2">
-            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-hero-background before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
+            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-grainy-gradient before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
               <h2 className="text-3xl font-bold">Building Website</h2>
               <p className="my-3">
                 Transform your online vision into reality with our "Building
@@ -49,7 +49,7 @@ export default function index({}: Props) {
                 className="absolute bottom-0 right-0 translate-x-5 translate-y-5"
               />
             </div>
-            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-hero-background before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
+            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-grainy-gradient before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
               <h2 className="text-3xl font-bold">Promotional Tweet</h2>
               <p className="my-3">
                 Leverage my +25k Twitter following with our "Promotional Tweet"
@@ -67,7 +67,7 @@ export default function index({}: Props) {
               </Link>
               <AiOutlineTwitter className="absolute bottom-0 right-0 translate-y-8 text-9xl text-twitter" />
             </div>
-            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-hero-background before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
+            <div className="relative p-4 pb-24 overflow-hidden duration-200 bg-white border-2 border-white isolate shadow-container rounded-xl hover:-translate-y-2 before:absolute before:inset-0 before:bg-grainy-gradient before:bg-cover before:bg-center before:opacity-0 before:-z-10 hover:before:opacity-40 before:duration-200">
               <h2 className="text-3xl font-bold">Video Showcase</h2>
               <p className="my-3">
                 Leverage my +25k Twitter following with our "Promotional Tweet"

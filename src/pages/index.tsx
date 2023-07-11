@@ -51,7 +51,7 @@ export default function Home({}: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-center bg-cover -z-20 bg-hero-background"
+                className="absolute inset-0 bg-center bg-cover -z-20 bg-grainy-gradient"
               />
             )}
           </AnimatePresence>

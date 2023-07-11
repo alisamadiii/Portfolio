@@ -50,7 +50,7 @@ export default function Chat_Community({}: Props) {
         title="Chat Community"
         description="This is the place where you can chat and have conversation with me."
       />
-      <div className="absolute inset-0 w-full h-full bg-center bg-cover bg-hero-background" />
+      <div className="absolute inset-0 w-full h-full bg-center bg-cover bg-grainy-gradient" />
       <div className="absolute inset-0 w-full h-full bg-pattern" />
       <div className="cookie-consent flex flex-col fixed inset-0 md:relative w-full md:mt-12 md:max-w-[452px] h-screen md:h-[600px] mx-auto shadow-container md:rounded-xl overflow-hidden">
         <Header />
