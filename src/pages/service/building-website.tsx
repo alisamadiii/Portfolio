@@ -69,7 +69,7 @@ export default function BuildingWebsite({}: Props) {
     id: number;
     video: string;
   }>(null);
-  const [FAQNum, setFAQNum] = useState(1);
+  const [FAQNum, setFAQNum] = useState(0);
 
   const SVGSize = "h-8 md:h-12";
   const SVGSize2 = "h-8";
@@ -214,8 +214,11 @@ export default function BuildingWebsite({}: Props) {
               </div>
             </div>
           </motion.section>
-          <motion.section layout className="mb-16">
-            <Heading2 lineUnder={false} className="w-full text-3xl">
+          <motion.section
+            layout
+            className="relative p-4 mb-16 md:p-6 lg:p-8 before:absolute before:inset-0 before:bg-gradient-to-tr before:from-primary before:to-secondary before:-z-10 before:rounded-xl md::before:rounded-3xl"
+          >
+            <Heading2 lineUnder={false} className="w-full text-3xl text-white">
               frequently asked questions
             </Heading2>
             <div className="flex flex-col items-center gap-2 mt-12">

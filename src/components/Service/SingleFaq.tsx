@@ -9,16 +9,17 @@ type Props = {
 };
 
 import { AiOutlinePlusCircle } from "react-icons/ai";
+import { IoIosArrowDown } from "react-icons/io";
 
 export default function SingleFaq({ singleFAQ, num, setNum }: Props) {
   return (
     <div
-      className={`w-full max-w-[700px] p-2 md:p-4 border-b border-dark-blue-2 ${
+      className={`w-full max-w-[700px] p-2 md:p-4 border-b border-light-blue-2 ${
         singleFAQ.answer == "writing" && "opacity-50"
       }`}
     >
       <div
-        className={`flex items-center justify-between gap-4 ${
+        className={`flex items-center justify-between gap-4 text-white ${
           singleFAQ.answer == "writing"
             ? "cursor-not-allowed"
             : "cursor-pointer"
@@ -27,8 +28,11 @@ export default function SingleFaq({ singleFAQ, num, setNum }: Props) {
       >
         <p className="md:text-lg">{singleFAQ.question}</p>
         <div>
-          <AiOutlinePlusCircle
-            className={`duration-200 ${num == singleFAQ.id && "rotate-45"}`}
+          <IoIosArrowDown
+            className={`duration-500`}
+            style={{
+              transform: `rotateX(${singleFAQ.id == num ? "180deg" : "0deg"})`,
+            }}
           />
         </div>
       </div>
@@ -38,7 +42,7 @@ export default function SingleFaq({ singleFAQ, num, setNum }: Props) {
             initial={{ height: 0 }}
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
-            className="overflow-hidden"
+            className="overflow-hidden text-white/90"
             dangerouslySetInnerHTML={{ __html: singleFAQ.answer }}
           ></motion.div>
         )}

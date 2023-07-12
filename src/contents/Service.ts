@@ -209,13 +209,13 @@ export const Faq: FAQs = [
     id: 3,
     question: "How much does it cost to create a website?",
     answer:
-      "<p class='mt-4 opacity-80 mb-2'>The <a href='#cost' class='text-blue-700 underline hover:no-underline'>cost</a> of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.</p>",
+      "<p class='mt-4 opacity-80 mb-2'>The <a href='#cost' class='text-white underline hover:no-underline'>cost</a> of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.</p>",
   },
   {
     id: 4,
     question: "How long does it take to build a website?",
     answer:
-      "<p class='mt-4 opacity-80 mb-2'>The timeframe for building a website <a href='#'>depends</a> on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.</p>",
+      "<p class='mt-4 opacity-80 mb-2'>The timeframe for building a website depends on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.</p>",
   },
   {
     id: 12,
@@ -226,7 +226,7 @@ export const Faq: FAQs = [
     id: 13,
     question: "They are too expensive.",
     answer:
-      "<p class='mt-4 opacity-80 mb-2 flex items-center gap-1'><img class='w-8' src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/2044px-WhatsApp.svg.png' /><a href='https://wa.me/message/MNYH64MBHSXKN1' target='_blank' class='text-blue-700 underline hover:no-underline'>Contact Now!</a> We can talk about it.</p>",
+      "<p class='mt-4 opacity-80 mb-2 flex items-center gap-1'><img class='w-8' src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/2044px-WhatsApp.svg.png' /><a href='https://wa.me/message/MNYH64MBHSXKN1' target='_blank' class='text-white underline hover:no-underline'>Contact Now!</a> We can talk about it.</p>",
   },
   {
     id: 5,
