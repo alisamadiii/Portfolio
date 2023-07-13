@@ -192,30 +192,44 @@ export type FAQ = {
   answer: string;
 };
 
+const ParagraphStyle = (value: string) => {
+  return `<p class='mt-4 opacity-80 mb-2 flex items-center gap-1'>${value}</p>`;
+};
+const Link = (value: string, link: string) => {
+  return `<a href='#${link}' class='text-white underline hover:no-underline'>${value}</a>`;
+};
+
 export const Faq: FAQs = [
   {
     id: 1,
     question: "What is website development?",
-    answer:
-      "<p class='mt-4 opacity-80 mb-2'>Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.</p>",
+    answer: ParagraphStyle(
+      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization."
+    ),
   },
   {
     id: 2,
     question: "Why do I need a website for my business?",
-    answer:
-      "<p class='mt-4 opacity-80 mb-2'>A website is essential for businesses as it serves as a powerful online presence, enabling you to reach a wider audience and showcase your products or services 24/7. It helps establish credibility, enhances brand visibility, facilitates customer engagement, and can even generate leads and sales.</p>",
+    answer: ParagraphStyle(
+      "A website is essential for businesses as it serves as a powerful online presence, enabling you to reach a wider audience and showcase your products or services 24/7. It helps establish credibility, enhances brand visibility, facilitates customer engagement, and can even generate leads and sales."
+    ),
   },
   {
     id: 3,
     question: "How much does it cost to create a website?",
-    answer:
-      "<p class='mt-4 opacity-80 mb-2'>The <a href='#cost' class='text-white underline hover:no-underline'>cost</a> of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.</p>",
+    answer: ParagraphStyle(
+      `The ${Link(
+        "cost",
+        "cost"
+      )} of creating a website depends on various factors such as the complexity of the design, the number of pages, desired functionalities, and any additional services required. It's best to contact us directly with your specific requirements so that we can provide you with an accurate estimate.`
+    ),
   },
   {
     id: 4,
     question: "How long does it take to build a website?",
-    answer:
-      "<p class='mt-4 opacity-80 mb-2'>The timeframe for building a website depends on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process.</p>",
+    answer: ParagraphStyle(
+      "The timeframe for building a website depends on the scope and complexity of the project. A simple website can be developed within a few weeks, while more complex websites may take several months. We work closely with our clients to establish realistic timelines and keep them updated throughout the process."
+    ),
   },
   {
     id: 12,
@@ -225,18 +239,19 @@ export const Faq: FAQs = [
   {
     id: 13,
     question: "They are too expensive.",
-    answer:
-      "<p class='mt-4 opacity-80 mb-2 flex items-center gap-1'><img class='w-8' src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/2044px-WhatsApp.svg.png' /><a href='https://wa.me/message/MNYH64MBHSXKN1' target='_blank' class='text-white underline hover:no-underline'>Contact Now!</a> We can talk about it.</p>",
+    answer: ParagraphStyle(
+      "<img class='w-8' src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/2044px-WhatsApp.svg.png' /><a href='https://wa.me/message/MNYH64MBHSXKN1' target='_blank' class='text-white underline hover:no-underline'>Contact Now!</a> We can talk about it."
+    ),
   },
   {
     id: 5,
     question: "Can you help me with website design as well?",
-    answer: "writing",
+    answer: ParagraphStyle("Yes"),
   },
   {
     id: 6,
     question: "Do you offer responsive design for mobile devices?",
-    answer: "writing",
+    answer: ParagraphStyle("Yes"),
   },
   {
     id: 7,
@@ -246,23 +261,27 @@ export const Faq: FAQs = [
   {
     id: 8,
     question: "Can you assist with domain registration and hosting setup?",
-    answer: "writing",
+    answer: ParagraphStyle("Yes"),
   },
   {
     id: 9,
     question:
       "Can you provide references or examples of websites you have developed?",
-    answer: "writing",
+    answer: ParagraphStyle(
+      "At the top of this page, you can see 7 Examples of my work."
+    ),
   },
   {
     id: 10,
     question: "Can you redesign an existing website?",
-    answer: "writing",
+    answer: ParagraphStyle("Yes"),
   },
   {
     id: 11,
     question:
       "Will my website be customizable and easy to update in the future?",
-    answer: "writing",
+    answer: ParagraphStyle(
+      "I am going to make a website in a way where you can update data very easy."
+    ),
   },
 ];

@@ -24,7 +24,11 @@ export default function SingleFaq({ singleFAQ, num, setNum }: Props) {
             ? "cursor-not-allowed"
             : "cursor-pointer"
         }`}
-        onClick={() => singleFAQ.answer !== "writing" && setNum(singleFAQ.id)}
+        onClick={() => {
+          if (singleFAQ.id == num) return setNum(0);
+
+          singleFAQ.answer !== "writing" && setNum(singleFAQ.id);
+        }}
       >
         <p className="md:text-lg">{singleFAQ.question}</p>
         <div>
