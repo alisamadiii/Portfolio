@@ -193,7 +193,7 @@ export type FAQ = {
 };
 
 const ParagraphStyle = (value: string) => {
-  return `<p class='mt-4 opacity-80 mb-2 flex items-center gap-1'>${value}</p>`;
+  return `<p class='mt-4 opacity-80 mb-2'>${value}</p>`;
 };
 const Link = (value: string, link: string) => {
   return `<a href='#${link}' class='text-white underline hover:no-underline'>${value}</a>`;
