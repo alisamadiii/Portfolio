@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Inter, Bebas_Neue } from "next/font/google";
-import { Packages } from "@/content/Data";
+import { Packages } from "../content/Data";
 
 const inter = Inter({ subsets: ["latin"] });
 const bebas_beue = Bebas_Neue({ subsets: ["latin"], weight: ["400"] });
