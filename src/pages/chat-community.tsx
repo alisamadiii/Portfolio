@@ -10,11 +10,13 @@ import Meta_Tag from "@/layout/Head";
 import SignIn from "@/components/SignIn";
 
 import { Header, Comments, Input } from "@/components/Chat-Components";
+import OfflineNotification from "@/components/OfflineNotification";
 
 type Props = {};
 
 export default function Chat_Community({}: Props) {
   const [isNotSigned, setIsNotSigned] = useState<boolean>(false);
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const { setComments } = useCommentsStore();
   const { setCurrentUser } = useContext(User_Context);
 
@@ -23,6 +25,15 @@ export default function Chat_Community({}: Props) {
       setCurrentUser(user);
     });
   }, []);
+
+  useEffect(() => {
+    setIsOnline(window.navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+  }, [isOnline]);
 
   useEffect(() => {
     const colRef = collection(db, "comments");
@@ -59,6 +70,7 @@ export default function Chat_Community({}: Props) {
         <p className="px-4 text-xs opacity-80">Press ctrl to delete comment</p>
       </div>
       {isNotSigned && <SignIn />}
+      {isOnline == false && <OfflineNotification />}
     </>
   );
 }

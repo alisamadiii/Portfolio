@@ -60,13 +60,15 @@ export default function Home() {
                     </svg>
                     <h2 className="capitalize">{item.name}</h2>
                   </div>
-                  <p>${item.price}</p>
+                  <p className="text-5xl font-black">${item.price}</p>
                 </div>
                 <p className="mt-3 mb-4 text-start">{item.description}</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 mt-8">
                   <a
-                    href="#"
-                    className={`bg-[#dfdfdf] py-2 rounded ${
+                    href={item.example_URL || "#"}
+                    // @ts-ignore
+                    target={item.example_URL && "_blank"}
+                    className={`bg-[#dfdfdf] py-2 rounded opacity-80 hover:opacity-100 ${
                       item.example_URL == null && "cursor-not-allowed"
                     }`}
                   >
@@ -75,7 +77,7 @@ export default function Home() {
                   <a
                     href="https://twitter.com/Ali_Developer05"
                     target="_blank"
-                    className="py-2 text-white rounded bg-twitter"
+                    className="py-2 text-white rounded bg-twitter opacity-80 hover:opacity-100"
                   >
                     Contact Me
                   </a>
