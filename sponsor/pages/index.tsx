@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Inter, Bebas_Neue } from "next/font/google";
 import { Packages } from "../content/Data";
 import { useEffect, useState } from "react";
-import Notification from "@/components/notification";
+import Notification from "../components/notification";
 import { AnimatePresence } from "framer-motion";
 
 const inter = Inter({ subsets: ["latin"] });
