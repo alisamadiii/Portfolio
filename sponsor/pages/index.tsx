@@ -1,11 +1,22 @@
 import Image from "next/image";
 import { Inter, Bebas_Neue } from "next/font/google";
 import { Packages } from "../content/Data";
+import { useEffect, useState } from "react";
+import Notification from "@/components/notification";
+import { AnimatePresence } from "framer-motion";
 
 const inter = Inter({ subsets: ["latin"] });
 const bebas_beue = Bebas_Neue({ subsets: ["latin"], weight: ["400"] });
 
 export default function Home() {
+  const [isNotification, setIsNotification] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsNotification(true);
+    }, 100);
+  }, []);
+
   return (
     <main className={`${inter.className} p-2 md:p-4 lg:p-8 pb-0`}>
       <Image
@@ -87,6 +98,12 @@ export default function Home() {
           </div>
         </section>
       </div>
+
+      <AnimatePresence mode="wait">
+        {isNotification && (
+          <Notification setIsNotification={setIsNotification} />
+        )}
+      </AnimatePresence>
     </main>
   );
 }

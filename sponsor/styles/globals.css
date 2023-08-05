@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.dot_animation::after {
+  @apply absolute w-4 h-4 rounded-full bg-primary -z-10;
+  content: "";
+  animation: dot 1s infinite;
+}
+
+@keyframes dot {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
