@@ -4,6 +4,7 @@ module.exports = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./layouts/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     colors: {
@@ -21,6 +22,8 @@ module.exports = {
       sm: 14,
       base: 15,
       xl: 20,
+      "2xl": 24,
+      "3xl": 28,
     },
     extend: {
       animation: {

@@ -1,3 +1,4 @@
+import Navbar from "@/components/Navbar/Navbar";
 import Preloader from "@/components/preloader";
 import { UserContext } from "@/context/User.context";
 import React, { useContext } from "react";
@@ -12,11 +13,15 @@ export default function Layouts({ children }: Props) {
   if (currentUser == null) return <Preloader />;
 
   return (
-    <div>
+    <div className="flex justify-center w-full gap-9">
       {/* Navbar */}
-      <nav>Navbar</nav>
-      <main>{children}</main>
-      <footer>Extra information</footer>
+      <nav className="flex flex-col items-start gap-6 pt-1 xl:w-60 h-96">
+        <Navbar />
+      </nav>
+      <main className="w-full max-w-[600px] h-96">{children}</main>
+      <footer className="hidden w-full max-w-xs h-96 bg-primary lg:block">
+        Extra information
+      </footer>
       {/* extra information */}
     </div>
   );
