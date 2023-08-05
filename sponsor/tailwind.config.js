@@ -16,8 +16,12 @@ module.exports = {
       black: "#000",
       test: "#ff0000",
     },
-    fontSize: {},
-    extend: {},
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      base: 15,
+      xl: 20,
+    },
   },
   plugins: [],
 };
