@@ -22,6 +22,17 @@ module.exports = {
       base: 15,
       xl: 20,
     },
+    extend: {
+      animation: {
+        squish: "squish .5s infinite alternate",
+      },
+      keyframes: {
+        squish: {
+          from: { transform: "scale(1) translateY(0%)" },
+          to: { transform: "scale(.9) translateY(-25%)" },
+        },
+      },
+    },
   },
   plugins: [],
 };

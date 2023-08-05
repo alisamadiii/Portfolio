@@ -11,10 +11,10 @@ export type UserTypes = {
   verified: boolean;
   followers: number;
   following: number;
-  tweets: TweetsType;
+  tweets: TweetType[];
 };
 
-export type TweetsType = {
+export type TweetType = {
   author_id: number;
   id: number;
   text: string;
@@ -25,4 +25,4 @@ export type TweetsType = {
   comments: number;
   impressions: number;
   pinned: boolean;
-}[];
+};

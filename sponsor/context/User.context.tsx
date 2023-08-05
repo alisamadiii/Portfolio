@@ -1,8 +1,9 @@
+import { UserData } from "@/content/UserData";
 import { UserTypes } from "@/types/User.t";
 import React, { createContext, useEffect, useState } from "react";
 
 type UserContextType = {
-  currentUser: null | UserTypes | { name: string };
+  currentUser: null | UserTypes;
   setCurrentUser: any;
 };
 
@@ -16,13 +17,11 @@ type UserProviderProps = {
 };
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [currentUser, setCurrentUser] = useState<
-    null | UserTypes | { name: string }
-  >(null);
+  const [currentUser, setCurrentUser] = useState<null | UserTypes>(null);
 
   useEffect(() => {
     setTimeout(() => {
-      setCurrentUser({ name: "Ali reza" });
+      setCurrentUser(UserData);
     }, 3000);
   }, []);
 
