@@ -18,7 +18,7 @@ export default function Layouts({ children }: Props) {
       <nav className="sticky top-0 flex flex-col items-start gap-6 pt-1 xl:w-60 h-96">
         <Navbar />
       </nav>
-      <main className="w-full max-w-[600px] min-h-screen border-x border-button-hover">
+      <main className="w-full max-w-[600px] min-h-screen border-x border-button-hover pb-24">
         {children}
       </main>
       <footer className="sticky top-0 hidden w-full max-w-xs pt-1 h-96 bg-primary lg:block">

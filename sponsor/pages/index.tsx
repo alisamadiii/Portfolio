@@ -94,7 +94,7 @@ export default function Home() {
       </section>
 
       <section className="mt-8 border-t border-button-hover">
-        <div className="px-4 py-3 duration-200 cursor-pointer hover:bg-tweet-hover">
+        <div>
           {currentUser?.tweets.map((tweet) => (
             <Tweet tweet={tweet} />
           ))}

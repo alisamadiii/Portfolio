@@ -25,6 +25,21 @@ export const UserData: UserTypes = {
       created_at: 1689301036,
       media: [
         "https://pbs.twimg.com/media/F0_Ja0-aQAoC4ky?format=jpg&name=large",
+        "https://pbs.twimg.com/media/F2vhH9abAAAR7zB?format=webp&name=small",
+      ],
+      likes: 10,
+      retweets: 10,
+      comments: 10,
+      impressions: 10000,
+      pinned: false,
+    },
+    {
+      author_id: 1482275556502962177,
+      id: 2,
+      text: "Master these high-income skills in 2023:",
+      created_at: 1689301036,
+      media: [
+        "https://pbs.twimg.com/media/F2vhH9abAAAR7zB?format=webp&name=small",
       ],
       likes: 10,
       retweets: 10,

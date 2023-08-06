@@ -10,6 +10,9 @@ module.exports = {
     colors: {
       primary: "#1D9BF0",
       secondary: "#0F1419",
+      likes: "rgba(249, 24, 128)",
+      retweets: "rgb(0, 186, 124)",
+      impressions: "",
       "primary-hover": "#1A8CD8",
       "font-2": "#536471",
       "button-hover": "#E7E7E8",
