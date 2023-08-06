@@ -19,10 +19,7 @@ export default function Tweet({ tweet }: Props) {
   const { currentUser } = useContext(UserContext);
 
   return (
-    <div
-      key={tweet.id}
-      className="flex items-start w-full gap-4 px-4 py-3 duration-200 cursor-pointer hover:bg-tweet-hover"
-    >
+    <div className="flex items-start w-full gap-4 px-4 py-3 duration-200 cursor-pointer hover:bg-tweet-hover">
       <Image
         src={currentUser!.display_URL}
         width={40}
@@ -40,7 +37,9 @@ export default function Tweet({ tweet }: Props) {
             {convertTimestampToDateTime(tweet.created_at)}
           </h3>
         </div>
-        <p className="leading-4">{tweet.text}</p>
+        <pre className="leading-4" style={{ fontFamily: "Segoe UI" }}>
+          {tweet.text}
+        </pre>
         {/* Media */}
         <div
           className={`mt-3 ${

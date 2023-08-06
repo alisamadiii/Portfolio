@@ -39,7 +39,12 @@ export default function Navbar({}: Props) {
           <p className="hidden mr-3 xl:block">My Work</p>
         </Button>
       </ul>
-      <Button variant={"primary"}>
+      <Button
+        variant={"primary"}
+        onClick={() =>
+          window.open("https://twitter.com/Ali_Developer05")?.focus()
+        }
+      >
         <p className="hidden xl:block">Sponsor</p>
         <SiGithubsponsors className="text-3xl xl:hidden" />
       </Button>
