@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import Button from "../Button";
 
 type Props = {};
@@ -10,9 +10,11 @@ import { SiGithubsponsors } from "react-icons/si";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import NavbarSmall from "./NavbarSmall";
+import { UserContext } from "@/context/User.context";
 
 export default function Navbar({}: Props) {
   const { route } = useRouter();
+  const { currentUser } = useContext(UserContext);
 
   return (
     <>
@@ -44,11 +46,16 @@ export default function Navbar({}: Props) {
           </Link>
           <Link href={"/lists"}>
             <Button className={`${route == "/lists" && "font-semibold"}`}>
-              {route == "/lists" ? (
-                <IoIosListBox className="text-3xl" />
-              ) : (
-                <IoIosList className="text-3xl" />
-              )}
+              <div className="relative">
+                {route == "/lists" ? (
+                  <IoIosListBox className="text-3xl" />
+                ) : (
+                  <IoIosList className="text-3xl" />
+                )}
+                <small className="absolute top-0 right-0 flex items-center justify-center w-4 h-4 text-xs text-white translate-x-1 -translate-y-1 rounded-full bg-primary">
+                  {currentUser?.tweets.length}
+                </small>
+              </div>
               <p className="hidden mr-3 xl:block">Lists</p>
             </Button>
           </Link>
