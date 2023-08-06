@@ -49,8 +49,9 @@ export default function Tweet({ tweet }: Props) {
           }`}
         >
           {tweet.media !== null &&
-            tweet.media.map((m) => (
+            tweet.media.map((m, index) => (
               <Image
+                key={index}
                 src={m}
                 width={600}
                 height={172}
