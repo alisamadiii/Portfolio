@@ -18,9 +18,9 @@ export default function NavbarSmall({}: Props) {
       <Link href={"/"}>
         <Button className={`${route == "/" && "font-semibold"}`}>
           {route == "/" ? (
-            <RiUser3Fill className="text-xl" />
+            <RiUser3Fill className="text-2xl" />
           ) : (
-            <RiUser3Line className="text-xl" />
+            <RiUser3Line className="text-2xl" />
           )}
         </Button>
       </Link>
@@ -28,9 +28,9 @@ export default function NavbarSmall({}: Props) {
         <Button className={`${route == "/lists" && "font-semibold"}`}>
           <div className="relative">
             {route == "/lists" ? (
-              <IoIosListBox className="text-xl" />
+              <IoIosListBox className="text-2xl" />
             ) : (
-              <IoIosList className="text-xl" />
+              <IoIosList className="text-2xl" />
             )}
             <small className="absolute top-0 right-0 flex items-center justify-center w-3 h-3 text-[10px] text-white translate-x-1 -translate-y-1 rounded-full bg-primary">
               {currentUser?.tweets.length}
@@ -41,9 +41,9 @@ export default function NavbarSmall({}: Props) {
       <Link href={"/work"}>
         <Button className={`${route == "/work" && "font-semibold"}`}>
           {route == "/work" ? (
-            <MdWork className="text-xl" />
+            <MdWork className="text-2xl" />
           ) : (
-            <MdWorkOutline className="text-xl" />
+            <MdWorkOutline className="text-2xl" />
           )}
         </Button>
       </Link>

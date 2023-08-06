@@ -11,6 +11,7 @@ import { FaRegComment } from "react-icons/fa";
 import { AiOutlineRetweet, AiFillHeart } from "react-icons/ai";
 import { BsBarChartFill } from "react-icons/bs";
 import Button from "./Button";
+import Link from "next/link";
 
 type Props = {
   tweet: TweetType;
@@ -20,7 +21,10 @@ export default function Tweet({ tweet }: Props) {
   const { currentUser } = useContext(UserContext);
 
   return (
-    <div className="flex items-start w-full gap-4 px-4 py-3 duration-200 cursor-pointer hover:bg-tweet-hover">
+    <Link
+      href={`/status/${tweet?.id}`}
+      className="flex items-start w-full gap-4 px-4 py-3 duration-200 cursor-pointer text-secondary hover:bg-tweet-hover"
+    >
       <Image
         src={currentUser!.display_URL}
         width={40}
@@ -35,24 +39,25 @@ export default function Tweet({ tweet }: Props) {
           <h3 className="text-font-2">{currentUser?.username}</h3>
           <h3 className="text-font-2">·</h3>
           <h3 className="text-font-2">
-            {convertTimestampToDateTime(tweet.created_at)}
+            {convertTimestampToDateTime(tweet?.created_at)}
           </h3>
         </div>
         <pre
           className="leading-6 whitespace-pre-wrap"
           style={{ fontFamily: "Segoe UI" }}
         >
-          {tweet.text}
+          {tweet?.text}
         </pre>
         {/* Media */}
         <div
           className={`mt-3 ${
-            tweet.media!.length > 1 &&
+            // @ts-ignore
+            tweet?.media?.length > 1 &&
             "grid grid-cols-2 gap-1 rounded-xl overflow-hidden"
           }`}
         >
-          {tweet.media !== null &&
-            tweet.media.map((m, index) => (
+          {tweet?.media !== null &&
+            tweet?.media.map((m, index) => (
               <Image
                 key={index}
                 src={m}
@@ -60,7 +65,7 @@ export default function Tweet({ tweet }: Props) {
                 height={172}
                 alt=""
                 className={`w-full border border-black/10 ${
-                  tweet.media!.length > 1
+                  tweet?.media!.length > 1
                     ? "aspect-video object-cover"
                     : "max-w-[389px] rounded-xl"
                 }`}
@@ -69,11 +74,11 @@ export default function Tweet({ tweet }: Props) {
         </div>
         {/* Analytics */}
         <div className="mt-3">
-          {tweet.example && (
+          {tweet?.example && (
             <Button
               variant={"example"}
               // @ts-ignore
-              onClick={() => window.open(tweet.example)?.focus()}
+              onClick={() => window.open(tweet?.example)?.focus()}
             >
               Example
             </Button>
@@ -83,29 +88,29 @@ export default function Tweet({ tweet }: Props) {
               <span className="p-2 duration-100 rounded-full group-hover:bg-primary/10">
                 <FaRegComment />
               </span>
-              {tweet.comments}
+              {tweet?.comments}
             </div>
             <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-retweets group">
               <span className="p-2 duration-100 rounded-full group-hover:bg-retweets/10">
                 <AiOutlineRetweet />
               </span>
-              {tweet.retweets}
+              {tweet?.retweets}
             </div>
             <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-likes group">
               <span className="p-2 duration-100 rounded-full group-hover:bg-likes/10">
                 <AiFillHeart />
               </span>
-              {tweet.likes}
+              {tweet?.likes}
             </div>
             <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-primary group">
               <span className="p-2 duration-100 rounded-full group-hover:bg-primary/10">
                 <BsBarChartFill />
               </span>
-              {formatLargeNumber(tweet.impressions)}
+              {formatLargeNumber(tweet?.impressions)}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

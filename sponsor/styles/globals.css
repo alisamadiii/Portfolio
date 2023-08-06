@@ -13,6 +13,8 @@ a {
 a,
 a:active,
 button,
-button:active {
+button:active,
+div,
+div:active {
   -webkit-tap-highlight-color: transparent !important;
 }

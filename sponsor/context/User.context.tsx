@@ -22,7 +22,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   useEffect(() => {
     setTimeout(() => {
       setCurrentUser(UserData);
-    }, 1000);
+    }, 0);
   }, []);
 
   const value = { currentUser, setCurrentUser };

@@ -11,6 +11,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import NavbarSmall from "./NavbarSmall";
 import { UserContext } from "@/context/User.context";
+import SponsorButton from "../SponsorButton";
 
 export default function Navbar({}: Props) {
   const { route } = useRouter();
@@ -70,15 +71,7 @@ export default function Navbar({}: Props) {
             </Button>
           </Link>
         </ul>
-        <Button
-          variant={"primary"}
-          onClick={() =>
-            window.open("https://twitter.com/Ali_Developer05")?.focus()
-          }
-        >
-          <p className="hidden xl:block">Sponsor</p>
-          <SiGithubsponsors className="text-3xl xl:hidden" />
-        </Button>
+        <SponsorButton />
       </nav>
 
       <NavbarSmall />
