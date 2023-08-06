@@ -1,4 +1,3 @@
-import Button from "../components/Button";
 import { UserContext } from "../context/User.context";
 import VerifiedIcon from "../public/VerifiedIcon";
 import Image from "next/image";
@@ -6,11 +5,11 @@ import { useContext } from "react";
 import Linkify from "linkify-react";
 
 // Icons
-import { BsArrowLeftShort } from "react-icons/bs";
 import { IoLocationOutline } from "react-icons/io5";
 import { AiOutlineLink } from "react-icons/ai";
 import { CgCalendarDates } from "react-icons/cg";
-import { convertTimestampToDateTime, formatLargeNumber } from "../utils";
+import { formatLargeNumber } from "../utils";
+
 import Tweet from "../components/Tweet";
 
 export default function Home() {
@@ -18,19 +17,6 @@ export default function Home() {
 
   return (
     <>
-      <header className="flex items-center gap-8 px-2 py-2">
-        <Button className="p-1">
-          <BsArrowLeftShort className="text-3xl" />
-        </Button>
-        <div>
-          <div className="flex items-center gap-1">
-            <h1 className="font-bold text-xl/5">{currentUser?.name}</h1>
-            {currentUser?.verified && <VerifiedIcon />}
-          </div>
-          <small>{currentUser?.total_tweet.toLocaleString()} tweets</small>
-        </div>
-      </header>
-
       <section className="relative">
         <Image
           src={currentUser!.display_banner}
@@ -43,11 +29,10 @@ export default function Home() {
           width={128}
           height={128}
           alt=""
-          className="absolute -translate-y-1/2 border-4 border-white rounded-full left-4"
+          className="absolute w-24 h-24 -translate-y-1/2 border-4 border-white rounded-full left-4 md:w-32 md:h-32"
         />
       </section>
-
-      <section className="px-4 mt-20 space-y-3">
+      <section className="px-4 space-y-3 mt-14 md:mt-20">
         <div>
           <div className="flex items-center gap-1">
             <h2 className="font-bold text-xl/7">{currentUser?.name}</h2>
@@ -92,7 +77,6 @@ export default function Home() {
           </p>
         </div>
       </section>
-
       <section className="mt-8 border-t border-button-hover">
         <div>
           {currentUser?.tweets.map((tweet) => (

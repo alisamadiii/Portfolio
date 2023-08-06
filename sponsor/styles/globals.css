@@ -9,3 +9,10 @@ html {
 a {
   @apply text-primary;
 }
+
+a,
+a:active,
+button,
+button:active {
+  -webkit-tap-highlight-color: transparent !important;
+}
