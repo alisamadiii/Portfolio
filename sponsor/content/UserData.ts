@@ -20,6 +20,19 @@ export const UserData: UserTypes = {
   tweets: [
     {
       author_id: 1482275556502962177,
+      id: 4,
+      text: `📣 Seeking sponsors to boost my message and reach a wider audience! 🚀 If you believe in my content and want to collaborate, let's connect! `,
+      created_at: 1689301036,
+      media: ["/sponsor.png"],
+      likes: 10,
+      retweets: 10,
+      comments: 10,
+      impressions: 10000,
+      pinned: false,
+      example: null,
+    },
+    {
+      author_id: 1482275556502962177,
       id: 1,
       text: `Tweet`,
       created_at: 1689301036,
@@ -29,6 +42,7 @@ export const UserData: UserTypes = {
       comments: 10,
       impressions: 10000,
       pinned: false,
+      example: null,
     },
     {
       author_id: 1482275556502962177,
@@ -41,6 +55,8 @@ export const UserData: UserTypes = {
       comments: 10,
       impressions: 10000,
       pinned: false,
+      example:
+        "https://twitter.com/Ali_Developer05/status/1680144107455528960?s=20",
     },
     {
       author_id: 1482275556502962177,
@@ -53,6 +69,8 @@ export const UserData: UserTypes = {
       comments: 10,
       impressions: 10000,
       pinned: false,
+      example:
+        "https://twitter.com/Ali_Developer05/status/1680500980389912578?s=20",
     },
   ],
 };

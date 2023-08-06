@@ -5,6 +5,7 @@ import { UserContext } from "../context/User.context";
 import React, { useContext } from "react";
 import { BsArrowLeftShort } from "react-icons/bs";
 import VerifiedIcon from "@/public/VerifiedIcon";
+import Footer from "@/components/Footer/Footer";
 
 type Props = {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ export default function Layouts({ children }: Props) {
       {/* Navbar */}
       <Navbar />
       <main className="w-full max-w-[600px] min-h-screen border-x border-button-hover pb-24">
-        <header className="flex items-center gap-8 px-2 py-2">
+        <header className="flex items-center gap-4 px-2 py-2 md:gap-8">
           <Button className="p-1" onClick={() => window.history.back()}>
             <BsArrowLeftShort className="text-3xl" />
           </Button>
@@ -34,8 +35,7 @@ export default function Layouts({ children }: Props) {
         </header>
         {children}
       </main>
-      <footer className="sticky top-0 hidden w-full max-w-xs pt-1 h-96 lg:block"></footer>
-      {/* extra information */}
+      <Footer />
     </div>
   );
 }

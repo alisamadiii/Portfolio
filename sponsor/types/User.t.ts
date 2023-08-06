@@ -26,4 +26,5 @@ export type TweetType = {
   comments: number;
   impressions: number;
   pinned: boolean;
+  example: null | string;
 };

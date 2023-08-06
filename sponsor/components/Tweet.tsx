@@ -10,6 +10,7 @@ import { convertTimestampToDateTime, formatLargeNumber } from "../utils";
 import { FaRegComment } from "react-icons/fa";
 import { AiOutlineRetweet, AiFillHeart } from "react-icons/ai";
 import { BsBarChartFill } from "react-icons/bs";
+import Button from "./Button";
 
 type Props = {
   tweet: TweetType;
@@ -37,7 +38,10 @@ export default function Tweet({ tweet }: Props) {
             {convertTimestampToDateTime(tweet.created_at)}
           </h3>
         </div>
-        <pre className="leading-4" style={{ fontFamily: "Segoe UI" }}>
+        <pre
+          className="leading-6 whitespace-pre-wrap"
+          style={{ fontFamily: "Segoe UI" }}
+        >
           {tweet.text}
         </pre>
         {/* Media */}
@@ -64,30 +68,41 @@ export default function Tweet({ tweet }: Props) {
             ))}
         </div>
         {/* Analytics */}
-        <div className="flex justify-between gap-4 mt-3 ">
-          <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-primary group">
-            <span className="p-2 duration-100 rounded-full group-hover:bg-primary/10">
-              <FaRegComment />
-            </span>
-            {tweet.comments}
-          </div>
-          <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-retweets group">
-            <span className="p-2 duration-100 rounded-full group-hover:bg-retweets/10">
-              <AiOutlineRetweet />
-            </span>
-            {tweet.retweets}
-          </div>
-          <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-likes group">
-            <span className="p-2 duration-100 rounded-full group-hover:bg-likes/10">
-              <AiFillHeart />
-            </span>
-            {tweet.likes}
-          </div>
-          <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-primary group">
-            <span className="p-2 duration-100 rounded-full group-hover:bg-primary/10">
-              <BsBarChartFill />
-            </span>
-            {formatLargeNumber(tweet.impressions)}
+        <div className="mt-3">
+          {tweet.example && (
+            <Button
+              variant={"example"}
+              // @ts-ignore
+              onClick={() => window.open(tweet.example)?.focus()}
+            >
+              Example
+            </Button>
+          )}
+          <div className="flex justify-between gap-4 mt-3">
+            <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-primary group">
+              <span className="p-2 duration-100 rounded-full group-hover:bg-primary/10">
+                <FaRegComment />
+              </span>
+              {tweet.comments}
+            </div>
+            <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-retweets group">
+              <span className="p-2 duration-100 rounded-full group-hover:bg-retweets/10">
+                <AiOutlineRetweet />
+              </span>
+              {tweet.retweets}
+            </div>
+            <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-likes group">
+              <span className="p-2 duration-100 rounded-full group-hover:bg-likes/10">
+                <AiFillHeart />
+              </span>
+              {tweet.likes}
+            </div>
+            <div className="flex items-center gap-2 duration-200 text-font-2 hover:text-primary group">
+              <span className="p-2 duration-100 rounded-full group-hover:bg-primary/10">
+                <BsBarChartFill />
+              </span>
+              {formatLargeNumber(tweet.impressions)}
+            </div>
           </div>
         </div>
       </div>
