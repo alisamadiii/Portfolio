@@ -1,6 +1,6 @@
-import Button from "@/components/Button";
-import { UserContext } from "@/context/User.context";
-import VerifiedIcon from "@/public/VerifiedIcon";
+import Button from "../components/Button";
+import { UserContext } from "../context/User.context";
+import VerifiedIcon from "../public/VerifiedIcon";
 import Image from "next/image";
 import { useContext } from "react";
 import Linkify from "linkify-react";
@@ -10,8 +10,8 @@ import { BsArrowLeftShort } from "react-icons/bs";
 import { IoLocationOutline } from "react-icons/io5";
 import { AiOutlineLink } from "react-icons/ai";
 import { CgCalendarDates } from "react-icons/cg";
-import { convertTimestampToDateTime, formatLargeNumber } from "@/utils";
-import Tweet from "@/components/Tweet";
+import { convertTimestampToDateTime, formatLargeNumber } from "../utils";
+import Tweet from "../components/Tweet";
 
 export default function Home() {
   const { currentUser } = useContext(UserContext);

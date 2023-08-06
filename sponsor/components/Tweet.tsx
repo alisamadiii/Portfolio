@@ -1,10 +1,10 @@
 import Image from "next/image";
 import React, { useContext } from "react";
 
-import { UserContext } from "@/context/User.context";
-import VerifiedIcon from "@/public/VerifiedIcon";
-import { TweetType } from "@/types/User.t";
-import { convertTimestampToDateTime, formatLargeNumber } from "@/utils";
+import { UserContext } from "../context/User.context";
+import VerifiedIcon from "../public/VerifiedIcon";
+import { TweetType } from "../types/User.t";
+import { convertTimestampToDateTime, formatLargeNumber } from "../utils";
 
 // Icons
 import { FaRegComment } from "react-icons/fa";

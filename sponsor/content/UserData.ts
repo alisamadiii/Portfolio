@@ -1,4 +1,4 @@
-import { UserTypes } from "@/types/User.t";
+import { UserTypes } from "../types/User.t";
 
 export const UserData: UserTypes = {
   name: "Ali Reza",

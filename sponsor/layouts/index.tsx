@@ -1,6 +1,6 @@
-import Navbar from "@/components/Navbar/Navbar";
-import Preloader from "@/components/preloader";
-import { UserContext } from "@/context/User.context";
+import Navbar from "../components/Navbar/Navbar";
+import Preloader from "../components/preloader";
+import { UserContext } from "../context/User.context";
 import React, { useContext } from "react";
 
 type Props = {

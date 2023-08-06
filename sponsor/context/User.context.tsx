@@ -1,5 +1,5 @@
-import { UserData } from "@/content/UserData";
-import { UserTypes } from "@/types/User.t";
+import { UserData } from "../content/UserData";
+import { UserTypes } from "../types/User.t";
 import React, { createContext, useEffect, useState } from "react";
 
 type UserContextType = {
