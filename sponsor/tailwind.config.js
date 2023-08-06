@@ -13,6 +13,7 @@ module.exports = {
       "primary-hover": "#1A8CD8",
       "font-2": "#536471",
       "button-hover": "#E7E7E8",
+      "tweet-hover": "#f7f7f7",
       white: "#fff",
       black: "#000",
       test: "#ff0000",

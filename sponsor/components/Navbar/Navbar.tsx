@@ -3,7 +3,7 @@ import Button from "../Button";
 
 type Props = {};
 
-import { BiSolidUser, BiUser } from "react-icons/bi";
+import { RiUser3Fill, RiUser3Line } from "react-icons/ri";
 import { IoIosList, IoIosListBox } from "react-icons/io";
 import { MdWorkOutline, MdWork } from "react-icons/md";
 import { SiGithubsponsors } from "react-icons/si";
@@ -27,7 +27,7 @@ export default function Navbar({}: Props) {
       </Button>
       <ul>
         <Button className="font-semibold">
-          <BiSolidUser className="text-3xl" />
+          <RiUser3Fill className="text-3xl" />
           <p className="hidden mr-3 xl:block">Profile</p>
         </Button>
         <Button>

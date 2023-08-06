@@ -15,11 +15,13 @@ export default function Layouts({ children }: Props) {
   return (
     <div className="flex justify-center w-full gap-9">
       {/* Navbar */}
-      <nav className="flex flex-col items-start gap-6 pt-1 xl:w-60 h-96">
+      <nav className="sticky top-0 flex flex-col items-start gap-6 pt-1 xl:w-60 h-96">
         <Navbar />
       </nav>
-      <main className="w-full max-w-[600px] h-96">{children}</main>
-      <footer className="hidden w-full max-w-xs h-96 bg-primary lg:block">
+      <main className="w-full max-w-[600px] min-h-screen border-x border-button-hover">
+        {children}
+      </main>
+      <footer className="sticky top-0 hidden w-full max-w-xs pt-1 h-96 bg-primary lg:block">
         Extra information
       </footer>
       {/* extra information */}

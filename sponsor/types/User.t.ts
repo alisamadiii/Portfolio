@@ -11,6 +11,7 @@ export type UserTypes = {
   verified: boolean;
   followers: number;
   following: number;
+  total_tweet: number;
   tweets: TweetType[];
 };
 
@@ -19,7 +20,7 @@ export type TweetType = {
   id: number;
   text: string;
   created_at: number;
-  media: string[];
+  media: string[] | null;
   likes: number;
   retweets: number;
   comments: number;

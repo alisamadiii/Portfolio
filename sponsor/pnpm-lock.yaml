@@ -32,6 +32,12 @@ dependencies:
   framer-motion:
     specifier: ^10.15.0
     version: 10.15.0(react-dom@18.2.0)(react@18.2.0)
+  linkify-react:
+    specifier: ^4.1.1
+    version: 4.1.1(linkifyjs@4.1.1)(react@18.2.0)
+  linkifyjs:
+    specifier: ^4.1.1
+    version: 4.1.1
   next:
     specifier: 13.4.12
     version: 13.4.12(react-dom@18.2.0)(react@18.2.0)
@@ -1790,6 +1796,20 @@ packages:
 
   /lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
+    dev: false
+
+  /linkify-react@4.1.1(linkifyjs@4.1.1)(react@18.2.0):
+    resolution: {integrity: sha512-2K9Y1cUdvq40dFWqCJ//X+WP19nlzIVITFGI93RjLnA0M7KbnxQ/ffC3AZIZaEIrLangF9Hjt3i0GQ9/anEG5A==}
+    peerDependencies:
+      linkifyjs: ^4.0.0
+      react: '>= 15.0.0'
+    dependencies:
+      linkifyjs: 4.1.1
+      react: 18.2.0
+    dev: false
+
+  /linkifyjs@4.1.1:
+    resolution: {integrity: sha512-zFN/CTVmbcVef+WaDXT63dNzzkfRBKT1j464NJQkV7iSgJU0sLBus9W0HBwnXK13/hf168pbrx/V/bjEHOXNHA==}
     dev: false
 
   /locate-path@6.0.0:
