@@ -23,7 +23,7 @@ export default function SponsorButton({}: Props) {
             key={"dm"}
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 20, opacity: 0 }}
+            // exit={{ x: 0, opacity: 0 }}
             transition={{ type: "tween", duration: 0.2 }}
             className="hidden xl:block"
           >
@@ -33,9 +33,9 @@ export default function SponsorButton({}: Props) {
           <motion.p
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -20, opacity: 0 }}
+            // exit={{ x: -0, opacity: 0 }}
             transition={{ type: "tween", duration: 0.2 }}
-            key={"Sponsor"}
+            key={"sponsor"}
             className="hidden xl:block"
           >
             Sponsor

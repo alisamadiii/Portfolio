@@ -47,7 +47,7 @@ export const UserData: UserTypes = {
     {
       author_id: 1482275556502962177,
       id: 2,
-      text: "Thread",
+      text: "Dedicated Thread",
       created_at: 1689301036,
       media: ["/thread-300.png"],
       likes: 10,
@@ -56,7 +56,7 @@ export const UserData: UserTypes = {
       impressions: 10000,
       pinned: false,
       example:
-        "https://twitter.com/Ali_Developer05/status/1680144107455528960?s=20",
+        "https://twitter.com/Ali_Developer05/status/1688841826567114752?s=20",
     },
     {
       author_id: 1482275556502962177,
