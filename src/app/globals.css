@@ -1,76 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
+    --geist-background: 0 0% 100%;
+    --geist-foreground: 0 0% 0%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
- 
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
- 
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
- 
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
- 
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
+    --accents-1: 0 0% 4%;
+    --accents-2: 0 0% 20%;
+    --accents-3: 0 0% 27%;
+    --accents-4: 0 0% 40%;
+    --accents-5: 0 0% 53%;
+    --accents-6: 0 0% 63%;
+    --accents-7: 0 0% 93%;
+    --accents-8: 0 0% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
- 
-    --radius: 0.5rem;
+    --border: 0, 0%, 0%, 0.2;
+    --border-hover: 0 0% 0%;
+
+    --geist-error-lighter: 357 69% 90%;
+    --geist-error-light: 0 100% 60%;
+    --geist-error: 0 100% 50%;
+    --geist-error-dark: 0 100% 40%;
+
+    --geist-success-lighter: 215 100% 91%;
+    --geist-success-light: 212 100% 60%;
+    --geist-success: 212 100% 48%;
+    --geist-success-dark: 212 94% 42%;
+
+    --geist-warning-lighter: 40 100% 91%;
+    --geist-warning-light: 37 91% 65%;
+    --geist-warning: 37 91% 55%;
+    --geist-warning-dark: 29 89% 35%;
+
+    --geist-violet-lighter: 259 57% 87%;
+    --geist-violet-light: 261 55% 61%;
+    --geist-violet: 270 67% 47%;
+    --geist-violet-dark: 262 55% 35%;
+
+    --geist-cyan-lighter: 167 100% 83%;
+    --geist-cyan-light: 167 89% 74%;
+    --geist-cyan: 167 72% 60%;
+    --geist-cyan-dark: 167 64% 45%;
+
+    --geist-highlight-purple: 305 94% 54%;
+    --geist-highlight-magenta: 336 82% 57%;
+    --geist-highlight-pink: 330 100% 50%;
+    --geist-highlight-yellow: 58 100% 50%;
   }
- 
+
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
- 
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
- 
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
- 
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
- 
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
- 
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
- 
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
- 
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+    --geist-background: 0 0% 0%;
+    --geist-foreground: 0 0% 100%;
+
+    --border: 0, 0%, 100%, 0.2;
+    --border-hover: 0 0% 100%;
   }
 }
- 
+
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground bg-background;
   }
 }
