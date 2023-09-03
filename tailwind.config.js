@@ -14,6 +14,10 @@ module.exports = {
       colors: {
         background: "hsl(var(--geist-background))",
         foreground: "hsl(var(--geist-foreground))",
+        button: {
+          DEFAULT: "hsl(var(--button-background))",
+          foreground: "hsl(var(--button-foreground))",
+        },
         accents: {
           1: "hsl(var(--accents-1))",
           2: "hsl(var(--accents-2))",
@@ -60,6 +64,7 @@ module.exports = {
           pink: "hsl(var(--geist-highlight-pink))",
           yellow: "hsl(var(--geist-highlight-yellow))",
         },
+        ring: "hsl(var(--ring))",
       },
       fontSize: {
         "5xl": [
@@ -144,6 +149,7 @@ module.exports = {
         DEFAULT: "hsl(var(--border))",
         hover: "hsl(var(--border-hover))",
       },
+
       // colors: {
       //   border: "hsl(var(--border))",
       //   input: "hsl(var(--input))",

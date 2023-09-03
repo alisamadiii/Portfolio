@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const boxVariants = cva(
-  "w-full p-8 border rounded-xl hover:border-hover duration-200 ease-linear",
+  "w-full bg-black p-8 border rounded-xl hover:border-hover duration-200 ease-linear",
   {
     variants: {
       variant: {},

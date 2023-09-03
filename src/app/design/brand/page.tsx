@@ -3,6 +3,7 @@ import React from "react";
 import { Container } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Box, Rect } from "@/components/ui/box";
+import { Button } from "@/components/ui/button";
 
 type Props = {};
 
@@ -86,6 +87,30 @@ export default function Brand({}: Props) {
           <Rect className="w-8 h-8 rounded-full bg-highlight-pink" />
           <Rect className="w-8 h-8 rounded-full bg-highlight-yellow" />
         </div>
+      </Box>
+
+      <Text size={32}>Border Radius</Text>
+
+      <Box className="flex flex-wrap gap-4">
+        <Rect className="w-24 h-24 border rounded bg-accents-1" />
+        <Rect className="w-24 h-24 border rounded-lg bg-accents-1" />
+        <Rect className="w-24 h-24 border rounded-xl bg-accents-1" />
+        <Rect className="w-24 h-24 border rounded-2xl bg-accents-1" />
+      </Box>
+
+      <Text size={32}>Button</Text>
+
+      <Box className="flex flex-wrap items-start gap-4">
+        <Button size={"lg"}>Default - lg</Button>
+        <Button size={"md"}>Default - md</Button>
+        <Button variant={"error"} size={"lg"}>
+          Error - lg
+        </Button>
+        <Button variant={"error"} size={"sm"}>
+          Error - sm
+        </Button>
+        <Button variant={"github"}>Continue with GitHub</Button>
+        <Button variant={"google"}>Continue with Google</Button>
       </Box>
     </Container>
   );
