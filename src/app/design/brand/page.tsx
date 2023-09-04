@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variant } from "framer-motion";
 
 import { Container } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
@@ -17,8 +17,11 @@ import {
 } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/use-toast";
 
-import { Pencil, Reply, Trash2 } from "lucide-react";
+import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import type { FramerMotionType } from "@/types/index.t";
+import { cn } from "@/lib/utils";
 
 type Props = {};
 
@@ -41,11 +44,11 @@ export default function Brand({}: Props) {
 
   return (
     <Container size={"xl"} className="my-20 space-y-8">
-      <BgCircle className="absolute top-0 left-0 rounded-full bg-white/10 w-96 h-96 blur-[120px] -z-50" />
-      <BgCircle className="absolute right-0 bottom-0 rounded-full bg-white/10 w-96 h-96 blur-[220px] -z-50" />
+      <BgCircle className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 w-96 h-96 blur-[120px] -z-50" />
 
       <Text size={32}>Text</Text>
-      <Box className="flex flex-col gap-3">
+
+      <Wrapper className="flex flex-col gap-3">
         <Text size={48}>The Evil Rabbit jumps.</Text>
         <Text size={32}>The Evil Rabbit jumps.</Text>
         <Text size={24}>The Evil Rabbit jumps.</Text>
@@ -70,11 +73,11 @@ export default function Brand({}: Props) {
           The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
           The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
         </Text>
-      </Box>
+      </Wrapper>
 
       <Text size={32}>Colors</Text>
 
-      <Box className="flex flex-wrap justify-between gap-4">
+      <Wrapper className="flex flex-wrap justify-between gap-4">
         <div className="flex -space-x-4">
           <Rect className="w-8 h-8 rounded-full bg-accents-1" />
           <Rect className="w-8 h-8 rounded-full bg-accents-2" />
@@ -121,20 +124,20 @@ export default function Brand({}: Props) {
           <Rect className="w-8 h-8 rounded-full bg-highlight-pink" />
           <Rect className="w-8 h-8 rounded-full bg-highlight-yellow" />
         </div>
-      </Box>
+      </Wrapper>
 
       <Text size={32}>Border Radius</Text>
 
-      <Box className="flex flex-wrap gap-4">
+      <Wrapper className="flex flex-wrap gap-4">
         <Rect className="w-24 h-24 border rounded bg-accents-1" />
         <Rect className="w-24 h-24 border rounded-lg bg-accents-1" />
         <Rect className="w-24 h-24 border rounded-xl bg-accents-1" />
         <Rect className="w-24 h-24 border rounded-2xl bg-accents-1" />
-      </Box>
+      </Wrapper>
 
       <Text size={32}>Button</Text>
 
-      <Box className="flex flex-wrap items-start gap-4">
+      <Wrapper className="flex flex-wrap items-start gap-4">
         <Button size={"lg"}>Default - lg</Button>
         <Button size={"md"}>Default - md</Button>
         <Button variant={"error"} size={"lg"}>
@@ -145,13 +148,13 @@ export default function Brand({}: Props) {
         </Button>
         <Button variant={"github"}>Continue with GitHub</Button>
         <Button variant={"google"}>Continue with Google</Button>
-      </Box>
+      </Wrapper>
 
       <Text size={32}>Context</Text>
 
-      <Box className="grid gap-4 place-items-center">
+      <Wrapper className="grid gap-4 place-items-center">
         <ContextMenu>
-          <ContextMenuTrigger className="grid h-24 text-black bg-white border rounded w-96 place-items-center">
+          <ContextMenuTrigger className="grid w-full h-24 max-w-xs text-black bg-white border rounded select-none place-items-center">
             Right click
           </ContextMenuTrigger>
           <ContextMenuContent className="bg-accents-1">
@@ -190,19 +193,30 @@ export default function Brand({}: Props) {
             >
               <Reply size={14} /> Reply
             </ContextMenuItem>
+            <ContextMenuItem
+              className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+              onClick={() => {
+                toast({
+                  title: "Copy",
+                  description: "You can copy text.",
+                });
+              }}
+            >
+              <Copy size={14} /> Copy Text
+            </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
-      </Box>
+      </Wrapper>
 
       <Text size={32}>Model</Text>
 
-      <Box>
+      <Wrapper>
         <Button size={"md"} onClick={openingModel}>
           Open Model
         </Button>
         <AnimatePresence>
           {isModel && (
-            <Rect className="fixed inset-0 z-50 grid w-full h-screen place-items-center isolate">
+            <Rect className="fixed inset-0 z-50 grid w-full h-screen px-4 place-items-center isolate">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -216,16 +230,16 @@ export default function Brand({}: Props) {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -40, opacity: 0 }}
                 transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
-                className="border rounded-xl bg-accents-1 w-96 h-60"
+                className="w-full max-w-md border rounded-xl bg-accents-1 h-60"
               ></Rect>
             </Rect>
           )}
         </AnimatePresence>
-      </Box>
+      </Wrapper>
 
       <Text size={32}>Skeleton</Text>
 
-      <Box className="grid items-start gap-8 md:grid-cols-2">
+      <Wrapper className="grid items-start gap-8 md:grid-cols-2">
         <div className="flex flex-col gap-4">
           <div className="flex items-start gap-4 grow">
             <Skeleton className="w-12 h-12 rounded-full" />
@@ -263,7 +277,33 @@ export default function Brand({}: Props) {
           </div>
           <Skeleton className="w-32 h-12 mt-4" />
         </div>
-      </Box>
+      </Wrapper>
     </Container>
+  );
+}
+
+const BoxAnimation: FramerMotionType = {
+  hidden: { y: 40, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+  exit: { y: 40, opacity: 0 },
+};
+
+interface WrapperProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function Wrapper({ children, className }: WrapperProps) {
+  return (
+    <Box
+      variants={BoxAnimation}
+      initial="hidden"
+      whileInView="visible"
+      transition={{ ease: "easeOut", duration: 0.5 }}
+      viewport={{ once: true, margin: "-100px" }}
+      className={cn("", className)}
+    >
+      {children}
+    </Box>
   );
 }

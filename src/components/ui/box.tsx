@@ -15,14 +15,14 @@ const boxVariants = cva(
   }
 );
 
-export interface BoxProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof boxVariants> {}
+type BoxProps = React.HTMLAttributes<HTMLDivElement> &
+  VariantProps<typeof boxVariants> &
+  HTMLMotionProps<"div">;
 
 const Box = React.forwardRef<HTMLDivElement, BoxProps>(
   ({ className, variant, size, ...props }, ref) => {
     return (
-      <div
+      <motion.div
         className={cn(boxVariants({ variant, size, className }))}
         ref={ref}
         {...props}
