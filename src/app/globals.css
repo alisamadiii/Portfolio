@@ -67,9 +67,17 @@
 @layer base {
   body {
     @apply text-foreground bg-background;
-    --size: 60px;
-    --line-color: rgba(255, 255, 255, 0.01);
+  }
 
+  .grid-line {
+    --size: 60px;
+    --line-color: hsl(0, 0%, 0%);
+
+    width: 100%;
+    height: 100vh;
+    z-index: -40;
+    position: absolute;
+    inset: 0;
     background-image: linear-gradient(var(--line-color) 2px, transparent 2px),
       linear-gradient(90deg, var(--line-color) 1px, transparent 1px);
     background-size: var(--size) var(--size), var(--size) var(--size);
