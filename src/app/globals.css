@@ -69,6 +69,10 @@
     @apply text-foreground bg-background;
   }
 
+  .popup-open {
+    overflow: hidden;
+  }
+
   .grid-line {
     --size: 60px;
     --line-color: hsl(0, 0%, 0%);
@@ -82,5 +86,24 @@
       linear-gradient(90deg, var(--line-color) 1px, transparent 1px);
     background-size: var(--size) var(--size), var(--size) var(--size);
     background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+  }
+
+  .skeleton::after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(270deg, #111, #333, #333, #111);
+    background-size: 400% 100%;
+    position: absolute;
+    animation: skeleton_loading__qBdUw 8s ease-in-out infinite;
+  }
+
+  @keyframes skeleton_loading__qBdUw {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 }

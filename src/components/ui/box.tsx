@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { motion, HTMLMotionProps } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -32,11 +33,11 @@ const Box = React.forwardRef<HTMLDivElement, BoxProps>(
 
 Box.displayName = "Box";
 
-export interface RectProps extends React.HTMLAttributes<HTMLDivElement> {}
+type RectProps = React.HTMLAttributes<HTMLDivElement> & HTMLMotionProps<"div">;
 
 const Rect = React.forwardRef<HTMLDivElement, RectProps>(
   ({ className, ...props }, ref) => {
-    return <div className={cn("", className)} ref={ref} {...props} />;
+    return <motion.div className={cn("", className)} ref={ref} {...props} />;
   }
 );
 
