@@ -18,6 +18,15 @@ import {
 } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/use-toast";
 
+// Select
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,16 +34,23 @@ import type { FramerMotionType } from "@/types/index.t";
 import { cn } from "@/lib/utils";
 import Switch from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import createGlobe from "cobe";
+import { RotateToLocationCobe } from "@/components/cube/RotateToLocation";
+import { DraggableCobe } from "@/components/cube/Draggable";
+import { RotateDraggableCobe } from "@/components/cube/RotateDraggable";
+import { AutoRotateCobe } from "@/components/cube/AutoRotate";
 
 type Props = {};
+
+type CobeTypes =
+  | "auto-rotate"
+  | "draggable"
+  | "rotate-to-location"
+  | "rotate-draggable";
 
 export default function Brand({}: Props) {
   const [isModel, setIsModel] = React.useState(false);
   const [changed, setChanged] = React.useState(false);
-  const [location, setLocation] = React.useState<any>([
-    { location: [-5.147665, 119.432732], size: 0.1 },
-  ]);
+  const [cobeType, setCobeType] = React.useState<CobeTypes>("auto-rotate");
 
   const { toast } = useToast();
 
@@ -53,39 +69,39 @@ export default function Brand({}: Props) {
   // Earth
   const canvasRef = React.useRef<any>(null);
 
-  React.useEffect(() => {
-    let phi = 0;
-    let width = 0;
-    const onResize = () =>
-      canvasRef.current && (width = canvasRef.current.offsetWidth);
-    window.addEventListener("resize", onResize);
-    onResize();
-    const globe = createGlobe(canvasRef.current, {
-      devicePixelRatio: 2,
-      width: width * 2,
-      height: width * 2,
-      phi: 0,
-      theta: 0.3,
-      dark: 1,
-      diffuse: 3,
-      mapSamples: 16000,
-      mapBrightness: 1.2,
-      baseColor: [1, 1, 1],
-      markerColor: [251 / 255, 100 / 255, 21 / 255],
-      glowColor: [1.2, 1.2, 1.2],
-      markers: location,
-      onRender: (state) => {
-        // Called on every animation frame.
-        // `state` will be an empty object, return updated params.
-        state.phi = phi;
-        phi += 0.005;
-        state.width = width * 2;
-        state.height = width * 2;
-      },
-    });
-    setTimeout(() => (canvasRef.current.style.opacity = "1"));
-    return () => globe.destroy();
-  }, [location]);
+  // React.useEffect(() => {
+  //   let phi = 0;
+  //   let width = 0;
+  //   const onResize = () =>
+  //     canvasRef.current && (width = canvasRef.current.offsetWidth);
+  //   window.addEventListener("resize", onResize);
+  //   onResize();
+  //   const globe = createGlobe(canvasRef.current, {
+  //     devicePixelRatio: 2,
+  //     width: width * 2,
+  //     height: width * 2,
+  //     phi: 0,
+  //     theta: 0.3,
+  //     dark: 1,
+  //     diffuse: 3,
+  //     mapSamples: 16000,
+  //     mapBrightness: 1.2,
+  //     baseColor: [1, 1, 1],
+  //     markerColor: [251 / 255, 100 / 255, 21 / 255],
+  //     glowColor: [1.2, 1.2, 1.2],
+  //     markers: location,
+  //     onRender: (state) => {
+  //       // Called on every animation frame.
+  //       // `state` will be an empty object, return updated params.
+  //       state.phi = phi;
+  //       phi += 0.005;
+  //       state.width = width * 2;
+  //       state.height = width * 2;
+  //     },
+  //   });
+  //   setTimeout(() => (canvasRef.current.style.opacity = "1"));
+  //   return () => globe.destroy();
+  // }, [location]);
 
   return (
     <>
@@ -429,22 +445,33 @@ export default function Brand({}: Props) {
         <Text size={32}>Earth</Text>
 
         <Box>
+          <Select onValueChange={(e: CobeTypes) => setCobeType(e)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Cobe Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto-rotate">auto-rotate</SelectItem>
+              <SelectItem value="draggable">draggable</SelectItem>
+              <SelectItem value="rotate-draggable">rotate-draggable</SelectItem>
+              <SelectItem value="rotate-to-location">
+                rotate-to-location
+              </SelectItem>
+            </SelectContent>
+          </Select>
           <div
             className={`flex flex-col ${changed ? "items-end" : "items-start"}`}
           >
-            <motion.canvas
-              ref={canvasRef}
-              layout
-              animate={{ scale: changed ? 0.7 : 1 }}
-              transition={{ duration: 1, type: "spring" }}
-              style={{
-                width: 600,
-                height: 600,
-                maxWidth: "100%",
-                aspectRatio: 1,
-                transition: "scale 300ms",
-              }}
-            />
+            <AnimatePresence mode="wait" initial={false}>
+              {cobeType == "auto-rotate" ? (
+                <AutoRotateCobe key={"auto-rotate"} />
+              ) : cobeType == "draggable" ? (
+                <DraggableCobe key={"draggable"} />
+              ) : cobeType == "rotate-draggable" ? (
+                <RotateDraggableCobe key={"rotate-draggable"} />
+              ) : (
+                <RotateToLocationCobe key={"rotate-to-location"} />
+              )}
+            </AnimatePresence>
           </div>
           <Button onClick={() => setChanged(!changed)}>Change</Button>
         </Box>
