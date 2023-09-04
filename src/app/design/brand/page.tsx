@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence, Variant } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { RotatingLines } from "react-loader-spinner";
 
 import { Container } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
@@ -22,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import type { FramerMotionType } from "@/types/index.t";
 import { cn } from "@/lib/utils";
+import Switch from "@/components/ui/switch";
 
 type Props = {};
 
@@ -70,6 +72,10 @@ export default function Brand({}: Props) {
           The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
         </Text>
         <Text size={14} variant={"muted-sm"}>
+          The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
+          The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
+        </Text>
+        <Text size={16} variant={"space-grotesk"}>
           The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
           The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.
         </Text>
@@ -137,17 +143,75 @@ export default function Brand({}: Props) {
 
       <Text size={32}>Button</Text>
 
-      <Wrapper className="flex flex-wrap items-start gap-4">
-        <Button size={"lg"}>Default - lg</Button>
-        <Button size={"md"}>Default - md</Button>
-        <Button variant={"error"} size={"lg"}>
-          Error - lg
-        </Button>
-        <Button variant={"error"} size={"sm"}>
-          Error - sm
-        </Button>
-        <Button variant={"github"}>Continue with GitHub</Button>
-        <Button variant={"google"}>Continue with Google</Button>
+      <Wrapper className="flex flex-col items-start gap-6">
+        <Text size={24}>Default</Text>
+        <div className="flex flex-wrap items-start gap-4">
+          <Button size={"lg"}>Default - lg</Button>
+          <Button size={"md"}>Default - md</Button>
+          <Button size={"sm"}>Default - sm</Button>
+        </div>
+        <Text size={24}>Primary</Text>
+        <div className="flex flex-wrap items-start gap-4">
+          <Button size={"lg"} variant={"primary"}>
+            Primary - lg
+          </Button>
+          <Button size={"md"} variant={"primary"}>
+            Primary - md
+          </Button>
+          <Button size={"sm"} variant={"primary"}>
+            Primary - sm
+          </Button>
+        </div>
+        <Text size={24}>Error</Text>
+        <div className="flex flex-wrap items-start gap-4">
+          <Button variant={"error"} size={"lg"}>
+            Error - lg
+          </Button>
+          <Button variant={"error"} size={"md"}>
+            Error - md
+          </Button>
+          <Button variant={"error"} size={"sm"}>
+            Error - sm
+          </Button>
+        </div>
+        <Text size={24}>Social Media</Text>
+        <div className="flex flex-wrap items-start gap-4">
+          <Button variant={"github"}>Continue with GitHub</Button>
+          <Button variant={"google"}>Continue with Google</Button>
+        </div>
+        <Text size={24}>Loading</Text>
+        <div className="flex flex-wrap items-start gap-4">
+          <Button disabled size={"lg"}>
+            <RotatingLines
+              strokeColor="black"
+              strokeWidth="3"
+              animationDuration="1"
+              width="24"
+              visible={true}
+            />
+            Loader
+          </Button>
+          <Button disabled size={"md"}>
+            <RotatingLines
+              strokeColor="black"
+              strokeWidth="3"
+              animationDuration="1"
+              width="20"
+              visible={true}
+            />
+            Loader
+          </Button>
+          <Button disabled>
+            <RotatingLines
+              strokeColor="black"
+              strokeWidth="3"
+              animationDuration="1"
+              width="18"
+              visible={true}
+            />
+            Loader
+          </Button>
+        </div>
       </Wrapper>
 
       <Text size={32}>Context</Text>
@@ -278,6 +342,52 @@ export default function Brand({}: Props) {
           <Skeleton className="w-32 h-12 mt-4" />
         </div>
       </Wrapper>
+
+      <Text size={32}>Loader</Text>
+
+      <Box className="flex flex-wrap items-center gap-8">
+        <RotatingLines
+          strokeColor="grey"
+          strokeWidth="3"
+          animationDuration="1"
+          width="30"
+          visible={true}
+        />
+        <RotatingLines
+          strokeColor="grey"
+          strokeWidth="3"
+          animationDuration="1"
+          width="24"
+          visible={true}
+        />
+        <RotatingLines
+          strokeColor="grey"
+          strokeWidth="3"
+          animationDuration="1"
+          width="20"
+          visible={true}
+        />
+        <RotatingLines
+          strokeColor="grey"
+          strokeWidth="3"
+          animationDuration="1"
+          width="18"
+          visible={true}
+        />
+      </Box>
+
+      <Text size={32}>Switch</Text>
+
+      <Box>
+        <Switch />
+      </Box>
+
+      <section className="relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-[.5px] bg-gradient-to-l from-transparent via-white to-transparent z-10" />
+        <div className="w-full bg-background/80">
+          <Text size={24}>Switch</Text>
+        </div>
+      </section>
     </Container>
   );
 }

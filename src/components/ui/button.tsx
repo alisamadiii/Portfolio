@@ -5,25 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "rounded h-12 font-medium tracking-[-0.02rem] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "flex items-center gap-2 rounded font-medium tracking-[-0.02rem] duration-150 focus-visible:outline-none focus-visible:shadow-focus-button disabled:cursor-not-allowed",
   {
     variants: {
-      variant: {
-        default: "bg-button text-button-foreground hover:bg-button/90",
-        primary: "",
-        error:
-          "bg-button bg-error-light text-button-foreground hover:bg-error-light/80",
-        github: "bg-[#24292E] text-white px-16 hover:bg-[#555]",
-        google: "bg-white text-black px-16 hover:bg-accents-7",
-      },
       size: {
         sm: "px-4 h-8",
         md: "px-7 h-10",
         lg: "px-7 h-12",
       },
+      variant: {
+        default: "bg-button text-button-foreground hover:bg-button/90",
+        outline: "border text-accents-6 hover:bg-accents-2 hover:text-white",
+        primary: "bg-success hover:bg-success-light",
+        error:
+          "bg-button bg-error-light text-button-foreground hover:bg-error-light/80",
+        github: "bg-[#24292E] h-12 text-white px-16 hover:bg-[#555]",
+        google: "bg-white h-12 text-black px-16 hover:bg-accents-7",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "sm",
     },
   }
 );

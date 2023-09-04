@@ -5,7 +5,7 @@ import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const boxVariants = cva(
-  "w-full bg-black p-8 border rounded-xl hover:border-hover duration-200 ease-linear",
+  "w-full bg-background p-8 border rounded-xl hover:border-hover duration-200 ease-linear",
   {
     variants: {
       variant: {},

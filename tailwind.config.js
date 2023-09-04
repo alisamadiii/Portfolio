@@ -149,7 +149,10 @@ module.exports = {
         DEFAULT: "hsl(var(--border))",
         hover: "hsl(var(--border-hover))",
       },
-
+      boxShadow: {
+        "focus-button":
+          "0 0 0 2px hsl(var(--geist-background)), 0 0 0 4px hsl(var(--geist-foreground))",
+      },
       // colors: {
       //   border: "hsl(var(--border))",
       //   input: "hsl(var(--input))",
