@@ -109,6 +109,29 @@
     }
   }
 
+  #outline-animation::after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: hsl(212 100% 48%);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 9999px;
+    animation: outline 1s infinite;
+  }
+
+  @keyframes outline {
+    from {
+      scale: 1;
+      opacity: 1;
+    }
+    to {
+      scale: 1.5;
+      opacity: 0;
+    }
+  }
+
   /* Switch */
   .toggler-wrapper {
     display: block;
