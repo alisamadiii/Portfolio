@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotatingLines } from "react-loader-spinner";
 
@@ -32,7 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import type { FramerMotionType } from "@/types/index.t";
 import { cn } from "@/lib/utils";
-import Switch from "@/components/ui/switch";
+import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { RotateToLocationCobe } from "@/components/cube/RotateToLocation";
 import { DraggableCobe } from "@/components/cube/Draggable";
@@ -54,8 +54,6 @@ export default function Brand({}: Props) {
   const [cobeType, setCobeType] = React.useState<CobeTypes>("auto-rotate");
   const [earth, { height, width }] = useMeasure();
 
-  console.log(height);
-
   const { toast } = useToast();
 
   const openingModel = () => {
@@ -72,10 +70,12 @@ export default function Brand({}: Props) {
 
   return (
     <>
-      <Container size={"xl"} className="my-20 space-y-8">
+      <Container size={"xl"} className="my-20 space-y-8" id="design-brand">
         <BgCircle className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 w-96 h-96 blur-[120px] -z-50" />
 
-        <Text size={32}>Text</Text>
+        <Text as="h2" size={32}>
+          Text
+        </Text>
 
         <Wrapper className="flex flex-col gap-3">
           <Text size={48}>The Evil Rabbit jumps.</Text>
@@ -108,7 +108,9 @@ export default function Brand({}: Props) {
           </Text>
         </Wrapper>
 
-        <Text size={32}>Colors</Text>
+        <Text as="h2" size={32}>
+          Colors
+        </Text>
 
         <Wrapper className="flex flex-wrap justify-between gap-4">
           <div className="flex -space-x-4">
@@ -159,7 +161,9 @@ export default function Brand({}: Props) {
           </div>
         </Wrapper>
 
-        <Text size={32}>Border Radius</Text>
+        <Text as="h2" size={32}>
+          Border Radius
+        </Text>
 
         <Wrapper className="flex flex-wrap gap-4">
           <Rect className="w-24 h-24 border rounded bg-accents-1" />
@@ -168,7 +172,9 @@ export default function Brand({}: Props) {
           <Rect className="w-24 h-24 border rounded-2xl bg-accents-1" />
         </Wrapper>
 
-        <Text size={32}>Button</Text>
+        <Text as="h2" size={32}>
+          Button
+        </Text>
 
         <Wrapper className="flex flex-col items-start gap-6">
           <Text size={24}>Default</Text>
@@ -241,7 +247,9 @@ export default function Brand({}: Props) {
           </div>
         </Wrapper>
 
-        <Text size={32}>Context</Text>
+        <Text as="h2" size={32}>
+          Context
+        </Text>
 
         <Wrapper className="grid gap-4 place-items-center">
           <ContextMenu>
@@ -299,7 +307,9 @@ export default function Brand({}: Props) {
           </ContextMenu>
         </Wrapper>
 
-        <Text size={32}>Model</Text>
+        <Text as="h2" size={32}>
+          Model
+        </Text>
 
         <Wrapper>
           <Button size={"md"} onClick={openingModel}>
@@ -328,7 +338,9 @@ export default function Brand({}: Props) {
           </AnimatePresence>
         </Wrapper>
 
-        <Text size={32}>Skeleton</Text>
+        <Text as="h2" size={32}>
+          Skeleton
+        </Text>
 
         <Wrapper className="grid items-start gap-8 md:grid-cols-2">
           <div className="flex flex-col gap-4">
@@ -370,7 +382,9 @@ export default function Brand({}: Props) {
           </div>
         </Wrapper>
 
-        <Text size={32}>Loader</Text>
+        <Text as="h2" size={32}>
+          Loader
+        </Text>
 
         <Box className="flex flex-wrap items-center gap-8">
           <RotatingLines
@@ -403,13 +417,19 @@ export default function Brand({}: Props) {
           />
         </Box>
 
-        <Text size={32}>Switch</Text>
+        <Text as="h2" size={32}>
+          Switch
+        </Text>
 
-        <Box>
+        <Box className="flex flex-wrap gap-4">
           <Switch />
+          <Switch disabled />
+          <Switch defaultChecked={true} />
         </Box>
 
-        <Text size={32}>Earth</Text>
+        <Text as="h2" size={32}>
+          Earth
+        </Text>
 
         <motion.div
           animate={{ height }}
@@ -496,7 +516,9 @@ export default function Brand({}: Props) {
               />
               <AvatarFallback>AL</AvatarFallback>
             </Avatar>
-            <Text size={32}>Who am I?</Text>
+            <Text as="h2" size={32}>
+              Who am I?
+            </Text>
             <Text
               size={20}
               variant={"muted-lg"}
