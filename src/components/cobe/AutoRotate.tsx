@@ -39,7 +39,8 @@ export function AutoRotateCobe() {
       },
     });
     return () => globe.destroy();
-  }, []);
+  }, [markers]);
+
   return (
     <div
       style={{

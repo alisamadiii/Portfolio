@@ -57,7 +57,7 @@ export function RotateToLocationCobe() {
     });
     setTimeout(() => (canvasRef.current.style.opacity = "1"));
     return () => globe.destroy();
-  }, []);
+  }, [markers]);
 
   return (
     <div

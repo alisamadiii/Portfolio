@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     router.push("/design/brand");
-  }, []);
+  }, [router]);
 
   return <main></main>;
 }

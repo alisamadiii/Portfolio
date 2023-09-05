@@ -4,12 +4,13 @@ import { useSpring } from "@react-spring/web";
 import { motion } from "framer-motion";
 import { useCobeStore } from "@/context/Cobe";
 
-export function RotateDraggableCobe() {
+export function DraggableCobe() {
   const { markers } = useCobeStore();
 
   const canvasRef: any = useRef();
   const pointerInteracting: any = useRef(null);
-  const pointerInteractionMovement: any = useRef(0);
+  const pointerInteractionMovement = useRef(0);
+
   const [{ r }, api] = useSpring(() => ({
     r: 0,
     config: {
@@ -19,8 +20,8 @@ export function RotateDraggableCobe() {
       precision: 0.001,
     },
   }));
+
   useEffect(() => {
-    let phi = 0;
     let width = 0;
     const onResize = () =>
       canvasRef.current && (width = canvasRef.current.offsetWidth);
@@ -41,20 +42,14 @@ export function RotateDraggableCobe() {
       glowColor: [1.2, 1.2, 1.2],
       markers,
       onRender: (state) => {
-        // This prevents rotation while dragging
-        if (!pointerInteracting.current) {
-          // Called on every animation frame.
-          // `state` will be an empty object, return updated params.
-          phi += 0.005;
-        }
-        state.phi = phi + r.get();
+        state.phi = r.get();
         state.width = width * 2;
         state.height = width * 2;
       },
     });
     setTimeout(() => (canvasRef.current.style.opacity = "1"));
     return () => globe.destroy();
-  }, [r]);
+  }, [r, markers]);
 
   return (
     <div

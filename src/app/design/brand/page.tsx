@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotatingLines } from "react-loader-spinner";
+import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Box, Rect } from "@/components/ui/box";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import BgCircle from "@/components/bg-circle";
 
 import {
@@ -18,15 +19,6 @@ import {
 } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/use-toast";
 
-// Select
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { Copy, Pencil, Reply, Trash2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -34,25 +26,19 @@ import type { FramerMotionType } from "@/types/index.t";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { RotateToLocationCobe } from "@/components/cube/RotateToLocation";
-import { DraggableCobe } from "@/components/cube/Draggable";
-import { RotateDraggableCobe } from "@/components/cube/RotateDraggable";
-import { AutoRotateCobe } from "@/components/cube/AutoRotate";
-import useMeasure from "react-use-measure";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@radix-ui/react-select";
 
 type Props = {};
 
-type CobeTypes =
-  | "auto-rotate"
-  | "draggable"
-  | "rotate-to-location"
-  | "rotate-draggable";
-
 export default function Brand({}: Props) {
   const [isModel, setIsModel] = React.useState(false);
-  const [isAddingLocation, setIsAddingLocation] = React.useState(false);
-  const [cobeType, setCobeType] = React.useState<CobeTypes>("auto-rotate");
-  const [earth, { height, width }] = useMeasure();
 
   const { toast } = useToast();
 
@@ -431,66 +417,11 @@ export default function Brand({}: Props) {
           Earth
         </Text>
 
-        <motion.div
-          animate={{ height }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.2 }}
-          className="border rounded-xl bg-background"
-        >
-          <Box className="bg-transparent border-none" ref={earth}>
-            <Select onValueChange={(e: CobeTypes) => setCobeType(e)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Cobe Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto-rotate">auto-rotate</SelectItem>
-                <SelectItem value="draggable">draggable</SelectItem>
-                <SelectItem value="rotate-draggable">
-                  rotate-draggable
-                </SelectItem>
-                <SelectItem value="rotate-to-location">
-                  rotate-to-location
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <div
-              className={`flex flex-col items-center duration-500 ${
-                isAddingLocation ? "scale-150 translate-y-36" : ""
-              }`}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {cobeType == "auto-rotate" ? (
-                  <AutoRotateCobe key={"auto-rotate"} />
-                ) : cobeType == "draggable" ? (
-                  <DraggableCobe key={"draggable"} />
-                ) : cobeType == "rotate-draggable" ? (
-                  <RotateDraggableCobe key={"rotate-draggable"} />
-                ) : (
-                  <RotateToLocationCobe key={"rotate-to-location"} />
-                )}
-              </AnimatePresence>
-            </div>
-            <Button onClick={() => setIsAddingLocation(true)}>
-              Add your location
-            </Button>
-            <AnimatePresence>
-              {isAddingLocation && (
-                <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
-                  transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
-                  className="absolute bottom-0 left-0 w-full border-t h-1/3 bg-accents-1/90 backdrop-blur-xl"
-                >
-                  <X
-                    size={24}
-                    className="absolute top-4 right-4 text-accents-6 hover:text-white"
-                    onClick={() => setIsAddingLocation(false)}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Box>
-        </motion.div>
+        <Box className="flex justify-start">
+          <Link href={"/design/brand/cobe"} className={buttonVariants()}>
+            See Now
+          </Link>
+        </Box>
       </Container>
 
       <Container size={"2xl"} className="relative overflow-hidden isolate">
