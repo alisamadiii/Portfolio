@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
+import { Copy, Pencil, Reply, Trash2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import type { FramerMotionType } from "@/types/index.t";
@@ -50,6 +50,7 @@ type CobeTypes =
 
 export default function Brand({}: Props) {
   const [isModel, setIsModel] = React.useState(false);
+  const [isAddingLocation, setIsAddingLocation] = React.useState(false);
   const [cobeType, setCobeType] = React.useState<CobeTypes>("auto-rotate");
   const [earth, { height, width }] = useMeasure();
 
@@ -431,7 +432,11 @@ export default function Brand({}: Props) {
                 </SelectItem>
               </SelectContent>
             </Select>
-            <div className={`flex flex-col items-center`}>
+            <div
+              className={`flex flex-col items-center duration-500 ${
+                isAddingLocation ? "scale-150 translate-y-36" : ""
+              }`}
+            >
               <AnimatePresence mode="wait" initial={false}>
                 {cobeType == "auto-rotate" ? (
                   <AutoRotateCobe key={"auto-rotate"} />
@@ -444,6 +449,26 @@ export default function Brand({}: Props) {
                 )}
               </AnimatePresence>
             </div>
+            <Button onClick={() => setIsAddingLocation(true)}>
+              Add your location
+            </Button>
+            <AnimatePresence>
+              {isAddingLocation && (
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
+                  className="absolute bottom-0 left-0 w-full border-t h-1/3 bg-accents-1/90 backdrop-blur-xl"
+                >
+                  <X
+                    size={24}
+                    className="absolute top-4 right-4 text-accents-6 hover:text-white"
+                    onClick={() => setIsAddingLocation(false)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Box>
         </motion.div>
       </Container>

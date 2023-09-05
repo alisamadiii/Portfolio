@@ -2,8 +2,11 @@ import createGlobe from "cobe";
 import { useEffect, useRef } from "react";
 import { useSpring } from "@react-spring/web";
 import { motion } from "framer-motion";
+import { useCobeStore } from "@/context/Cobe";
 
 export function RotateDraggableCobe() {
+  const { markers } = useCobeStore();
+
   const canvasRef: any = useRef();
   const pointerInteracting: any = useRef(null);
   const pointerInteractionMovement: any = useRef(0);
@@ -36,7 +39,7 @@ export function RotateDraggableCobe() {
       baseColor: [1, 1, 1],
       markerColor: [251 / 255, 100 / 255, 21 / 255],
       glowColor: [1.2, 1.2, 1.2],
-      markers: [],
+      markers,
       onRender: (state) => {
         // This prevents rotation while dragging
         if (!pointerInteracting.current) {

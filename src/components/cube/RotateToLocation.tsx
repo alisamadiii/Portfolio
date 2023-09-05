@@ -2,8 +2,11 @@ import createGlobe from "cobe";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { motion } from "framer-motion";
+import { useCobeStore } from "@/context/Cobe";
 
 export function RotateToLocationCobe() {
+  const { markers } = useCobeStore();
+
   const canvasRef: any = useRef();
   const locationToAngles = (lat: number, long: number) => {
     return [
@@ -34,11 +37,7 @@ export function RotateToLocationCobe() {
       baseColor: [1, 1, 1],
       markerColor: [251 / 255, 200 / 255, 21 / 255],
       glowColor: [1.2, 1.2, 1.2],
-      markers: [
-        { location: [36.286209, 59.5998], size: 0.1 },
-        { location: [-5.147665, 119.432732], size: 0.1 },
-        { location: [34.555347, 69.207489], size: 0.1 },
-      ],
+      markers,
       onRender: (state) => {
         state.phi = currentPhi;
         state.theta = currentTheta;
@@ -59,6 +58,7 @@ export function RotateToLocationCobe() {
     setTimeout(() => (canvasRef.current.style.opacity = "1"));
     return () => globe.destroy();
   }, []);
+
   return (
     <div
       style={{

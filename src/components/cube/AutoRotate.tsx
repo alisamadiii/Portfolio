@@ -1,8 +1,11 @@
 import createGlobe from "cobe";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useCobeStore } from "@/context/Cobe";
 
 export function AutoRotateCobe() {
+  const { markers } = useCobeStore();
+
   const canvasRef: any = useRef();
 
   useEffect(() => {
@@ -25,7 +28,7 @@ export function AutoRotateCobe() {
       baseColor: [1, 1, 1],
       markerColor: [251 / 255, 100 / 255, 21 / 255],
       glowColor: [1.2, 1.2, 1.2],
-      markers: [],
+      markers,
       onRender: (state) => {
         // Called on every animation frame.
         // `state` will be an empty object, return updated params.
