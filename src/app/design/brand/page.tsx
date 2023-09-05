@@ -49,7 +49,6 @@ type CobeTypes =
 
 export default function Brand({}: Props) {
   const [isModel, setIsModel] = React.useState(false);
-  const [changed, setChanged] = React.useState(false);
   const [cobeType, setCobeType] = React.useState<CobeTypes>("auto-rotate");
 
   const { toast } = useToast();
@@ -65,43 +64,6 @@ export default function Brand({}: Props) {
       // document.body.classList.add("popup-open");
     }
   };
-
-  // Earth
-  const canvasRef = React.useRef<any>(null);
-
-  // React.useEffect(() => {
-  //   let phi = 0;
-  //   let width = 0;
-  //   const onResize = () =>
-  //     canvasRef.current && (width = canvasRef.current.offsetWidth);
-  //   window.addEventListener("resize", onResize);
-  //   onResize();
-  //   const globe = createGlobe(canvasRef.current, {
-  //     devicePixelRatio: 2,
-  //     width: width * 2,
-  //     height: width * 2,
-  //     phi: 0,
-  //     theta: 0.3,
-  //     dark: 1,
-  //     diffuse: 3,
-  //     mapSamples: 16000,
-  //     mapBrightness: 1.2,
-  //     baseColor: [1, 1, 1],
-  //     markerColor: [251 / 255, 100 / 255, 21 / 255],
-  //     glowColor: [1.2, 1.2, 1.2],
-  //     markers: location,
-  //     onRender: (state) => {
-  //       // Called on every animation frame.
-  //       // `state` will be an empty object, return updated params.
-  //       state.phi = phi;
-  //       phi += 0.005;
-  //       state.width = width * 2;
-  //       state.height = width * 2;
-  //     },
-  //   });
-  //   setTimeout(() => (canvasRef.current.style.opacity = "1"));
-  //   return () => globe.destroy();
-  // }, [location]);
 
   return (
     <>
@@ -458,9 +420,7 @@ export default function Brand({}: Props) {
               </SelectItem>
             </SelectContent>
           </Select>
-          <div
-            className={`flex flex-col ${changed ? "items-end" : "items-start"}`}
-          >
+          <div className={`flex flex-col items-center`}>
             <AnimatePresence mode="wait" initial={false}>
               {cobeType == "auto-rotate" ? (
                 <AutoRotateCobe key={"auto-rotate"} />
@@ -473,7 +433,6 @@ export default function Brand({}: Props) {
               )}
             </AnimatePresence>
           </div>
-          <Button onClick={() => setChanged(!changed)}>Change</Button>
         </Box>
       </Container>
 

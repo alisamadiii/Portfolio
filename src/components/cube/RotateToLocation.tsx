@@ -63,7 +63,7 @@ export function RotateToLocationCobe() {
       style={{
         width: "100%",
         maxWidth: 600,
-        aspectRatio: 1,
+        aspectRatio: 4 / 4,
         margin: "auto",
         position: "relative",
       }}
@@ -83,10 +83,9 @@ export function RotateToLocationCobe() {
         }}
       />
       <div
-        className="flex flex-col items-center justify-center md:flex-row control-buttons"
+        className="flex flex-col items-center justify-center md:flex-row"
         style={{ gap: ".5rem" }}
       >
-        Rotate to:
         <Button
           variant={"primary"}
           onClick={() => {
