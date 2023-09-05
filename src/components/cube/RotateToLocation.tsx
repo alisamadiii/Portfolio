@@ -37,6 +37,7 @@ export function RotateToLocationCobe() {
       markers: [
         { location: [36.286209, 59.5998], size: 0.1 },
         { location: [-5.147665, 119.432732], size: 0.1 },
+        { location: [34.555347, 69.207489], size: 0.1 },
       ],
       onRender: (state) => {
         state.phi = currentPhi;
@@ -63,7 +64,6 @@ export function RotateToLocationCobe() {
       style={{
         width: "100%",
         maxWidth: 600,
-        aspectRatio: 4 / 4,
         margin: "auto",
         position: "relative",
       }}
@@ -78,6 +78,7 @@ export function RotateToLocationCobe() {
           width: "100%",
           height: "100%",
           contain: "layout paint size",
+          aspectRatio: 1,
           opacity: 0,
           transition: "opacity 1s ease",
         }}
@@ -87,20 +88,40 @@ export function RotateToLocationCobe() {
         style={{ gap: ".5rem" }}
       >
         <Button
-          variant={"primary"}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          size={"sm"}
           onClick={() => {
             focusRef.current = locationToAngles(36.286209, 59.5998);
           }}
         >
-          📍 Mashhad
+          Mashhad
         </Button>
         <Button
-          variant={"primary"}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          size={"sm"}
           onClick={() => {
             focusRef.current = locationToAngles(-5.147665, 119.432732);
           }}
         >
-          📍 Makassar
+          Makassar
+        </Button>
+        <Button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          size={"sm"}
+          onClick={() => {
+            focusRef.current = locationToAngles(34.555347, 69.207489);
+          }}
+        >
+          Kabul
         </Button>
       </div>
     </div>

@@ -38,6 +38,7 @@ import { RotateToLocationCobe } from "@/components/cube/RotateToLocation";
 import { DraggableCobe } from "@/components/cube/Draggable";
 import { RotateDraggableCobe } from "@/components/cube/RotateDraggable";
 import { AutoRotateCobe } from "@/components/cube/AutoRotate";
+import useMeasure from "react-use-measure";
 
 type Props = {};
 
@@ -50,6 +51,9 @@ type CobeTypes =
 export default function Brand({}: Props) {
   const [isModel, setIsModel] = React.useState(false);
   const [cobeType, setCobeType] = React.useState<CobeTypes>("auto-rotate");
+  const [earth, { height, width }] = useMeasure();
+
+  console.log(height);
 
   const { toast } = useToast();
 
@@ -406,34 +410,42 @@ export default function Brand({}: Props) {
 
         <Text size={32}>Earth</Text>
 
-        <Box>
-          <Select onValueChange={(e: CobeTypes) => setCobeType(e)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Cobe Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto-rotate">auto-rotate</SelectItem>
-              <SelectItem value="draggable">draggable</SelectItem>
-              <SelectItem value="rotate-draggable">rotate-draggable</SelectItem>
-              <SelectItem value="rotate-to-location">
-                rotate-to-location
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <div className={`flex flex-col items-center`}>
-            <AnimatePresence mode="wait" initial={false}>
-              {cobeType == "auto-rotate" ? (
-                <AutoRotateCobe key={"auto-rotate"} />
-              ) : cobeType == "draggable" ? (
-                <DraggableCobe key={"draggable"} />
-              ) : cobeType == "rotate-draggable" ? (
-                <RotateDraggableCobe key={"rotate-draggable"} />
-              ) : (
-                <RotateToLocationCobe key={"rotate-to-location"} />
-              )}
-            </AnimatePresence>
-          </div>
-        </Box>
+        <motion.div
+          animate={{ height }}
+          transition={{ duration: 0.8, type: "spring", bounce: 0.2 }}
+          className="border rounded-xl bg-background"
+        >
+          <Box className="bg-transparent border-none" ref={earth}>
+            <Select onValueChange={(e: CobeTypes) => setCobeType(e)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Cobe Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto-rotate">auto-rotate</SelectItem>
+                <SelectItem value="draggable">draggable</SelectItem>
+                <SelectItem value="rotate-draggable">
+                  rotate-draggable
+                </SelectItem>
+                <SelectItem value="rotate-to-location">
+                  rotate-to-location
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <div className={`flex flex-col items-center`}>
+              <AnimatePresence mode="wait" initial={false}>
+                {cobeType == "auto-rotate" ? (
+                  <AutoRotateCobe key={"auto-rotate"} />
+                ) : cobeType == "draggable" ? (
+                  <DraggableCobe key={"draggable"} />
+                ) : cobeType == "rotate-draggable" ? (
+                  <RotateDraggableCobe key={"rotate-draggable"} />
+                ) : (
+                  <RotateToLocationCobe key={"rotate-to-location"} />
+                )}
+              </AnimatePresence>
+            </div>
+          </Box>
+        </motion.div>
       </Container>
 
       <Container size={"2xl"} className="relative overflow-hidden isolate">
