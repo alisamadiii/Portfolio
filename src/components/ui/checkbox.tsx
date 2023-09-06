@@ -24,7 +24,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, Props>(
         <input
           ref={ref}
           type="checkbox"
-          className="w-4 h-4 peer input-reset-appearance"
+          className="w-4 h-4 appearance-none peer input-reset-appearance"
           checked={checked}
           {...props}
         />

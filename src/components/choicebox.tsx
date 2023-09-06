@@ -20,7 +20,7 @@ function Item({ children, checked, value, ...props }: ItemProps) {
 
   return (
     <Label
-      className={`p-4 border rounded duration-300 ${
+      className={`p-4 border rounded duration-150 cursor-pointer ${
         checked
           ? "bg-success-darker border-success"
           : "bg-black hover:border-accents-6"
@@ -33,7 +33,7 @@ function Item({ children, checked, value, ...props }: ItemProps) {
           type="radio"
           checked={checked}
           value={value}
-          className="w-4 h-4 peer input-reset-appearance"
+          className="w-4 h-4 appearance-none peer input-reset-appearance"
           {...props}
         />
         <span className="absolute flex items-center justify-center w-4 h-4 duration-200 border rounded-full bg-accents-2/50 peer-checked:border-success">

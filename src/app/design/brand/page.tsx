@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotatingLines } from "react-loader-spinner";
 import Link from "next/link";
@@ -491,9 +491,7 @@ export default function Brand({}: Props) {
               />
               <AvatarFallback>AL</AvatarFallback>
             </Avatar>
-            <Text as="h2" size={32}>
-              Who am I?
-            </Text>
+            <Text size={32}>Who am I?</Text>
             <Text
               size={20}
               variant={"muted-lg"}
