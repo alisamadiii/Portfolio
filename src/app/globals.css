@@ -28,6 +28,7 @@
     --geist-success-light: 212 100% 60%;
     --geist-success: 212 100% 48%;
     --geist-success-dark: 212 94% 42%;
+    --geist-success-darker: 212 78% 23%;
 
     --geist-warning-lighter: 40 100% 91%;
     --geist-warning-light: 37 91% 65%;
@@ -203,5 +204,33 @@
       top: 3.5px;
       left: 4px;
     }
+  }
+
+  /* Checkbox */
+  .checkbox_label .checkbox_input {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    -o-appearance: none;
+
+    width: 1.04056rem;
+    height: 1.04056rem;
+  }
+
+  .checkbox_label .checkbox_input ~ span {
+    width: 1.04056rem;
+    height: 1.04056rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 0.17344rem;
+    transition: 0.1s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .checkbox_label .checkbox_input:checked ~ span {
+    background: #0095f6;
+    border-color: #0082d6;
   }
 }

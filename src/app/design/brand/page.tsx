@@ -26,11 +26,17 @@ import type { FramerMotionType } from "@/types/index.t";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import Checkbox from "@/components/ui/checkbox";
+import * as Choicebox from "@/components/choicebox";
 
 type Props = {};
 
 export default function Brand({}: Props) {
   const [isModel, setIsModel] = React.useState(false);
+  const [isChecked, setIsChecked] = React.useState(false);
+  const [selectedOption, setSelectedOption] = React.useState<null | string>(
+    null
+  );
 
   const { toast } = useToast();
 
@@ -44,6 +50,10 @@ export default function Brand({}: Props) {
       setIsModel(true);
       // document.body.classList.add("popup-open");
     }
+  };
+
+  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedOption(event.target.value);
   };
 
   return (
@@ -364,7 +374,7 @@ export default function Brand({}: Props) {
           Loader
         </Text>
 
-        <Box className="flex flex-wrap items-center gap-8">
+        <Wrapper className="flex flex-wrap items-center gap-8">
           <RotatingLines
             strokeColor="grey"
             strokeWidth="3"
@@ -393,27 +403,69 @@ export default function Brand({}: Props) {
             width="18"
             visible={true}
           />
-        </Box>
+        </Wrapper>
+
+        <Text as="h2" size={32}>
+          Checkbox
+        </Text>
+
+        <Wrapper>
+          <Checkbox
+            checked={isChecked}
+            onChange={(e) => setIsChecked(!isChecked)}
+          />
+        </Wrapper>
+
+        <Text as="h2" size={32}>
+          Choicebox
+        </Text>
+
+        <Wrapper>
+          <Choicebox.Group className="flex gap-4">
+            <Choicebox.Item
+              name="choicebox"
+              value={"option1"}
+              checked={selectedOption == "option1"}
+              onChange={handleRadioChange}
+            >
+              <Text size={16}>Testing</Text>
+              <Text size={12} variant={"muted-sm"}>
+                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+              </Text>
+            </Choicebox.Item>
+            <Choicebox.Item
+              name="choicebox"
+              value={"option2"}
+              checked={selectedOption == "option2"}
+              onChange={handleRadioChange}
+            >
+              <Text size={16}>Testing</Text>
+              <Text size={12} variant={"muted-sm"}>
+                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+              </Text>
+            </Choicebox.Item>
+          </Choicebox.Group>
+        </Wrapper>
 
         <Text as="h2" size={32}>
           Switch
         </Text>
 
-        <Box className="flex flex-wrap gap-4">
+        <Wrapper className="flex flex-wrap gap-4">
           <Switch />
           <Switch disabled />
           <Switch defaultChecked={true} />
-        </Box>
+        </Wrapper>
 
         <Text as="h2" size={32}>
           Earth
         </Text>
 
-        <Box className="flex justify-start">
+        <Wrapper className="flex justify-start">
           <Link href={"/design/brand/cobe"} className={buttonVariants()}>
             See Now
           </Link>
-        </Box>
+        </Wrapper>
       </Container>
 
       <Container size={"2xl"} className="relative overflow-hidden isolate">

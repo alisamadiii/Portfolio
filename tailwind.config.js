@@ -33,6 +33,7 @@ module.exports = {
           light: "hsl(var(--geist-success-light))",
           DEFAULT: "hsl(var(--geist-success))",
           dark: "hsl(var(--geist-success-dark))",
+          darker: "hsl(var(--geist-success-darker))",
         },
         error: {
           lighter: "hsl(var(--geist-error-lighter))",
