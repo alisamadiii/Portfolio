@@ -3,6 +3,7 @@ import React from "react";
 import { VariantProps, cva } from "class-variance-authority";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Label } from "./label";
 
 const checkboxVariants = cva("", {
   variants: {
@@ -19,15 +20,15 @@ interface Props
 const Checkbox = React.forwardRef<HTMLInputElement, Props>(
   ({ className, variant, checked, ...props }, ref) => {
     return (
-      <label className={cn("relative checkbox_label", className)}>
+      <Label className={cn("relative checkbox_label", className)}>
         <input
           ref={ref}
           type="checkbox"
-          className="peer checkbox_input"
+          className="w-4 h-4 peer input-reset-appearance"
           checked={checked}
           {...props}
         />
-        <span className="border bg-accents-2/50">
+        <span className="absolute top-0 left-0 flex items-center justify-center w-4 h-4 duration-100 border rounded-sm bg-accents-2/50 peer-checked:bg-success peer-checked:border-success-dark">
           <AnimatePresence initial={false}>
             {checked && (
               <motion.svg
@@ -54,7 +55,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, Props>(
             )}
           </AnimatePresence>
         </span>
-      </label>
+      </Label>
     );
   }
 );
