@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotatingLines } from "react-loader-spinner";
 import Link from "next/link";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/use-toast";
 
-import { Copy, Pencil, Reply, Trash2, X } from "lucide-react";
+import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import type { FramerMotionType } from "@/types/index.t";
