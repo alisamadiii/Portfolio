@@ -74,6 +74,9 @@ dependencies:
   framer-motion:
     specifier: ^10.16.2
     version: 10.16.2(react-dom@18.2.0)(react@18.2.0)
+  gsap:
+    specifier: ^3.12.2
+    version: 3.12.2
   lucide-react:
     specifier: ^0.274.0
     version: 0.274.0(react@18.2.0)
@@ -2797,6 +2800,10 @@ packages:
 
   /graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
+    dev: false
+
+  /gsap@3.12.2:
+    resolution: {integrity: sha512-EkYnpG8qHgYBFAwsgsGEqvT1WUidX0tt/ijepx7z8EUJHElykg91RvW1XbkT59T0gZzzszOpjQv7SE41XuIXyQ==}
     dev: false
 
   /has-bigints@1.0.2:

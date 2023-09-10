@@ -2,8 +2,9 @@ import createGlobe from "cobe";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useCobeStore } from "@/context/Cobe";
+import { cn } from "@/lib/utils";
 
-export function AutoRotateCobe() {
+export function AutoRotateCobe({ className }: { className?: string }) {
   const { markers } = useCobeStore();
 
   const canvasRef: any = useRef();
@@ -42,26 +43,18 @@ export function AutoRotateCobe() {
   }, [markers]);
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 600,
-        aspectRatio: 1,
-        margin: "auto",
-        position: "relative",
-      }}
-    >
+    <div className={cn("w-full max-w-[600px] aspect-square m-auto relative")}>
       <motion.canvas
-        initial={{ opacity: 0, scale: 0.8, rotate: 30 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        exit={{ opacity: 0, scale: 0.8, rotate: 30 }}
+        // initial={{ opacity: 0, scale: 0.8, rotate: 30 }}
+        // animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        // exit={{ opacity: 0, scale: 0.8, rotate: 30 }}
         transition={{ type: "spring" }}
         ref={canvasRef}
         style={{
           width: "100%",
           height: "100%",
           contain: "layout paint size",
-          opacity: 0,
+          opacity: 1,
           transition: "opacity 1s ease",
         }}
       />
