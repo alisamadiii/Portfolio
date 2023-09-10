@@ -43,7 +43,12 @@ export function AutoRotateCobe({ className }: { className?: string }) {
   }, [markers]);
 
   return (
-    <div className={cn("w-full max-w-[600px] aspect-square m-auto relative")}>
+    <div
+      className={cn(
+        "w-full max-w-[600px] aspect-square m-auto relative",
+        className
+      )}
+    >
       <motion.canvas
         // initial={{ opacity: 0, scale: 0.8, rotate: 30 }}
         // animate={{ opacity: 1, scale: 1, rotate: 0 }}
