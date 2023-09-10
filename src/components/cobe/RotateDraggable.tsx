@@ -1,10 +1,10 @@
 import createGlobe from "cobe";
 import { useEffect, useRef } from "react";
 import { useSpring } from "@react-spring/web";
-import { motion } from "framer-motion";
 import { useCobeStore } from "@/context/Cobe";
+import { cn } from "@/lib/utils";
 
-export function RotateDraggableCobe() {
+export function RotateDraggableCobe({ className }: { className: string }) {
   const { markers } = useCobeStore();
 
   const canvasRef: any = useRef();
@@ -57,61 +57,47 @@ export function RotateDraggableCobe() {
   }, [r, markers]);
 
   return (
-    <div
+    <canvas
+      ref={canvasRef}
+      onPointerDown={(e) => {
+        pointerInteracting.current =
+          e.clientX - pointerInteractionMovement.current;
+        canvasRef.current.style.cursor = "grabbing";
+      }}
+      onPointerUp={() => {
+        pointerInteracting.current = null;
+        canvasRef.current.style.cursor = "grab";
+      }}
+      onPointerOut={() => {
+        pointerInteracting.current = null;
+        canvasRef.current.style.cursor = "grab";
+      }}
+      onMouseMove={(e) => {
+        if (pointerInteracting.current !== null) {
+          const delta = e.clientX - pointerInteracting.current;
+          pointerInteractionMovement.current = delta;
+          api.start({
+            r: delta / 200,
+          });
+        }
+      }}
+      onTouchMove={(e) => {
+        if (pointerInteracting.current !== null && e.touches[0]) {
+          const delta = e.touches[0].clientX - pointerInteracting.current;
+          pointerInteractionMovement.current = delta;
+          api.start({
+            r: delta / 100,
+          });
+        }
+      }}
       style={{
         width: "100%",
-        maxWidth: 600,
-        aspectRatio: 1,
-        margin: "auto",
-        position: "relative",
+        height: "100%",
+        cursor: "grab",
+        contain: "layout paint size",
+        opacity: 0,
+        transition: "opacity 1s ease",
       }}
-    >
-      <motion.canvas
-        initial={{ opacity: 0, scale: 0.8, rotate: 30 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        exit={{ opacity: 0, scale: 0.8, rotate: 30 }}
-        transition={{ type: "spring" }}
-        ref={canvasRef}
-        onPointerDown={(e) => {
-          pointerInteracting.current =
-            e.clientX - pointerInteractionMovement.current;
-          canvasRef.current.style.cursor = "grabbing";
-        }}
-        onPointerUp={() => {
-          pointerInteracting.current = null;
-          canvasRef.current.style.cursor = "grab";
-        }}
-        onPointerOut={() => {
-          pointerInteracting.current = null;
-          canvasRef.current.style.cursor = "grab";
-        }}
-        onMouseMove={(e) => {
-          if (pointerInteracting.current !== null) {
-            const delta = e.clientX - pointerInteracting.current;
-            pointerInteractionMovement.current = delta;
-            api.start({
-              r: delta / 200,
-            });
-          }
-        }}
-        onTouchMove={(e) => {
-          if (pointerInteracting.current !== null && e.touches[0]) {
-            const delta = e.touches[0].clientX - pointerInteracting.current;
-            pointerInteractionMovement.current = delta;
-            api.start({
-              r: delta / 100,
-            });
-          }
-        }}
-        style={{
-          width: "100%",
-          height: "100%",
-          cursor: "grab",
-          contain: "layout paint size",
-          opacity: 0,
-          transition: "opacity 1s ease",
-        }}
-      />
-    </div>
+    />
   );
 }

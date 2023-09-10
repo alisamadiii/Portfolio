@@ -1,18 +1,33 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Text } from "./ui/text";
 import { gsap } from "gsap";
-import { AutoRotateCobe } from "./cobe/AutoRotate";
+import { RotateDraggableCobe } from "./cobe/RotateDraggable";
+import { AnimatePresence, Variants, motion } from "framer-motion";
+import { Button, buttonVariants } from "./ui/button";
 
 type Props = {};
 
+const earthRotating: Variants = {
+  initial: { scale: 0.2, y: -100 },
+  animate: { scale: 1.5, y: 500 },
+};
+
 export default function Intro({}: Props) {
+  const [rotateEarth, setRotateEarth] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setRotateEarth(false);
+    }, 5000);
+  }, []);
+
   useEffect(() => {
     const first = document.querySelector("#first");
     const second = document.querySelector("#second");
     const third = document.querySelector("#third");
-    const earth = document.querySelector(".earth");
+    const forth = document.querySelector("#forth");
 
     const tl = gsap.timeline();
 
@@ -45,10 +60,17 @@ export default function Intro({}: Props) {
         opacity: 0,
         y: 20,
       })
-      .to(earth, {
-        scale: 4,
+      .to(
+        third,
+        {
+          opacity: 0,
+          y: -20,
+        },
+        "+=1"
+      )
+      .from(forth, {
         opacity: 0,
-        duration: 3,
+        y: 20,
       });
   }, []);
 
@@ -63,7 +85,19 @@ export default function Intro({}: Props) {
       <Text size={32} className="absolute" id="third">
         I am a Web developer
       </Text>
-      <AutoRotateCobe className="-z-50 earth" />
+      <Button size={"lg"} className="absolute" id="forth">
+        Explore now
+      </Button>
+      <AnimatePresence initial={false}>
+        <motion.div
+          variants={earthRotating}
+          animate={rotateEarth ? "initial" : "animate"}
+          transition={{ duration: 1.5, ease: "backOut" }}
+          className="w-full aspect-square max-w-[600px] m-auto"
+        >
+          <RotateDraggableCobe className="earth" />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

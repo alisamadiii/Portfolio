@@ -456,16 +456,6 @@ export default function Brand({}: Props) {
           <Switch disabled />
           <Switch defaultChecked={true} />
         </Wrapper>
-
-        <Text as="h2" size={32}>
-          Earth
-        </Text>
-
-        <Wrapper className="flex justify-start">
-          <Link href={"/design/brand/cobe"} className={buttonVariants()}>
-            See Now
-          </Link>
-        </Wrapper>
       </Container>
 
       <Container size={"2xl"} className="relative overflow-hidden isolate">
