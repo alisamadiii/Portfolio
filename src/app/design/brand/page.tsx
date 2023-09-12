@@ -522,7 +522,7 @@ function Wrapper({ children, className }: WrapperProps) {
       whileInView="visible"
       transition={{ ease: "easeOut", duration: 0.5 }}
       viewport={{ once: true, margin: "-100px" }}
-      className={cn("", className)}
+      className={cn("p-4 md:p-6 lg:p-8", className)}
     >
       {children}
     </Box>

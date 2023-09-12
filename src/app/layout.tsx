@@ -10,6 +10,7 @@ const space_grotesk = Space_Grotesk({
 
 import { Toaster } from "@/components/ui/toaster";
 import Intro from "@/components/intro";
+import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
   title: "Ali Reza",
@@ -25,7 +26,8 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${space_grotesk.variable} font-sans`}>
         <div className="grid-line" />
-        <Intro />
+        <Navbar />
+        {/* <Intro /> */}
         <main>{children}</main>
         <Toaster />
       </body>

@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const containerVariants = cva("mx-auto px-4", {
+const containerVariants = cva("mx-auto px-6", {
   variants: {
     variant: {},
     size: {

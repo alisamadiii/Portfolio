@@ -3,26 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { Text } from "./ui/text";
 import { gsap } from "gsap";
-import { RotateDraggableCobe } from "./cobe/RotateDraggable";
-import { AnimatePresence, Variants, motion } from "framer-motion";
+import { Variants } from "framer-motion";
 import { Button, buttonVariants } from "./ui/button";
 
 type Props = {};
 
-const earthRotating: Variants = {
-  initial: { scale: 0.2, y: -100 },
-  animate: { scale: 1.5, y: 500 },
-};
-
 export default function Intro({}: Props) {
-  const [rotateEarth, setRotateEarth] = useState(true);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setRotateEarth(false);
-    }, 5000);
-  }, []);
-
   useEffect(() => {
     const first = document.querySelector("#first");
     const second = document.querySelector("#second");
@@ -31,9 +17,9 @@ export default function Intro({}: Props) {
 
     const tl = gsap.timeline();
 
-    tl.from(first, {
-      opacity: 0,
-      y: 20,
+    tl.to(first, {
+      opacity: 1,
+      y: 0,
       delay: 1,
     })
       .to(
@@ -44,9 +30,9 @@ export default function Intro({}: Props) {
         },
         "+=1"
       )
-      .from(second, {
-        opacity: 0,
-        y: 20,
+      .to(second, {
+        opacity: 1,
+        y: 0,
       })
       .to(
         second,
@@ -56,9 +42,9 @@ export default function Intro({}: Props) {
         },
         "+=1"
       )
-      .from(third, {
-        opacity: 0,
-        y: 20,
+      .to(third, {
+        opacity: 1,
+        y: 0,
       })
       .to(
         third,
@@ -68,9 +54,9 @@ export default function Intro({}: Props) {
         },
         "+=1"
       )
-      .from(forth, {
-        opacity: 0,
-        y: 20,
+      .to(forth, {
+        opacity: 1,
+        y: 0,
       });
   }, []);
 
@@ -169,18 +155,18 @@ export default function Intro({}: Props) {
       <div className="absolute top-0 w-full bg-violet" id="circle-violet" />
       <div className="absolute top-0 w-full bg-cyan" id="circle-cyan" />
       <div className="absolute bottom-0 w-full bg-white" id="circle-white-2" />
-      <Text size={32} className="absolute" id="first">
+      <Text size={32} className="absolute translate-y-8 opacity-0" id="first">
         Hey
       </Text>
-      <Text size={32} className="absolute" id="second">
+      <Text size={32} className="absolute translate-y-8 opacity-0" id="second">
         I am Ali Reza
       </Text>
-      <Text size={32} className="absolute" id="third">
+      <Text size={32} className="absolute translate-y-8 opacity-0" id="third">
         I am a Web developer
       </Text>
       <Button
         size={"lg"}
-        className="absolute"
+        className="absolute translate-y-8 opacity-0"
         id="forth"
         onClick={clickHandler}
       >
