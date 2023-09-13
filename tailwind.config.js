@@ -11,6 +11,9 @@ module.exports = {
       },
     },
     extend: {
+      height: {
+        dvh: "100dvh",
+      },
       colors: {
         background: "hsl(var(--geist-background))",
         foreground: "hsl(var(--geist-foreground))",
@@ -18,6 +21,12 @@ module.exports = {
           DEFAULT: "hsl(var(--button-background))",
           foreground: "hsl(var(--button-foreground))",
         },
+        "gradient-1-from": "hsl(var(--gradient-1-from))",
+        "gradient-1-to": "hsl(var(--gradient-1-to))",
+        "gradient-2-from": "hsl(var(--gradient-2-from))",
+        "gradient-2-to": "hsl(var(--gradient-2-to))",
+        "gradient-3-from": "hsl(var(--gradient-3-from))",
+        "gradient-4-to": "hsl(var(--gradient-3-to))",
         accents: {
           1: "hsl(var(--accents-1))",
           2: "hsl(var(--accents-2))",
@@ -69,6 +78,14 @@ module.exports = {
         "link-hover": "hsl(var(--link-hover))",
       },
       fontSize: {
+        "6xl": [
+          "3rem",
+          {
+            lineHeight: "normal",
+            letterSpacing: "-0.08rem",
+            fontWeight: "900",
+          },
+        ],
         "5xl": [
           "3rem",
           {

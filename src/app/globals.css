@@ -15,6 +15,13 @@
     --geist-background: 0 0% 100%;
     --geist-foreground: 0 0% 0%;
 
+    --gradient-1-from: 209 100% 47%;
+    --gradient-1-to: 178 100% 44%;
+    --gradient-2-from: 270 40% 47%;
+    --gradient-2-to: 330 100% 50%;
+    --gradient-3-from: 0 100% 65%;
+    --gradient-3-to: 47 95% 57%;
+
     --accents-1: 0 0% 4%;
     --accents-2: 0 0% 20%;
     --accents-3: 0 0% 27%;

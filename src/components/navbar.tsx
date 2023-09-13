@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, Variants, motion } from "framer-motion";
 
 import { Container } from "./ui/container";
 import { Button } from "./ui/button";
@@ -34,6 +34,29 @@ const ServiceINITIAL_VALUE = [
   },
 ];
 
+const ServicePopupAnimation: Variants = {
+  hidden: {
+    rotateX: "var(--rotateX-from, 0)",
+    scale: "var(--scale-from, 1)",
+    y: "var(--y-from, 0px)",
+    opacity: "var(--opacity-from, 1)",
+    height: "var(--height-from)",
+  },
+  visible: {
+    rotateX: "var(--rotateX-to, 0)",
+    scale: "var(--scale-to, 1)",
+    opacity: "var(--opacity-to, 1)",
+    height: "var(--height-to)",
+  },
+  exit: {
+    rotateX: "var(--rotateX-from, 0)",
+    scale: "var(--scale-from, 1)",
+    y: "var(--y-from, 0px)",
+    opacity: "var(--opacity-from, 1)",
+    height: "var(--height-from)",
+  },
+};
+
 export default function Navbar({}: Props) {
   const [isNavbar, setIsNavbar] = useState(false);
   const [isService, setIsService] = useState(false);
@@ -47,12 +70,17 @@ export default function Navbar({}: Props) {
         {/* Logo */}
         <div className="md:hidden"></div>
         <ul
-          className={`absolute top-16 left-0 flex flex-col md:flex-row md:items-center w-full h-[calc(100dvh-64px)] duration-500 px-6 md:px-0 md:w-auto bg-background md:gap-11 md:static max-md:-z-10 ${
+          className={`absolute top-16 left-0 bg-background flex flex-col md:flex-row md:items-center w-full max-md:h-[calc(100dvh-64px)] duration-500 px-6 md:px-0 md:w-auto md:gap-11 md:static max-md:-z-10 ${
             isNavbar
               ? "max-md:translate-y-0"
               : "max-md:-translate-y-[calc(100%+64px)]"
           }`}
         >
+          <li className="mb-4 md:hidden">
+            <Button size={"md"} className="w-full text-center">
+              Chat now
+            </Button>
+          </li>
           <li
             className={textVariants({
               variant: "muted-sm",
@@ -73,26 +101,10 @@ export default function Navbar({}: Props) {
             <AnimatePresence>
               {isService && (
                 <Box
-                  initial={{
-                    rotateX: "var(--rotateX-from, 0)",
-                    scale: "var(--scale-from, 1)",
-                    y: "var(--y-from, 0px)",
-                    opacity: "var(--opacity-from, 1)",
-                    height: "var(--height-from)",
-                  }}
-                  animate={{
-                    rotateX: "var(--rotateX-to, 0)",
-                    scale: "var(--scale-to, 1)",
-                    opacity: "var(--opacity-to, 1)",
-                    height: "var(--height-to)",
-                  }}
-                  exit={{
-                    rotateX: "var(--rotateX-from, 0)",
-                    scale: "var(--scale-from, 1)",
-                    y: "var(--y-from, 0px)",
-                    opacity: "var(--opacity-from, 1)",
-                    height: "var(--height-from)",
-                  }}
+                  variants={ServicePopupAnimation}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
                   transition={{ duration: 0.2 }}
                   className="flex p-2 max-md:rounded-none md:mb-auto md:w-[628px] max-md:border-none max-md:p-0 duration-0 md:absolute max-md:[--height-from:0px] max-md:[--height-to:auto] md:[--rotateX-from:-30deg] md:[--rotateX-to:0deg] md:[--scale-from:0.9] md:[--scale-to:1] md:[--y-from:24px] md:[--opacity-from:0] md:[--opacity-to:1]"
                 >
@@ -142,9 +154,9 @@ export default function Navbar({}: Props) {
             </a>
           </li>
         </ul>
-        <Button className="max-md:hidden">Chat now</Button>
+        <Button className="text-sm max-md:hidden">Chat now</Button>
         <div
-          className="p-1 overflow-hidden border rounded-full cursor-pointer text-accents-6 md:hidden"
+          className="p-1 overflow-hidden border rounded-full cursor-pointer bg-background text-accents-6 md:hidden"
           onClick={() => setIsNavbar(!isNavbar)}
         >
           <AnimatePresence initial={false} mode="wait">
