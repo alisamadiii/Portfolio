@@ -20,6 +20,8 @@ const textVariants = cva("", {
       "muted-base": "leading-[1.5rem] text-accents-6",
       "muted-sm": "leading-[1.25rem] text-accents-6",
       "space-grotesk": "font-space_grotesk text-accents-6",
+      "section-name":
+        "text-xs tracking-[0.255rem] uppercase text-center text-accents-6",
     },
   },
   defaultVariants: {},

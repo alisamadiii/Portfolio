@@ -8,6 +8,7 @@ import { containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Github, Linkedin } from "lucide-react";
+import NumberGradient from "@/components/number-gradient";
 
 export default function Home() {
   const [gradientColor, setGradientColor] = useState(1);
@@ -78,6 +79,35 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      <div className="space-y-32">
+        <section className="flex flex-col items-center space-y-6">
+          <Text variant={"section-name"}>explore about me</Text>
+          <NumberGradient gradient={1} number={1} title="About" />
+          <Text
+            variant={"muted-lg"}
+            size={20}
+            className="max-w-3xl mb-8 text-center max-md:text-base"
+          >
+            I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience,
+            mainly focusing on front-end magic with ReactJS. I&apos;m all about
+            embracing new challenges and learning opportunities. Let&apos;s
+            build something awesome together!
+          </Text>
+        </section>
+
+        <section>
+          <Text variant={"section-name"}>experience with</Text>
+        </section>
+
+        <section>
+          <NumberGradient gradient={2} number={2} title="Projects" />
+        </section>
+
+        <section>
+          <NumberGradient gradient={3} number={3} title="My Experience" />
+        </section>
+      </div>
     </main>
   );
 }
