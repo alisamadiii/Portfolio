@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+import SplitType from "split-type";
 
 import { containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
@@ -13,6 +15,8 @@ import NumberGradient from "@/components/number-gradient";
 export default function Home() {
   const [gradientColor, setGradientColor] = useState(1);
 
+  gsap.registerPlugin(ScrollTrigger);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       // Update the gradientColor value here
@@ -21,6 +25,36 @@ export default function Home() {
 
     // To stop the looped function when the component unmounts
     return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      // @ts-ignore
+      const LocomotiveScroll = (await import("locomotive-scroll")).default;
+      const locomotiveScroll = new LocomotiveScroll();
+    })();
+  }, []);
+
+  useEffect(() => {
+    const splitTypes = document.querySelectorAll("#reveal-text");
+
+    splitTypes.forEach((char: any) => {
+      const text = new SplitType(char, { types: "chars, words" });
+
+      gsap
+        .from(text.chars, {
+          scrollTrigger: {
+            trigger: char,
+            start: "top 80%",
+            end: "top: 0%",
+            // scrub: true,
+          },
+          color: "black",
+          opacity: 1,
+          stagger: 0.2,
+        })
+        .duration(1.5);
+    });
   }, []);
 
   return (
@@ -88,6 +122,7 @@ export default function Home() {
             variant={"muted-lg"}
             size={20}
             className="max-w-3xl mb-8 text-center max-md:text-base"
+            id="reveal-text"
           >
             I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience,
             mainly focusing on front-end magic with ReactJS. I&apos;m all about

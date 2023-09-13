@@ -11,6 +11,7 @@ const space_grotesk = Space_Grotesk({
 import { Toaster } from "@/components/ui/toaster";
 import Intro from "@/components/intro";
 import Navbar from "@/components/navbar";
+import { useEffect } from "react";
 
 export const metadata: Metadata = {
   title: "Ali Reza",
