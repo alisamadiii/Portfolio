@@ -26,7 +26,7 @@ module.exports = {
         "gradient-2-from": "hsl(var(--gradient-2-from))",
         "gradient-2-to": "hsl(var(--gradient-2-to))",
         "gradient-3-from": "hsl(var(--gradient-3-from))",
-        "gradient-4-to": "hsl(var(--gradient-3-to))",
+        "gradient-3-to": "hsl(var(--gradient-3-to))",
         accents: {
           1: "hsl(var(--accents-1))",
           2: "hsl(var(--accents-2))",
