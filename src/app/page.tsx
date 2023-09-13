@@ -63,7 +63,7 @@ export default function Home() {
         className={containerVariants({
           size: "xl",
           className:
-            "flex flex-col items-center justify-center max-md:py-20 md:h-dvh",
+            "flex flex-col items-center justify-center max-md:py-20 max-md:mt-16 md:h-dvh",
         })}
       >
         <Image src={"/Logo.png"} width={60} height={60} alt="logo" />
@@ -114,7 +114,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="space-y-32">
+      <div className="px-6 space-y-32">
         <section className="flex flex-col items-center space-y-6">
           <Text variant={"section-name"}>explore about me</Text>
           <NumberGradient gradient={1} number={1} title="About" />
