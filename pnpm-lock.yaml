@@ -98,12 +98,18 @@ dependencies:
   react-dom:
     specifier: 18.2.0
     version: 18.2.0(react@18.2.0)
+  react-icons:
+    specifier: ^4.11.0
+    version: 4.11.0(react@18.2.0)
   react-loader-spinner:
     specifier: ^5.4.5
     version: 5.4.5(@babel/core@7.22.11)(react-dom@18.2.0)(react@18.2.0)
   react-use-measure:
     specifier: ^2.1.1
     version: 2.1.1(react-dom@18.2.0)(react@18.2.0)
+  react-vertical-timeline-component:
+    specifier: ^3.6.0
+    version: 3.6.0(react@18.2.0)
   split-type:
     specifier: ^0.3.3
     version: 0.3.3
@@ -122,6 +128,11 @@ dependencies:
   zustand:
     specifier: ^4.4.1
     version: 4.4.1(@types/react@18.2.21)(react@18.2.0)
+
+devDependencies:
+  '@types/react-vertical-timeline-component':
+    specifier: ^3.3.3
+    version: 3.3.3
 
 packages:
 
@@ -1532,7 +1543,6 @@ packages:
 
   /@types/prop-types@15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
-    dev: false
 
   /@types/react-dom@18.2.7:
     resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
@@ -1540,17 +1550,21 @@ packages:
       '@types/react': 18.2.21
     dev: false
 
+  /@types/react-vertical-timeline-component@3.3.3:
+    resolution: {integrity: sha512-xmKeQ9TtZLeGtsWQx2im0U79wnC0M2F/FPEAHP7uS3G9SAVgis1XSHzq/mq7XrcbnI9eiZbL7dhiy/TqCuDc7w==}
+    dependencies:
+      '@types/react': 18.2.21
+    dev: true
+
   /@types/react@18.2.21:
     resolution: {integrity: sha512-neFKG/sBAwGxHgXiIxnbm3/AAVQ/cMRS93hvBpg8xYRbeQSPVABp9U2bRnPf0iI4+Ucdv3plSxKK+3CW2ENJxA==}
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.3
       csstype: 3.1.2
-    dev: false
 
   /@types/scheduler@0.16.3:
     resolution: {integrity: sha512-5cJ8CB4yAx7BH1oMvdU0Jh9lrEXyPkar6F9G/ERswkCuvP4KQZfZkSjcMbAICCpQTN4OuZn8tz0HiKv9TGZgrQ==}
-    dev: false
 
   /@types/websocket@1.0.6:
     resolution: {integrity: sha512-JXkliwz93B2cMWOI1ukElQBPN88vMg3CruvW4KVSKpflt3NyNCJImnhIuB/f97rG7kakqRJGFiwkA895Kn02Dg==}
@@ -1941,6 +1955,10 @@ packages:
       clsx: 2.0.0
     dev: false
 
+  /classnames@2.3.2:
+    resolution: {integrity: sha512-CSbhY4cFEJRe6/GQzIk5qXZ4Jeg5pcsP7b5peFSDpffpe1cqjASH/n9UTjBwOp6XpMSTwQ8Za2K5V02ueA7Tmw==}
+    dev: false
+
   /client-only@0.0.1:
     resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
     dev: false
@@ -2028,7 +2046,6 @@ packages:
 
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
-    dev: false
 
   /d@1.0.1:
     resolution: {integrity: sha512-m62ShEObQ39CfralilEQRjH6oAMtNCV1xJyEx5LpRYUVN+EviphDgUc/F3hnYbADmkiNs67Y+3ylmlG7Lnu+FA==}
@@ -3639,6 +3656,22 @@ packages:
       scheduler: 0.23.0
     dev: false
 
+  /react-icons@4.11.0(react@18.2.0):
+    resolution: {integrity: sha512-V+4khzYcE5EBk/BvcuYRq6V/osf11ODUM2J8hg2FDSswRrGvqiYUYPRy4OdrWaQOBj4NcpJfmHZLNaD+VH0TyA==}
+    peerDependencies:
+      react: '*'
+    dependencies:
+      react: 18.2.0
+    dev: false
+
+  /react-intersection-observer@8.34.0(react@18.2.0):
+    resolution: {integrity: sha512-TYKh52Zc0Uptp5/b4N91XydfSGKubEhgZRtcg1rhTKABXijc4Sdr1uTp5lJ8TN27jwUsdXxjHXtHa0kPj704sw==}
+    peerDependencies:
+      react: ^15.0.0 || ^16.0.0 || ^17.0.0|| ^18.0.0
+    dependencies:
+      react: 18.2.0
+    dev: false
+
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
     dev: false
@@ -3723,6 +3756,17 @@ packages:
       debounce: 1.2.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /react-vertical-timeline-component@3.6.0(react@18.2.0):
+    resolution: {integrity: sha512-l9zulqjIGlRuaQeplGzV4r/tG2RYBpYt84Il8w4IxnJze2cDIGI04MKo3F7f1sHT0Sih1ohEFts8UV23AJS15Q==}
+    requiresBuild: true
+    dependencies:
+      classnames: 2.3.2
+      prop-types: 15.8.1
+      react-intersection-observer: 8.34.0(react@18.2.0)
+    transitivePeerDependencies:
+      - react
     dev: false
 
   /react@18.2.0:

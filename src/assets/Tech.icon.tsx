@@ -20,7 +20,7 @@ export default function TechIcon({}: Props) {
             height="94.0054"
             rx="26.158"
             fill="white"
-            fill-opacity="0.05"
+            fillOpacity="0.05"
           />
           <g id="Website" filter="url(#filter1_i_265_2640)">
             <rect
@@ -43,7 +43,7 @@ export default function TechIcon({}: Props) {
               height="85.4223"
               rx="25.9537"
               stroke="url(#paint1_linear_265_2640)"
-              stroke-width="0.408719"
+              strokeWidth="0.408719"
             />
           </g>
           <rect
@@ -53,7 +53,7 @@ export default function TechIcon({}: Props) {
             height="93.5967"
             rx="25.9537"
             stroke="url(#paint2_linear_265_2640)"
-            stroke-width="0.408719"
+            strokeWidth="0.408719"
           />
         </g>
         <g id="icon-wrapper" filter="url(#filter2_b_265_2640)">
@@ -63,7 +63,7 @@ export default function TechIcon({}: Props) {
             height="94.0054"
             rx="26.158"
             fill="white"
-            fill-opacity="0.05"
+            fillOpacity="0.05"
           />
           <g id="Website_2" filter="url(#filter3_i_265_2640)">
             <rect
@@ -86,7 +86,7 @@ export default function TechIcon({}: Props) {
               height="85.4223"
               rx="25.9537"
               stroke="url(#paint4_linear_265_2640)"
-              stroke-width="0.408719"
+              strokeWidth="0.408719"
             />
           </g>
           <rect
@@ -96,7 +96,7 @@ export default function TechIcon({}: Props) {
             height="93.5967"
             rx="25.9537"
             stroke="url(#paint5_linear_265_2640)"
-            stroke-width="0.408719"
+            strokeWidth="0.408719"
           />
         </g>
         <g id="icon-wrapper" filter="url(#filter4_b_265_2640)">
@@ -107,7 +107,7 @@ export default function TechIcon({}: Props) {
             height="94.0054"
             rx="26.158"
             fill="white"
-            fill-opacity="0.05"
+            fillOpacity="0.05"
           />
           <g id="Website_3" filter="url(#filter5_i_265_2640)">
             <rect
@@ -154,7 +154,7 @@ export default function TechIcon({}: Props) {
               height="85.4223"
               rx="25.9537"
               stroke="url(#paint7_linear_265_2640)"
-              stroke-width="0.408719"
+              strokeWidth="0.408719"
             />
           </g>
           <rect
@@ -164,50 +164,50 @@ export default function TechIcon({}: Props) {
             height="93.5967"
             rx="25.9537"
             stroke="url(#paint8_linear_265_2640)"
-            stroke-width="0.408719"
+            strokeWidth="0.408719"
           />
         </g>
         <path
           id="Author --&gt; nextjs"
           d="M150 140.349V179.177"
           stroke="url(#paint9_linear_265_2640)"
-          stroke-width="0.817439"
-          stroke-dasharray="0"
+          strokeWidth="0.817439"
+          strokeDasharray="0"
         />
         <path
           id="Author --&gt; nextjs_2"
           d="M150 131.828V93"
           stroke="url(#paint10_linear_265_2640)"
-          stroke-width="0.817439"
-          stroke-dasharray="0"
+          strokeWidth="0.817439"
+          strokeDasharray="0"
         />
         <path
           id="Author --&gt; framer-motion"
           d="M188.42 132.174H244.823C249.338 132.174 252.998 135.834 252.998 140.349V179.177"
           stroke="url(#paint11_linear_265_2640)"
-          stroke-width="0.817439"
-          stroke-dasharray="0"
+          strokeWidth="0.817439"
+          strokeDasharray="0"
         />
         <path
           id="Author --&gt; framer-motion_2"
           d="M188.42 132.003H244.823C249.338 132.003 252.998 128.343 252.998 123.828V85"
           stroke="url(#paint12_linear_265_2640)"
-          stroke-width="0.817439"
-          stroke-dasharray="0"
+          strokeWidth="0.817439"
+          strokeDasharray="0"
         />
         <path
           id="figma --&gt; Author"
           d="M47.0029 179.177V140.349C47.0029 135.834 50.6627 132.174 55.1773 132.174H111.581"
           stroke="url(#paint13_linear_265_2640)"
-          stroke-width="0.817439"
-          stroke-dasharray="0"
+          strokeWidth="0.817439"
+          strokeDasharray="0"
         />
         <path
           id="figma --&gt; Author_2"
           d="M47.0029 85V123.828C47.0029 128.343 50.6627 132.003 55.1773 132.003H111.581"
           stroke="url(#paint14_linear_265_2640)"
-          stroke-width="0.817439"
-          stroke-dasharray="0"
+          strokeWidth="0.817439"
+          strokeDasharray="0"
         />
         <g id="icon-wrapper" filter="url(#filter6_b_265_2640)">
           <rect
@@ -216,7 +216,7 @@ export default function TechIcon({}: Props) {
             height="94.0054"
             rx="26.158"
             fill="white"
-            fill-opacity="0.05"
+            fillOpacity="0.05"
           />
           <g id="Website_4" filter="url(#filter7_i_265_2640)">
             <rect
@@ -239,7 +239,7 @@ export default function TechIcon({}: Props) {
               height="85.4223"
               rx="25.9537"
               stroke="url(#paint16_linear_265_2640)"
-              stroke-width="0.408719"
+              strokeWidth="0.408719"
             />
           </g>
           <rect
@@ -249,7 +249,7 @@ export default function TechIcon({}: Props) {
             height="93.5967"
             rx="25.9537"
             stroke="url(#paint17_linear_265_2640)"
-            stroke-width="0.408719"
+            strokeWidth="0.408719"
           />
         </g>
         <g id="icon-wrapper" filter="url(#filter8_b_265_2640)">
@@ -259,7 +259,7 @@ export default function TechIcon({}: Props) {
             height="94.0054"
             rx="26.158"
             fill="white"
-            fill-opacity="0.05"
+            fillOpacity="0.05"
           />
           <g id="Website_5" filter="url(#filter9_i_265_2640)">
             <rect
@@ -282,7 +282,7 @@ export default function TechIcon({}: Props) {
               height="85.4223"
               rx="25.9537"
               stroke="url(#paint19_linear_265_2640)"
-              stroke-width="0.408719"
+              strokeWidth="0.408719"
             />
           </g>
           <rect
@@ -292,7 +292,7 @@ export default function TechIcon({}: Props) {
             height="93.5967"
             rx="25.9537"
             stroke="url(#paint20_linear_265_2640)"
-            stroke-width="0.408719"
+            strokeWidth="0.408719"
           />
         </g>
         <g id="icon-wrapper" filter="url(#filter10_b_265_2640)">
@@ -301,7 +301,7 @@ export default function TechIcon({}: Props) {
             height="94.0054"
             rx="26.158"
             fill="white"
-            fill-opacity="0.05"
+            fillOpacity="0.05"
           />
           <g id="Website_6" filter="url(#filter11_i_265_2640)">
             <rect
@@ -314,8 +314,8 @@ export default function TechIcon({}: Props) {
             />
             <path
               id="icon"
-              fill-rule="evenodd"
-              clip-rule="evenodd"
+              fillRule="evenodd"
+              clipRule="evenodd"
               d="M28.0027 24.0027L31.4607 65.4027L46.9804 70.0027L62.5402 65.3981L66.0027 24.0027H28.0027ZM58.7894 33.8283L58.5726 36.402L58.4765 37.5428H40.2745L40.7104 42.7408H58.0451L57.9288 44.107L56.8112 57.4746L56.7397 58.3325L47.0027 61.2121L46.9804 61.2213L37.2345 58.3325L36.5706 50.3584H41.3452L41.6827 54.411L46.9804 55.9359H46.9848L52.2914 54.4064L52.8435 47.8215H36.356L35.187 33.8283L35.0752 32.4644H58.9034L58.7894 33.8283Z"
               fill="url(#paint21_linear_265_2640)"
             />
@@ -326,7 +326,7 @@ export default function TechIcon({}: Props) {
               height="85.4223"
               rx="25.9537"
               stroke="url(#paint22_linear_265_2640)"
-              stroke-width="0.408719"
+              strokeWidth="0.408719"
             />
           </g>
           <rect
@@ -336,7 +336,7 @@ export default function TechIcon({}: Props) {
             height="93.5967"
             rx="25.9537"
             stroke="url(#paint23_linear_265_2640)"
-            stroke-width="0.408719"
+            strokeWidth="0.408719"
           />
         </g>
         <g id="Author" filter="url(#filter12_b_265_2640)">
@@ -347,7 +347,7 @@ export default function TechIcon({}: Props) {
             height="17.2698"
             rx="8.63488"
             fill="black"
-            fill-opacity="0.27"
+            fillOpacity="0.27"
           />
           <path
             id="I have Experience with"
@@ -361,8 +361,8 @@ export default function TechIcon({}: Props) {
             height="16.861"
             rx="8.43052"
             stroke="white"
-            stroke-opacity="0.2"
-            stroke-width="0.408719"
+            strokeOpacity="0.2"
+            strokeWidth="0.408719"
           />
         </g>
       </g>
@@ -374,9 +374,9 @@ export default function TechIcon({}: Props) {
           width="177.384"
           height="177.384"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="20.8447" />
           <feComposite
             in2="SourceAlpha"
@@ -397,9 +397,9 @@ export default function TechIcon({}: Props) {
           width="99.7275"
           height="99.7275"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -432,9 +432,9 @@ export default function TechIcon({}: Props) {
           width="177.384"
           height="177.384"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="20.8447" />
           <feComposite
             in2="SourceAlpha"
@@ -455,9 +455,9 @@ export default function TechIcon({}: Props) {
           width="99.7275"
           height="99.7275"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -490,9 +490,9 @@ export default function TechIcon({}: Props) {
           width="177.384"
           height="177.384"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="20.8447" />
           <feComposite
             in2="SourceAlpha"
@@ -513,9 +513,9 @@ export default function TechIcon({}: Props) {
           width="99.7275"
           height="99.7275"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -548,9 +548,9 @@ export default function TechIcon({}: Props) {
           width="177.384"
           height="177.384"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="20.8447" />
           <feComposite
             in2="SourceAlpha"
@@ -571,9 +571,9 @@ export default function TechIcon({}: Props) {
           width="99.7275"
           height="99.7275"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -606,9 +606,9 @@ export default function TechIcon({}: Props) {
           width="177.384"
           height="177.384"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="20.8447" />
           <feComposite
             in2="SourceAlpha"
@@ -629,9 +629,9 @@ export default function TechIcon({}: Props) {
           width="99.7275"
           height="99.7275"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -664,9 +664,9 @@ export default function TechIcon({}: Props) {
           width="177.384"
           height="177.384"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="20.8447" />
           <feComposite
             in2="SourceAlpha"
@@ -687,9 +687,9 @@ export default function TechIcon({}: Props) {
           width="99.7275"
           height="99.7275"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -722,9 +722,9 @@ export default function TechIcon({}: Props) {
           width="129.888"
           height="23.8093"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="1.63488" />
           <feComposite
             in2="SourceAlpha"
@@ -746,8 +746,8 @@ export default function TechIcon({}: Props) {
           y2="251.68"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#505050" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#505050" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_265_2640"
@@ -757,8 +757,8 @@ export default function TechIcon({}: Props) {
           y2="226.256"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint2_linear_265_2640"
@@ -768,8 +768,8 @@ export default function TechIcon({}: Props) {
           y2="198.388"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" stop-opacity="0.56" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.56" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint3_linear_265_2640"
@@ -779,8 +779,8 @@ export default function TechIcon({}: Props) {
           y2="243.18"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#505050" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#505050" />
         </linearGradient>
         <linearGradient
           id="paint4_linear_265_2640"
@@ -790,8 +790,8 @@ export default function TechIcon({}: Props) {
           y2="226.256"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint5_linear_265_2640"
@@ -801,8 +801,8 @@ export default function TechIcon({}: Props) {
           y2="198.388"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" stop-opacity="0.56" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.56" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint6_linear_265_2640"
@@ -812,8 +812,8 @@ export default function TechIcon({}: Props) {
           y2="251.012"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#505050" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#505050" />
         </linearGradient>
         <linearGradient
           id="paint7_linear_265_2640"
@@ -823,8 +823,8 @@ export default function TechIcon({}: Props) {
           y2="226.079"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint8_linear_265_2640"
@@ -834,8 +834,8 @@ export default function TechIcon({}: Props) {
           y2="198.21"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" stop-opacity="0.56" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.56" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint9_linear_265_2640"
@@ -845,8 +845,8 @@ export default function TechIcon({}: Props) {
           y2="179.177"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint10_linear_265_2640"
@@ -856,8 +856,8 @@ export default function TechIcon({}: Props) {
           y2="93"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint11_linear_265_2640"
@@ -867,9 +867,9 @@ export default function TechIcon({}: Props) {
           y2="179.177"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0.0290787" stop-color="#545454" />
-          <stop offset="0.561296" stop-color="white" />
-          <stop offset="1" stop-color="#545454" stop-opacity="0" />
+          <stop offset="0.0290787" stopColor="#545454" />
+          <stop offset="0.561296" stopColor="white" />
+          <stop offset="1" stopColor="#545454" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint12_linear_265_2640"
@@ -879,9 +879,9 @@ export default function TechIcon({}: Props) {
           y2="85"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0.0290787" stop-color="#545454" />
-          <stop offset="0.561296" stop-color="white" />
-          <stop offset="1" stop-color="#545454" stop-opacity="0" />
+          <stop offset="0.0290787" stopColor="#545454" />
+          <stop offset="0.561296" stopColor="white" />
+          <stop offset="1" stopColor="#545454" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint13_linear_265_2640"
@@ -891,9 +891,9 @@ export default function TechIcon({}: Props) {
           y2="132.174"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#545454" />
-          <stop offset="0.661458" stop-color="white" />
-          <stop offset="1" stop-color="#545454" />
+          <stop stopColor="#545454" />
+          <stop offset="0.661458" stopColor="white" />
+          <stop offset="1" stopColor="#545454" />
         </linearGradient>
         <linearGradient
           id="paint14_linear_265_2640"
@@ -903,9 +903,9 @@ export default function TechIcon({}: Props) {
           y2="132.003"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#545454" />
-          <stop offset="0.661458" stop-color="white" />
-          <stop offset="1" stop-color="#545454" />
+          <stop stopColor="#545454" />
+          <stop offset="0.661458" stopColor="white" />
+          <stop offset="1" stopColor="#545454" />
         </linearGradient>
         <linearGradient
           id="paint15_linear_265_2640"
@@ -915,8 +915,8 @@ export default function TechIcon({}: Props) {
           y2="71.0027"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#505050" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#505050" />
         </linearGradient>
         <linearGradient
           id="paint16_linear_265_2640"
@@ -926,8 +926,8 @@ export default function TechIcon({}: Props) {
           y2="47.0786"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint17_linear_265_2640"
@@ -937,8 +937,8 @@ export default function TechIcon({}: Props) {
           y2="19.2104"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" stop-opacity="0.56" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.56" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint18_linear_265_2640"
@@ -948,8 +948,8 @@ export default function TechIcon({}: Props) {
           y2="70.0027"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#505050" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#505050" />
         </linearGradient>
         <linearGradient
           id="paint19_linear_265_2640"
@@ -959,8 +959,8 @@ export default function TechIcon({}: Props) {
           y2="47.0786"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint20_linear_265_2640"
@@ -970,8 +970,8 @@ export default function TechIcon({}: Props) {
           y2="19.2104"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" stop-opacity="0.56" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.56" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint21_linear_265_2640"
@@ -981,8 +981,8 @@ export default function TechIcon({}: Props) {
           y2="70.0027"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-color="#505050" />
+          <stop stopColor="white" />
+          <stop offset="1" stopColor="#505050" />
         </linearGradient>
         <linearGradient
           id="paint22_linear_265_2640"
@@ -992,8 +992,8 @@ export default function TechIcon({}: Props) {
           y2="47.0786"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" />
-          <stop offset="1" stop-opacity="0" />
+          <stop stopColor="white" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint23_linear_265_2640"
@@ -1003,8 +1003,8 @@ export default function TechIcon({}: Props) {
           y2="19.2104"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="white" stop-opacity="0.56" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.56" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
       </defs>
     </svg>

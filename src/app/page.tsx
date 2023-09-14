@@ -1,16 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import SplitType from "split-type";
+import {
+  VerticalTimeline,
+  VerticalTimelineElement,
+} from "react-vertical-timeline-component";
+import "react-vertical-timeline-component/style.min.css";
 
 import { containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { Github, Linkedin } from "lucide-react";
 import NumberGradient from "@/components/number-gradient";
+
+// Icons
+import TechIcon from "@/assets/Tech.icon";
+import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
+import { Experience } from "@/lib/data";
 
 export default function Home() {
   const [gradientColor, setGradientColor] = useState(1);
@@ -105,10 +114,10 @@ export default function Home() {
           </Button>
           <div className="flex gap-3 md:gap-5 max-md:w-full max-md:max-w-md">
             <Button size={"lg"} className="w-full px-4">
-              <Linkedin />
+              <AiFillLinkedin />
             </Button>
             <Button size={"lg"} className="w-full px-4">
-              <Github />
+              <AiFillGithub />
             </Button>
           </div>
         </div>
@@ -131,16 +140,55 @@ export default function Home() {
           </Text>
         </section>
 
-        <section>
+        <section className="flex flex-col items-center space-y-6">
           <Text variant={"section-name"}>experience with</Text>
+          <TechIcon />
         </section>
 
         <section>
           <NumberGradient gradient={2} number={2} title="Projects" />
         </section>
 
-        <section>
+        <section className="space-y-20">
           <NumberGradient gradient={3} number={3} title="My Experience" />
+          <VerticalTimeline lineColor="">
+            {Experience.map((value) => (
+              <React.Fragment key={value.id}>
+                <VerticalTimelineElement
+                  contentStyle={{
+                    background: "#0A0A0A",
+                    border: "0.5px solid rgba(255, 255, 255, .20)",
+                    boxShadow: "none",
+                    borderRadius: "12px",
+                  }}
+                  contentArrowStyle={{
+                    display: "none",
+                  }}
+                  date={value.date}
+                  icon={value.icon}
+                  iconStyle={{
+                    background: "black",
+                    fontSize: "15rem",
+                    boxShadow: "none",
+                  }}
+                  dateClassName="date"
+                >
+                  <Text as="h3" size={24}>
+                    {value.title}
+                  </Text>
+                  <Text variant={"muted-sm"} className="!mt-1 !text-xs">
+                    {value.subtitle}
+                  </Text>
+                  <Text
+                    className="!mt-2 !text-sm !leading-6"
+                    variant={"muted-sm"}
+                  >
+                    {value.description}
+                  </Text>
+                </VerticalTimelineElement>
+              </React.Fragment>
+            ))}
+          </VerticalTimeline>
         </section>
       </div>
     </main>

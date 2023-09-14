@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  --line-color: #a1a1a1;
+}
+
+.vertical-timeline::before {
+  width: 0.5px !important;
+}
+
+.date {
+  color: #a1a1a1;
+  font-size: 12px !important;
+}
+
 @layer components {
   /* .input-reset-appearance {
     -moz-appearance: none;
