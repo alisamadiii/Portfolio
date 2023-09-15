@@ -11,7 +11,7 @@ import {
 } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
 
-import { containerVariants } from "@/components/ui/container";
+import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
@@ -191,6 +191,55 @@ export default function Home() {
           </VerticalTimeline>
         </section>
       </div>
+
+      <Container
+        size={"2xl"}
+        className="relative mt-32 overflow-hidden isolate"
+      >
+        <div className="absolute top-0 left-0 z-20 w-full h-px bg-gradient-to-l from-transparent via-white to-transparent" />
+        <div
+          className="absolute inset-0 w-full h-full -z-10 opacity-10"
+          style={{
+            background:
+              "radial-gradient(50% 50% at 50% 0,rgba(255, 255, 255,.5) 0,rgba(255, 255, 255,0) 100%)",
+          }}
+        />
+        <Container
+          size={"xl"}
+          className="grid items-center gap-8 py-32 text-center md:text-start md:grid-cols-3"
+        >
+          <div className="flex flex-col items-center gap-2 md:items-start md:col-span-2">
+            <Text
+              className={`max-w-4xl text-center text-5xl lg:text-6xl text-transparent bg-gradient-to-tr bg-clip-text ${
+                gradientColor === 1
+                  ? "from-gradient-1-from to-gradient-1-to"
+                  : gradientColor === 2
+                  ? "from-gradient-2-from to-gradient-2-to"
+                  : "from-gradient-3-from to-gradient-3-to"
+              }`}
+            >
+              Service
+            </Text>
+            <Text
+              size={20}
+              variant={"muted-lg"}
+              className="font-normal line-clamp-2"
+            >
+              Embark on a streamlined digital journey with our Service Route.
+            </Text>
+          </div>
+          <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
+            <Button size={"lg"} className="w-32 px-0">
+              Check out
+            </Button>
+            <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to w-32 px-0">
+              <Button variant={"primary"} size={"lg"} className="w-full px-0">
+                Read more
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </Container>
     </main>
   );
 }
