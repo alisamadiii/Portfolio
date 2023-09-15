@@ -72,8 +72,10 @@ export default function Home() {
         className={containerVariants({
           size: "xl",
           className:
-            "flex flex-col items-center justify-center max-md:py-20 max-md:mt-16 md:h-dvh",
+            "flex flex-col items-center justify-center max-md:py-20 max-md:mt-16 md:h-dvh overflow-hidden",
         })}
+        data-scroll
+        data-scroll-speed=".5"
       >
         <Image src={"/Logo.png"} width={60} height={60} alt="logo" />
         <h1 className="max-w-4xl my-4 text-4xl text-center md:text-5xl lg:text-6xl">
