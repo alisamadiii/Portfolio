@@ -20,8 +20,11 @@ import NumberGradient from "@/components/number-gradient";
 import TechIcon from "@/assets/Tech.icon";
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
 import { Experience } from "@/lib/data";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Home() {
+  const { toast } = useToast();
+
   const [gradientColor, setGradientColor] = useState(1);
 
   gsap.registerPlugin(ScrollTrigger);
@@ -66,6 +69,14 @@ export default function Home() {
     });
   }, []);
 
+  const UnderConstruction = () => {
+    toast({
+      title: "Under Construction",
+      description: "",
+      variant: "destructive",
+    });
+  };
+
   return (
     <main>
       <header
@@ -74,8 +85,6 @@ export default function Home() {
           className:
             "flex flex-col items-center justify-center max-md:py-20 max-md:mt-16 md:h-dvh overflow-hidden",
         })}
-        data-scroll
-        data-scroll-speed=".5"
       >
         <Image src={"/Logo.png"} width={60} height={60} alt="logo" />
         <h1 className="max-w-4xl my-4 text-4xl text-center md:text-5xl lg:text-6xl">
@@ -107,18 +116,31 @@ export default function Home() {
               variant={"primary"}
               size={"lg"}
               className="max-md:w-full max-md:max-w-md"
+              onClick={UnderConstruction}
             >
               Contact me
             </Button>
           </div>
-          <Button size={"lg"} className="max-md:w-full max-md:max-w-md">
+          <Button
+            size={"lg"}
+            className="max-md:w-full max-md:max-w-md"
+            onClick={UnderConstruction}
+          >
             Download CV
           </Button>
           <div className="flex gap-3 md:gap-5 max-md:w-full max-md:max-w-md">
-            <Button size={"lg"} className="w-full px-4">
+            <Button
+              size={"lg"}
+              className="w-full px-4"
+              onClick={UnderConstruction}
+            >
               <AiFillLinkedin />
             </Button>
-            <Button size={"lg"} className="w-full px-4">
+            <Button
+              size={"lg"}
+              className="w-full px-4"
+              onClick={UnderConstruction}
+            >
               <AiFillGithub />
             </Button>
           </div>
@@ -151,7 +173,7 @@ export default function Home() {
           <NumberGradient gradient={2} number={2} title="Projects" />
         </section>
 
-        <section className="space-y-20">
+        <section className="space-y-20 overflow-hidden">
           <NumberGradient gradient={3} number={3} title="My Experience" />
           <VerticalTimeline lineColor="">
             {Experience.map((value) => (
@@ -231,11 +253,20 @@ export default function Home() {
             </Text>
           </div>
           <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
-            <Button size={"lg"} className="w-32 px-0">
+            <Button
+              size={"lg"}
+              className="w-32 px-0"
+              onClick={UnderConstruction}
+            >
               Check out
             </Button>
             <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to w-32 px-0">
-              <Button variant={"primary"} size={"lg"} className="w-full px-0">
+              <Button
+                variant={"primary"}
+                size={"lg"}
+                className="w-full px-0"
+                onClick={UnderConstruction}
+              >
                 Read more
               </Button>
             </div>
