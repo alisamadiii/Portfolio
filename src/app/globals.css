@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  --line-color: #a1a1a1;
+}
+
+.vertical-timeline::before {
+  width: 0.5px !important;
+}
+
+.date {
+  color: #a1a1a1;
+  font-size: 12px !important;
+}
+
+@layer components {
+  /* .input-reset-appearance {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    -o-appearance: none;
+  } */
+}
+
+@layer base {
+  :root {
+    --geist-background: 0 0% 100%;
+    --geist-foreground: 0 0% 0%;
+
+    --gradient-1-from: 209 100% 47%;
+    --gradient-1-to: 178 100% 44%;
+    --gradient-2-from: 270 40% 47%;
+    --gradient-2-to: 330 100% 50%;
+    --gradient-3-from: 0 100% 65%;
+    --gradient-3-to: 47 95% 57%;
+
+    --accents-1: 0 0% 4%;
+    --accents-2: 0 0% 20%;
+    --accents-3: 0 0% 27%;
+    --accents-4: 0 0% 40%;
+    --accents-5: 0 0% 53%;
+    --accents-6: 0 0% 63%;
+    --accents-7: 0 0% 93%;
+    --accents-8: 0 0% 98%;
+
+    --border: 0, 0%, 0%, 0.2;
+    --border-hover: 0 0% 0%;
+
+    --geist-error-lighter: 357 69% 90%;
+    --geist-error-light: 0 100% 60%;
+    --geist-error: 0 100% 50%;
+    --geist-error-dark: 0 100% 40%;
+
+    --geist-success-lighter: 215 100% 91%;
+    --geist-success-light: 212 100% 60%;
+    --geist-success: 212 100% 48%;
+    --geist-success-dark: 212 94% 42%;
+    --geist-success-darker: 212 78% 23%;
+
+    --geist-warning-lighter: 40 100% 91%;
+    --geist-warning-light: 37 91% 65%;
+    --geist-warning: 37 91% 55%;
+    --geist-warning-dark: 29 89% 35%;
+
+    --geist-violet-lighter: 259 57% 87%;
+    --geist-violet-light: 261 55% 61%;
+    --geist-violet: 270 67% 47%;
+    --geist-violet-dark: 262 55% 35%;
+
+    --geist-cyan-lighter: 167 100% 83%;
+    --geist-cyan-light: 167 89% 74%;
+    --geist-cyan: 167 72% 60%;
+    --geist-cyan-dark: 167 64% 45%;
+
+    --geist-highlight-purple: 305 94% 54%;
+    --geist-highlight-magenta: 336 82% 57%;
+    --geist-highlight-pink: 330 100% 50%;
+    --geist-highlight-yellow: 58 100% 50%;
+  }
+
+  .dark {
+    --geist-background: 0 0% 0%;
+    --geist-foreground: 0 0% 100%;
+
+    --button-background: 0 0% 100%;
+    --button-foreground: 0 0% 0%;
+
+    --border: 0, 0%, 100%, 0.2;
+    --border-hover: 0 0% 100%;
+
+    --ring: 0, 0%, 100%, 0.8;
+
+    --focus-button: 0 0% 100%;
+
+    --link-hover: 0, 0%, 6%, 0.55;
+  }
+}
+
+@layer base {
+  body {
+    @apply text-foreground bg-background;
+  }
+
+  .popup-open {
+    overflow: hidden;
+  }
+
+  .grid-line {
+    --size: 60px;
+    --line-color: hsl(0, 0%, 0%);
+
+    width: 100%;
+    height: 100vh;
+    z-index: -40;
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(var(--line-color) 2px, transparent 2px),
+      linear-gradient(90deg, var(--line-color) 1px, transparent 1px);
+    background-size: var(--size) var(--size), var(--size) var(--size);
+    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+  }
+
+  .skeleton::after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(270deg, #111, #333, #333, #111);
+    background-size: 400% 100%;
+    position: absolute;
+    animation: skeleton_loading__qBdUw 8s ease-in-out infinite;
+  }
+
+  @keyframes skeleton_loading__qBdUw {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  #outline-animation::after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: hsl(212 100% 48%);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 9999px;
+    animation: outline 1s infinite;
+  }
+
+  @keyframes outline {
+    from {
+      scale: 1;
+      opacity: 1;
+    }
+    to {
+      scale: 1.5;
+      opacity: 0;
+    }
+  }
+}
