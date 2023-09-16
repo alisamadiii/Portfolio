@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { HTMLMotionProps, motion } from "framer-motion";
@@ -16,7 +18,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-button text-button-foreground hover:bg-button/90",
         outline: "border text-accents-6 hover:bg-accents-2 hover:text-white",
-        primary: "bg-success hover:bg-success-light",
+        primary: "bg-success text-foreground hover:bg-success-light",
         error:
           "bg-button bg-error-light text-button-foreground hover:bg-error-light/80",
         github: "bg-[#24292E] h-12 text-white px-16 hover:bg-[#555]",

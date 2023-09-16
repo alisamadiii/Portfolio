@@ -87,7 +87,7 @@ export default function Home() {
         })}
       >
         <Image src={"/Logo.png"} width={60} height={60} alt="logo" />
-        <h1 className="max-w-4xl my-4 text-4xl text-center md:text-5xl lg:text-6xl">
+        <h1 className="max-w-4xl my-4 text-4xl text-center md:text-5xl lg:text-6xl text-foreground">
           Experienced web developer specializing in{" "}
           <span
             className={`text-transparent bg-gradient-to-tr bg-clip-text ${

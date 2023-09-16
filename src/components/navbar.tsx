@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, Variants, motion } from "framer-motion";
 
 import { Container } from "./ui/container";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { Text, textVariants } from "./ui/text";
 import { Box } from "./ui/box";
 
@@ -64,13 +64,14 @@ export default function Navbar({}: Props) {
             }`}
           >
             <li className="mb-4 md:hidden">
-              <Button
-                size={"md"}
-                className="w-full text-center"
-                onClick={UnderConstruction}
+              <Link
+                href={"/login"}
+                className={buttonVariants({
+                  className: "w-full text-center text-background",
+                })}
               >
                 Chat now
-              </Button>
+              </Link>
             </li>
             <li
               className={textVariants({
@@ -145,9 +146,14 @@ export default function Navbar({}: Props) {
               </a>
             </li>
           </ul>
-          <Button className="text-sm max-md:hidden" onClick={UnderConstruction}>
+          <Link
+            href={"/login"}
+            className={buttonVariants({
+              className: "text-sm max-md:hidden text-background",
+            })}
+          >
             Chat now
-          </Button>
+          </Link>
           <div
             className="p-1 overflow-hidden border rounded-full cursor-pointer bg-background text-accents-6 md:hidden"
             onClick={() => setIsNavbar(!isNavbar)}
