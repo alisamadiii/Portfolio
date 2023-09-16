@@ -15,6 +15,7 @@ import { IoIosArrowDown } from "react-icons/io";
 
 import { ServiceINITIAL_VALUE } from "@/lib/data";
 import { ServicePopupAnimation } from "@/lib/animation";
+import { useToast } from "./ui/use-toast";
 
 type Props = {};
 
@@ -22,6 +23,8 @@ export default function Navbar({}: Props) {
   const [isNavbar, setIsNavbar] = useState(false);
   const [isScrollNavbar, setIsScrollNavbar] = useState(false);
   const [isService, setIsService] = useState(false);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +39,13 @@ export default function Navbar({}: Props) {
     };
   }, [isScrollNavbar]);
 
-  console.log(isScrollNavbar);
+  const UnderConstruction = () => {
+    toast({
+      title: "Under Construction",
+      description: "",
+      variant: "destructive",
+    });
+  };
 
   return (
     <>
@@ -55,7 +64,11 @@ export default function Navbar({}: Props) {
             }`}
           >
             <li className="mb-4 md:hidden">
-              <Button size={"md"} className="w-full text-center">
+              <Button
+                size={"md"}
+                className="w-full text-center"
+                onClick={UnderConstruction}
+              >
                 Chat now
               </Button>
             </li>
@@ -90,6 +103,7 @@ export default function Navbar({}: Props) {
                         key={value.id}
                         href={"#"}
                         className="items-center w-full duration-200 rounded-none max-md:h-12 max-md:flex md:rounded-lg md:p-4 hover:bg-link-hover"
+                        onClick={UnderConstruction}
                       >
                         <Text className="flex items-center gap-2 text-base md:text-sm text-accents-6 md:text-foreground">
                           {value.icon}
@@ -131,7 +145,9 @@ export default function Navbar({}: Props) {
               </a>
             </li>
           </ul>
-          <Button className="text-sm max-md:hidden">Chat now</Button>
+          <Button className="text-sm max-md:hidden" onClick={UnderConstruction}>
+            Chat now
+          </Button>
           <div
             className="p-1 overflow-hidden border rounded-full cursor-pointer bg-background text-accents-6 md:hidden"
             onClick={() => setIsNavbar(!isNavbar)}
