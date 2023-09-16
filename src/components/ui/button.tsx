@@ -20,7 +20,7 @@ const buttonVariants = cva(
         outline: "border text-accents-6 hover:bg-accents-2 hover:text-white",
         primary: "bg-success text-foreground hover:bg-success-light",
         error:
-          "bg-button bg-error-light text-button-foreground hover:bg-error-light/80",
+          "!text-black bg-button bg-error-light text-button-foreground hover:bg-error-light/80",
         github: "bg-[#24292E] h-12 text-white px-16 hover:bg-[#555]",
         google: "bg-white h-12 text-black px-16 hover:bg-accents-7",
       },

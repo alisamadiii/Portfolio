@@ -16,6 +16,7 @@ import { IoIosArrowDown } from "react-icons/io";
 import { ServiceINITIAL_VALUE } from "@/lib/data";
 import { ServicePopupAnimation } from "@/lib/animation";
 import { useToast } from "./ui/use-toast";
+import { UseUserContext } from "@/context/User.context";
 
 type Props = {};
 
@@ -23,6 +24,8 @@ export default function Navbar({}: Props) {
   const [isNavbar, setIsNavbar] = useState(false);
   const [isScrollNavbar, setIsScrollNavbar] = useState(false);
   const [isService, setIsService] = useState(false);
+
+  const { currentUser } = UseUserContext();
 
   const { toast } = useToast();
 
@@ -65,7 +68,7 @@ export default function Navbar({}: Props) {
           >
             <li className="mb-4 md:hidden">
               <Link
-                href={"/login"}
+                href={currentUser ? "/chat" : "/login"}
                 className={buttonVariants({
                   className: "w-full text-center text-background",
                 })}
@@ -147,7 +150,7 @@ export default function Navbar({}: Props) {
             </li>
           </ul>
           <Link
-            href={"/login"}
+            href={currentUser ? "/chat" : "/login"}
             className={buttonVariants({
               className: "text-sm max-md:hidden text-background",
             })}

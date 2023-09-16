@@ -23,4 +23,15 @@ const ServicePopupAnimation: Variants = {
   },
 };
 
-export { ServicePopupAnimation };
+const UserInformationPopup: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 15,
+  },
+  visible: {
+    opacity: 1,
+    y: 24,
+  },
+};
+
+export { ServicePopupAnimation, UserInformationPopup };

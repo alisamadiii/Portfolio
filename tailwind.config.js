@@ -13,6 +13,7 @@ module.exports = {
     extend: {
       height: {
         dvh: "100dvh",
+        chat: "527px",
       },
       colors: {
         background: "hsl(var(--geist-background))",
@@ -145,7 +146,7 @@ module.exports = {
         xxs: [
           "0.625rem",
           {
-            lineHeight: "2rem",
+            lineHeight: "1rem",
             letterSpacing: "initial",
             fontWeight: "400",
           },
