@@ -9,6 +9,7 @@ const space_grotesk = Space_Grotesk({
 });
 
 import { Toaster } from "@/components/ui/toaster";
+import { UserProvider } from "@/context/User.context";
 
 export const metadata: Metadata = {
   title: "Ali Reza",
@@ -25,9 +26,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${space_grotesk.variable} font-sans text-accents-6`}
       >
-        <div className="grid-line" />
-        <main>{children}</main>
-        <Toaster />
+        <UserProvider>
+          <div className="grid-line" />
+          <main>{children}</main>
+          <Toaster />
+        </UserProvider>
       </body>
     </html>
   );

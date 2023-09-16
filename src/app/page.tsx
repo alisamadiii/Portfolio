@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import SplitType from "split-type";
@@ -21,9 +21,11 @@ import TechIcon from "@/assets/Tech.icon";
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
 import { Experience } from "@/lib/data";
 import { useToast } from "@/components/ui/use-toast";
+import { UserContext } from "@/context/User.context";
 
 export default function Home() {
   const { toast } = useToast();
+  const { currentUser } = useContext(UserContext);
 
   const [gradientColor, setGradientColor] = useState(1);
 
