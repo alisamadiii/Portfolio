@@ -163,3 +163,7 @@ html {
     }
   }
 }
+
+textarea::-webkit-scrollbar {
+  width: 0px;
+}
