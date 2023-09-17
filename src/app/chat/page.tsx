@@ -61,7 +61,7 @@ export default function Chat({}: Props) {
   return (
     <div className="grid w-full h-dvh place-items-center">
       <div className="relative w-full max-w-sm overflow-hidden border rounded-lg h-chat">
-        <header className="flex items-center justify-between w-full px-4 py-2 border-b">
+        <header className="relative z-10 flex items-center justify-between w-full px-4 py-2 border-b">
           <Avatar className="w-auto h-auto">
             <AvatarImage src="/logo.png" alt="logo" className="w-6 h-6" id="" />
             <AvatarFallback>AL</AvatarFallback>
@@ -138,7 +138,10 @@ export default function Chat({}: Props) {
         </header>
 
         {/* Messages */}
-        <div className="flex flex-col items-start justify-end w-full h-full px-4 py-24">
+        <div className="relative flex flex-col items-start justify-end w-full h-full px-4 py-24">
+          {isUserInformation && (
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none bg-background/40 backdrop-blur-sm" />
+          )}
           {messagesValue?.length !== 0 ? (
             messagesValue?.map((message) => (
               <EachMessage key={message.id} message={message} />
