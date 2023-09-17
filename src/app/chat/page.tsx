@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 
@@ -14,20 +14,18 @@ import { signout, supabase } from "@/utils/supabase";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { RotatingLines } from "react-loader-spinner";
+import SendingMessage from "@/components/sending-message";
+import EachMessage from "@/components/EachMessage";
+import type { MessageValue } from "@/types/chat-history.t";
 
 type Props = {};
 
 export default function Chat({}: Props) {
+  const [messagesValue, setMessagesValue] = useState<MessageValue[] | null>([]);
+
   const [isUserInformation, setIsUserInformation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { currentUser, setCurrentUser } = UseUserContext();
-
-  const AddingText = async () => {
-    const { data, error } = await supabase
-      .from("Chat History")
-      .insert([{ user_email: currentUser.user.email }])
-      .select();
-  };
 
   const signOutHandler = async () => {
     setIsLoading(true);
@@ -35,6 +33,30 @@ export default function Chat({}: Props) {
     setCurrentUser(null);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    const textarea = document.querySelector("#message") as HTMLTextAreaElement;
+
+    if (textarea) {
+      textarea.addEventListener("keyup", (event: Event) => {
+        textarea.style.height = "1rem";
+        const target = event.target as HTMLTextAreaElement;
+        textarea.style.height = `${target.scrollHeight}px`;
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const gettingAllMessage = async () => {
+      const { data, error } = await supabase
+        .from("Chat History")
+        .select("id, message, user_email");
+
+      setMessagesValue(data);
+    };
+
+    gettingAllMessage();
+  }, []);
 
   return (
     <div className="grid w-full h-dvh place-items-center">
@@ -114,25 +136,15 @@ export default function Chat({}: Props) {
               ))}
           </div>
         </header>
-        {currentUser && (
-          <footer className="absolute bottom-0 left-0 flex items-center justify-between w-full gap-2 p-2 bg-background">
-            {/* Inputs */}
-            <Label
-              className={`flex items-center bg-accents-1 grow rounded-full pl-2 pr-3 py-2`}
-            >
-              <textarea
-                className="py-1 bg-transparent outline-none resize-none grow placeholder:text-accents-6/50"
-                rows={1}
-                placeholder="your message"
-              />
-              <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
-            </Label>
-            {/* Send */}
-            <div className="p-2 rounded-full bg-foreground text-background">
-              <CustomIcon icon="send" />
-            </div>
-          </footer>
-        )}
+
+        {/* Messages */}
+        <div className="w-full h-full px-4">
+          {messagesValue?.map((message) => (
+            <EachMessage key={message.id} message={message} />
+          ))}
+        </div>
+
+        {currentUser && <SendingMessage setMessagesValue={setMessagesValue} />}
       </div>
     </div>
   );

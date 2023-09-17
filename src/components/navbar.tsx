@@ -68,7 +68,8 @@ export default function Navbar({}: Props) {
           >
             <li className="mb-4 md:hidden">
               <Link
-                href={currentUser ? "/chat" : "/login"}
+                href={"/"}
+                onClick={UnderConstruction}
                 className={buttonVariants({
                   className: "w-full text-center text-background",
                 })}
@@ -150,7 +151,8 @@ export default function Navbar({}: Props) {
             </li>
           </ul>
           <Link
-            href={currentUser ? "/chat" : "/login"}
+            href={"/"}
+            onClick={UnderConstruction}
             className={buttonVariants({
               className: "text-sm max-md:hidden text-background",
             })}
