@@ -8,5 +8,5 @@ type Props = { children: ReactNode };
 export default function Template({ children }: Props) {
   const supabase = createServerComponentClient({ cookies });
 
-  return children;
+  return <div>{children}</div>;
 }
