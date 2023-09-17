@@ -15,6 +15,12 @@ module.exports = {
         dvh: "100dvh",
         chat: "527px",
       },
+      maxWidth: {
+        message: "208px",
+      },
+      minWidth: {
+        message: "42px",
+      },
       colors: {
         background: "hsl(var(--geist-background))",
         foreground: "hsl(var(--geist-foreground))",

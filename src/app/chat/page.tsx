@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 
@@ -11,11 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { UserInformationPopup } from "@/lib/animation";
 import { signout, supabase } from "@/utils/supabase";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import { RotatingLines } from "react-loader-spinner";
-import SendingMessage from "@/components/sending-message";
-import EachMessage from "@/components/EachMessage";
+import SendingMessage from "@/components/chat-page/sending-message";
+import EachMessage from "@/components/chat-page/EachMessage";
 import type { MessageValue } from "@/types/chat-history.t";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -51,7 +50,7 @@ export default function Chat({}: Props) {
     const gettingAllMessage = async () => {
       const { data, error } = await supabase
         .from("chat-history")
-        .select("id, message");
+        .select("id, message, user_uid");
 
       setMessagesValue(data);
     };
@@ -139,7 +138,7 @@ export default function Chat({}: Props) {
         </header>
 
         {/* Messages */}
-        <div className="w-full h-full px-4">
+        <div className="flex flex-col items-start justify-end w-full h-full px-4 py-24">
           {messagesValue?.length !== 0 ? (
             messagesValue?.map((message) => (
               <EachMessage key={message.id} message={message} />
