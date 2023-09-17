@@ -18,6 +18,8 @@ export default function SendingMessage({ setMessagesValue }: Props) {
 
   const { currentUser, setCurrentUser } = UseUserContext();
 
+  console.log(currentUser);
+
   useEffect(() => {
     const textarea = document.querySelector("#message") as HTMLTextAreaElement;
 
@@ -35,11 +37,9 @@ export default function SendingMessage({ setMessagesValue }: Props) {
 
     if (message.length == 0) return;
 
-    const data = await supabase.from("Chat History").insert([
+    const data = await supabase.from("chat-history").insert([
       {
-        user_email: currentUser.user.email,
-        user_image: currentUser.user.user_metadata.avatar_url,
-        user_name: currentUser.user.user_metadata.full_name,
+        user_uid: currentUser.user.user_metadata.provider_id,
         message,
       },
     ]);

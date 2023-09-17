@@ -34,8 +34,6 @@ export default function Login({}: Props) {
     });
   };
 
-  console.log(currentUser);
-
   if (currentUser == null) {
     return (
       <div className="relative w-full overflow-hidden h-dvh">
