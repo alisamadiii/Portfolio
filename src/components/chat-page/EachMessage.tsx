@@ -10,13 +10,23 @@ import {
   ContextMenuTrigger,
 } from "../ui/context-menu";
 import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
+import { useToast } from "../ui/use-toast";
 
 type Props = {
   message: MessageValue;
 };
 
 export default function EachMessage({ message }: Props) {
+  const { toast } = useToast();
   const { currentUser } = UseUserContext();
+
+  const copyMessage = (value: string) => {
+    navigator.clipboard.writeText(value);
+    toast({
+      title: "Copied",
+      description: `Message - ${value}`,
+    });
+  };
 
   return (
     <ContextMenu>
@@ -27,7 +37,9 @@ export default function EachMessage({ message }: Props) {
             : "rounded-tl-none"
         }`}
       >
-        <Text size={12}>{message.message}</Text>
+        <Text size={12} className="select-none">
+          {message.message}
+        </Text>
       </ContextMenuTrigger>
       <ContextMenuContent className="bg-accents-1">
         {currentUser?.user.user_metadata.provider_id == message.user_uid && (
@@ -45,7 +57,10 @@ export default function EachMessage({ message }: Props) {
         <ContextMenuItem className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white">
           <Reply size={14} /> Reply
         </ContextMenuItem>
-        <ContextMenuItem className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white">
+        <ContextMenuItem
+          className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+          onClick={() => copyMessage(message.message)}
+        >
           <Copy size={14} /> Copy Text
         </ContextMenuItem>
       </ContextMenuContent>
