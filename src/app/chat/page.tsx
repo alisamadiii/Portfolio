@@ -17,6 +17,7 @@ import { RotatingLines } from "react-loader-spinner";
 import SendingMessage from "@/components/sending-message";
 import EachMessage from "@/components/EachMessage";
 import type { MessageValue } from "@/types/chat-history.t";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {};
 
@@ -139,9 +140,26 @@ export default function Chat({}: Props) {
 
         {/* Messages */}
         <div className="w-full h-full px-4">
-          {messagesValue?.map((message) => (
-            <EachMessage key={message.id} message={message} />
-          ))}
+          {messagesValue?.length !== 0 ? (
+            messagesValue?.map((message) => (
+              <EachMessage key={message.id} message={message} />
+            ))
+          ) : (
+            <div className="mt-3 space-y-2">
+              <Skeleton className="w-1/2 h-6" />
+              <Skeleton className="w-1/3 h-6" />
+              <Skeleton className="w-1/2 h-6" />
+              <Skeleton className="w-1/3 h-6" />
+              <Skeleton className="w-1/2 h-6 ml-auto" />
+              <Skeleton className="w-1/3 h-6 ml-auto" />
+              <Skeleton className="w-1/2 h-6" />
+              <Skeleton className="w-1/3 h-6" />
+              <Skeleton className="w-1/2 h-6 ml-auto" />
+              <Skeleton className="w-1/3 h-6 ml-auto" />
+              <Skeleton className="w-1/2 h-6" />
+              <Skeleton className="w-1/3 h-6" />
+            </div>
+          )}
         </div>
 
         {currentUser && <SendingMessage setMessagesValue={setMessagesValue} />}
