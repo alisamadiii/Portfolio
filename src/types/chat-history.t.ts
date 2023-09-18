@@ -1,3 +1,3 @@
-type MessageValue = { id: number; message: string; user_uid: string };
+type MessageValue = { id: string; message: string; user_uid: string };
 
 export type { MessageValue };

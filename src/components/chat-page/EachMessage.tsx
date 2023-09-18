@@ -11,12 +11,15 @@ import {
 } from "../ui/context-menu";
 import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
 import { useToast } from "../ui/use-toast";
+import { supabase } from "@/utils/supabase";
 
 type Props = {
+  messages: MessageValue[];
+  setMessages: (a: MessageValue[]) => void;
   message: MessageValue;
 };
 
-export default function EachMessage({ message }: Props) {
+export default function EachMessage({ messages, setMessages, message }: Props) {
   const { toast } = useToast();
   const { currentUser } = UseUserContext();
 
@@ -26,6 +29,18 @@ export default function EachMessage({ message }: Props) {
       title: "Copied",
       description: `Message - ${value}`,
     });
+  };
+
+  const deleteMessage = async (id: string) => {
+    const filterDeletedMessage = messages.filter(
+      (message) => message.id !== id
+    );
+
+    setMessages(filterDeletedMessage);
+
+    await supabase.from("chat-history").delete().eq("id", id);
+
+    console.log("deleted");
   };
 
   return (
@@ -44,7 +59,10 @@ export default function EachMessage({ message }: Props) {
       <ContextMenuContent className="bg-accents-1">
         {currentUser?.user.user_metadata.provider_id == message.user_uid && (
           <>
-            <ContextMenuItem className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white">
+            <ContextMenuItem
+              className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+              onClick={() => deleteMessage(message.id)}
+            >
               <Trash2 size={14} />
               Delete
             </ContextMenuItem>

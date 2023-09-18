@@ -155,7 +155,12 @@ export default function Chat({}: Props) {
         >
           {messagesValue?.length !== 0 ? (
             messagesValue?.map((message) => (
-              <EachMessage key={message.id} message={message} />
+              <EachMessage
+                key={message.id}
+                messages={messagesValue}
+                setMessages={setMessagesValue}
+                message={message}
+              />
             ))
           ) : (
             <Box className="h-full mt-3 space-y-2 border-none rounded-none">
