@@ -21,6 +21,14 @@ html {
     -webkit-appearance: none;
     -o-appearance: none;
   } */
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 2px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: white;
+    border-radius: 1rem;
+  }
 }
 
 @layer base {

@@ -17,6 +17,7 @@ import SendingMessage from "@/components/chat-page/sending-message";
 import EachMessage from "@/components/chat-page/EachMessage";
 import type { MessageValue } from "@/types/chat-history.t";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Box } from "@/components/ui/box";
 
 type Props = {};
 
@@ -58,10 +59,12 @@ export default function Chat({}: Props) {
     gettingAllMessage();
   }, []);
 
+  console.log(messagesValue);
+
   return (
     <div className="grid w-full h-dvh place-items-center">
-      <div className="relative w-full max-w-sm overflow-hidden border rounded-lg h-chat">
-        <header className="relative z-10 flex items-center justify-between w-full px-4 py-2 border-b">
+      <div className="relative flex flex-col w-full max-w-sm overflow-hidden border rounded-lg h-chat">
+        <header className="relative z-10 flex items-center justify-between w-full px-4 py-2 bg-black border-b">
           <Avatar className="w-auto h-auto">
             <AvatarImage src="/logo.png" alt="logo" className="w-6 h-6" id="" />
             <AvatarFallback>AL</AvatarFallback>
@@ -138,16 +141,16 @@ export default function Chat({}: Props) {
         </header>
 
         {/* Messages */}
-        <div className="relative flex flex-col items-start justify-end w-full h-full px-4 py-24">
-          {isUserInformation && (
+        <div className="relative flex flex-col items-start w-full h-full px-4 pt-2 pb-16 overflow-auto custom-scrollbar">
+          {/* {isUserInformation && (
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none bg-background/40 backdrop-blur-sm" />
-          )}
+          )} */}
           {messagesValue?.length !== 0 ? (
             messagesValue?.map((message) => (
               <EachMessage key={message.id} message={message} />
             ))
           ) : (
-            <div className="mt-3 space-y-2">
+            <Box className="h-full mt-3 space-y-2 border-none rounded-none">
               <Skeleton className="w-1/2 h-6" />
               <Skeleton className="w-1/3 h-6" />
               <Skeleton className="w-1/2 h-6" />
@@ -160,7 +163,7 @@ export default function Chat({}: Props) {
               <Skeleton className="w-1/3 h-6 ml-auto" />
               <Skeleton className="w-1/2 h-6" />
               <Skeleton className="w-1/3 h-6" />
-            </div>
+            </Box>
           )}
         </div>
 
