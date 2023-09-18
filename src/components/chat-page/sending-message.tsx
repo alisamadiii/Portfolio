@@ -18,8 +18,6 @@ export default function SendingMessage({ setMessagesValue }: Props) {
 
   const { currentUser, setCurrentUser } = UseUserContext();
 
-  console.log(currentUser);
-
   useEffect(() => {
     const textarea = document.querySelector("#message") as HTMLTextAreaElement;
 
@@ -34,8 +32,18 @@ export default function SendingMessage({ setMessagesValue }: Props) {
 
   const submittingMessage = async (e: any) => {
     e.preventDefault();
-
     if (message.length == 0) return;
+
+    // @ts-ignore
+    setMessagesValue((prev) => [
+      ...prev,
+      {
+        message,
+        user_uid: Number(currentUser.user.user_metadata.provider_id),
+        id: Math.floor(Math.random() * 1000000),
+      },
+    ]);
+    setMassage("");
 
     const data = await supabase.from("chat-history").insert([
       {
@@ -43,14 +51,12 @@ export default function SendingMessage({ setMessagesValue }: Props) {
         message,
       },
     ]);
-
-    setMassage("");
   };
 
   return (
     <form
       onSubmit={submittingMessage}
-      className="absolute bottom-0 left-0 flex items-center justify-between w-full gap-2 p-2 bg-background"
+      className="flex items-center justify-between w-full gap-2 p-2 bg-background"
     >
       {/* Inputs */}
       <Label

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
@@ -59,7 +59,15 @@ export default function Chat({}: Props) {
     gettingAllMessage();
   }, []);
 
-  console.log(messagesValue);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Scroll to the bottom of the container
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [messagesValue]);
 
   return (
     <div className="grid w-full h-dvh place-items-center">
@@ -141,10 +149,10 @@ export default function Chat({}: Props) {
         </header>
 
         {/* Messages */}
-        <div className="relative flex flex-col items-start w-full h-full px-4 pt-2 pb-16 overflow-auto custom-scrollbar">
-          {/* {isUserInformation && (
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none bg-background/40 backdrop-blur-sm" />
-          )} */}
+        <div
+          className="relative flex flex-col items-start w-full h-full px-4 py-2 overflow-auto custom-scrollbar"
+          ref={containerRef}
+        >
           {messagesValue?.length !== 0 ? (
             messagesValue?.map((message) => (
               <EachMessage key={message.id} message={message} />
