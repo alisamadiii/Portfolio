@@ -32,17 +32,17 @@ export default function SendingMessage({}: Props) {
     e.preventDefault();
     if (message.length == 0) return;
 
-    // @ts-ignore
-    setMessages([
-      ...messages,
-      {
-        message,
-        user_uid: Number(currentUser.user.user_metadata.provider_id),
-        id: Math.floor(Math.random() * 1000000),
-      },
-    ]);
-    setMassage("");
-    setReplyId(null);
+    // // @ts-ignore
+    // setMessages([
+    //   ...messages,
+    //   {
+    //     message,
+    //     user_uid: Number(currentUser.user.user_metadata.provider_id),
+    //     id: Math.floor(Math.random() * 1000000),
+    //   },
+    // ]);
+    // setMassage("");
+    // setReplyId(null);
 
     const data = await supabase.from("chat-history").insert([
       {

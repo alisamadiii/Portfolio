@@ -25,7 +25,7 @@ export default function Chat({}: Props) {
   const [isUserInformation, setIsUserInformation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { currentUser, setCurrentUser } = UseUserContext();
-  const { messages, setMessages } = useChatStore();
+  const { messages, setMessages, replyId } = useChatStore();
 
   const signOutHandler = async () => {
     setIsLoading(true);
@@ -66,7 +66,7 @@ export default function Chat({}: Props) {
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, replyId]);
 
   return (
     <div className="grid w-full h-dvh place-items-center">
