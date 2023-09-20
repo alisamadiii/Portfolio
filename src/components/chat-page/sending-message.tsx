@@ -69,6 +69,12 @@ export default function SendingMessage({}: Props) {
             ]);
             setMassage("");
             setReplyId(null);
+          } else if (payload.eventType == "DELETE") {
+            const findMessage = messages.filter(
+              (message) => message.id !== payload.old.id
+            );
+
+            setMessages(findMessage);
           }
         }
       )

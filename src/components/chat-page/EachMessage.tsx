@@ -34,10 +34,6 @@ export default function EachMessage({ message }: Props) {
   };
 
   const deleteMessage = async (id: string) => {
-    const findMessage = messages.filter((message) => message.id !== id);
-
-    setMessages(findMessage);
-
     await supabase.from("chat-history").delete().eq("id", id);
     console.log("deleted");
   };
