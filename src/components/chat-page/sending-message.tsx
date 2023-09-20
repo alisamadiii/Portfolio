@@ -37,18 +37,6 @@ export default function SendingMessage({}: Props) {
     e.preventDefault();
     if (message.length == 0) return;
 
-    // // @ts-ignore
-    // setMessages([
-    //   ...messages,
-    //   {
-    //     message,
-    //     user_uid: Number(currentUser.user.user_metadata.provider_id),
-    //     id: Math.floor(Math.random() * 1000000),
-    //   },
-    // ]);
-    // setMassage("");
-    // setReplyId(null);
-
     const data = await supabase.from("chat-history").insert([
       {
         user_uid: currentUser.user.user_metadata.provider_id,
@@ -57,6 +45,39 @@ export default function SendingMessage({}: Props) {
       },
     ]);
   };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("realtime-message")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "chat-history",
+        },
+        (payload: any) => {
+          console.log(payload);
+          if (payload.eventType == "INSERT") {
+            setMessages([
+              ...messages,
+              {
+                message: payload.new.message,
+                user_uid: payload.new.user_uid,
+                id: payload.new.id,
+              },
+            ]);
+            setMassage("");
+            setReplyId(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, messages]);
 
   return (
     <form

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import type { MessageValue } from "@/types/chat-history.t";
 import { UseUserContext } from "@/context/User.context";
@@ -34,14 +34,11 @@ export default function EachMessage({ message }: Props) {
   };
 
   const deleteMessage = async (id: string) => {
-    const filterDeletedMessage = messages.filter(
-      (message) => message.id !== id
-    );
+    const findMessage = messages.filter((message) => message.id !== id);
 
-    setMessages(filterDeletedMessage);
+    setMessages(findMessage);
 
     await supabase.from("chat-history").delete().eq("id", id);
-
     console.log("deleted");
   };
 
