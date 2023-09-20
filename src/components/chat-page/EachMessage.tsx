@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from "react";
 
 import type { MessageValue } from "@/types/chat-history.t";
@@ -51,6 +53,25 @@ export default function EachMessage({ message }: Props) {
             : "rounded-tl-none"
         }`}
       >
+        {message.reply && (
+          <Text
+            size={10}
+            className={`relative px-2 py-1 mb-2 overflow-hidden rounded-r select-none line-clamp-3 ${
+              currentUser?.user.user_metadata.provider_id == message.user_uid
+                ? "bg-accents-7"
+                : "bg-accents-1"
+            }`}
+          >
+            <div
+              className={`absolute top-0 left-0 w-[1px] h-full ${
+                currentUser?.user.user_metadata.provider_id == message.user_uid
+                  ? "bg-background"
+                  : "bg-foreground"
+              }`}
+            />
+            {messages.find((m) => m.id == message.reply)?.message}
+          </Text>
+        )}
         <Text size={12} className="select-none">
           {message.message}
         </Text>

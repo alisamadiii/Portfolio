@@ -65,6 +65,7 @@ export default function SendingMessage({}: Props) {
                 message: payload.new.message,
                 user_uid: payload.new.user_uid,
                 id: payload.new.id,
+                reply: payload.new.reply,
               },
             ]);
             setMassage("");
