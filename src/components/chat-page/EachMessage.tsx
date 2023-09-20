@@ -12,16 +12,18 @@ import {
 import { Copy, Pencil, Reply, Trash2 } from "lucide-react";
 import { useToast } from "../ui/use-toast";
 import { supabase } from "@/utils/supabase";
+import { useChatStore } from "@/context/Chat.context";
 
 type Props = {
-  messages: MessageValue[];
-  setMessages: (a: MessageValue[]) => void;
   message: MessageValue;
 };
 
-export default function EachMessage({ messages, setMessages, message }: Props) {
+export default function EachMessage({ message }: Props) {
   const { toast } = useToast();
   const { currentUser } = UseUserContext();
+  const { setReplyId } = useChatStore();
+
+  const { messages, setMessages } = useChatStore();
 
   const copyMessage = (value: string) => {
     navigator.clipboard.writeText(value);
@@ -41,6 +43,10 @@ export default function EachMessage({ messages, setMessages, message }: Props) {
     await supabase.from("chat-history").delete().eq("id", id);
 
     console.log("deleted");
+  };
+
+  const replyMessage = (id: string) => {
+    setReplyId(id);
   };
 
   return (
@@ -72,7 +78,10 @@ export default function EachMessage({ messages, setMessages, message }: Props) {
             </ContextMenuItem>
           </>
         )}
-        <ContextMenuItem className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white">
+        <ContextMenuItem
+          className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+          onClick={() => replyMessage(message.id)}
+        >
           <Reply size={14} /> Reply
         </ContextMenuItem>
         <ContextMenuItem

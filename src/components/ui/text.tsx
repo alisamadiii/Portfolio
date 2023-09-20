@@ -5,6 +5,14 @@ import { cn } from "@/lib/utils";
 
 const textVariants = cva("", {
   variants: {
+    variant: {
+      "muted-lg": "leading-[2rem] font-normal text-accents-6",
+      "muted-base": "leading-[1.5rem] text-accents-6",
+      "muted-sm": "leading-[1.25rem] text-accents-6",
+      "space-grotesk": "font-space_grotesk text-accents-6",
+      "section-name":
+        "text-xs tracking-[0.255rem] uppercase text-center text-accents-6",
+    },
     size: {
       48: "text-5xl",
       32: "text-4xl",
@@ -15,16 +23,10 @@ const textVariants = cva("", {
       12: "text-xs",
       10: "text-xxs",
     },
-    variant: {
-      "muted-lg": "leading-[2rem] font-normal text-accents-6",
-      "muted-base": "leading-[1.5rem] text-accents-6",
-      "muted-sm": "leading-[1.25rem] text-accents-6",
-      "space-grotesk": "font-space_grotesk text-accents-6",
-      "section-name":
-        "text-xs tracking-[0.255rem] uppercase text-center text-accents-6",
-    },
   },
-  defaultVariants: {},
+  defaultVariants: {
+    size: 16,
+  },
 });
 
 export interface TextProps
@@ -44,6 +46,7 @@ const Text = React.forwardRef<HTMLParagraphElement, TextProps>(
     );
   }
 );
+
 Text.displayName = "Text";
 
 export { Text, textVariants };

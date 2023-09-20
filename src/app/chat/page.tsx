@@ -15,18 +15,17 @@ import { signout, supabase } from "@/utils/supabase";
 import { RotatingLines } from "react-loader-spinner";
 import SendingMessage from "@/components/chat-page/sending-message";
 import EachMessage from "@/components/chat-page/EachMessage";
-import type { MessageValue } from "@/types/chat-history.t";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Box } from "@/components/ui/box";
+import { useChatStore } from "@/context/Chat.context";
 
 type Props = {};
 
 export default function Chat({}: Props) {
-  const [messagesValue, setMessagesValue] = useState<MessageValue[] | null>([]);
-
   const [isUserInformation, setIsUserInformation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { currentUser, setCurrentUser } = UseUserContext();
+  const { messages, setMessages } = useChatStore();
 
   const signOutHandler = async () => {
     setIsLoading(true);
@@ -53,7 +52,7 @@ export default function Chat({}: Props) {
         .from("chat-history")
         .select("id, message, user_uid");
 
-      setMessagesValue(data);
+      setMessages(data!);
     };
 
     gettingAllMessage();
@@ -67,7 +66,7 @@ export default function Chat({}: Props) {
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
-  }, [messagesValue]);
+  }, [messages]);
 
   return (
     <div className="grid w-full h-dvh place-items-center">
@@ -150,17 +149,12 @@ export default function Chat({}: Props) {
 
         {/* Messages */}
         <div
-          className="relative flex flex-col items-start w-full h-full px-4 py-2 overflow-auto custom-scrollbar"
+          className="relative flex flex-col items-start w-full h-full px-4 py-2 overflow-auto custom-scrollbar bg-background"
           ref={containerRef}
         >
-          {messagesValue?.length !== 0 ? (
-            messagesValue?.map((message) => (
-              <EachMessage
-                key={message.id}
-                messages={messagesValue}
-                setMessages={setMessagesValue}
-                message={message}
-              />
+          {messages?.length !== 0 ? (
+            messages?.map((message) => (
+              <EachMessage key={message.id} message={message} />
             ))
           ) : (
             <Box className="h-full mt-3 space-y-2 border-none rounded-none">
@@ -180,7 +174,7 @@ export default function Chat({}: Props) {
           )}
         </div>
 
-        {currentUser && <SendingMessage setMessagesValue={setMessagesValue} />}
+        {currentUser && <SendingMessage />}
       </div>
     </div>
   );
