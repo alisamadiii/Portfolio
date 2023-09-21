@@ -93,7 +93,11 @@ export default function EachMessage({ message }: Props) {
           </Text>
         )}
         {message.files && (
-          <div className="grid grid-cols-2 gap-1 mb-2 overflow-hidden rounded">
+          <div
+            className={`grid gap-1 mb-2 overflow-hidden rounded ${
+              message.files.length > 1 ? "grid-cols-2" : ""
+            }`}
+          >
             {message.files.map((url, index) => (
               <Image
                 key={index}

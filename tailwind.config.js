@@ -16,7 +16,7 @@ module.exports = {
         chat: "527px",
       },
       maxWidth: {
-        message: "208px",
+        message: "268px",
       },
       minWidth: {
         message: "42px",
