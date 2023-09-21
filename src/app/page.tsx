@@ -15,7 +15,6 @@ import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
-import { useInView } from "react-intersection-observer";
 
 // Icons
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";

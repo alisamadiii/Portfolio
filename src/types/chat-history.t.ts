@@ -3,6 +3,7 @@ type MessageValue = {
   message: string;
   user_uid: number;
   reply: string;
+  files: string[];
 };
 
 type SingleUser = {

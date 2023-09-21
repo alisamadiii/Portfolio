@@ -74,7 +74,7 @@ export default function Chat({}: Props) {
     const gettingAllMessage = async () => {
       const { data, error } = await supabase
         .from("chat-history")
-        .select("id, message, user_uid, reply");
+        .select("id, message, user_uid, reply, files");
 
       setMessages(data!);
     };

@@ -92,6 +92,20 @@ export default function EachMessage({ message }: Props) {
             {messages.find((m) => m.id == message.reply)?.message}
           </Text>
         )}
+        {message.files && (
+          <div className="grid grid-cols-2 gap-1 mb-2 overflow-hidden rounded">
+            {message.files.map((url, index) => (
+              <Image
+                key={index}
+                src={url}
+                className="object-cover w-full h-full"
+                width={300}
+                height={300}
+                alt=""
+              />
+            ))}
+          </div>
+        )}
         <Text size={12} className="select-none">
           {message.message}
         </Text>

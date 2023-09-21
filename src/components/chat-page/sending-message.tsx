@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -13,12 +13,18 @@ import { useChatStore } from "@/context/Chat.context";
 import { Text } from "../ui/text";
 
 import { AiOutlineClose } from "react-icons/ai";
+import { FileUploaded } from "@/types/index.t";
+import Image from "next/image";
+import { RotatingLines } from "react-loader-spinner";
 
 type Props = {};
 
 export default function SendingMessage({}: Props) {
   const [message, setMassage] = useState("");
+  const [files, setFiles] = useState<FileUploaded[]>([]);
   const { messages, setMessages, replyId, setReplyId } = useChatStore();
+
+  const [loading, setLoading] = useState(false);
 
   const [label, { height }] = useMeasure();
 
@@ -35,15 +41,45 @@ export default function SendingMessage({}: Props) {
 
   const submittingMessage = async (e: any) => {
     e.preventDefault();
+    setLoading(true);
     if (message.length == 0) return;
 
-    const data = await supabase.from("chat-history").insert([
-      {
-        user_uid: currentUser.user.user_metadata.provider_id,
-        message,
-        reply: replyId,
-      },
-    ]);
+    const imagesURl: string[] = [];
+
+    if (files.length > 0) {
+      const uploadingFiles = Array.from(files).map(async (file: any) => {
+        const uploading = await supabase.storage
+          .from("chat")
+          .upload(`${file.name}`, file);
+        console.log(`uploaded - ${file.name}`);
+        const { data } = await supabase.storage
+          .from("chat")
+          .getPublicUrl(`${file.name}`);
+        imagesURl.push(data.publicUrl);
+      });
+
+      await Promise.all(uploadingFiles);
+
+      const data = await supabase.from("chat-history").insert([
+        {
+          user_uid: currentUser.user.user_metadata.provider_id,
+          message,
+          reply: replyId,
+          files: imagesURl,
+        },
+      ]);
+      setLoading(false);
+      setFiles([]);
+    } else {
+      const data = await supabase.from("chat-history").insert([
+        {
+          user_uid: currentUser.user.user_metadata.provider_id,
+          message,
+          reply: replyId,
+        },
+      ]);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -66,6 +102,7 @@ export default function SendingMessage({}: Props) {
                 user_uid: payload.new.user_uid,
                 id: payload.new.id,
                 reply: payload.new.reply,
+                files: payload.new.files,
               },
             ]);
             setMassage("");
@@ -86,6 +123,15 @@ export default function SendingMessage({}: Props) {
     };
   }, [supabase, messages]);
 
+  // Importing File
+  const importingFile = async (e: ChangeEvent) => {
+    const target = e.target as HTMLInputElement;
+    const files = target.files;
+
+    // @ts-ignore
+    setFiles(Array.from(files));
+  };
+
   return (
     <form
       onSubmit={submittingMessage}
@@ -96,6 +142,22 @@ export default function SendingMessage({}: Props) {
         ref={label}
         className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2`}
       >
+        {files.length > 0 && (
+          <div className="flex w-full gap-2 mb-2">
+            {files.map((file, index) => (
+              <div key={index}>
+                <Image
+                  // @ts-ignore
+                  src={URL.createObjectURL(file)}
+                  width={40}
+                  height={40}
+                  alt=""
+                  className="object-cover w-10 h-10 rounded"
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <AnimatePresence>
           {replyId && (
             <motion.div
@@ -136,12 +198,30 @@ export default function SendingMessage({}: Props) {
             value={message}
             onChange={(e) => setMassage(e.target.value)}
           />
-          <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
+          <label>
+            <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
+            <input
+              type="file"
+              className="hidden"
+              multiple
+              onChange={(event) => importingFile(event)}
+            />
+          </label>
         </div>
       </Label>
       {/* Send */}
       <button className="p-2 rounded-full bg-foreground text-background">
-        <CustomIcon icon="send" />
+        {loading ? (
+          <RotatingLines
+            strokeColor="black"
+            strokeWidth="3"
+            animationDuration="1"
+            width="14"
+            visible={true}
+          />
+        ) : (
+          <CustomIcon icon="send" />
+        )}
       </button>
     </form>
   );

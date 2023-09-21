@@ -6,6 +6,15 @@ interface FramerMotionType extends Variants {
   exit: Variant;
 }
 
+interface FileUploaded {
+  lastModified: number;
+  lastModifiedDate: string;
+  name: string;
+  size: number;
+  type: string;
+  webkitRelativePath: string;
+}
+
 type TechIcon =
   | "html"
   | "css"
@@ -22,4 +31,4 @@ interface TechnologyType {
   description: string;
 }
 
-export type { FramerMotionType, TechIcon, TechnologyType };
+export type { FramerMotionType, FileUploaded, TechIcon, TechnologyType };
