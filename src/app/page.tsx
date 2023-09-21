@@ -22,6 +22,7 @@ import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
 import { Experience } from "@/lib/data";
 import { useToast } from "@/components/ui/use-toast";
 import { UserContext } from "@/context/User.context";
+import Technologies from "@/components/technologies";
 
 export default function Home() {
   const { toast } = useToast();
@@ -151,12 +152,14 @@ export default function Home() {
 
       <div className="px-6 space-y-32">
         <section className="flex flex-col items-center space-y-6">
-          <Text variant={"section-name"}>explore about me</Text>
+          <Text size={12} variant={"section-name"}>
+            explore about me
+          </Text>
           <NumberGradient gradient={1} number={1} title="About" />
           <Text
-            variant={"muted-lg"}
             size={20}
-            className="max-w-3xl mb-8 text-center max-md:text-base"
+            variant={"muted-lg"}
+            className="max-w-3xl mb-8 leading-8 text-center max-md:text-base"
             id="reveal-text"
           >
             I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience,
@@ -167,8 +170,10 @@ export default function Home() {
         </section>
 
         <section className="flex flex-col items-center space-y-6">
-          <Text variant={"section-name"}>experience with</Text>
-          <TechIcon />
+          <Text size={12} variant={"section-name"}>
+            experience with
+          </Text>
+          <Technologies />
         </section>
 
         <section>
@@ -202,7 +207,11 @@ export default function Home() {
                   <Text as="h3" size={24}>
                     {value.title}
                   </Text>
-                  <Text variant={"muted-sm"} className="!mt-1 !text-xs">
+                  <Text
+                    size={12}
+                    variant={"muted-sm"}
+                    className="!mt-1 !text-xs"
+                  >
                     {value.subtitle}
                   </Text>
                   <Text

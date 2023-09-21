@@ -6,4 +6,20 @@ interface FramerMotionType extends Variants {
   exit: Variant;
 }
 
-export type { FramerMotionType };
+type TechIcon =
+  | "html"
+  | "css"
+  | "js"
+  | "tailwind"
+  | "reactjs"
+  | "nextjs"
+  | "supabase";
+
+interface TechnologyType {
+  id: number;
+  title: string;
+  icon: TechIcon;
+  description: string;
+}
+
+export type { FramerMotionType, TechIcon, TechnologyType };

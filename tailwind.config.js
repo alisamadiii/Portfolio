@@ -120,7 +120,7 @@ module.exports = {
         xl: [
           "1.25rem",
           {
-            lineHeight: "1.5rem",
+            lineHeight: "2rem",
             letterSpacing: "-0.02rem",
             fontWeight: "600",
           },
