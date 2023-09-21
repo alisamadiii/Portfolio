@@ -15,18 +15,17 @@ import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
+import { useInView } from "react-intersection-observer";
 
 // Icons
-import TechIcon from "@/assets/Tech.icon";
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
+
 import { Experience } from "@/lib/data";
 import { useToast } from "@/components/ui/use-toast";
-import { UserContext } from "@/context/User.context";
 import Technologies from "@/components/technologies";
 
 export default function Home() {
   const { toast } = useToast();
-  const { currentUser } = useContext(UserContext);
 
   const [gradientColor, setGradientColor] = useState(1);
 
@@ -42,13 +41,13 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      // @ts-ignore
-      const LocomotiveScroll = (await import("locomotive-scroll")).default;
-      const locomotiveScroll = new LocomotiveScroll();
-    })();
-  }, []);
+  // useEffect(() => {
+  //   (async () => {
+  //     // @ts-ignore
+  //     const LocomotiveScroll = (await import("locomotive-scroll")).default;
+  //     const locomotiveScroll = new LocomotiveScroll();
+  //   })();
+  // }, []);
 
   useEffect(() => {
     const splitTypes = document.querySelectorAll("#reveal-text");
@@ -151,7 +150,7 @@ export default function Home() {
       </header>
 
       <div className="px-6 space-y-32">
-        <section className="flex flex-col items-center space-y-6">
+        <section className="flex flex-col items-center space-y-6" id="about">
           <Text size={12} variant={"section-name"}>
             explore about me
           </Text>
@@ -176,11 +175,11 @@ export default function Home() {
           <Technologies />
         </section>
 
-        <section>
+        <section id="project">
           <NumberGradient gradient={2} number={2} title="Projects" />
         </section>
 
-        <section className="space-y-20 overflow-hidden">
+        <section className="space-y-20 overflow-hidden" id="experience">
           <NumberGradient gradient={3} number={3} title="My Experience" />
           <VerticalTimeline lineColor="">
             {Experience.map((value) => (

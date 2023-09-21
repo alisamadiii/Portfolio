@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, Variants, motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
 
 import { Container } from "./ui/container";
 import { Button, buttonVariants } from "./ui/button";
@@ -71,6 +72,7 @@ export default function Navbar({}: Props) {
                 href={"/"}
                 onClick={UnderConstruction}
                 className={buttonVariants({
+                  size: "lg",
                   className: "w-full text-center text-background",
                 })}
               >
@@ -226,6 +228,7 @@ function ScrollNavbar() {
       {INITIAL_VALUE.map((value) => (
         <a
           key={value.id}
+          href={value.link}
           className={`relative inline-block py-2 text-center capitalize rounded-full isolate`}
           onClick={() => setCurrentSection(value.name)}
         >
