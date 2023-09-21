@@ -35,6 +35,30 @@ export default function Chat({}: Props) {
   };
 
   useEffect(() => {
+    const storingUserData = async () => {
+      const { data } = await supabase.from("users").select("*");
+
+      const findingExistedUser = data?.find(
+        (user) =>
+          user.provider_id == currentUser?.user.user_metadata.provider_id
+      );
+
+      if (!findingExistedUser) {
+        const userData = await supabase.from("users").insert([
+          {
+            email: currentUser?.user.user_metadata.email,
+            full_name: currentUser?.user.user_metadata.full_name,
+            avatar_url: currentUser?.user.user_metadata.avatar_url,
+            provider_id: currentUser?.user.user_metadata.provider_id,
+          },
+        ]);
+      }
+    };
+
+    storingUserData();
+  }, [currentUser]);
+
+  useEffect(() => {
     const textarea = document.querySelector("#message") as HTMLTextAreaElement;
 
     if (textarea) {
@@ -153,7 +177,7 @@ export default function Chat({}: Props) {
           ref={containerRef}
         >
           {messages?.length !== 0 ? (
-            messages?.map((message) => (
+            messages!.map((message) => (
               <EachMessage key={message.id} message={message} />
             ))
           ) : (
