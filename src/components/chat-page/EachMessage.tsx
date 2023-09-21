@@ -24,10 +24,7 @@ type Props = {
 };
 
 export default function EachMessage({ message }: Props) {
-  const [hoverData, setHoverData] = useState<{
-    hover?: boolean;
-    userData?: SingleUser | null;
-  }>({ hover: false, userData: null });
+  const [userData, setUserData] = useState<SingleUser | null>(null);
 
   const { toast } = useToast();
   const { currentUser } = UseUserContext();
@@ -53,13 +50,12 @@ export default function EachMessage({ message }: Props) {
   };
 
   const mouseEnter = async () => {
-    setHoverData({ hover: true });
     const { data } = await supabase
       .from("users")
       .select("*")
       .eq("provider_id", currentUser?.user.user_metadata.provider_id);
 
-    setHoverData({ userData: data![0], hover: true });
+    setUserData(data![0]);
   };
 
   const mouseLeave = () => {
@@ -69,7 +65,7 @@ export default function EachMessage({ message }: Props) {
   return (
     <ContextMenu>
       <ContextMenuTrigger
-        className={`relative w-auto min-w-message max-w-message border mb-2 p-2 rounded-lg ${
+        className={`relative group w-auto min-w-message max-w-message border mb-2 p-2 rounded-lg ${
           currentUser?.user.user_metadata.provider_id == message.user_uid
             ? "bg-foreground text-background ml-auto rounded-tr-none"
             : "rounded-tl-none"
@@ -99,36 +95,35 @@ export default function EachMessage({ message }: Props) {
         <Text size={12} className="select-none">
           {message.message}
         </Text>
-        {currentUser.user.user_metadata.provider_id !== message.user_uid &&
-          hoverData.hover && (
-            <div className="w-auto absolute right-0 translate-x-[calc(100%+8px)] bg-accents-1 -translate-y-1/2 top-1/2 p-1 rounded">
-              {hoverData.userData ? (
-                <div className="flex items-center gap-1">
-                  <Image
-                    src={hoverData.userData.avatar_url}
-                    width={14}
-                    height={14}
-                    alt=""
-                    className="rounded-full"
-                  />
-                  <div className="">
-                    <Text className="text-[8px]">
-                      {hoverData.userData.full_name}
-                    </Text>
-                    <Text className="text-[6px]">01:01pm</Text>
-                  </div>
+        {currentUser.user.user_metadata.provider_id !== message.user_uid && (
+          <div className="w-16 absolute right-0 translate-x-[calc(100%+8px)] bg-accents-1 top-1/2 p-1 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1/2 duration-100">
+            {userData ? (
+              <div className="flex items-center gap-1">
+                <Image
+                  src={userData.avatar_url}
+                  width={14}
+                  height={14}
+                  alt=""
+                  className="rounded-full"
+                />
+                <div className="">
+                  <Text className="text-[8px] truncate">
+                    {userData.full_name}
+                  </Text>
+                  <Text className="text-[6px]">01:01pm</Text>
                 </div>
-              ) : (
-                <div className="flex items-center gap-1">
-                  <Skeleton className="w-3 h-3" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-1 rounded-none w-9" />
-                    <Skeleton className="w-6 h-1 rounded-none" />
-                  </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Skeleton className="w-3 h-3" />
+                <div className="space-y-1">
+                  <Skeleton className="h-1 rounded-none w-9" />
+                  <Skeleton className="w-6 h-1 rounded-none" />
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        )}
       </ContextMenuTrigger>
       <ContextMenuContent className="bg-accents-1">
         {currentUser?.user.user_metadata.provider_id == message.user_uid && (
