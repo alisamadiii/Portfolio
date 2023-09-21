@@ -49,11 +49,11 @@ export default function EachMessage({ message }: Props) {
     setReplyId(id);
   };
 
-  const mouseEnter = async () => {
+  const mouseEnter = async (userId: number) => {
     const { data } = await supabase
       .from("users")
       .select("*")
-      .eq("provider_id", currentUser?.user.user_metadata.provider_id);
+      .eq("provider_id", userId);
 
     setUserData(data![0]);
   };
@@ -70,7 +70,7 @@ export default function EachMessage({ message }: Props) {
             ? "bg-foreground text-background ml-auto rounded-tr-none"
             : "rounded-tl-none"
         }`}
-        onMouseEnter={mouseEnter}
+        onMouseEnter={() => mouseEnter(message.user_uid)}
         onMouseLeave={mouseLeave}
       >
         {message.reply && (
@@ -96,7 +96,7 @@ export default function EachMessage({ message }: Props) {
           {message.message}
         </Text>
         {currentUser.user.user_metadata.provider_id !== message.user_uid && (
-          <div className="w-16 absolute right-0 translate-x-[calc(100%+8px)] bg-accents-1 top-1/2 p-1 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1/2 duration-100">
+          <div className="w-20 absolute right-0 translate-x-[calc(100%+8px)] bg-accents-1 top-1/2 p-1 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1/2 duration-100">
             {userData ? (
               <div className="flex items-center gap-1">
                 <Image
@@ -106,7 +106,7 @@ export default function EachMessage({ message }: Props) {
                   alt=""
                   className="rounded-full"
                 />
-                <div className="">
+                <div className="w-14">
                   <Text className="text-[8px] truncate">
                     {userData.full_name}
                   </Text>
