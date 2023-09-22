@@ -18,6 +18,7 @@ import { useChatStore } from "@/context/Chat.context";
 import { Skeleton } from "../ui/skeleton";
 import { Box } from "../ui/box";
 import Image from "next/image";
+import { getLastNameRoute } from "@/utils";
 
 type Props = {
   message: MessageValue;
@@ -30,7 +31,7 @@ export default function EachMessage({ message }: Props) {
   const { currentUser } = UseUserContext();
   const { setReplyId } = useChatStore();
 
-  const { messages, setMessages } = useChatStore();
+  const { messages } = useChatStore();
 
   const copyMessage = (value: string) => {
     navigator.clipboard.writeText(value);
@@ -42,6 +43,16 @@ export default function EachMessage({ message }: Props) {
 
   const deleteMessage = async (id: string) => {
     await supabase.from("chat-history").delete().eq("id", id);
+
+    if (message.files) {
+      await supabase.storage
+        .from("chat")
+        .remove(
+          message.files.map((file) =>
+            getLastNameRoute(file).replaceAll("%20", " ")
+          )
+        );
+    }
     console.log("deleted");
   };
 
@@ -144,7 +155,8 @@ export default function EachMessage({ message }: Props) {
         )}
       </ContextMenuTrigger>
       <ContextMenuContent className="bg-accents-1">
-        {currentUser?.user.user_metadata.provider_id == message.user_uid && (
+        {(currentUser?.user.user_metadata.provider_id == message.user_uid ||
+          process.env.NEXT_PUBLIC_OWNER) && (
           <>
             <ContextMenuItem
               className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
