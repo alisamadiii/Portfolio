@@ -136,7 +136,7 @@ export default function Navbar({}: Props) {
                   "flex items-center text-base md:text-sm border-b md:border-none hover:text-accents-7 h-12 md:h-auto duration-100 cursor-pointer",
               })}
             >
-              <a href="#" target={"_blank"}>
+              <a href="https://blog.alirezasamadi.com/" target={"_blank"}>
                 Blog
               </a>
             </li>
@@ -147,7 +147,7 @@ export default function Navbar({}: Props) {
                   "flex items-center text-base md:text-sm border-b md:border-none hover:text-accents-7 h-12 md:h-auto duration-100 cursor-pointer",
               })}
             >
-              <a href="#" target={"_blank"}>
+              <a href="https://store.alirezasamadi.com/" target={"_blank"}>
                 Products
               </a>
             </li>

@@ -124,7 +124,7 @@ export default function EachMessage({ message }: Props) {
         <Text size={12} className="select-none">
           {message.message}
         </Text>
-        {currentUser.user.user_metadata.provider_id !== message.user_uid && (
+        {currentUser?.user.user_metadata.provider_id !== message.user_uid && (
           <div className="w-20 absolute right-0 translate-x-[calc(100%+8px)] bg-accents-1 top-1/2 p-1 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1/2 duration-100">
             {userData ? (
               <div className="flex items-center gap-1">

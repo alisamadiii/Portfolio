@@ -1,8 +1,9 @@
 "use client";
 
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, memo, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { AnimatePresence, motion } from "framer-motion";
+import Compressor from "compressorjs";
 
 import { UseUserContext } from "@/context/User.context";
 import { Label } from "@/components/ui/label";
@@ -21,10 +22,11 @@ type Props = {};
 
 export default function SendingMessage({}: Props) {
   const [message, setMassage] = useState("");
-  const [files, setFiles] = useState<FileUploaded[]>([]);
+  const [files, setFiles] = useState<Blob[]>([]);
   const { messages, setMessages, replyId, setReplyId } = useChatStore();
 
   const [loading, setLoading] = useState(false);
+  const [uploadingLoading, setUploadingLoading] = useState(false);
 
   const [label, { height }] = useMeasure();
 
@@ -125,11 +127,33 @@ export default function SendingMessage({}: Props) {
 
   // Importing File
   const importingFile = async (e: ChangeEvent) => {
+    setUploadingLoading(true);
     const target = e.target as HTMLInputElement;
-    const files = target.files;
+    const uploadedFiles = target.files;
+
+    const compressedFiles: Blob[] = [];
 
     // @ts-ignore
-    setFiles(Array.from(files));
+    const compressing = Array.from(uploadedFiles).map((file) => {
+      return new Promise((resolve: any) => {
+        new Compressor(file, {
+          quality: 0.6,
+          success: (compressedResult) => {
+            compressedFiles.push(compressedResult);
+            resolve(); // Resolve this promise when all files are compressed.
+          },
+          error: (error) => {
+            console.error("Compression error:", error);
+          },
+        });
+      });
+    });
+
+    await Promise.all(compressing);
+
+    setFiles(compressedFiles);
+
+    setUploadingLoading(false);
   };
 
   return (
@@ -145,16 +169,7 @@ export default function SendingMessage({}: Props) {
         {files.length > 0 && (
           <div className="flex w-full gap-2 mb-2">
             {files.map((file, index) => (
-              <div key={index}>
-                <Image
-                  // @ts-ignore
-                  src={URL.createObjectURL(file)}
-                  width={40}
-                  height={40}
-                  alt=""
-                  className="object-cover w-10 h-10 rounded"
-                />
-              </div>
+              <DisplayingImageUploading key={index} file={file} />
             ))}
           </div>
         )}
@@ -199,11 +214,22 @@ export default function SendingMessage({}: Props) {
             onChange={(e) => setMassage(e.target.value)}
           />
           <label>
-            <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
+            {uploadingLoading ? (
+              <RotatingLines
+                strokeColor="white"
+                strokeWidth="3"
+                animationDuration="1"
+                width="14"
+                visible={true}
+              />
+            ) : (
+              <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
+            )}
             <input
               type="file"
               className="hidden"
               multiple
+              accept="image/*"
               onChange={(event) => importingFile(event)}
             />
           </label>
@@ -226,3 +252,20 @@ export default function SendingMessage({}: Props) {
     </form>
   );
 }
+
+const DisplayingImageUploading = memo(({ file }: { file: Blob }) => {
+  return (
+    <div>
+      <Image
+        // @ts-ignore
+        src={URL.createObjectURL(file)}
+        width={40}
+        height={40}
+        alt=""
+        className="object-cover w-10 h-10 rounded"
+      />
+    </div>
+  );
+});
+
+DisplayingImageUploading.displayName = "DisplayingImageUploading";
