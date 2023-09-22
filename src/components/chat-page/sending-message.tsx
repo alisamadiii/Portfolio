@@ -167,11 +167,15 @@ export default function SendingMessage({}: Props) {
         className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2`}
       >
         {files.length > 0 && (
-          <div className="flex w-full gap-2 mb-2">
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            className="flex w-full gap-2 mb-2 overflow-hidden"
+          >
             {files.map((file, index) => (
-              <DisplayingImageUploading key={index} file={file} />
+              <DisplayingImageUploading key={index} file={file} index={index} />
             ))}
-          </div>
+          </motion.div>
         )}
         <AnimatePresence>
           {replyId && (
@@ -253,19 +257,25 @@ export default function SendingMessage({}: Props) {
   );
 }
 
-const DisplayingImageUploading = memo(({ file }: { file: Blob }) => {
-  return (
-    <div>
-      <Image
-        // @ts-ignore
-        src={URL.createObjectURL(file)}
-        width={40}
-        height={40}
-        alt=""
-        className="object-cover w-10 h-10 rounded"
-      />
-    </div>
-  );
-});
+const DisplayingImageUploading = memo(
+  ({ index, file }: { index: number; file: Blob }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.02 }}
+      >
+        <Image
+          // @ts-ignore
+          src={URL.createObjectURL(file)}
+          width={40}
+          height={40}
+          alt=""
+          className="object-cover w-10 h-10 rounded"
+        />
+      </motion.div>
+    );
+  }
+);
 
 DisplayingImageUploading.displayName = "DisplayingImageUploading";
