@@ -179,3 +179,30 @@ html {
 textarea::-webkit-scrollbar {
   width: 0px;
 }
+
+#line-animation {
+  opacity: 0;
+  animation: line-animation 4s infinite linear;
+}
+
+#line-animation:nth-child(1) {
+  animation-delay: 1s;
+}
+#line-animation:nth-child(2) {
+  animation-delay: 2s;
+}
+#line-animation:nth-child(3) {
+  animation-delay: 3s;
+}
+#line-animation:nth-child(4) {
+  animation-delay: 4s;
+}
+
+@keyframes line-animation {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
