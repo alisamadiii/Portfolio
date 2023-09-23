@@ -15,6 +15,9 @@ module.exports = {
         dvh: "100dvh",
         chat: "527px",
       },
+      width: {
+        message: "268px",
+      },
       maxWidth: {
         message: "268px",
       },

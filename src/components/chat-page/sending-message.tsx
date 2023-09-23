@@ -164,7 +164,7 @@ export default function SendingMessage({}: Props) {
       {/* Inputs */}
       <Label
         ref={label}
-        className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2`}
+        className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2 focus-within:ring-2 ring-foreground duration-200`}
       >
         {files.length > 0 && (
           <motion.div

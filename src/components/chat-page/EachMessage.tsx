@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import type { MessageValue, SingleUser } from "@/types/chat-history.t";
 import { UseUserContext } from "@/context/User.context";
@@ -16,9 +17,14 @@ import { useToast } from "../ui/use-toast";
 import { supabase } from "@/utils/supabase";
 import { useChatStore } from "@/context/Chat.context";
 import { Skeleton } from "../ui/skeleton";
-import { Box } from "../ui/box";
 import Image from "next/image";
 import { getLastNameRoute } from "@/utils";
+
+// Icons
+import {
+  IoIosArrowDroprightCircle,
+  IoIosArrowDropleftCircle,
+} from "react-icons/io";
 
 type Props = {
   message: MessageValue;
@@ -26,6 +32,7 @@ type Props = {
 
 export default function EachMessage({ message }: Props) {
   const [userData, setUserData] = useState<SingleUser | null>(null);
+  const [currentImage, setCurrentImage] = useState(0);
 
   const { toast } = useToast();
   const { currentUser } = UseUserContext();
@@ -73,6 +80,19 @@ export default function EachMessage({ message }: Props) {
     // setHoverData({ hover: false, userData: null });
   };
 
+  // Changing Image
+  const changingImage = (action: "increase" | "decrease") => {
+    if (action == "increase") {
+      if (currentImage == message.files.length - 1) return;
+
+      setCurrentImage(currentImage + 1);
+    } else {
+      if (currentImage == 0) return;
+
+      setCurrentImage(currentImage - 1);
+    }
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger
@@ -104,21 +124,43 @@ export default function EachMessage({ message }: Props) {
           </Text>
         )}
         {message.files && (
-          <div
-            className={`grid gap-1 mb-2 overflow-hidden rounded ${
-              message.files.length > 1 ? "grid-cols-2" : ""
-            }`}
-          >
-            {message.files.map((url, index) => (
-              <Image
-                key={index}
-                src={url}
-                className="object-cover w-full h-full"
-                width={300}
-                height={300}
-                alt=""
-              />
-            ))}
+          <div className={`relative mb-2 overflow-hidden rounded w-[220px]`}>
+            <div className="relative flex items-center bg-accents-6/20 aspect-square">
+              <AnimatePresence initial={false}>
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ type: "tween" }}
+                  key={currentImage}
+                  className="absolute w-full"
+                >
+                  <Image
+                    src={message.files[currentImage]}
+                    className="object-cover w-full pointer-events-none select-none"
+                    width={300}
+                    height={300}
+                    alt=""
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            {message.files.length > 1 && (
+              <>
+                {currentImage !== 0 && (
+                  <IoIosArrowDropleftCircle
+                    className="absolute text-xl text-white -translate-y-1/2 shadow-lg cursor-pointer top-1/2 left-1"
+                    onClick={() => changingImage("decrease")}
+                  />
+                )}
+                {currentImage !== message.files.length - 1 && (
+                  <IoIosArrowDroprightCircle
+                    className="absolute text-xl text-white -translate-y-1/2 shadow-lg cursor-pointer top-1/2 right-1"
+                    onClick={() => changingImage("increase")}
+                  />
+                )}
+              </>
+            )}
           </div>
         )}
         <Text size={12} className="select-none">
