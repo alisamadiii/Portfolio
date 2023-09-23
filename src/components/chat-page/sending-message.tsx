@@ -136,7 +136,7 @@ export default function SendingMessage({}: Props) {
       className="flex items-center justify-between w-full gap-2 p-2 bg-background"
     >
       {/* Inputs */}
-      <Label
+      <div
         className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2 focus-within:ring-2 ring-foreground duration-200`}
       >
         {uploadedImage!.length > 0 && (
@@ -199,7 +199,7 @@ export default function SendingMessage({}: Props) {
             <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
           </div>
         </div>
-      </Label>
+      </div>
 
       {/* Send */}
       <button className="p-2 rounded-full bg-foreground text-background">

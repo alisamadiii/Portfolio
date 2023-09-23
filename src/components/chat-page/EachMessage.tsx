@@ -34,6 +34,8 @@ export default function EachMessage({ message }: Props) {
   const [userData, setUserData] = useState<SingleUser | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
 
+  const [deleted, setDeleted] = useState(false);
+
   const { toast } = useToast();
   const { currentUser } = UseUserContext();
   const { setReplyId } = useChatStore();
@@ -49,6 +51,8 @@ export default function EachMessage({ message }: Props) {
   };
 
   const deleteMessage = async (id: string) => {
+    setDeleted(true);
+
     await supabase.from("chat-history").delete().eq("id", id);
 
     if (message.files) {
@@ -96,11 +100,11 @@ export default function EachMessage({ message }: Props) {
   return (
     <ContextMenu>
       <ContextMenuTrigger
-        className={`relative group w-auto min-w-message max-w-message border mb-2 p-2 rounded-lg ${
+        className={`relative group w-auto min-w-message max-w-message border mb-2 p-2 rounded-lg transition-colors ${
           currentUser?.user.user_metadata.provider_id == message.user_uid
             ? "bg-foreground text-background ml-auto rounded-tr-none"
             : "rounded-tl-none"
-        }`}
+        } ${deleted && "!bg-error text-white animate-pulse"}`}
         onMouseEnter={() => mouseEnter(message.user_uid)}
         onMouseLeave={mouseLeave}
       >
