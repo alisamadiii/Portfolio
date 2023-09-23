@@ -1,9 +1,7 @@
 "use client";
 
-import React, { ChangeEvent, memo, useEffect, useState } from "react";
-import useMeasure from "react-use-measure";
+import React, { memo, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Compressor from "compressorjs";
 
 import { UseUserContext } from "@/context/User.context";
 import { Label } from "@/components/ui/label";
@@ -14,21 +12,26 @@ import { useChatStore } from "@/context/Chat.context";
 import { Text } from "../ui/text";
 
 import { AiOutlineClose } from "react-icons/ai";
-import { FileUploaded } from "@/types/index.t";
 import Image from "next/image";
 import { RotatingLines } from "react-loader-spinner";
+import AddingImages from "./adding-images";
 
 type Props = {};
 
 export default function SendingMessage({}: Props) {
   const [message, setMassage] = useState("");
-  const [files, setFiles] = useState<Blob[]>([]);
-  const { messages, setMessages, replyId, setReplyId } = useChatStore();
+  const {
+    messages,
+    setMessages,
+    replyId,
+    setReplyId,
+    uploadedImage,
+    setUploadedImage,
+  } = useChatStore();
+
+  const [isAddingImage, setIsAddingImage] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [uploadingLoading, setUploadingLoading] = useState(false);
-
-  const [label, { height }] = useMeasure();
 
   const { currentUser } = UseUserContext();
 
@@ -48,17 +51,19 @@ export default function SendingMessage({}: Props) {
 
     const imagesURl: string[] = [];
 
-    if (files.length > 0) {
-      const uploadingFiles = Array.from(files).map(async (file: any) => {
-        const uploading = await supabase.storage
-          .from("chat")
-          .upload(`${file.name}`, file);
-        console.log(`uploaded - ${file.name}`);
-        const { data } = await supabase.storage
-          .from("chat")
-          .getPublicUrl(`${file.name}`);
-        imagesURl.push(data.publicUrl);
-      });
+    if (uploadedImage.length > 0) {
+      const uploadingFiles = Array.from(uploadedImage).map(
+        async (file: any) => {
+          const uploading = await supabase.storage
+            .from("chat")
+            .upload(`${file.name}`, file);
+          console.log(`uploaded - ${file.name}`);
+          const { data } = await supabase.storage
+            .from("chat")
+            .getPublicUrl(`${file.name}`);
+          imagesURl.push(data.publicUrl);
+        }
+      );
 
       await Promise.all(uploadingFiles);
 
@@ -71,7 +76,7 @@ export default function SendingMessage({}: Props) {
         },
       ]);
       setLoading(false);
-      setFiles([]);
+      setUploadedImage([]);
     } else {
       const data = await supabase.from("chat-history").insert([
         {
@@ -125,37 +130,6 @@ export default function SendingMessage({}: Props) {
     };
   }, [supabase, messages]);
 
-  // Importing File
-  const importingFile = async (e: ChangeEvent) => {
-    setUploadingLoading(true);
-    const target = e.target as HTMLInputElement;
-    const uploadedFiles = target.files;
-
-    const compressedFiles: Blob[] = [];
-
-    // @ts-ignore
-    const compressing = Array.from(uploadedFiles).map((file) => {
-      return new Promise((resolve: any) => {
-        new Compressor(file, {
-          quality: 0.6,
-          success: (compressedResult) => {
-            compressedFiles.push(compressedResult);
-            resolve(); // Resolve this promise when all files are compressed.
-          },
-          error: (error) => {
-            console.error("Compression error:", error);
-          },
-        });
-      });
-    });
-
-    await Promise.all(compressing);
-
-    setFiles(compressedFiles);
-
-    setUploadingLoading(false);
-  };
-
   return (
     <form
       onSubmit={submittingMessage}
@@ -163,16 +137,15 @@ export default function SendingMessage({}: Props) {
     >
       {/* Inputs */}
       <Label
-        ref={label}
         className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2 focus-within:ring-2 ring-foreground duration-200`}
       >
-        {files.length > 0 && (
+        {uploadedImage!.length > 0 && (
           <motion.div
             initial={{ height: 0 }}
             animate={{ height: "auto" }}
             className="flex w-full gap-2 mb-2 overflow-hidden"
           >
-            {files.map((file, index) => (
+            {uploadedImage?.map((file, index) => (
               <DisplayingImageUploading key={index} file={file} index={index} />
             ))}
           </motion.div>
@@ -217,28 +190,17 @@ export default function SendingMessage({}: Props) {
             value={message}
             onChange={(e) => setMassage(e.target.value)}
           />
-          <label>
-            {uploadingLoading ? (
-              <RotatingLines
-                strokeColor="white"
-                strokeWidth="3"
-                animationDuration="1"
-                width="14"
-                visible={true}
-              />
-            ) : (
-              <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
-            )}
-            <input
-              type="file"
-              className="hidden"
-              multiple
-              accept="image/*"
-              onChange={(event) => importingFile(event)}
-            />
-          </label>
+
+          {/* Opening */}
+          <div
+            onClick={() => setIsAddingImage(true)}
+            className="cursor-pointer"
+          >
+            <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
+          </div>
         </div>
       </Label>
+
       {/* Send */}
       <button className="p-2 rounded-full bg-foreground text-background">
         {loading ? (
@@ -253,18 +215,43 @@ export default function SendingMessage({}: Props) {
           <CustomIcon icon="send" />
         )}
       </button>
+
+      {/* Adding images */}
+      <AnimatePresence>
+        {isAddingImage && <AddingImages setIsVisible={setIsAddingImage} />}
+      </AnimatePresence>
     </form>
   );
 }
 
+import { IoMdClose } from "react-icons/io";
+
 const DisplayingImageUploading = memo(
   ({ index, file }: { index: number; file: Blob }) => {
+    const { uploadedImage, setUploadedImage } = useChatStore();
+
+    const deletingFile = (file: Blob | File) => {
+      const filterImages = uploadedImage.filter(
+        (image) => image.name !== file.name
+      );
+
+      setUploadedImage(filterImages);
+    };
+
     return (
       <motion.div
+        layout
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: index * 0.02 }}
+        transition={{ duration: 0.4 }}
+        className="relative"
       >
+        <div
+          className="absolute top-0 right-0 p-px text-white rounded-full cursor-pointer bg-background"
+          onClick={() => deletingFile(file)}
+        >
+          <IoMdClose className="text-xxs" />
+        </div>
         <Image
           // @ts-ignore
           src={URL.createObjectURL(file)}
