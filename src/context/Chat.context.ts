@@ -9,6 +9,8 @@ interface ChatStore {
   setReplyId: (a: string | number | null) => void;
   uploadedImage: Blob[] | File[];
   setUploadedImage: (a: Blob[] | File[]) => void;
+  uploadWay: 1 | 2;
+  setUploadWay: (a: 1 | 2) => void;
 }
 
 const useChatStore = create<ChatStore>()((set) => ({
@@ -18,6 +20,8 @@ const useChatStore = create<ChatStore>()((set) => ({
   setReplyId: (replyId: string | number | null) => set({ replyId }),
   uploadedImage: [],
   setUploadedImage: (uploadedImage: Blob[] | File[]) => set({ uploadedImage }),
+  uploadWay: 1,
+  setUploadWay: (uploadWay: 1 | 2) => set({ uploadWay }),
 }));
 
 export { useChatStore };

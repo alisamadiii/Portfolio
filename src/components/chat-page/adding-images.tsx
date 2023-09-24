@@ -15,6 +15,9 @@ import { useChatStore } from "@/context/Chat.context";
 import { RotatingLines } from "react-loader-spinner";
 import Image from "next/image";
 import { useToast } from "@/components/ui/use-toast";
+import { Switch } from "../ui/switch";
+import LinkInput from "./link-input";
+import { Button } from "../ui/button";
 
 type Props = {
   setIsVisible: (a: boolean) => void;
@@ -25,6 +28,8 @@ export default function AddingImages({ setIsVisible }: Props) {
 
   const [loading, setLoading] = useState(false);
   const [isDroppingFile, setIsDroppingFile] = useState(false);
+
+  const { uploadWay, setUploadWay } = useChatStore();
 
   const { toast } = useToast();
 
@@ -141,49 +146,63 @@ export default function AddingImages({ setIsVisible }: Props) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -40, opacity: 0 }}
           transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
-          className={`w-full max-w-md p-4 border rounded-xl bg-accents-1 space-y-2`}
+          className={`w-full max-w-md p-4 border rounded-xl bg-accents-1 flex flex-col gap-2`}
         >
-          <Label
-            className={`flex w-full gap-3 p-4 duration-200 rounded cursor-pointer bg-accents-2/10 hover:bg-accents-2/20 ${
-              loading && "bg-success-darker text-white"
-            } ${uploadedImage.length == 5 && "bg-error-dark text-white"}`}
-          >
-            {loading ? (
-              <RotatingLines
-                strokeColor="white"
-                strokeWidth="3"
-                animationDuration="1"
-                width="16"
-                visible={true}
-              />
-            ) : (
-              <FaFolderOpen className="text-xl" />
-            )}
-            <div>
-              <Text>Choose from media</Text>
-              <Text size={12}>
-                You can only upload image - Maximum {uploadedImage.length} / 5
-                Images
-              </Text>
-            </div>
-            <input
-              type="file"
-              multiple
-              disabled={uploadedImage.length == 5}
-              accept="image/*"
-              className="hidden"
-              onChange={importingFile}
-            />
-          </Label>
+          {uploadWay == 1 ? (
+            <>
+              <Label
+                className={`flex w-full gap-3 p-4 duration-200 rounded cursor-pointer bg-accents-2/10 hover:bg-accents-2/20 ${
+                  loading && "bg-success-darker text-white"
+                } ${uploadedImage.length == 5 && "bg-error-dark text-white"}`}
+              >
+                {loading ? (
+                  <RotatingLines
+                    strokeColor="white"
+                    strokeWidth="3"
+                    animationDuration="1"
+                    width="16"
+                    visible={true}
+                  />
+                ) : (
+                  <FaFolderOpen className="text-xl" />
+                )}
+                <div>
+                  <Text>Choose from media</Text>
+                  <Text size={12}>
+                    You can only upload image - Maximum {uploadedImage.length} /
+                    5 Images
+                  </Text>
+                </div>
+                <input
+                  type="file"
+                  multiple
+                  disabled={uploadedImage.length == 5}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={importingFile}
+                />
+              </Label>
 
-          {uploadedImage.length !== 5 && (
-            <Text size={10} className="text-right opacity-50">
-              Drag and Drop
-            </Text>
+              {uploadedImage.length !== 5 && (
+                <Text size={10} className="text-right opacity-50">
+                  Drag and Drop
+                </Text>
+              )}
+            </>
+          ) : (
+            <div className="relative pr-6 space-y-2">
+              <LinkInput />
+              <LinkInput />
+              <LinkInput />
+              <div className="absolute right-0 flex flex-row-reverse gap-2 ml-auto translate-y-4">
+                <Button type="button">Add</Button>
+                <Button type="button">Preview</Button>
+              </div>
+            </div>
           )}
 
           {/* Notes */}
-          {uploadedImage.length > 1 && (
+          {uploadedImage.length > 0 && (
             <div className="flex w-full gap-3 p-4 text-white duration-200 border rounded bg-success-darker">
               {loading ? (
                 <RotatingLines
@@ -208,13 +227,26 @@ export default function AddingImages({ setIsVisible }: Props) {
                       width={25}
                       height={25}
                       alt=""
-                      className="object-cover rounded-full shadow-[0_0_0_1px_white]"
+                      className="object-cover rounded-full w-6 h-6 shadow-[0_0_0_1px_white]"
                     />
                   ))}
                 </div>
               </div>
             </div>
           )}
+
+          <Label
+            className={`flex items-center justify-end gap-2 text-xs cursor-pointer select-none ${
+              uploadWay == 1 ? "mt-4" : "mt-20"
+            }`}
+          >
+            Use link instead
+            <Switch
+              checked={uploadWay == 2}
+              disabled={uploadedImage.length > 0}
+              onCheckedChange={(checked) => setUploadWay(checked ? 2 : 1)}
+            />
+          </Label>
         </Rect>
       ) : (
         <div key={"dropping-uploading"} className="text-white animate-bounce">
