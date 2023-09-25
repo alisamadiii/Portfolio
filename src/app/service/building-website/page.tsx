@@ -183,46 +183,95 @@ export default function BuildingWebsite({}: Props) {
             {allTestimonials ? "show less" : "show more"}
           </Button>
         </section>
+      </Container>
 
-        <section className="flex flex-col items-center gap-16">
-          <Badge>what clients are saying</Badge>
-          <div className="flex items-start overflow-hidden gap-11 fade-out-testimonial group">
-            {Testimonials.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className="w-full p-8 space-y-6 text-center border max-w-testimonial rounded-xl animation-testimonial bg-background"
-                style={{ flex: "0 0 auto" }}
-              >
-                <Text size={24} className="leading-8 text-foreground">
-                  {testimonial.testimonial}
-                </Text>
-                <Text size={16} variant={"space-grotesk"}>
-                  {testimonial.headline}
-                </Text>
-                <Text size={24} className="text-foreground">
-                  {testimonial.from}
-                </Text>
-              </div>
-            ))}
-            {Testimonials.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className="w-full p-8 space-y-6 text-center border max-w-testimonial rounded-xl animation-testimonial"
-                style={{ flex: "0 0 auto" }}
-              >
-                <Text size={24} className="leading-8 text-foreground">
-                  {testimonial.testimonial}
-                </Text>
-                <Text size={16} variant={"space-grotesk"}>
-                  {testimonial.headline}
-                </Text>
-                <Text size={24} className="text-foreground">
-                  {testimonial.from}
-                </Text>
-              </div>
-            ))}
+      <Container
+        size={"2xl"}
+        className="relative flex flex-col items-center gap-16 overflow-hidden fade-out-testimonial"
+      >
+        <Badge>what clients are saying</Badge>
+        <div className="flex items-start gap-11 group">
+          {Testimonials.map((testimonial) => (
+            <div
+              key={testimonial.id}
+              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animation-testimonial bg-background"
+              style={{ flex: "0 0 auto" }}
+            >
+              <Text className="text-lg leading-8 text-foreground md:text-2xl">
+                {testimonial.testimonial}
+              </Text>
+              <Text size={16} variant={"space-grotesk"}>
+                {testimonial.headline}
+              </Text>
+              <Text size={24} className="text-foreground">
+                {testimonial.from}
+              </Text>
+            </div>
+          ))}
+          {Testimonials.map((testimonial) => (
+            <div
+              key={testimonial.id}
+              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animation-testimonial"
+              style={{ flex: "0 0 auto" }}
+            >
+              <Text className="text-lg leading-8 text-foreground md:text-2xl">
+                {testimonial.testimonial}
+              </Text>
+              <Text size={16} variant={"space-grotesk"}>
+                {testimonial.headline}
+              </Text>
+              <Text size={24} className="text-foreground">
+                {testimonial.from}
+              </Text>
+            </div>
+          ))}
+        </div>
+      </Container>
+
+      <Container
+        size={"2xl"}
+        className="relative mt-32 overflow-hidden isolate"
+      >
+        <div className="absolute top-0 left-0 z-20 w-full h-px bg-gradient-to-l from-transparent via-white to-transparent" />
+        <div
+          className="absolute inset-0 w-full h-full -z-10 opacity-10"
+          style={{
+            background:
+              "radial-gradient(50% 50% at 50% 0,rgba(255, 255, 255,.5) 0,rgba(255, 255, 255,0) 100%)",
+          }}
+        />
+        <Container
+          size={"xl"}
+          className="grid items-center gap-8 py-32 text-center md:text-start md:grid-cols-3"
+        >
+          <div className="flex flex-col items-center gap-2 md:items-start md:col-span-2">
+            <Text
+              className={`max-w-4xl text-center text-5xl lg:text-6xl text-transparent bg-gradient-to-tr bg-clip-text from-gradient-1-from to-gradient-1-to`}
+            >
+              Client
+            </Text>
+            <Text
+              size={20}
+              variant={"muted-lg"}
+              className="font-normal line-clamp-2"
+            >
+              If you are looking for someone to build a website then send us
+              your information
+            </Text>
           </div>
-        </section>
+          <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
+            <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to w-32 px-0">
+              <Button
+                variant={"primary"}
+                size={"lg"}
+                className="w-full px-0"
+                // onClick={UnderConstruction}
+              >
+                Here
+              </Button>
+            </div>
+          </div>
+        </Container>
       </Container>
     </main>
   );

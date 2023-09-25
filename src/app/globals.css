@@ -55,7 +55,7 @@ html {
 }
 
 .animation-testimonial {
-  animation: testimonial-moving 15s infinite linear;
+  animation: testimonial-moving 20s infinite linear;
 }
 
 @keyframes testimonial-moving {
