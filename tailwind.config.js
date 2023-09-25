@@ -20,6 +20,7 @@ module.exports = {
       },
       maxWidth: {
         message: "268px",
+        testimonial: "800px",
       },
       minWidth: {
         message: "42px",

@@ -35,6 +35,34 @@ html {
   }
 }
 
+.fade-out-testimonial {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0),
+    black,
+    rgba(0, 0, 0, 0)
+  );
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0),
+    black,
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.animation-testimonial {
+  animation: testimonial-moving 15s infinite linear;
+}
+
+@keyframes testimonial-moving {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-316%);
+  }
+}
+
 @layer base {
   :root {
     --geist-background: 0 0% 100%;
@@ -182,20 +210,20 @@ textarea::-webkit-scrollbar {
 
 #line-animation {
   opacity: 0;
-  animation: line-animation 4s infinite linear;
+  animation: line-animation 2s infinite linear;
 }
 
 #line-animation:nth-child(1) {
-  animation-delay: 1s;
+  animation-delay: 0.5s;
 }
 #line-animation:nth-child(2) {
-  animation-delay: 2s;
+  animation-delay: 1s;
 }
 #line-animation:nth-child(3) {
-  animation-delay: 3s;
+  animation-delay: 1.5s;
 }
 #line-animation:nth-child(4) {
-  animation-delay: 4s;
+  animation-delay: 2s;
 }
 
 @keyframes line-animation {

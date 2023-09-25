@@ -93,4 +93,105 @@ const Technologies: TechnologyType[] = [
   },
 ];
 
-export { ServiceINITIAL_VALUE, Experience, Technologies };
+const Pricing = [
+  {
+    id: 1,
+    title: "level 1",
+    price: 30,
+    job: {
+      design: false,
+      coding: false,
+      animation: false,
+    },
+  },
+  {
+    id: 2,
+    title: "level 2",
+    price: 60,
+    job: {
+      design: true,
+      coding: true,
+      animation: false,
+    },
+  },
+  {
+    id: 3,
+    title: "level 3",
+    price: 70,
+    job: {
+      design: false,
+      coding: true,
+      animation: true,
+    },
+  },
+  {
+    id: 4,
+    title: "level 4",
+    price: 120,
+    job: {
+      design: true,
+      coding: true,
+      animation: true,
+    },
+  },
+];
+
+const FrequentlyAskedQuestions = [
+  {
+    id: 1,
+    question: "What is website development?",
+    answer:
+      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.",
+  },
+  {
+    id: 2,
+    question: "What is website development?",
+    answer:
+      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.",
+  },
+  {
+    id: 3,
+    question: "What is website development?",
+    answer:
+      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.",
+  },
+  {
+    id: 4,
+    question: "What is website development?",
+    answer:
+      "Website development is the process of creating and building a website from scratch or making modifications to an existing website. It involves various tasks such as web design, front-end and back-end coding, content creation, and website optimization.",
+  },
+];
+
+const Testimonials = [
+  {
+    id: 1,
+    from: "Sharyph",
+    headline: "AI Buff",
+    testimonial:
+      "I needed a site and contacted Ali, then had a call and the next day my site was full ready and was published. I was literally shocked and amazed by the speed and energy of Ali. If you are in need of a site development, Ali is your man",
+  },
+  {
+    id: 2,
+    from: "Muzzammil",
+    headline: "AI Buff",
+    testimonial:
+      "I needed a site and contacted Ali, then had a call and the next day my site was full ready and was published. I was literally shocked and amazed by the speed and energy of Ali. If you are in need of a site development, Ali is your man",
+  },
+  {
+    id: 3,
+    from: "Avie",
+    headline: "AI Buff",
+    testimonial:
+      "Ali astoundingly completed the fundamental aspects of the website in a mere day, demonstrating exceptional speed and accuracy tailored to our specific requirements. His self-directed approach eliminated the need for detailed instructions or oversight, proving his remarkable independence and expertise. The site's performance and speed are excellent, and the design deserves high praise. Ali's work is a testament to his phenomenal skills and commitment.",
+  },
+];
+
+export {
+  ServiceINITIAL_VALUE,
+  Experience,
+  Technologies,
+  Pricing,
+  FrequentlyAskedQuestions,
+  Testimonials,
+};

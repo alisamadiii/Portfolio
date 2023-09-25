@@ -20,13 +20,13 @@ function Item({ children, checked, value, ...props }: ItemProps) {
 
   return (
     <Label
-      className={`p-4 border rounded duration-150 cursor-pointer ${
+      className={`p-4 border rounded duration-150 cursor-pointer w-full ${
         checked
           ? "bg-success-darker border-success"
-          : "bg-black hover:border-accents-6"
+          : "bg-gradient-to-t from-black to-accents-1 border-background hover:border-accents-6"
       }`}
     >
-      <div>{children}</div>
+      <div className="space-y-2">{children}</div>
       <div className="relative flex justify-center mt-4">
         <input
           ref={inputRef}
