@@ -150,14 +150,20 @@ export default function BuildingWebsite({}: Props) {
         <section className="flex flex-col items-center gap-16">
           <Badge>frequently asked questions</Badge>
           <motion.div
-            className={`grid gap-6 md:grid-cols-2 [--height:700px] md:[--height:400px] ${
+            className={`grid gap-6 md:grid-cols-2 overflow-hidden [--height:700px] md:[--height:400px] ${
               !allTestimonials && "fade-out-faq"
             }`}
             initial={{ height: "var(--height)" }}
             animate={{ height: allTestimonials ? "auto" : "var(--height)" }}
+            transition={{ duration: 0.3 }}
           >
             {FrequentlyAskedQuestions.map((question) => (
-              <div key={question.id} className="space-y-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                key={question.id}
+                className="space-y-2"
+              >
                 <Text size={14} className="font-medium text-foreground">
                   {question.question}
                 </Text>
@@ -172,7 +178,7 @@ export default function BuildingWebsite({}: Props) {
                       .replaceAll("@", ""),
                   }}
                 />
-              </div>
+              </motion.div>
             ))}
           </motion.div>
           <Button
@@ -255,8 +261,8 @@ export default function BuildingWebsite({}: Props) {
               variant={"muted-lg"}
               className="font-normal line-clamp-2"
             >
-              If you are looking for someone to build a website then send us
-              your information
+              If you're in need of a website builder, please provide us with
+              your information.
             </Text>
           </div>
           <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
@@ -267,7 +273,7 @@ export default function BuildingWebsite({}: Props) {
                 className="w-full px-0"
                 // onClick={UnderConstruction}
               >
-                Here
+                Send now
               </Button>
             </div>
           </div>
