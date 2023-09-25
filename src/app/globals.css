@@ -49,6 +49,10 @@ html {
     rgba(0, 0, 0, 0)
   );
 }
+.fade-out-faq {
+  -webkit-mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
+}
 
 .animation-testimonial {
   animation: testimonial-moving 15s infinite linear;

@@ -18,6 +18,7 @@ import { ServiceINITIAL_VALUE } from "@/lib/data";
 import { ServicePopupAnimation } from "@/lib/animation";
 import { useToast } from "./ui/use-toast";
 import { UseUserContext } from "@/context/User.context";
+import { usePathname } from "next/navigation";
 
 type Props = {};
 
@@ -26,7 +27,7 @@ export default function Navbar({}: Props) {
   const [isScrollNavbar, setIsScrollNavbar] = useState(false);
   const [isService, setIsService] = useState(false);
 
-  const { currentUser } = UseUserContext();
+  const pathName = usePathname();
 
   const { toast } = useToast();
 
@@ -190,7 +191,9 @@ export default function Navbar({}: Props) {
         </Container>
       </nav>
 
-      <AnimatePresence>{isScrollNavbar && <ScrollNavbar />}</AnimatePresence>
+      <AnimatePresence>
+        {isScrollNavbar && pathName == "/" && <ScrollNavbar />}
+      </AnimatePresence>
     </>
   );
 }

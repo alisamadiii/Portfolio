@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 
 import * as Choicebox from "@/components/choicebox";
 
@@ -16,8 +17,9 @@ type Props = {};
 
 export default function BuildingWebsite({}: Props) {
   const [selectedOption, setSelectedOption] = React.useState<null | string>(
-    null
+    "1"
   );
+  const [allTestimonials, setAllTestimonials] = useState(false);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedOption(event.target.value);
@@ -26,19 +28,19 @@ export default function BuildingWebsite({}: Props) {
   return (
     <main className="relative overflow-hidden">
       <div
-        className="absolute max-2xl:bottom-0 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-[0.85] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-[0.85] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
         id="line-animation"
       />
       <div
-        className="absolute max-2xl:bottom-0 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-90 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-90 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
         id="line-animation"
       />
       <div
-        className="absolute max-2xl:bottom-0 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-95 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-95 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
         id="line-animation"
       />
       <div
-        className="absolute max-2xl:bottom-0 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
         id="line-animation"
       />
       <header
@@ -147,16 +149,39 @@ export default function BuildingWebsite({}: Props) {
 
         <section className="flex flex-col items-center gap-16">
           <Badge>frequently asked questions</Badge>
-          <div className="grid gap-6 md:grid-cols-2">
+          <motion.div
+            className={`grid gap-6 md:grid-cols-2 [--height:700px] md:[--height:400px] ${
+              !allTestimonials && "fade-out-faq"
+            }`}
+            initial={{ height: "var(--height)" }}
+            animate={{ height: allTestimonials ? "auto" : "var(--height)" }}
+          >
             {FrequentlyAskedQuestions.map((question) => (
               <div key={question.id} className="space-y-2">
                 <Text size={14} className="font-medium text-foreground">
                   {question.question}
                 </Text>
-                <Text size={14}>{question.answer}</Text>
+                <Text
+                  size={14}
+                  dangerouslySetInnerHTML={{
+                    __html: question.answer
+                      .replaceAll(
+                        /@(\w+)/g,
+                        '<span class="text-success font-bold">@$1</span>'
+                      )
+                      .replaceAll("@", ""),
+                  }}
+                />
               </div>
             ))}
-          </div>
+          </motion.div>
+          <Button
+            size={"sm"}
+            onClick={() => setAllTestimonials(!allTestimonials)}
+            className={`${!allTestimonials && "-translate-y-12"}`}
+          >
+            {allTestimonials ? "show less" : "show more"}
+          </Button>
         </section>
 
         <section className="flex flex-col items-center gap-16">
@@ -165,7 +190,7 @@ export default function BuildingWebsite({}: Props) {
             {Testimonials.map((testimonial) => (
               <div
                 key={testimonial.id}
-                className="w-full p-8 space-y-6 text-center border max-w-testimonial rounded-xl animation-testimonial"
+                className="w-full p-8 space-y-6 text-center border max-w-testimonial rounded-xl animation-testimonial bg-background"
                 style={{ flex: "0 0 auto" }}
               >
                 <Text size={24} className="leading-8 text-foreground">
