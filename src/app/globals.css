@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --blue-color: hsl(212 100% 48%);
+}
+
 * {
   scroll-behavior: smooth;
 }

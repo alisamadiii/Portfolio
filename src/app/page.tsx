@@ -80,6 +80,8 @@ export default function Home() {
 
   return (
     <main>
+      <div className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full top-1/2 w-96 h-96 bg-foreground/5 blur-[100px] -z-50" />
+
       <header
         className={containerVariants({
           size: "xl",

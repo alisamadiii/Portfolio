@@ -93,7 +93,18 @@ const Technologies: TechnologyType[] = [
   },
 ];
 
-const Pricing = [
+export type PricingType = {
+  id: number;
+  title: string;
+  price: number;
+  job: {
+    design: boolean;
+    coding: boolean;
+    animation: boolean;
+  };
+};
+
+const Pricing: PricingType[] = [
   {
     id: 1,
     title: "level 1",

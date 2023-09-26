@@ -5,24 +5,27 @@ import { motion } from "framer-motion";
 
 import * as Choicebox from "@/components/choicebox";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import Technologies from "@/components/technologies";
 import { FrequentlyAskedQuestions, Pricing, Testimonials } from "@/lib/data";
 import CustomIcon from "@/assets/CustomIcon";
+import { useContactStore } from "@/context/Contact.context";
+import Link from "next/link";
+import Price from "@/components/Price";
 
 type Props = {};
 
 export default function BuildingWebsite({}: Props) {
-  const [selectedOption, setSelectedOption] = React.useState<null | string>(
-    "1"
-  );
+  const { level, setLevel } = useContactStore();
+
   const [allTestimonials, setAllTestimonials] = useState(false);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedOption(event.target.value);
+    // @ts-ignore
+    setLevel(event.target.value);
   };
 
   return (
@@ -81,58 +84,7 @@ export default function BuildingWebsite({}: Props) {
           <Badge>Pricing</Badge>
           <div className="flex flex-wrap w-full gap-6">
             {Pricing.map((price) => (
-              <Choicebox.Group
-                key={price.id}
-                className="flex gap-4 grow basis-56"
-              >
-                <Choicebox.Item
-                  name="choicebox"
-                  value={price.id.toString()}
-                  checked={selectedOption == price.id.toString()}
-                  onChange={handleRadioChange}
-                >
-                  <div className="flex justify-between">
-                    <Text
-                      as="h3"
-                      size={24}
-                      className={`${
-                        selectedOption == price.id.toString() &&
-                        "text-foreground"
-                      }`}
-                    >
-                      {price.title}
-                    </Text>
-                    <div className="-space-y-1 text-right">
-                      <Text as="h3" size={16}>
-                        ${price.price}
-                      </Text>
-                      <Text as="h3" size={10}>
-                        per page
-                      </Text>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Text as="h3" size={16} className="flex items-center gap-4">
-                      Design{" "}
-                      <CustomIcon
-                        icon={price.job.design ? "service" : "no-service"}
-                      />
-                    </Text>
-                    <Text as="h3" size={16} className="flex items-center gap-4">
-                      Coding{" "}
-                      <CustomIcon
-                        icon={price.job.coding ? "service" : "no-service"}
-                      />
-                    </Text>
-                    <Text as="h3" size={16} className="flex items-center gap-4">
-                      Animation{" "}
-                      <CustomIcon
-                        icon={price.job.animation ? "service" : "no-service"}
-                      />
-                    </Text>
-                  </div>
-                </Choicebox.Item>
-              </Choicebox.Group>
+              <Price key={price.id} price={price} />
             ))}
           </div>
           <article className="flex flex-col items-center gap-8 text-center">
@@ -261,20 +213,23 @@ export default function BuildingWebsite({}: Props) {
               variant={"muted-lg"}
               className="font-normal line-clamp-2"
             >
-              If you're in need of a website builder, please provide us with
-              your information.
+              If you&apos;re in need of a website builder, please provide us
+              with your information.
             </Text>
           </div>
           <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
-            <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to w-32 px-0">
-              <Button
-                variant={"primary"}
-                size={"lg"}
-                className="w-full px-0"
+            <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to px-0">
+              <Link
+                href={"/service/building-website/contact"}
+                className={buttonVariants({
+                  variant: "primary",
+                  size: "lg",
+                  className: "inline-block",
+                })}
                 // onClick={UnderConstruction}
               >
                 Send now
-              </Button>
+              </Link>
             </div>
           </div>
         </Container>
