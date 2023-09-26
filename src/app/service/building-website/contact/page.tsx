@@ -1,8 +1,9 @@
 "use client";
 
 import { Container } from "@/components/ui/container";
-import React, { useEffect, useState } from "react";
+import React, { DragEvent, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Compressor from "compressorjs";
 
 import { Pricing } from "@/lib/data";
 import Price from "@/components/Price";
@@ -13,6 +14,7 @@ import { UseUserContext } from "@/context/User.context";
 import { supabase } from "@/utils/supabase";
 
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+import DesignPage from "@/components/contact/design";
 
 type Props = {};
 
@@ -20,13 +22,15 @@ const INITIAL_TABS = [1, 2, 3, 4, 5];
 
 export default function Contact({}: Props) {
   const [tab, setTab] = useState(1);
+  const [isDroppingFile, setIsDroppingFile] = useState(false);
 
-  const { name, setName, email, setEmail, page, setPage } = useContactStore();
+  const { name, setName, email, setEmail, page, setPage, level, design } =
+    useContactStore();
   const { currentUser } = UseUserContext();
 
   useEffect(() => {
     const handleBeforeUnload = (e: any) => {
-      if (tab == 2) {
+      if (tab != 1) {
         e.preventDefault();
         e.returnValue = ""; // Some browsers require this line to display the confirmation dialog
       }
@@ -69,10 +73,12 @@ export default function Contact({}: Props) {
   return (
     <Container
       size={"2xl"}
-      className="flex flex-col items-start justify-center gap-12 min-h-[100dvh] max-md:mt-20"
+      className="flex flex-col items-start md:justify-center gap-12 min-h-[100dvh] max-md:mt-20"
     >
       <div
-        className={`w-full flex gap-12 mb-12 ${tab == 6 && "justify-center"}`}
+        className={`w-full flex gap-4 md:gap-12 mb-12 ${
+          tab == 6 && "justify-center"
+        }`}
       >
         {INITIAL_TABS.map((tabValue) => (
           <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
@@ -132,7 +138,14 @@ export default function Contact({}: Props) {
           </Text>
           <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
             <Text size={20} className="font-normal">
-              {page}
+              <motion.span
+                initial={{ y: 4 }}
+                animate={{ y: 0 }}
+                className="inline-block"
+                key={page}
+              >
+                {page}
+              </motion.span>
             </Text>
             <div>
               <IoIosArrowUp
@@ -151,9 +164,13 @@ export default function Contact({}: Props) {
       {/* Tab5 */}
       {tab == 5 && (
         <section className="w-full space-y-8">
-          <Text size={48} className="text-foreground">
-            Your UI design
-          </Text>
+          {Pricing.find((price) => price.title == level)?.job.design ? (
+            <Text size={48} className="text-success">
+              I will make the design :)
+            </Text>
+          ) : (
+            <DesignPage />
+          )}
         </section>
       )}
 
@@ -176,7 +193,8 @@ export default function Contact({}: Props) {
             disabled={
               tab == 6 ||
               (tab == 2 && name.length == 0) ||
-              (tab == 3 && !email.includes(".com"))
+              (tab == 3 && !email.includes(".com")) ||
+              (tab == 5 && design.url?.length == 0)
             }
           >
             Next

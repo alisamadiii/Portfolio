@@ -111,7 +111,7 @@ const Pricing: PricingType[] = [
     price: 30,
     job: {
       design: false,
-      coding: false,
+      coding: true,
       animation: false,
     },
   },

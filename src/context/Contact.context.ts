@@ -11,6 +11,11 @@ interface ContactType {
   setEmail: (a: string) => void;
   page: number;
   setPage: (a: number) => void;
+  design: {
+    url?: string;
+    files?: File[];
+  };
+  setDesign: (a: { url?: string; files?: File[] }) => void;
 }
 
 const useContactStore = create<ContactType>()((set) => ({
@@ -22,6 +27,8 @@ const useContactStore = create<ContactType>()((set) => ({
   setEmail: (email: string) => set({ email }),
   page: 1,
   setPage: (page: number) => set({ page }),
+  design: { url: "", files: [] },
+  setDesign: (design: { url?: string; files?: File[] }) => set({ design }),
 }));
 
 export { useContactStore };
