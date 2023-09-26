@@ -8,11 +8,11 @@ import { Pricing } from "@/lib/data";
 import Price from "@/components/Price";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import CustomIcon from "@/assets/CustomIcon";
-import { useToast } from "@/components/ui/use-toast";
 import { useContactStore } from "@/context/Contact.context";
 import { UseUserContext } from "@/context/User.context";
 import { supabase } from "@/utils/supabase";
+
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 type Props = {};
 
@@ -21,7 +21,7 @@ const INITIAL_TABS = [1, 2, 3, 4, 5];
 export default function Contact({}: Props) {
   const [tab, setTab] = useState(1);
 
-  const { name, setName, email, setEmail } = useContactStore();
+  const { name, setName, email, setEmail, page, setPage } = useContactStore();
   const { currentUser } = UseUserContext();
 
   useEffect(() => {
@@ -53,6 +53,17 @@ export default function Contact({}: Props) {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/service/building-website/contact`,
       },
     });
+  };
+
+  // page number
+  const pageNumber = (action: "increase" | "decrease") => {
+    if (action == "increase") {
+      if (page == 20) return;
+      setPage(page + 1);
+    } else if (action == "decrease") {
+      if (page == 1) return;
+      setPage(page - 1);
+    }
   };
 
   return (
@@ -119,6 +130,21 @@ export default function Contact({}: Props) {
           <Text size={48} className="text-foreground">
             How many pages do you want to make?
           </Text>
+          <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
+            <Text size={20} className="font-normal">
+              {page}
+            </Text>
+            <div>
+              <IoIosArrowUp
+                className="cursor-pointer"
+                onClick={() => pageNumber("increase")}
+              />
+              <IoIosArrowDown
+                className="cursor-pointer"
+                onClick={() => pageNumber("decrease")}
+              />
+            </div>
+          </div>
         </section>
       )}
 
@@ -213,8 +239,33 @@ function Tab({ tabValue, tabState }: TabProps) {
             exit={{ scale: 0 }}
             transition={{ duration: 0.2 }}
             key={"completed"}
+            className="text-white"
           >
-            <CustomIcon icon="service" className="w-6 text-white" />
+            <svg
+              width="24"
+              height="100%"
+              viewBox="0 0 14 14"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <motion.circle
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                cx="7"
+                cy="7"
+                r="6.65"
+                stroke="currentColor"
+                stroke-width="0.7"
+              />
+              <motion.path
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.3 }}
+                d="M3 7L5.5 10L11 5"
+                stroke="currentColor"
+                stroke-width="0.8"
+              />
+            </svg>
           </motion.span>
         ) : (
           <motion.span

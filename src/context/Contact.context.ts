@@ -9,6 +9,8 @@ interface ContactType {
   setName: (a: string) => void;
   email: string;
   setEmail: (a: string) => void;
+  page: number;
+  setPage: (a: number) => void;
 }
 
 const useContactStore = create<ContactType>()((set) => ({
@@ -18,6 +20,8 @@ const useContactStore = create<ContactType>()((set) => ({
   setName: (name: string) => set({ name }),
   email: "",
   setEmail: (email: string) => set({ email }),
+  page: 1,
+  setPage: (page: number) => set({ page }),
 }));
 
 export { useContactStore };
