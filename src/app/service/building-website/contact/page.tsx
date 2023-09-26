@@ -10,6 +10,9 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import CustomIcon from "@/assets/CustomIcon";
 import { useToast } from "@/components/ui/use-toast";
+import { useContactStore } from "@/context/Contact.context";
+import { UseUserContext } from "@/context/User.context";
+import { supabase } from "@/utils/supabase";
 
 type Props = {};
 
@@ -18,10 +21,15 @@ const INITIAL_TABS = [1, 2, 3, 4, 5];
 export default function Contact({}: Props) {
   const [tab, setTab] = useState(1);
 
+  const { name, setName, email, setEmail } = useContactStore();
+  const { currentUser } = UseUserContext();
+
   useEffect(() => {
     const handleBeforeUnload = (e: any) => {
-      e.preventDefault();
-      e.returnValue = ""; // Some browsers require this line to display the confirmation dialog
+      if (tab == 2) {
+        e.preventDefault();
+        e.returnValue = ""; // Some browsers require this line to display the confirmation dialog
+      }
     };
 
     // Set up the beforeunload event handler
@@ -32,6 +40,20 @@ export default function Contact({}: Props) {
       window.onbeforeunload = null;
     };
   }, []);
+
+  useEffect(() => {
+    currentUser && setEmail(currentUser.user.email);
+    currentUser && setName(currentUser.user.user_metadata.full_name);
+  }, [currentUser]);
+
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/service/building-website/contact`,
+      },
+    });
+  };
 
   return (
     <Container
@@ -65,6 +87,13 @@ export default function Contact({}: Props) {
           <Text size={48} className="text-foreground">
             Your name
           </Text>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+          />
         </section>
       )}
 
@@ -74,6 +103,13 @@ export default function Contact({}: Props) {
           <Text size={48} className="text-foreground">
             Your email
           </Text>
+          <input
+            type="text"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+          />
         </section>
       )}
 
@@ -108,9 +144,20 @@ export default function Contact({}: Props) {
         <Button onClick={() => setTab(tab - 1)} disabled={tab == 1}>
           Prev
         </Button>
-        <Button onClick={() => setTab(tab + 1)} disabled={tab == 6}>
-          Next
-        </Button>
+        {currentUser ? (
+          <Button
+            onClick={() => setTab(tab + 1)}
+            disabled={
+              tab == 6 ||
+              (tab == 2 && name.length == 0) ||
+              (tab == 3 && !email.includes(".com"))
+            }
+          >
+            Next
+          </Button>
+        ) : (
+          <Button onClick={signInWithGoogle}>Sign in to continue</Button>
+        )}
       </div>
     </Container>
   );

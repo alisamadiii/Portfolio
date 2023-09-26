@@ -7,7 +7,7 @@ import { HTMLMotionProps, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "flex items-center justify-center gap-2 rounded font-medium tracking-[-0.02rem] transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-focus-button disabled:cursor-not-allowed",
+  "flex items-center justify-center gap-2 rounded font-medium tracking-[-0.02rem] transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-focus-button disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       size: {
