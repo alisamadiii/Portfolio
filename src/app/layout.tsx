@@ -2,8 +2,15 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({
+  display: "swap",
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-inter",
+});
+
 const space_grotesk = Space_Grotesk({
+  display: "swap",
   subsets: ["latin"],
   variable: "--font-space-grotesk",
 });

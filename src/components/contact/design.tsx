@@ -63,7 +63,7 @@ export default function DesignPage({}: Props) {
           </Label>
         )}
         {design.files!.length > 0 && (
-          <motion.div className="columns-3">
+          <motion.div className="columns-2 md:columns-3 lg:columns-4">
             {design.files!.map((file) => (
               <File key={file.size} file={file} />
             ))}

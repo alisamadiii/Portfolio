@@ -6,4 +6,14 @@ function getLastNameRoute(url: string) {
   return lastNameRoute;
 }
 
-export { getLastNameRoute };
+function convertingBytes(value: number) {
+  const kilobytes = value / 1024;
+
+  if (kilobytes <= 1204) {
+    return `${(value / 1024).toFixed(2)} KB`;
+  }
+
+  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+export { getLastNameRoute, convertingBytes };

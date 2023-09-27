@@ -3,15 +3,12 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 
-import * as Choicebox from "@/components/choicebox";
-
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import Technologies from "@/components/technologies";
 import { FrequentlyAskedQuestions, Pricing, Testimonials } from "@/lib/data";
-import CustomIcon from "@/assets/CustomIcon";
 import { useContactStore } from "@/context/Contact.context";
 import Link from "next/link";
 import Price from "@/components/Price";
