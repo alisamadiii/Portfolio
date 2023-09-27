@@ -17,8 +17,8 @@ export default function TechIcon({ icon }: Props) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M0 0L2.6299 30.6L14.433 34L26.2667 30.5966L28.9 0H0ZM23.4141 7.2624L23.2492 9.1647L23.1761 10.0079H9.333L9.6645 13.8499H22.848L22.7596 14.8597L21.9096 24.7401L21.8552 25.3742L14.45 27.5026L14.433 27.5094L7.021 25.3742L6.5161 19.4803H10.1473L10.404 22.4757L14.433 23.6028H14.4364L18.4722 22.4723L18.8921 17.6052H6.3529L5.4638 7.2624L5.3788 6.2543H23.5008L23.4141 7.2624Z"
           fill="url(#paint0_linear_215_42)"
         />
@@ -31,8 +31,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>
@@ -58,8 +58,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>
@@ -85,8 +85,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>
@@ -112,8 +112,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>
@@ -143,8 +143,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
           <linearGradient
             id="paint1_linear_215_46"
@@ -154,8 +154,8 @@ export default function TechIcon({ icon }: Props) {
             y2="20.5133"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>
@@ -193,8 +193,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34.0058"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>
@@ -220,8 +220,8 @@ export default function TechIcon({ icon }: Props) {
             y2="34"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#505050" />
+            <stop stopColor="white" />
+            <stop offset="1" stopColor="#505050" />
           </linearGradient>
         </defs>
       </svg>

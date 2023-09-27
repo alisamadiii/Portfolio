@@ -274,7 +274,7 @@ function Tab({ tabValue, tabState }: TabProps) {
                 cy="7"
                 r="6.65"
                 stroke="currentColor"
-                stroke-width="0.7"
+                strokeWidth="0.7"
               />
               <motion.path
                 initial={{ pathLength: 0 }}
@@ -282,7 +282,7 @@ function Tab({ tabValue, tabState }: TabProps) {
                 transition={{ delay: 0.3 }}
                 d="M3 7L5.5 10L11 5"
                 stroke="currentColor"
-                stroke-width="0.8"
+                strokeWidth="0.8"
               />
             </svg>
           </motion.span>

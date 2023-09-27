@@ -55,6 +55,7 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
-    "@types/react-vertical-timeline-component": "^3.3.3"
+    "@types/react-vertical-timeline-component": "^3.3.3",
+    "encoding": "^0.1.13"
   }
 }
