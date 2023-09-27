@@ -16,6 +16,8 @@ interface ContactType {
     files?: File[];
   };
   setDesign: (a: { url?: string; files?: File[] }) => void;
+  isDelete: boolean;
+  setIsDelete: (a: boolean) => void;
 }
 
 const useContactStore = create<ContactType>()((set) => ({
@@ -29,6 +31,8 @@ const useContactStore = create<ContactType>()((set) => ({
   setPage: (page: number) => set({ page }),
   design: { url: "", files: [] },
   setDesign: (design: { url?: string; files?: File[] }) => set({ design }),
+  isDelete: false,
+  setIsDelete: (isDelete: boolean) => set({ isDelete }),
 }));
 
 export { useContactStore };

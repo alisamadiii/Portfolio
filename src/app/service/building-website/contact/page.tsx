@@ -22,7 +22,6 @@ const INITIAL_TABS = [1, 2, 3, 4, 5];
 
 export default function Contact({}: Props) {
   const [tab, setTab] = useState(1);
-  const [isDroppingFile, setIsDroppingFile] = useState(false);
 
   const { name, setName, email, setEmail, page, setPage, level, design } =
     useContactStore();
@@ -71,139 +70,141 @@ export default function Contact({}: Props) {
   };
 
   return (
-    <Container
-      size={"2xl"}
-      className="flex flex-col items-start md:justify-center gap-12 min-h-[100dvh] max-md:mt-20"
-    >
-      <div
-        className={`w-full flex gap-4 md:gap-12 mb-12 ${
-          tab == 6 && "justify-center"
-        }`}
+    <div className="overflow-hidden">
+      <Container
+        size={"2xl"}
+        className="flex flex-col items-start gap-12 pb-12 mt-20 md:mt-24"
       >
-        {INITIAL_TABS.map((tabValue) => (
-          <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
-        ))}
-      </div>
-      {/* Tab 1 */}
-      {tab == 1 && (
-        <section className="w-full space-y-8">
-          <Text size={48} className="text-foreground">
-            Which products do you want?
-          </Text>
-          <div className="flex flex-wrap w-full gap-6">
-            {Pricing.map((price) => (
-              <Price key={price.id} price={price} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Tab2 */}
-      {tab == 2 && (
-        <section className="w-full space-y-8">
-          <Text size={48} className="text-foreground">
-            Your name
-          </Text>
-          <input
-            type="text"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
-          />
-        </section>
-      )}
-
-      {/* Tab3 */}
-      {tab == 3 && (
-        <section className="w-full space-y-8">
-          <Text size={48} className="text-foreground">
-            Your email
-          </Text>
-          <input
-            type="text"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
-          />
-        </section>
-      )}
-
-      {/* Tab4 */}
-      {tab == 4 && (
-        <section className="w-full space-y-8">
-          <Text size={48} className="text-foreground">
-            How many pages do you want to make?
-          </Text>
-          <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
-            <Text size={20} className="font-normal">
-              <motion.span
-                initial={{ y: 4 }}
-                animate={{ y: 0 }}
-                className="inline-block"
-                key={page}
-              >
-                {page}
-              </motion.span>
+        <div
+          className={`w-full flex gap-4 md:gap-12 mb-12 ${
+            tab == 6 && "justify-center"
+          }`}
+        >
+          {INITIAL_TABS.map((tabValue) => (
+            <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
+          ))}
+        </div>
+        {/* Tab 1 */}
+        {tab == 1 && (
+          <section className="w-full space-y-8">
+            <Text size={48} className="text-foreground">
+              Which products do you want?
             </Text>
-            <div>
-              <IoIosArrowUp
-                className="cursor-pointer"
-                onClick={() => pageNumber("increase")}
-              />
-              <IoIosArrowDown
-                className="cursor-pointer"
-                onClick={() => pageNumber("decrease")}
-              />
+            <div className="flex flex-wrap w-full gap-6">
+              {Pricing.map((price) => (
+                <Price key={price.id} price={price} />
+              ))}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Tab5 */}
-      {tab == 5 && (
-        <section className="w-full space-y-8">
-          {Pricing.find((price) => price.title == level)?.job.design ? (
-            <Text size={48} className="text-success">
-              I will make the design :)
-            </Text>
-          ) : (
-            <DesignPage />
-          )}
-        </section>
-      )}
-
-      {/* Tab6 */}
-      {tab == 6 && (
-        <section className="w-full space-y-8">
-          <Text size={48} className="text-foreground">
-            Review page
-          </Text>
-        </section>
-      )}
-
-      <div className="flex gap-4">
-        <Button onClick={() => setTab(tab - 1)} disabled={tab == 1}>
-          Prev
-        </Button>
-        {currentUser ? (
-          <Button
-            onClick={() => setTab(tab + 1)}
-            disabled={
-              tab == 6 ||
-              (tab == 2 && name.length == 0) ||
-              (tab == 3 && !email.includes(".com")) ||
-              (tab == 5 && design.url?.length == 0)
-            }
-          >
-            Next
-          </Button>
-        ) : (
-          <Button onClick={signInWithGoogle}>Sign in to continue</Button>
+          </section>
         )}
-      </div>
-    </Container>
+
+        {/* Tab2 */}
+        {tab == 2 && (
+          <section className="w-full space-y-8">
+            <Text size={48} className="text-foreground">
+              Your name
+            </Text>
+            <input
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+            />
+          </section>
+        )}
+
+        {/* Tab3 */}
+        {tab == 3 && (
+          <section className="w-full space-y-8">
+            <Text size={48} className="text-foreground">
+              Your email
+            </Text>
+            <input
+              type="text"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+            />
+          </section>
+        )}
+
+        {/* Tab4 */}
+        {tab == 4 && (
+          <section className="w-full space-y-8">
+            <Text size={48} className="text-foreground">
+              How many pages do you want to make?
+            </Text>
+            <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
+              <Text size={20} className="font-normal">
+                <motion.span
+                  initial={{ y: 4 }}
+                  animate={{ y: 0 }}
+                  className="inline-block"
+                  key={page}
+                >
+                  {page}
+                </motion.span>
+              </Text>
+              <div>
+                <IoIosArrowUp
+                  className="cursor-pointer"
+                  onClick={() => pageNumber("increase")}
+                />
+                <IoIosArrowDown
+                  className="cursor-pointer"
+                  onClick={() => pageNumber("decrease")}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Tab5 */}
+        {tab == 5 && (
+          <section className="w-full space-y-8">
+            {Pricing.find((price) => price.title == level)?.job.design ? (
+              <Text size={48} className="text-success">
+                I will make the design :)
+              </Text>
+            ) : (
+              <DesignPage />
+            )}
+          </section>
+        )}
+
+        {/* Tab6 */}
+        {tab == 6 && (
+          <section className="w-full space-y-8">
+            <Text size={48} className="text-foreground">
+              Review page
+            </Text>
+          </section>
+        )}
+
+        <div className="flex gap-4">
+          <Button onClick={() => setTab(tab - 1)} disabled={tab == 1}>
+            Prev
+          </Button>
+          {currentUser ? (
+            <Button
+              onClick={() => setTab(tab + 1)}
+              disabled={
+                tab == 6 ||
+                (tab == 2 && name.length == 0) ||
+                (tab == 3 && !email.includes(".com")) ||
+                (tab == 5 && design.url?.length == 0)
+              }
+            >
+              Next
+            </Button>
+          ) : (
+            <Button onClick={signInWithGoogle}>Sign in to continue</Button>
+          )}
+        </div>
+      </Container>
+    </div>
   );
 }
 

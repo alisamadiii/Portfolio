@@ -90,19 +90,19 @@ dependencies:
     specifier: ^0.274.0
     version: 0.274.0(react@18.2.0)
   next:
-    specifier: 13.4.19
+    specifier: latest
     version: 13.4.19(@babel/core@7.22.11)(react-dom@18.2.0)(react@18.2.0)
   postcss:
     specifier: 8.4.29
     version: 8.4.29
   react:
-    specifier: 18.2.0
+    specifier: latest
     version: 18.2.0
   react-day-picker:
     specifier: ^8.8.1
     version: 8.8.1(date-fns@2.30.0)(react@18.2.0)
   react-dom:
-    specifier: 18.2.0
+    specifier: latest
     version: 18.2.0(react@18.2.0)
   react-icons:
     specifier: ^4.11.0
