@@ -1,5 +1,6 @@
 import React, { DragEvent, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import Compressor from "compressorjs";
 
 import { Text } from "../ui/text";
 import { useContactStore } from "@/context/Contact.context";
@@ -29,7 +30,28 @@ export default function DesignPage({}: Props) {
 
     const uploadedFiles = event.dataTransfer.files;
 
-    setDesign({ ...design, files: Array.from(uploadedFiles!) });
+    const compressedFiles: Blob[] = [];
+
+    const compressing = Array.from(uploadedFiles!).map((file) => {
+      if (file.type.startsWith("image/")) {
+        return new Promise((resolve: any) => {
+          new Compressor(file, {
+            quality: 0.6,
+            success: (compressedResult) => {
+              compressedFiles.push(compressedResult);
+              resolve(); // Resolve this promise when all files are compressed.
+            },
+            error: (error) => {
+              console.error("Compression error:", error);
+            },
+          });
+        });
+      }
+    });
+
+    await Promise.all(compressing);
+
+    setDesign({ ...design, files: compressedFiles });
     setIsDroppingFile(false);
   };
 

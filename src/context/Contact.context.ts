@@ -13,9 +13,9 @@ interface ContactType {
   setPage: (a: number) => void;
   design: {
     url?: string;
-    files?: File[];
+    files?: File[] | Blob[];
   };
-  setDesign: (a: { url?: string; files?: File[] }) => void;
+  setDesign: (a: { url?: string; files?: File[] | Blob[] }) => void;
   isDelete: boolean;
   setIsDelete: (a: boolean) => void;
 }
@@ -30,7 +30,8 @@ const useContactStore = create<ContactType>()((set) => ({
   page: 1,
   setPage: (page: number) => set({ page }),
   design: { url: "", files: [] },
-  setDesign: (design: { url?: string; files?: File[] }) => set({ design }),
+  setDesign: (design: { url?: string; files?: File[] | Blob[] }) =>
+    set({ design }),
   isDelete: false,
   setIsDelete: (isDelete: boolean) => set({ isDelete }),
 }));

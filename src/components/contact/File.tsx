@@ -7,14 +7,12 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 import { convertingBytes } from "@/utils";
 
 type Props = {
-  file: File;
+  file: File | Blob;
 };
 
 function File({ file }: Props) {
   //   const { setIsDelete } = useContactStore();
   const [isInformation, setIsInformation] = useState(false);
-
-  console.log(file);
 
   return (
     <motion.div
@@ -32,13 +30,7 @@ function File({ file }: Props) {
         animate={{ scale: isInformation ? 1.5 : 1 }}
         className={`w-full`}
       >
-        <Image
-          src={URL.createObjectURL(file)}
-          width={300}
-          height={600}
-          alt=""
-          className={`w-full h-full pointer-events-none rounded-xl duration-200`}
-        />
+        <FileDisplay file={file} />
       </motion.div>
       <AiOutlineInfoCircle
         className="absolute cursor-pointer top-4 right-4"
@@ -76,7 +68,7 @@ function File({ file }: Props) {
             <div>
               <Text size={10}>Modified</Text>
               <Text size={14} className="text-foreground">
-                {file.lastModified}
+                {/* {file.m} */}
               </Text>
             </div>
           </motion.div>
@@ -86,4 +78,18 @@ function File({ file }: Props) {
   );
 }
 
-export default memo(File);
+export default File;
+
+const FileDisplay = memo(({ file }: { file: Blob | File }) => {
+  return (
+    <Image
+      src={URL.createObjectURL(file)}
+      width={300}
+      height={600}
+      alt=""
+      className={`w-full h-full pointer-events-none rounded-xl duration-200`}
+    />
+  );
+});
+
+FileDisplay.displayName = "FileDisplay";
