@@ -15,6 +15,7 @@ import { supabase } from "@/utils/supabase";
 
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import DesignPage from "@/components/contact/design";
+import Image from "next/image";
 
 type Props = {};
 
@@ -73,11 +74,13 @@ export default function Contact({}: Props) {
     <div className="overflow-hidden">
       <Container
         size={"2xl"}
-        className="flex flex-col items-start gap-12 pb-12 mt-20 md:mt-24"
+        className={`flex gap-12 pb-12 mt-20 md:mt-24 ${
+          tab == 6 ? "flex-row items-center" : "flex-col items-start"
+        }`}
       >
         <div
-          className={`w-full flex gap-4 md:gap-12 mb-12 ${
-            tab == 6 && "justify-center"
+          className={`flex gap-4 md:gap-12 mb-12 ${
+            tab == 6 && "justify-center flex-col"
           }`}
         >
           {INITIAL_TABS.map((tabValue) => (
@@ -176,33 +179,81 @@ export default function Contact({}: Props) {
 
         {/* Tab6 */}
         {tab == 6 && (
-          <section className="w-full space-y-8">
-            <Text size={48} className="text-foreground">
+          <section className="w-full space-y-12 grow">
+            <Text size={48} className="text-center text-foreground">
               Review page
             </Text>
+            <div className="w-full max-w-md p-8 mx-auto space-y-6 border rounded-xl bg-accents-1">
+              <div className="grid items-center grid-cols-2">
+                <Text size={24} className="text-foreground">
+                  Name
+                </Text>
+                <Text>{name}</Text>
+              </div>
+              <div className="grid items-center grid-cols-2">
+                <Text size={24} className="text-foreground">
+                  Email
+                </Text>
+                <Text>{email}</Text>
+              </div>
+              <div className="grid items-center grid-cols-2">
+                <Text size={24} className="text-foreground">
+                  UI design
+                </Text>
+                <Text>{design.url}</Text>
+              </div>
+              <div className="grid items-center grid-cols-2">
+                <Text size={24} className="text-foreground">
+                  Page
+                </Text>
+                <Text>{page}</Text>
+              </div>
+              <div className="flex h-32 gap-2 overflow-auto custom-scrollbar fade-out-review_page_files">
+                {design.files?.map((file, index) => (
+                  <Image
+                    key={index}
+                    src={URL.createObjectURL(file)}
+                    width={300}
+                    height={600}
+                    alt=""
+                    className={`w-full h-full pointer-events-none rounded duration-200`}
+                  />
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Button size={"md"} onClick={() => setTab(tab - 1)}>
+                  Edit
+                </Button>
+                <Button variant={"primary"} size={"md"}>
+                  Send
+                </Button>
+              </div>
+            </div>
           </section>
         )}
 
-        <div className="flex gap-4">
-          <Button onClick={() => setTab(tab - 1)} disabled={tab == 1}>
-            Prev
-          </Button>
-          {currentUser ? (
-            <Button
-              onClick={() => setTab(tab + 1)}
-              disabled={
-                tab == 6 ||
-                (tab == 2 && name.length == 0) ||
-                (tab == 3 && !email.includes(".com")) ||
-                (tab == 5 && design.url?.length == 0)
-              }
-            >
-              Next
+        {tab !== 6 && (
+          <div className="flex gap-4">
+            <Button onClick={() => setTab(tab - 1)} disabled={tab == 1}>
+              Prev
             </Button>
-          ) : (
-            <Button onClick={signInWithGoogle}>Sign in to continue</Button>
-          )}
-        </div>
+            {currentUser ? (
+              <Button
+                onClick={() => setTab(tab + 1)}
+                disabled={
+                  tab == 6 ||
+                  (tab == 2 && name.length == 0) ||
+                  (tab == 3 && !email.includes(".com")) ||
+                  (tab == 5 && design.url?.length == 0)
+                }
+              >
+                Next
+              </Button>
+            ) : (
+              <Button onClick={signInWithGoogle}>Sign in to continue</Button>
+            )}
+          </div>
+        )}
       </Container>
     </div>
   );

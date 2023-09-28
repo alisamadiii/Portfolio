@@ -32,6 +32,7 @@ html {
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 2px;
+    height: 2px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: white;
@@ -65,6 +66,11 @@ html {
 .fade-out-file_information {
   -webkit-mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
   mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
+}
+
+.fade-out-review_page_files {
+  -webkit-mask-image: linear-gradient(to right, black 90%, rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(to right, black 90%, rgba(0, 0, 0, 0));
 }
 
 .animation-testimonial {

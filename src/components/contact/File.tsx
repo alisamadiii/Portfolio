@@ -14,6 +14,8 @@ function File({ file }: Props) {
   //   const { setIsDelete } = useContactStore();
   const [isInformation, setIsInformation] = useState(false);
 
+  console.log(file);
+
   return (
     <motion.div
       drag
@@ -68,7 +70,8 @@ function File({ file }: Props) {
             <div>
               <Text size={10}>Modified</Text>
               <Text size={14} className="text-foreground">
-                {/* {file.m} */}
+                {/* @ts-ignore */}
+                {file.lastModified}
               </Text>
             </div>
           </motion.div>
