@@ -2,7 +2,7 @@
 
 import { Container } from "@/components/ui/container";
 import React, { DragEvent, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, Variants, motion } from "framer-motion";
 import Compressor from "compressorjs";
 
 import { Pricing } from "@/lib/data";
@@ -70,8 +70,23 @@ export default function Contact({}: Props) {
     }
   };
 
+  const enteringAnimation: Variants = {
+    hidden: {
+      opacity: 0,
+      x: -30,
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        type: "tween",
+        duration: 0.2,
+      },
+    },
+  };
+
   return (
-    <div className="overflow-hidden">
+    <div className="h-screen overflow-auto bg-gradient-to-t from-accents-1 to-black">
       <Container
         size={"2xl"}
         className={`flex gap-12 pb-12 mt-20 md:mt-24 ${
@@ -88,149 +103,172 @@ export default function Contact({}: Props) {
           ))}
         </div>
         {/* Tab 1 */}
-        {tab == 1 && (
-          <section className="w-full space-y-8">
-            <Text size={48} className="text-foreground">
-              Which products do you want?
-            </Text>
-            <div className="flex flex-wrap w-full gap-6">
-              {Pricing.map((price) => (
-                <Price key={price.id} price={price} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Tab2 */}
-        {tab == 2 && (
-          <section className="w-full space-y-8">
-            <Text size={48} className="text-foreground">
-              Your name
-            </Text>
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
-            />
-          </section>
-        )}
-
-        {/* Tab3 */}
-        {tab == 3 && (
-          <section className="w-full space-y-8">
-            <Text size={48} className="text-foreground">
-              Your email
-            </Text>
-            <input
-              type="text"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
-            />
-          </section>
-        )}
-
-        {/* Tab4 */}
-        {tab == 4 && (
-          <section className="w-full space-y-8">
-            <Text size={48} className="text-foreground">
-              How many pages do you want to make?
-            </Text>
-            <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
-              <Text size={20} className="font-normal">
-                <motion.span
-                  initial={{ y: 4 }}
-                  animate={{ y: 0 }}
-                  className="inline-block"
-                  key={page}
-                >
-                  {page}
-                </motion.span>
+        <AnimatePresence mode="wait">
+          {tab == 1 ? (
+            <motion.section
+              key={1}
+              variants={enteringAnimation}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full space-y-8"
+            >
+              <Text size={48} className="text-foreground">
+                Which products do you want?
               </Text>
-              <div>
-                <IoIosArrowUp
-                  className="cursor-pointer"
-                  onClick={() => pageNumber("increase")}
-                />
-                <IoIosArrowDown
-                  className="cursor-pointer"
-                  onClick={() => pageNumber("decrease")}
-                />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Tab5 */}
-        {tab == 5 && (
-          <section className="w-full space-y-8">
-            {Pricing.find((price) => price.title == level)?.job.design ? (
-              <Text size={48} className="text-success">
-                I will make the design :)
-              </Text>
-            ) : (
-              <DesignPage />
-            )}
-          </section>
-        )}
-
-        {/* Tab6 */}
-        {tab == 6 && (
-          <section className="w-full space-y-12 grow">
-            <Text size={48} className="text-center text-foreground">
-              Review page
-            </Text>
-            <div className="w-full max-w-md p-8 mx-auto space-y-6 border rounded-xl bg-accents-1">
-              <div className="grid items-center grid-cols-2">
-                <Text size={24} className="text-foreground">
-                  Name
-                </Text>
-                <Text>{name}</Text>
-              </div>
-              <div className="grid items-center grid-cols-2">
-                <Text size={24} className="text-foreground">
-                  Email
-                </Text>
-                <Text>{email}</Text>
-              </div>
-              <div className="grid items-center grid-cols-2">
-                <Text size={24} className="text-foreground">
-                  UI design
-                </Text>
-                <Text>{design.url}</Text>
-              </div>
-              <div className="grid items-center grid-cols-2">
-                <Text size={24} className="text-foreground">
-                  Page
-                </Text>
-                <Text>{page}</Text>
-              </div>
-              <div className="flex h-32 gap-2 overflow-auto custom-scrollbar fade-out-review_page_files">
-                {design.files?.map((file, index) => (
-                  <Image
-                    key={index}
-                    src={URL.createObjectURL(file)}
-                    width={300}
-                    height={600}
-                    alt=""
-                    className={`w-full h-full pointer-events-none rounded duration-200`}
-                  />
+              <div className="flex flex-wrap w-full gap-6">
+                {Pricing.map((price) => (
+                  <Price key={price.id} price={price} />
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Button size={"md"} onClick={() => setTab(tab - 1)}>
-                  Edit
-                </Button>
-                <Button variant={"primary"} size={"md"}>
-                  Send
-                </Button>
+            </motion.section>
+          ) : tab == 2 ? (
+            <motion.section
+              key={2}
+              variants={enteringAnimation}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full space-y-8"
+            >
+              <Text size={48} className="text-foreground">
+                Your name
+              </Text>
+              <input
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+              />
+            </motion.section>
+          ) : tab == 3 ? (
+            <motion.section
+              key={3}
+              variants={enteringAnimation}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full space-y-8"
+            >
+              <Text size={48} className="text-foreground">
+                Your email
+              </Text>
+              <input
+                type="text"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+              />
+            </motion.section>
+          ) : tab == 4 ? (
+            <motion.section
+              key={4}
+              variants={enteringAnimation}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full space-y-8"
+            >
+              <Text size={48} className="text-foreground">
+                How many pages do you want to make?
+              </Text>
+              <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
+                <Text size={20} className="font-normal">
+                  <motion.span
+                    initial={{ y: 4 }}
+                    animate={{ y: 0 }}
+                    className="inline-block"
+                    key={page}
+                  >
+                    {page}
+                  </motion.span>
+                </Text>
+                <div>
+                  <IoIosArrowUp
+                    className="cursor-pointer"
+                    onClick={() => pageNumber("increase")}
+                  />
+                  <IoIosArrowDown
+                    className="cursor-pointer"
+                    onClick={() => pageNumber("decrease")}
+                  />
+                </div>
               </div>
-            </div>
-          </section>
-        )}
+            </motion.section>
+          ) : tab == 5 ? (
+            <motion.section
+              key={5}
+              variants={enteringAnimation}
+              initial="hidden"
+              animate="visible"
+              className="w-full space-y-8"
+            >
+              {Pricing.find((price) => price.title == level)?.job.design ? (
+                <Text size={48} className="text-success">
+                  I will make the design :)
+                </Text>
+              ) : (
+                <DesignPage />
+              )}
+            </motion.section>
+          ) : (
+            tab == 6 && (
+              <motion.section key={6} className="w-full space-y-12 grow">
+                <Text size={48} className="text-center text-foreground">
+                  Review page
+                </Text>
+                <div className="w-full max-w-md p-8 mx-auto space-y-6 border rounded-xl bg-accents-1">
+                  <div className="grid items-center grid-cols-2">
+                    <Text size={24} className="text-foreground">
+                      Name
+                    </Text>
+                    <Text>{name}</Text>
+                  </div>
+                  <div className="grid items-center grid-cols-2">
+                    <Text size={24} className="text-foreground">
+                      Email
+                    </Text>
+                    <Text>{email}</Text>
+                  </div>
+                  <div className="grid items-center grid-cols-2">
+                    <Text size={24} className="text-foreground">
+                      UI design
+                    </Text>
+                    <Text>{design.url}</Text>
+                  </div>
+                  <div className="grid items-center grid-cols-2">
+                    <Text size={24} className="text-foreground">
+                      Page
+                    </Text>
+                    <Text>{page}</Text>
+                  </div>
+                  <div className="flex h-32 gap-2 overflow-auto custom-scrollbar fade-out-review_page_files">
+                    {design.files?.map((file, index) => (
+                      <Image
+                        key={index}
+                        src={URL.createObjectURL(file)}
+                        width={300}
+                        height={600}
+                        alt=""
+                        className={`w-full h-full pointer-events-none rounded duration-200`}
+                      />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button size={"md"} onClick={() => setTab(tab - 1)}>
+                      Edit
+                    </Button>
+                    <Button variant={"primary"} size={"md"}>
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              </motion.section>
+            )
+          )}
+        </AnimatePresence>
 
         {tab !== 6 && (
           <div className="flex gap-4">
@@ -285,7 +323,7 @@ function Tab({ tabValue, tabState }: TabProps) {
         opacity: status == "completed" ? 1 : status == "progress" ? 0.8 : 0.2,
       }}
       transition={{ duration: 0.4 }}
-      className="relative flex items-center justify-center w-12 h-12 overflow-hidden border rounded-full"
+      className="relative flex items-center justify-center w-12 h-12 overflow-hidden border rounded-full isolate"
     >
       <AnimatePresence>
         {status == "completed" && (

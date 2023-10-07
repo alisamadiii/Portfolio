@@ -12,17 +12,27 @@ import { FrequentlyAskedQuestions, Pricing, Testimonials } from "@/lib/data";
 import { useContactStore } from "@/context/Contact.context";
 import Link from "next/link";
 import Price from "@/components/Price";
+import { useToast } from "@/components/ui/use-toast";
 
 type Props = {};
 
 export default function BuildingWebsite({}: Props) {
   const { level, setLevel } = useContactStore();
+  const { toast } = useToast();
 
   const [allTestimonials, setAllTestimonials] = useState(false);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // @ts-ignore
     setLevel(event.target.value);
+  };
+
+  const UnderConstruction = () => {
+    toast({
+      title: "Under Construction",
+      description: "",
+      variant: "destructive",
+    });
   };
 
   return (
@@ -216,17 +226,17 @@ export default function BuildingWebsite({}: Props) {
           </div>
           <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
             <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to px-0">
-              <Link
-                href={"/service/building-website/contact"}
+              <button
+                // href={"#"}
                 className={buttonVariants({
                   variant: "primary",
                   size: "lg",
                   className: "inline-block",
                 })}
-                // onClick={UnderConstruction}
+                onClick={UnderConstruction}
               >
                 Send now
-              </Link>
+              </button>
             </div>
           </div>
         </Container>

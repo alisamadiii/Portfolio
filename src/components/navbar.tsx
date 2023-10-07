@@ -109,9 +109,8 @@ export default function Navbar({}: Props) {
                     {ServiceINITIAL_VALUE.map((value) => (
                       <Link
                         key={value.id}
-                        href={"#"}
+                        href={"/service/building-website"}
                         className="items-center w-full duration-200 rounded-none max-md:h-12 max-md:flex md:rounded-lg md:p-4 hover:bg-link-hover"
-                        onClick={UnderConstruction}
                       >
                         <Text className="flex items-center gap-2 text-base md:text-sm text-accents-6 md:text-foreground">
                           {value.icon}
