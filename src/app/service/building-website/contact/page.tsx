@@ -93,11 +93,7 @@ export default function Contact({}: Props) {
           tab == 6 ? "flex-row items-center" : "flex-col items-start"
         }`}
       >
-        <div
-          className={`flex gap-4 md:gap-12 mb-12 ${
-            tab == 6 && "justify-center flex-col"
-          }`}
-        >
+        <div className={`flex gap-4 md:gap-12 mb-12 ${tab == 6 && "hidden"}`}>
           {INITIAL_TABS.map((tabValue) => (
             <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
           ))}

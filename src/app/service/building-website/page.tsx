@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Container, containerVariants } from "@/components/ui/container";
@@ -13,6 +13,7 @@ import { useContactStore } from "@/context/Contact.context";
 import Link from "next/link";
 import Price from "@/components/Price";
 import { useToast } from "@/components/ui/use-toast";
+import Image from "next/image";
 
 type Props = {};
 
@@ -34,6 +35,17 @@ export default function BuildingWebsite({}: Props) {
       variant: "destructive",
     });
   };
+
+  const demosContainer = useRef<HTMLDivElement | null>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: demosContainer,
+    offset: ["start end", "end start"],
+  });
+
+  const x = useTransform(scrollYProgress, [0, 1], [300, 0]);
+  const xReverse = useTransform(scrollYProgress, [0, 2], [0, 400]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
 
   return (
     <main className="relative overflow-hidden">
@@ -83,6 +95,39 @@ export default function BuildingWebsite({}: Props) {
       </header>
 
       <Container size={"xl"} className="space-y-16 my-28">
+        <section
+          className="flex flex-col items-center gap-16"
+          ref={demosContainer}
+        >
+          <Badge>Demos</Badge>
+          <div className="space-y-4">
+            <motion.div style={{ x }} className="flex justify-center gap-2">
+              {[0, 1, 2, 3, 4, 5, 6].map((_, index) => (
+                <Image
+                  key={index}
+                  src="/project demo.png"
+                  width={400}
+                  height={300}
+                  alt="project demo"
+                />
+              ))}
+            </motion.div>
+            <motion.div
+              style={{ x: xReverse }}
+              className="flex justify-center gap-2"
+            >
+              {[0, 1, 2, 3, 4, 5, 6].map((_, index) => (
+                <Image
+                  key={index}
+                  src="/project demo.png"
+                  width={400}
+                  height={300}
+                  alt="project demo"
+                />
+              ))}
+            </motion.div>
+          </div>
+        </section>
         <section className="flex flex-col items-center gap-16">
           <Badge>Experience</Badge>
           <Technologies />
