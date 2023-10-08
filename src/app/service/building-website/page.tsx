@@ -65,7 +65,10 @@ export default function BuildingWebsite({}: Props) {
         className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
         id="line-animation"
       />
-      <header
+      <motion.header
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "tween", ease: "backOut" }}
         className={containerVariants({
           size: "xl",
           className:
@@ -92,7 +95,7 @@ export default function BuildingWebsite({}: Props) {
         <Button size={"lg"} className="max-md:w-full max-md:max-w-md">
           Know me more!
         </Button>
-      </header>
+      </motion.header>
 
       <Container size={"xl"} className="space-y-16 my-28">
         <section
@@ -204,7 +207,7 @@ export default function BuildingWebsite({}: Props) {
           {Testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animation-testimonial bg-background"
+              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animate-testimonial bg-background"
               style={{ flex: "0 0 auto" }}
             >
               <Text className="text-lg leading-8 text-foreground md:text-2xl">
@@ -221,7 +224,7 @@ export default function BuildingWebsite({}: Props) {
           {Testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animation-testimonial"
+              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animate-testimonial"
               style={{ flex: "0 0 auto" }}
             >
               <Text className="text-lg leading-8 text-foreground md:text-2xl">

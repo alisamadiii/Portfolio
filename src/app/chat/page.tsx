@@ -96,7 +96,7 @@ export default function Chat({}: Props) {
     <div className="grid w-full h-dvh place-items-center">
       <div className="absolute top-0 left-0 w-full bg-accents-2/10 blur-3xl h-96 -z-50"></div>
       <div className="relative flex flex-col w-full max-w-sm overflow-hidden border rounded-lg h-chat">
-        <header className="relative z-10 flex items-center justify-between w-full px-4 py-2 bg-black border-b">
+        <header className="absolute z-10 flex items-center justify-between w-full px-4 py-2 border-b bg-black/60 backdrop-blur-sm">
           <Avatar className="w-auto h-auto">
             <AvatarImage src="/logo.png" alt="logo" className="w-6 h-6" id="" />
             <AvatarFallback>AL</AvatarFallback>
@@ -174,7 +174,7 @@ export default function Chat({}: Props) {
 
         {/* Messages */}
         <div
-          className="relative flex flex-col items-start w-full h-full px-4 py-2 overflow-auto custom-scrollbar bg-background"
+          className="relative flex flex-col items-start w-full h-full px-4 py-2 pt-12 overflow-auto custom-scrollbar bg-background"
           ref={containerRef}
         >
           {messages?.length !== 0 ? (

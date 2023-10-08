@@ -183,6 +183,19 @@ module.exports = {
         "focus-button":
           "0 0 0 2px hsl(var(--geist-background)), 0 0 0 4px hsl(var(--geist-foreground))",
       },
+      animation: {
+        testimonial: "testimonial-moving 20s infinite linear",
+      },
+      keyframes: {
+        "testimonial-moving": {
+          from: {
+            transform: "translateX(0)",
+          },
+          to: {
+            transform: "translateX(-316%)",
+          },
+        },
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

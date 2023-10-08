@@ -73,19 +73,6 @@ html {
   mask-image: linear-gradient(to right, black 90%, rgba(0, 0, 0, 0));
 }
 
-.animation-testimonial {
-  animation: testimonial-moving 20s infinite linear;
-}
-
-@keyframes testimonial-moving {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-316%);
-  }
-}
-
 @layer base {
   :root {
     --geist-background: 0 0% 100%;
