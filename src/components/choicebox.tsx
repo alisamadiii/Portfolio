@@ -20,30 +20,30 @@ function Item({ children, checked, value, ...props }: ItemProps) {
 
   return (
     <Label
-      className={`p-4 border rounded duration-150 cursor-pointer w-full ${
+      className={`w-full cursor-pointer rounded border p-4 duration-150 ${
         checked
-          ? "bg-success-darker border-success"
-          : "bg-gradient-to-t from-black to-accents-1 border-background hover:border-accents-6"
+          ? "border-success bg-success-darker"
+          : "border-background bg-gradient-to-t from-black to-accents-1 hover:border-accents-6"
       }`}
     >
       <div className="space-y-2">{children}</div>
-      <div className="relative flex justify-center mt-4">
+      <div className="relative mt-4 flex justify-center">
         <input
           ref={inputRef}
           type="radio"
           checked={checked}
           value={value}
-          className="w-4 h-4 appearance-none peer input-reset-appearance"
+          className="input-reset-appearance peer h-4 w-4 appearance-none"
           {...props}
         />
-        <span className="absolute flex items-center justify-center w-4 h-4 duration-200 border rounded-full bg-accents-2/50 peer-checked:border-success">
+        <span className="absolute flex h-4 w-4 items-center justify-center rounded-full border bg-accents-2/50 duration-200 peer-checked:border-success">
           <AnimatePresence>
             {checked && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="absolute w-2 h-2 rounded-full bg-success"
+                className="absolute h-2 w-2 rounded-full bg-success"
               />
             )}
           </AnimatePresence>

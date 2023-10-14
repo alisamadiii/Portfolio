@@ -133,17 +133,17 @@ export default function SendingMessage({}: Props) {
   return (
     <form
       onSubmit={submittingMessage}
-      className="flex items-center justify-between w-full gap-2 p-2 bg-background"
+      className="flex w-full items-center justify-between gap-2 bg-background p-2"
     >
       {/* Inputs */}
       <div
-        className={`flex flex-col items-center bg-accents-1 grow rounded-xl pl-2 pr-3 py-2 focus-within:ring-2 ring-foreground duration-200`}
+        className={`flex grow flex-col items-center rounded-xl bg-accents-1 py-2 pl-2 pr-3 ring-foreground duration-200 focus-within:ring-2`}
       >
         {uploadedImage!.length > 0 && (
           <motion.div
             initial={{ height: 0 }}
             animate={{ height: "auto" }}
-            className="flex w-full gap-2 mb-2 overflow-hidden"
+            className="mb-2 flex w-full gap-2 overflow-hidden"
           >
             {uploadedImage?.map((file, index) => (
               <DisplayingImageUploading key={index} file={file} index={index} />
@@ -159,20 +159,20 @@ export default function SendingMessage({}: Props) {
               className="w-full overflow-hidden"
               key={replyId}
             >
-              <div className="bg-background px-2 py-0.5 rounded relative overflow-hidden mb-2 w-full">
-                <div className="absolute top-0 left-0 w-[2px] h-full bg-white" />
+              <div className="relative mb-2 w-full overflow-hidden rounded bg-background px-2 py-0.5">
+                <div className="absolute left-0 top-0 h-full w-[2px] bg-white" />
                 <Text
                   as="h3"
                   size={10}
-                  className="tracking-widest !text-white text-xxs"
+                  className="text-xxs tracking-widest !text-white"
                 >
                   Ali
                 </Text>
-                <Text size={10} className="leading-4 line-clamp-3">
+                <Text size={10} className="line-clamp-3 leading-4">
                   {messages.find((message) => message.id == replyId)?.message}
                 </Text>
                 <span
-                  className="absolute cursor-pointer text-xxs top-2 right-2"
+                  className="absolute right-2 top-2 cursor-pointer text-xxs"
                   onClick={() => setReplyId(null)}
                 >
                   <AiOutlineClose />
@@ -181,9 +181,9 @@ export default function SendingMessage({}: Props) {
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="flex items-center w-full">
+        <div className="flex w-full items-center">
           <textarea
-            className="py-1 leading-5 bg-transparent outline-none resize-none grow placeholder:text-accents-6/50 max-h-20"
+            className="max-h-20 grow resize-none bg-transparent py-1 leading-5 outline-none placeholder:text-accents-6/50"
             rows={1}
             placeholder="your message"
             id="message"
@@ -196,13 +196,13 @@ export default function SendingMessage({}: Props) {
             onClick={() => setIsAddingImage(true)}
             className="cursor-pointer"
           >
-            <CustomIcon icon="photo" className="w-4 h-4 text-foreground" />
+            <CustomIcon icon="photo" className="h-4 w-4 text-foreground" />
           </div>
         </div>
       </div>
 
       {/* Send */}
-      <button className="p-2 rounded-full bg-foreground text-background">
+      <button className="rounded-full bg-foreground p-2 text-background">
         {loading ? (
           <RotatingLines
             strokeColor="black"
@@ -247,7 +247,7 @@ const DisplayingImageUploading = memo(
         className="relative"
       >
         <div
-          className="absolute top-0 right-0 p-px text-white rounded-full cursor-pointer bg-background"
+          className="absolute right-0 top-0 cursor-pointer rounded-full bg-background p-px text-white"
           onClick={() => deletingFile(file)}
         >
           <IoMdClose className="text-xxs" />
@@ -258,7 +258,7 @@ const DisplayingImageUploading = memo(
           width={40}
           height={40}
           alt=""
-          className="object-cover w-10 h-10 rounded"
+          className="h-10 w-10 rounded object-cover"
         />
       </motion.div>
     );

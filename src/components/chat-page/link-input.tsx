@@ -34,11 +34,11 @@ export default function LinkInput({}: Props) {
     <div className="relative">
       <input
         type="text"
-        className={`w-full p-2 duration-100 border rounded outline-none bg-accents-1 focus:ring-1 placeholder:opacity-50 ${
+        className={`w-full rounded border bg-accents-1 p-2 outline-none duration-100 placeholder:opacity-50 focus:ring-1 ${
           validImage
             ? "border-success ring-success"
             : `${
-                inputField.length > 0 ? "ring-error border-error" : "ring-white"
+                inputField.length > 0 ? "border-error ring-error" : "ring-white"
               }`
         }`}
         placeholder="under construction"
@@ -46,7 +46,7 @@ export default function LinkInput({}: Props) {
         onChange={(event) => setInputField(event.target.value)}
       />
       <div
-        className={`absolute top-0 translate-y-5 right-0 w-4 h-[calc(100%+20px)] border-t border-r translate-x-[calc(100%)] rounded-tr-lg  ${
+        className={`absolute right-0 top-0 h-[calc(100%+20px)] w-4 translate-x-[calc(100%)] translate-y-5 rounded-tr-lg border-r border-t  ${
           validImage
             ? "border-success"
             : `${inputField.length > 0 && "border-error"}`

@@ -20,15 +20,15 @@ interface Props
 const Checkbox = React.forwardRef<HTMLInputElement, Props>(
   ({ className, variant, checked, ...props }, ref) => {
     return (
-      <Label className={cn("relative checkbox_label", className)}>
+      <Label className={cn("checkbox_label relative", className)}>
         <input
           ref={ref}
           type="checkbox"
-          className="w-4 h-4 appearance-none peer input-reset-appearance"
+          className="input-reset-appearance peer h-4 w-4 appearance-none"
           checked={checked}
           {...props}
         />
-        <span className="absolute top-0 left-0 flex items-center justify-center w-4 h-4 duration-100 border rounded-sm bg-accents-2/50 peer-checked:bg-success peer-checked:border-success-dark">
+        <span className="absolute left-0 top-0 flex h-4 w-4 items-center justify-center rounded-sm border bg-accents-2/50 duration-100 peer-checked:border-success-dark peer-checked:bg-success">
           <AnimatePresence initial={false}>
             {checked && (
               <motion.svg

@@ -11,10 +11,10 @@ export default function NumberGradient({ gradient, number, title }: Props) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className={`w-[0.5px] h-28 bg-gradient-to-t from-gradient-${gradient}-from to-transparent`}
+        className={`h-28 w-[0.5px] bg-gradient-to-t from-gradient-${gradient}-from to-transparent`}
       />
       <div
-        className={`flex items-center justify-center w-10 h-10 font-medium text-black rounded-full mb-3 -translate-y-3 bg-gradient-to-r from-gradient-${gradient}-from to-gradient-${gradient}-to`}
+        className={`mb-3 flex h-10 w-10 -translate-y-3 items-center justify-center rounded-full bg-gradient-to-r font-medium text-black from-gradient-${gradient}-from to-gradient-${gradient}-to`}
       >
         {number}
       </div>
@@ -22,7 +22,7 @@ export default function NumberGradient({ gradient, number, title }: Props) {
         <Text
           as="h2"
           size={32}
-          className={`font-bold bg-clip-text text-transparent bg-gradient-to-r from-gradient-${gradient}-from to-gradient-${gradient}-to`}
+          className={`bg-gradient-to-r bg-clip-text font-bold text-transparent from-gradient-${gradient}-from to-gradient-${gradient}-to`}
         >
           {title}
         </Text>

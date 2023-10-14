@@ -89,11 +89,11 @@ export default function Contact({}: Props) {
     <div className="h-screen overflow-auto bg-gradient-to-t from-accents-1 to-black">
       <Container
         size={"2xl"}
-        className={`flex gap-12 pb-12 mt-20 md:mt-24 ${
+        className={`mt-20 flex gap-12 pb-12 md:mt-24 ${
           tab == 6 ? "flex-row items-center" : "flex-col items-start"
         }`}
       >
-        <div className={`flex gap-4 md:gap-12 mb-12 ${tab == 6 && "hidden"}`}>
+        <div className={`mb-12 flex gap-4 md:gap-12 ${tab == 6 && "hidden"}`}>
           {INITIAL_TABS.map((tabValue) => (
             <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
           ))}
@@ -112,7 +112,7 @@ export default function Contact({}: Props) {
               <Text size={48} className="text-foreground">
                 Which products do you want?
               </Text>
-              <div className="flex flex-wrap w-full gap-6">
+              <div className="flex w-full flex-wrap gap-6">
                 {Pricing.map((price) => (
                   <Price key={price.id} price={price} />
                 ))}
@@ -135,7 +135,7 @@ export default function Contact({}: Props) {
                 placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+                className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
               />
             </motion.section>
           ) : tab == 3 ? (
@@ -155,7 +155,7 @@ export default function Contact({}: Props) {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+                className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
               />
             </motion.section>
           ) : tab == 4 ? (
@@ -170,7 +170,7 @@ export default function Contact({}: Props) {
               <Text size={48} className="text-foreground">
                 How many pages do you want to make?
               </Text>
-              <div className="flex items-center justify-between w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none">
+              <div className="flex w-full max-w-xl items-center justify-between border-b bg-transparent px-6 py-4 text-xl font-normal outline-none">
                 <Text size={20} className="font-normal">
                   <motion.span
                     initial={{ y: 4 }}
@@ -211,36 +211,36 @@ export default function Contact({}: Props) {
             </motion.section>
           ) : (
             tab == 6 && (
-              <motion.section key={6} className="w-full space-y-12 grow">
+              <motion.section key={6} className="w-full grow space-y-12">
                 <Text size={48} className="text-center text-foreground">
                   Review page
                 </Text>
-                <div className="w-full max-w-md p-8 mx-auto space-y-6 border rounded-xl bg-accents-1">
-                  <div className="grid items-center grid-cols-2">
+                <div className="mx-auto w-full max-w-md space-y-6 rounded-xl border bg-accents-1 p-8">
+                  <div className="grid grid-cols-2 items-center">
                     <Text size={24} className="text-foreground">
                       Name
                     </Text>
                     <Text>{name}</Text>
                   </div>
-                  <div className="grid items-center grid-cols-2">
+                  <div className="grid grid-cols-2 items-center">
                     <Text size={24} className="text-foreground">
                       Email
                     </Text>
                     <Text>{email}</Text>
                   </div>
-                  <div className="grid items-center grid-cols-2">
+                  <div className="grid grid-cols-2 items-center">
                     <Text size={24} className="text-foreground">
                       UI design
                     </Text>
                     <Text>{design.url}</Text>
                   </div>
-                  <div className="grid items-center grid-cols-2">
+                  <div className="grid grid-cols-2 items-center">
                     <Text size={24} className="text-foreground">
                       Page
                     </Text>
                     <Text>{page}</Text>
                   </div>
-                  <div className="flex h-32 gap-2 overflow-auto custom-scrollbar fade-out-review_page_files">
+                  <div className="custom-scrollbar fade-out-review_page_files flex h-32 gap-2 overflow-auto">
                     {design.files?.map((file, index) => (
                       <Image
                         key={index}
@@ -248,7 +248,7 @@ export default function Contact({}: Props) {
                         width={300}
                         height={600}
                         alt=""
-                        className={`w-full h-full pointer-events-none rounded duration-200`}
+                        className={`pointer-events-none h-full w-full rounded duration-200`}
                       />
                     ))}
                   </div>
@@ -319,7 +319,7 @@ function Tab({ tabValue, tabState }: TabProps) {
         opacity: status == "completed" ? 1 : status == "progress" ? 0.8 : 0.2,
       }}
       transition={{ duration: 0.4 }}
-      className="relative flex items-center justify-center w-12 h-12 overflow-hidden border rounded-full isolate"
+      className="relative isolate flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border"
     >
       <AnimatePresence>
         {status == "completed" && (
@@ -328,7 +328,7 @@ function Tab({ tabValue, tabState }: TabProps) {
             animate={{ x: 0 }}
             exit={{ x: -100 }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="absolute top-0 left-0 w-full h-full bg-success -z-10"
+            className="absolute left-0 top-0 -z-10 h-full w-full bg-success"
           />
         )}
       </AnimatePresence>

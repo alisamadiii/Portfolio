@@ -66,12 +66,12 @@ export default function DesignPage({}: Props) {
           placeholder="Url"
           value={design.url}
           onChange={(e) => setDesign({ ...design, url: e.target.value })}
-          className="w-full max-w-xl px-6 py-4 text-xl font-normal bg-transparent border-b outline-none"
+          className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
         />
         {isUpload && design.files?.length == 0 && (
           <Label
-            className={`flex items-center justify-center w-full h-48 max-w-xl border cursor-pointer rounded-xl ${
-              isDroppingFile ? "bg-success/50 animate-pulse" : ""
+            className={`flex h-48 w-full max-w-xl cursor-pointer items-center justify-center rounded-xl border ${
+              isDroppingFile ? "animate-pulse bg-success/50" : ""
             }`}
             onDragOver={(e) => {
               e.preventDefault();
@@ -91,7 +91,7 @@ export default function DesignPage({}: Props) {
             ))}
           </motion.div>
         )}
-        <Label className="flex items-center justify-end max-w-xl gap-4 cursor-pointer select-none">
+        <Label className="flex max-w-xl cursor-pointer select-none items-center justify-end gap-4">
           <Text size={16} variant={"muted-sm"}>
             Upload video or images
           </Text>

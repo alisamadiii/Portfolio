@@ -12,7 +12,7 @@ export default function Back({ to }: Props) {
       className={textVariants({
         size: 14,
         className:
-          "flex items-center gap-2 mt-20 mb-16 text-accents-6 hover:text-white",
+          "mb-16 mt-20 flex items-center gap-2 text-accents-6 hover:text-white",
       })}
     >
       <svg

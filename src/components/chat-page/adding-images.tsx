@@ -121,7 +121,7 @@ export default function AddingImages({ setIsVisible }: Props) {
 
   return (
     <Rect
-      className="fixed inset-0 z-50 grid w-full h-screen px-4 place-items-center isolate"
+      className="fixed inset-0 isolate z-50 grid h-screen w-full place-items-center px-4"
       onDragOver={(e) => {
         e.preventDefault();
         setIsDroppingFile(true);
@@ -134,8 +134,8 @@ export default function AddingImages({ setIsVisible }: Props) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.35 }}
-        className={`absolute inset-0 w-full h-full -z-10 transition-colors ${
-          isDroppingFile ? "bg-success/50 animate-pulse" : "bg-black/75"
+        className={`absolute inset-0 -z-10 h-full w-full transition-colors ${
+          isDroppingFile ? "animate-pulse bg-success/50" : "bg-black/75"
         }`}
         onClick={() => setIsVisible(false)}
       />
@@ -146,12 +146,12 @@ export default function AddingImages({ setIsVisible }: Props) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -40, opacity: 0 }}
           transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
-          className={`w-full max-w-md p-4 border rounded-xl bg-accents-1 flex flex-col gap-2`}
+          className={`flex w-full max-w-md flex-col gap-2 rounded-xl border bg-accents-1 p-4`}
         >
           {uploadWay == 1 ? (
             <>
               <Label
-                className={`flex w-full gap-3 p-4 duration-200 rounded cursor-pointer bg-accents-2/10 hover:bg-accents-2/20 ${
+                className={`flex w-full cursor-pointer gap-3 rounded bg-accents-2/10 p-4 duration-200 hover:bg-accents-2/20 ${
                   loading && "bg-success-darker text-white"
                 } ${uploadedImage.length == 5 && "bg-error-dark text-white"}`}
               >
@@ -190,11 +190,11 @@ export default function AddingImages({ setIsVisible }: Props) {
               )}
             </>
           ) : (
-            <div className="relative pr-6 space-y-2">
+            <div className="relative space-y-2 pr-6">
               <LinkInput />
               <LinkInput />
               <LinkInput />
-              <div className="absolute right-0 flex flex-row-reverse gap-2 ml-auto translate-y-4">
+              <div className="absolute right-0 ml-auto flex translate-y-4 flex-row-reverse gap-2">
                 <Button type="button">Add</Button>
                 <Button type="button">Preview</Button>
               </div>
@@ -203,7 +203,7 @@ export default function AddingImages({ setIsVisible }: Props) {
 
           {/* Notes */}
           {uploadedImage.length > 0 && (
-            <div className="flex w-full gap-3 p-4 text-white duration-200 border rounded bg-success-darker">
+            <div className="flex w-full gap-3 rounded border bg-success-darker p-4 text-white duration-200">
               {loading ? (
                 <RotatingLines
                   strokeColor="white"
@@ -227,7 +227,7 @@ export default function AddingImages({ setIsVisible }: Props) {
                       width={25}
                       height={25}
                       alt=""
-                      className="object-cover rounded-full w-6 h-6 shadow-[0_0_0_1px_white]"
+                      className="h-6 w-6 rounded-full object-cover shadow-[0_0_0_1px_white]"
                     />
                   ))}
                 </div>
@@ -236,7 +236,7 @@ export default function AddingImages({ setIsVisible }: Props) {
           )}
 
           <Label
-            className={`flex items-center justify-end gap-2 text-xs cursor-pointer select-none ${
+            className={`flex cursor-pointer select-none items-center justify-end gap-2 text-xs ${
               uploadWay == 1 ? "mt-4" : "mt-20"
             }`}
           >
@@ -249,7 +249,7 @@ export default function AddingImages({ setIsVisible }: Props) {
           </Label>
         </Rect>
       ) : (
-        <div key={"dropping-uploading"} className="text-white animate-bounce">
+        <div key={"dropping-uploading"} className="animate-bounce text-white">
           <AiOutlineCloudUpload className="text-6xl md:text-9xl" />
         </div>
       )}

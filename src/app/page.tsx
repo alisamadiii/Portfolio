@@ -80,20 +80,20 @@ export default function Home() {
 
   return (
     <main>
-      <div className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full top-1/2 w-96 h-96 bg-foreground/5 blur-[100px] -z-50" />
+      <div className="absolute top-1/2 -z-50 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/5 blur-[100px]" />
 
       <header
         className={containerVariants({
           size: "xl",
           className:
-            "flex flex-col items-center justify-center max-md:py-20 max-md:mt-16 md:h-dvh overflow-hidden",
+            "flex flex-col items-center justify-center overflow-hidden max-md:mt-16 max-md:py-20 md:h-dvh",
         })}
       >
         <Image src={"/Logo.png"} width={60} height={60} alt="logo" />
-        <h1 className="max-w-4xl my-4 text-4xl text-center md:text-5xl lg:text-6xl text-foreground">
+        <h1 className="my-4 max-w-4xl text-center text-4xl text-foreground md:text-5xl lg:text-6xl">
           Experienced web developer specializing in{" "}
           <span
-            className={`text-transparent bg-gradient-to-tr bg-clip-text ${
+            className={`bg-gradient-to-tr bg-clip-text text-transparent ${
               gradientColor === 1
                 ? "from-gradient-1-from to-gradient-1-to"
                 : gradientColor === 2
@@ -113,8 +113,8 @@ export default function Home() {
           I have a strong foundation in HTML, CSS, and JavaScript, and I am
           skilled in creating interactive and visually appealing websites.
         </Text>
-        <div className="flex flex-col items-center justify-center w-full gap-3 md:gap-5 md:flex-row">
-          <div className="max-md:w-full max-md:max-w-md p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to">
+        <div className="flex w-full flex-col items-center justify-center gap-3 md:flex-row md:gap-5">
+          <div className="rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to p-0.5 max-md:w-full max-md:max-w-md">
             <Button
               variant={"primary"}
               size={"lg"}
@@ -131,7 +131,7 @@ export default function Home() {
           >
             Download CV
           </Button>
-          <div className="flex gap-3 md:gap-5 max-md:w-full max-md:max-w-md">
+          <div className="flex gap-3 max-md:w-full max-md:max-w-md md:gap-5">
             <Button
               size={"lg"}
               className="w-full px-4"
@@ -150,7 +150,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="px-6 space-y-32">
+      <div className="space-y-32 px-6">
         <section className="flex flex-col items-center space-y-6" id="about">
           <Text size={12} variant={"section-name"}>
             explore about me
@@ -159,7 +159,7 @@ export default function Home() {
           <Text
             size={20}
             variant={"muted-lg"}
-            className="max-w-3xl mb-8 leading-8 text-center max-md:text-base"
+            className="mb-8 max-w-3xl text-center leading-8 max-md:text-base"
             id="reveal-text"
           >
             I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience,
@@ -229,11 +229,11 @@ export default function Home() {
 
       <Container
         size={"2xl"}
-        className="relative mt-32 overflow-hidden isolate"
+        className="relative isolate mt-32 overflow-hidden"
       >
-        <div className="absolute top-0 left-0 z-20 w-full h-px bg-gradient-to-l from-transparent via-white to-transparent" />
+        <div className="absolute left-0 top-0 z-20 h-px w-full bg-gradient-to-l from-transparent via-white to-transparent" />
         <div
-          className="absolute inset-0 w-full h-full -z-10 opacity-10"
+          className="absolute inset-0 -z-10 h-full w-full opacity-10"
           style={{
             background:
               "radial-gradient(50% 50% at 50% 0,rgba(255, 255, 255,.5) 0,rgba(255, 255, 255,0) 100%)",
@@ -241,11 +241,11 @@ export default function Home() {
         />
         <Container
           size={"xl"}
-          className="grid items-center gap-8 py-32 text-center md:text-start md:grid-cols-3"
+          className="grid items-center gap-8 py-32 text-center md:grid-cols-3 md:text-start"
         >
-          <div className="flex flex-col items-center gap-2 md:items-start md:col-span-2">
+          <div className="flex flex-col items-center gap-2 md:col-span-2 md:items-start">
             <Text
-              className={`max-w-4xl text-center text-5xl lg:text-6xl text-transparent bg-gradient-to-tr bg-clip-text ${
+              className={`max-w-4xl bg-gradient-to-tr bg-clip-text text-center text-5xl text-transparent lg:text-6xl ${
                 gradientColor === 1
                   ? "from-gradient-1-from to-gradient-1-to"
                   : gradientColor === 2
@@ -258,12 +258,12 @@ export default function Home() {
             <Text
               size={20}
               variant={"muted-lg"}
-              className="font-normal line-clamp-2"
+              className="line-clamp-2 font-normal"
             >
               Embark on a streamlined digital journey with our Service Route.
             </Text>
           </div>
-          <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
+          <div className="flex flex-col items-center gap-2 md:items-end md:gap-4">
             <Button
               size={"lg"}
               className="w-32 px-0"
@@ -271,7 +271,7 @@ export default function Home() {
             >
               Check out
             </Button>
-            <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to w-32 px-0">
+            <div className="w-32 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to p-0.5 px-0">
               <Button
                 variant={"primary"}
                 size={"lg"}

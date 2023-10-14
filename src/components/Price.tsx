@@ -20,7 +20,7 @@ export default function Price({ price }: Props) {
   };
 
   return (
-    <Choicebox.Group className="flex gap-4 grow basis-56">
+    <Choicebox.Group className="flex grow basis-56 gap-4">
       <Choicebox.Item
         name="choicebox"
         value={price.title}

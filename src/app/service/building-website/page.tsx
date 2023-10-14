@@ -50,19 +50,19 @@ export default function BuildingWebsite({}: Props) {
   return (
     <main className="relative overflow-hidden">
       <div
-        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-[0.85] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="pointer-events-none absolute -z-10 h-96 w-96 scale-[0.85] rounded-[100%] border border-gradient-1-from max-2xl:right-0 max-2xl:top-60 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 2xl:h-[calc(100vh*2)] 2xl:w-full 2xl:-translate-y-1/2"
         id="line-animation"
       />
       <div
-        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-90 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="pointer-events-none absolute -z-10 h-96 w-96 scale-90 rounded-[100%] border border-gradient-1-from max-2xl:right-0 max-2xl:top-60 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 2xl:h-[calc(100vh*2)] 2xl:w-full 2xl:-translate-y-1/2"
         id="line-animation"
       />
       <div
-        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] scale-95 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="pointer-events-none absolute -z-10 h-96 w-96 scale-95 rounded-[100%] border border-gradient-1-from max-2xl:right-0 max-2xl:top-60 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 2xl:h-[calc(100vh*2)] 2xl:w-full 2xl:-translate-y-1/2"
         id="line-animation"
       />
       <div
-        className="absolute max-2xl:top-60 max-2xl:right-0 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 w-96 2xl:w-full h-96 2xl:h-[calc(100vh*2)] 2xl:-translate-y-1/2 border rounded-[100%] pointer-events-none border-gradient-1-from -z-10"
+        className="pointer-events-none absolute -z-10 h-96 w-96 rounded-[100%] border border-gradient-1-from max-2xl:right-0 max-2xl:top-60 max-2xl:translate-x-1/2 max-2xl:translate-y-1/2 2xl:h-[calc(100vh*2)] 2xl:w-full 2xl:-translate-y-1/2"
         id="line-animation"
       />
       <motion.header
@@ -72,10 +72,10 @@ export default function BuildingWebsite({}: Props) {
         className={containerVariants({
           size: "xl",
           className:
-            "flex flex-col items-center justify-center max-md:py-20 max-md:mt-16 md:h-dvh overflow-hidden",
+            "flex flex-col items-center justify-center overflow-hidden max-md:mt-16 max-md:py-20 md:h-dvh",
         })}
       >
-        <h1 className="max-w-4xl my-4 text-4xl text-center md:text-5xl lg:text-6xl text-foreground">
+        <h1 className="my-4 max-w-4xl text-center text-4xl text-foreground md:text-5xl lg:text-6xl">
           Building Website
         </h1>
         <Text
@@ -97,7 +97,7 @@ export default function BuildingWebsite({}: Props) {
         </Button>
       </motion.header>
 
-      <Container size={"xl"} className="space-y-16 my-28">
+      <Container size={"xl"} className="my-28 space-y-16">
         <section
           className="flex flex-col items-center gap-16"
           ref={demosContainer}
@@ -137,7 +137,7 @@ export default function BuildingWebsite({}: Props) {
         </section>
         <section className="flex flex-col items-center gap-16">
           <Badge>Pricing</Badge>
-          <div className="flex flex-wrap w-full gap-6">
+          <div className="flex w-full flex-wrap gap-6">
             {Pricing.map((price) => (
               <Price key={price.id} price={price} />
             ))}
@@ -157,7 +157,7 @@ export default function BuildingWebsite({}: Props) {
         <section className="flex flex-col items-center gap-16">
           <Badge>frequently asked questions</Badge>
           <motion.div
-            className={`grid gap-6 md:grid-cols-2 overflow-hidden [--height:700px] md:[--height:400px] ${
+            className={`grid gap-6 overflow-hidden [--height:700px] md:grid-cols-2 md:[--height:400px] ${
               !allTestimonials && "fade-out-faq"
             }`}
             initial={{ height: "var(--height)" }}
@@ -200,14 +200,14 @@ export default function BuildingWebsite({}: Props) {
 
       <Container
         size={"2xl"}
-        className="relative flex flex-col items-center gap-16 overflow-hidden fade-out-testimonial"
+        className="fade-out-testimonial relative flex flex-col items-center gap-16 overflow-hidden"
       >
         <Badge>what clients are saying</Badge>
-        <div className="flex items-start gap-11 group">
+        <div className="group flex items-start gap-11">
           {Testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animate-testimonial bg-background"
+              className="w-full max-w-md animate-testimonial space-y-6 rounded-xl border bg-background p-8 text-center md:max-w-testimonial"
               style={{ flex: "0 0 auto" }}
             >
               <Text className="text-lg leading-8 text-foreground md:text-2xl">
@@ -224,7 +224,7 @@ export default function BuildingWebsite({}: Props) {
           {Testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="w-full max-w-md p-8 space-y-6 text-center border md:max-w-testimonial rounded-xl animate-testimonial"
+              className="w-full max-w-md animate-testimonial space-y-6 rounded-xl border p-8 text-center md:max-w-testimonial"
               style={{ flex: "0 0 auto" }}
             >
               <Text className="text-lg leading-8 text-foreground md:text-2xl">
@@ -243,11 +243,11 @@ export default function BuildingWebsite({}: Props) {
 
       <Container
         size={"2xl"}
-        className="relative mt-32 overflow-hidden isolate"
+        className="relative isolate mt-32 overflow-hidden"
       >
-        <div className="absolute top-0 left-0 z-20 w-full h-px bg-gradient-to-l from-transparent via-white to-transparent" />
+        <div className="absolute left-0 top-0 z-20 h-px w-full bg-gradient-to-l from-transparent via-white to-transparent" />
         <div
-          className="absolute inset-0 w-full h-full -z-10 opacity-10"
+          className="absolute inset-0 -z-10 h-full w-full opacity-10"
           style={{
             background:
               "radial-gradient(50% 50% at 50% 0,rgba(255, 255, 255,.5) 0,rgba(255, 255, 255,0) 100%)",
@@ -255,25 +255,25 @@ export default function BuildingWebsite({}: Props) {
         />
         <Container
           size={"xl"}
-          className="grid items-center gap-8 py-32 text-center md:text-start md:grid-cols-3"
+          className="grid items-center gap-8 py-32 text-center md:grid-cols-3 md:text-start"
         >
-          <div className="flex flex-col items-center gap-2 md:items-start md:col-span-2">
+          <div className="flex flex-col items-center gap-2 md:col-span-2 md:items-start">
             <Text
-              className={`max-w-4xl text-center text-5xl lg:text-6xl text-transparent bg-gradient-to-tr bg-clip-text from-gradient-1-from to-gradient-1-to`}
+              className={`max-w-4xl bg-gradient-to-tr from-gradient-1-from to-gradient-1-to bg-clip-text text-center text-5xl text-transparent lg:text-6xl`}
             >
               Client
             </Text>
             <Text
               size={20}
               variant={"muted-lg"}
-              className="font-normal line-clamp-2"
+              className="line-clamp-2 font-normal"
             >
               If you&apos;re in need of a website builder, please provide us
               with your information.
             </Text>
           </div>
-          <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
-            <div className="p-0.5 rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to px-0">
+          <div className="flex flex-col items-center gap-2 md:items-end md:gap-4">
+            <div className="rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to p-0.5 px-0">
               <button
                 // href={"#"}
                 className={buttonVariants({

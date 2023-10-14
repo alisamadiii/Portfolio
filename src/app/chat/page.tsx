@@ -93,12 +93,12 @@ export default function Chat({}: Props) {
   }, [messages, replyId]);
 
   return (
-    <div className="grid w-full h-dvh place-items-center">
-      <div className="absolute top-0 left-0 w-full bg-accents-2/10 blur-3xl h-96 -z-50"></div>
-      <div className="relative flex flex-col w-full max-w-sm overflow-hidden border rounded-lg h-chat">
-        <header className="absolute z-10 flex items-center justify-between w-full px-4 py-2 border-b bg-black/60 backdrop-blur-sm">
-          <Avatar className="w-auto h-auto">
-            <AvatarImage src="/logo.png" alt="logo" className="w-6 h-6" id="" />
+    <div className="grid h-dvh w-full place-items-center">
+      <div className="absolute left-0 top-0 -z-50 h-96 w-full bg-accents-2/10 blur-3xl"></div>
+      <div className="relative flex h-chat w-full max-w-sm flex-col overflow-hidden rounded-lg border">
+        <header className="absolute z-10 flex w-full items-center justify-between border-b bg-black/60 px-4 py-2 backdrop-blur-sm">
+          <Avatar className="h-auto w-auto">
+            <AvatarImage src="/logo.png" alt="logo" className="h-6 w-6" id="" />
             <AvatarFallback>AL</AvatarFallback>
           </Avatar>
           <div className="relative">
@@ -115,7 +115,7 @@ export default function Chat({}: Props) {
                   initial="hidden"
                   animate="visible"
                   transition={{ duration: 0.1, ease: "easeOut" }}
-                  className="absolute right-0 w-40 p-2 space-y-3 translate-y-6 border rounded-xl bg-accents-1"
+                  className="absolute right-0 w-40 translate-y-6 space-y-3 rounded-xl border bg-accents-1 p-2"
                 >
                   {/* Name & Gmail */}
                   <div>
@@ -134,7 +134,7 @@ export default function Chat({}: Props) {
                   {/* Sign out */}
                   <Button
                     variant={"error"}
-                    className="w-full h-6 text-xxs"
+                    className="h-6 w-full text-xxs"
                     onClick={signOutHandler}
                   >
                     {isLoading && (
@@ -155,13 +155,13 @@ export default function Chat({}: Props) {
                   initial="hidden"
                   animate="visible"
                   transition={{ duration: 0.1, ease: "easeOut" }}
-                  className="absolute right-0 w-40 p-2 space-y-3 translate-y-6 border rounded-xl bg-accents-1"
+                  className="absolute right-0 w-40 translate-y-6 space-y-3 rounded-xl border bg-accents-1 p-2"
                 >
                   {/* Sign out */}
                   <Link
                     href={"/login"}
                     className={buttonVariants({
-                      className: "w-full h-6 text-xxs",
+                      className: "h-6 w-full text-xxs",
                     })}
                     onClick={signOutHandler}
                   >
@@ -174,7 +174,7 @@ export default function Chat({}: Props) {
 
         {/* Messages */}
         <div
-          className="relative flex flex-col items-start w-full h-full px-4 py-2 pt-12 overflow-auto custom-scrollbar bg-background"
+          className="custom-scrollbar relative flex h-full w-full flex-col items-start overflow-auto bg-background px-4 py-2 pt-12"
           ref={containerRef}
         >
           {messages?.length !== 0 ? (
@@ -182,19 +182,19 @@ export default function Chat({}: Props) {
               <EachMessage key={message.id} message={message} />
             ))
           ) : (
-            <Box className="h-full mt-3 space-y-2 border-none rounded-none">
-              <Skeleton className="w-1/2 h-6" />
-              <Skeleton className="w-1/3 h-6" />
-              <Skeleton className="w-1/2 h-6" />
-              <Skeleton className="w-1/3 h-6" />
-              <Skeleton className="w-1/2 h-6 ml-auto" />
-              <Skeleton className="w-1/3 h-6 ml-auto" />
-              <Skeleton className="w-1/2 h-6" />
-              <Skeleton className="w-1/3 h-6" />
-              <Skeleton className="w-1/2 h-6 ml-auto" />
-              <Skeleton className="w-1/3 h-6 ml-auto" />
-              <Skeleton className="w-1/2 h-6" />
-              <Skeleton className="w-1/3 h-6" />
+            <Box className="mt-3 h-full space-y-2 rounded-none border-none">
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-6 w-1/3" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-6 w-1/3" />
+              <Skeleton className="ml-auto h-6 w-1/2" />
+              <Skeleton className="ml-auto h-6 w-1/3" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-6 w-1/3" />
+              <Skeleton className="ml-auto h-6 w-1/2" />
+              <Skeleton className="ml-auto h-6 w-1/3" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-6 w-1/3" />
             </Box>
           )}
         </div>

@@ -39,8 +39,8 @@ export default function Login({}: Props) {
 
   if (currentUser == null) {
     return (
-      <div className="relative w-full overflow-hidden h-dvh">
-        <Container size={"2xl"} className="pt-20 space-y-16">
+      <div className="relative h-dvh w-full overflow-hidden">
+        <Container size={"2xl"} className="space-y-16 pt-20">
           <Link
             href={"/"}
             className="flex items-center gap-3 duration-200 hover:gap-4 hover:text-accents-7"
@@ -67,9 +67,9 @@ export default function Login({}: Props) {
   }
 
   return (
-    <div className="grid w-full h-dvh place-items-center">
+    <div className="grid h-dvh w-full place-items-center">
       <Text size={32} className="text-foreground">
-        <span className="px-2 rounded bg-foreground text-background">
+        <span className="rounded bg-foreground px-2 text-background">
           {currentUser.user.user_metadata.full_name}
         </span>
         , You are signed in

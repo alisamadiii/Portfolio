@@ -145,7 +145,7 @@ export default function Intro({}: Props) {
 
   return (
     <div
-      className="fixed top-0 left-0 z-50 flex items-center justify-center w-full h-screen overflow-hidden bg-black isolate"
+      className="fixed left-0 top-0 isolate z-50 flex h-screen w-full items-center justify-center overflow-hidden bg-black"
       id="container"
     >
       <div className="absolute top-0 w-full bg-white" id="circle-white" />

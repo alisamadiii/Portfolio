@@ -59,7 +59,7 @@ export default function Brand({}: Props) {
   return (
     <>
       <Container size={"xl"} className="my-20 space-y-8" id="design-brand">
-        <BgCircle className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 w-96 h-96 blur-[120px] -z-50" />
+        <BgCircle className="absolute left-1/2 top-0 -z-50 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-[120px]" />
 
         <Text as="h2" size={32}>
           Text
@@ -102,50 +102,50 @@ export default function Brand({}: Props) {
 
         <Wrapper className="flex flex-wrap justify-between gap-4">
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-accents-1" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-2" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-3" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-4" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-5" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-6" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-7" />
-            <Rect className="w-8 h-8 rounded-full bg-accents-8" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-1" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-2" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-3" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-4" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-5" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-6" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-7" />
+            <Rect className="h-8 w-8 rounded-full bg-accents-8" />
           </div>
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-success-lighter" />
-            <Rect className="w-8 h-8 rounded-full bg-success-light" />
-            <Rect className="w-8 h-8 rounded-full bg-success" />
-            <Rect className="w-8 h-8 rounded-full bg-success-dark" />
+            <Rect className="h-8 w-8 rounded-full bg-success-lighter" />
+            <Rect className="h-8 w-8 rounded-full bg-success-light" />
+            <Rect className="h-8 w-8 rounded-full bg-success" />
+            <Rect className="h-8 w-8 rounded-full bg-success-dark" />
           </div>
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-error-lighter" />
-            <Rect className="w-8 h-8 rounded-full bg-error-light" />
-            <Rect className="w-8 h-8 rounded-full bg-error" />
-            <Rect className="w-8 h-8 rounded-full bg-error-dark" />
+            <Rect className="h-8 w-8 rounded-full bg-error-lighter" />
+            <Rect className="h-8 w-8 rounded-full bg-error-light" />
+            <Rect className="h-8 w-8 rounded-full bg-error" />
+            <Rect className="h-8 w-8 rounded-full bg-error-dark" />
           </div>
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-warning-lighter" />
-            <Rect className="w-8 h-8 rounded-full bg-warning-light" />
-            <Rect className="w-8 h-8 rounded-full bg-warning" />
-            <Rect className="w-8 h-8 rounded-full bg-warning-dark" />
+            <Rect className="h-8 w-8 rounded-full bg-warning-lighter" />
+            <Rect className="h-8 w-8 rounded-full bg-warning-light" />
+            <Rect className="h-8 w-8 rounded-full bg-warning" />
+            <Rect className="h-8 w-8 rounded-full bg-warning-dark" />
           </div>
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-violet-lighter" />
-            <Rect className="w-8 h-8 rounded-full bg-violet-light" />
-            <Rect className="w-8 h-8 rounded-full bg-violet" />
-            <Rect className="w-8 h-8 rounded-full bg-violet-dark" />
+            <Rect className="h-8 w-8 rounded-full bg-violet-lighter" />
+            <Rect className="h-8 w-8 rounded-full bg-violet-light" />
+            <Rect className="h-8 w-8 rounded-full bg-violet" />
+            <Rect className="h-8 w-8 rounded-full bg-violet-dark" />
           </div>
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-cyan-lighter" />
-            <Rect className="w-8 h-8 rounded-full bg-cyan-light" />
-            <Rect className="w-8 h-8 rounded-full bg-cyan" />
-            <Rect className="w-8 h-8 rounded-full bg-cyan-dark" />
+            <Rect className="h-8 w-8 rounded-full bg-cyan-lighter" />
+            <Rect className="h-8 w-8 rounded-full bg-cyan-light" />
+            <Rect className="h-8 w-8 rounded-full bg-cyan" />
+            <Rect className="h-8 w-8 rounded-full bg-cyan-dark" />
           </div>
           <div className="flex -space-x-4">
-            <Rect className="w-8 h-8 rounded-full bg-highlight-purple" />
-            <Rect className="w-8 h-8 rounded-full bg-highlight-magenta" />
-            <Rect className="w-8 h-8 rounded-full bg-highlight-pink" />
-            <Rect className="w-8 h-8 rounded-full bg-highlight-yellow" />
+            <Rect className="h-8 w-8 rounded-full bg-highlight-purple" />
+            <Rect className="h-8 w-8 rounded-full bg-highlight-magenta" />
+            <Rect className="h-8 w-8 rounded-full bg-highlight-pink" />
+            <Rect className="h-8 w-8 rounded-full bg-highlight-yellow" />
           </div>
         </Wrapper>
 
@@ -154,10 +154,10 @@ export default function Brand({}: Props) {
         </Text>
 
         <Wrapper className="flex flex-wrap gap-4">
-          <Rect className="w-24 h-24 border rounded bg-accents-1" />
-          <Rect className="w-24 h-24 border rounded-lg bg-accents-1" />
-          <Rect className="w-24 h-24 border rounded-xl bg-accents-1" />
-          <Rect className="w-24 h-24 border rounded-2xl bg-accents-1" />
+          <Rect className="h-24 w-24 rounded border bg-accents-1" />
+          <Rect className="h-24 w-24 rounded-lg border bg-accents-1" />
+          <Rect className="h-24 w-24 rounded-xl border bg-accents-1" />
+          <Rect className="h-24 w-24 rounded-2xl border bg-accents-1" />
         </Wrapper>
 
         <Text as="h2" size={32}>
@@ -239,14 +239,14 @@ export default function Brand({}: Props) {
           Context
         </Text>
 
-        <Wrapper className="grid gap-4 place-items-center">
+        <Wrapper className="grid place-items-center gap-4">
           <ContextMenu>
-            <ContextMenuTrigger className="grid w-full h-24 max-w-xs text-black bg-white border rounded select-none place-items-center">
+            <ContextMenuTrigger className="grid h-24 w-full max-w-xs select-none place-items-center rounded border bg-white text-black">
               Right click
             </ContextMenuTrigger>
             <ContextMenuContent className="bg-accents-1">
               <ContextMenuItem
-                className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+                className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
                 onClick={() => {
                   toast({
                     title: "Delete",
@@ -258,7 +258,7 @@ export default function Brand({}: Props) {
                 Delete
               </ContextMenuItem>
               <ContextMenuItem
-                className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+                className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
                 onClick={() => {
                   toast({
                     title: "Edit",
@@ -270,7 +270,7 @@ export default function Brand({}: Props) {
                 Edit
               </ContextMenuItem>
               <ContextMenuItem
-                className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+                className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
                 onClick={() => {
                   toast({
                     title: "Reply",
@@ -281,7 +281,7 @@ export default function Brand({}: Props) {
                 <Reply size={14} /> Reply
               </ContextMenuItem>
               <ContextMenuItem
-                className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+                className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
                 onClick={() => {
                   toast({
                     title: "Copy",
@@ -305,13 +305,13 @@ export default function Brand({}: Props) {
           </Button>
           <AnimatePresence>
             {isModel && (
-              <Rect className="fixed inset-0 z-50 grid w-full h-screen px-4 place-items-center isolate">
+              <Rect className="fixed inset-0 isolate z-50 grid h-screen w-full place-items-center px-4">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.35 }}
-                  className="absolute inset-0 w-full h-full bg-black/75 -z-10"
+                  className="absolute inset-0 -z-10 h-full w-full bg-black/75"
                   onClick={openingModel}
                 />
                 <Rect
@@ -319,7 +319,7 @@ export default function Brand({}: Props) {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -40, opacity: 0 }}
                   transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
-                  className="w-full max-w-md border rounded-xl bg-accents-1 h-60"
+                  className="h-60 w-full max-w-md rounded-xl border bg-accents-1"
                 ></Rect>
               </Rect>
             )}
@@ -332,41 +332,41 @@ export default function Brand({}: Props) {
 
         <Wrapper className="grid items-start gap-8 md:grid-cols-2">
           <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-4 grow">
-              <Skeleton className="w-12 h-12 rounded-full" />
-              <div className="space-y-2 grow">
-                <Skeleton className="w-full h-4" />
-                <Skeleton className="w-full h-2" />
-                <Skeleton className="w-full h-2" />
-                <Skeleton className="w-32 h-2" />
+            <div className="flex grow items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="grow space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-2 w-32" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <Skeleton className="w-full h-32 col-span-2" />
-              <Skeleton className="w-full h-full row-span-2" />
-              <Skeleton className="w-full h-32" />
-              <Skeleton className="w-full h-32" />
-              <Skeleton className="w-full h-32 col-span-3" />
+              <Skeleton className="col-span-2 h-32 w-full" />
+              <Skeleton className="row-span-2 h-full w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="col-span-3 h-32 w-full" />
             </div>
           </div>
 
-          <div className="flex flex-col items-start gap-4 grow">
-            <Skeleton className="w-full aspect-square rounded-xl" />
-            <div className="flex items-center w-1/2 gap-4">
-              <Skeleton className="w-12 h-12 rounded-full" />
-              <div className="space-y-2 grow">
-                <Skeleton className="w-full h-4" />
-                <Skeleton className="w-1/2 h-2" />
+          <div className="flex grow flex-col items-start gap-4">
+            <Skeleton className="aspect-square w-full rounded-xl" />
+            <div className="flex w-1/2 items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="grow space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-2 w-1/2" />
               </div>
             </div>
             <div className="w-full space-y-2">
-              <Skeleton className="w-full h-2 rounded-full" />
-              <Skeleton className="w-full h-2 rounded-full" />
-              <Skeleton className="w-full h-2 rounded-full" />
-              <Skeleton className="w-full h-2 rounded-full" />
-              <Skeleton className="w-1/2 h-2 rounded-full" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-2 w-1/2 rounded-full" />
             </div>
-            <Skeleton className="w-32 h-12 mt-4" />
+            <Skeleton className="mt-4 h-12 w-32" />
           </div>
         </Wrapper>
 
@@ -458,10 +458,10 @@ export default function Brand({}: Props) {
         </Wrapper>
       </Container>
 
-      <Container size={"2xl"} className="relative overflow-hidden isolate">
-        <div className="absolute top-0 left-0 z-20 w-full h-px bg-gradient-to-l from-transparent via-white to-transparent" />
+      <Container size={"2xl"} className="relative isolate overflow-hidden">
+        <div className="absolute left-0 top-0 z-20 h-px w-full bg-gradient-to-l from-transparent via-white to-transparent" />
         <div
-          className="absolute inset-0 w-full h-full -z-10 opacity-10"
+          className="absolute inset-0 -z-10 h-full w-full opacity-10"
           style={{
             background:
               "radial-gradient(50% 50% at 50% 0,rgba(255, 255, 255,.5) 0,rgba(255, 255, 255,0) 100%)",
@@ -469,14 +469,14 @@ export default function Brand({}: Props) {
         />
         <Container
           size={"xl"}
-          className="grid items-center gap-8 py-32 text-center md:text-start md:grid-cols-3"
+          className="grid items-center gap-8 py-32 text-center md:grid-cols-3 md:text-start"
         >
-          <div className="flex flex-col items-center gap-2 md:items-start md:col-span-2">
+          <div className="flex flex-col items-center gap-2 md:col-span-2 md:items-start">
             <Avatar className="relative mb-4" id="outline-animation">
               <AvatarImage
                 src="https://www.alirezasamadi.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.76a478a9.jpg&w=128&q=75"
                 alt="logo"
-                className="w-8 h-8 rounded-full"
+                className="h-8 w-8 rounded-full"
                 id=""
               />
               <AvatarFallback>AL</AvatarFallback>
@@ -485,7 +485,7 @@ export default function Brand({}: Props) {
             <Text
               size={20}
               variant={"muted-lg"}
-              className="font-normal line-clamp-2"
+              className="line-clamp-2 font-normal"
             >
               My name is Ali Reza and I am a web developer with over 2 years of
               experience in the field. I specialize in front-end development and

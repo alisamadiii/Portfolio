@@ -27,7 +27,7 @@ export default function Technologies({}: Props) {
               <motion.div
                 layoutId="information"
                 layout="position"
-                className="flex flex-col items-center p-6 text-center border rounded bg-background w-80"
+                className="flex w-80 flex-col items-center rounded border bg-background p-6 text-center"
               >
                 <motion.div layoutId={technology.title} className="mb-2">
                   <TechIcon icon={technology.icon} />

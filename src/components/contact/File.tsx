@@ -35,7 +35,7 @@ function File({ file }: Props) {
         <FileDisplay file={file} />
       </motion.div>
       <AiOutlineInfoCircle
-        className="absolute cursor-pointer top-4 right-4"
+        className="absolute right-4 top-4 cursor-pointer"
         onClick={() => setIsInformation(!isInformation)}
       />
       <AnimatePresence>
@@ -45,7 +45,7 @@ function File({ file }: Props) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween" }}
-            className="absolute top-0 right-0 w-full h-full p-4 pb-12 space-y-4 overflow-auto border bg-black/60 backdrop-blur rounded-xl custom-scrollbar fade-out-file_information"
+            className="custom-scrollbar fade-out-file_information absolute right-0 top-0 h-full w-full space-y-4 overflow-auto rounded-xl border bg-black/60 p-4 pb-12 backdrop-blur"
             onClick={() => setIsInformation(false)}
             title="close"
           >
@@ -90,7 +90,7 @@ const FileDisplay = memo(({ file }: { file: Blob | File }) => {
       width={300}
       height={600}
       alt=""
-      className={`w-full h-full pointer-events-none rounded-xl duration-200`}
+      className={`pointer-events-none h-full w-full rounded-xl duration-200`}
     />
   );
 });

@@ -100,25 +100,25 @@ export default function EachMessage({ message }: Props) {
   return (
     <ContextMenu>
       <ContextMenuTrigger
-        className={`relative group w-auto min-w-message max-w-message border mb-2 p-2 rounded-lg transition-colors ${
+        className={`group relative mb-2 w-auto min-w-message max-w-message rounded-lg border p-2 transition-colors ${
           currentUser?.user.user_metadata.provider_id == message.user_uid
-            ? "bg-foreground text-background ml-auto rounded-tr-none"
+            ? "ml-auto rounded-tr-none bg-foreground text-background"
             : "rounded-tl-none"
-        } ${deleted && "!bg-error text-white animate-pulse"}`}
+        } ${deleted && "animate-pulse !bg-error text-white"}`}
         onMouseEnter={() => mouseEnter(message.user_uid)}
         onMouseLeave={mouseLeave}
       >
         {message.reply && (
           <Text
             size={10}
-            className={`relative px-2 py-1 mb-2 overflow-hidden rounded-r select-none line-clamp-3 ${
+            className={`relative mb-2 line-clamp-3 select-none overflow-hidden rounded-r px-2 py-1 ${
               currentUser?.user.user_metadata.provider_id == message.user_uid
                 ? "bg-accents-7"
                 : "bg-accents-1"
             }`}
           >
             <span
-              className={`absolute top-0 left-0 w-[1px] h-full ${
+              className={`absolute left-0 top-0 h-full w-[1px] ${
                 currentUser?.user.user_metadata.provider_id == message.user_uid
                   ? "bg-background"
                   : "bg-foreground"
@@ -128,8 +128,8 @@ export default function EachMessage({ message }: Props) {
           </Text>
         )}
         {message.files && (
-          <div className={`relative mb-2 overflow-hidden rounded w-[220px]`}>
-            <div className="relative flex items-center bg-accents-6/20 aspect-square">
+          <div className={`relative mb-2 w-[220px] overflow-hidden rounded`}>
+            <div className="relative flex aspect-square items-center bg-accents-6/20">
               <AnimatePresence initial={false}>
                 <motion.div
                   initial={{ x: "100%" }}
@@ -141,7 +141,7 @@ export default function EachMessage({ message }: Props) {
                 >
                   <Image
                     src={message.files[currentImage]}
-                    className="object-cover w-full pointer-events-none select-none"
+                    className="pointer-events-none w-full select-none object-cover"
                     width={300}
                     height={300}
                     alt=""
@@ -153,13 +153,13 @@ export default function EachMessage({ message }: Props) {
               <>
                 {currentImage !== 0 && (
                   <IoIosArrowDropleftCircle
-                    className="absolute text-xl text-white -translate-y-1/2 shadow-lg cursor-pointer top-1/2 left-1"
+                    className="absolute left-1 top-1/2 -translate-y-1/2 cursor-pointer text-xl text-white shadow-lg"
                     onClick={() => changingImage("decrease")}
                   />
                 )}
                 {currentImage !== message.files.length - 1 && (
                   <IoIosArrowDroprightCircle
-                    className="absolute text-xl text-white -translate-y-1/2 shadow-lg cursor-pointer top-1/2 right-1"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer text-xl text-white shadow-lg"
                     onClick={() => changingImage("increase")}
                   />
                 )}
@@ -171,7 +171,7 @@ export default function EachMessage({ message }: Props) {
           {message.message}
         </Text>
         {currentUser?.user.user_metadata.provider_id !== message.user_uid && (
-          <div className="w-20 absolute right-0 translate-x-[calc(100%+8px)] bg-accents-1 top-1/2 p-1 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1/2 duration-100">
+          <div className="absolute right-0 top-1/2 w-20 translate-x-[calc(100%+8px)] rounded bg-accents-1 p-1 opacity-0 duration-100 group-hover:-translate-y-1/2 group-hover:opacity-100">
             {userData ? (
               <div className="flex items-center gap-1">
                 <Image
@@ -182,7 +182,7 @@ export default function EachMessage({ message }: Props) {
                   className="rounded-full"
                 />
                 <div className="w-14">
-                  <Text className="text-[8px] truncate">
+                  <Text className="truncate text-[8px]">
                     {userData.full_name}
                   </Text>
                   <Text className="text-[6px]">01:01pm</Text>
@@ -190,10 +190,10 @@ export default function EachMessage({ message }: Props) {
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <Skeleton className="w-3 h-3" />
+                <Skeleton className="h-3 w-3" />
                 <div className="space-y-1">
-                  <Skeleton className="h-1 rounded-none w-9" />
-                  <Skeleton className="w-6 h-1 rounded-none" />
+                  <Skeleton className="h-1 w-9 rounded-none" />
+                  <Skeleton className="h-1 w-6 rounded-none" />
                 </div>
               </div>
             )}
@@ -205,26 +205,26 @@ export default function EachMessage({ message }: Props) {
           process.env.NEXT_PUBLIC_OWNER) && (
           <>
             <ContextMenuItem
-              className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+              className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
               onClick={() => deleteMessage(message.id)}
             >
               <Trash2 size={14} />
               Delete
             </ContextMenuItem>
-            <ContextMenuItem className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white">
+            <ContextMenuItem className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white">
               <Pencil size={14} />
               Edit
             </ContextMenuItem>
           </>
         )}
         <ContextMenuItem
-          className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+          className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
           onClick={() => replyMessage(message.id)}
         >
           <Reply size={14} /> Reply
         </ContextMenuItem>
         <ContextMenuItem
-          className="flex items-center gap-2 text-xs duration-100 cursor-pointer text-accents-6 hover:bg-accents-2 hover:text-white"
+          className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
           onClick={() => copyMessage(message.message)}
         >
           <Copy size={14} /> Copy Text
