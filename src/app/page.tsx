@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import SplitType from "split-type";
@@ -10,18 +10,22 @@ import {
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
+import { motion } from "framer-motion";
 
 import { Container, containerVariants } from "@/components/ui/container";
-import { Text } from "@/components/ui/text";
+import { Text, textVariants } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
 
 // Icons
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
+import { BsArrowRightShort } from "react-icons/bs";
 
-import { Experience } from "@/lib/data";
+import { Experience, Projects } from "@/lib/data";
 import { useToast } from "@/components/ui/use-toast";
 import Technologies from "@/components/technologies";
+import Project from "@/components/project";
+import { useScroll, useTransform } from "framer-motion";
 
 export default function Home() {
   const { toast } = useToast();
@@ -32,21 +36,11 @@ export default function Home() {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      // Update the gradientColor value here
       setGradientColor((prevColor) => (prevColor % 3) + 1);
     }, 2000); // 1000 milliseconds = 1 second
 
-    // To stop the looped function when the component unmounts
     return () => clearInterval(intervalId);
   }, []);
-
-  // useEffect(() => {
-  //   (async () => {
-  //     // @ts-ignore
-  //     const LocomotiveScroll = (await import("locomotive-scroll")).default;
-  //     const locomotiveScroll = new LocomotiveScroll();
-  //   })();
-  // }, []);
 
   useEffect(() => {
     const splitTypes = document.querySelectorAll("#reveal-text");
@@ -78,16 +72,28 @@ export default function Home() {
     });
   };
 
+  const headerContainer = useRef<null | HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: headerContainer,
+    offset: ["start start", "center start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+
   return (
     <main>
       <div className="absolute top-1/2 -z-50 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/5 blur-[100px]" />
 
-      <header
+      <motion.header
+        style={{ y, opacity }}
         className={containerVariants({
           size: "xl",
           className:
             "flex flex-col items-center justify-center overflow-hidden max-md:mt-16 max-md:py-20 md:h-dvh",
         })}
+        ref={headerContainer}
       >
         <Image src={"/Logo.png"} width={60} height={60} alt="logo" />
         <h1 className="my-4 max-w-4xl text-center text-4xl text-foreground md:text-5xl lg:text-6xl">
@@ -148,7 +154,7 @@ export default function Home() {
             </Button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <div className="space-y-32 px-6">
         <section className="flex flex-col items-center space-y-6" id="about">
@@ -176,8 +182,13 @@ export default function Home() {
           <Technologies />
         </section>
 
-        <section id="project">
+        <section className="space-y-6" id="project">
           <NumberGradient gradient={2} number={2} title="Projects" />
+          <ul className={containerVariants({ size: "xl" })}>
+            {Projects.map((project) => (
+              <Project key={project.id} project={project} />
+            ))}
+          </ul>
         </section>
 
         <section className="space-y-20 overflow-hidden" id="experience">

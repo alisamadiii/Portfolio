@@ -34,4 +34,16 @@ const UserInformationPopup: Variants = {
   },
 };
 
-export { ServicePopupAnimation, UserInformationPopup };
+const ProjectInformation: Variants = {
+  hidden: {
+    height: 0,
+  },
+  visible: {
+    height: "auto",
+  },
+  exit: {
+    height: 0,
+  },
+};
+
+export { ServicePopupAnimation, UserInformationPopup, ProjectInformation };

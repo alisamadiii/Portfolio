@@ -12,6 +12,16 @@ const ServiceINITIAL_VALUE = [
   },
 ];
 
+const Projects = [
+  {
+    id: 1,
+    name: "AniLearn.dev",
+    description:
+      "We offer top-notch content for easy learning, with clear visual development principles.",
+    site: "https://www.anilearn.dev/",
+  },
+];
+
 const Experience = [
   {
     id: 1,
@@ -248,6 +258,7 @@ const Testimonials = [
 
 export {
   ServiceINITIAL_VALUE,
+  Projects,
   Experience,
   Technologies,
   Pricing,
