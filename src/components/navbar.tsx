@@ -50,7 +50,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="absolute left-0 top-0 isolate z-50 h-16 w-full bg-background">
+      <nav className="absolute left-0 top-0 isolate z-50 h-16 w-full bg-background/40 backdrop-blur-sm">
         <Container
           size={"2xl"}
           className="flex h-full items-center justify-between"

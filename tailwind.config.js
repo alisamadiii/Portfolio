@@ -26,7 +26,7 @@ module.exports = {
         message: "42px",
       },
       colors: {
-        background: "hsl(var(--geist-background))",
+        background: "hsl(var(--geist-background) / <alpha-value>)",
         foreground: "hsl(var(--geist-foreground))",
         button: {
           DEFAULT: "hsl(var(--button-background))",
