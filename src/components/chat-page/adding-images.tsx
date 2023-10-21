@@ -1,6 +1,6 @@
-import React, { ChangeEvent, DragEvent, useState } from "react";
+import React, { type ChangeEvent, type DragEvent, useState } from "react";
 import Compressor from "compressorjs";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { Rect } from "../ui/box";
 import { Label } from "../ui/label";
@@ -19,9 +19,9 @@ import { Switch } from "../ui/switch";
 import LinkInput from "./link-input";
 import { Button } from "../ui/button";
 
-type Props = {
+interface Props {
   setIsVisible: (a: boolean) => void;
-};
+}
 
 export default function AddingImages({ setIsVisible }: Props) {
   const { uploadedImage, setUploadedImage } = useChatStore();
@@ -37,7 +37,9 @@ export default function AddingImages({ setIsVisible }: Props) {
     const target = e.target as HTMLInputElement;
     const uploadedFiles: FileList | null = target.files;
 
-    if (Array.from(uploadedFiles!).length > 5) {
+    if (!uploadedFiles) return;
+
+    if (Array.from(uploadedFiles).length > 5) {
       return toast({
         title: "5 Images",
         description: "you are not allowed to upload more than 5 images.",
@@ -49,8 +51,8 @@ export default function AddingImages({ setIsVisible }: Props) {
 
     const compressedFiles: Blob[] = [];
 
-    const compressing = Array.from(uploadedFiles!).map((file) => {
-      return new Promise((resolve: any) => {
+    const compressing = Array.from(uploadedFiles).map(async (file) => {
+      return await new Promise((resolve: any) => {
         new Compressor(file, {
           quality: 0.6,
           success: (compressedResult) => {
@@ -77,7 +79,7 @@ export default function AddingImages({ setIsVisible }: Props) {
 
     const uploadedFiles = event.dataTransfer.files;
 
-    if (Array.from(uploadedFiles!).length > 5) {
+    if (Array.from(uploadedFiles).length > 5) {
       toast({
         title: "5 Images",
         description: "you are not allowed to upload more than 5 images.",
@@ -90,9 +92,9 @@ export default function AddingImages({ setIsVisible }: Props) {
 
     const compressedFiles: Blob[] = [];
 
-    const compressing = Array.from(uploadedFiles!).map((file) => {
+    const compressing = Array.from(uploadedFiles).map(async (file) => {
       if (file.type.startsWith("image")) {
-        return new Promise((resolve: any) => {
+        return await new Promise((resolve: any) => {
           new Compressor(file, {
             quality: 0.6,
             success: (compressedResult) => {
@@ -126,7 +128,9 @@ export default function AddingImages({ setIsVisible }: Props) {
         e.preventDefault();
         setIsDroppingFile(true);
       }}
-      onDragLeave={() => setIsDroppingFile(false)}
+      onDragLeave={() => {
+        setIsDroppingFile(false);
+      }}
       onDrop={onDropHandler}
     >
       <motion.div
@@ -137,9 +141,11 @@ export default function AddingImages({ setIsVisible }: Props) {
         className={`absolute inset-0 -z-10 h-full w-full transition-colors ${
           isDroppingFile ? "animate-pulse bg-success/50" : "bg-black/75"
         }`}
-        onClick={() => setIsVisible(false)}
+        onClick={() => {
+          setIsVisible(false);
+        }}
       />
-      {isDroppingFile == false ? (
+      {!isDroppingFile ? (
         <Rect
           key={"manual-uploading"}
           initial={{ y: -40, opacity: 0 }}
@@ -148,12 +154,12 @@ export default function AddingImages({ setIsVisible }: Props) {
           transition={{ ease: [0.4, 0, 0.2, 1], duration: 0.35 }}
           className={`flex w-full max-w-md flex-col gap-2 rounded-xl border bg-accents-1 p-4`}
         >
-          {uploadWay == 1 ? (
+          {uploadWay === 1 ? (
             <>
               <Label
                 className={`flex w-full cursor-pointer gap-3 rounded bg-accents-2/10 p-4 duration-200 hover:bg-accents-2/20 ${
                   loading && "bg-success-darker text-white"
-                } ${uploadedImage.length == 5 && "bg-error-dark text-white"}`}
+                } ${uploadedImage.length === 5 && "bg-error-dark text-white"}`}
               >
                 {loading ? (
                   <RotatingLines
@@ -176,7 +182,7 @@ export default function AddingImages({ setIsVisible }: Props) {
                 <input
                   type="file"
                   multiple
-                  disabled={uploadedImage.length == 5}
+                  disabled={uploadedImage.length === 5}
                   accept="image/*"
                   className="hidden"
                   onChange={importingFile}
@@ -237,14 +243,16 @@ export default function AddingImages({ setIsVisible }: Props) {
 
           <Label
             className={`flex cursor-pointer select-none items-center justify-end gap-2 text-xs ${
-              uploadWay == 1 ? "mt-4" : "mt-20"
+              uploadWay === 1 ? "mt-4" : "mt-20"
             }`}
           >
             Use link instead
             <Switch
-              checked={uploadWay == 2}
+              checked={uploadWay === 2}
               disabled={uploadedImage.length > 0}
-              onCheckedChange={(checked) => setUploadWay(checked ? 2 : 1)}
+              onCheckedChange={(checked) => {
+                setUploadWay(checked ? 2 : 1);
+              }}
             />
           </Label>
         </Rect>

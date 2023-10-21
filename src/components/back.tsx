@@ -1,9 +1,10 @@
-import { MoveLeft } from "lucide-react";
 import React from "react";
 import Link from "next/link";
 import { textVariants } from "./ui/text";
 
-type Props = { to: string };
+interface Props {
+  to: string;
+}
 
 export default function Back({ to }: Props) {
   return (

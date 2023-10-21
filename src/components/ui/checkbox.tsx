@@ -1,6 +1,6 @@
 import React from "react";
 
-import { VariantProps, cva } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Label } from "./label";

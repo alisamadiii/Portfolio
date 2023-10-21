@@ -1,9 +1,8 @@
 "use client";
 
 import { Container } from "@/components/ui/container";
-import React, { DragEvent, useEffect, useState } from "react";
-import { AnimatePresence, Variants, motion } from "framer-motion";
-import Compressor from "compressorjs";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, type Variants, motion } from "framer-motion";
 
 import { Pricing } from "@/lib/data";
 import Price from "@/components/Price";
@@ -17,11 +16,9 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import DesignPage from "@/components/contact/design";
 import Image from "next/image";
 
-type Props = {};
-
 const INITIAL_TABS = [1, 2, 3, 4, 5];
 
-export default function Contact({}: Props) {
+export default function Contact() {
   const [tab, setTab] = useState(1);
 
   const { name, setName, email, setEmail, page, setPage, level, design } =
@@ -30,7 +27,7 @@ export default function Contact({}: Props) {
 
   useEffect(() => {
     const handleBeforeUnload = (e: any) => {
-      if (tab != 1) {
+      if (tab !== 1) {
         e.preventDefault();
         e.returnValue = ""; // Some browsers require this line to display the confirmation dialog
       }
@@ -51,7 +48,7 @@ export default function Contact({}: Props) {
   }, [currentUser]);
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/service/building-website/contact`,
@@ -61,11 +58,11 @@ export default function Contact({}: Props) {
 
   // page number
   const pageNumber = (action: "increase" | "decrease") => {
-    if (action == "increase") {
-      if (page == 20) return;
+    if (action === "increase") {
+      if (page === 20) return;
       setPage(page + 1);
-    } else if (action == "decrease") {
-      if (page == 1) return;
+    } else if (action === "decrease") {
+      if (page === 1) return;
       setPage(page - 1);
     }
   };
@@ -90,17 +87,17 @@ export default function Contact({}: Props) {
       <Container
         size={"2xl"}
         className={`mt-20 flex gap-12 pb-12 md:mt-24 ${
-          tab == 6 ? "flex-row items-center" : "flex-col items-start"
+          tab === 6 ? "flex-row items-center" : "flex-col items-start"
         }`}
       >
-        <div className={`mb-12 flex gap-4 md:gap-12 ${tab == 6 && "hidden"}`}>
+        <div className={`mb-12 flex gap-4 md:gap-12 ${tab === 6 && "hidden"}`}>
           {INITIAL_TABS.map((tabValue) => (
             <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
           ))}
         </div>
         {/* Tab 1 */}
         <AnimatePresence mode="wait">
-          {tab == 1 ? (
+          {tab === 1 ? (
             <motion.section
               key={1}
               variants={enteringAnimation}
@@ -118,7 +115,7 @@ export default function Contact({}: Props) {
                 ))}
               </div>
             </motion.section>
-          ) : tab == 2 ? (
+          ) : tab === 2 ? (
             <motion.section
               key={2}
               variants={enteringAnimation}
@@ -134,11 +131,13 @@ export default function Contact({}: Props) {
                 type="text"
                 placeholder="Name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                }}
                 className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
               />
             </motion.section>
-          ) : tab == 3 ? (
+          ) : tab === 3 ? (
             <motion.section
               key={3}
               variants={enteringAnimation}
@@ -154,11 +153,13 @@ export default function Contact({}: Props) {
                 type="text"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                }}
                 className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
               />
             </motion.section>
-          ) : tab == 4 ? (
+          ) : tab === 4 ? (
             <motion.section
               key={4}
               variants={enteringAnimation}
@@ -184,16 +185,20 @@ export default function Contact({}: Props) {
                 <div>
                   <IoIosArrowUp
                     className="cursor-pointer"
-                    onClick={() => pageNumber("increase")}
+                    onClick={() => {
+                      pageNumber("increase");
+                    }}
                   />
                   <IoIosArrowDown
                     className="cursor-pointer"
-                    onClick={() => pageNumber("decrease")}
+                    onClick={() => {
+                      pageNumber("decrease");
+                    }}
                   />
                 </div>
               </div>
             </motion.section>
-          ) : tab == 5 ? (
+          ) : tab === 5 ? (
             <motion.section
               key={5}
               variants={enteringAnimation}
@@ -201,7 +206,7 @@ export default function Contact({}: Props) {
               animate="visible"
               className="w-full space-y-8"
             >
-              {Pricing.find((price) => price.title == level)?.job.design ? (
+              {Pricing.find((price) => price.title === level)?.job.design ? (
                 <Text size={48} className="text-success">
                   I will make the design :)
                 </Text>
@@ -210,7 +215,7 @@ export default function Contact({}: Props) {
               )}
             </motion.section>
           ) : (
-            tab == 6 && (
+            tab === 6 && (
               <motion.section key={6} className="w-full grow space-y-12">
                 <Text size={48} className="text-center text-foreground">
                   Review page
@@ -253,7 +258,12 @@ export default function Contact({}: Props) {
                     ))}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Button size={"md"} onClick={() => setTab(tab - 1)}>
+                    <Button
+                      size={"md"}
+                      onClick={() => {
+                        setTab(tab - 1);
+                      }}
+                    >
                       Edit
                     </Button>
                     <Button variant={"primary"} size={"md"}>
@@ -268,17 +278,24 @@ export default function Contact({}: Props) {
 
         {tab !== 6 && (
           <div className="flex gap-4">
-            <Button onClick={() => setTab(tab - 1)} disabled={tab == 1}>
+            <Button
+              onClick={() => {
+                setTab(tab - 1);
+              }}
+              disabled={tab === 1}
+            >
               Prev
             </Button>
             {currentUser ? (
               <Button
-                onClick={() => setTab(tab + 1)}
+                onClick={() => {
+                  setTab(tab + 1);
+                }}
                 disabled={
-                  tab == 6 ||
-                  (tab == 2 && name.length == 0) ||
-                  (tab == 3 && !email.includes(".com")) ||
-                  (tab == 5 && design.url?.length == 0)
+                  tab === 6 ||
+                  (tab === 2 && name.length === 0) ||
+                  (tab === 3 && !email.includes(".com")) ||
+                  (tab === 5 && design.url?.length === 0)
                 }
               >
                 Next
@@ -293,10 +310,10 @@ export default function Contact({}: Props) {
   );
 }
 
-type TabProps = {
+interface TabProps {
   tabValue: number;
   tabState: number;
-};
+}
 
 function Tab({ tabValue, tabState }: TabProps) {
   const [status, setStatus] = useState<
@@ -304,7 +321,7 @@ function Tab({ tabValue, tabState }: TabProps) {
   >("");
 
   useEffect(() => {
-    tabValue == tabState
+    tabValue === tabState
       ? setStatus("progress")
       : tabValue < tabState
       ? setStatus("completed")
@@ -316,13 +333,13 @@ function Tab({ tabValue, tabState }: TabProps) {
       layout
       initial={false}
       animate={{
-        opacity: status == "completed" ? 1 : status == "progress" ? 0.8 : 0.2,
+        opacity: status === "completed" ? 1 : status === "progress" ? 0.8 : 0.2,
       }}
       transition={{ duration: 0.4 }}
       className="relative isolate flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border"
     >
       <AnimatePresence>
-        {status == "completed" && (
+        {status === "completed" && (
           <motion.div
             initial={{ x: -100 }}
             animate={{ x: 0 }}
@@ -333,7 +350,7 @@ function Tab({ tabValue, tabState }: TabProps) {
         )}
       </AnimatePresence>
       <AnimatePresence mode="wait">
-        {status == "completed" ? (
+        {status === "completed" ? (
           <motion.span
             initial={{ scale: 0 }}
             animate={{

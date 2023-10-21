@@ -1,9 +1,9 @@
 import React from "react";
 import { FaEarthAmericas, FaReact } from "react-icons/fa6";
 import { BsVectorPen } from "react-icons/bs";
-import { TechnologyType } from "@/types/index.t";
+import { type TechnologyType } from "@/types/index.t";
 
-const ServiceINITIAL_VALUE = [
+const ServiceInitialValue = [
   {
     id: 1,
     title: "Building Website",
@@ -103,7 +103,7 @@ const Technologies: TechnologyType[] = [
   },
 ];
 
-export type PricingType = {
+export interface PricingType {
   id: number;
   title: string;
   price: number;
@@ -112,7 +112,7 @@ export type PricingType = {
     coding: boolean;
     animation: boolean;
   };
-};
+}
 
 const Pricing: PricingType[] = [
   {
@@ -257,7 +257,7 @@ const Testimonials = [
 ];
 
 export {
-  ServiceINITIAL_VALUE,
+  ServiceInitialValue,
   Projects,
   Experience,
   Technologies,

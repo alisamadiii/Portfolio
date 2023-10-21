@@ -6,14 +6,14 @@ import { BsArrowRightShort } from "react-icons/bs";
 import { ProjectInformation } from "@/lib/animation";
 import { Button } from "./ui/button";
 
-type Props = {
+interface Props {
   project: {
     id: number;
     name: string;
     description: string;
     site: string;
   };
-};
+}
 
 export default function Project({ project }: Props) {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +27,9 @@ export default function Project({ project }: Props) {
           }`,
         })}
         title="open"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+        }}
       >
         {project.name}
         <BsArrowRightShort
@@ -54,7 +56,7 @@ export default function Project({ project }: Props) {
             >
               <Text>{project.description}</Text>
               <Button>
-                <a href={project.site} target="_blank">
+                <a href={project.site} target="_blank" rel="noreferrer">
                   Visit
                 </a>
               </Button>

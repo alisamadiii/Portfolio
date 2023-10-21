@@ -1,8 +1,10 @@
 "use client";
 
+import React from "react";
+
 import { supabase } from "@/utils/supabase";
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useContext,
   useEffect,
@@ -23,7 +25,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const data = supabase.auth.onAuthStateChange((event, session: any) => {
+    supabase.auth.onAuthStateChange((event, session: any) => {
       setCurrentUser(session);
     });
   }, []);

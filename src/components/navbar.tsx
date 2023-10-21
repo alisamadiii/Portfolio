@@ -2,11 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, Variants, motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { Container } from "./ui/container";
-import { Button, buttonVariants } from "./ui/button";
+import { buttonVariants } from "./ui/button";
 import { Text, textVariants } from "./ui/text";
 import { Box } from "./ui/box";
 
@@ -14,15 +13,12 @@ import { Box } from "./ui/box";
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import { IoIosArrowDown } from "react-icons/io";
 
-import { ServiceINITIAL_VALUE } from "@/lib/data";
+import { ServiceInitialValue } from "@/lib/data";
 import { ServicePopupAnimation } from "@/lib/animation";
 import { useToast } from "./ui/use-toast";
-import { UseUserContext } from "@/context/User.context";
 import { usePathname } from "next/navigation";
 
-type Props = {};
-
-export default function Navbar({}: Props) {
+export default function Navbar() {
   const [isNavbar, setIsNavbar] = useState(false);
   const [isScrollNavbar, setIsScrollNavbar] = useState(false);
   const [isService, setIsService] = useState(false);
@@ -86,7 +82,9 @@ export default function Navbar({}: Props) {
                 className:
                   "relative border-b text-base md:border-none md:text-sm",
               })}
-              onClick={() => setIsService(!isService)}
+              onClick={() => {
+                setIsService(!isService);
+              }}
             >
               <span className="flex h-12 cursor-pointer items-center gap-2 text-foreground duration-100 hover:text-accents-7 md:h-auto md:text-accents-6">
                 Service
@@ -106,7 +104,7 @@ export default function Navbar({}: Props) {
                     transition={{ duration: 0.2 }}
                     className="flex p-2 duration-0 max-md:rounded-none max-md:border-none max-md:p-0 max-md:[--height-from:0px] max-md:[--height-to:auto] md:absolute md:mb-auto md:w-[628px] md:[--opacity-from:0] md:[--opacity-to:1] md:[--rotateX-from:-30deg] md:[--rotateX-to:0deg] md:[--scale-from:0.9] md:[--scale-to:1] md:[--y-from:24px]"
                   >
-                    {ServiceINITIAL_VALUE.map((value) => (
+                    {ServiceInitialValue.map((value) => (
                       <Link
                         key={value.id}
                         href={"/service/building-website"}
@@ -136,7 +134,11 @@ export default function Navbar({}: Props) {
                   "flex h-12 cursor-pointer items-center border-b text-base duration-100 hover:text-accents-7 md:h-auto md:border-none md:text-sm",
               })}
             >
-              <a href="https://blog.alirezasamadi.com/" target={"_blank"}>
+              <a
+                href="https://blog.alirezasamadi.com/"
+                target={"_blank"}
+                rel="noreferrer"
+              >
                 Blog
               </a>
             </li>
@@ -147,7 +149,11 @@ export default function Navbar({}: Props) {
                   "flex h-12 cursor-pointer items-center border-b text-base duration-100 hover:text-accents-7 md:h-auto md:border-none md:text-sm",
               })}
             >
-              <a href="https://store.alirezasamadi.com/" target={"_blank"}>
+              <a
+                href="https://store.alirezasamadi.com/"
+                target={"_blank"}
+                rel="noreferrer"
+              >
                 Products
               </a>
             </li>
@@ -163,7 +169,9 @@ export default function Navbar({}: Props) {
           </Link>
           <div
             className="cursor-pointer overflow-hidden rounded-full border bg-background p-1 text-accents-6 md:hidden"
-            onClick={() => setIsNavbar(!isNavbar)}
+            onClick={() => {
+              setIsNavbar(!isNavbar);
+            }}
           >
             <AnimatePresence initial={false} mode="wait">
               {isNavbar ? (
@@ -191,24 +199,24 @@ export default function Navbar({}: Props) {
       </nav>
 
       <AnimatePresence>
-        {isScrollNavbar && pathName == "/" && <ScrollNavbar />}
+        {isScrollNavbar && pathName === "/" && <ScrollNavbar />}
       </AnimatePresence>
     </>
   );
 }
 
-const ScrollNavAnimation: Variants = {
-  hidden: {
-    scale: "var(--scale-from, 100%)",
-    x: "var(--y-from, -50%)",
-  },
-  visible: {
-    scale: "var(--scale-to, 100%)",
-  },
-  exit: {
-    scale: "var(--scale-from, 100%)",
-  },
-};
+// const ScrollNavAnimation: Variants = {
+//   hidden: {
+//     scale: "var(--scale-from, 100%)",
+//     x: "var(--y-from, -50%)",
+//   },
+//   visible: {
+//     scale: "var(--scale-to, 100%)",
+//   },
+//   exit: {
+//     scale: "var(--scale-from, 100%)",
+//   },
+// };
 
 function ScrollNavbar() {
   const INITIAL_VALUE = [
@@ -232,10 +240,12 @@ function ScrollNavbar() {
           key={value.id}
           href={value.link}
           className={`relative isolate inline-block rounded-full py-2 text-center capitalize`}
-          onClick={() => setCurrentSection(value.name)}
+          onClick={() => {
+            setCurrentSection(value.name);
+          }}
         >
           {value.name}
-          {currentSection == value.name && (
+          {currentSection === value.name && (
             <motion.div
               layoutId="scroll-nav"
               className="absolute inset-0 -z-10 rounded-full bg-accents-2/60"

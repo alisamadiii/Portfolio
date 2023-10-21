@@ -4,7 +4,7 @@ export const supabase = createPagesBrowserClient();
 
 // Sign Out
 async function signout() {
-  const { error } = await supabase.auth.signOut();
+  await supabase.auth.signOut();
 }
 
 export { signout };

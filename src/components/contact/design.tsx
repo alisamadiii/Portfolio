@@ -1,4 +1,4 @@
-import React, { DragEvent, useEffect, useRef, useState } from "react";
+import React, { type DragEvent, useState } from "react";
 import { motion } from "framer-motion";
 import Compressor from "compressorjs";
 
@@ -6,23 +6,12 @@ import { Text } from "../ui/text";
 import { useContactStore } from "@/context/Contact.context";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
-import Image from "next/image";
 import File from "./File";
 
-type Props = {};
-
-export default function DesignPage({}: Props) {
+export default function DesignPage() {
   const { design, setDesign } = useContactStore();
   const [isUpload, setIsUpload] = useState(false);
   const [isDroppingFile, setIsDroppingFile] = useState(false);
-
-  const [scrollWidth, setScrollWidth] = useState(0);
-  useEffect(() => {
-    const carousal = document.querySelector(".carousal") as HTMLDivElement;
-    if (carousal) {
-      setScrollWidth(carousal.scrollWidth - carousal.offsetWidth);
-    }
-  }, [design, setDesign]);
 
   // Dropping images
   const onDropHandler = async (event: DragEvent<HTMLLabelElement>) => {
@@ -32,9 +21,9 @@ export default function DesignPage({}: Props) {
 
     const compressedFiles: Blob[] = [];
 
-    const compressing = Array.from(uploadedFiles!).map((file) => {
+    const compressing = Array.from(uploadedFiles).map(async (file) => {
       if (file.type.startsWith("image/")) {
-        return new Promise((resolve: any) => {
+        return await new Promise((resolve: any) => {
           new Compressor(file, {
             quality: 0.6,
             success: (compressedResult) => {
@@ -65,10 +54,12 @@ export default function DesignPage({}: Props) {
           type="text"
           placeholder="Url"
           value={design.url}
-          onChange={(e) => setDesign({ ...design, url: e.target.value })}
+          onChange={(e) => {
+            setDesign({ ...design, url: e.target.value });
+          }}
           className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
         />
-        {isUpload && design.files?.length == 0 && (
+        {isUpload && design.files?.length === 0 && (
           <Label
             className={`flex h-48 w-full max-w-xl cursor-pointer items-center justify-center rounded-xl border ${
               isDroppingFile ? "animate-pulse bg-success/50" : ""
@@ -77,29 +68,39 @@ export default function DesignPage({}: Props) {
               e.preventDefault();
               setIsDroppingFile(true);
             }}
-            onDragLeave={() => setIsDroppingFile(false)}
+            onDragLeave={() => {
+              setIsDroppingFile(false);
+            }}
             onDrop={onDropHandler}
           >
             Drag and drop
             <input type="file" className="hidden" multiple />
           </Label>
         )}
-        {design.files!.length > 0 && (
-          <motion.div className="columns-2 md:columns-3 lg:columns-4">
-            {design.files!.map((file) => (
-              <File key={file.size} file={file} />
-            ))}
-          </motion.div>
+        {design.files ? (
+          <>
+            {design.files.length > 0 && (
+              <motion.div className="columns-2 md:columns-3 lg:columns-4">
+                {design.files.map((file: any) => (
+                  <File key={file.size} file={file} />
+                ))}
+              </motion.div>
+            )}
+            <Label className="flex max-w-xl cursor-pointer select-none items-center justify-end gap-4">
+              <Text size={16} variant={"muted-sm"}>
+                Upload video or images
+              </Text>
+              <Switch
+                onCheckedChange={(checked) => {
+                  setIsUpload(checked);
+                }}
+                disabled={design.files.length > 0}
+              />
+            </Label>
+          </>
+        ) : (
+          <div></div>
         )}
-        <Label className="flex max-w-xl cursor-pointer select-none items-center justify-end gap-4">
-          <Text size={16} variant={"muted-sm"}>
-            Upload video or images
-          </Text>
-          <Switch
-            onCheckedChange={(checked) => setIsUpload(checked)}
-            disabled={design.files!.length > 0}
-          />
-        </Label>
       </div>
     </div>
   );

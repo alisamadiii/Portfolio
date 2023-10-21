@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-type Props = {};
-
-export default function LinkInput({}: Props) {
+export default function LinkInput() {
   const [validImage, setValidImage] = useState(false);
   const [inputField, setInputField] = useState("");
 
@@ -43,7 +41,9 @@ export default function LinkInput({}: Props) {
         }`}
         placeholder="under construction"
         value={inputField}
-        onChange={(event) => setInputField(event.target.value)}
+        onChange={(event) => {
+          setInputField(event.target.value);
+        }}
       />
       <div
         className={`absolute right-0 top-0 h-[calc(100%+20px)] w-4 translate-x-[calc(100%)] translate-y-5 rounded-tr-lg border-r border-t  ${

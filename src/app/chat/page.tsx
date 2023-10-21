@@ -19,9 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Box } from "@/components/ui/box";
 import { useChatStore } from "@/context/Chat.context";
 
-type Props = {};
-
-export default function Chat({}: Props) {
+export default function Chat() {
   const [isUserInformation, setIsUserInformation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { currentUser, setCurrentUser } = UseUserContext();
@@ -40,11 +38,11 @@ export default function Chat({}: Props) {
 
       const findingExistedUser = data?.find(
         (user) =>
-          user.provider_id == currentUser?.user.user_metadata.provider_id
+          user.provider_id === currentUser?.user.user_metadata.provider_id
       );
 
       if (!findingExistedUser) {
-        const userData = await supabase.from("users").insert([
+        await supabase.from("users").insert([
           {
             email: currentUser?.user.user_metadata.email,
             full_name: currentUser?.user.user_metadata.full_name,
@@ -72,11 +70,15 @@ export default function Chat({}: Props) {
 
   useEffect(() => {
     const gettingAllMessage = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("chat-history")
         .select("id, message, user_uid, reply, files");
 
-      setMessages(data!);
+      if (data) {
+        setMessages(data);
+      } else {
+        throw Error("nothing found");
+      }
     };
 
     gettingAllMessage();
@@ -104,7 +106,9 @@ export default function Chat({}: Props) {
           <div className="relative">
             <span
               className="cursor-pointer"
-              onClick={() => setIsUserInformation(!isUserInformation)}
+              onClick={() => {
+                setIsUserInformation(!isUserInformation);
+              }}
             >
               <CustomIcon icon="3-dots" />
             </span>
@@ -178,7 +182,7 @@ export default function Chat({}: Props) {
           ref={containerRef}
         >
           {messages?.length !== 0 ? (
-            messages!.map((message) => (
+            messages.map((message) => (
               <EachMessage key={message.id} message={message} />
             ))
           ) : (

@@ -4,7 +4,6 @@ import React, { memo, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { UseUserContext } from "@/context/User.context";
-import { Label } from "@/components/ui/label";
 import CustomIcon from "@/assets/CustomIcon";
 import { supabase } from "@/utils/supabase";
 
@@ -16,9 +15,9 @@ import Image from "next/image";
 import { RotatingLines } from "react-loader-spinner";
 import AddingImages from "./adding-images";
 
-type Props = {};
+import { IoMdClose } from "react-icons/io";
 
-export default function SendingMessage({}: Props) {
+export default function SendingMessage() {
   const [message, setMassage] = useState("");
   const {
     messages,
@@ -47,18 +46,16 @@ export default function SendingMessage({}: Props) {
   const submittingMessage = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-    if (message.length == 0) return;
+    if (message.length === 0) return;
 
     const imagesURl: string[] = [];
 
     if (uploadedImage.length > 0) {
       const uploadingFiles = Array.from(uploadedImage).map(
         async (file: any) => {
-          const uploading = await supabase.storage
-            .from("chat")
-            .upload(`${file.name}`, file);
+          await supabase.storage.from("chat").upload(`${file.name}`, file);
           console.log(`uploaded - ${file.name}`);
-          const { data } = await supabase.storage
+          const { data } = supabase.storage
             .from("chat")
             .getPublicUrl(`${file.name}`);
           imagesURl.push(data.publicUrl);
@@ -67,7 +64,7 @@ export default function SendingMessage({}: Props) {
 
       await Promise.all(uploadingFiles);
 
-      const data = await supabase.from("chat-history").insert([
+      await supabase.from("chat-history").insert([
         {
           user_uid: currentUser.user.user_metadata.provider_id,
           message,
@@ -78,7 +75,7 @@ export default function SendingMessage({}: Props) {
       setLoading(false);
       setUploadedImage([]);
     } else {
-      const data = await supabase.from("chat-history").insert([
+      await supabase.from("chat-history").insert([
         {
           user_uid: currentUser.user.user_metadata.provider_id,
           message,
@@ -101,7 +98,7 @@ export default function SendingMessage({}: Props) {
         },
         (payload: any) => {
           console.log(payload);
-          if (payload.eventType == "INSERT") {
+          if (payload.eventType === "INSERT") {
             setMessages([
               ...messages,
               {
@@ -114,7 +111,7 @@ export default function SendingMessage({}: Props) {
             ]);
             setMassage("");
             setReplyId(null);
-          } else if (payload.eventType == "DELETE") {
+          } else if (payload.eventType === "DELETE") {
             const findMessage = messages.filter(
               (message) => message.id !== payload.old.id
             );
@@ -139,7 +136,7 @@ export default function SendingMessage({}: Props) {
       <div
         className={`flex grow flex-col items-center rounded-xl bg-accents-1 py-2 pl-2 pr-3 ring-foreground duration-200 focus-within:ring-2`}
       >
-        {uploadedImage!.length > 0 && (
+        {uploadedImage.length > 0 && (
           <motion.div
             initial={{ height: 0 }}
             animate={{ height: "auto" }}
@@ -169,11 +166,13 @@ export default function SendingMessage({}: Props) {
                   Ali
                 </Text>
                 <Text size={10} className="line-clamp-3 leading-4">
-                  {messages.find((message) => message.id == replyId)?.message}
+                  {messages.find((message) => message.id === replyId)?.message}
                 </Text>
                 <span
                   className="absolute right-2 top-2 cursor-pointer text-xxs"
-                  onClick={() => setReplyId(null)}
+                  onClick={() => {
+                    setReplyId(null);
+                  }}
                 >
                   <AiOutlineClose />
                 </span>
@@ -188,12 +187,16 @@ export default function SendingMessage({}: Props) {
             placeholder="your message"
             id="message"
             value={message}
-            onChange={(e) => setMassage(e.target.value)}
+            onChange={(e) => {
+              setMassage(e.target.value);
+            }}
           />
 
           {/* Opening */}
           <div
-            onClick={() => setIsAddingImage(true)}
+            onClick={() => {
+              setIsAddingImage(true);
+            }}
             className="cursor-pointer"
           >
             <CustomIcon icon="photo" className="h-4 w-4 text-foreground" />
@@ -224,8 +227,6 @@ export default function SendingMessage({}: Props) {
   );
 }
 
-import { IoMdClose } from "react-icons/io";
-
 const DisplayingImageUploading = memo(
   ({ index, file }: { index: number; file: Blob }) => {
     const { uploadedImage, setUploadedImage } = useChatStore();
@@ -248,12 +249,13 @@ const DisplayingImageUploading = memo(
       >
         <div
           className="absolute right-0 top-0 cursor-pointer rounded-full bg-background p-px text-white"
-          onClick={() => deletingFile(file)}
+          onClick={() => {
+            deletingFile(file);
+          }}
         >
           <IoMdClose className="text-xxs" />
         </div>
         <Image
-          // @ts-ignore
           src={URL.createObjectURL(file)}
           width={40}
           height={40}

@@ -1,4 +1,4 @@
-import { Variant, Variants } from "framer-motion";
+import { type Variant, type Variants } from "framer-motion";
 
 interface FramerMotionType extends Variants {
   hidden: Variant;

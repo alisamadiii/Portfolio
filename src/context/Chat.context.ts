@@ -15,13 +15,21 @@ interface ChatStore {
 
 const useChatStore = create<ChatStore>()((set) => ({
   messages: [],
-  setMessages: (messages: MessageValue[]) => set({ messages }),
+  setMessages: (messages: MessageValue[]) => {
+    set({ messages });
+  },
   replyId: null,
-  setReplyId: (replyId: string | number | null) => set({ replyId }),
+  setReplyId: (replyId: string | number | null) => {
+    set({ replyId });
+  },
   uploadedImage: [],
-  setUploadedImage: (uploadedImage: Blob[] | File[]) => set({ uploadedImage }),
+  setUploadedImage: (uploadedImage: Blob[] | File[]) => {
+    set({ uploadedImage });
+  },
   uploadWay: 1,
-  setUploadWay: (uploadWay: 1 | 2) => set({ uploadWay }),
+  setUploadWay: (uploadWay: 1 | 2) => {
+    set({ uploadWay });
+  },
 }));
 
 export { useChatStore };

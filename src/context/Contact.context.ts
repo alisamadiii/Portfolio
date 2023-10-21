@@ -22,18 +22,29 @@ interface ContactType {
 
 const useContactStore = create<ContactType>()((set) => ({
   level: "level 1",
-  setLevel: (level: Levels) => set({ level }),
+  setLevel: (level: Levels) => {
+    set({ level });
+  },
   name: "",
-  setName: (name: string) => set({ name }),
+  setName: (name: string) => {
+    set({ name });
+  },
   email: "",
-  setEmail: (email: string) => set({ email }),
+  setEmail: (email: string) => {
+    set({ email });
+  },
   page: 1,
-  setPage: (page: number) => set({ page }),
+  setPage: (page: number) => {
+    set({ page });
+  },
   design: { url: "", files: [] },
-  setDesign: (design: { url?: string; files?: File[] | Blob[] }) =>
-    set({ design }),
+  setDesign: (design: { url?: string; files?: File[] | Blob[] }) => {
+    set({ design });
+  },
   isDelete: false,
-  setIsDelete: (isDelete: boolean) => set({ isDelete }),
+  setIsDelete: (isDelete: boolean) => {
+    set({ isDelete });
+  },
 }));
 
 export { useContactStore };

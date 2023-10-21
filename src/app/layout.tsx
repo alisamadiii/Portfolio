@@ -1,6 +1,11 @@
+import React from "react";
+
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+
+import { Toaster } from "@/components/ui/toaster";
+import { UserProvider } from "@/context/User.context";
 
 const inter = Inter({
   display: "swap",
@@ -9,14 +14,11 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const space_grotesk = Space_Grotesk({
+const spaceGrotesk = Space_Grotesk({
   display: "swap",
   subsets: ["latin"],
   variable: "--font-space-grotesk",
 });
-
-import { Toaster } from "@/components/ui/toaster";
-import { UserProvider } from "@/context/User.context";
 
 export const metadata: Metadata = {
   title: "Ali Reza",
@@ -31,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${space_grotesk.variable} font-sans text-accents-6`}
+        className={`${inter.variable} ${spaceGrotesk.variable} font-sans text-accents-6`}
       >
         <UserProvider>
           <div className="grid-line" />

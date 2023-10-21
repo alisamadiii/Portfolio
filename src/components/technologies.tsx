@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 import TechIcon from "@/assets/Tech.icon";
 import { Technologies as TechnologiesData } from "@/lib/data";
 import { Text } from "./ui/text";
 
-type Props = {};
-
-export default function Technologies({}: Props) {
+export default function Technologies() {
   const [hoveredTech, setHoveredTech] = useState<null | string>(null);
 
   return (
@@ -16,14 +14,18 @@ export default function Technologies({}: Props) {
         <div
           key={technology.id}
           className="p-4 md:relative"
-          onMouseEnter={() => setHoveredTech(technology.icon)}
-          onMouseLeave={() => setHoveredTech(null)}
+          onMouseEnter={() => {
+            setHoveredTech(technology.icon);
+          }}
+          onMouseLeave={() => {
+            setHoveredTech(null);
+          }}
         >
           <motion.div layoutId={technology.title}>
             <TechIcon icon={technology.icon} />
           </motion.div>
           <div className="absolute top-0 z-50 max-md:left-1/2 max-md:-translate-x-1/2 md:right-0">
-            {hoveredTech == technology.icon && (
+            {hoveredTech === technology.icon && (
               <motion.div
                 layoutId="information"
                 layout="position"

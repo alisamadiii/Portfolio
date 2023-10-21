@@ -6,8 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "format": "prettier --ignore-path .gitignore --write \"**/*.{ts,tsx}\""
+    "check-types": "tsc --pretty --noEmit",
+    "check-format": "prettier --check .",
+    "check-lint": "eslint . --ext ts --ext tsx --ext js",
+    "format": "prettier --write .",
+    "test-all": "npm run check-format && npm run check-lint && npm run check-types && npm run build",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.4",
@@ -32,7 +36,6 @@
     "cobe": "^0.6.3",
     "compressorjs": "^1.2.1",
     "date-fns": "^2.30.0",
-    "eslint": "8.48.0",
     "eslint-config-next": "13.4.19",
     "framer-motion": "^10.16.2",
     "gsap": "^3.12.2",
@@ -52,13 +55,26 @@
     "tailwind-merge": "^1.14.0",
     "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.2.2",
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
+    "@next/eslint-plugin-next": "^13.5.6",
     "@types/react-vertical-timeline-component": "^3.3.3",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
     "encoding": "^0.1.13",
+    "eslint": "8.48.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-standard-with-typescript": "^39.1.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.33.2",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.0.2",
     "prettier": "^3.0.3",
-    "prettier-plugin-tailwindcss": "^0.5.6"
+    "prettier-plugin-tailwindcss": "^0.5.6",
+    "typescript": "5.2.2"
   }
 }

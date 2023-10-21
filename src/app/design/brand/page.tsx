@@ -3,12 +3,11 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotatingLines } from "react-loader-spinner";
-import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Box, Rect } from "@/components/ui/box";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import BgCircle from "@/components/bg-circle";
 
 import {
@@ -29,9 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import Checkbox from "@/components/ui/checkbox";
 import * as Choicebox from "@/components/choicebox";
 
-type Props = {};
-
-export default function Brand({}: Props) {
+export default function Brand() {
   const [isModel, setIsModel] = React.useState(false);
   const [isChecked, setIsChecked] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState<null | string>(
@@ -412,7 +409,9 @@ export default function Brand({}: Props) {
         <Wrapper>
           <Checkbox
             checked={isChecked}
-            onChange={(e) => setIsChecked(!isChecked)}
+            onChange={(e) => {
+              setIsChecked(!isChecked);
+            }}
           />
         </Wrapper>
 
@@ -425,7 +424,7 @@ export default function Brand({}: Props) {
             <Choicebox.Item
               name="choicebox"
               value={"option1"}
-              checked={selectedOption == "option1"}
+              checked={selectedOption === "option1"}
               onChange={handleRadioChange}
             >
               <Text size={16}>Testing</Text>
@@ -436,7 +435,7 @@ export default function Brand({}: Props) {
             <Choicebox.Item
               name="choicebox"
               value={"option2"}
-              checked={selectedOption == "option2"}
+              checked={selectedOption === "option2"}
               onChange={handleRadioChange}
             >
               <Text size={16}>Testing</Text>

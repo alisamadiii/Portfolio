@@ -6,15 +6,12 @@ import { Text } from "../ui/text";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { convertingBytes } from "@/utils";
 
-type Props = {
-  file: File | Blob;
-};
+interface Props {
+  file: File;
+}
 
 function File({ file }: Props) {
-  //   const { setIsDelete } = useContactStore();
   const [isInformation, setIsInformation] = useState(false);
-
-  console.log(file);
 
   return (
     <motion.div
@@ -36,7 +33,9 @@ function File({ file }: Props) {
       </motion.div>
       <AiOutlineInfoCircle
         className="absolute right-4 top-4 cursor-pointer"
-        onClick={() => setIsInformation(!isInformation)}
+        onClick={() => {
+          setIsInformation(!isInformation);
+        }}
       />
       <AnimatePresence>
         {isInformation && (
@@ -46,7 +45,9 @@ function File({ file }: Props) {
             exit={{ x: "100%" }}
             transition={{ type: "tween" }}
             className="custom-scrollbar fade-out-file_information absolute right-0 top-0 h-full w-full space-y-4 overflow-auto rounded-xl border bg-black/60 p-4 pb-12 backdrop-blur"
-            onClick={() => setIsInformation(false)}
+            onClick={() => {
+              setIsInformation(false);
+            }}
             title="close"
           >
             <div>
@@ -70,7 +71,6 @@ function File({ file }: Props) {
             <div>
               <Text size={10}>Modified</Text>
               <Text size={14} className="text-foreground">
-                {/* @ts-ignore */}
                 {file.lastModified}
               </Text>
             </div>

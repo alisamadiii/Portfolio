@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React from "react";
 
 import CustomIcon from "@/assets/CustomIcon";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,12 @@ import { supabase } from "@/utils/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { UseUserContext } from "@/context/User.context";
 
-type Props = {};
-
-export default function Login({}: Props) {
+export default function Login() {
   const { toast } = useToast();
   const { currentUser } = UseUserContext();
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/chat`,

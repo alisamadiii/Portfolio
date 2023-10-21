@@ -1,11 +1,11 @@
 import React from "react";
 import { Text } from "./ui/text";
 
-type Props = {
+interface Props {
   number: number;
   gradient: 1 | 2 | 3;
   title?: string;
-};
+}
 
 export default function NumberGradient({ gradient, number, title }: Props) {
   return (

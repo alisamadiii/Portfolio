@@ -149,7 +149,7 @@ html {
 
 @layer base {
   body {
-    @apply text-foreground bg-background;
+    @apply bg-background text-foreground;
   }
 
   .popup-open {
@@ -167,8 +167,14 @@ html {
     inset: 0;
     background-image: linear-gradient(var(--line-color) 2px, transparent 2px),
       linear-gradient(90deg, var(--line-color) 1px, transparent 1px);
-    background-size: var(--size) var(--size), var(--size) var(--size);
-    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+    background-size:
+      var(--size) var(--size),
+      var(--size) var(--size);
+    background-position:
+      -2px -2px,
+      -2px -2px,
+      -1px -1px,
+      -1px -1px;
   }
 
   .skeleton::after {

@@ -10,22 +10,20 @@ import {
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 import { Container, containerVariants } from "@/components/ui/container";
-import { Text, textVariants } from "@/components/ui/text";
+import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
 
 // Icons
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
-import { BsArrowRightShort } from "react-icons/bs";
 
 import { Experience, Projects } from "@/lib/data";
 import { useToast } from "@/components/ui/use-toast";
 import Technologies from "@/components/technologies";
 import Project from "@/components/project";
-import { useScroll, useTransform } from "framer-motion";
 
 export default function Home() {
   const { toast } = useToast();
@@ -39,7 +37,9 @@ export default function Home() {
       setGradientColor((prevColor) => (prevColor % 3) + 1);
     }, 2000); // 1000 milliseconds = 1 second
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {

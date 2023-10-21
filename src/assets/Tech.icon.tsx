@@ -1,10 +1,10 @@
 import React from "react";
 
-import type { TechIcon } from "@/types/index.t";
+import type { TechIcon as TechIconTypes } from "@/types/index.t";
 
-type Props = {
-  icon: TechIcon;
-};
+interface Props {
+  icon: TechIconTypes;
+}
 
 export default function TechIcon({ icon }: Props) {
   const currentIcon = {

@@ -1,4 +1,4 @@
-function getLastNameRoute(url: string) {
+function getLastNameRoute(url: string): string {
   // Split the URL by '/'
   const parts = url.split("/");
   // Get the last part (route)
@@ -6,7 +6,7 @@ function getLastNameRoute(url: string) {
   return lastNameRoute;
 }
 
-function convertingBytes(value: number) {
+function convertingBytes(value: number): string {
   const kilobytes = value / 1024;
 
   if (kilobytes <= 1204) {

@@ -9,24 +9,14 @@ import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import Technologies from "@/components/technologies";
 import { FrequentlyAskedQuestions, Pricing, Testimonials } from "@/lib/data";
-import { useContactStore } from "@/context/Contact.context";
-import Link from "next/link";
 import Price from "@/components/Price";
 import { useToast } from "@/components/ui/use-toast";
 import Image from "next/image";
 
-type Props = {};
-
-export default function BuildingWebsite({}: Props) {
-  const { level, setLevel } = useContactStore();
+export default function BuildingWebsite() {
   const { toast } = useToast();
 
   const [allTestimonials, setAllTestimonials] = useState(false);
-
-  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // @ts-ignore
-    setLevel(event.target.value);
-  };
 
   const UnderConstruction = () => {
     toast({
@@ -45,7 +35,6 @@ export default function BuildingWebsite({}: Props) {
 
   const x = useTransform(scrollYProgress, [0, 1], [300, 0]);
   const xReverse = useTransform(scrollYProgress, [0, 2], [0, 400]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
 
   return (
     <main className="relative overflow-hidden">
@@ -190,7 +179,9 @@ export default function BuildingWebsite({}: Props) {
           </motion.div>
           <Button
             size={"sm"}
-            onClick={() => setAllTestimonials(!allTestimonials)}
+            onClick={() => {
+              setAllTestimonials(!allTestimonials);
+            }}
             className={`${!allTestimonials && "-translate-y-12"}`}
           >
             {allTestimonials ? "show less" : "show more"}

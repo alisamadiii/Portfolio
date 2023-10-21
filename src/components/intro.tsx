@@ -1,14 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Text } from "./ui/text";
 import { gsap } from "gsap";
-import { Variants } from "framer-motion";
-import { Button, buttonVariants } from "./ui/button";
+import { Button } from "./ui/button";
 
-type Props = {};
-
-export default function Intro({}: Props) {
+export default function Intro() {
   useEffect(() => {
     const first = document.querySelector("#first");
     const second = document.querySelector("#second");

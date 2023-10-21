@@ -1,9 +1,9 @@
 import React from "react";
 
-type Props = {
+interface Props {
   icon: "back-arrow" | "3-dots" | "send" | "photo" | "service" | "no-service";
   className?: string;
-};
+}
 
 export default function CustomIcon({ icon, className }: Props) {
   const currentIcon = {

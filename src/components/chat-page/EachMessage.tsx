@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { MessageValue, SingleUser } from "@/types/chat-history.t";
@@ -26,9 +26,9 @@ import {
   IoIosArrowDropleftCircle,
 } from "react-icons/io";
 
-type Props = {
+interface Props {
   message: MessageValue;
-};
+}
 
 export default function EachMessage({ message }: Props) {
   const [userData, setUserData] = useState<SingleUser | null>(null);
@@ -42,8 +42,8 @@ export default function EachMessage({ message }: Props) {
 
   const { messages } = useChatStore();
 
-  const copyMessage = (value: string) => {
-    navigator.clipboard.writeText(value);
+  const copyMessage = async (value: string) => {
+    await navigator.clipboard.writeText(value);
     toast({
       title: "Copied",
       description: `Message - ${value}`,
@@ -77,7 +77,9 @@ export default function EachMessage({ message }: Props) {
       .select("*")
       .eq("provider_id", userId);
 
-    setUserData(data![0]);
+    if (!data) return;
+
+    setUserData(data[0]);
   };
 
   const mouseLeave = () => {
@@ -86,12 +88,12 @@ export default function EachMessage({ message }: Props) {
 
   // Changing Image
   const changingImage = (action: "increase" | "decrease") => {
-    if (action == "increase") {
-      if (currentImage == message.files.length - 1) return;
+    if (action === "increase") {
+      if (currentImage === message.files.length - 1) return;
 
       setCurrentImage(currentImage + 1);
     } else {
-      if (currentImage == 0) return;
+      if (currentImage === 0) return;
 
       setCurrentImage(currentImage - 1);
     }
@@ -101,30 +103,32 @@ export default function EachMessage({ message }: Props) {
     <ContextMenu>
       <ContextMenuTrigger
         className={`group relative mb-2 w-auto min-w-message max-w-message rounded-lg border p-2 transition-colors ${
-          currentUser?.user.user_metadata.provider_id == message.user_uid
+          currentUser?.user.user_metadata.provider_id === message.user_uid
             ? "ml-auto rounded-tr-none bg-foreground text-background"
             : "rounded-tl-none"
         } ${deleted && "animate-pulse !bg-error text-white"}`}
-        onMouseEnter={() => mouseEnter(message.user_uid)}
+        onMouseEnter={async () => {
+          await mouseEnter(message.user_uid);
+        }}
         onMouseLeave={mouseLeave}
       >
         {message.reply && (
           <Text
             size={10}
             className={`relative mb-2 line-clamp-3 select-none overflow-hidden rounded-r px-2 py-1 ${
-              currentUser?.user.user_metadata.provider_id == message.user_uid
+              currentUser?.user.user_metadata.provider_id === message.user_uid
                 ? "bg-accents-7"
                 : "bg-accents-1"
             }`}
           >
             <span
               className={`absolute left-0 top-0 h-full w-[1px] ${
-                currentUser?.user.user_metadata.provider_id == message.user_uid
+                currentUser?.user.user_metadata.provider_id === message.user_uid
                   ? "bg-background"
                   : "bg-foreground"
               }`}
             />
-            {messages.find((m) => m.id == message.reply)?.message}
+            {messages.find((m) => m.id === message.reply)?.message}
           </Text>
         )}
         {message.files && (
@@ -154,13 +158,17 @@ export default function EachMessage({ message }: Props) {
                 {currentImage !== 0 && (
                   <IoIosArrowDropleftCircle
                     className="absolute left-1 top-1/2 -translate-y-1/2 cursor-pointer text-xl text-white shadow-lg"
-                    onClick={() => changingImage("decrease")}
+                    onClick={() => {
+                      changingImage("decrease");
+                    }}
                   />
                 )}
                 {currentImage !== message.files.length - 1 && (
                   <IoIosArrowDroprightCircle
                     className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer text-xl text-white shadow-lg"
-                    onClick={() => changingImage("increase")}
+                    onClick={() => {
+                      changingImage("increase");
+                    }}
                   />
                 )}
               </>
@@ -201,12 +209,14 @@ export default function EachMessage({ message }: Props) {
         )}
       </ContextMenuTrigger>
       <ContextMenuContent className="bg-accents-1">
-        {(currentUser?.user.user_metadata.provider_id == message.user_uid ||
+        {(currentUser?.user.user_metadata.provider_id === message.user_uid ||
           process.env.NEXT_PUBLIC_OWNER) && (
           <>
             <ContextMenuItem
               className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
-              onClick={() => deleteMessage(message.id)}
+              onClick={async () => {
+                await deleteMessage(message.id);
+              }}
             >
               <Trash2 size={14} />
               Delete
@@ -219,13 +229,17 @@ export default function EachMessage({ message }: Props) {
         )}
         <ContextMenuItem
           className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
-          onClick={() => replyMessage(message.id)}
+          onClick={() => {
+            replyMessage(message.id);
+          }}
         >
           <Reply size={14} /> Reply
         </ContextMenuItem>
         <ContextMenuItem
           className="flex cursor-pointer items-center gap-2 text-xs text-accents-6 duration-100 hover:bg-accents-2 hover:text-white"
-          onClick={() => copyMessage(message.message)}
+          onClick={() => {
+            copyMessage(message.message);
+          }}
         >
           <Copy size={14} /> Copy Text
         </ContextMenuItem>

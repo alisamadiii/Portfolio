@@ -7,16 +7,16 @@ import { useContactStore } from "@/context/Contact.context";
 
 import type { PricingType } from "@/lib/data";
 
-type Props = {
+interface Props {
   price: PricingType;
-};
+}
 
 export default function Price({ price }: Props) {
   const { level, setLevel } = useContactStore();
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // @ts-ignore
-    setLevel(event.target.value);
+    const value: any = event.target.value;
+    setLevel(value);
   };
 
   return (
@@ -24,14 +24,14 @@ export default function Price({ price }: Props) {
       <Choicebox.Item
         name="choicebox"
         value={price.title}
-        checked={level == price.title}
+        checked={level === price.title}
         onChange={handleRadioChange}
       >
         <div className="flex justify-between">
           <Text
             as="h3"
             size={24}
-            className={`${level == price.title && "text-foreground"}`}
+            className={`${level === price.title && "text-foreground"}`}
           >
             {price.title}
           </Text>
