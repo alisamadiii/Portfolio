@@ -76,18 +76,20 @@ export default function Home() {
 
   const { scrollYProgress } = useScroll({
     target: headerContainer,
-    offset: ["start start", "center start"],
+    offset: ["start start", "end start"],
   });
 
-  const y = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 70]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9]);
+  // const blur = useTransform(scrollYProgress, [0, 1], [0, 10]);
 
   return (
     <main>
       <div className="absolute top-1/2 -z-50 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/5 blur-[100px]" />
 
       <motion.header
-        style={{ y, opacity }}
+        style={{ y, opacity, scale }}
         className={containerVariants({
           size: "xl",
           className:

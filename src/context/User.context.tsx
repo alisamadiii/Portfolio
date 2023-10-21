@@ -24,9 +24,20 @@ export const UserContext = createContext<User>({
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState(null);
 
+  const sendingUserData = async (session: any) => {
+    if (!session) return;
+
+    await supabase.from("users").upsert({
+      provider_id: session.user.user_metadata.provider_id,
+      full_name: session.user.user_metadata.full_name,
+      avatar_url: session.user.user_metadata.avatar_url,
+    });
+  };
+
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session: any) => {
       setCurrentUser(session);
+      sendingUserData(session);
     });
   }, []);
 
