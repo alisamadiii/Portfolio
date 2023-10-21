@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Container, containerVariants } from "@/components/ui/container";
@@ -11,7 +12,6 @@ import Technologies from "@/components/technologies";
 import { FrequentlyAskedQuestions, Pricing, Testimonials } from "@/lib/data";
 import Price from "@/components/Price";
 import { useToast } from "@/components/ui/use-toast";
-import Image from "next/image";
 
 export default function BuildingWebsite() {
   const { toast } = useToast();
