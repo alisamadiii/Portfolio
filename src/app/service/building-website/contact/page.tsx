@@ -295,7 +295,10 @@ export default function Contact() {
                   tab === 6 ||
                   (tab === 2 && name.length === 0) ||
                   (tab === 3 && !email.includes(".com")) ||
-                  (tab === 5 && design.url?.length === 0)
+                  (tab === 5 &&
+                    design.url?.length === 0 &&
+                    Pricing.find((price) => price.title === level)?.job
+                      .design === false)
                 }
               >
                 Next

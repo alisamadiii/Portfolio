@@ -11,22 +11,31 @@ import {
 } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useInView } from "react-intersection-observer";
 
 import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Icons
 import { AiFillGithub, AiFillLinkedin } from "react-icons/ai";
 
-import { Experience, Projects } from "@/lib/data";
+import { Experience } from "@/lib/data";
 import { useToast } from "@/components/ui/use-toast";
 import Technologies from "@/components/technologies";
 import Project from "@/components/project";
+import { supabase } from "@/utils/supabase";
 
 export default function Home() {
   const { toast } = useToast();
+  const { ref: projects, inView } = useInView({
+    /* Optional options */
+    threshold: 0,
+  });
+
+  const [projectsData, setProjectsData] = useState<any>(null);
 
   const [gradientColor, setGradientColor] = useState(1);
 
@@ -82,7 +91,20 @@ export default function Home() {
   const y = useTransform(scrollYProgress, [0, 1], [0, 70]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9]);
-  // const blur = useTransform(scrollYProgress, [0, 1], [0, 10]);
+
+  useEffect(() => {
+    const fetchingProjects = async () => {
+      if (!inView) { console.log("not-fetching"); return; }
+
+      console.log("fetching");
+      const { data } = await supabase.from("project").select("*");
+
+      setProjectsData(data);
+      console.log("done");
+    };
+
+    fetchingProjects();
+  }, [inView]);
 
   return (
     <main>
@@ -184,12 +206,27 @@ export default function Home() {
           <Technologies />
         </section>
 
-        <section className="space-y-6" id="project">
+        <section className="space-y-6" id="project" ref={projects}>
           <NumberGradient gradient={2} number={2} title="Projects" />
           <ul className={containerVariants({ size: "xl" })}>
-            {Projects.map((project) => (
-              <Project key={project.id} project={project} />
-            ))}
+            {projectsData ? (
+              projectsData.map((project: any) => (
+                <Project key={project.id} project={project} />
+              ))
+            ) : (
+              <div className="space-y-4 p-4">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-48 rounded-xl" />
+                  <Skeleton className="h-4 w-8 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-2 w-48 rounded-xl" />
+                  <Skeleton className="h-2 w-48 rounded-xl" />
+                  <Skeleton className="h-2 w-24 rounded-xl" />
+                </div>
+                <Skeleton className="h-8 w-24 rounded-xl" />
+              </div>
+            )}
           </ul>
         </section>
 
