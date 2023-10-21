@@ -174,6 +174,7 @@ module.exports = {
       },
       borderWidth: {
         DEFAULT: "0.5px",
+        video: "6px",
       },
       borderColor: {
         DEFAULT: "hsl(var(--border))",

@@ -94,7 +94,10 @@ export default function Home() {
 
   useEffect(() => {
     const fetchingProjects = async () => {
-      if (!inView) { console.log("not-fetching"); return; }
+      if (!inView) {
+        console.log("not-fetching");
+        return;
+      }
 
       console.log("fetching");
       const { data } = await supabase.from("project").select("*");
@@ -225,6 +228,7 @@ export default function Home() {
                   <Skeleton className="h-2 w-24 rounded-xl" />
                 </div>
                 <Skeleton className="h-8 w-24 rounded-xl" />
+                <Skeleton className="h-48 w-full rounded-xl" />
               </div>
             )}
           </ul>

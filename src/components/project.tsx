@@ -5,6 +5,7 @@ import { Text, textVariants } from "./ui/text";
 import { BsArrowRightShort } from "react-icons/bs";
 import { ProjectInformation } from "@/lib/animation";
 import { Button } from "./ui/button";
+import Video from "./video";
 
 interface Props {
   project: {
@@ -12,6 +13,7 @@ interface Props {
     name: string;
     description: string;
     site: string;
+    video_url: null | string;
   };
 }
 
@@ -60,6 +62,8 @@ export default function Project({ project }: Props) {
                   Visit
                 </a>
               </Button>
+
+              {project.video_url && <Video videoUrl={project.video_url} />}
             </motion.div>
           </motion.article>
         )}

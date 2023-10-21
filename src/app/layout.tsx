@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description:
     "As a front-end developer, I specialize in building and maintaining the user interface of web applications.",
   openGraph: {
-    title: "Service",
+    title: "Ali Reza - Portfolio",
     description:
       "As a front-end developer, I specialize in building and maintaining the user interface of web applications.",
     url: "https://www.alirezasamadi.com/",
