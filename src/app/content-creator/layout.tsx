@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const metadata: Metadata = {
-  title: "404",
+  title: "Content Creator",
   description:
     "As a front-end developer, I specialize in building and maintaining the user interface of web applications.",
 };

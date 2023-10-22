@@ -8,6 +8,7 @@
 
 * {
   scroll-behavior: smooth;
+  @apply scroll-pt-4;
 }
 
 html {

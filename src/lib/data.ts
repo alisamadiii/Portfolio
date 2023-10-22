@@ -256,6 +256,74 @@ const Testimonials = [
   },
 ];
 
+interface ContentCreationsType {
+  id: number;
+  question: string;
+  paragraphs: string[];
+  images: string[] | null;
+}
+
+const ContentCreations: ContentCreationsType[] = [
+  {
+    id: 1,
+    question: "What contents I am making?",
+    paragraphs: [
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bmF0dXJlfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+    ],
+  },
+  {
+    id: 2,
+    question: "Why I started making them?",
+    paragraphs: [
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+    ],
+    images: null,
+  },
+  {
+    id: 3,
+    question: "What contents I am making?",
+    paragraphs: [
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bmF0dXJlfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+    ],
+  },
+  {
+    id: 4,
+    question: "What contents I am making?",
+    paragraphs: [
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+      "The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps. The Evil Rabbit jumps.",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bmF0dXJlfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fG5hdHVyZXxlbnwwfHwwfHx8MA%3D%3D",
+    ],
+  },
+];
+
 export {
   ServiceInitialValue,
   Projects,
@@ -264,4 +332,6 @@ export {
   Pricing,
   FrequentlyAskedQuestions,
   Testimonials,
+  ContentCreations,
+  type ContentCreationsType,
 };
