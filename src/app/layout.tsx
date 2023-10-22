@@ -31,7 +31,20 @@ export const metadata: Metadata = {
     url: "https://www.alirezasamadi.com/",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1682687220640-9d3b11ca30e5?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        url: "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/project/metadata-image.jpg",
+        width: 800,
+        height: 600,
+      },
+    ],
+  },
+  twitter: {
+    title: "Ali Reza - Portfolio",
+    description:
+      "As a front-end developer, I specialize in building and maintaining the user interface of web applications.",
+    site: "https://www.alirezasamadi.com/",
+    images: [
+      {
+        url: "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/project/metadata-image.jpg",
         width: 800,
         height: 600,
       },

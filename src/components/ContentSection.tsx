@@ -37,6 +37,15 @@ export default function ContentSection({ content }: Props) {
     carousalSize();
   }, []);
 
+  const textFormat = (text: string) => {
+    return text
+      .replaceAll(/@(\w+)/g, "<span class='text-error font-bold'>$1</span>")
+      .replaceAll(
+        /#(\w+)/g,
+        "<a class='text-success font-bold hover:underline cursor-pointer' href='#$1'>#$1</a>"
+      );
+  };
+
   return (
     <motion.article ref={articleRef} className="space-y-8" style={{ opacity }}>
       <Text size={32} className="text-foreground">
@@ -44,9 +53,13 @@ export default function ContentSection({ content }: Props) {
       </Text>
       <div className="space-y-6">
         {content.paragraphs.map((paragraph, index) => (
-          <Text key={index} variant={"muted-lg"}>
-            {paragraph}
-          </Text>
+          <Text
+            key={index}
+            variant={"muted-lg"}
+            dangerouslySetInnerHTML={{
+              __html: textFormat(paragraph),
+            }}
+          />
         ))}
       </div>
       {content.images && (
