@@ -64,6 +64,10 @@ export default function BuildingWebsite() {
             "flex flex-col items-center justify-center overflow-hidden max-md:mt-16 max-md:py-20 md:h-dvh",
         })}
       >
+        <Badge className="flex items-center gap-2 px-4">
+          <div className="before: relative h-2 w-2 rounded-full bg-success before:absolute before:h-full before:w-full before:animate-badge-circle-expand before:rounded-full before:bg-success" />
+          Currently having a Client
+        </Badge>
         <h1 className="my-4 max-w-4xl text-center text-4xl text-foreground md:text-5xl lg:text-6xl">
           Building Website
         </h1>

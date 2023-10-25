@@ -186,6 +186,7 @@ module.exports = {
       },
       animation: {
         testimonial: "testimonial-moving 20s infinite linear",
+        "badge-circle-expand": "badge-circle-expand 1s infinite linear",
       },
       keyframes: {
         "testimonial-moving": {
@@ -194,6 +195,16 @@ module.exports = {
           },
           to: {
             transform: "translateX(-316%)",
+          },
+        },
+        "badge-circle-expand": {
+          from: {
+            transform: "scale(1)",
+            opacity: "1",
+          },
+          to: {
+            transform: "scale(2)",
+            opacity: "0",
           },
         },
       },

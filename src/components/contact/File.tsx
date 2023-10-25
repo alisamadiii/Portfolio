@@ -83,7 +83,7 @@ function File({ file }: Props) {
 
 export default File;
 
-const FileDisplay = memo(({ file }: { file: Blob | File }) => {
+const FileDisplay = memo(({ file }: { file: File }) => {
   return (
     <Image
       src={URL.createObjectURL(file)}
