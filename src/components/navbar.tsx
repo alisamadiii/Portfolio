@@ -18,8 +18,12 @@ import { ServicePopupAnimation } from "@/lib/animation";
 import { useToast } from "./ui/use-toast";
 import { usePathname } from "next/navigation";
 
-export default function Navbar() {
-  const [isNavbar, setIsNavbar] = useState(false);
+interface NavbarProps {
+  isNavbar: boolean;
+  setIsNavbar: (a: boolean) => void;
+}
+
+export default function Navbar({ isNavbar, setIsNavbar }: NavbarProps) {
   const [isScrollNavbar, setIsScrollNavbar] = useState(false);
   const [isService, setIsService] = useState(false);
 
