@@ -70,9 +70,7 @@ export default function Chat() {
 
   useEffect(() => {
     const gettingAllMessage = async () => {
-      const { data } = await supabase
-        .from("chat-history")
-        .select("id, message, user_uid, reply, files");
+      const { data } = await supabase.from("chat-history").select("*");
 
       if (data) {
         setMessages(data);

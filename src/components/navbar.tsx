@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -52,9 +52,24 @@ export default function Navbar({ isNavbar, setIsNavbar }: NavbarProps) {
     });
   };
 
+  const navbarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const navbar = navbarRef.current;
+
+    document.addEventListener("mousedown", (event: any) => {
+      if (navbar && !navbar.contains(event.target)) {
+        setIsService(false);
+      }
+    });
+  }, []);
+
   return (
     <>
-      <nav className="absolute left-0 top-0 isolate z-50 h-16 w-full bg-background/40 backdrop-blur-sm">
+      <nav
+        className="absolute left-0 top-0 isolate z-50 h-16 w-full bg-background/40 backdrop-blur-sm"
+        ref={navbarRef}
+      >
         <Container
           size={"2xl"}
           className="flex h-full items-center justify-between"
@@ -209,19 +224,6 @@ export default function Navbar({ isNavbar, setIsNavbar }: NavbarProps) {
   );
 }
 
-// const ScrollNavAnimation: Variants = {
-//   hidden: {
-//     scale: "var(--scale-from, 100%)",
-//     x: "var(--y-from, -50%)",
-//   },
-//   visible: {
-//     scale: "var(--scale-to, 100%)",
-//   },
-//   exit: {
-//     scale: "var(--scale-from, 100%)",
-//   },
-// };
-
 function ScrollNavbar() {
   const INITIAL_VALUE = [
     { id: 1, name: "about", link: "#about" },
@@ -244,7 +246,7 @@ function ScrollNavbar() {
           key={value.id}
           href={value.link}
           className={`relative isolate inline-block rounded-full py-2 text-center capitalize`}
-          onClick={() => {
+          onMouseOver={() => {
             setCurrentSection(value.name);
           }}
         >
