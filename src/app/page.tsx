@@ -15,7 +15,7 @@ import { useInView } from "react-intersection-observer";
 
 import { Container, containerVariants } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import NumberGradient from "@/components/number-gradient";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -148,14 +148,18 @@ export default function Home() {
         </Text>
         <div className="flex w-full flex-col items-center justify-center gap-3 md:flex-row md:gap-5">
           <div className="rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to p-0.5 max-md:w-full max-md:max-w-md">
-            <Button
-              variant={"primary"}
-              size={"lg"}
-              className="max-md:w-full max-md:max-w-md"
-              onClick={UnderConstruction}
+            <a
+              href="https://twitter.com/Ali_Developer05"
+              target="_blank"
+              className={buttonVariants({
+                variant: "primary",
+                size: "lg",
+                className: "max-md:w-full max-md:max-w-md",
+              })}
+              onClick={UnderConstruction} rel="noreferrer"
             >
               Contact me
-            </Button>
+            </a>
           </div>
           <Button
             size={"lg"}
@@ -165,20 +169,28 @@ export default function Home() {
             Download CV
           </Button>
           <div className="flex gap-3 max-md:w-full max-md:max-w-md md:gap-5">
-            <Button
-              size={"lg"}
-              className="w-full px-4"
-              onClick={UnderConstruction}
+            <a
+              href="https://www.linkedin.com/in/alireza17/"
+              target="_blank"
+              className={buttonVariants({
+                size: "lg",
+                className: "w-full px-4 text-2xl",
+              })}
+              onClick={UnderConstruction} rel="noreferrer"
             >
               <AiFillLinkedin />
-            </Button>
-            <Button
-              size={"lg"}
-              className="w-full px-4"
-              onClick={UnderConstruction}
+            </a>
+            <a
+              href="https://github.com/AliReza1083/"
+              target="_blank"
+              className={buttonVariants({
+                size: "lg",
+                className: "w-full px-4 text-2xl",
+              })}
+              onClick={UnderConstruction} rel="noreferrer"
             >
               <AiFillGithub />
-            </Button>
+            </a>
           </div>
         </div>
       </motion.header>
