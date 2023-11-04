@@ -1,46 +1,54 @@
 "use client";
 
-import { Container } from "@/components/ui/container";
-import React, { useEffect, useState } from "react";
-import { AnimatePresence, type Variants, motion } from "framer-motion";
+import React, { type InputHTMLAttributes, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-import { Pricing } from "@/lib/data";
-import Price from "@/components/Price";
+// import { Pricing } from "@/lib/data";
+// import Price from "@/components/Price";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useContactStore } from "@/context/Contact.context";
 import { UseUserContext } from "@/context/User.context";
 import { supabase } from "@/utils/supabase";
 
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import DesignPage from "@/components/contact/design";
 import Image from "next/image";
 
-const INITIAL_TABS = [1, 2, 3, 4, 5];
+// Icons
+import { AiFillLock, AiOutlineGoogle } from "react-icons/ai";
+import { RotatingLines } from "react-loader-spinner";
+
+const imageContainerData = [
+  {
+    id: 1,
+    image:
+      "https://images.unsplash.com/photo-1575089976121-8ed7b2a54265?auto=format&fit=crop&q=80&w=1887&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    title: "Project 1",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non alias veniam architecto aspernatur deserunt earum, quidem magni harum expedita fuga corrupti, quos repellendus fugit culpa in optio eos aliquam similique?",
+  },
+  {
+    id: 2,
+    image:
+      "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGNvZGluZ3xlbnwwfHwwfHx8MA%3D%3D",
+    title: "Project 2",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non alias veniam architecto aspernatur deserunt earum, quidem magni harum expedita fuga corrupti, quos repellendus fugit culpa in optio eos aliquam similique?",
+  },
+  {
+    id: 3,
+    image:
+      "https://images.unsplash.com/photo-1536148935331-408321065b18?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fGNvZGluZ3xlbnwwfHwwfHx8MA%3D%3D",
+    title: "Project 3",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non alias veniam architecto aspernatur deserunt earum, quidem magni harum expedita fuga corrupti, quos repellendus fugit culpa in optio eos aliquam similique?",
+  },
+];
 
 export default function Contact() {
-  const [tab, setTab] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const { name, setName, email, setEmail, page, setPage, level, design } =
-    useContactStore();
+  const { name, setName, email, setEmail, page } = useContactStore();
   const { currentUser } = UseUserContext();
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: any) => {
-      if (tab !== 1) {
-        e.preventDefault();
-        e.returnValue = ""; // Some browsers require this line to display the confirmation dialog
-      }
-    };
-
-    // Set up the beforeunload event handler
-    window.onbeforeunload = handleBeforeUnload;
-
-    // Clean up: Remove the event handler when the component unmounts
-    return () => {
-      window.onbeforeunload = null;
-    };
-  }, []);
 
   useEffect(() => {
     currentUser && setEmail(currentUser.user.email);
@@ -56,353 +64,247 @@ export default function Contact() {
     });
   };
 
-  // page number
-  const pageNumber = (action: "increase" | "decrease") => {
-    if (action === "increase") {
-      if (page === 20) return;
-      setPage(page + 1);
-    } else if (action === "decrease") {
-      if (page === 1) return;
-      setPage(page - 1);
-    }
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex(
+        (prevIndex) => (prevIndex + 1) % imageContainerData.length
+      );
+    }, 5000);
 
-  const enteringAnimation: Variants = {
-    hidden: {
-      opacity: 0,
-      x: -30,
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        type: "tween",
-        duration: 0.2,
-      },
-    },
-  };
+    return () => { clearInterval(interval); };
+  }, []);
 
-  return (
-    <div className="h-screen overflow-auto bg-gradient-to-t from-accents-1 to-black">
-      <Container
-        size={"2xl"}
-        className={`mt-20 flex gap-12 pb-12 md:mt-24 ${
-          tab === 6 ? "flex-row items-center" : "flex-col items-start"
-        }`}
-      >
-        <div className={`mb-12 flex gap-4 md:gap-12 ${tab === 6 && "hidden"}`}>
-          {INITIAL_TABS.map((tabValue) => (
-            <Tab key={tabValue} tabValue={tabValue} tabState={tab} />
-          ))}
-        </div>
-        {/* Tab 1 */}
-        <AnimatePresence mode="wait">
-          {tab === 1 ? (
-            <motion.section
-              key={1}
-              variants={enteringAnimation}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="w-full space-y-8"
+  return currentUser ? (
+    <div className="grid h-screen grid-cols-3">
+      {/* Image Container */}
+      <section className="relative h-full overflow-hidden">
+        <AnimatePresence initial={false}>
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{
+              x: 0,
+            }}
+            exit={{
+              x: "-100%",
+            }}
+            transition={{ ease: "easeInOut", type: "tween", duration: 1 }}
+            key={imageContainerData[currentIndex].id}
+            className="absolute left-0 top-0 h-full w-full"
+          >
+            <Image
+              src={imageContainerData[currentIndex].image}
+              className="pointer-events-none h-full w-full select-none object-cover"
+              width={300}
+              height={300}
+              alt=""
+            />
+            <motion.ul
+              initial={{ y: "100%" }}
+              animate={{ y: 0, transition: { delay: 1, type: "tween" } }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.5, type: "tween" }}
+              className="absolute bottom-0 left-0 flex w-full flex-col justify-end gap-2 rounded-t-xl bg-background/70 p-4 text-white backdrop-blur-xl"
             >
-              <Text size={48} className="text-foreground">
-                Which products do you want?
-              </Text>
-              <div className="flex w-full flex-wrap gap-6">
-                {Pricing.map((price) => (
-                  <Price key={price.id} price={price} />
-                ))}
-              </div>
-            </motion.section>
-          ) : tab === 2 ? (
-            <motion.section
-              key={2}
-              variants={enteringAnimation}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="w-full space-y-8"
-            >
-              <Text size={48} className="text-foreground">
-                Your name
-              </Text>
-              <input
-                type="text"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                }}
-                className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
-              />
-            </motion.section>
-          ) : tab === 3 ? (
-            <motion.section
-              key={3}
-              variants={enteringAnimation}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="w-full space-y-8"
-            >
-              <Text size={48} className="text-foreground">
-                Your email
-              </Text>
-              <input
-                type="text"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
-                className="w-full max-w-xl border-b bg-transparent px-6 py-4 text-xl font-normal outline-none"
-              />
-            </motion.section>
-          ) : tab === 4 ? (
-            <motion.section
-              key={4}
-              variants={enteringAnimation}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="w-full space-y-8"
-            >
-              <Text size={48} className="text-foreground">
-                How many pages do you want to make?
-              </Text>
-              <div className="flex w-full max-w-xl items-center justify-between border-b bg-transparent px-6 py-4 text-xl font-normal outline-none">
-                <Text size={20} className="font-normal">
-                  <motion.span
-                    initial={{ y: 4 }}
-                    animate={{ y: 0 }}
-                    className="inline-block"
-                    key={page}
-                  >
-                    {page}
-                  </motion.span>
-                </Text>
-                <div>
-                  <IoIosArrowUp
-                    className="cursor-pointer"
-                    onClick={() => {
-                      pageNumber("increase");
-                    }}
-                  />
-                  <IoIosArrowDown
-                    className="cursor-pointer"
-                    onClick={() => {
-                      pageNumber("decrease");
-                    }}
-                  />
-                </div>
-              </div>
-            </motion.section>
-          ) : tab === 5 ? (
-            <motion.section
-              key={5}
-              variants={enteringAnimation}
-              initial="hidden"
-              animate="visible"
-              className="w-full space-y-8"
-            >
-              {Pricing.find((price) => price.title === level)?.job.design ? (
-                <Text size={48} className="text-success">
-                  I will make the design :)
-                </Text>
-              ) : (
-                <DesignPage />
-              )}
-            </motion.section>
-          ) : (
-            tab === 6 && (
-              <motion.section key={6} className="w-full grow space-y-12">
-                <Text size={48} className="text-center text-foreground">
-                  Review page
-                </Text>
-                <div className="mx-auto w-full max-w-md space-y-6 rounded-xl border bg-accents-1 p-8">
-                  <div className="grid grid-cols-2 items-center">
-                    <Text size={24} className="text-foreground">
-                      Name
-                    </Text>
-                    <Text>{name}</Text>
-                  </div>
-                  <div className="grid grid-cols-2 items-center">
-                    <Text size={24} className="text-foreground">
-                      Email
-                    </Text>
-                    <Text>{email}</Text>
-                  </div>
-                  <div className="grid grid-cols-2 items-center">
-                    <Text size={24} className="text-foreground">
-                      UI design
-                    </Text>
-                    <Text>{design.url}</Text>
-                  </div>
-                  <div className="grid grid-cols-2 items-center">
-                    <Text size={24} className="text-foreground">
-                      Page
-                    </Text>
-                    <Text>{page}</Text>
-                  </div>
-                  <div className="custom-scrollbar fade-out-review_page_files flex h-32 gap-2 overflow-auto">
-                    {design.files?.map((file, index) => (
-                      <Image
-                        key={index}
-                        src={URL.createObjectURL(file)}
-                        width={300}
-                        height={600}
-                        alt=""
-                        className={`pointer-events-none h-full w-full rounded duration-200`}
-                      />
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      size={"md"}
-                      onClick={() => {
-                        setTab(tab - 1);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button variant={"primary"} size={"md"}>
-                      Send
-                    </Button>
-                  </div>
-                </div>
-              </motion.section>
-            )
-          )}
-        </AnimatePresence>
-
-        {tab !== 6 && (
-          <div className="flex gap-4">
-            <Button
-              onClick={() => {
-                setTab(tab - 1);
-              }}
-              disabled={tab === 1}
-            >
-              Prev
-            </Button>
-            {currentUser ? (
-              <Button
-                onClick={() => {
-                  setTab(tab + 1);
-                }}
-                disabled={
-                  tab === 6 ||
-                  (tab === 2 && name.length === 0) ||
-                  (tab === 3 && !email.includes(".com")) ||
-                  (tab === 5 &&
-                    design.url?.length === 0 &&
-                    Pricing.find((price) => price.title === level)?.job
-                      .design === false)
-                }
+              <motion.li
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1.3 }}
               >
-                Next
-              </Button>
-            ) : (
-              <Button onClick={signInWithGoogle}>Sign in to continue</Button>
-            )}
-          </div>
-        )}
-      </Container>
+                <Text as="h2" size={32}>
+                  {imageContainerData[currentIndex].title}
+                </Text>
+              </motion.li>
+              <motion.li
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1.4 }}
+              >
+                <Text variant={"space-grotesk"} className="text-foreground">
+                  {imageContainerData[currentIndex].description}
+                </Text>
+              </motion.li>
+            </motion.ul>
+          </motion.div>
+        </AnimatePresence>
+      </section>
+      {/* Contact Form */}
+      <section className="col-span-2 flex flex-col justify-center gap-12 px-12">
+        <div className="flex w-full gap-6">
+          <Input text="Your Name" placeholder={name} value={name} disabled />
+          <Input
+            text="Email"
+            placeholder={email}
+            value={email}
+            disabled={true}
+          />
+        </div>
+        <Input
+          text="How many pages do you want to make?"
+          placeholder="0"
+          value={page}
+          type="number"
+        />
+        <Input
+          text="Your UI Design"
+          placeholder="https://"
+          type="url"
+          comment="press ctrl+u for uploading file"
+        />
+        <Button className="self-start" disabled size={"lg"}>
+          Under Construction
+        </Button>
+      </section>
+    </div>
+  ) : (
+    <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
+      <RotatingLines
+        strokeColor="white"
+        strokeWidth="3"
+        animationDuration="1"
+        width="36"
+        visible={true}
+      />
+      <Button variant={"google"} onClick={signInWithGoogle}>
+        <AiOutlineGoogle className="text-2xl" /> Continue with Google
+      </Button>
+      <small>If the page is not responding, then you must be signed in.</small>
     </div>
   );
 }
 
-interface TabProps {
-  tabValue: number;
-  tabState: number;
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  text: string;
+  placeholder: string;
+  opacity?: number;
+  disabled?: boolean;
+  comment?: string;
 }
 
-function Tab({ tabValue, tabState }: TabProps) {
-  const [status, setStatus] = useState<
-    "progress" | "not-progress" | "completed" | string
-  >("");
-
-  useEffect(() => {
-    tabValue === tabState
-      ? setStatus("progress")
-      : tabValue < tabState
-      ? setStatus("completed")
-      : setStatus("not-progress");
-  }, [tabState]);
-
+function Input({
+  text,
+  placeholder,
+  opacity,
+  disabled = false,
+  comment,
+  ...props
+}: InputProps) {
   return (
-    <motion.div
-      layout
-      initial={false}
-      animate={{
-        opacity: status === "completed" ? 1 : status === "progress" ? 0.8 : 0.2,
-      }}
-      transition={{ duration: 0.4 }}
-      className="relative isolate flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border"
-    >
-      <AnimatePresence>
-        {status === "completed" && (
-          <motion.div
-            initial={{ x: -100 }}
-            animate={{ x: 0 }}
-            exit={{ x: -100 }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="absolute left-0 top-0 -z-10 h-full w-full bg-success"
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence mode="wait">
-        {status === "completed" ? (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{
-              scale: 1,
-              transition: { type: "spring", stiffness: 100 },
-            }}
-            exit={{ scale: 0 }}
-            transition={{ duration: 0.2 }}
-            key={"completed"}
-            className="text-white"
-          >
-            <svg
-              width="24"
-              height="100%"
-              viewBox="0 0 14 14"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <motion.circle
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                cx="7"
-                cy="7"
-                r="6.65"
-                stroke="currentColor"
-                strokeWidth="0.7"
-              />
-              <motion.path
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ delay: 0.3 }}
-                d="M3 7L5.5 10L11 5"
-                stroke="currentColor"
-                strokeWidth="0.8"
-              />
-            </svg>
-          </motion.span>
-        ) : (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            transition={{ duration: 0.2, type: "spring" }}
-            key={"not-completed"}
-          >
-            {tabValue}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.div>
+    <label className="group relative w-full" style={{ opacity }}>
+      <Text
+        size={20}
+        className="font-medium duration-200 group-focus-within:text-success"
+      >
+        {text}
+      </Text>
+      <div className="relative">
+        <input
+          type="text"
+          className="w-full truncate border-b bg-transparent pb-4 pt-2 text-4xl text-white outline-none"
+          placeholder={placeholder}
+          disabled={disabled}
+          {...props}
+        />
+        <div className="absolute bottom-0 right-0 h-[0.5px] w-0 bg-white duration-200 group-focus-within:left-0 group-focus-within:w-full" />
+      </div>
+      {comment && (
+        <Text size={12} className="mt-1">
+          {comment}
+        </Text>
+      )}
+      {disabled && (
+        <div className="absolute right-4 top-1/2">
+          <AiFillLock />
+        </div>
+      )}
+    </label>
   );
 }
+
+// function Tab({ tabValue, tabState }: TabProps) {
+//   const [status, setStatus] = useState<
+//     "progress" | "not-progress" | "completed" | string
+//   >("");
+
+//   useEffect(() => {
+//     tabValue === tabState
+//       ? setStatus("progress")
+//       : tabValue < tabState
+//       ? setStatus("completed")
+//       : setStatus("not-progress");
+//   }, [tabState]);
+
+//   return (
+//     <motion.div
+//       layout
+//       initial={false}
+//       animate={{
+//         opacity: status === "completed" ? 1 : status === "progress" ? 0.8 : 0.2,
+//       }}
+//       transition={{ duration: 0.4 }}
+//       className="relative isolate flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border"
+//     >
+//       <AnimatePresence>
+//         {status === "completed" && (
+//           <motion.div
+//             initial={{ x: -100 }}
+//             animate={{ x: 0 }}
+//             exit={{ x: -100 }}
+//             transition={{ type: "tween", duration: 0.3 }}
+//             className="absolute left-0 top-0 -z-10 h-full w-full bg-success"
+//           />
+//         )}
+//       </AnimatePresence>
+//       <AnimatePresence mode="wait">
+//         {status === "completed" ? (
+//           <motion.span
+//             initial={{ scale: 0 }}
+//             animate={{
+//               scale: 1,
+//               transition: { type: "spring", stiffness: 100 },
+//             }}
+//             exit={{ scale: 0 }}
+//             transition={{ duration: 0.2 }}
+//             key={"completed"}
+//             className="text-white"
+//           >
+//             <svg
+//               width="24"
+//               height="100%"
+//               viewBox="0 0 14 14"
+//               fill="none"
+//               xmlns="http://www.w3.org/2000/svg"
+//             >
+//               <motion.circle
+//                 initial={{ pathLength: 0 }}
+//                 animate={{ pathLength: 1 }}
+//                 cx="7"
+//                 cy="7"
+//                 r="6.65"
+//                 stroke="currentColor"
+//                 strokeWidth="0.7"
+//               />
+//               <motion.path
+//                 initial={{ pathLength: 0 }}
+//                 animate={{ pathLength: 1 }}
+//                 transition={{ delay: 0.3 }}
+//                 d="M3 7L5.5 10L11 5"
+//                 stroke="currentColor"
+//                 strokeWidth="0.8"
+//               />
+//             </svg>
+//           </motion.span>
+//         ) : (
+//           <motion.span
+//             initial={{ scale: 0 }}
+//             animate={{ scale: 1 }}
+//             exit={{ scale: 0 }}
+//             transition={{ duration: 0.2, type: "spring" }}
+//             key={"not-completed"}
+//           >
+//             {tabValue}
+//           </motion.span>
+//         )}
+//       </AnimatePresence>
+//     </motion.div>
+//   );
+// }

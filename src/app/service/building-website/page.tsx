@@ -11,20 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import Technologies from "@/components/technologies";
 import { FrequentlyAskedQuestions, Pricing, Testimonials } from "@/lib/data";
 import Price from "@/components/Price";
-import { useToast } from "@/components/ui/use-toast";
+import Link from "next/link";
 
 export default function BuildingWebsite() {
-  const { toast } = useToast();
-
   const [allTestimonials, setAllTestimonials] = useState(false);
-
-  const UnderConstruction = () => {
-    toast({
-      title: "Under Construction",
-      description: "",
-      variant: "destructive",
-    });
-  };
 
   const demosContainer = useRef<HTMLDivElement | null>(null);
 
@@ -269,17 +259,17 @@ export default function BuildingWebsite() {
           </div>
           <div className="flex flex-col items-center gap-2 md:items-end md:gap-4">
             <div className="rounded bg-gradient-to-r from-gradient-1-from to-gradient-1-to p-0.5 px-0">
-              <button
-                // href={"#"}
+              <Link
+                href={"/service/building-website/contact"}
                 className={buttonVariants({
                   variant: "primary",
                   size: "lg",
                   className: "inline-block",
                 })}
-                onClick={UnderConstruction}
+                // onClick={UnderConstruction}
               >
                 Send now
-              </button>
+              </Link>
             </div>
           </div>
         </Container>

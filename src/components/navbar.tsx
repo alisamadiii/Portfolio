@@ -64,10 +64,14 @@ export default function Navbar({ isNavbar, setIsNavbar }: NavbarProps) {
     });
   }, []);
 
+  const hiddenNavbar = pathName.includes("/contact");
+
   return (
     <>
       <nav
-        className="absolute left-0 top-0 isolate z-50 h-16 w-full bg-background/40 backdrop-blur-sm"
+        className={`absolute left-0 top-0 isolate z-50 h-16 w-full bg-background/40 backdrop-blur-sm ${
+          hiddenNavbar && "hidden"
+        }`}
         ref={navbarRef}
       >
         <Container
@@ -77,7 +81,7 @@ export default function Navbar({ isNavbar, setIsNavbar }: NavbarProps) {
           {/* Logo */}
           <div className="md:hidden"></div>
           <ul
-            className={`absolute left-0 top-16 flex w-full flex-col bg-background px-6 duration-500 max-md:-z-10 max-md:h-[calc(100dvh-64px)] md:static md:w-auto md:flex-row md:items-center md:gap-11 md:px-0 ${
+            className={`absolute left-0 top-16 flex w-full flex-col bg-background px-6 duration-500 max-md:-z-10 max-md:h-[calc(100dvh-64px)] md:static md:w-auto md:flex-row md:items-center md:gap-11 md:bg-transparent md:px-0 ${
               isNavbar
                 ? "max-md:translate-y-0"
                 : "max-md:-translate-y-[calc(100%+64px)]"
