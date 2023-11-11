@@ -22,6 +22,7 @@ import { AiOutlineGoogle } from "react-icons/ai";
 import { RotatingLines } from "react-loader-spinner";
 import { BiSolidLock } from "react-icons/bi";
 import ImageItem from "./ImageItem";
+import DraftButton from "./DraftButton";
 
 type inputSelected = "name" | "email" | "page" | "url";
 
@@ -86,6 +87,19 @@ export default function Contact() {
       setImages(files);
     }
   };
+
+  useEffect(() => {
+    const fetchingData = async () => {
+      const { data } = await supabase
+        .from("contact-form")
+        .select("status")
+        .eq("userId", currentUser?.user.user_metadata.provider_id);
+
+      console.log(data);
+    };
+
+    fetchingData();
+  }, []);
 
   return currentUser ? (
     <form
@@ -178,9 +192,16 @@ export default function Contact() {
           </div>
         )}
       </label>
-      <div className="pl-11">
-        <Button size={"md"} id="tab-form-page" onKeyDown={handleTabKey}>
-          Send
+      <div className="flex gap-2 pl-11">
+        <DraftButton />
+        <Button
+          size={"md"}
+          id="tab-form-page"
+          onKeyDown={handleTabKey}
+          type="button"
+          disabled
+        >
+          Under Construction
         </Button>
       </div>
     </form>
