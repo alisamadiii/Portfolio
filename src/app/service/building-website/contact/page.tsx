@@ -1,7 +1,13 @@
 "use client";
 
-import React, { type InputHTMLAttributes, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import React, {
+  type InputHTMLAttributes,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
+import { motion } from "framer-motion";
 
 // import { Pricing } from "@/lib/data";
 // import Price from "@/components/Price";
@@ -11,43 +17,19 @@ import { useContactStore } from "@/context/Contact.context";
 import { UseUserContext } from "@/context/User.context";
 import { supabase } from "@/utils/supabase";
 
-import Image from "next/image";
-
 // Icons
-import { AiFillLock, AiOutlineGoogle } from "react-icons/ai";
+import { AiOutlineGoogle } from "react-icons/ai";
 import { RotatingLines } from "react-loader-spinner";
+import { BiSolidLock } from "react-icons/bi";
+import ImageItem from "./ImageItem";
 
-const imageContainerData = [
-  {
-    id: 1,
-    image:
-      "https://images.unsplash.com/photo-1575089976121-8ed7b2a54265?auto=format&fit=crop&q=80&w=1887&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    title: "Project 1",
-    description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non alias veniam architecto aspernatur deserunt earum, quidem magni harum expedita fuga corrupti, quos repellendus fugit culpa in optio eos aliquam similique?",
-  },
-  {
-    id: 2,
-    image:
-      "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGNvZGluZ3xlbnwwfHwwfHx8MA%3D%3D",
-    title: "Project 2",
-    description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non alias veniam architecto aspernatur deserunt earum, quidem magni harum expedita fuga corrupti, quos repellendus fugit culpa in optio eos aliquam similique?",
-  },
-  {
-    id: 3,
-    image:
-      "https://images.unsplash.com/photo-1536148935331-408321065b18?auto=format&fit=crop&q=60&w=500&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fGNvZGluZ3xlbnwwfHwwfHx8MA%3D%3D",
-    title: "Project 3",
-    description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non alias veniam architecto aspernatur deserunt earum, quidem magni harum expedita fuga corrupti, quos repellendus fugit culpa in optio eos aliquam similique?",
-  },
-];
+type inputSelected = "name" | "email" | "page" | "url";
 
 export default function Contact() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [inputSelected, setInputSelected] = useState<inputSelected>("name");
 
-  const { name, setName, email, setEmail, page } = useContactStore();
+  const { name, setName, email, setEmail, page, setPage, images, setImages } =
+    useContactStore();
   const { currentUser } = UseUserContext();
 
   useEffect(() => {
@@ -64,97 +46,144 @@ export default function Contact() {
     });
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex(
-        (prevIndex) => (prevIndex + 1) % imageContainerData.length
-      );
-    }, 5000);
+  const onSubmitHandler = async (event: ChangeEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    return () => { clearInterval(interval); };
-  }, []);
+    await supabase.from("contact-form").upsert(
+      {
+        userId: currentUser?.user.user_metadata.provider_id,
+        email,
+        name,
+        page,
+        status: "SENT",
+      },
+      { onConflict: "email" }
+    );
+  };
+
+  const handleTabKey = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Tab") {
+      event.preventDefault(); // Prevent the default tab behavior
+
+      const inputs = document.querySelectorAll("#tab-form-page");
+      const lastIndex = inputs.length - 1;
+
+      // Find the index of the currently focused input
+      const currentIndex = Array.from(inputs).findIndex(
+        (input) => input === document.activeElement
+      );
+
+      // Set focus to the next or first input in the form
+      const nextIndex = currentIndex < lastIndex ? currentIndex + 1 : 0;
+      (inputs[nextIndex] as HTMLInputElement).focus();
+    }
+  };
+
+  const uploadFiles = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+
+    if (files) {
+      setImages(files);
+    }
+  };
 
   return currentUser ? (
-    <div className="grid h-screen grid-cols-3">
-      {/* Image Container */}
-      <section className="relative h-full overflow-hidden">
-        <AnimatePresence initial={false}>
+    <form
+      onSubmit={onSubmitHandler}
+      className="mx-auto min-h-screen max-w-xl border-l py-14"
+    >
+      <Text size={32} className="mb-11 pl-11 text-foreground">
+        Contact Form
+      </Text>
+
+      <Input
+        text="name"
+        caption="Lorem ipsum dolor sit amet consectetur, adipisicing elit."
+        inputSelected={inputSelected}
+        setInputSelected={setInputSelected}
+        onKeyDown={handleTabKey}
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+        }}
+      />
+      <Input
+        text="email"
+        caption="Lorem ipsum dolor sit amet consectetur, adipisicing elit."
+        inputSelected={inputSelected}
+        setInputSelected={setInputSelected}
+        onKeyDown={handleTabKey}
+        value={email}
+        islocked={true}
+      />
+      <Input
+        text="page"
+        type="number"
+        caption="Lorem ipsum dolor sit amet consectetur, adipisicing elit."
+        inputSelected={inputSelected}
+        setInputSelected={setInputSelected}
+        onKeyDown={handleTabKey}
+        value={page}
+        onChange={(e) => {
+          setPage(Number(e.target.value));
+        }}
+      />
+      <label
+        className="relative mb-9 flex w-full flex-col gap-3 pl-11"
+        onClick={() => {
+          setInputSelected("url");
+        }}
+      >
+        {inputSelected === "url" && (
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{
-              x: 0,
-            }}
-            exit={{
-              x: "-100%",
-            }}
-            transition={{ ease: "easeInOut", type: "tween", duration: 1 }}
-            key={imageContainerData[currentIndex].id}
-            className="absolute left-0 top-0 h-full w-full"
-          >
-            <Image
-              src={imageContainerData[currentIndex].image}
-              className="pointer-events-none h-full w-full select-none object-cover"
-              width={300}
-              height={300}
-              alt=""
-            />
-            <motion.ul
-              initial={{ y: "100%" }}
-              animate={{ y: 0, transition: { delay: 1, type: "tween" } }}
-              exit={{ y: "100%" }}
-              transition={{ duration: 0.5, type: "tween" }}
-              className="absolute bottom-0 left-0 flex w-full flex-col justify-end gap-2 rounded-t-xl bg-background/70 p-4 text-white backdrop-blur-xl"
-            >
-              <motion.li
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1.3 }}
-              >
-                <Text as="h2" size={32}>
-                  {imageContainerData[currentIndex].title}
-                </Text>
-              </motion.li>
-              <motion.li
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1.4 }}
-              >
-                <Text variant={"space-grotesk"} className="text-foreground">
-                  {imageContainerData[currentIndex].description}
-                </Text>
-              </motion.li>
-            </motion.ul>
-          </motion.div>
-        </AnimatePresence>
-      </section>
-      {/* Contact Form */}
-      <section className="col-span-2 flex flex-col justify-center gap-12 px-12">
-        <div className="flex w-full gap-6">
-          <Input text="Your Name" placeholder={name} value={name} disabled />
-          <Input
-            text="Email"
-            placeholder={email}
-            value={email}
-            disabled={true}
+            layoutId="blue-circle"
+            transition={{ type: "tween" }}
+            className={`absolute -left-[0.5px] -top-12 -z-10 flex h-32 w-px items-center justify-center bg-gradient-to-t from-transparent via-white/50 to-transparent before:absolute before:h-3 before:w-3 before:rounded-full before:bg-success`}
           />
+        )}
+        <div className="space-y-1">
+          <Text size={24} className="capitalize text-foreground">
+            Url
+          </Text>
+          <Text variant={"muted-sm"}>
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+          </Text>
         </div>
-        <Input
-          text="How many pages do you want to make?"
-          placeholder="0"
-          value={page}
-          type="number"
-        />
-        <Input
-          text="Your UI Design"
-          placeholder="https://"
-          type="url"
-          comment="press ctrl+u for uploading file"
-        />
-        <Button className="self-start" disabled size={"lg"}>
-          Under Construction
+        <div className="relative flex gap-2">
+          <input
+            name={"url"}
+            className={`w-full rounded-xl bg-accents-1 px-3 py-2 text-foreground outline-none ring-1 ring-transparent duration-100 placeholder:capitalize placeholder:text-accents-4 focus:ring-success`}
+            id="tab-form-page"
+            placeholder={"url"}
+            onFocus={() => {
+              setInputSelected("url");
+            }}
+            autoComplete="off"
+          />
+          <label className="flex cursor-pointer items-center rounded-xl bg-foreground px-2 text-background">
+            Upload
+            <input
+              type="file"
+              className="hidden"
+              onChange={uploadFiles}
+              multiple
+            />
+          </label>
+        </div>
+        {images && (
+          <div className="columns-2 gap-2 overflow-hidden rounded-lg">
+            {Array.from(images).map((image, index) => (
+              <ImageItem key={index} file={image} />
+            ))}
+          </div>
+        )}
+      </label>
+      <div className="pl-11">
+        <Button size={"md"} id="tab-form-page" onKeyDown={handleTabKey}>
+          Send
         </Button>
-      </section>
-    </div>
+      </div>
+    </form>
   ) : (
     <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
       <RotatingLines
@@ -173,138 +202,64 @@ export default function Contact() {
 }
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  text: string;
-  placeholder: string;
-  opacity?: number;
-  disabled?: boolean;
-  comment?: string;
+  inputSelected: inputSelected;
+  setInputSelected: (a: inputSelected) => void;
+  text: inputSelected;
+  caption: string;
+  islocked?: boolean;
 }
 
 function Input({
   text,
-  placeholder,
-  opacity,
+  caption,
   disabled = false,
-  comment,
+  inputSelected,
+  setInputSelected,
+  islocked = false,
   ...props
 }: InputProps) {
   return (
-    <label className="group relative w-full" style={{ opacity }}>
-      <Text
-        size={20}
-        className="font-medium duration-200 group-focus-within:text-success"
-      >
-        {text}
-      </Text>
-      <div className="relative">
+    <label
+      className="relative mb-9 flex w-full flex-col gap-3 pl-11"
+      onClick={() => {
+        setInputSelected(text);
+      }}
+    >
+      {inputSelected === text && (
+        <motion.div
+          layoutId="blue-circle"
+          transition={{ type: "tween" }}
+          className={`absolute -left-[0.5px] -top-12 -z-10 flex h-32 w-px items-center justify-center bg-gradient-to-t from-transparent via-white/50 to-transparent before:absolute before:h-3 before:w-3 before:rounded-full ${
+            islocked ? "before:bg-warning" : "before:bg-success"
+          }`}
+        />
+      )}
+      <div className="space-y-1">
+        <Text size={24} className="capitalize text-foreground">
+          {text}
+        </Text>
+        <Text variant={"muted-sm"}>{caption}</Text>
+      </div>
+      <div className="relative flex items-center">
         <input
-          type="text"
-          className="w-full truncate border-b bg-transparent pb-4 pt-2 text-4xl text-white outline-none"
-          placeholder={placeholder}
-          disabled={disabled}
+          name={text}
+          className={`w-full rounded-xl bg-accents-1 px-3 py-2 text-foreground outline-none ring-1 ring-transparent duration-100 placeholder:capitalize placeholder:text-accents-4 ${
+            islocked ? "focus:ring-warning" : "focus:ring-success"
+          }`}
+          id="tab-form-page"
+          placeholder={text}
+          onFocus={() => {
+            setInputSelected(text);
+          }}
+          autoComplete="off"
           {...props}
         />
-        <div className="absolute bottom-0 right-0 h-[0.5px] w-0 bg-white duration-200 group-focus-within:left-0 group-focus-within:w-full" />
+        {islocked && (
+          <div className="absolute right-4">
+            <BiSolidLock />
+          </div>
+        )}
       </div>
-      {comment && (
-        <Text size={12} className="mt-1">
-          {comment}
-        </Text>
-      )}
-      {disabled && (
-        <div className="absolute right-4 top-1/2">
-          <AiFillLock />
-        </div>
-      )}
     </label>
   );
 }
-
-// function Tab({ tabValue, tabState }: TabProps) {
-//   const [status, setStatus] = useState<
-//     "progress" | "not-progress" | "completed" | string
-//   >("");
-
-//   useEffect(() => {
-//     tabValue === tabState
-//       ? setStatus("progress")
-//       : tabValue < tabState
-//       ? setStatus("completed")
-//       : setStatus("not-progress");
-//   }, [tabState]);
-
-//   return (
-//     <motion.div
-//       layout
-//       initial={false}
-//       animate={{
-//         opacity: status === "completed" ? 1 : status === "progress" ? 0.8 : 0.2,
-//       }}
-//       transition={{ duration: 0.4 }}
-//       className="relative isolate flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border"
-//     >
-//       <AnimatePresence>
-//         {status === "completed" && (
-//           <motion.div
-//             initial={{ x: -100 }}
-//             animate={{ x: 0 }}
-//             exit={{ x: -100 }}
-//             transition={{ type: "tween", duration: 0.3 }}
-//             className="absolute left-0 top-0 -z-10 h-full w-full bg-success"
-//           />
-//         )}
-//       </AnimatePresence>
-//       <AnimatePresence mode="wait">
-//         {status === "completed" ? (
-//           <motion.span
-//             initial={{ scale: 0 }}
-//             animate={{
-//               scale: 1,
-//               transition: { type: "spring", stiffness: 100 },
-//             }}
-//             exit={{ scale: 0 }}
-//             transition={{ duration: 0.2 }}
-//             key={"completed"}
-//             className="text-white"
-//           >
-//             <svg
-//               width="24"
-//               height="100%"
-//               viewBox="0 0 14 14"
-//               fill="none"
-//               xmlns="http://www.w3.org/2000/svg"
-//             >
-//               <motion.circle
-//                 initial={{ pathLength: 0 }}
-//                 animate={{ pathLength: 1 }}
-//                 cx="7"
-//                 cy="7"
-//                 r="6.65"
-//                 stroke="currentColor"
-//                 strokeWidth="0.7"
-//               />
-//               <motion.path
-//                 initial={{ pathLength: 0 }}
-//                 animate={{ pathLength: 1 }}
-//                 transition={{ delay: 0.3 }}
-//                 d="M3 7L5.5 10L11 5"
-//                 stroke="currentColor"
-//                 strokeWidth="0.8"
-//               />
-//             </svg>
-//           </motion.span>
-//         ) : (
-//           <motion.span
-//             initial={{ scale: 0 }}
-//             animate={{ scale: 1 }}
-//             exit={{ scale: 0 }}
-//             transition={{ duration: 0.2, type: "spring" }}
-//             key={"not-completed"}
-//           >
-//             {tabValue}
-//           </motion.span>
-//         )}
-//       </AnimatePresence>
-//     </motion.div>
-//   );
-// }

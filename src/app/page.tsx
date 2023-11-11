@@ -55,7 +55,7 @@ export default function Home() {
     const splitTypes = document.querySelectorAll("#reveal-text");
 
     splitTypes.forEach((char: any) => {
-      const text = new SplitType(char, { types: "chars, words" });
+      const text = new SplitType(char, { types: "chars,words" });
 
       gsap
         .from(text.chars, {
@@ -156,7 +156,8 @@ export default function Home() {
                 size: "lg",
                 className: "max-md:w-full max-md:max-w-md",
               })}
-              onClick={UnderConstruction} rel="noreferrer"
+              onClick={UnderConstruction}
+              rel="noreferrer"
             >
               Contact me
             </a>
@@ -176,7 +177,8 @@ export default function Home() {
                 size: "lg",
                 className: "w-full px-4 text-2xl",
               })}
-              onClick={UnderConstruction} rel="noreferrer"
+              onClick={UnderConstruction}
+              rel="noreferrer"
             >
               <AiFillLinkedin />
             </a>
@@ -187,7 +189,8 @@ export default function Home() {
                 size: "lg",
                 className: "w-full px-4 text-2xl",
               })}
-              onClick={UnderConstruction} rel="noreferrer"
+              onClick={UnderConstruction}
+              rel="noreferrer"
             >
               <AiFillGithub />
             </a>
