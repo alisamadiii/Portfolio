@@ -13,6 +13,8 @@ interface ContactType {
   setPage: (a: number) => void;
   images: FileList | null;
   setImages: (a: FileList | null) => void;
+  imagesLink: string[];
+  setImagesLink: (a: string[]) => void;
   isDelete: boolean;
   setIsDelete: (a: boolean) => void;
 }
@@ -38,6 +40,8 @@ const useContactStore = create<ContactType>()((set) => ({
   setImages: (images: FileList | null) => {
     set({ images });
   },
+  imagesLink: [],
+  setImagesLink: (imagesLink) => { set({ imagesLink }); },
   isDelete: false,
   setIsDelete: (isDelete: boolean) => {
     set({ isDelete });

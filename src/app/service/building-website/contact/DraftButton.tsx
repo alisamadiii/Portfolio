@@ -10,7 +10,7 @@ export default function DraftButton() {
   const [status, setStatus] = useState({ isLoading: false, isSuccess: false });
 
   const { currentUser } = UseUserContext();
-  const { name, email, page } = useContactStore();
+  const { name, email, page, imagesLink } = useContactStore();
 
   const onDraftHandler = async () => {
     setStatus({ isLoading: true, isSuccess: false });
@@ -21,6 +21,7 @@ export default function DraftButton() {
         name,
         page,
         status: "DRAFT",
+        images: imagesLink,
       },
       { onConflict: "email" }
     );

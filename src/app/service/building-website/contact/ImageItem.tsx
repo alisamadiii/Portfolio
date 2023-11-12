@@ -6,6 +6,7 @@ import { UseUserContext } from "@/context/User.context";
 import { supabase } from "@/utils/supabase";
 import { RotatingLines } from "react-loader-spinner";
 import { Button } from "@/components/ui/button";
+import { useContactStore } from "@/context/Contact.context";
 
 interface Props {
   file: File;
@@ -15,6 +16,7 @@ function ImageItem({ file }: Props) {
   const { currentUser } = UseUserContext();
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { imagesLink, setImagesLink } = useContactStore();
 
   useEffect(() => {
     const uploadingFiles = async () => {
@@ -30,11 +32,42 @@ function ImageItem({ file }: Props) {
         );
 
       setIsLoading(false);
+
       console.log("done");
+
+      const { data } = await supabase.storage
+        .from("contact-form")
+        .list(
+          `${
+            currentUser?.user.user_metadata.full_name +
+            "-" +
+            currentUser?.user.user_metadata.provider_id
+          }`,
+          {
+            limit: 100,
+            offset: 0,
+          }
+        );
+
+      if (data) {
+        setImagesLink(
+          data.map((d) => {
+            return `${
+              process.env.NEXT_PUBLIC_SUPABASE_URL
+            }/storage/v1/object/public/contact-form/${
+              currentUser?.user.user_metadata.full_name +
+              "-" +
+              currentUser?.user.user_metadata.provider_id
+            }/${d.name}`;
+          })
+        );
+      }
     };
 
     uploadingFiles();
   }, [file]);
+
+  console.log(imagesLink);
 
   const deletingFiles = async () => {
     setIsDeleting(true);

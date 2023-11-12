@@ -23,6 +23,8 @@ import { RotatingLines } from "react-loader-spinner";
 import { BiSolidLock } from "react-icons/bi";
 import ImageItem from "./ImageItem";
 import DraftButton from "./DraftButton";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type inputSelected = "name" | "email" | "page" | "url";
 
@@ -33,10 +35,36 @@ export default function Contact() {
     useContactStore();
   const { currentUser } = UseUserContext();
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["myData"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contact-form")
+        .select("page, email, name")
+        .eq("userId", currentUser?.user.user_metadata.provider_id);
+
+      if (data) {
+        return data;
+      } else if (error) {
+        return null;
+      }
+    },
+    enabled: !!currentUser,
+  });
+
   useEffect(() => {
-    currentUser && setEmail(currentUser.user.email);
-    currentUser && setName(currentUser.user.user_metadata.full_name);
-  }, [currentUser]);
+    if (data) {
+      if (data.length > 0) {
+        setEmail(data[0].email);
+        setName(data[0].name);
+        setPage(data[0].page);
+      } else {
+        console.log("not data found");
+        currentUser && setEmail(currentUser.user.email);
+        currentUser && setName(currentUser.user.user_metadata.full_name);
+      }
+    }
+  }, [data]);
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -56,7 +84,7 @@ export default function Contact() {
         email,
         name,
         page,
-        status: "SENT",
+        status: "DRAFT",
       },
       { onConflict: "email" }
     );
@@ -88,19 +116,6 @@ export default function Contact() {
     }
   };
 
-  useEffect(() => {
-    const fetchingData = async () => {
-      const { data } = await supabase
-        .from("contact-form")
-        .select("status")
-        .eq("userId", currentUser?.user.user_metadata.provider_id);
-
-      console.log(data);
-    };
-
-    fetchingData();
-  }, []);
-
   return currentUser ? (
     <form
       onSubmit={onSubmitHandler}
@@ -120,6 +135,7 @@ export default function Contact() {
         onChange={(e) => {
           setName(e.target.value);
         }}
+        isLoading={isLoading}
       />
       <Input
         text="email"
@@ -129,6 +145,7 @@ export default function Contact() {
         onKeyDown={handleTabKey}
         value={email}
         islocked={true}
+        isLoading={isLoading}
       />
       <Input
         text="page"
@@ -141,6 +158,7 @@ export default function Contact() {
         onChange={(e) => {
           setPage(Number(e.target.value));
         }}
+        isLoading={isLoading}
       />
       <label
         className="relative mb-9 flex w-full flex-col gap-3 pl-11"
@@ -228,6 +246,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   text: inputSelected;
   caption: string;
   islocked?: boolean;
+  isLoading: boolean;
 }
 
 function Input({
@@ -237,6 +256,7 @@ function Input({
   inputSelected,
   setInputSelected,
   islocked = false,
+  isLoading,
   ...props
 }: InputProps) {
   return (
@@ -279,6 +299,9 @@ function Input({
           <div className="absolute right-4">
             <BiSolidLock />
           </div>
+        )}
+        {isLoading && (
+          <Skeleton className="absolute inset-2 after:duration-1000" />
         )}
       </div>
     </label>
