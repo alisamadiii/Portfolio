@@ -1,4 +1,8 @@
 import { defineDocumentType, makeSource } from "contentlayer/source-files";
+import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
 
 const computedFields = {
   slug: {
@@ -24,6 +28,10 @@ const Blog = defineDocumentType(() => ({
       type: "date",
       required: true,
     },
+    isComplete: {
+      type: "string",
+      required: true,
+    },
   },
   computedFields,
 }));
@@ -31,4 +39,26 @@ const Blog = defineDocumentType(() => ({
 export default makeSource({
   contentDirPath: "./blogs",
   documentTypes: [Blog],
+  mdx: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [
+      rehypeSlug,
+      [
+        rehypePrettyCode,
+        {
+          theme: "one-dark-pro",
+          keepBackground: false,
+        },
+      ],
+      [
+        rehypeAutolinkHeadings,
+        {
+          properties: {
+            className: ["subheading-anchor"],
+            ariaLabel: "Link to section",
+          },
+        },
+      ],
+    ],
+  },
 });

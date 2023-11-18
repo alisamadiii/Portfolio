@@ -2,26 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+/* Code Wrapper */
+[data-rehype-pretty-code-fragment] {
+  @apply my-8 mb-3 overflow-hidden rounded-lg border border-border bg-[rgb(24,24,27)];
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+[data-rehype-pretty-code-fragment] > [data-rehype-pretty-code-title] {
+  @apply mb-2 border-b border-border px-4 py-2;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+[data-rehype-pretty-code-fragment] code {
+  @apply py-3;
+}
+
+[data-rehype-pretty-code-fragment]:has([data-rehype-pretty-code-title]) code {
+  @apply py-0 pb-3;
+}
+
+[data-highlighted-chars] {
+  background-color: rgba(63, 63, 70, 0.5);
+  padding: 0.2rem;
+  border-radius: 0.2rem;
+}
+[data-highlighted-line] {
+  background-color: rgba(46, 46, 51, 0.5);
+  padding: 0.2rem;
+}
+
+[data-chars-id="s"] {
+  border-radius: 0.2rem;
+}
+
+code [data-line] {
+  padding-inline: 1em;
+  padding: 0.125rem 1rem;
+}
+
+code[data-line-numbers] {
+  counter-reset: line;
+}
+
+code[data-line-numbers] > [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+
+  /* Other styling */
+  display: inline-block;
+  width: 1rem;
+  margin-right: 2rem;
+  text-align: right;
+  color: gray;
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
 import { allBlogs } from "contentlayer/generated";
+import Badge from "@/components/badge";
 
 type Props = {};
 
@@ -17,6 +18,8 @@ export default function BlogLinks({}: Props) {
       ? compareDesc(new Date(a.publishAt), new Date(b.publishAt))
       : compareDesc(new Date(b.publishAt), new Date(a.publishAt))
   );
+
+  console.log(blogs);
 
   return (
     <>
@@ -33,12 +36,13 @@ export default function BlogLinks({}: Props) {
           <motion.li key={blog.publishAt} layoutId={blog.publishAt}>
             <Link
               href={`/blog/${blog.slug}`}
-              className="inline-block w-full border-b border-b-transparent py-2 outline-none focus:border-foreground"
+              className="flex w-full flex-col border-b border-b-transparent py-2 outline-none focus:border-foreground"
             >
               <p>{blog.title}</p>
               <small className="text-muted-2">
                 {format(parseISO(blog.publishAt), "LLLL d, yyyy")}
               </small>
+              {blog.isComplete === "false\r" && <Badge>Not Completed</Badge>}
             </Link>
           </motion.li>
         ))}

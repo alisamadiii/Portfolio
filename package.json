@@ -10,6 +10,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "clsx": "^2.0.0",
     "contentlayer": "^0.3.4",
     "date-fns": "^2.30.0",
     "framer-motion": "^10.16.5",
@@ -17,7 +18,12 @@
     "next": "14.0.3",
     "next-contentlayer": "^0.3.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-pretty-code": "^0.10.2",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
