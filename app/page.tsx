@@ -6,11 +6,12 @@ const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 export default function Home() {
   return (
     <>
-      <h1 className="mb-8 text-2xl font-bold">hey, I' m Ali Reza 👋</h1>
+      <h1 className="mb-8 text-2xl font-bold">hey, I&apos; m Ali Reza 👋</h1>
       <p className="mb-5 leading-6 text-muted">
-        I'm Ali Reza! I've got 2+ years of web dev experience, mainly focusing
-        on front-end magic with ReactJS. I'm all about embracing new challenges
-        and learning opportunities. Let's build something awesome together!
+        I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
+        focusing on front-end magic with ReactJS. I&apos;m all about embracing
+        new challenges and learning opportunities. Let&apos;s build something
+        awesome together!
       </p>
       <p className="leading-6 text-muted">
         I began creating animated content in January 2023, and within one month,
