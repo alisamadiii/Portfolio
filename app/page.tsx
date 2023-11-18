@@ -52,8 +52,11 @@ export default function Home() {
       </a>
       <p className="mb-5 leading-6 text-muted">Experience with:</p>
       <div className="flex flex-wrap gap-2">
-        {technologies.map((tech) => (
-          <div className="rounded border border-border  bg-box px-3 py-4">
+        {technologies.map((tech, index) => (
+          <div
+            key={index}
+            className="rounded border border-border  bg-box px-3 py-4"
+          >
             <TechnologyIcon name={tech} />
           </div>
         ))}
