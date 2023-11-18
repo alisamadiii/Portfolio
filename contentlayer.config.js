@@ -20,6 +20,10 @@ const Blog = defineDocumentType(() => ({
   filePathPattern: "**/*.mdx",
   contentType: "mdx",
   fields: {
+    isComplete: {
+      type: "boolean",
+      default: false,
+    },
     title: {
       type: "string",
       required: true,
@@ -28,9 +32,13 @@ const Blog = defineDocumentType(() => ({
       type: "date",
       required: true,
     },
-    isComplete: {
+    blogImage: {
       type: "string",
       required: true,
+    },
+    keyboard: {
+      type: "list",
+      of: { type: "string" },
     },
   },
   computedFields,

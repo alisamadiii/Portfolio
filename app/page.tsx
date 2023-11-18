@@ -22,7 +22,7 @@ export default function Home() {
       <a
         href="https://twitter.com/alirdev"
         target="_blank"
-        className="focus:shadow-box-focus my-8 flex w-full items-center gap-4 rounded border border-border bg-box px-3 py-4 outline-none duration-200"
+        className="my-8 flex w-full items-center gap-4 rounded border border-border bg-box px-3 py-4 outline-none duration-200 focus:shadow-box-focus"
       >
         <div>
           <Image

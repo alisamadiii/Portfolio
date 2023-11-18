@@ -40,7 +40,7 @@ export default function BlogLinks({}: Props) {
               <small className="text-muted-2">
                 {format(parseISO(blog.publishAt), "LLLL d, yyyy")}
               </small>
-              {blog.isComplete === "false\r" && <Badge>Not Completed</Badge>}
+              {!blog.isComplete && <Badge>Not Completed</Badge>}
             </Link>
           </motion.li>
         ))}

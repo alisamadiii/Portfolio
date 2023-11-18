@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { allBlogs } from "@/.contentlayer/generated";
 import { Mdx } from "./MDXContent";
+import BlogHeader from "./blogHeader";
 
 type Props = {
   params: {
@@ -11,17 +12,18 @@ type Props = {
 };
 
 export default function BlogPage({ params }: Props) {
-  const findingPosts = allBlogs.find(
+  const findingBlogs = allBlogs.find(
     (post) => params.slug === post._raw.flattenedPath
   );
 
-  if (!findingPosts) {
+  if (!findingBlogs) {
     return notFound();
   }
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Mdx code={findingPosts.body.code} />
+      <BlogHeader blog={findingBlogs} />
+      <Mdx code={findingBlogs.body.code} />
     </div>
   );
 }
