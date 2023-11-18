@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, LayoutGroup } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
@@ -18,8 +18,6 @@ export default function BlogLinks({}: Props) {
       ? compareDesc(new Date(a.publishAt), new Date(b.publishAt))
       : compareDesc(new Date(b.publishAt), new Date(a.publishAt))
   );
-
-  console.log(blogs);
 
   return (
     <>
