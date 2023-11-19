@@ -23,8 +23,8 @@ export default function Blog({}: Props) {
         stunning, functional, and fully customized websites that align perfectly
         with your unique needs and goals. From concept to completion, I bring
         your vision to life, ensuring seamless navigation, compelling design,
-        and optimal user experience. Let's collaborate and build a captivating
-        online presence that sets you apart from the competition.
+        and optimal user experience. Let&apos;s collaborate and build a
+        captivating online presence that sets you apart from the competition.
       </p>
       <ServiceLinks />
     </>

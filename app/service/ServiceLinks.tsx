@@ -12,8 +12,8 @@ type Props = {};
 export default function BlogLinks({}: Props) {
   return (
     <motion.ul layout className="gap-4 space-y-4 md:columns-2">
-      {allServices.map((service) => (
-        <motion.li>
+      {allServices.map((service, index) => (
+        <motion.li key={index}>
           <Link
             href={`${service.slug}`}
             className="flex w-full flex-col overflow-hidden rounded-xl border border-border outline-none duration-100 hover:bg-box focus:border-foreground"
