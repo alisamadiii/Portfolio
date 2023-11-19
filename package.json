@@ -19,6 +19,7 @@
     "next-contentlayer": "^0.3.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-wrap-balancer": "^1.1.0",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-pretty-code": "^0.10.2",

@@ -14,6 +14,7 @@ const config: Config = {
         muted: {
           DEFAULT: "#737373",
           2: "#A3A3A3",
+          3: "#d4d4d4",
         },
         box: "#262626",
         border: "#404040",
