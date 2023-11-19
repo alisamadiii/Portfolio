@@ -5,6 +5,7 @@ import { allBlogs } from "@/.contentlayer/generated";
 import { Mdx } from "./MDXContent";
 import BlogHeader from "./blogHeader";
 import Balancer from "react-wrap-balancer";
+import { Metadata } from "next";
 
 type Props = {
   params: {
@@ -12,6 +13,40 @@ type Props = {
   };
 };
 
+type generateMetadataProps = {
+  params: { slug: string };
+};
+
+export async function generateMetadata({
+  params,
+}: generateMetadataProps): Promise<Metadata> {
+  // read route params
+  const slug = params.slug;
+
+  const findingBlogs = allBlogs.find(
+    (post) => slug === post._raw.flattenedPath
+  );
+
+  if (!findingBlogs) {
+    return {};
+  }
+
+  return {
+    title: findingBlogs.title,
+    openGraph: {
+      title: findingBlogs.title,
+      description: "will be adding",
+      url: "https://www.alirezasamadi.com/",
+      images: [
+        {
+          url: findingBlogs.blogImage,
+          width: 800,
+          height: 600,
+        },
+      ],
+    },
+  };
+}
 export default function BlogPage({ params }: Props) {
   const findingBlogs = allBlogs.find(
     (post) => params.slug === post._raw.flattenedPath
