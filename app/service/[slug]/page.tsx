@@ -1,8 +1,8 @@
 import React from "react";
 import { notFound } from "next/navigation";
 
-import { allBlogs } from "@/.contentlayer/generated";
-import BlogHeader from "./blogHeader";
+import { allServices } from "@/.contentlayer/generated";
+import BlogHeader from "./serviceHeader";
 import Balancer from "react-wrap-balancer";
 import { Metadata } from "next";
 import Links from "./Links";
@@ -24,24 +24,26 @@ export async function generateMetadata({
   // read route params
   const slug = params.slug;
 
-  const findingBlogs = allBlogs.find((post) => slug === post.slugAsParams);
+  const findingServices = allServices.find(
+    (service) => slug === service.slugAsParams
+  );
 
-  if (!findingBlogs) {
+  if (!findingServices) {
     return {};
   }
 
   return {
     title: {
-      default: findingBlogs.title,
-      absolute: `${findingBlogs.title} | Blog`,
+      default: findingServices.title,
+      absolute: `${findingServices.title} | Blog`,
     },
     openGraph: {
-      title: findingBlogs.title,
+      title: findingServices.title,
       description: "will be adding",
       url: "https://www.alirezasamadi.com/",
       images: [
         {
-          url: findingBlogs.blogImage,
+          url: findingServices.image,
           width: 800,
           height: 600,
         },
@@ -50,7 +52,7 @@ export async function generateMetadata({
   };
 }
 export default function BlogPage({ params }: Props) {
-  const findingBlogs = allBlogs.find(
+  const findingBlogs = allServices.find(
     (post) => params.slug === post.slugAsParams
   );
 
@@ -60,20 +62,9 @@ export default function BlogPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      {findingBlogs.isComplete ? (
-        <>
-          <BlogHeader blog={findingBlogs} />
-          <Mdx code={findingBlogs.body.code} />
-          <Links blog={findingBlogs} />
-        </>
-      ) : (
-        <div className="relative p-4">
-          <BlogHeader blog={findingBlogs} />
-          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-background/50 backdrop-blur">
-            <Balancer className="text-xl">In process of Writing...</Balancer>
-          </div>
-        </div>
-      )}
+      {/* <BlogHeader service={findingBlogs} /> */}
+      <Mdx code={findingBlogs.body.code} />
+      <Links service={findingBlogs} />
     </div>
   );
 }

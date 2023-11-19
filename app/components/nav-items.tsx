@@ -13,6 +13,8 @@ export const NavItems = ({ path, name }: Props) => {
 
   if (usePathName.includes("/blog/")) {
     usePathName = "/blog";
+  } else if (usePathName.includes("/service/")) {
+    usePathName = "/service";
   }
 
   const isActive = path === usePathName;

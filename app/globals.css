@@ -60,3 +60,8 @@ code[data-line-numbers] > [data-line]::before {
   text-align: right;
   color: gray;
 }
+
+.fade-out-faq {
+  -webkit-mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
+}

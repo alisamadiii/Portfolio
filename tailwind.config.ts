@@ -22,6 +22,21 @@ const config: Config = {
       boxShadow: {
         "box-focus": "0 0 0 2px #111010, 0 0 0 4px white",
       },
+      animation: {
+        "badge-circle-expand": "badge-circle-expand 1s infinite linear",
+      },
+      keyframes: {
+        "badge-circle-expand": {
+          from: {
+            transform: "scale(1)",
+            opacity: "1",
+          },
+          to: {
+            transform: "scale(2)",
+            opacity: "0",
+          },
+        },
+      },
     },
   },
   plugins: [],

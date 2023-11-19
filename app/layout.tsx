@@ -40,7 +40,7 @@ export default function RootLayout({
         className={`${GeistSans.className} mx-auto max-w-2xl bg-background py-16 text-foreground max-md:px-4`}
       >
         <Navbar />
-        <main>{children}</main>
+        <main className="flex flex-col">{children}</main>
       </body>
     </html>
   );

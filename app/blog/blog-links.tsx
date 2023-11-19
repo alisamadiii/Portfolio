@@ -6,7 +6,7 @@ import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
 import { allBlogs } from "contentlayer/generated";
-import Badge from "@/components/badge";
+import Badge from "../components/badge";
 
 type Props = {};
 
@@ -33,7 +33,7 @@ export default function BlogLinks({}: Props) {
         {blogs.map((blog) => (
           <motion.li key={blog.publishAt} layoutId={blog.publishAt}>
             <Link
-              href={`/blog/${blog.slug}`}
+              href={`${blog.slug}`}
               className="flex w-full flex-col border-b border-b-transparent py-2 outline-none focus:border-foreground"
             >
               <p>{blog.title}</p>

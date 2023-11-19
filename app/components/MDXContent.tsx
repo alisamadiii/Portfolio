@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { useMDXComponent } from "next-contentlayer/hooks";
 import Image from "next/image";
 import { cn } from "@/utils";
+import FAQ from "./faq";
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -20,7 +21,7 @@ const components = {
   ),
   p: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <p
-      className="text-muted-3 my-5 scroll-m-20 text-base leading-7"
+      className="my-5 scroll-m-20 text-base leading-7 text-muted-3"
       {...props}
     />
   ),
@@ -39,7 +40,7 @@ const components = {
   ),
   li: ({ className, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
     <li
-      className="text-muted-3 relative my-2 flex items-center before:absolute before:h-1 before:w-1 before:-translate-x-5 before:rounded-full before:bg-muted"
+      className="relative my-2 flex items-center text-muted-3 before:absolute before:h-1 before:w-1 before:-translate-x-5 before:rounded-full before:bg-muted"
       {...props}
     />
   ),
@@ -87,6 +88,7 @@ const components = {
   Image: ({ className, alt, ...props }: React.ComponentProps<typeof Image>) => (
     <Image className={cn("rounded-md", className)} alt={alt} {...props} />
   ),
+  FaqFrontEnd: FAQ,
 };
 
 export function Mdx({ code }: { code: string }) {

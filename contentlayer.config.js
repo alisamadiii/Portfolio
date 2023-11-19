@@ -17,7 +17,7 @@ const computedFields = {
 
 const Blog = defineDocumentType(() => ({
   name: "Blog",
-  filePathPattern: "**/*.mdx",
+  filePathPattern: "blog/**/*.mdx",
   contentType: "mdx",
   fields: {
     isComplete: {
@@ -44,9 +44,34 @@ const Blog = defineDocumentType(() => ({
   computedFields,
 }));
 
+const Service = defineDocumentType(() => ({
+  name: "Service",
+  filePathPattern: "service/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true,
+    },
+    description: {
+      type: "string",
+      required: true,
+    },
+    image: {
+      type: "string",
+      required: true,
+    },
+    keyboard: {
+      type: "list",
+      of: { type: "string" },
+    },
+  },
+  computedFields,
+}));
+
 export default makeSource({
-  contentDirPath: "./blogs",
-  documentTypes: [Blog],
+  contentDirPath: "./content",
+  documentTypes: [Blog, Service],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
