@@ -1,7 +1,12 @@
 import React from "react";
 import BlogLinks from "./blog-links";
+import { Metadata } from "next";
 
 type Props = {};
+
+export const metadata: Metadata = {
+  title: "Blog",
+};
 
 export default function Blog({}: Props) {
   return (
