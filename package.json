@@ -17,6 +17,7 @@
     "geist": "^1.1.0",
     "next": "14.0.3",
     "next-contentlayer": "^0.3.4",
+    "open-graph-scraper": "^6.3.2",
     "react": "^18",
     "react-dom": "^18",
     "react-wrap-balancer": "^1.1.0",

@@ -6,6 +6,7 @@ import { Mdx } from "./MDXContent";
 import BlogHeader from "./blogHeader";
 import Balancer from "react-wrap-balancer";
 import { Metadata } from "next";
+import Links from "./Links";
 
 type Props = {
   params: {
@@ -62,6 +63,7 @@ export default function BlogPage({ params }: Props) {
         <>
           <BlogHeader blog={findingBlogs} />
           <Mdx code={findingBlogs.body.code} />
+          <Links blog={findingBlogs} />
         </>
       ) : (
         <div className="relative p-4">
