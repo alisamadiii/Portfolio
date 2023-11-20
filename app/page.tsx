@@ -1,18 +1,30 @@
 import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
+import { MotionH1 } from "./framer";
+import ParagraphAnimate from "./components/ParagraphAnimate";
 
 const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 
 export default function Home() {
   return (
     <>
-      <h1 className="mb-8 text-2xl font-bold">hey, I&apos; m Ali Reza 👋</h1>
+      <div className="mb-8 overflow-hidden">
+        <MotionH1 className="text-2xl font-bold">
+          hey, I&apos; m Ali Reza 👋
+        </MotionH1>
+      </div>
       <p className="mb-5 leading-6 text-muted">
         I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
         focusing on front-end magic with ReactJS. I&apos;m all about embracing
         new challenges and learning opportunities. Let&apos;s build something
         awesome together!
       </p>
+      {/* <ParagraphAnimate>
+        I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
+        focusing on front-end magic with ReactJS. I&apos;m all about embracing
+        new challenges and learning opportunities. Let&apos;s build something
+        awesome together!
+      </ParagraphAnimate> */}
       <p className="leading-6 text-muted">
         I began creating animated content in January 2023, and within one month,
         I gained 10k followers. My content has been well-received by many
