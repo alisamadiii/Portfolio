@@ -29,7 +29,10 @@ export default function BlogLinks({}: Props) {
   return (
     <>
       <div className="mb-5">
-        <Select onValueChange={(value) => setStatics(value)} defaultValue="new">
+        <Select
+          onValueChange={(value: "new" | "old") => setStatics(value)}
+          defaultValue="new"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Statics" />
           </SelectTrigger>
