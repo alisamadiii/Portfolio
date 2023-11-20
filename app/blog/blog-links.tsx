@@ -5,30 +5,40 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/select";
 import { allBlogs } from "contentlayer/generated";
 import Badge from "../components/badge";
 
 type Props = {};
 
 export default function BlogLinks({}: Props) {
-  const [isNew, setIsNew] = useState(true);
+  const [statics, setStatics] = useState<"new" | "old">("new");
 
   const blogs = allBlogs.sort((a, b) =>
-    isNew
+    statics === "new"
       ? compareDesc(new Date(a.publishAt), new Date(b.publishAt))
       : compareDesc(new Date(b.publishAt), new Date(a.publishAt))
   );
 
   return (
     <>
-      <button
-        className={`mb-5 self-start rounded-lg border border-border px-4 py-1 ${
-          isNew ? "bg-foreground text-background" : ""
-        }`}
-        onClick={() => setIsNew(!isNew)}
-      >
-        New
-      </button>
+      <div className="mb-5">
+        <Select onValueChange={(value) => setStatics(value)} defaultValue="new">
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Statics" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="old">Old</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <motion.ul layout className="flex flex-col">
         {blogs.map((blog) => (
           <motion.li key={blog.publishAt} layoutId={blog.publishAt}>

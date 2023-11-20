@@ -6,6 +6,13 @@ import Image from "next/image";
 import { cn } from "@/utils";
 import FAQ from "./faq";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/app/components/tooltip";
+
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1
@@ -26,11 +33,20 @@ const components = {
     />
   ),
   a: ({ className, ...props }: React.HTMLAttributes<HTMLAnchorElement>) => (
-    <a
-      target="_blank"
-      className="text-muted-3 underline hover:text-foreground"
-      {...props}
-    />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <a
+            target="_blank"
+            className="text-muted-3 underline hover:text-foreground"
+            {...props}
+          />
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Visit the link</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   ),
   ul: ({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
     <ul

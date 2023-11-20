@@ -18,7 +18,7 @@ const navItems = {
 };
 export default function Navbar({}: Props) {
   return (
-    <nav className="-ml-3 mb-16 flex">
+    <nav className="-ml-3 mb-16 flex max-w-2xl">
       <Suspense fallback={null}>
         {Object.entries(navItems).map(([path, { name }], index) => {
           return <NavItems key={index} path={path} name={name} />;

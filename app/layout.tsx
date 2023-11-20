@@ -37,10 +37,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${GeistSans.className} mx-auto max-w-2xl bg-background py-16 text-foreground max-md:px-4`}
+        className={`${GeistSans.className} bg-background py-16 text-foreground max-md:px-4`}
       >
-        <Navbar />
-        <main className="flex flex-col">{children}</main>
+        <div className="mx-auto max-w-2xl">
+          <Navbar />
+        </div>
+        <main className="relative mx-auto flex max-w-2xl flex-col">
+          {children}
+        </main>
       </body>
     </html>
   );
