@@ -1,17 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
 import { allBlogs } from "contentlayer/generated";
 import Badge from "../components/badge";
+import { supabase } from "@/utils/supabase";
 
 type Props = {};
 
 export default function BlogLinks({}: Props) {
   const [isNew, setIsNew] = useState(true);
+
+  // useEffect(() => {
+  //   const addingDataToSupabase = async () => {
+  //     return blogs.map(async ({ title, uniqueId }) => {
+  //       await supabase
+  //         .from("blog")
+  //         .upsert({ id: uniqueId, title }, { onConflict: "title" });
+  //     });
+  //   };
+
+  //   addingDataToSupabase();
+  // }, []);
 
   const blogs = allBlogs.sort((a, b) =>
     isNew

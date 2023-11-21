@@ -21,6 +21,7 @@ const config: Config = {
       },
       boxShadow: {
         "box-focus": "0 0 0 2px #111010, 0 0 0 4px white",
+        "input-focus": "0 0 0 2px #111010, 0 0 0 4px white",
       },
       animation: {
         "badge-circle-expand": "badge-circle-expand 1s infinite linear",

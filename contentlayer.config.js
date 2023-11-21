@@ -20,6 +20,10 @@ const Blog = defineDocumentType(() => ({
   filePathPattern: "blog/**/*.mdx",
   contentType: "mdx",
   fields: {
+    uniqueId: {
+      type: "number",
+      default: true,
+    },
     isComplete: {
       type: "boolean",
       default: false,

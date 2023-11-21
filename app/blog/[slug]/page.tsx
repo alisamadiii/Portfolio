@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 
 import { allBlogs } from "@/.contentlayer/generated";
 import BlogHeader from "./blogHeader";
-import Balancer from "react-wrap-balancer";
 import { Metadata } from "next";
 import { Mdx } from "@/app/components/MDXContent";
+import CommentForm from "./comment-form";
+import Comments from "./comments";
 
 type Props = {
   params: {
@@ -64,6 +65,8 @@ export default function BlogPage({ params }: Props) {
           <BlogHeader blog={findingBlogs} />
           <Mdx code={findingBlogs.body.code} />
           {/* <Links blog={findingBlogs} /> */}
+          <CommentForm slug={params.slug} />
+          <Comments slug={params.slug} />
         </>
       ) : (
         <div className="relative p-4">
