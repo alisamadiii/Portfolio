@@ -12,8 +12,6 @@ export default function LinkMetadata({ link }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["link-metadata", link],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
       const res = await fetch("/api/generateMetadata", {
         method: "POST",
         headers: {
