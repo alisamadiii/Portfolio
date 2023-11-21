@@ -17,44 +17,47 @@ export default function Comments({ slug }: Props) {
       const { data } = await supabase
         .from("blog-comments")
         .select("*")
-        .eq("slug", slug);
+        .eq("slug", slug)
+        .eq("approve", true);
 
       return data || null;
     },
   });
 
-  useEffect(() => {
-    if (data) {
-      const channel = supabase
-        .channel("realtime-message")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "blog-comments",
-          },
-          (payload) => {
-            if (payload.eventType === "INSERT") {
-              queryClient.setQueriesData<string[]>(
-                // @ts-ignore
-                ["Comments"],
-                [...data, payload.new]
-              );
-            }
-          }
-        )
-        .subscribe();
+  // useEffect(() => {
+  //   if (data) {
+  //     const channel = supabase
+  //       .channel("realtime-message")
+  //       .on(
+  //         "postgres_changes",
+  //         {
+  //           event: "*",
+  //           schema: "public",
+  //           table: "blog-comments",
+  //         },
+  //         (payload) => {
+  //           if (payload.eventType === "INSERT") {
+  //             queryClient.setQueriesData<string[]>(
+  //               // @ts-ignore
+  //               ["Comments"],
+  //               [...data, payload.new]
+  //             );
+  //           }
+  //         }
+  //       )
+  //       .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [data]);
+  //     return () => {
+  //       supabase.removeChannel(channel);
+  //     };
+  //   }
+  // }, [data]);
 
   if (!data) {
     return null;
   }
+
+  console.log(data);
 
   return (
     <div className="mt-5">

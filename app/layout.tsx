@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 
 import Navbar from "./components/navbar";
+import Footer from "./components/footer";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alirezasamadi.com/"),
@@ -46,6 +47,7 @@ export default function RootLayout({
         <main className="relative mx-auto flex max-w-2xl flex-col">
           {children}
         </main>
+        <Footer />
       </body>
     </html>
   );

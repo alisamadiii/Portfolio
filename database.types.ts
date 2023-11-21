@@ -11,18 +11,21 @@ export interface Database {
     Tables: {
       "blog-comments": {
         Row: {
+          approve: boolean | null
           comment: string
           created_at: string
           id: string
           slug: string
         }
         Insert: {
+          approve?: boolean | null
           comment: string
           created_at?: string
           id?: string
           slug: string
         }
         Update: {
+          approve?: boolean | null
           comment?: string
           created_at?: string
           id?: string

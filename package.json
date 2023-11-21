@@ -28,6 +28,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-spinners": "^0.13.8",
+    "react-use-measure": "^2.1.1",
     "react-wrap-balancer": "^1.1.0",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
