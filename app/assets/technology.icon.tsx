@@ -52,7 +52,7 @@ export default function TechnologyIcon({ name }: Props) {
           <path
             d="M11.3485 19.6154C10.839 20.2572 9.80586 19.9055 9.79353 19.0861L9.61394 7.10162H17.6723C19.1319 7.10162 19.9459 8.78748 19.0384 9.93071L11.3485 19.6154Z"
             fill="url(#paint1_linear_4_61)"
-            fill-opacity="0.2"
+            fillOpacity="0.2"
           />
           <path
             d="M8.07131 0.331317C8.58081 -0.310097 9.61414 0.0414179 9.62626 0.86061L9.70505 12.8451H1.74747C0.287876 12.8451 -0.526063 11.1594 0.381412 10.0162L8.07131 0.331317Z"
@@ -68,8 +68,8 @@ export default function TechnologyIcon({ name }: Props) {
             y2="466.622"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#249361" />
-            <stop offset="1" stop-color="#3ECF8E" />
+            <stop stopColor="#249361" />
+            <stop offset="1" stopColor="#3ECF8E" />
           </linearGradient>
           <linearGradient
             id="paint1_linear_4_61"
@@ -115,8 +115,8 @@ export default function TechnologyIcon({ name }: Props) {
             y2="1823.83"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#2298BD" />
-            <stop offset="1" stop-color="#0ED7B5" />
+            <stop stopColor="#2298BD" />
+            <stop offset="1" stopColor="#0ED7B5" />
           </linearGradient>
           <clipPath id="clip0_14_18">
             <rect

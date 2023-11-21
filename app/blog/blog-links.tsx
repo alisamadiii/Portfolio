@@ -42,7 +42,7 @@ export default function BlogLinks({}: Props) {
           </SelectContent>
         </Select>
       </div>
-      <motion.ul layout className="flex flex-col">
+      <ul className="flex flex-col">
         {blogs.map((blog) => (
           <motion.li key={blog.publishAt} layoutId={blog.publishAt}>
             <Link
@@ -57,7 +57,7 @@ export default function BlogLinks({}: Props) {
             </Link>
           </motion.li>
         ))}
-      </motion.ul>
+      </ul>
     </>
   );
 }

@@ -5,7 +5,6 @@ import { allBlogs } from "@/.contentlayer/generated";
 import BlogHeader from "./blogHeader";
 import Balancer from "react-wrap-balancer";
 import { Metadata } from "next";
-import Links from "./Links";
 import { Mdx } from "@/app/components/MDXContent";
 
 type Props = {
@@ -64,13 +63,13 @@ export default function BlogPage({ params }: Props) {
         <>
           <BlogHeader blog={findingBlogs} />
           <Mdx code={findingBlogs.body.code} />
-          <Links blog={findingBlogs} />
+          {/* <Links blog={findingBlogs} /> */}
         </>
       ) : (
         <div className="relative p-4">
           <BlogHeader blog={findingBlogs} />
           <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-background/50 backdrop-blur">
-            <Balancer className="text-xl">In process of Writing...</Balancer>
+            <h1 className="text-center text-2xl">In process of Writing...</h1>
           </div>
         </div>
       )}

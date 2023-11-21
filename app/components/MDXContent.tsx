@@ -12,6 +12,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/app/components/tooltip";
+import LinkMetadata from "./LinkMetadata";
+import Balancer from "react-wrap-balancer";
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -21,7 +23,8 @@ const components = {
     />
   ),
   h2: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h2
+    <Balancer
+      as={"h2"}
       className="mb-6 mt-12 scroll-m-20 text-3xl font-bold tracking-tight"
       {...props}
     />
@@ -65,7 +68,7 @@ const components = {
   ),
   blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <blockquote
-      className="border-l border-border pl-4 italic [&>p]:text-white"
+      className="border-l border-border pl-4 italic [&>p]:text-sm [&>p]:leading-6 [&>p]:text-white [&>p]:md:text-base"
       {...props}
     ></blockquote>
   ),
@@ -105,6 +108,7 @@ const components = {
     <Image className={cn("rounded-md", className)} alt={alt} {...props} />
   ),
   FaqFrontEnd: FAQ,
+  LinkMetadata,
 };
 
 export function Mdx({ code }: { code: string }) {
