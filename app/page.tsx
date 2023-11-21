@@ -1,6 +1,5 @@
 import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
-import { MotionH1 } from "./framer";
 import { CalendarDays } from "lucide-react";
 
 // import ParagraphAnimate from "./components/ParagraphAnimate";
@@ -16,9 +15,7 @@ export default function Home() {
   return (
     <>
       <div className="mb-8 overflow-hidden">
-        <MotionH1 className="text-2xl font-bold">
-          hey, I&apos; m Ali Reza 👋
-        </MotionH1>
+        <h1 className="text-2xl font-bold">hey, I&apos; m Ali Reza 👋</h1>
       </div>
       <p className="mb-5 leading-6 text-muted">
         I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
