@@ -33,6 +33,24 @@ export interface Database {
         }
         Relationships: []
       }
+      client: {
+        Row: {
+          client: boolean
+          created_at: string
+          id: number
+        }
+        Insert: {
+          client?: boolean
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          client?: boolean
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,5 +1,6 @@
 "use client";
 
+import TextFormat from "@/app/components/textFormat";
 import { supabase } from "@/utils/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
@@ -63,8 +64,11 @@ export default function Comments({ slug }: Props) {
     <div className="mt-5">
       <ul>
         {data.map((d) => (
-          <li key={d.id}>
-            <p>{d.comment}</p>
+          <li
+            key={d.id}
+            className="border-b border-border px-3 py-4 even:bg-box/30"
+          >
+            <TextFormat value={d.comment} />
           </li>
         ))}
       </ul>

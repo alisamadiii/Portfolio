@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import Balancer from "react-wrap-balancer";
 import { motion } from "framer-motion";
 import useMeasure from "react-use-measure";
@@ -20,20 +20,32 @@ export default function CommentForm({ slug }: Props) {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [ref, { height }] = useMeasure();
+  const textareaRef = useRef<null | HTMLTextAreaElement>(null);
 
   const onSubmitHandler = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (inputField.length === 0) return;
 
+    const line = inputField.replace(/\n/g, "\\n");
+
     setIsLoading(true);
 
-    await supabase.from("blog-comments").insert({ comment: inputField, slug });
+    await supabase.from("blog-comments").insert({ comment: line, slug });
 
     setInputField("");
     setIsLoading(false);
     setIsSuccess(true);
   };
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+
+    if (textarea) {
+      textarea.style.height = "26px";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [inputField]);
 
   return (
     <motion.div animate={{ height: height > 0 ? height : undefined }}>
@@ -99,18 +111,19 @@ export default function CommentForm({ slug }: Props) {
           ) : (
             <motion.form
               key={"form"}
-              className="flex items-center gap-2"
+              className="flex items-start gap-2"
               onSubmit={onSubmitHandler}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
-              <input
-                type="text"
+              <textarea
+                ref={textareaRef}
                 placeholder="comment"
-                className="grow rounded border border-border bg-transparent p-2 outline-none duration-100 focus:shadow-input-focus"
+                className="grow resize-none overflow-hidden rounded border border-border bg-transparent p-2 outline-none transition-shadow duration-100 focus:shadow-input-focus"
                 value={inputField}
+                rows={1}
                 onChange={(e) => setInputField(e.target.value)}
               />
               <button className="rounded bg-foreground px-4 py-2 text-background">

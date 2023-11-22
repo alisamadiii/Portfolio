@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { ApproveButton, DeleteButton } from "./Button";
+import TextFormat from "../components/textFormat";
 
 type Props = {};
 
@@ -74,10 +75,10 @@ export default function Owner({}: Props) {
               <motion.li
                 key={d.id}
                 layoutId={d.id}
-                className="flex items-start justify-between gap-4 border-b border-border px-3 py-2 last-of-type:border-none"
+                className="flex items-start justify-between gap-4 border-b border-border py-2 last-of-type:border-none"
               >
                 <div className="-space-y-2">
-                  <p>{d.comment}</p>
+                  <TextFormat value={d.comment} />
                   <small className="inline-block text-muted-3">{d.slug}</small>
                 </div>
                 <div className="flex flex-col items-end gap-2">
