@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <>
       <div className="mb-8 overflow-hidden">
-        <h1 className="text-2xl font-bold">hey, I&apos; m Ali Reza 👋</h1>
+        <h1 className="text-2xl font-bold">hey, I&apos;m Ali Reza 👋</h1>
       </div>
       <p className="mb-5 leading-6 text-muted">
         I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly

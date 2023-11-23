@@ -14,6 +14,7 @@ import {
 } from "@/app/components/tooltip";
 import LinkMetadata from "./LinkMetadata";
 import Balancer from "react-wrap-balancer";
+import Gallery from "./gallery";
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -26,6 +27,13 @@ const components = {
     <Balancer
       as={"h2"}
       className="mb-6 mt-12 scroll-m-20 text-3xl font-bold tracking-tight"
+      {...props}
+    />
+  ),
+  h3: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <Balancer
+      as={"h3"}
+      className="mb-6 mt-8 scroll-m-20 text-2xl font-bold tracking-tight"
       {...props}
     />
   ),
@@ -109,6 +117,7 @@ const components = {
   ),
   FaqFrontEnd: FAQ,
   LinkMetadata,
+  Gallery,
 };
 
 export function Mdx({ code }: { code: string }) {
