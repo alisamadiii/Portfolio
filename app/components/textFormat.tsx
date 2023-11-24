@@ -1,8 +1,8 @@
 import React from "react";
 
-type Props = {
+interface Props {
   value: string;
-};
+}
 
 export default function TextFormat({ value }: Props) {
   return (

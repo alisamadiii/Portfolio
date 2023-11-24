@@ -1,8 +1,8 @@
 import React from "react";
 
-type Props = {
+interface Props {
   name: Technology;
-};
+}
 
 export default function TechnologyIcon({ name }: Props) {
   const currentIcon = {
@@ -80,7 +80,7 @@ export default function TechnologyIcon({ name }: Props) {
             gradientUnits="userSpaceOnUse"
           >
             <stop />
-            <stop offset="1" stop-opacity="0" />
+            <stop offset="1" stopOpacity="0" />
           </linearGradient>
           <clipPath id="clip0_4_61">
             <rect width="103.434" height="20" fill="white" />

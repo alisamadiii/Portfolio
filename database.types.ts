@@ -4,65 +4,91 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export interface Database {
   public: {
     Tables: {
       "blog-comments": {
         Row: {
-          approve: boolean | null
-          comment: string
-          created_at: string
-          id: string
-          slug: string
-        }
+          approve: boolean | null;
+          comment: string;
+          created_at: string;
+          id: string;
+          slug: string;
+        };
         Insert: {
-          approve?: boolean | null
-          comment: string
-          created_at?: string
-          id?: string
-          slug: string
-        }
+          approve?: boolean | null;
+          comment: string;
+          created_at?: string;
+          id?: string;
+          slug: string;
+        };
         Update: {
-          approve?: boolean | null
-          comment?: string
-          created_at?: string
-          id?: string
-          slug?: string
-        }
-        Relationships: []
-      }
+          approve?: boolean | null;
+          comment?: string;
+          created_at?: string;
+          id?: string;
+          slug?: string;
+        };
+        Relationships: [];
+      };
       client: {
         Row: {
-          client: boolean
-          created_at: string
-          id: number
-        }
+          client: boolean;
+          created_at: string;
+          id: number;
+        };
         Insert: {
-          client?: boolean
-          created_at?: string
-          id?: number
-        }
+          client?: boolean;
+          created_at?: string;
+          id?: number;
+        };
         Update: {
-          client?: boolean
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
-    }
+          client?: boolean;
+          created_at?: string;
+          id?: number;
+        };
+        Relationships: [];
+      };
+      "page-view": {
+        Row: {
+          id: number;
+          slug: string;
+          updated_at: string;
+          views: number | null;
+        };
+        Insert: {
+          id?: number;
+          slug: string;
+          updated_at?: string;
+          views?: number | null;
+        };
+        Update: {
+          id?: number;
+          slug?: string;
+          updated_at?: string;
+          views?: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      "increment-view": {
+        Args: {
+          page_slug: string;
+        };
+        Returns: undefined;
+      };
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      [_ in never]: never;
+    };
+  };
 }

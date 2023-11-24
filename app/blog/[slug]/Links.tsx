@@ -1,13 +1,13 @@
 "use client";
 
-import { Blog } from "@/.contentlayer/generated";
+import { type Blog } from "@/.contentlayer/generated";
 import Image from "next/image";
 import React, { Suspense } from "react";
 import Balancer from "react-wrap-balancer";
 
-type Props = {
+interface Props {
   blog: Blog;
-};
+}
 
 export default function Links({ blog }: Props) {
   const linkRegex = /https?:\/\/[^\s]+/g;
@@ -63,9 +63,10 @@ async function LinkMetadata({ link }: { link: string }) {
         href={link}
         target="_blank"
         className="flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-border duration-100 hover:bg-box md:flex-row"
+        rel="noreferrer"
       >
         {data.ogImage && (
-          <img
+          <Image
             src={data.ogImage[0].url}
             width={600}
             height={300}
@@ -80,7 +81,7 @@ async function LinkMetadata({ link }: { link: string }) {
           </small>
           <p className="mt-2 flex items-center gap-1">
             {data.favicon && data.favicon !== "/favicon.ico" && (
-              <img src={data.favicon} width={15} height={15} alt="" />
+              <Image src={data.favicon} width={15} height={15} alt="" />
             )}
             {data.ogSiteName && (
               <small className="text-muted">{data.ogSiteName}</small>

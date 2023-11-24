@@ -1,31 +1,35 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Badge from "../components/badge";
 import { supabase } from "@/utils/supabase";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "../components/skeleton";
 
-type Props = {};
-
-export default function ClientBadge({}: Props) {
-  const [isShow, setIsShow] = useState(false);
-
-  useEffect(() => {
-    const fetchClient = async () => {
-      const { data: client } = await supabase
+export default function ClientBadge() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["job"],
+    queryFn: async () => {
+      const { data } = await supabase
         .from("client")
         .select("client")
         .eq("id", 1)
         .single();
 
-      if (!client) return;
+      return data ?? null;
+    },
+  });
 
-      setIsShow(client.client);
-    };
-    fetchClient();
-  }, []);
+  if (data === null || data === undefined) {
+    return null;
+  }
 
-  return isShow ? (
-    <Badge className="mb-4 flex items-center gap-2 px-4">
+  if (isLoading) {
+    return <Skeleton className="mb-4 mt-3 h-3 w-44 rounded-full" />;
+  }
+
+  return data?.client ? (
+    <Badge className="relative mb-4 flex items-center gap-2 px-4">
       <div className="relative h-2 w-2 rounded-full bg-blue-700 before:absolute before:h-full before:w-full before:animate-badge-circle-expand before:rounded-full before:bg-blue-700" />
       Currently having a Client
     </Badge>

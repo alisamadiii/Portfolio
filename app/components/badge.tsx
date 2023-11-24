@@ -1,5 +1,5 @@
 import { cn } from "@/utils";
-import React, { HTMLAttributes } from "react";
+import React, { type HTMLAttributes } from "react";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {}
 

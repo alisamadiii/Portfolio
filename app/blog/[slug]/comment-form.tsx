@@ -1,18 +1,17 @@
 "use client";
 
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import React, { type ChangeEvent, useEffect, useRef, useState } from "react";
 import Balancer from "react-wrap-balancer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import useMeasure from "react-use-measure";
 
 import Badge from "@/app/components/badge";
 import { MotionText } from "@/app/framer";
 import { supabase } from "@/utils/supabase";
-import { AnimatePresence } from "framer-motion";
 
-type Props = {
+interface Props {
   slug: string;
-};
+}
 
 export default function CommentForm({ slug }: Props) {
   const [inputField, setInputField] = useState("");
@@ -101,7 +100,9 @@ export default function CommentForm({ slug }: Props) {
                 }}
               >
                 <button
-                  onClick={() => setIsSuccess(false)}
+                  onClick={() => {
+                    setIsSuccess(false);
+                  }}
                   className="mt-3 rounded bg-foreground px-3 py-2 text-background"
                 >
                   Comment again
@@ -124,7 +125,9 @@ export default function CommentForm({ slug }: Props) {
                 className="grow resize-none overflow-hidden rounded border border-border bg-transparent p-2 outline-none transition-shadow duration-100 focus:shadow-input-focus"
                 value={inputField}
                 rows={1}
-                onChange={(e) => setInputField(e.target.value)}
+                onChange={(e) => {
+                  setInputField(e.target.value);
+                }}
               />
               <button className="rounded bg-foreground px-4 py-2 text-background">
                 {isLoading ? "Sending..." : "Send"}

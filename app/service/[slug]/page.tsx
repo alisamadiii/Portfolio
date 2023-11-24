@@ -2,21 +2,19 @@ import React from "react";
 import { notFound } from "next/navigation";
 
 import { allServices } from "@/.contentlayer/generated";
-import BlogHeader from "./serviceHeader";
-import Balancer from "react-wrap-balancer";
-import { Metadata } from "next";
+import { type Metadata } from "next";
 import Links from "./Links";
 import { Mdx } from "@/app/components/MDXContent";
 
-type Props = {
+interface Props {
   params: {
     slug: string;
   };
-};
+}
 
-type generateMetadataProps = {
+interface generateMetadataProps {
   params: { slug: string };
-};
+}
 
 export async function generateMetadata({
   params,

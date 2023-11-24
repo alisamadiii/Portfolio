@@ -3,7 +3,9 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-type Props = { children: React.ReactNode };
+interface Props {
+  children: React.ReactNode;
+}
 
 export default function RootTemplate({ children }: Props) {
   const queryClient = new QueryClient();

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 
-type Props = {
+interface Props {
   children: React.ReactNode;
-};
+}
 
 export default function ParagraphAnimate({ children }: Props) {
   return (

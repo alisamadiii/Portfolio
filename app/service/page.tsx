@@ -1,16 +1,13 @@
 import React from "react";
-import { Metadata } from "next";
+import { type Metadata } from "next";
 import ServiceLinks from "./ServiceLinks";
-import Badge from "../components/badge";
 import ClientBadge from "./client-badge";
-
-type Props = {};
 
 export const metadata: Metadata = {
   title: "Service",
 };
 
-export default function Blog({}: Props) {
+export default function Blog() {
   return (
     <>
       <h1 className="text-2xl font-bold">hire me!</h1>

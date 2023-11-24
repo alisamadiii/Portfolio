@@ -4,9 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FrequentlyAskedQuestions } from "../lib/data";
 
-type Props = {};
-
-export default function FAQ({}: Props) {
+export default function FAQ() {
   const [allTestimonials, setAllTestimonials] = useState(false);
 
   return (

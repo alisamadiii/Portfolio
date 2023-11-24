@@ -1,6 +1,6 @@
 "use client";
 
-import { Blog } from "@/.contentlayer/generated";
+import { type Blog } from "@/.contentlayer/generated";
 import Image from "next/image";
 import React, { useRef } from "react";
 import readingTime from "reading-time";
@@ -8,9 +8,9 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import Balancer from "react-wrap-balancer";
 
-type Props = {
+interface Props {
   blog: Blog;
-};
+}
 
 function formatDate(date: string) {
   const currentDate = new Date();

@@ -1,15 +1,15 @@
 "use client";
 
-import { Service } from "@/.contentlayer/generated";
+import { type Service } from "@/.contentlayer/generated";
 import Image from "next/image";
 import React, { useRef } from "react";
 import readingTime from "reading-time";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Balancer from "react-wrap-balancer";
 
-type Props = {
+interface Props {
   service: Service;
-};
+}
 
 export default function BlogHeader({ service }: Props) {
   const blogHeaderRef = useRef<null | HTMLDivElement>(null);

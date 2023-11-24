@@ -6,12 +6,10 @@ import { motion } from "framer-motion";
 import { ApproveButton, DeleteButton } from "./Button";
 import TextFormat from "../components/textFormat";
 
-type Props = {};
-
-export default function Owner({}: Props) {
+export default function Owner() {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["comments"],
     queryFn: async () => {
       const { data } = await supabase
@@ -19,7 +17,7 @@ export default function Owner({}: Props) {
         .select("*")
         .eq("approve", false);
 
-      return data || null;
+      return data ?? null;
     },
   });
 
@@ -35,24 +33,21 @@ export default function Owner({}: Props) {
             table: "blog-comments",
           },
           (payload) => {
+            /* eslint-disable */
             if (payload.eventType === "UPDATE") {
               const updatedData = data.filter(
                 (message) => message.id !== payload.old.id
               );
-              queryClient.setQueriesData<string[]>(
-                // @ts-ignore
-                ["Comments"],
-                updatedData
-              );
+              // esl
+              // @ts-ignore
+              queryClient.setQueriesData(["Comments"], updatedData);
             } else if (payload.eventType === "DELETE") {
               const deletedData = data.filter((d) => d.id !== payload.old.id);
-              queryClient.setQueriesData<string[]>(
-                // @ts-ignore
-                ["Comments"],
-                deletedData
-              );
+              // @ts-ignore
+              queryClient.setQueriesData(["Comments"], deletedData);
             }
           }
+          /* eslint-enable */
         )
         .subscribe();
 

@@ -3,20 +3,20 @@ import { notFound } from "next/navigation";
 
 import { allBlogs } from "@/.contentlayer/generated";
 import BlogHeader from "./blogHeader";
-import { Metadata } from "next";
+import { type Metadata } from "next";
 import { Mdx } from "@/app/components/MDXContent";
 import CommentForm from "./comment-form";
 import Comments from "./comments";
 
-type Props = {
+interface Props {
   params: {
     slug: string;
   };
-};
+}
 
-type generateMetadataProps = {
+interface generateMetadataProps {
   params: { slug: string };
-};
+}
 
 export async function generateMetadata({
   params,
@@ -60,22 +60,11 @@ export default function BlogPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      {findingBlogs.isComplete ? (
-        <>
-          <BlogHeader blog={findingBlogs} />
-          <Mdx code={findingBlogs.body.code} />
-          {/* <Links blog={findingBlogs} /> */}
-          <CommentForm slug={params.slug} />
-          <Comments slug={params.slug} />
-        </>
-      ) : (
-        <div className="relative p-4">
-          <BlogHeader blog={findingBlogs} />
-          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-background/50 backdrop-blur">
-            <h1 className="text-center text-2xl">In process of Writing...</h1>
-          </div>
-        </div>
-      )}
+      <BlogHeader blog={findingBlogs} />
+      <Mdx code={findingBlogs.body.code} />
+      {/* <Links blog={findingBlogs} /> */}
+      <CommentForm slug={params.slug} />
+      <Comments slug={params.slug} />
     </div>
   );
 }

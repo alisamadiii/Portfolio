@@ -2,17 +2,15 @@
 
 import TextFormat from "@/app/components/textFormat";
 import { supabase } from "@/utils/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-type Props = {
+interface Props {
   slug: string;
-};
+}
 
 export default function Comments({ slug }: Props) {
-  const queryClient = useQueryClient();
-
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["Comments"],
     queryFn: async () => {
       const { data } = await supabase
@@ -21,38 +19,9 @@ export default function Comments({ slug }: Props) {
         .eq("slug", slug)
         .eq("approve", true);
 
-      return data || null;
+      return data ?? null;
     },
   });
-
-  // useEffect(() => {
-  //   if (data) {
-  //     const channel = supabase
-  //       .channel("realtime-message")
-  //       .on(
-  //         "postgres_changes",
-  //         {
-  //           event: "*",
-  //           schema: "public",
-  //           table: "blog-comments",
-  //         },
-  //         (payload) => {
-  //           if (payload.eventType === "INSERT") {
-  //             queryClient.setQueriesData<string[]>(
-  //               // @ts-ignore
-  //               ["Comments"],
-  //               [...data, payload.new]
-  //             );
-  //           }
-  //         }
-  //       )
-  //       .subscribe();
-
-  //     return () => {
-  //       supabase.removeChannel(channel);
-  //     };
-  //   }
-  // }, [data]);
 
   if (!data) {
     return null;

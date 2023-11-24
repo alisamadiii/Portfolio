@@ -1,11 +1,9 @@
 "use client";
 
-import React, { ChangeEvent, useState } from "react";
+import React, { type ChangeEvent, useState } from "react";
 import Owner from "./Owner";
 
-type Props = {};
-
-export default function ApprovePage({}: Props) {
+export default function ApprovePage() {
   const [isOwner, setIsOwner] = useState(false);
   const [passwordField, setPasswordField] = useState("");
 
@@ -29,7 +27,9 @@ export default function ApprovePage({}: Props) {
         placeholder="password"
         className="mr-5 grow rounded border border-border bg-transparent p-2 outline-none duration-100 focus:shadow-input-focus"
         value={passwordField}
-        onChange={(e) => setPasswordField(e.target.value)}
+        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+          setPasswordField(event.target.value);
+        }}
       />
       <button className="rounded bg-foreground px-4 py-2 text-background">
         Continue

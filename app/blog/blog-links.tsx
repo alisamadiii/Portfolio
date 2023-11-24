@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
 import { allBlogs } from "contentlayer/generated";
 import Badge from "../components/badge";
-import { supabase } from "@/utils/supabase";
 
-type Props = {};
-
-export default function BlogLinks({}: Props) {
+export default function BlogLinks() {
   const [isNew, setIsNew] = useState(true);
 
   // useEffect(() => {
@@ -38,7 +35,9 @@ export default function BlogLinks({}: Props) {
         className={`mb-4 self-start rounded border border-border px-2 py-1 ${
           isNew ? "bg-foreground text-background" : ""
         }`}
-        onClick={() => setIsNew(!isNew)}
+        onClick={() => {
+          setIsNew(!isNew);
+        }}
       >
         New
       </button>

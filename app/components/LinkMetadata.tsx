@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import React from "react";
 import { BarLoader } from "react-spinners";
 
-type Props = {
+interface Props {
   link: string;
-};
+}
 
 export default function LinkMetadata({ link }: Props) {
   const { data, isLoading } = useQuery({
@@ -31,14 +32,15 @@ export default function LinkMetadata({ link }: Props) {
     enabled: !!link,
   });
 
-  return data && data.ogImage && data.ogDescription ? (
+  return data?.ogImage && data.ogDescription ? (
     <a
       href={link}
       target="_blank"
       className="flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-border duration-100 hover:bg-box md:flex-row"
+      rel="noreferrer"
     >
       {data.ogImage && (
-        <img
+        <Image
           src={data.ogImage[0].url}
           width={600}
           height={300}
@@ -53,7 +55,7 @@ export default function LinkMetadata({ link }: Props) {
         </small>
         <p className="mt-2 flex items-center gap-1">
           {data.favicon && data.favicon !== "/favicon.ico" && (
-            <img src={data.favicon} width={15} height={15} alt="" />
+            <Image src={data.favicon} width={15} height={15} alt="" />
           )}
           {data.ogSiteName && (
             <small className="text-muted">{data.ogSiteName}</small>

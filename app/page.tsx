@@ -1,3 +1,5 @@
+import React from "react";
+
 import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
 import { CalendarDays } from "lucide-react";
@@ -41,6 +43,7 @@ export default function Home() {
             href="https://twitter.com/alirdev"
             target="_blank"
             className="flex w-full items-center gap-4 rounded border border-border bg-box px-3 py-4 outline-none duration-200 focus:shadow-box-focus"
+            rel="noreferrer"
           >
             <div>
               <Image

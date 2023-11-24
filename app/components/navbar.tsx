@@ -3,8 +3,6 @@
 import React, { Suspense } from "react";
 import { NavItems } from "./nav-items";
 
-type Props = {};
-
 const navItems = {
   "/": {
     name: "home",
@@ -16,7 +14,7 @@ const navItems = {
     name: "service",
   },
 };
-export default function Navbar({}: Props) {
+export default function Navbar() {
   return (
     <nav className="-ml-3 mb-16 flex max-w-2xl">
       <Suspense fallback={null}>

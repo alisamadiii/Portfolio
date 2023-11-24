@@ -1,5 +1,6 @@
+import React, { useState } from "react";
+
 import { supabase } from "@/utils/supabase";
-import { useState } from "react";
 
 export const DeleteButton = ({ id }: { id: string }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -28,6 +29,7 @@ export const ApproveButton = ({ id }: { id: string }) => {
     await supabase.from("blog-comments").update({ approve: true }).eq("id", id);
     setIsApproving(false);
   };
+
   return (
     <button
       className="rounded bg-blue-700 px-3 py-1"

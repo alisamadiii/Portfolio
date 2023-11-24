@@ -1,3 +1,5 @@
+import React from "react";
+
 import Link from "next/link";
 import { GeistMono } from "geist/font/mono";
 
@@ -110,7 +112,10 @@ const components = {
     />
   ),
   Link: ({ className, ...props }: React.ComponentProps<typeof Link>) => (
-    <Link className={"font-medium underline underline-offset-4"} {...props} />
+    <Link
+      className={cn("font-medium underline underline-offset-4", className)}
+      {...props}
+    />
   ),
   Image: ({ className, alt, ...props }: React.ComponentProps<typeof Image>) => (
     <Image className={cn("rounded-md", className)} alt={alt} {...props} />
