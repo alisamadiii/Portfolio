@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     if (to && title && username && details && inviteLink && blogImage) {
       const data = await resend.emails.send({
         from: "alireza@alirezasamadi.com",
-        to: ["aliaghasamadi5@gmail.com"],
+        to: [to],
         subject:
           "Hi, I am Ali Reza, this email is going to be sent only to a single person",
         react: EmailTemplate({
