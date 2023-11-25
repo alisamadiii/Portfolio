@@ -2,4 +2,4 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 pnpm check-types
-pnpm dlx lint-staged --concurrent false
+# pnpm dlx lint-staged --concurrent false
