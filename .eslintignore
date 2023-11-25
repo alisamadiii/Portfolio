@@ -20,3 +20,5 @@ commitlint.config.js
 /app/components/select.tsx
 /app/components/hover-card.tsx
 /app/components/tooltip.tsx
+
+/react-email-starter
