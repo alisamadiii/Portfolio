@@ -1,3 +1,4 @@
+import { colorSpecificText } from "../../utils/index";
 import {
   Body,
   Button,
@@ -19,15 +20,15 @@ interface VercelInviteUserEmailProps {
   title: string;
   username: string;
   details: string;
-  inviteLink: string;
+  linkTo: string;
   blogImage: string;
 }
 
-const EmailTemplate = ({
+export const VercelInviteUserEmail = ({
   title = "How do I make a Website?",
   username = "Ali Reza",
-  details = "If I want to start coding and I don't know what I should make or design, I need to think beforehand about the design I want to make. I should put most of my time...",
-  inviteLink = "https://www.alirezasamadi.com/blog/How-do-I-make-a-Website",
+  details = "I see lots of @developers start coding straightforwardly without having any @designs or plans before coding it. If I don't make any designs and don't build a website step by step, I would get confused and I would not know what I'm doing, and easily it ...",
+  linkTo = "https://www.alirezasamadi.com/blog/How-do-I-make-a-Website",
   blogImage = "https://www.alirezasamadi.com/_next/image?url=https%3A%2F%2Fldxedhzbfnmrovkzozxc.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fblog%2Fhow%2520do%2520I%2520make%2520a%2520website%2FHow%2520do%2520I%2520make%2520a%2520Website_.png&w=1920&q=75",
 }: VercelInviteUserEmailProps) => {
   const previewText = `Blog - ${title}`;
@@ -54,24 +55,27 @@ const EmailTemplate = ({
             <Text className="text-[14px] leading-[24px] text-black">
               Hello <strong>{username}</strong>,
             </Text>
-            <Text className="text-[14px] leading-[24px] text-black">
-              {details}
-            </Text>
+            <Text
+              className="text-[14px] leading-[24px] text-black"
+              dangerouslySetInnerHTML={{
+                __html: colorSpecificText(details),
+              }}
+            />
             <Section className="my-[32px]">
               <Img src={blogImage} alt={title} className="w-full rounded-xl" />
             </Section>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-[#000000] px-4 py-2 text-center text-[12px] font-semibold text-white no-underline"
-                href={inviteLink}
+                href={linkTo}
               >
                 Read now
               </Button>
             </Section>
             <Text className="text-[14px] leading-[24px] text-black">
               or copy and paste this URL into your browser:{" "}
-              <Link href={inviteLink} className="text-blue-600 no-underline">
-                {inviteLink}
+              <Link href={linkTo} className="text-blue-600 no-underline">
+                {linkTo}
               </Link>
             </Text>
             <Hr className="mx-0 my-[26px] w-full border border-solid border-[#eaeaea]" />
@@ -89,4 +93,4 @@ const EmailTemplate = ({
   );
 };
 
-export default EmailTemplate;
+export default VercelInviteUserEmail;

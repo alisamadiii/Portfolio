@@ -1,3 +1,5 @@
+// supabase gen types typescript --project-id <supabase ID> > database.types.ts
+
 import { createClient } from "@supabase/supabase-js";
 
 import { type Database } from "@/database.types";

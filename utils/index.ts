@@ -6,4 +6,10 @@ function cn(...inputs: ClassValue[]): any {
   return twMerge(clsx(inputs));
 }
 
-export { cn };
+function colorSpecificText(text: string) {
+  const styleParagraph = text.replaceAll(/@(\w+)/g, "<strong>$1</strong>");
+
+  return styleParagraph;
+}
+
+export { cn, colorSpecificText };

@@ -34,6 +34,10 @@ const Blog = defineDocumentType(() => ({
       type: "string",
       required: true,
     },
+    text_information: {
+      type: "string",
+      required: true,
+    },
     publishAt: {
       type: "date",
       required: true,

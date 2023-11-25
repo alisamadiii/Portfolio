@@ -32,6 +32,7 @@ module.exports = {
     "@typescript-eslint/no-misused-promises": "off",
     "@typescript-eslint/no-floating-promises": "off",
     "@typescript-eslint/promise-function-async": "off",
+    "@typescript-eslint/no-confusing-void-expression": "off",
   },
   settings: {
     react: {

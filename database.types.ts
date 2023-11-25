@@ -78,24 +78,18 @@ export interface Database {
           email: string;
           id: string;
           name: string | null;
-          sent: boolean | null;
-          slug: string | null;
         };
         Insert: {
           created_at?: string;
           email: string;
           id?: string;
           name?: string | null;
-          sent?: boolean | null;
-          slug?: string | null;
         };
         Update: {
           created_at?: string;
           email?: string;
           id?: string;
           name?: string | null;
-          sent?: boolean | null;
-          slug?: string | null;
         };
         Relationships: [];
       };

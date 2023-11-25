@@ -9,21 +9,20 @@ export async function POST(req: NextRequest) {
   const title = req.nextUrl.searchParams.get("title");
   const username = req.nextUrl.searchParams.get("username");
   const details = req.nextUrl.searchParams.get("details");
-  const inviteLink = req.nextUrl.searchParams.get("invite_link");
+  const linkTo = req.nextUrl.searchParams.get("link_to");
   const blogImage = req.nextUrl.searchParams.get("blog_image");
 
   try {
-    if (to && title && username && details && inviteLink && blogImage) {
+    if (to && title && username && details && linkTo && blogImage) {
       const data = await resend.emails.send({
         from: "alireza@alirezasamadi.com",
         to: [to],
-        subject:
-          "Hi, I am Ali Reza, this email is going to be sent only to a single person",
+        subject: `Blog - ${title}`,
         react: EmailTemplate({
           title,
           username,
           details,
-          inviteLink,
+          linkTo,
           blogImage,
         }),
       });
@@ -45,10 +44,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return new Response(JSON.stringify({ response: "please add the fields" }), {
-      status: 429,
-      statusText: "not contains all the fields",
-    });
+    return new Response(
+      JSON.stringify({ response: "please add all the fields correctly" }),
+      {
+        status: 429,
+        statusText: "not contains all the fields",
+      }
+    );
   } catch (e) {
     return new Response(JSON.stringify({ response: "unsuccessful" }), {
       status: 400,

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import { ApproveButton, DeleteButton } from "./Button";
 import TextFormat from "../components/textFormat";
+import SendEmail from "./SendEmail";
 
 export default function Owner() {
   const queryClient = useQueryClient();
@@ -84,6 +85,8 @@ export default function Owner() {
             ))}
           </ul>
         ))}
+
+      <SendEmail />
     </div>
   );
 }

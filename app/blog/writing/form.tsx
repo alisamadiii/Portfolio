@@ -1,7 +1,6 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
-import { usePathname } from "next/navigation";
 import React, { type ChangeEvent, useState } from "react";
 import { BarLoader } from "react-spinners";
 import { AnimatePresence, motion } from "framer-motion";
@@ -26,8 +25,6 @@ export default function Form() {
     setValues({ ...values, [name]: value });
   };
 
-  const pathName = usePathname();
-
   const onSubmitHandler = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -39,9 +36,11 @@ export default function Form() {
 
     const { error } = await supabase
       .from("sending-emails")
-      .insert({ email, name, slug: pathName.split("/")[2] });
+      .insert({ email, name });
 
     setStatus({ ...status, isLoading: false });
+
+    console.log(error);
 
     if (error?.code === "23505") {
       setStatus({ ...status, emailExist: true });
@@ -49,6 +48,8 @@ export default function Form() {
       setStatus({ ...status, emailExist: false, isSuccess: true });
     }
   };
+
+  console.log(values);
 
   const { isLoading, emailExist, isSuccess } = status;
 
