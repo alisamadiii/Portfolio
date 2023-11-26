@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm test-all
+npm run check-types
+npm run format --white  
+npm run check-lint --fix
