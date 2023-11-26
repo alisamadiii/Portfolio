@@ -35,6 +35,7 @@
     "open-graph-scraper": "^6.3.2",
     "react": "^18",
     "react-dom": "^18",
+    "react-icons": "^4.12.0",
     "react-spinners": "^0.13.8",
     "react-use-measure": "^2.1.1",
     "react-wrap-balancer": "^1.1.0",

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/app/components/select";
 import { allBlogs } from ".contentlayer/generated";
-import { Mail } from "lucide-react";
+import { MdOutlineEmail } from "react-icons/md";
 
 export default function SendEmail() {
   const [isLoading, setIsLoading] = useState(false);
@@ -66,8 +66,8 @@ export default function SendEmail() {
   return (
     <>
       <h1 className="mb-5 mt-12 flex items-center gap-4 text-3xl font-bold">
-        <span className="relative rounded bg-box/50 p-2">
-          <Mail size={16} />
+        <span className="relative rounded bg-box/50 p-2 text-xl">
+          <MdOutlineEmail />
           <span className="absolute right-0 top-0 flex h-3 min-w-[12px] -translate-y-1 translate-x-1 items-center justify-center rounded bg-blue-700 text-[10px]">
             {data.length}
           </span>
