@@ -1,41 +1,44 @@
 "use client";
 
-import React, { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
+import React, { useEffect, useRef, useState } from "react";
 import Balancer from "react-wrap-balancer";
 import { motion, AnimatePresence } from "framer-motion";
 import useMeasure from "react-use-measure";
 
 import Badge from "@/app/components/badge";
 import { MotionText } from "@/app/framer";
-import { supabase } from "@/utils/supabase";
+import { submitComment } from "@/app/action";
 
 interface Props {
   slug: string;
 }
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      className="rounded bg-foreground px-4 py-2 text-background"
+      aria-disabled={pending}
+    >
+      {pending ? "Sending..." : "Send"}
+    </button>
+  );
+}
+
 export default function CommentForm({ slug }: Props) {
   const [inputField, setInputField] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const [formState, formAction] = useFormState(submitComment, {
+    message: "",
+    slug,
+    error: undefined,
+  });
 
   const [ref, { height }] = useMeasure();
   const textareaRef = useRef<null | HTMLTextAreaElement>(null);
-
-  const onSubmitHandler = async (event: ChangeEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (inputField.length === 0) return;
-
-    const line = inputField.replace(/\n/g, "\\n");
-
-    setIsLoading(true);
-
-    await supabase.from("blog-comments").insert({ comment: line, slug });
-
-    setInputField("");
-    setIsLoading(false);
-    setIsSuccess(true);
-  };
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -45,6 +48,13 @@ export default function CommentForm({ slug }: Props) {
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }, [inputField]);
+
+  useEffect(() => {
+    if (formState?.message === "sent") {
+      setIsSuccess(true);
+      setInputField("");
+    }
+  }, [formState]);
 
   return (
     <motion.div animate={{ height: height > 0 ? height : undefined }}>
@@ -112,8 +122,8 @@ export default function CommentForm({ slug }: Props) {
           ) : (
             <motion.form
               key={"form"}
+              action={formAction}
               className="flex items-start gap-2"
-              onSubmit={onSubmitHandler}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -122,6 +132,8 @@ export default function CommentForm({ slug }: Props) {
               <textarea
                 ref={textareaRef}
                 placeholder="comment"
+                name="comment"
+                id="comment"
                 className="grow resize-none overflow-hidden rounded border border-border bg-transparent p-2 outline-none transition-shadow duration-100 focus:shadow-input-focus"
                 value={inputField}
                 rows={1}
@@ -129,9 +141,7 @@ export default function CommentForm({ slug }: Props) {
                   setInputField(e.target.value);
                 }}
               />
-              <button className="rounded bg-foreground px-4 py-2 text-background">
-                {isLoading ? "Sending..." : "Send"}
-              </button>
+              <SubmitButton />
             </motion.form>
           )}
         </AnimatePresence>
