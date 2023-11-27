@@ -51,24 +51,42 @@ export interface Database {
         };
         Relationships: [];
       };
-      "page-view": {
+      page_views: {
+        Row: {
+          id: number;
+          slug: string;
+          view_count: number | null;
+        };
+        Insert: {
+          id?: number;
+          slug: string;
+          view_count?: number | null;
+        };
+        Update: {
+          id?: number;
+          slug?: string;
+          view_count?: number | null;
+        };
+        Relationships: [];
+      };
+      pages: {
         Row: {
           id: number;
           slug: string;
           updated_at: string;
-          views: number | null;
+          view_count: number;
         };
         Insert: {
           id?: number;
           slug: string;
           updated_at?: string;
-          views?: number | null;
+          view_count?: number;
         };
         Update: {
           id?: number;
           slug?: string;
           updated_at?: string;
-          views?: number | null;
+          view_count?: number;
         };
         Relationships: [];
       };
@@ -98,9 +116,16 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      "increment-view": {
+      increment_page_view: {
         Args: {
           page_slug: string;
+        };
+        Returns: undefined;
+      };
+      "send-comment": {
+        Args: {
+          comment_text: string;
+          slug_text: string;
         };
         Returns: undefined;
       };

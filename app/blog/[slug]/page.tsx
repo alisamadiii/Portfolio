@@ -7,6 +7,7 @@ import { type Metadata } from "next";
 import { Mdx } from "@/app/components/MDXContent";
 import CommentForm from "./comment-form";
 import Comments from "./comments";
+import PageView from "./page-view";
 
 interface Props {
   params: {
@@ -49,6 +50,7 @@ export async function generateMetadata({
     },
   };
 }
+
 export default function BlogPage({ params }: Props) {
   const findingBlogs = allBlogs.find(
     (post) => params.slug === post.slugAsParams
@@ -65,6 +67,7 @@ export default function BlogPage({ params }: Props) {
       {/* <Links blog={findingBlogs} /> */}
       <CommentForm slug={params.slug} />
       <Comments slug={params.slug} />
+      <PageView slug={params.slug} />
     </div>
   );
 }

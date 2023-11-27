@@ -27,8 +27,6 @@ export default function Comments({ slug }: Props) {
     return null;
   }
 
-  console.log(data);
-
   return (
     <div className="mt-5">
       <ul>
