@@ -51,24 +51,6 @@ export interface Database {
         };
         Relationships: [];
       };
-      page_views: {
-        Row: {
-          id: number;
-          slug: string;
-          view_count: number | null;
-        };
-        Insert: {
-          id?: number;
-          slug: string;
-          view_count?: number | null;
-        };
-        Update: {
-          id?: number;
-          slug?: string;
-          view_count?: number | null;
-        };
-        Relationships: [];
-      };
       pages: {
         Row: {
           id: number;

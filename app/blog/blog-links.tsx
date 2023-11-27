@@ -1,27 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
 import { allBlogs } from "contentlayer/generated";
 import Badge from "../components/badge";
+import ViewCount from "./ViewCount";
 
 export default function BlogLinks() {
-  const [isNew, setIsNew] = useState(true);
-
-  // useEffect(() => {
-  //   const addingDataToSupabase = async () => {
-  //     return blogs.map(async ({ title, uniqueId }) => {
-  //       await supabase
-  //         .from("blog")
-  //         .upsert({ id: uniqueId, title }, { onConflict: "title" });
-  //     });
-  //   };
-
-  //   addingDataToSupabase();
-  // }, []);
+  const [isNew, setIsNew] = useState(false);
 
   const blogs = allBlogs.sort((a, b) =>
     isNew
@@ -46,13 +35,24 @@ export default function BlogLinks() {
           <motion.li key={blog.publishAt} layoutId={blog.publishAt}>
             <Link
               href={`${blog.slug}`}
-              className="flex w-full flex-col border-b border-b-transparent py-2 outline-none focus:border-foreground"
+              className="flex w-full justify-between border-b border-b-transparent py-2 outline-none focus:border-foreground"
             >
-              <p>{blog.title}</p>
-              <small className="text-muted-2">
-                {format(parseISO(blog.publishAt), "LLLL d, yyyy")}
-              </small>
-              {!blog.isComplete && <Badge>Not Completed</Badge>}
+              <div className="flex flex-col">
+                <p>{blog.title}</p>
+                <small className="text-muted-2">
+                  {format(parseISO(blog.publishAt), "LLLL d, yyyy")}
+                </small>
+                {!blog.isComplete && <Badge>Not Completed</Badge>}
+              </div>
+              {blog.isComplete && (
+                <Suspense
+                  fallback={
+                    <div className="text-sm text-muted">loading...</div>
+                  }
+                >
+                  <ViewCount slug={blog.slugAsParams} />
+                </Suspense>
+              )}
             </Link>
           </motion.li>
         ))}
