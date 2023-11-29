@@ -14,14 +14,16 @@ export default function BlogLinks() {
         <motion.li key={index}>
           <Link
             href={`${service.slug}`}
-            className="flex w-full flex-col overflow-hidden rounded-xl border border-border outline-none duration-100 hover:bg-box focus:border-foreground"
+            className={` group flex w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-background/10 p-0.5 outline-none backdrop-blur-sm duration-100 after:bg-background hover:bg-box focus:border-foreground ${
+              service.advance ? "border_animate" : "border border-border"
+            }`}
           >
             <Image
               src={service.image}
               width={600}
               height={400}
               alt=""
-              className="mb-2 aspect-video object-cover"
+              className="mb-2 aspect-video rounded-t-xl object-cover"
             />
             <div className="flex flex-col px-3 pb-2">
               <p className="text-xl font-bold">{service.title}</p>

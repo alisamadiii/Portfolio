@@ -9,7 +9,9 @@ export const metadata: Metadata = {
 export default function Blog() {
   return (
     <>
-      <h1 className="mb-8 text-2xl font-bold">read my blogs</h1>
+      <h1 className="text_gradient mb-8 text-2xl font-extrabold">
+        read my blogs
+      </h1>
       <BlogLinks />
     </>
   );

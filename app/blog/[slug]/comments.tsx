@@ -40,13 +40,15 @@ export default function Comments({ slug }: Props) {
 
   return (
     <div className="mt-8">
-      <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-muted-2">
-        <Checkbox
-          checked={isShowTimeDistance}
-          onChange={(event) => setIsShowTimeDistance(event.target.checked)}
-        />
-        Show Time Distance
-      </label>
+      {data.length > 0 && (
+        <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-muted-2">
+          <Checkbox
+            checked={isShowTimeDistance}
+            onChange={(event) => setIsShowTimeDistance(event.target.checked)}
+          />
+          Show Time Distance
+        </label>
+      )}
       <ul>
         {data.map((d) => (
           <li

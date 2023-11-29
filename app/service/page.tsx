@@ -7,10 +7,10 @@ export const metadata: Metadata = {
   title: "Service",
 };
 
-export default function Blog() {
+export default function Service() {
   return (
     <>
-      <h1 className="text-2xl font-bold">hire me!</h1>
+      <h1 className="text_gradient text-2xl font-extrabold">hire me!</h1>
       <ClientBadge />
       <p className="mb-8 text-base text-muted">
         Welcome to our Website Building Service, where your online aspirations

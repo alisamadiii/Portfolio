@@ -20,10 +20,6 @@ export default function ClientBadge() {
     },
   });
 
-  if (data === null || data === undefined) {
-    return null;
-  }
-
   if (isLoading) {
     return <Skeleton className="mb-4 mt-3 h-3 w-44 rounded-full" />;
   }

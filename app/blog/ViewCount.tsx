@@ -1,3 +1,5 @@
+"use client";
+
 import { supabase } from "@/utils/supabase";
 import React from "react";
 

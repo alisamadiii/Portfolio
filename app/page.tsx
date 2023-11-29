@@ -16,9 +16,9 @@ const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 export default function Home() {
   return (
     <>
-      <div className="mb-8 overflow-hidden">
-        <h1 className="text-2xl font-bold">hey, I&apos;m Ali Reza 👋</h1>
-      </div>
+      <h1 className="text_gradient mb-8 text-2xl font-extrabold">
+        hey, I&apos;m Ali Reza 👋
+      </h1>
       <p className="mb-5 leading-6 text-muted">
         I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
         focusing on front-end magic with ReactJS. I&apos;m all about embracing

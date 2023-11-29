@@ -8,13 +8,13 @@ import { Mdx } from "@/app/components/MDXContent";
 import CommentForm from "./comment-form";
 import Comments from "./comments";
 import PageView from "./page-view";
+// import { getTableOfContents } from "@/app/lib/toc";
 
 interface Props {
   params: {
     slug: string;
   };
 }
-
 interface generateMetadataProps {
   params: { slug: string };
 }
@@ -51,7 +51,7 @@ export async function generateMetadata({
   };
 }
 
-export default function BlogPage({ params }: Props) {
+export default async function BlogPage({ params }: Props) {
   const findingBlogs = allBlogs.find(
     (post) => params.slug === post.slugAsParams
   );
@@ -60,8 +60,10 @@ export default function BlogPage({ params }: Props) {
     return notFound();
   }
 
+  // const toc = await getTableOfContents(findingBlogs.body.raw);
+
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div>
       <BlogHeader blog={findingBlogs} />
       <Mdx code={findingBlogs.body.code} />
       {/* <Links blog={findingBlogs} /> */}

@@ -75,6 +75,11 @@ const Service = defineDocumentType(() => ({
       type: "list",
       of: { type: "string" },
     },
+    advance: {
+      type: "boolean",
+      default: false,
+      required: true,
+    },
   },
   computedFields,
 }));
