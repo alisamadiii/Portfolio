@@ -1011,3 +1011,7 @@ code[data-line-numbers] > [data-line]::before {
   border-radius: 12px;
   z-index: -1;
 }
+
+ul:has(#anchor:hover) > li > #anchor:not(:hover) {
+  opacity: 0.5;
+}

@@ -59,6 +59,10 @@ const Service = defineDocumentType(() => ({
   filePathPattern: "service/**/*.mdx",
   contentType: "mdx",
   fields: {
+    advance: {
+      type: "boolean",
+      required: true,
+    },
     title: {
       type: "string",
       required: true,
@@ -74,11 +78,6 @@ const Service = defineDocumentType(() => ({
     keyboard: {
       type: "list",
       of: { type: "string" },
-    },
-    advance: {
-      type: "boolean",
-      default: false,
-      required: true,
     },
   },
   computedFields,

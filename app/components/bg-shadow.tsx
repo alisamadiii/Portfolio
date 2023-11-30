@@ -55,8 +55,8 @@ export default function BgShadow() {
         </defs>
       </motion.svg>
 
-      <div className="stars pointer-events-none absolute left-0 top-0 h-px w-px opacity-30 md:opacity-20" />
-      <div className="stars_2 pointer-events-none absolute left-0 top-0 h-0.5 w-0.5 opacity-30 md:opacity-20" />
+      <div className="stars pointer-events-none absolute left-0 top-0 h-px w-px opacity-30 md:opacity-10" />
+      <div className="stars_2 pointer-events-none absolute left-0 top-0 h-0.5 w-0.5 opacity-30 md:opacity-10" />
     </>
   );
 }

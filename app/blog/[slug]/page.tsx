@@ -65,7 +65,9 @@ export default async function BlogPage({ params }: Props) {
   return (
     <div>
       <BlogHeader blog={findingBlogs} />
-      <Mdx code={findingBlogs.body.code} />
+      <div className="mb-16 border-b border-border pb-24">
+        <Mdx code={findingBlogs.body.code} />
+      </div>
       {/* <Links blog={findingBlogs} /> */}
       <CommentForm slug={params.slug} />
       <Comments slug={params.slug} />

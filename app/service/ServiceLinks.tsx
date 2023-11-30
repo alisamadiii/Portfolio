@@ -14,8 +14,10 @@ export default function BlogLinks() {
         <motion.li key={index}>
           <Link
             href={`${service.slug}`}
-            className={` group flex w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-background/10 p-0.5 outline-none backdrop-blur-sm duration-100 after:bg-background hover:bg-box focus:border-foreground ${
-              service.advance ? "border_animate" : "border border-border"
+            className={` group flex w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-background/10 p-0.5 outline-none backdrop-blur-sm duration-100 focus:border-foreground ${
+              service.advance
+                ? "border_animate after:bg-background hover:after:bg-box"
+                : "border border-border hover:bg-box"
             }`}
           >
             <Image

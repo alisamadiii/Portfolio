@@ -12,11 +12,13 @@ import ViewCount from "./ViewCount";
 export default function BlogLinks() {
   const [isNew, setIsNew] = useState(false);
 
-  const blogs = allBlogs.sort((a, b) =>
-    isNew
-      ? compareDesc(new Date(a.publishAt), new Date(b.publishAt))
-      : compareDesc(new Date(b.publishAt), new Date(a.publishAt))
-  );
+  const blogs = allBlogs
+    .sort((a, b) =>
+      isNew
+        ? compareDesc(new Date(a.publishAt), new Date(b.publishAt))
+        : compareDesc(new Date(b.publishAt), new Date(a.publishAt))
+    )
+    .sort((a: any, b: any) => b.isComplete - a.isComplete);
 
   return (
     <>

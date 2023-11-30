@@ -18,6 +18,7 @@ import LinkMetadata from "./LinkMetadata";
 import Balancer from "react-wrap-balancer";
 import Gallery from "./gallery";
 import Video from "./video";
+import DisplayAnimatedContents from "./display-animated-contents";
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -125,6 +126,7 @@ const components = {
   LinkMetadata,
   Gallery,
   Video,
+  DisplayAnimatedContents,
 };
 
 export function Mdx({ code }: { code: string }) {

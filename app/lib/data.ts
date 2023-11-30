@@ -97,4 +97,37 @@ const Testimonials = [
   },
 ];
 
-export { FrequentlyAskedQuestions, Testimonials };
+const techsData = {
+  html: [
+    {
+      name: "Semantic HTML",
+      link: "https://x.com/alirdev/status/1712030418755817974?s=20",
+    },
+  ],
+  css: [
+    {
+      name: "4 ways of centering a div",
+      link: "https://x.com/alirdev/status/1691736648227475698?s=20",
+    },
+    {
+      name: "Different way of writing CSS",
+      link: "https://x.com/alirdev/status/1719645545613197765?s=20",
+    },
+    {
+      name: "Box Model - CSS",
+      link: "https://x.com/alirdev/status/1718915803951902921?s=20",
+    },
+    {
+      name: "Display vs. Visibility - CSS",
+      link: "https://x.com/alirdev/status/1717103867387904197?s=20",
+    },
+  ],
+  js: [
+    {
+      name: "Different Ways of Writing Function",
+      link: "https://x.com/alirdev/status/1721452535003938909?s=20",
+    },
+  ],
+};
+
+export { FrequentlyAskedQuestions, Testimonials, techsData };
