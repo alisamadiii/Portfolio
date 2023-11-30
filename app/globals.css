@@ -987,7 +987,7 @@ code[data-line-numbers] > [data-line]::before {
 
 .border_animate::before {
   content: "";
-  background-image: conic-gradient(white 20deg, transparent 180deg);
+  background-image: conic-gradient(white 20deg, transparent 80deg);
   position: absolute;
   inset: -110px;
   z-index: -1;

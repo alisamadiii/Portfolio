@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="mb-1 flex gap-3">
         <Magnetic>
           <a
-            href="https://github.com/AliReza1083/"
+            href={process.env.NEXT_PUBLIC_GITHUB_URL}
             target="_blank"
             rel="noreferrer"
             className="text-2xl text-muted hover:text-foreground"
@@ -20,7 +20,7 @@ export default function Footer() {
 
         <Magnetic>
           <a
-            href="https://www.linkedin.com/in/alireza17/"
+            href={process.env.NEXT_PUBLIC_LINKEDIN_URL}
             target="_blank"
             rel="noreferrer"
             className="text-2xl text-muted hover:text-foreground"
@@ -30,7 +30,7 @@ export default function Footer() {
         </Magnetic>
         <Magnetic>
           <a
-            href="https://twitter.com/alirdev"
+            href={process.env.NEXT_PUBLIC_TWITTER_URL}
             target="_blank"
             rel="noreferrer"
             className="text-2xl text-muted hover:text-foreground"
@@ -41,7 +41,7 @@ export default function Footer() {
       </div>
       <small className="text-muted">
         Developer by{" "}
-        <a href="https://twitter.com/alirdev" className="text-muted-3">
+        <a href={process.env.NEXT_PUBLIC_TWITTER_URL} className="text-muted-3">
           Ali Reza
         </a>
       </small>

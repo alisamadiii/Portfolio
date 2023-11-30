@@ -13,13 +13,10 @@ export default function Service() {
       <h1 className="text_gradient text-2xl font-extrabold">hire me!</h1>
       <ClientBadge />
       <p className="mb-8 text-base text-muted">
-        Welcome to our Website Building Service, where your online aspirations
-        become reality. As a skilled developer, I specialize in creating
-        stunning, functional, and fully customized websites that align perfectly
-        with your unique needs and goals. From concept to completion, I bring
-        your vision to life, ensuring seamless navigation, compelling design,
-        and optimal user experience. Let&apos;s collaborate and build a
-        captivating online presence that sets you apart from the competition.
+        Welcome to our Website Building Service! I&apos;m your go-to developer
+        for crafting awesome, custom websites that match your unique vibes and
+        goals. Let&apos;s team up to create a standout online presence that
+        feels just right for you!
       </p>
       <ServiceLinks />
     </>

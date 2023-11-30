@@ -10,7 +10,7 @@ import Badge from "../components/badge";
 import ViewCount from "./ViewCount";
 
 export default function BlogLinks() {
-  const [isNew, setIsNew] = useState(false);
+  const [isNew, setIsNew] = useState(true);
 
   const blogs = allBlogs
     .sort((a, b) =>
@@ -38,6 +38,7 @@ export default function BlogLinks() {
             <Link
               href={`${blog.slug}`}
               className="flex w-full justify-between border-b border-b-transparent py-2 outline-none focus:border-foreground"
+              style={{ opacity: blog.isComplete ? 1 : 0.5 }}
             >
               <div className="flex flex-col">
                 <p>{blog.title}</p>
