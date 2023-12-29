@@ -10,27 +10,48 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/app/components/hover-card";
+import Badge from "./components/badge";
+import Link from "next/link";
 
 const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
+
+const clientProjects: ClientProjectsTypes[] = [
+  {
+    projectId: 1,
+    name: "Crosspost",
+    clientName: null,
+    description: "Description",
+    period: "3 mounts",
+    domain: null,
+    isDone: false,
+  },
+];
+
+const personalProjects: PersonalProjectsTypes[] = [
+  {
+    projectId: 1,
+    name: "AniLearn.dev",
+    description: "Easy way to learn HTML, CSS, and JavaScript",
+    domain: "https://anilearn.dev",
+    isWorking: true,
+  },
+];
 
 export default function Home() {
   return (
     <>
-      <h1 className="text_gradient mb-8 text-2xl font-extrabold">
+      <h1 className="text_gradient text-2xl font-extrabold">
         hey, I&apos;m Ali Reza 👋
       </h1>
+      <Link href={"/blog/my-story"}>
+        <Badge className="mb-8">Hear My Story</Badge>
+      </Link>
       <p className="mb-5 leading-6 text-muted">
         I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
         focusing on front-end magic with ReactJS. I&apos;m all about embracing
         new challenges and learning opportunities. Let&apos;s build something
         awesome together!
       </p>
-      {/* <ParagraphAnimate>
-        I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
-        focusing on front-end magic with ReactJS. I&apos;m all about embracing
-        new challenges and learning opportunities. Let&apos;s build something
-        awesome together!
-      </ParagraphAnimate> */}
       <p className="leading-6 text-muted">
         I began creating animated content in January 2023, and within one month,
         I gained 10k followers. My content has been well-received by many
@@ -105,6 +126,43 @@ export default function Home() {
           </div>
         ))}
       </div>
+      <p className="mb-5 mt-8 leading-6 text-muted">Personal Projects:</p>
+
+      <ul className="list-disc pl-4">
+        {personalProjects.map((project, index) => (
+          <li key={index}>
+            <a href="https://anilearn.dev" target="_blank" rel="noreferrer">
+              <h3>{project.name}</h3>
+              <p className="text-sm text-muted">{project.description} </p>
+              {project.isWorking && <Badge>still working</Badge>}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mb-5 mt-8 leading-6 text-muted">
+        <span>Client</span> Projects:
+      </p>
+
+      <ul className="list-disc pl-4">
+        {clientProjects.map((project, index) => {
+          const Element = project.isDone ? "a" : "button";
+
+          return (
+            <li key={index}>
+              <Element
+                href="#"
+                className={`flex w-full flex-col ${
+                  project.isDone ? "" : "cursor-not-allowed opacity-50"
+                }`}
+              >
+                <h3>{project.name}</h3>
+                <p className="text-sm text-muted">{project.description} </p>
+              </Element>
+            </li>
+          );
+        })}
+      </ul>
     </>
   );
 }
