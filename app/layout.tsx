@@ -7,6 +7,7 @@ import { GeistSans } from "geist/font/sans";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import BgShadow from "./components/bg-shadow";
+import ModalProviders from "@/providers/ModalProviders";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alirezasamadi.com/"),
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body
         className={`${GeistSans.className} bg-background py-16 text-foreground max-md:px-4`}
       >
+        <ModalProviders />
         <BgShadow />
         <div className="mx-auto max-w-2xl">
           <Navbar />
