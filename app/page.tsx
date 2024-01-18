@@ -20,7 +20,7 @@ const clientProjects: ClientProjectsTypes[] = [
     projectId: 1,
     name: "Crosspost",
     clientName: null,
-    description: "Description",
+    description: "",
     period: "3 mounts",
     domain: null,
     isDone: false,
@@ -134,7 +134,6 @@ export default function Home() {
             <a href="https://anilearn.dev" target="_blank" rel="noreferrer">
               <h3>{project.name}</h3>
               <p className="text-sm text-muted">{project.description} </p>
-              {project.isWorking && <Badge>still working</Badge>}
             </a>
           </li>
         ))}
@@ -153,11 +152,20 @@ export default function Home() {
               <Element
                 href="#"
                 className={`flex w-full flex-col ${
-                  project.isDone ? "" : "cursor-not-allowed opacity-50"
+                  project.isDone ? "" : "cursor-not-allowed"
                 }`}
               >
-                <h3>{project.name}</h3>
-                <p className="text-sm text-muted">{project.description} </p>
+                <h3 className={`${!project.isDone && "opacity-50"}`}>
+                  {project.name}
+                </h3>
+                <p
+                  className={`text-sm text-muted ${
+                    !project.isDone && "opacity-50"
+                  }`}
+                >
+                  {project.description}
+                </p>
+                {!project.isDone && <Badge>My current client</Badge>}
               </Element>
             </li>
           );
