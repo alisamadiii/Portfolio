@@ -4,7 +4,6 @@ import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
 import { CalendarDays } from "lucide-react";
 
-// import ParagraphAnimate from "./components/ParagraphAnimate";
 import {
   HoverCard,
   HoverCardContent,

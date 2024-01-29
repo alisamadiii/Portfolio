@@ -37,7 +37,7 @@ const components = {
   h3: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <Balancer
       as={"h3"}
-      className="mb-6 mt-8 scroll-m-20 text-2xl font-bold tracking-tight"
+      className="mb-6 mt-8 block w-full scroll-m-20 text-2xl font-bold tracking-tight"
       {...props}
     />
   ),

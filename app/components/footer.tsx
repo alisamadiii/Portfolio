@@ -40,7 +40,7 @@ export default function Footer() {
         </Magnetic>
       </div>
       <small className="text-muted">
-        Developer by{" "}
+        Developed by{" "}
         <a href={process.env.NEXT_PUBLIC_TWITTER_URL} className="text-muted-3">
           Ali Reza
         </a>
