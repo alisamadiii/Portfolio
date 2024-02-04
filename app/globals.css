@@ -1020,6 +1020,6 @@ code[data-line-numbers] > [data-line]::before {
   z-index: -1;
 }
 
-ul:has(#anchor:hover) > li > #anchor:not(:hover) {
+/* ul:has(#anchor:hover) > li > #anchor:not(:hover) {
   opacity: 0.5;
-}
+} */

@@ -50,10 +50,11 @@ export default function BlogHeader({ blog }: Props) {
   });
 
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
   return (
     <header>
-      <div className="relative" ref={blogHeaderRef}>
+      <div className="relative overflow-hidden" ref={blogHeaderRef}>
         <Image
           src={blog.blogImage}
           width={1600}
@@ -62,7 +63,7 @@ export default function BlogHeader({ blog }: Props) {
         />
         {blog.keyboard && (
           <motion.aside
-            style={{ opacity }}
+            style={{ opacity, y }}
             className="absolute bottom-0 left-0 flex w-full items-center justify-between pb-2 pr-3"
           >
             <div className="flex items-center divide-x-2 divide-border">

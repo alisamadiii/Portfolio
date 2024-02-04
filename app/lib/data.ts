@@ -97,37 +97,263 @@ const Testimonials = [
   },
 ];
 
-const techsData = {
-  html: [
-    {
-      name: "Semantic HTML",
-      link: "https://x.com/alirdev/status/1712030418755817974?s=20",
-    },
-  ],
-  css: [
-    {
-      name: "4 ways of centering a div",
-      link: "https://x.com/alirdev/status/1691736648227475698?s=20",
-    },
-    {
-      name: "Different way of writing CSS",
-      link: "https://x.com/alirdev/status/1719645545613197765?s=20",
-    },
-    {
-      name: "Box Model - CSS",
-      link: "https://x.com/alirdev/status/1718915803951902921?s=20",
-    },
-    {
-      name: "Display vs. Visibility - CSS",
-      link: "https://x.com/alirdev/status/1717103867387904197?s=20",
-    },
-  ],
-  js: [
-    {
-      name: "Different Ways of Writing Function",
-      link: "https://x.com/alirdev/status/1721452535003938909?s=20",
-    },
-  ],
-};
+export type TechsTypes = "html" | "css" | "js";
+
+export interface TechsDataType {
+  name: string;
+  link: string;
+  tech: TechsTypes;
+}
+
+const html: TechsDataType[] = [
+  {
+    name: "Semantic HTML",
+    link: "https://x.com/alirdev/status/1712030418755817974?s=20",
+    tech: "html",
+  },
+];
+
+const css: TechsDataType[] = [
+  {
+    name: "4 ways of centering a div",
+    link: "https://x.com/alirdev/status/1691736648227475698?s=20",
+    tech: "css",
+  },
+  {
+    name: "vh vs dvh",
+    link: "https://x.com/alirdev/status/1751970485146181791?s=20",
+    tech: "css",
+  },
+  {
+    name: "Different way of writing CSS",
+    link: "https://x.com/alirdev/status/1719645545613197765?s=20",
+    tech: "css",
+  },
+  {
+    name: "Box Model - CSS",
+    link: "https://x.com/alirdev/status/1718915803951902921?s=20",
+    tech: "css",
+  },
+  {
+    name: "Display vs. Visibility - CSS",
+    link: "https://x.com/alirdev/status/1717103867387904197?s=20",
+    tech: "css",
+  },
+  {
+    name: "Text Truncate",
+    link: "https://x.com/alirdev/status/1737659640023003371?s=20",
+    tech: "css",
+  },
+  {
+    name: "How to make a gradient border?",
+    link: "https://x.com/alirdev/status/1744539508543238363?s=20",
+    tech: "css",
+  },
+  {
+    name: "::before & ::after",
+    link: "https://x.com/alirdev/status/1738706642848624757?s=20",
+    tech: "css",
+  },
+  {
+    name: "Box Model",
+    link: "https://x.com/alirdev/status/1718915803951902921?s=20",
+    tech: "css",
+  },
+  {
+    name: "Aspect Ratio",
+    link: "https://x.com/alirdev/status/1731601500307440039?s=20",
+    tech: "css",
+  },
+  {
+    name: "list-style-type",
+    link: "https://x.com/alirdev/status/1729788777864864125?s=20",
+    tech: "css",
+  },
+  {
+    name: "Counters",
+    link: "https://x.com/alirdev/status/1729064061202297315?s=20",
+    tech: "css",
+  },
+  {
+    name: "Combinator",
+    link: "https://x.com/alirdev/status/1726527112176345444?s=20",
+    tech: "css",
+  },
+  {
+    name: "-webkit-tap-highlight-color: Optimizing Mobile UI Interactions",
+    link: "https://x.com/alirdev/status/1722177320675615140?s=20",
+    tech: "css",
+  },
+  {
+    name: "Different way of writing CSS",
+    link: "https://x.com/alirdev/status/1719645545613197765?s=20",
+    tech: "css",
+  },
+  {
+    name: "Display",
+    link: "https://x.com/alirdev/status/1716381225123033090?s=20",
+    tech: "css",
+  },
+  {
+    name: "Overflow",
+    link: "https://x.com/alirdev/status/1715292029163536634?s=20",
+    tech: "css",
+  },
+  {
+    name: "z-index",
+    link: "https://x.com/alirdev/status/1714567264719224939?s=20",
+    tech: "css",
+  },
+  {
+    name: "position",
+    link: "https://x.com/alirdev/status/1713845222759977004?s=20",
+    tech: "css",
+  },
+  {
+    name: "Smooth Scrolling",
+    link: "https://x.com/alirdev/status/1711305679712190511?s=20",
+    tech: "css",
+  },
+  {
+    name: "Scroll Padding",
+    link: "https://x.com/alirdev/status/1710231381417353440?s=20",
+    tech: "css",
+  },
+  {
+    name: "Input Placeholder",
+    link: "https://x.com/alirdev/status/1709493713238708312?s=20",
+    tech: "css",
+  },
+  {
+    name: "Global Variables",
+    link: "https://x.com/alirdev/status/1708768934114300405?s=20",
+    tech: "css",
+  },
+  {
+    name: "How to fade out content in CSS?",
+    link: "https://x.com/alirdev/status/1706232236822167659?s=20",
+    tech: "css",
+  },
+  {
+    name: "Working with SVG color",
+    link: "https://x.com/alirdev/status/1706957002013069415?s=20",
+    tech: "css",
+  },
+  {
+    name: "Learn how to create a custom scrollbar",
+    link: "https://x.com/alirdev/status/1696810084561752570?s=20",
+    tech: "css",
+  },
+  {
+    name: "Grid",
+    link: "https://x.com/alirdev/status/1704427958885294410?s=20",
+    tech: "css",
+  },
+  {
+    name: "Understand the benefits of using max-width",
+    link: "https://x.com/alirdev/status/1703695456814199268?s=20",
+    tech: "css",
+  },
+  {
+    name: "Understand the benefits of using max-width",
+    link: "https://x.com/alirdev/status/1703695456814199268?s=20",
+    tech: "css",
+  },
+  {
+    name: "Background Gradient",
+    link: "https://x.com/alirdev/status/1701883522850656678?s=20",
+    tech: "css",
+  },
+  {
+    name: "::first-letter",
+    link: "https://x.com/alirdev/status/1700097550748111004?s=20",
+    tech: "css",
+  },
+  {
+    name: "calc() - CSS Function",
+    link: "https://x.com/alirdev/status/1699346801609023528?s=20",
+    tech: "css",
+  },
+  {
+    name: "Media Queries",
+    link: "https://x.com/alirdev/status/1697534936377614667?s=20",
+    tech: "css",
+  },
+  {
+    name: "Padding & Margin",
+    link: "https://x.com/alirdev/status/1696085313855373571?s=20",
+    tech: "css",
+  },
+  {
+    name: "Transform",
+    link: "https://x.com/alirdev/status/1694635830416175413?s=20",
+    tech: "css",
+  },
+  {
+    name: "Object Fit",
+    link: "https://x.com/alirdev/status/1692461481013710995?s=20",
+    tech: "css",
+  },
+  {
+    name: "Create an iOS Toggle Switch with HTML & CSS - Here's How!",
+    link: "https://x.com/alirdev/status/1693911015468175582?s=20",
+    tech: "css",
+  },
+  {
+    name: "Flex Order",
+    link: "https://x.com/alirdev/status/1693186197680742548?s=20",
+    tech: "css",
+  },
+  {
+    name: "Flex Position",
+    link: "https://x.com/alirdev/status/1690649487059152897?s=20",
+    tech: "css",
+  },
+];
+
+const js: TechsDataType[] = [
+  {
+    name: "Different Ways of Writing Function",
+    link: "https://x.com/alirdev/status/1721452535003938909?s=20",
+    tech: "js",
+  },
+  {
+    name: "Slice vs Splice",
+    link: "https://x.com/alirdev/status/1725440019513667962?s=20",
+    tech: "js",
+  },
+  {
+    name: "Math",
+    link: "https://x.com/alirdev/status/1727253424268562601?s=20",
+    tech: "js",
+  },
+  {
+    name: "Let vs Const",
+    link: "https://x.com/alirdev/status/1724713993582084514?s=20",
+    tech: "js",
+  },
+  {
+    name: "if statement vs switch statement",
+    link: "https://x.com/alirdev/status/1723989230257660109?s=20",
+    tech: "js",
+  },
+  {
+    name: "map arrays",
+    link: "https://x.com/alirdev/status/1722902068716007476?s=20",
+    tech: "js",
+  },
+  {
+    name: "Different Ways of Writing Function",
+    link: "https://x.com/alirdev/status/1721452535003938909?s=20",
+    tech: "js",
+  },
+  {
+    name: "Array Methods",
+    link: "https://x.com/alirdev/status/1701158723996319851?s=20",
+    tech: "js",
+  },
+];
+
+const techsData: TechsDataType[] = [...html, ...css, ...js];
 
 export { FrequentlyAskedQuestions, Testimonials, techsData };

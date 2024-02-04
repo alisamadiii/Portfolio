@@ -1,49 +1,48 @@
-import React from "react";
-import { techsData } from "../lib/data";
+"use client";
 
-interface Props {
-  tech: "html" | "css" | "js";
+import React from "react";
+import { type TechsTypes, type TechsDataType, techsData } from "../lib/data";
+
+export default function DisplayAnimatedContents() {
+  return (
+    <ul className="mb-8 flex flex-col gap-8">
+      <Techs tech="html" />
+      <Techs tech="css" />
+      <Techs tech="js" />
+    </ul>
+  );
 }
 
-export default function DisplayAnimatedContents({ tech }: Props) {
-  const currentTech = {
-    html: techsData.html.map((data, index) => (
-      <li key={index} className="group grow basis-80">
-        <a
-          href={data.link}
-          target="_blank"
-          className="flex h-20 items-center justify-center overflow-hidden rounded-xl border-[0.5px] border-border bg-box/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05),0_10px_10px_rgba(255,255,255,.02)] backdrop-blur-sm duration-200 hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]"
-          id="anchor" rel="noreferrer"
-        >
-          {data.name}
-        </a>
-      </li>
-    )),
-    css: techsData.css.map((data, index) => (
-      <li key={index} className="group grow basis-80">
-        <a
-          href={data.link}
-          target="_blank"
-          className="flex h-20 items-center justify-center overflow-hidden rounded-xl border-[0.5px] border-border bg-box/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05),0_10px_10px_rgba(255,255,255,.02)] backdrop-blur-sm duration-200 hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]"
-          id="anchor" rel="noreferrer"
-        >
-          {data.name}
-        </a>
-      </li>
-    )),
-    js: techsData.js.map((data, index) => (
-      <li key={index} className="group grow basis-80">
-        <a
-          href={data.link}
-          target="_blank"
-          className="flex h-20 items-center justify-center overflow-hidden rounded-xl border-[0.5px] border-border bg-box/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05),0_10px_10px_rgba(255,255,255,.02)] backdrop-blur-sm duration-200 hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]"
-          id="anchor" rel="noreferrer"
-        >
-          {data.name}
-        </a>
-      </li>
-    )),
-  }[tech];
+function Techs({ tech }: { tech: TechsTypes }) {
+  return (
+    <div>
+      <h2 className="relative isolate mb-2 inline-block rounded text-sm uppercase before:absolute before:-z-10 before:h-full before:w-full before:-rotate-3 before:scale-150 before:rounded-lg before:bg-box">
+        {tech === "js" ? "javascript" : tech}
+      </h2>
+      <ul className="list-disc pl-8">
+        {techsData
+          .filter((data) => data.tech === tech)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((data, index) => (
+            <EachTech key={index} data={data} />
+          ))}
+      </ul>
+    </div>
+  );
+}
 
-  return <ul className="flex flex-wrap gap-2">{currentTech}</ul>;
+function EachTech({ data }: { data: TechsDataType }) {
+  return (
+    <li className="group">
+      <a
+        href={data.link}
+        target="_blank"
+        className="inline-block py-1 text-muted-3 hover:text-foreground"
+        id="anchor"
+        rel="noreferrer"
+      >
+        {data.name}
+      </a>
+    </li>
+  );
 }
