@@ -83,20 +83,6 @@ export default function Video({ url }: Props) {
     }
   };
 
-  const handleTimelineClick = (e: any) => {
-    const video = videoRef.current;
-
-    if (video) {
-      const timeline = e.currentTarget;
-      const clickPosition = e.clientX - timeline.getBoundingClientRect().left;
-      const timelineWidth = timeline.clientWidth;
-      const videoDuration = video.duration;
-
-      const timePosition = (clickPosition / timelineWidth) * videoDuration;
-      video.currentTime = timePosition;
-    }
-  };
-
   // Autoplay for small screens
   useEffect(() => {
     const options = {
@@ -168,10 +154,7 @@ export default function Video({ url }: Props) {
       )}
       <aside className="absolute bottom-0 left-0 flex w-full flex-col gap-[0.35rem] px-4 py-4 md:gap-4 md:px-4">
         {/* Video Timeline */}
-        <div
-          className="h-[0.35rem] cursor-pointer overflow-hidden rounded-full bg-[#A7A7A7]/50 duration-150 hover:h-[.5rem]"
-          onClick={handleTimelineClick}
-        >
+        <div className="h-[0.35rem] cursor-pointer overflow-hidden rounded-full bg-[#A7A7A7]/50 duration-150 hover:h-[.5rem]">
           <div
             style={{
               width: `${progressPercentage()}%`,

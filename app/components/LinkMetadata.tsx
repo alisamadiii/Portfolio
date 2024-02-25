@@ -36,7 +36,7 @@ export default function LinkMetadata({ link }: Props) {
     <a
       href={link}
       target="_blank"
-      className="flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-border duration-100 hover:bg-box md:flex-row"
+      className="mb-2 flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-border duration-100 hover:bg-box md:flex-row"
       rel="noreferrer"
     >
       {data.ogImage && (

@@ -19,6 +19,7 @@ import Balancer from "react-wrap-balancer";
 import Gallery from "./gallery";
 import Video from "./video";
 import DisplayAnimatedContents from "./display-animated-contents";
+import ImageExplain from "./ImageExplain";
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -30,20 +31,20 @@ const components = {
   h2: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <Balancer
       as={"h2"}
-      className="mb-6 mt-12 scroll-m-20 text-3xl font-bold tracking-tight"
+      className="mb-6 mt-12 scroll-m-20 text-2xl font-bold tracking-tight"
       {...props}
     />
   ),
   h3: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <Balancer
       as={"h3"}
-      className="mb-6 mt-8 block w-full scroll-m-20 text-2xl font-bold tracking-tight"
+      className="mb-6 mt-8 block w-full scroll-m-20 text-xl font-bold tracking-tight"
       {...props}
     />
   ),
   p: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <p
-      className="my-5 scroll-m-20 text-base leading-7 text-muted-3"
+      className="my-2 scroll-m-20 text-base leading-7 text-muted-3"
       {...props}
     />
   ),
@@ -80,7 +81,7 @@ const components = {
   ),
   blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <blockquote
-      className="border-l border-border pl-4 italic [&>p]:text-sm [&>p]:leading-6 [&>p]:text-white [&>p]:md:text-base"
+      className="my-4 border-l border-border pl-4 italic [&>p]:text-sm [&>p]:leading-6 [&>p]:text-white [&>p]:md:text-base"
       {...props}
     ></blockquote>
   ),
@@ -127,6 +128,7 @@ const components = {
   Gallery,
   Video,
   DisplayAnimatedContents,
+  ImageExplain,
 };
 
 export function Mdx({ code }: { code: string }) {

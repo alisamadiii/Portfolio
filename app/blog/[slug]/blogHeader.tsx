@@ -53,7 +53,7 @@ export default function BlogHeader({ blog }: Props) {
   const y = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
   return (
-    <header>
+    <header className="mb-12">
       <div className="relative overflow-hidden" ref={blogHeaderRef}>
         <Image
           src={blog.blogImage}
@@ -61,6 +61,7 @@ export default function BlogHeader({ blog }: Props) {
           height={840}
           alt={blog.title}
         />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20"></div>
         {blog.keyboard && (
           <motion.aside
             style={{ opacity, y }}
@@ -73,15 +74,16 @@ export default function BlogHeader({ blog }: Props) {
                 </p>
               ))}
             </div>
-            <p className="text-xs text-muted-2">
-              {readingTime(blog.body.raw).text}
-            </p>
+            <p className="text-xs">{readingTime(blog.body.raw).text}</p>
           </motion.aside>
         )}
       </div>
       <div className="mt-4 flex flex-col">
         <Balancer className="text-3xl font-bold">{blog.title}</Balancer>
-        <small className="text-muted-2">
+        <Balancer as={"p"} className="mb-2 mt-1 text-sm text-muted-2">
+          {blog.text_information}
+        </Balancer>
+        <small className="text-xs text-muted-2">
           {format(parseISO(blog.publishAt), "LLLL d, yyyy")} (
           {formatDate(blog.publishAt)})
         </small>
