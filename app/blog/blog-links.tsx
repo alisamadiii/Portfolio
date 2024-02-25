@@ -34,7 +34,7 @@ export default function BlogLinks() {
       </button>
       <ul className="flex flex-col">
         {blogs.map((blog) => (
-          <motion.li key={blog.publishAt} layoutId={blog.publishAt}>
+          <motion.li key={blog.uniqueId} layoutId={blog.uniqueId.toString()}>
             <Link
               href={`${blog.slug}`}
               className="flex w-full justify-between border-b border-b-transparent py-2 outline-none focus:border-foreground"
