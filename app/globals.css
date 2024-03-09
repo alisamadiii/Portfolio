@@ -1023,3 +1023,27 @@ code[data-line-numbers] > [data-line]::before {
 /* ul:has(#anchor:hover) > li > #anchor:not(:hover) {
   opacity: 0.5;
 } */
+
+.custom_shadow {
+  box-shadow:
+    0 10px 19px 4px rgb(0 0 0 / 0.16),
+    0 -10px 16px -4px rgb(255 255 255 / 0.04),
+    0 0 0 1px rgb(255 255 255 / 0.01),
+    0 1px 0 0 rgb(255 255 255 / 0.02);
+}
+
+.custom-selection::selection {
+  background-color: #b4d5fe;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
