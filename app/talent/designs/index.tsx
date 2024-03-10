@@ -31,4 +31,16 @@ export const Index: Array<{ name: string; component: any }> = [
     name: "two-factor-authentication",
     component: React.lazy(() => import("./two-factor-authentication")),
   },
+  {
+    name: "drag-profiles-picture",
+    component: React.lazy(() => import("./drag-profiles-picture")),
+  },
+  {
+    name: "expand-profiles-picture",
+    component: React.lazy(() => import("./expand-profiles-picture")),
+  },
+  {
+    name: "generate-metadata",
+    component: React.lazy(() => import("./generate-metadata")),
+  },
 ];

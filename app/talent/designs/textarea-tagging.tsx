@@ -50,7 +50,7 @@ export default function Textarea() {
             ref={textareaRef}
             name="tagging"
             id="tagging"
-            placeholder="caption"
+            placeholder="Caption..."
             className="custom-selection h-full w-full resize-none overflow-hidden bg-transparent p-1 text-white caret-black outline-none transition-colors"
             onChange={onChangeHandler}
           />

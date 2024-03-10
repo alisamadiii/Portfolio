@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import React from "react";
@@ -7,9 +8,10 @@ import { BarLoader } from "react-spinners";
 
 interface Props {
   link: string;
+  className?: string;
 }
 
-export default function LinkMetadata({ link }: Props) {
+export default function LinkMetadata({ link, className }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["link-metadata", link],
     queryFn: async () => {
@@ -36,7 +38,10 @@ export default function LinkMetadata({ link }: Props) {
     <a
       href={link}
       target="_blank"
-      className="mb-2 flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-border duration-100 hover:bg-box md:flex-row"
+      className={cn(
+        "mb-2 flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-border duration-100 hover:bg-box md:flex-row",
+        className
+      )}
       rel="noreferrer"
     >
       {data.ogImage && (
