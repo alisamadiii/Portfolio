@@ -4,6 +4,14 @@ import * as React from "react";
 
 export const Index: Array<{ name: string; component: any }> = [
   {
+    name: "drag-profiles-picture",
+    component: React.lazy(() => import("./drag-profiles-picture")),
+  },
+  {
+    name: "expand-profiles-picture",
+    component: React.lazy(() => import("./expand-profiles-picture")),
+  },
+  {
     name: "password",
     component: React.lazy(() => import("./password")),
   },
@@ -32,15 +40,19 @@ export const Index: Array<{ name: string; component: any }> = [
     component: React.lazy(() => import("./two-factor-authentication")),
   },
   {
-    name: "drag-profiles-picture",
-    component: React.lazy(() => import("./drag-profiles-picture")),
-  },
-  {
-    name: "expand-profiles-picture",
-    component: React.lazy(() => import("./expand-profiles-picture")),
-  },
-  {
     name: "generate-metadata",
     component: React.lazy(() => import("./generate-metadata")),
+  },
+  {
+    name: "video",
+    component: React.lazy(() => import("./video")),
+  },
+  {
+    name: "tech-hover-animation",
+    component: React.lazy(() => import("./tech-hover-animation")),
+  },
+  {
+    name: "photos-expand",
+    component: React.lazy(() => import("./photos-expand")),
   },
 ];
