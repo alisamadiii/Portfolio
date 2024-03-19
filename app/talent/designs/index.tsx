@@ -55,4 +55,8 @@ export const Index: Array<{ name: string; component: any }> = [
     name: "photos-expand",
     component: React.lazy(() => import("./photos-expand")),
   },
+  {
+    name: "gradient-animation",
+    component: React.lazy(() => import("./gradient-animation")),
+  },
 ];
