@@ -78,4 +78,9 @@ export const Index: Array<{ id: number; name: string; component: any }> = [
     name: "gradient-animation",
     component: React.lazy(() => import("./gradient-animation")),
   },
+  {
+    id: 16,
+    name: "feedback",
+    component: React.lazy(() => import("./feedback")),
+  },
 ];

@@ -82,7 +82,7 @@ function Button({ children, className, ...props }: ButtonType) {
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "fixed flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border text-2xl shadow-xl hover:bg-gray-100 disabled:opacity-50",
+        "fixed flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border bg-white text-2xl shadow-xl hover:bg-gray-100 disabled:opacity-50",
         className
       )}
       {...props}

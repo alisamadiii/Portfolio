@@ -73,7 +73,7 @@ export default function Talent() {
               </p>
               <Link
                 ref={scope}
-                href={"/talent"}
+                href={"/talent?design=1"}
                 className="mt-8 inline-block rounded-lg bg-white p-2 px-8 text-black"
                 onMouseOver={onMouseOver}
                 onMouseLeave={onMouseLeave}
