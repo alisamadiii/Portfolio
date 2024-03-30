@@ -6,7 +6,6 @@ import { GeistSans } from "geist/font/sans";
 
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
-import BgShadow from "./components/bg-shadow";
 import ModalProviders from "@/providers/ModalProviders";
 
 export const metadata: Metadata = {

@@ -66,9 +66,10 @@ export default function Talent() {
               <h1 className="mb-4 text-3xl font-bold">My works</h1>
               <p>
                 Hey there! Ready to dive into my world? Click that button and
-                let's take a stroll through some of my favorite works together.
-                Get ready to be wowed, inspired, and maybe even crack a smile or
-                two along the way. Can't wait to show you what I've been up to!
+                let&apos;s take a stroll through some of my favorite works
+                together. Get ready to be wowed, inspired, and maybe even crack
+                a smile or two along the way. Can&apos;t wait to show you what
+                I&apos;ve been up to!
               </p>
               <Link
                 ref={scope}
