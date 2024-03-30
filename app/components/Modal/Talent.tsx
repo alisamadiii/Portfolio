@@ -11,23 +11,26 @@ import { GrUserWorker } from "react-icons/gr";
 import Link from "next/link";
 
 export default function Talent() {
-  const color = useMotionValue("rgba(32,30,30.5)");
+  const color1 = useMotionValue("rgb(59, 130, 246)");
+  const color2 = useMotionValue("rgb(59, 130, 246)");
   const [show, setShow] = useState(false);
 
   const [scope, animateNow] = useAnimate();
 
-  const backgroundImage = useMotionTemplate`linear-gradient(#111010, ${color})`;
+  const backgroundImage = useMotionTemplate`linear-gradient(${color1}, ${color2})`;
 
   const onClickHandler = () => {
     setShow(true);
 
-    animate(color, "rgba(32,30,30.5)");
+    animate(color1, "hsl(0,0,20)");
+    animate(color2, "rgba(32,30,30)");
   };
 
   const onCloseHandler = () => {
     setShow(false);
 
-    animate(color, "rgba(32,30,30.5)");
+    animate(color1, "rgba(59, 130, 246)");
+    animate(color2, "rgb(59, 130, 246)");
   };
 
   const onMouseOver = () => {
@@ -39,13 +42,17 @@ export default function Talent() {
 
   return (
     <>
-      <div className="fixed bottom-0 right-0 z-20 p-8">
+      <div className="bg-blue fixed bottom-0 right-0 z-20 p-8">
         <motion.div
           layout
           onClick={onClickHandler}
           className={`z-20 flex items-center justify-center shadow-2xl shadow-white/10 ${show ? "max-w-[800px] border border-muted/20 md:min-w-[800px]" : "border-transparent"}`}
           style={{ borderRadius: 10, backgroundImage }}
-          transition={{ duration: 0.5, type: "spring", bounce: 0 }}
+          transition={{
+            duration: 0.5,
+            type: "spring",
+            bounce: 0,
+          }}
         >
           {!show ? (
             <motion.button
@@ -83,6 +90,8 @@ export default function Talent() {
             </motion.div>
           )}
         </motion.div>
+
+        <div className="grid-background fade-out-grid-background absolute right-0 top-0 -z-10 h-full w-full" />
       </div>
 
       <AnimatePresence>
