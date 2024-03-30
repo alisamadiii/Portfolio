@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-type Props = {};
-
-export default function BlurryText({}: Props) {
+export default function BlurryText() {
   const [input, setInput] = useState("");
 
   return (

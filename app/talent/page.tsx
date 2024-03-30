@@ -35,7 +35,7 @@ export default function Home() {
       <Arrows key={Component?.id} />
       <ElementName
         id={Component?.id || 0}
-        name={Component?.name || "Not found"}
+        name={Component?.name.replaceAll("-", " ") || "Not found"}
       />
     </main>
   );

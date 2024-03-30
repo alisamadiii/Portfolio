@@ -10,9 +10,7 @@ import {
 import { GrUserWorker } from "react-icons/gr";
 import Link from "next/link";
 
-type Props = {};
-
-export default function Talent({}: Props) {
+export default function Talent() {
   const color = useMotionValue("rgba(32,30,30.5)");
   const [show, setShow] = useState(false);
 

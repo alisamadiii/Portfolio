@@ -1,14 +1,8 @@
 "use client";
 
 import React from "react";
-import { Index } from ".";
-import { useCurrentElementStore } from "../page";
 
-export default function HeadTags() {
-  const { currentElement } = useCurrentElementStore();
-
-  const name = Index[currentElement].name;
-
+export default function HeadTags({ name }: { name: string }) {
   return (
     <head>
       <title>{name.replaceAll("-", " ")}</title>

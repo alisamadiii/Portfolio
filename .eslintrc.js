@@ -35,6 +35,7 @@ module.exports = {
     "@typescript-eslint/no-confusing-void-expression": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/prefer-ts-expect-error": "off",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
   },
   settings: {
     react: {
