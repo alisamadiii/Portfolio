@@ -31,6 +31,7 @@ export default function TwoFactorAuthentication() {
             key={index}
             type="number"
             value={values[index]}
+            // @ts-ignore
             ref={(el) => (inputRefs.current[index] = el)}
             className="h-12 w-8 rounded-md border border-gray-500 text-center font-semibold outline-none"
             onChange={(e) => handleInputChange(index, e.target.value)}

@@ -5,19 +5,25 @@ import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { cn } from "@/utils";
-import { useCurrentElementStore } from "../talent/page";
 import { Index } from "../talent/designs";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Arrows() {
-  const { currentElement, setCurrentElement } = useCurrentElementStore();
+  const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const designNum = Number(searchParams.get("design"));
 
   const handleNavigation = (action: "forward" | "backward") => {
     if (action === "forward") {
-      if (currentElement === Index.length - 1) return;
-      setCurrentElement(currentElement + 1);
+      if (designNum === Index.length) return;
+
+      router.push(`?design=${designNum + 1}`);
     } else if (action === "backward") {
-      if (currentElement === 0) return;
-      setCurrentElement(currentElement - 1);
+      if (designNum === 1) return;
+
+      router.push(`?design=${designNum - 1}`);
     }
   };
 
@@ -39,21 +45,21 @@ export default function Arrows() {
     return () => {
       document.removeEventListener("keydown", onKeyHandler);
     };
-  }, [currentElement]);
+  }, [searchParams]);
 
   return (
     <div>
       <Button
         className="bottom-4 left-4"
         onClick={() => onClickHandler("backward")}
-        disabled={currentElement === 0}
+        disabled={designNum === 0}
       >
         <IoIosArrowRoundBack />
       </Button>
       <Button
         className="bottom-4 right-4"
         onClick={() => onClickHandler("forward")}
-        disabled={currentElement === Index.length - 1}
+        disabled={designNum === Index.length - 1}
       >
         <IoIosArrowRoundForward />
       </Button>

@@ -33,7 +33,7 @@
     "mdast-util-toc": "^7.0.0",
     "next": "14.0.3",
     "next-contentlayer": "^0.3.4",
-    "open-graph-scraper": "^6.3.2",
+    "open-graph-scraper": "^6.5.0",
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^4.12.0",

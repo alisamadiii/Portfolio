@@ -3,18 +3,16 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { useCurrentElementStore } from "../talent/page";
-import { Index } from "../talent/designs";
-
-export default function ElementName() {
-  const { currentElement } = useCurrentElementStore();
-
+export default function ElementName({
+  id,
+  name,
+}: {
+  id: number;
+  name: string;
+}) {
   return (
     <AnimatePresence initial={false}>
-      <motion.div
-        key={Index[currentElement].name}
-        className="fixed bottom-4 overflow-hidden"
-      >
+      <motion.div key={id} className="fixed bottom-4 overflow-hidden">
         <motion.p
           initial={{ y: 25 }}
           animate={{ y: 0 }}
@@ -22,7 +20,7 @@ export default function ElementName() {
           transition={{ type: "tween", duration: 0.2 }}
           className="font-medium capitalize text-black/80"
         >
-          {Index[currentElement].name.replaceAll("-", " ")}
+          {name}
         </motion.p>
       </motion.div>
     </AnimatePresence>

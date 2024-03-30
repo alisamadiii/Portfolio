@@ -45,7 +45,7 @@ export default function RootLayout({
         className={`${GeistSans.className} bg-background py-16 text-foreground max-md:px-4`}
       >
         <ModalProviders />
-        <BgShadow />
+        {/* <BgShadow /> */}
         <div className="mx-auto max-w-2xl">
           <Navbar />
         </div>

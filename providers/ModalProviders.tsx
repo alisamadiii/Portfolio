@@ -1,6 +1,7 @@
 "use client";
 
 import ImagePreview from "@/app/components/Modal/ImagePreview";
+import Talent from "@/app/components/Modal/Talent";
 import React, { useEffect, useState } from "react";
 
 export default function ModalProviders() {
@@ -17,6 +18,7 @@ export default function ModalProviders() {
   return (
     <>
       <ImagePreview />
+      <Talent />
     </>
   );
 }

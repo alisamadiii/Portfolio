@@ -34,6 +34,8 @@ export default function LinkMetadata({ link, className }: Props) {
     enabled: !!link,
   });
 
+  console.log(data);
+
   return data?.ogImage && data.ogDescription ? (
     <a
       href={link}
