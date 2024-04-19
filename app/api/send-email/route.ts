@@ -7,20 +7,20 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   const to = req.nextUrl.searchParams.get("to");
   const title = req.nextUrl.searchParams.get("title");
-  const username = req.nextUrl.searchParams.get("username");
   const details = req.nextUrl.searchParams.get("details");
   const linkTo = req.nextUrl.searchParams.get("link_to");
   const blogImage = req.nextUrl.searchParams.get("blog_image");
 
+  console.log(to?.split(","));
+
   try {
-    if (to && title && username && details && linkTo && blogImage) {
+    if (to && title && details && linkTo && blogImage) {
       const data = await resend.emails.send({
-        from: "alireza@alirezasamadi.com",
-        to: [to],
+        from: "blog@alirezasamadi.com",
+        to: to?.split(","),
         subject: `Blog - ${title}`,
         react: EmailTemplate({
           title,
-          username,
           details,
           linkTo,
           blogImage,

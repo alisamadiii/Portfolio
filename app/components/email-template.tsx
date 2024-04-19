@@ -18,7 +18,6 @@ import * as React from "react";
 
 interface VercelInviteUserEmailProps {
   title: string;
-  username: string;
   details: string;
   linkTo: string;
   blogImage: string;
@@ -26,7 +25,6 @@ interface VercelInviteUserEmailProps {
 
 export const VercelInviteUserEmail = ({
   title = "How do I make a Website?",
-  username = "Ali Reza",
   details = "I see lots of @developers start coding straightforwardly without having any @designs or plans before coding it. If I don't make any designs and don't build a website step by step, I would get confused and I would not know what I'm doing, and easily it ...",
   linkTo = "https://www.alirezasamadi.com/blog/How-do-I-make-a-Website",
   blogImage = "https://www.alirezasamadi.com/_next/image?url=https%3A%2F%2Fldxedhzbfnmrovkzozxc.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fblog%2Fhow%2520do%2520I%2520make%2520a%2520website%2FHow%2520do%2520I%2520make%2520a%2520Website_.png&w=1920&q=75",
@@ -52,9 +50,7 @@ export const VercelInviteUserEmail = ({
             <Heading className="mx-0 my-[30px] p-0 text-center text-[24px] font-normal text-black">
               Read <strong>Blog</strong> on <strong>Website</strong>
             </Heading>
-            <Text className="text-[14px] leading-[24px] text-black">
-              Hello <strong>{username}</strong>,
-            </Text>
+            <Text className="text-[14px] leading-[24px] text-black">Hello</Text>
             <Text
               className="text-[14px] leading-[24px] text-black"
               dangerouslySetInnerHTML={{
@@ -78,6 +74,9 @@ export const VercelInviteUserEmail = ({
                 {linkTo}
               </Link>
             </Text>
+            <Link href={linkTo} className="text-sm text-blue-600 underline">
+              Unsubscribe
+            </Link>
             <Hr className="mx-0 my-[26px] w-full border border-solid border-[#eaeaea]" />
             <Text className="text-[12px] leading-[24px] text-[#666666]">
               I&apos;m Ali Reza! I&apos;ve got 2+ years of{" "}

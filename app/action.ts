@@ -29,19 +29,14 @@ export interface SendingEmailTypes {
   error: string | undefined;
 }
 
-async function sendingEmail(_: any, formData: FormData) {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-
-  if (name !== "" || email !== "") {
-    const { error } = await supabase
-      .from("sending-emails")
-      .insert({ email, name });
+async function sendingEmail(email: string) {
+  if (email !== "") {
+    const { error } = await supabase.from("sending-emails").insert({ email });
 
     if (error?.code === "23505") {
       return { message: "Email already exists", error: 23505 };
     } else {
-      return { message: "sent", error: undefined };
+      return { message: "Joined", error: undefined };
     }
   }
 

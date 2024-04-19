@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
     const hasCompleteBlog = allBlogs.find((blog) => blog.slugAsParams === slug);
 
     if (hasCompleteBlog?.isComplete === false) {
-      return NextResponse.rewrite(new URL("/blog/writing", request.url));
+      return NextResponse.redirect(new URL("/newsletter", request.url));
     }
   }
 

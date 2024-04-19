@@ -44,20 +44,20 @@ export default function SendEmail() {
       const details = findingBlogs.text_information;
       const linkTo = `${process.env.NEXT_PUBLIC_WEBSITE_URL}${findingBlogs.slug}`;
 
-      await Promise.all(
-        data.map(async (d) => {
-          const res = await fetch(
-            `/api/send-email?title=${title}&username=${d.name}&details=${details}&link_to=${linkTo}&blog_image=${blogImage}&to=${d.email}`,
-            {
-              method: "POST",
-            }
-          );
+      // console.log(data.map((d) => d.email));
 
-          const data = await res.json();
+      console.log({ title, blogImage, details, linkTo });
 
-          console.log(data);
-        })
+      const res = await fetch(
+        `/api/send-email?title=${title}&details=${details}&link_to=${linkTo}&blog_image=${blogImage}&to=${data.map((d) => d.email)}`,
+        {
+          method: "POST",
+        }
       );
+
+      const dataRes = await res.json();
+
+      console.log(dataRes);
 
       setIsLoading(false);
     }
