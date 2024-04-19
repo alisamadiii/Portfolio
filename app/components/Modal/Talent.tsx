@@ -11,8 +11,8 @@ import { GrUserWorker } from "react-icons/gr";
 import Link from "next/link";
 
 export default function Talent() {
-  const color1 = useMotionValue("rgb(59, 130, 246)");
-  const color2 = useMotionValue("rgb(59, 130, 246)");
+  const color1 = useMotionValue("rgb(255, 255, 255)");
+  const color2 = useMotionValue("rgb(255, 255, 255)");
   const [show, setShow] = useState(false);
 
   const [scope, animateNow] = useAnimate();
@@ -29,8 +29,8 @@ export default function Talent() {
   const onCloseHandler = () => {
     setShow(false);
 
-    animate(color1, "rgba(59, 130, 246)");
-    animate(color2, "rgb(59, 130, 246)");
+    animate(color1, "rgba(255, 255, 255)");
+    animate(color2, "rgb(255, 255, 255)");
   };
 
   const onMouseOver = () => {
@@ -59,7 +59,7 @@ export default function Talent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="rounded-full p-2 text-3xl"
+              className="rounded-full p-2 text-3xl text-black"
             >
               <GrUserWorker />
             </motion.button>

@@ -11,6 +11,8 @@ import {
 } from "@/app/components/hover-card";
 import Badge from "./components/badge";
 import Link from "next/link";
+import TextShadow from "./components/text-shadow";
+import GlassAnimation from "./components/glass-animation";
 
 const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 
@@ -39,8 +41,8 @@ const personalProjects: PersonalProjectsTypes[] = [
 export default function Home() {
   return (
     <>
-      <h1 className="text_gradient text-2xl font-extrabold">
-        hey, I&apos;m Ali Reza 👋
+      <h1 className="text-2xl font-extrabold">
+        hey, I&apos;m <TextShadow>Ali Reza</TextShadow> 👋
       </h1>
       <Link href={"/blog/my-story"}>
         <Badge className="mb-8">Hear My Story</Badge>
@@ -58,7 +60,9 @@ export default function Home() {
         favourites below.
       </p>
       <HoverCard>
-        <HoverCardTrigger className="my-8">
+        <HoverCardTrigger className="relative my-8 overflow-hidden">
+          <GlassAnimation />
+
           <a
             href="https://twitter.com/alirdev"
             target="_blank"
@@ -67,11 +71,11 @@ export default function Home() {
           >
             <div>
               <Image
-                src={"/my-image.png"}
+                src={"/my-image.jpg"}
                 width={120}
                 height={120}
                 alt="my-image"
-                className="h-16 w-16"
+                className="h-16 w-16 rounded-full object-cover"
               />
             </div>
             <div className="grow">
@@ -92,7 +96,7 @@ export default function Home() {
             </svg>
           </a>
         </HoverCardTrigger>
-        <HoverCardContent className="flex w-full max-w-xs items-start justify-between space-x-4">
+        <HoverCardContent className="relative flex w-full max-w-xs items-start justify-between space-x-4">
           <Image
             src={"/my-image.png"}
             width={40}
@@ -114,7 +118,7 @@ export default function Home() {
           </div>
         </HoverCardContent>
       </HoverCard>
-      <p className="mb-5 leading-6 text-muted">Experience with:</p>
+      <p className="mb-5 leading-6 text-muted">Main Tech Stacks:</p>
       <div className="flex flex-wrap gap-2">
         {technologies.map((tech, index) => (
           <div

@@ -1,13 +1,13 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
-import React from "react";
+import React, { memo } from "react";
 
 interface Props {
   slug: string;
 }
 
-export default async function ViewCount({ slug }: Props) {
+async function ViewCountElement({ slug }: Props) {
   const { data, error } = await supabase
     .from("pages")
     .select("view_count")
@@ -18,5 +18,13 @@ export default async function ViewCount({ slug }: Props) {
     return null;
   }
 
-  return <div className="text-sm text-muted">{data.view_count} Views</div>;
+  return (
+    <div className="text-sm text-muted" style={{ flex: "0 0 auto" }}>
+      {data.view_count} Views
+    </div>
+  );
 }
+
+const ViewCount = memo(ViewCountElement);
+
+export default ViewCount;

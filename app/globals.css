@@ -186,3 +186,18 @@ input[type="number"] {
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
+
+.text_shadow_animation {
+  mask-image: linear-gradient(
+    0deg,
+    white calc(var(--x) + 20%),
+    transparent calc(var(--x) + 30%),
+    white calc(var(--x) + 100%)
+  );
+  -webkit-mask-image: linear-gradient(
+    -75deg,
+    white calc(var(--x) + 20%),
+    transparent calc(var(--x) + 30%),
+    white calc(var(--x) + 100%)
+  );
+}
