@@ -57,7 +57,7 @@ export default function CommentForm({ slug, blogImage }: Props) {
       const sendingEmailRes = await fetch(
         `/api/comment-email?title=${slug}&comment=${inputField}&blog_image=${blogImage}&gmail=${emailField}`,
         {
-          method: "POST",
+          method: "GET",
         }
       );
 

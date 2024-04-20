@@ -4,7 +4,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const title = req.nextUrl.searchParams.get("title");
   const comment = req.nextUrl.searchParams.get("comment");
   const blogImage = req.nextUrl.searchParams.get("blog_image");
