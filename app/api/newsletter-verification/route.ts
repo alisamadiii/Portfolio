@@ -1,4 +1,4 @@
-import EmailTemplate from "@/app/components/email-template";
+import NewsletterVerification from "@/react-email-starter/emails/newsletter-verification";
 import type { NextRequest } from "next/server";
 import { Resend } from "resend";
 
@@ -6,22 +6,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   const to = req.nextUrl.searchParams.get("to");
-  const title = req.nextUrl.searchParams.get("title");
-  const details = req.nextUrl.searchParams.get("details");
-  const linkTo = req.nextUrl.searchParams.get("link_to");
-  const blogImage = req.nextUrl.searchParams.get("blog_image");
+
+  console.log(to);
 
   try {
-    if (to && title && details && linkTo && blogImage) {
+    if (to) {
       const data = await resend.emails.send({
-        from: "blog@alirezasamadi.com",
-        to: to?.split(","),
-        subject: `Blog - ${title}`,
-        react: EmailTemplate({
-          title,
-          details,
-          linkTo,
-          blogImage,
+        from: "newsletter-verification@alirezasamadi.com",
+        to: [to],
+        subject: `Newsletter Verification`,
+        react: NewsletterVerification({
+          to,
+          linkVerification: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/newsletter/approving`,
         }),
       });
 

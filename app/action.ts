@@ -59,7 +59,7 @@ export interface SendingEmailTypes {
 
 async function sendingEmail(email: string) {
   if (email !== "") {
-    const { error } = await supabase.from("sending-emails").insert({ email });
+    const { error } = await supabase.from("newsletter").insert({ email });
 
     if (error?.code === "23505") {
       return { message: "Email already exists", error: 23505 };

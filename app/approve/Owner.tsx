@@ -1,8 +1,8 @@
 import { supabase } from "@/utils/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
-import SendEmail from "./SendEmail";
 import EachComment from "./EachComment";
+import Link from "next/link";
 
 export default function Owner() {
   const queryClient = useQueryClient();
@@ -70,7 +70,12 @@ export default function Owner() {
           </ul>
         ))}
 
-      <SendEmail />
+      <Link
+        href={"/approve/newsletter"}
+        className="mt-8 inline-block w-full rounded-md bg-box p-4 hover:bg-opacity-80"
+      >
+        Newsletter
+      </Link>
     </div>
   );
 }

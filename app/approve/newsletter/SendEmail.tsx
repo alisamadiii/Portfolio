@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/utils/supabase";
@@ -13,6 +15,7 @@ import {
 } from "@/app/components/select";
 import { allBlogs } from ".contentlayer/generated";
 import { MdOutlineEmail } from "react-icons/md";
+import EachEmail from "./EachEmail";
 
 export default function SendEmail() {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +24,7 @@ export default function SendEmail() {
   const { data } = useQuery({
     queryKey: ["emails"],
     queryFn: async () => {
-      const { data } = await supabase.from("sending-emails").select("*");
+      const { data } = await supabase.from("newsletter").select("*");
 
       return data ?? null;
     },
@@ -74,6 +77,12 @@ export default function SendEmail() {
         </span>
         Send Email!
       </h1>
+
+      <ul className="mb-4">
+        {data.map((d) => (
+          <EachEmail key={d.id} email={d} />
+        ))}
+      </ul>
 
       <div className="flex flex-col gap-4">
         <Select onValueChange={(value) => setSelectedBlog(value)}>

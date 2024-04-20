@@ -11,6 +11,7 @@ export default function Newsletter() {
 
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const onChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
@@ -37,6 +38,19 @@ export default function Newsletter() {
     const data = await sendingEmail(value);
 
     setMessage(data.message);
+
+    if (data.message === "Joined") {
+      const emailRes = await fetch(`/api/newsletter-verification?to=${value}`, {
+        method: "POST",
+      });
+
+      if (emailRes.status === 200) {
+        setEmailSent(true);
+      }
+    } else {
+      console.log("no need");
+    }
+
     // @ts-ignore
     event.target[0].value = "";
     setIsLoading(false);
@@ -120,6 +134,10 @@ export default function Newsletter() {
           )}
         </AnimatePresence>
       </button>
+
+      {emailSent && (
+        <p className="mt-4 text-white">Check your email for verification</p>
+      )}
 
       <button
         className="mt-8 text-muted-2 hover:text-white"

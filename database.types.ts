@@ -57,6 +57,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      newsletter: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          verified: boolean | null;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id?: string;
+          verified?: boolean | null;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          verified?: boolean | null;
+        };
+        Relationships: [];
+      };
       pages: {
         Row: {
           id: number;
@@ -75,24 +96,6 @@ export interface Database {
           slug?: string;
           updated_at?: string;
           view_count?: number;
-        };
-        Relationships: [];
-      };
-      "sending-emails": {
-        Row: {
-          created_at: string;
-          email: string;
-          id: string;
-        };
-        Insert: {
-          created_at?: string;
-          email: string;
-          id?: string;
-        };
-        Update: {
-          created_at?: string;
-          email?: string;
-          id?: string;
         };
         Relationships: [];
       };
