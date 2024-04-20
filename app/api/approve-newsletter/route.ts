@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
       });
     } else {
       return new Response(
-        JSON.stringify({ response: "no account with this email" }),
+        JSON.stringify({
+          response: "Sorry, there is no account with this email!",
+        }),
         {
           status: 404,
           statusText: "Sorry, there is no account with this email!",

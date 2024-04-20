@@ -16,7 +16,9 @@ export default function NewsletterApproving() {
           method: "POST",
         });
 
-        setMessage(res.statusText);
+        const { response } = await res.json();
+
+        setMessage(response);
       } else {
         console.log("dont run");
       }

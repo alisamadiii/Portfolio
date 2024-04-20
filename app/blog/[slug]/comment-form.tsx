@@ -52,6 +52,8 @@ export default function CommentForm({ slug, blogImage }: Props) {
         setInputField("");
       }
 
+      console.log("sending via email to Ali Reza");
+
       const sendingEmailRes = await fetch(
         `/api/comment-email?title=${slug}&comment=${inputField}&blog_image=${blogImage}&gmail=${emailField}`,
         {
