@@ -1,11 +1,8 @@
 import { supabase } from "@/utils/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
-import { motion } from "framer-motion";
-
-import { ApproveButton, DeleteButton } from "./Button";
-import TextFormat from "../components/textFormat";
 import SendEmail from "./SendEmail";
+import EachComment from "./EachComment";
 
 export default function Owner() {
   const queryClient = useQueryClient();
@@ -68,20 +65,7 @@ export default function Owner() {
         ) : (
           <ul>
             {data.map((d) => (
-              <motion.li
-                key={d.id}
-                layoutId={d.id}
-                className="flex items-start justify-between gap-4 border-b border-border py-2 last-of-type:border-none"
-              >
-                <div className="-space-y-2">
-                  <TextFormat value={d.comment} />
-                  <small className="inline-block text-muted-3">{d.slug}</small>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <ApproveButton id={d.id} />
-                  <DeleteButton id={d.id} />
-                </div>
-              </motion.li>
+              <EachComment key={d.id} data={d} />
             ))}
           </ul>
         ))}

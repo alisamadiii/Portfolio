@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       "blog-comments": {
@@ -122,7 +122,7 @@ export interface Database {
       [_ in never]: never;
     };
   };
-}
+};
 
 type PublicSchema = Database[Extract<keyof Database, "public">];
 

@@ -7,17 +7,45 @@ async function submitComment(prevState: any, formData: FormData) {
 
   if (comment) {
     try {
-      const line = comment.replaceAll(/\n/g, "\\n");
-
       await supabase
         .from("blog-comments")
-        .insert({ comment: line, slug: prevState.slug });
+        .insert({ comment, slug: prevState.slug });
 
-      return { message: "sent", slug: prevState.slug, error: undefined };
+      await fetch("/api/comment-email");
+
+      return {
+        message: "sent",
+        slug: prevState.slug,
+        error: undefined,
+      };
     } catch (error) {
       return {
         message: "unsuccessful",
         slug: prevState.slug,
+        error,
+      };
+    }
+  }
+}
+
+export async function submitCommentForm(
+  comment: string,
+  slug: string,
+  email: string | null
+) {
+  if (comment) {
+    try {
+      await supabase.from("blog-comments").insert({ comment, slug, email });
+
+      return {
+        message: "sent",
+        slug,
+        error: undefined,
+      };
+    } catch (error) {
+      return {
+        message: "unsuccessful",
+        slug,
         error,
       };
     }

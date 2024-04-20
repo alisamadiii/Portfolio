@@ -69,7 +69,7 @@ export default async function BlogPage({ params }: Props) {
         <Mdx code={findingBlogs.body.code} />
       </div>
       {/* <Links blog={findingBlogs} /> */}
-      <CommentForm slug={params.slug} />
+      <CommentForm slug={params.slug} blogImage={findingBlogs.blogImage} />
       <Comments slug={params.slug} />
       <PageView slug={params.slug} />
     </div>

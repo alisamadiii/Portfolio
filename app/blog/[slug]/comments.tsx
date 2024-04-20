@@ -1,7 +1,6 @@
 "use client";
 
 import Checkbox from "@/app/components/checkbox";
-import TextFormat from "@/app/components/textFormat";
 import { formateDate, formateDateDistance } from "@/utils";
 import { supabase } from "@/utils/supabase";
 import { useQuery } from "@tanstack/react-query";
@@ -55,7 +54,11 @@ export default function Comments({ slug }: Props) {
             key={d.id}
             className="flex flex-col border-b border-border px-3 py-4 even:bg-box/30"
           >
-            <TextFormat value={d.comment} />
+            <h3 className="whitespace-pre-line text-lg">{d.comment}</h3>
+            <div className="mt-4 flex gap-4">
+              <p className="text-muted-3">Reply</p>
+              <p className="whitespace-pre-line text-muted-2">{d.reply}</p>
+            </div>
             <div className="relative mt-2 flex h-5 w-full items-center justify-end text-right text-muted">
               <AnimatePresence initial={false}>
                 {isShowTimeDistance ? (
