@@ -11,7 +11,7 @@ export default function Newsletter() {
 
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
 
   const onChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
@@ -45,7 +45,7 @@ export default function Newsletter() {
       });
 
       if (emailRes.status === 200) {
-        setEmailSent(true);
+        setEmailSuccess(true);
       }
     } else {
       console.log("no need");
@@ -129,14 +129,14 @@ export default function Newsletter() {
               transition={{ type: "tween" }}
               className="inline-block"
             >
-              Sending...
+              Joining...
             </motion.p>
           )}
         </AnimatePresence>
       </button>
 
-      {emailSent && (
-        <p className="mt-4 text-white">Check your email for verification</p>
+      {emailSuccess && (
+        <p className="mt-4 text-white">Thanks for subscribing!</p>
       )}
 
       <button
