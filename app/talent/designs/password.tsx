@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { IoEye, IoEyeOff } from "react-icons/io5";

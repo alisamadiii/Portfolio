@@ -1,11 +1,18 @@
+"use client";
+
 import React from "react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import Magnetic from "./magnetic";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
   return (
-    <footer className="mx-auto mt-16 max-w-2xl">
+    <footer
+      className={`mx-auto my-16 max-w-2xl ${pathname.includes("/talent") ? "hidden" : "block max-md:px-4"}`}
+    >
       <div className="mb-1 flex gap-3">
         <Magnetic>
           <a

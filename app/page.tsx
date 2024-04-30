@@ -8,11 +8,12 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/app/components/hover-card";
-import Badge from "./components/badge";
+} from "@/components/hover-card";
+import Badge from "../components/badge";
 import Link from "next/link";
-import TextShadow from "./components/text-shadow";
-import GlassAnimation from "./components/glass-animation";
+import TextShadow from "../components/text-shadow";
+import GlassAnimation from "../components/glass-animation";
+import ContentWrapper from "@/components/content-wrapper";
 
 const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 
@@ -40,7 +41,7 @@ const personalProjects: PersonalProjectsTypes[] = [
 
 export default function Home() {
   return (
-    <>
+    <ContentWrapper>
       <h1 className="text-2xl font-extrabold">
         hey, I&apos;m <TextShadow>Ali Reza</TextShadow> 👋
       </h1>
@@ -174,6 +175,6 @@ export default function Home() {
           );
         })}
       </ul>
-    </>
+    </ContentWrapper>
   );
 }

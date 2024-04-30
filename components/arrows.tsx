@@ -5,7 +5,7 @@ import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { cn } from "@/utils";
-import { Index } from "../talent/designs";
+import { Index } from "../app/talent/designs";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Arrows() {

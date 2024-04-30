@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import { allBlogs } from "@/.contentlayer/generated";
 import BlogHeader from "./blogHeader";
 import { type Metadata } from "next";
-import { Mdx } from "@/app/components/MDXContent";
+import { Mdx } from "@/components/MDXContent";
 import CommentForm from "./comment-form";
 import Comments from "./comments";
 import PageView from "./page-view";
+import ContentWrapper from "@/components/content-wrapper";
 // import { getTableOfContents } from "@/app/lib/toc";
 
 interface Props {
@@ -63,7 +64,7 @@ export default async function BlogPage({ params }: Props) {
   // const toc = await getTableOfContents(findingBlogs.body.raw);
 
   return (
-    <div>
+    <ContentWrapper>
       <BlogHeader blog={findingBlogs} />
       <div className="mb-16 border-b border-border pb-24">
         <Mdx code={findingBlogs.body.code} />
@@ -72,6 +73,6 @@ export default async function BlogPage({ params }: Props) {
       <CommentForm slug={params.slug} blogImage={findingBlogs.blogImage} />
       <Comments slug={params.slug} />
       <PageView slug={params.slug} />
-    </div>
+    </ContentWrapper>
   );
 }

@@ -1,4 +1,6 @@
-import LinkMetadata from "@/app/components/LinkMetadata";
+"use client";
+
+import LinkMetadata from "@/components/LinkMetadata";
 import React, { type ChangeEvent, useState } from "react";
 
 export default function GenerateMetadata() {

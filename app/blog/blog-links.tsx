@@ -6,7 +6,7 @@ import Link from "next/link";
 import { compareDesc, format, parseISO } from "date-fns";
 
 import { allBlogs } from "contentlayer/generated";
-import Badge from "../components/badge";
+import Badge from "../../components/badge";
 import ViewCount from "./ViewCount";
 
 export default function BlogLinks() {

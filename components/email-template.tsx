@@ -1,4 +1,4 @@
-import { colorSpecificText } from "../../utils/index";
+import { colorSpecificText } from "../utils/index";
 import {
   Body,
   Button,

@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
-import { type TechsTypes, type TechsDataType, techsData } from "../lib/data";
+import {
+  type TechsTypes,
+  type TechsDataType,
+  techsData,
+} from "../app/lib/data";
 
 export default function DisplayAnimatedContents() {
   return (

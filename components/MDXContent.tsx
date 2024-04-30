@@ -13,7 +13,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/app/components/tooltip";
+} from "@/components/tooltip";
 import LinkMetadata from "./LinkMetadata";
 import Balancer from "react-wrap-balancer";
 import Gallery from "./gallery";

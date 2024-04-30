@@ -3,7 +3,7 @@
 import React, { type ChangeEvent, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import TextShadow from "../components/text-shadow";
+import TextShadow from "../../components/text-shadow";
 import { sendingEmail } from "../action";
 
 export default function Newsletter() {

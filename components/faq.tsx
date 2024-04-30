@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { FrequentlyAskedQuestions } from "../lib/data";
+import { FrequentlyAskedQuestions } from "../app/lib/data";
 
 export default function FAQ() {
   return (

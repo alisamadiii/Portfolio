@@ -4,8 +4,8 @@ import React from "react";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 
-import Navbar from "./components/navbar";
-import Footer from "./components/footer";
+import Navbar from "../components/navbar";
+import Footer from "../components/footer";
 import ModalProviders from "@/providers/ModalProviders";
 
 export const metadata: Metadata = {
@@ -40,17 +40,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={`${GeistSans.className} bg-background py-16 text-foreground max-md:px-4`}
-      >
+      <body className={`${GeistSans.className} bg-background text-foreground`}>
         <ModalProviders />
         {/* <BgShadow /> */}
-        <div className="mx-auto max-w-2xl">
-          <Navbar />
-        </div>
-        <main className="relative mx-auto flex max-w-2xl flex-col">
-          {children}
-        </main>
+        <Navbar />
+
+        {children}
+
         <Footer />
       </body>
     </html>

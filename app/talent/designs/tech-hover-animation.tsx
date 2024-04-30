@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { motion, useAnimate } from "framer-motion";
 

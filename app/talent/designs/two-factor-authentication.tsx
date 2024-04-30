@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";

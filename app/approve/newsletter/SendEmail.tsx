@@ -12,7 +12,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/app/components/select";
+} from "@/components/select";
 import { allBlogs } from ".contentlayer/generated";
 import { MdOutlineEmail } from "react-icons/md";
 import EachEmail from "./EachEmail";

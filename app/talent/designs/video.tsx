@@ -1,3 +1,5 @@
+"use client";
+
 import React, { type ChangeEvent, useRef, useState } from "react";
 
 export default function Video() {

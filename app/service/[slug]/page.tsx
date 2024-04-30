@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { allServices } from "@/.contentlayer/generated";
 import { type Metadata } from "next";
 import Links from "./Links";
-import { Mdx } from "@/app/components/MDXContent";
+import { Mdx } from "@/components/MDXContent";
 
 interface Props {
   params: {

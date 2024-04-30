@@ -1,3 +1,5 @@
+"use client";
+
 import React, { type ChangeEvent, useEffect, useRef, useState } from "react";
 import useMeasure from "react-use-measure";
 import { motion } from "framer-motion";

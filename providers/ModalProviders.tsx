@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 
-import ImagePreview from "@/app/components/Modal/ImagePreview";
-import Talent from "@/app/components/Modal/Talent";
+import ImagePreview from "@/components/Modal/ImagePreview";
+import Talent from "@/components/Modal/Talent";
 
 export default function ModalProviders() {
   const [isMountain, setIsMountain] = useState(false);

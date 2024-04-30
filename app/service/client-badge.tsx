@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Badge from "../components/badge";
+import Badge from "../../components/badge";
 import { supabase } from "@/utils/supabase";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "../components/skeleton";
+import { Skeleton } from "../../components/skeleton";
 
 export default function ClientBadge() {
   const { data, isLoading } = useQuery({

@@ -1,6 +1,6 @@
 "use client";
 
-import Checkbox from "@/app/components/checkbox";
+import Checkbox from "@/components/checkbox";
 import { formateDate, formateDateDistance } from "@/utils";
 import { supabase } from "@/utils/supabase";
 import { useQuery } from "@tanstack/react-query";

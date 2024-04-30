@@ -5,7 +5,7 @@ import Balancer from "react-wrap-balancer";
 import { motion, AnimatePresence } from "framer-motion";
 import useMeasure from "react-use-measure";
 
-import Badge from "@/app/components/badge";
+import Badge from "@/components/badge";
 import { MotionText } from "@/app/framer";
 import { submitCommentForm } from "@/app/action";
 import { validEmail } from "@/utils";

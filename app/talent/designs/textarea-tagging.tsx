@@ -1,9 +1,12 @@
+"use client";
+
 import React, { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import useMeasure from "react-use-measure";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 
 export default function Textarea() {
+  console.log("text-area");
   const [value, setValue] = useState("");
   const [color, setColor] = useState("#4169E1");
 
