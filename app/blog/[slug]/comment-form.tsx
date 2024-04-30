@@ -72,8 +72,11 @@ export default function CommentForm({ slug, blogImage }: Props) {
   };
 
   return (
-    <motion.div animate={{ height: height > 0 ? height : undefined }}>
-      <div ref={ref} className="mt-8 flex flex-col">
+    <motion.div
+      animate={{ height: height > 0 ? height : undefined }}
+      className="mt-8"
+    >
+      <div ref={ref} className="flex flex-col">
         <Balancer className="text-3xl font-bold">Comment</Balancer>
         <Badge className="mb-5">Public Beta</Badge>
         <AnimatePresence mode="wait" initial={false}>

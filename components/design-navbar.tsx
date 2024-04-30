@@ -24,7 +24,7 @@ export default function DesignNavbar() {
             animate={{ x: 0, filter: "blur(0px)" }}
             exit={{ x: "-100%", filter: "blur(4px)" }}
             transition={{ duration: 0.5, type: "spring", bounce: 0 }}
-            className="pointer-events-auto h-screen w-64 p-4 backdrop-blur-sm"
+            className="pointer-events-auto h-[100dvh] w-64 p-4 backdrop-blur-sm"
           >
             <div className="h-full w-full overflow-auto rounded-xl border bg-white/70 p-1 shadow-md">
               <Link
