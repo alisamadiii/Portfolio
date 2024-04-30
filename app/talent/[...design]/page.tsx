@@ -9,6 +9,26 @@ interface props {
 
 const collections: CollectionsTypes = ["general", "animations-dev"];
 
+// or Dynamic metadata
+export async function generateMetadata({ params }: props) {
+  const from = params.design[0] as keyof IndexData;
+  const name = params.design[1];
+
+  if (!collections.includes(from)) {
+    return notFound();
+  }
+
+  const Component = NewIndex[from].find((value) => value.name === name);
+
+  return {
+    title: Component?.name
+      .replaceAll("-", " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" "),
+  };
+}
+
 export default function EachDesigns({ params }: props) {
   const from = params.design[0] as keyof IndexData;
   const name = params.design[1];

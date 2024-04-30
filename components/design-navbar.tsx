@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { IoMenu } from "react-icons/io5";
+import { IoMenu, IoClose } from "react-icons/io5";
+import { IoIosArrowRoundBack } from "react-icons/io";
+
 import { AnimatePresence, motion } from "framer-motion";
-import { NewIndex } from "@/app/talent/designs";
+import { type ComponentInfo, NewIndex } from "@/app/talent/designs";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -24,18 +26,25 @@ export default function DesignNavbar() {
             transition={{ duration: 0.5, type: "spring", bounce: 0 }}
             className="pointer-events-auto h-screen w-64 p-4 backdrop-blur-sm"
           >
-            <div className="h-full w-full rounded-xl border bg-white/70 p-1 shadow-md">
+            <div className="h-full w-full overflow-auto rounded-xl border bg-white/70 p-1 shadow-md">
+              <Link
+                href={"/"}
+                className="mb-4 flex items-center gap-1 p-1 text-sm"
+              >
+                <IoIosArrowRoundBack />
+                Go back
+              </Link>
               {Object.entries(NewIndex).map(([collection, data], index) => (
                 <div key={index} className="mt-4 first-of-type:mt-1">
-                  <h3 className="mb-2 px-1 text-sm font-light capitalize">
+                  <h3 className="mb-2 px-1 text-xs font-light capitalize opacity-80">
                     {collection.replaceAll("-", " ")}
                   </h3>
                   <ul>
-                    {data.map((d) => (
+                    {data.map((d: ComponentInfo) => (
                       <li key={d.id}>
                         <Link
                           href={`/talent/${collection}/${d.name}`}
-                          className={`inline-block w-full rounded-md p-1 text-sm capitalize hover:bg-gray-100 active:bg-gray-200 ${params.design[1] === d.name && "font-bold"}`}
+                          className={`inline-block w-full rounded-md p-1 text-sm capitalize hover:bg-gray-100 active:bg-gray-200 ${params.designs && params.design[1] === d.name && "font-bold"}`}
                         >
                           {d.name.replaceAll("-", " ")}
                         </Link>
@@ -57,10 +66,20 @@ export default function DesignNavbar() {
           onClick={() => setIsExpand(!isExpand)}
         >
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-md bg-white"
+            className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-white"
             style={{ boxShadow: "0 5px 10px rgba(0,0,0,.1)" }}
           >
-            <IoMenu />
+            <AnimatePresence mode="popLayout">
+              {isExpand ? (
+                <motion.p key={"close"} transition={{ duration: 2 }}>
+                  <IoClose />
+                </motion.p>
+              ) : (
+                <motion.p key={"menu"} transition={{ duration: 2 }}>
+                  <IoMenu />
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
         </motion.button>
       </AnimatePresence>

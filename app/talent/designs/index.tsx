@@ -93,7 +93,7 @@ export const Index: Array<{ id: number; name: string; component: any }> = [
   },
 ];
 
-interface ComponentInfo {
+export interface ComponentInfo {
   id: number;
   name: string;
   component: React.LazyExoticComponent<React.ComponentType<any>>;
