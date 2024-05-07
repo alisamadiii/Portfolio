@@ -2,13 +2,6 @@ import React from "react";
 
 import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
-import { CalendarDays } from "lucide-react";
-
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/hover-card";
 import Badge from "../components/badge";
 import Link from "next/link";
 import TextShadow from "../components/text-shadow";
@@ -60,65 +53,42 @@ export default function Home() {
         people, and I continue to improve it every day. You can watch some of my
         favourites below.
       </p>
-      <HoverCard>
-        <HoverCardTrigger className="relative my-8 overflow-hidden">
-          <GlassAnimation />
-
-          <a
-            href="https://twitter.com/alirdev"
-            target="_blank"
-            className="flex w-full items-center gap-4 rounded border border-border bg-box px-3 py-4 outline-none duration-200 focus:shadow-box-focus"
-            rel="noreferrer"
-          >
-            <div>
-              <Image
-                src={"/my-image.jpg"}
-                width={120}
-                height={120}
-                alt="my-image"
-                className="h-16 w-16 rounded-full object-cover"
-              />
-            </div>
-            <div className="grow">
-              <p className="font-semibold">@alirdev</p>
-              <p className="text-muted-2">33000 followers</p>
-            </div>
-            <svg
-              height="100%"
-              viewBox="0 0 15 17"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-3"
-            >
-              <path
-                d="M12.9282 0.425631L1.68479 1.80615L1.87944 3.39147L10.4083 2.34997L0.461526 15.0812L1.72392 16.0675L11.6707 3.33626L12.7234 11.8637L14.3087 11.6691L12.9282 0.425631Z"
-                fill="currentColor"
-              />
-            </svg>
-          </a>
-        </HoverCardTrigger>
-        <HoverCardContent className="relative flex w-full max-w-xs items-start justify-between space-x-4">
-          <Image
-            src={"/my-image.png"}
-            width={40}
-            height={40}
-            alt="twitter image"
-          />
-          <div className="space-y-1">
-            <h4 className="text-sm font-semibold">@alirdev</h4>
-            <p className="text-sm">
-              Sharing Animated Content and Tech Tools. Building better and
-              faster with Next.js
-            </p>
-            <div className="flex items-center pt-2">
-              <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
-              <span className="text-muted-foreground text-xs">
-                Joined January 2022
-              </span>
-            </div>
+      <div className="relative my-8 overflow-hidden">
+        <GlassAnimation />
+        <a
+          href="https://twitter.com/alirdev"
+          target="_blank"
+          className="flex w-full items-center gap-4 overflow-hidden rounded border border-border bg-box px-3 py-4 outline-none duration-200 focus:shadow-box-focus"
+          rel="noreferrer"
+        >
+          <div>
+            <Image
+              src={"/my-image.jpg"}
+              width={120}
+              height={120}
+              alt="my-image"
+              className="h-16 w-16 rounded-full object-cover"
+            />
           </div>
-        </HoverCardContent>
-      </HoverCard>
+          <div className="grow">
+            <p className="font-semibold">@alirdev</p>
+            <p className="text-muted-2">33000 followers</p>
+          </div>
+          <svg
+            height="100%"
+            viewBox="0 0 15 17"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-3"
+          >
+            <path
+              d="M12.9282 0.425631L1.68479 1.80615L1.87944 3.39147L10.4083 2.34997L0.461526 15.0812L1.72392 16.0675L11.6707 3.33626L12.7234 11.8637L14.3087 11.6691L12.9282 0.425631Z"
+              fill="currentColor"
+            />
+          </svg>
+        </a>
+      </div>
+
       <p className="mb-5 leading-6 text-muted">Main Tech Stacks:</p>
       <div className="flex flex-wrap gap-2">
         {technologies.map((tech, index) => (

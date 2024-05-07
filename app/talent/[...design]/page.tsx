@@ -2,6 +2,7 @@ import React from "react";
 
 import { type CollectionsTypes, type IndexData, NewIndex } from "../designs";
 import { notFound } from "next/navigation";
+import Shoutout from "@/components/Shoutout";
 
 interface props {
   params: { design: any[] };
@@ -42,6 +43,9 @@ export default function EachDesigns({ params }: props) {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center">
       {Component ? <Component.component /> : <div>Not Found</div>}
+      {Component?.from && (
+        <Shoutout name={Component.from.creator} link={Component.from.link} />
+      )}
     </main>
   );
 }
