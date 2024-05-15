@@ -7,6 +7,7 @@ import { GeistSans } from "geist/font/sans";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import ModalProviders from "@/providers/ModalProviders";
+import ToastProvider from "./talent/designs/sonner/ToastProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alirezasamadi.com/"),
@@ -48,6 +49,8 @@ export default function RootLayout({
         {children}
 
         <Footer />
+
+        <ToastProvider />
       </body>
     </html>
   );

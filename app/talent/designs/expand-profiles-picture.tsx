@@ -25,7 +25,7 @@ export default function ExpandProfilesPicture() {
   const onExpandHandler = () => setExpand(!expand);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="isolate flex flex-col items-center">
       <div className={`${expand ? "flex gap-4" : "-space-y-[58px]"}`}>
         {initialValues.map((value, index) => (
           <motion.div

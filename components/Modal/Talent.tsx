@@ -43,46 +43,48 @@ export default function Talent() {
             </motion.span>
           </motion.button>
 
-          {show && (
-            <motion.div
-              layoutId="talent-wrapper"
-              className="relative isolate w-full max-w-[600px] overflow-hidden bg-white p-4"
-              style={{ borderRadius: 24 }}
-            >
+          <AnimatePresence mode="popLayout">
+            {show && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute -inset-4 -z-10 bg-gradient-to-t from-[#333333] to-[rgba(32,30,30)]"
-              />
-              <div className="mb-4 flex items-center gap-2">
-                <motion.span
-                  layoutId="work-icon"
-                  className="inline-block text-4xl"
-                >
-                  <GrUserWorker />
-                </motion.span>
-                <h1 className="text-3xl font-bold">My works</h1>
-              </div>
-              <p>
-                Hey there! Ready to dive into my world? Click that button and
-                let&apos;s take a stroll through some of my favorite works
-                together. Get ready to be wowed, inspired, and maybe even crack
-                a smile or two along the way. Can&apos;t wait to show you what
-                I&apos;ve been up to!
-              </p>
-              <Link
-                ref={scope}
-                href={"/talent"}
-                onClick={() => setShow(false)}
-                className="mt-8 inline-block rounded-lg bg-white p-2 px-8 text-black"
-                onMouseOver={onMouseOver}
-                onMouseLeave={onMouseLeave}
+                layoutId="talent-wrapper"
+                className="relative isolate w-full max-w-[600px] overflow-hidden bg-white p-4"
+                style={{ borderRadius: 24 }}
               >
-                <span className="inline-block">See what I can do</span>
-              </Link>
-            </motion.div>
-          )}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute -inset-4 -z-10 bg-gradient-to-t from-[#333333] to-[rgba(32,30,30)]"
+                />
+                <div className="mb-4 flex items-center gap-2">
+                  <motion.span
+                    layoutId="work-icon"
+                    className="inline-block text-4xl"
+                  >
+                    <GrUserWorker />
+                  </motion.span>
+                  <h1 className="text-3xl font-bold">My works</h1>
+                </div>
+                <p>
+                  Hey there! Ready to dive into my world? Click that button and
+                  let&apos;s take a stroll through some of my favorite works
+                  together. Get ready to be wowed, inspired, and maybe even
+                  crack a smile or two along the way. Can&apos;t wait to show
+                  you what I&apos;ve been up to!
+                </p>
+                <Link
+                  ref={scope}
+                  href={"/talent"}
+                  onClick={() => setShow(false)}
+                  className="mt-8 inline-block rounded-lg bg-white p-2 px-8 text-black"
+                  onMouseOver={onMouseOver}
+                  onMouseLeave={onMouseLeave}
+                >
+                  <span className="inline-block">See what I can do</span>
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

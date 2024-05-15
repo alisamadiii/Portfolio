@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -15,7 +14,7 @@ const initialValues = [
   },
   {
     id: 3,
-    url: "https://images.unsplash.com/photo-1463453091185-61582044d556?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8dXNlciUyMG1hbnxlbnwwfHwwfHx8MA%3D%3D",
+    url: "https://images.unsplash.com/photo-1557862921-37829c790f19?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlciUyMG1hbnxlbnwwfHwwfHx8MA%3D%3D",
   },
 ];
 
@@ -45,7 +44,7 @@ export default function DragProfilesPicture() {
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="isolate flex flex-col items-center">
       <div className="flex -space-x-12 md:-space-x-32">
         {values.map((value, index) => (
           <motion.div
@@ -64,7 +63,7 @@ export default function DragProfilesPicture() {
             whileDrag={{ cursor: "grabbing" }}
             className="relative isolate h-24 w-24 first-of-type:z-20 last-of-type:-z-10 md:h-48 md:w-48"
           >
-            <Image
+            <img
               src={value.url}
               width={300}
               height={300}

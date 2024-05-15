@@ -41,7 +41,7 @@ export default function DesignNavbar() {
                   </h3>
                   <ul>
                     {data.map((d: ComponentInfo) => (
-                      <li key={d.id}>
+                      <li key={d.name}>
                         <Link
                           href={`/talent/${collection}/${d.name}`}
                           className={`inline-block w-full rounded-md p-1 text-sm capitalize hover:bg-gray-100 active:bg-gray-200 ${params.designs && params.design[1] === d.name && "font-bold"}`}
