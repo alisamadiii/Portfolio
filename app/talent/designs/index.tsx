@@ -85,5 +85,9 @@ export const NewIndex: IndexData = {
       name: "day-1",
       component: React.lazy(() => import("./50-day-challenge/day-1")),
     },
+    {
+      name: "day-2",
+      component: React.lazy(() => import("./50-day-challenge/day-2")),
+    },
   ],
 };
