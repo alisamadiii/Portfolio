@@ -5,8 +5,8 @@ import React from "react";
 import { NewIndex } from "./designs";
 
 export default function Home() {
-  const Component = NewIndex.general.find(
-    (value) => value.name.toLowerCase() === "theme-toggle"
+  const Component = NewIndex["50-day-challenge"].find(
+    (value) => value.name.toLowerCase() === "day-2"
   )?.component;
 
   return (

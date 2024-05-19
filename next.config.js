@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 const { withContentlayer } = require("next-contentlayer");
 const nextConfig = {
   images: {
@@ -8,15 +9,6 @@ const nextConfig = {
         hostname: "*",
       },
     ],
-  },
-  webpack: (config) => {
-    // ignore formidable warnings
-    config.ignoreWarnings = [
-      { module: /node_modules\/formidable\/src\/Formidable\.js/ },
-      { file: /node_modules\/formidable\/src\/index\.js/ },
-    ];
-
-    return config;
   },
 };
 
