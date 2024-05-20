@@ -474,3 +474,8 @@ input[type="number"] {
     opacity: 0.15;
   }
 }
+
+div {
+  width: 400px;
+  height: 400px;
+}
