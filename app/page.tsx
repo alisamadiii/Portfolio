@@ -3,7 +3,6 @@ import React from "react";
 import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
 import Badge from "../components/badge";
-import Link from "next/link";
 import TextShadow from "../components/text-shadow";
 import GlassAnimation from "../components/glass-animation";
 import ContentWrapper from "@/components/content-wrapper";
@@ -38,9 +37,9 @@ export default function Home() {
       <h1 className="text-2xl font-extrabold">
         hey, I&apos;m <TextShadow>Ali Reza</TextShadow> 👋
       </h1>
-      <Link href={"/blog/my-story"}>
+      {/* <Link href={"/blog/my-story"}>
         <Badge className="mb-8">Hear My Story</Badge>
-      </Link>
+      </Link> */}
       <p className="mb-5 leading-6 text-muted">
         I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
         focusing on front-end magic with ReactJS. I&apos;m all about embracing

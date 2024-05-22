@@ -475,7 +475,6 @@ input[type="number"] {
   }
 }
 
-div {
-  width: 400px;
-  height: 400px;
+.avatars-z-index {
+  @apply [&>*:nth-child(1)]:z-[7] [&>*:nth-child(2)]:z-[6] [&>*:nth-child(3)]:z-[5] [&>*:nth-child(4)]:z-[4] [&>*:nth-child(5)]:z-[3] [&>*:nth-child(6)]:z-[2];
 }
