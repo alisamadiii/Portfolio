@@ -18,15 +18,15 @@ export default function EachToast({
 }: Props) {
   return (
     <motion.li
-      layoutId={value.id}
-      initial={{ opacity: 0, y: 40 }}
-      animate={{
-        opacity: length - 1 - index > 2 ? 0 : 1,
-        y: 0,
-        scale: 1 - (length - 1 - index) * 0.1,
-      }}
-      exit={{ opacity: 0, y: 40 }}
-      className="relative mt-[-64px] flex w-[356px] flex-col justify-center rounded-lg border border-[hsl(0,0%,93%)] bg-white p-4 shadow-[0_4px_12px_#0000001a]"
+      layout
+      // initial={{ opacity: 0, y: 40 }}
+      // animate={{
+      //   opacity: length - 1 - index > 2 ? 0 : 1,
+      //   y: 0,
+      //   scale: 1 - (length - 1 - index) * 0.1,
+      // }}
+      exit={{ opacity: 1, y: 40 }}
+      className="relative flex w-[356px] flex-col justify-center rounded-lg border border-[hsl(0,0%,93%)] bg-white p-4 shadow-[0_4px_12px_#0000001a]"
     >
       <div className="flex justify-between">
         <p>{value.title}</p>

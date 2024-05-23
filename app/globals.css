@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-::selection {
+/* ::selection {
   background-color: white;
   color: black;
-}
+} */
 
 ::-webkit-scrollbar {
   @apply w-2 bg-muted-2/20;

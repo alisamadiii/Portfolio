@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import uniqid from "uniqid";
-import EachToast from "./each-toast";
-import { AnimatePresence, MotionConfig } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 
 export interface ToasterTypes {
   id: string;
@@ -30,8 +29,6 @@ export default function Day6() {
     }
   };
 
-  console.log(toaster);
-
   return (
     <div>
       <button
@@ -45,19 +42,37 @@ export default function Day6() {
 
       <MotionConfig transition={{ duration: 0.6, type: "spring", bounce: 0 }}>
         {toaster && (
-          <ul className="fixed bottom-4 right-4">
+          <motion.ul className="fixed bottom-4 right-4 w-[356px]">
             <AnimatePresence mode="popLayout">
               {toaster.map((value, index) => (
-                <EachToast
+                <motion.li
+                  layout
                   key={value.id}
-                  index={index}
-                  length={toaster.length}
-                  value={value}
-                  onDeleteHandler={onDeleteHandler}
-                />
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{
+                    opacity: toaster.length - 1 - index > 2 ? 0 : 1,
+                    y: 0,
+                    scale: 1 - (toaster.length - 1 - index) * 0.1,
+                  }}
+                  exit={{ y: 40, opacity: 0 }}
+                  className={`relative flex w-[356px] flex-col justify-center rounded-lg border border-[hsl(0,0%,93%)] bg-white  p-4 shadow-[0_4px_12px_#0000001a] ${index !== toaster.length - 1 && "mb-[-60px]"}`}
+                >
+                  <div className="flex justify-between">
+                    <p>{value.title}</p>
+                    <button
+                      className="flex h-6 w-6 items-center justify-center"
+                      onClick={() => onDeleteHandler(value.id)}
+                    >
+                      X
+                    </button>
+                  </div>
+                  <small>
+                    {value.description} - {value.id}
+                  </small>
+                </motion.li>
               ))}
             </AnimatePresence>
-          </ul>
+          </motion.ul>
         )}
       </MotionConfig>
     </div>
