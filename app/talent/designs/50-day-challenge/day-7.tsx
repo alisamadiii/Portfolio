@@ -6,8 +6,6 @@ import {
   MotionConfig,
   motion,
   useDragControls,
-  useMotionValue,
-  useTransform,
 } from "framer-motion";
 
 import Intro from "./intro";
@@ -19,16 +17,12 @@ export default function Day7() {
 
   const dragControls = useDragControls();
 
-  const y = useMotionValue(0);
-  const scale = useTransform(y, [0, 300], [0.9, 1]);
-
   return (
     <div className="relative isolate w-full overflow-hidden bg-black">
       <MotionConfig transition={{ duration: 0.6, type: "spring", bounce: 0 }}>
         <motion.div
           initial={{ borderRadius: 0, scale: 1 }}
           animate={{ scale: isOpen ? 0.9 : 1, borderRadius: isOpen ? 28 : 0 }}
-          style={{ scale }}
           className="bg-white"
         >
           <Intro onClickHandler={onClickHandler} />
@@ -46,9 +40,6 @@ export default function Day7() {
                 dragElastic={{ top: 0.2, bottom: 1 }}
                 dragControls={dragControls}
                 dragListener={false}
-                onDrag={(event, info) => {
-                  y.set(info.offset.y);
-                }}
                 onDragEnd={(event, info) => {
                   if (info.offset.y >= 200) {
                     setIsOpen(false);

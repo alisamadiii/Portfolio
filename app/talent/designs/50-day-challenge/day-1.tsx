@@ -62,7 +62,7 @@ export default function Day1() {
                 exit={{ scale: 1.4, opacity: 0 }}
                 className="inline-block"
               >
-                <LoadingSpinner className="w-5 text-white" />
+                <LoadingSpinner />
               </motion.p>
             ) : (
               <motion.span
