@@ -36,7 +36,7 @@ export default function IphoneSimulator({
           <div>
             <motion.h3
               animate={{ opacity: topElements ? 1 : 0 }}
-              className="text-sm"
+              className="text-sm mix-blend-exclusion"
             >
               9:41
             </motion.h3>
@@ -46,7 +46,7 @@ export default function IphoneSimulator({
           </div>
           <motion.div
             animate={{ opacity: topElements ? 1 : 0 }}
-            className="flex items-center justify-end gap-2"
+            className="flex items-center justify-end gap-2 mix-blend-exclusion"
           >
             <svg
               width="17"
@@ -149,7 +149,7 @@ export default function IphoneSimulator({
         <footer className="flex justify-center py-[10px]">
           <div
             className={cn(
-              "h-1 w-full max-w-[119px] rounded-full bg-white",
+              "h-1 w-full max-w-[119px] rounded-full mix-blend-exclusion",
               theme === "light" ? "bg-black" : "bg-white"
             )}
           ></div>

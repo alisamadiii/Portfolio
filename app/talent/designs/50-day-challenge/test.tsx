@@ -1,36 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
+import {
+  motion,
+  useMotionValue,
+  useVelocity,
+  useTransform,
+} from "framer-motion";
+
+const pink = (saturation: number) => `hsl(327, ${saturation}%, 50%)`;
 
 export default function Test() {
-  const [isAdding, setIsAdding] = useState(false);
+  const x = useMotionValue(0);
 
-  const handleToggleIsAdding = () => setIsAdding(!isAdding);
+  /**
+   * Smooth x with useSpring. This isn't always neccessary but we're using
+   * a drag gesture to change x and user input can be noisey.
+   */
+  // const xSmooth = useSpring(x, { damping: 50, stiffness: 400 });
+
+  /**
+   * Create a motion value from the smoothed output of x
+   */
+  const xVelocity = useVelocity(x);
+
+  /**
+   * Transform the velocity of x into a scale motion value
+   */
+  const scale = useTransform(xVelocity, [-3000, 0, 3000], [2, 1, 2], {
+    clamp: false,
+  });
+
+  /**
+   * Transform the velocity of x into a range of background color intensities
+   */
+  const backgroundColor = useTransform(
+    xVelocity,
+    [-2000, 0, 2000],
+    [pink(100), pink(0), pink(100)]
+  );
 
   return (
-    <motion.div className="grid h-96 w-full place-content-center">
-      <motion.div
-        layoutId="wrapper"
-        className="w-fit rounded border border-neutral-300 p-2"
-      >
-        <motion.button layoutId="btn" onClick={handleToggleIsAdding}>
-          👋
-        </motion.button>
-      </motion.div>
-
-      <AnimatePresence mode="popLayout">
-        {isAdding && (
-          <motion.div
-            layoutId="wrapper"
-            className="grid h-32 w-32 place-content-end rounded border border-neutral-300 bg-white p-2"
-          >
-            <motion.button layoutId="btn" onClick={handleToggleIsAdding}>
-              👋
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+    <motion.div
+      drag="x"
+      className="h-12 w-12"
+      dragElastic={1}
+      dragConstraints={{ left: -200, right: 200 }}
+      style={{ x, scale, backgroundColor }}
+    />
   );
 }
