@@ -19,6 +19,10 @@
   @apply rounded-2xl bg-muted;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Code Wrapper */
 [data-rehype-pretty-code-fragment] {
   @apply my-8 mb-3 overflow-hidden rounded-lg border border-border bg-[rgb(24,24,27)];

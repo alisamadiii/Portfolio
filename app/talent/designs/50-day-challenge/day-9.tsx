@@ -51,7 +51,7 @@ export default function Day9() {
 
         <div className="flex h-full flex-col justify-end px-4 pb-4">
           <button
-            className="h-14 w-full rounded-2xl bg-[#1E1E1E]"
+            className="h-14 w-full rounded-2xl bg-[#1E1E1E] duration-200 active:scale-90"
             onClick={onClickHandler}
           >
             {isError ? "Okay" : isOpen ? "Cancel" : "Open"}
@@ -193,13 +193,13 @@ export default function Day9() {
                           </p>
 
                           <button
-                            className="mt-6 h-14 w-full rounded-2xl bg-[#343434]"
+                            className="mt-6 h-14 w-full rounded-2xl bg-[#343434] duration-200 active:scale-90"
                             onClick={onSendingHandler}
                           >
                             Text message
                           </button>
                           <button
-                            className="mt-2 h-14 w-full rounded-2xl bg-[#343434]"
+                            className="mt-2 h-14 w-full rounded-2xl bg-[#343434] duration-200 active:scale-90"
                             onClick={onSendingHandler}
                           >
                             Call my number
