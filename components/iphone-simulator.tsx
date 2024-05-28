@@ -22,7 +22,7 @@ export default function IphoneSimulator({
       className={cn(
         "aspect-[4/8] w-full max-w-[393px] rounded-[64px] border",
         theme === "light"
-          ? `bg-black p-1 ${elementColor === "light" ? "text-white" : "text-black"}`
+          ? `bg-black p-1 ${elementColor === "light" ? "text-black" : "text-white"}`
           : "border-[#424242] bg-[#131313] p-2 text-white"
       )}
     >
@@ -145,12 +145,14 @@ export default function IphoneSimulator({
             </svg>
           </motion.div>
         </header>
-        <main className="-z-10 grow">{children}</main>
+        <main className="no-scrollbar -z-10 grow overflow-auto">
+          {children}
+        </main>
         <footer className="flex justify-center py-[10px]">
           <div
             className={cn(
               "h-1 w-full max-w-[119px] rounded-full mix-blend-exclusion",
-              theme === "light" ? "bg-black" : "bg-white"
+              elementColor === "light" ? "bg-black" : "bg-white"
             )}
           ></div>
         </footer>

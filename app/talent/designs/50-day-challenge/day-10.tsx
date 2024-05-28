@@ -93,7 +93,6 @@ export default function Day10() {
     <div>
       <IphoneSimulator
         theme="light"
-        elementColor="light"
         topElements={!isCamera}
         pillChildren={
           <div>
@@ -121,12 +120,12 @@ export default function Day10() {
         />
 
         <div className="absolute bottom-12 flex w-full justify-between px-8">
-          <button className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40 text-2xl backdrop-blur-lg duration-200 active:scale-95">
+          <button className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40 text-2xl text-white backdrop-blur-lg duration-200 active:scale-95">
             <IoIosFlashlight />
           </button>
           <motion.button
             layoutId="camera-wrapper"
-            className="flex h-12 w-12 items-center justify-center bg-black/40 text-lg backdrop-blur-lg"
+            className="flex h-12 w-12 items-center justify-center bg-black/40 text-lg text-white backdrop-blur-lg"
             onClick={onCameraClickHandler}
             whileTap={{ scale: 0.9 }}
             style={{ borderRadius: 48 }}
