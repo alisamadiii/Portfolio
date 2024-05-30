@@ -57,6 +57,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      goal: {
+        Row: {
+          created_at: string;
+          duration: number | null;
+          from: string | null;
+          id: string;
+          title: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          duration?: number | null;
+          from?: string | null;
+          id?: string;
+          title?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          duration?: number | null;
+          from?: string | null;
+          id?: string;
+          title?: string | null;
+        };
+        Relationships: [];
+      };
       newsletter: {
         Row: {
           created_at: string;

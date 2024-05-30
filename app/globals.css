@@ -400,14 +400,6 @@ input[type="number"] {
   width: var(--spinner-size, 20px);
 }
 
-.spinner {
-  position: relative;
-  top: 50%;
-  left: 50%;
-  height: var(--spinner-size, 20px);
-  width: var(--spinner-size, 20px);
-}
-
 .bar {
   animation: spin 1.2s linear infinite;
   background: var(--spinner-color);
@@ -494,7 +486,6 @@ input[type="number"] {
 
 /* ! Loading */
 .spinner {
-  color: official;
   display: inline-block;
   position: relative;
   width: var(--size-spinning);

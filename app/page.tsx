@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 
 import Image from "next/image";
 import TechnologyIcon from "./assets/technology.icon";
@@ -6,6 +6,8 @@ import Badge from "../components/badge";
 import TextShadow from "../components/text-shadow";
 import GlassAnimation from "../components/glass-animation";
 import ContentWrapper from "@/components/content-wrapper";
+import CurrentGoal from "@/components/current-goal";
+import LoadingSpinner from "@/components/loading-spinner";
 
 const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 
@@ -34,7 +36,17 @@ const personalProjects: PersonalProjectsTypes[] = [
 export default function Home() {
   return (
     <ContentWrapper>
-      <h1 className="text-2xl font-extrabold">
+      <Suspense
+        fallback={
+          <div className="mb-8 flex flex-col items-center justify-center">
+            <LoadingSpinner />
+            <p className="text-xs text-muted-2">What is my current goal?</p>
+          </div>
+        }
+      >
+        <CurrentGoal />
+      </Suspense>
+      <h1 className="mb-8 text-2xl font-extrabold">
         hey, I&apos;m <TextShadow>Ali Reza</TextShadow> 👋
       </h1>
       {/* <Link href={"/blog/my-story"}>
