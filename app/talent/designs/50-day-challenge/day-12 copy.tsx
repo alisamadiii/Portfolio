@@ -8,7 +8,7 @@ import IphoneSimulator from "@/components/iphone-simulator";
 export default function Day12() {
   return (
     <div>
-      <IphoneSimulator theme="light">
+      <IphoneSimulator>
         <div className="absolute inset-0 -z-10 w-full"></div>
 
         <motion.div className="px-4 text-black">

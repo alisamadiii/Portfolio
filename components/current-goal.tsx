@@ -49,7 +49,7 @@ export default async function CurrentGoal() {
     return (
       <Link
         href={"/talent/50-day-challenge/intro"}
-        className="relative mb-8 flex h-24 items-center overflow-hidden rounded-md border border-border bg-white p-4 text-black"
+        className="relative mb-8 flex h-36 items-center overflow-hidden rounded-md border border-border bg-white p-4 text-black md:h-24"
       >
         <div className="self-start">
           <h3 className="text-lg font-medium">{currentGoal.title}</h3>
@@ -58,7 +58,7 @@ export default async function CurrentGoal() {
             {daySuffix} day.
           </p>
         </div>
-        <p className="absolute right-0 translate-y-4 text-[12rem] font-black">
+        <p className="absolute right-0 translate-y-14 text-[12rem] font-black md:translate-y-4">
           {currentDay}
         </p>
 

@@ -92,8 +92,7 @@ export default function Day10() {
   return (
     <div>
       <IphoneSimulator
-        theme="light"
-        topElements={!isCamera}
+        topElements={{ left: !isCamera, right: !isCamera }}
         pillChildren={
           <div>
             <AnimatePresence>
@@ -142,7 +141,7 @@ export default function Day10() {
               <motion.div
                 layoutId="camera-wrapper"
                 className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden bg-black px-4 py-14"
-                style={{ borderRadius: 48 }}
+                style={{ borderRadius: 44 }}
               >
                 <div className="flex h-20 w-full items-start justify-between">
                   <button onClick={onCameraClickHandler}>

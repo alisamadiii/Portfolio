@@ -41,7 +41,7 @@ export default function Day13() {
 
   return (
     <div className="flex h-dvh w-full items-center justify-center bg-[#D5D3CA]">
-      <IphoneSimulator theme="light">
+      <IphoneSimulator>
         <div className="absolute inset-0 -z-10 bg-[#D5D3CA]" />
 
         <div className="ml-8 mt-4 max-w-24">

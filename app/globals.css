@@ -5,6 +5,8 @@
 :root {
   --size-spinning: 40px;
   --color-spinning: #a7a7a9;
+
+  --ios-simulator-color: white;
 }
 
 /* ::selection {
@@ -20,10 +22,6 @@
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.ReactVirtualized__Grid.ReactVirtualized__List::-webkit-scrollbar {
   display: none;
 }
 
