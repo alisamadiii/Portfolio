@@ -1,0 +1,146 @@
+"use client";
+
+import IphoneSimulator from "@/components/iphone-simulator";
+import React, { useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { PiStarFourFill } from "react-icons/pi";
+
+export default function Day16() {
+  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+
+  const [selectedInput, setSelectedInput] = useState(0);
+  const [ready, setReady] = useState(false);
+
+  const [success, setSuccess] = useState(false);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const value = e.target.value;
+
+    if (index < inputsRef.current.length - 1) {
+      if (value.length === 1 && /^[0-9]$/.test(value)) {
+        inputsRef.current[index + 1]?.focus();
+      }
+    } else if (index === 3) {
+      if (value.length === 1 && /^[0-9]$/.test(value)) {
+        inputsRef.current[index]?.blur();
+        setReady(true);
+      }
+    }
+  };
+
+  console.log(success);
+
+  return (
+    <div>
+      <IphoneSimulator>
+        <div className="absolute inset-0 -z-10 bg-white" />
+        <div className="relative flex flex-col items-center justify-center px-12 pt-16 text-black">
+          <motion.div className="relative z-50 flex h-24 w-24 items-center justify-center gap-2">
+            <motion.div
+              className="absolute inset-0 -z-10 rounded-3xl bg-black"
+              animate={{
+                transform: `
+                perspective(300px) 
+                rotateY(${selectedInput === 0 ? "0deg" : selectedInput === 1 ? "-20deg" : selectedInput === 2 ? "-10deg" : selectedInput === 3 ? "10deg" : selectedInput === 4 ? "20deg" : ""})
+                rotateX(${selectedInput === 0 ? "0deg" : "-10deg"})
+                `,
+              }}
+            ></motion.div>
+            <motion.div
+              className="text-3xl text-white"
+              animate={{
+                scale:
+                  selectedInput === 0
+                    ? 1
+                    : selectedInput === 1
+                      ? 0.8
+                      : selectedInput === 2
+                        ? 0.9
+                        : selectedInput === 3
+                          ? 1
+                          : selectedInput === 4
+                            ? 1.15
+                            : 1,
+              }}
+              transition={{ duration: success ? 3 : 0.2 }}
+            >
+              <PiStarFourFill />
+            </motion.div>
+            <motion.div
+              className="text-3xl text-white"
+              animate={{
+                scale:
+                  selectedInput === 0
+                    ? 1
+                    : selectedInput === 1
+                      ? 1.15
+                      : selectedInput === 2
+                        ? 1
+                        : selectedInput === 3
+                          ? 0.9
+                          : selectedInput === 4
+                            ? 0.8
+                            : "",
+              }}
+            >
+              <PiStarFourFill />
+            </motion.div>
+          </motion.div>
+
+          <div className="mt-12 flex gap-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="relative flex h-14 w-11 items-center justify-center rounded-2xl shadow-lg"
+              >
+                <input
+                  // @ts-ignore
+                  ref={(el) => (inputsRef.current[index] = el)}
+                  type="number"
+                  className="h-full w-full bg-transparent text-center text-xl font-medium outline-none"
+                  onFocus={() => setSelectedInput(index + 1)}
+                  onBlur={() => setSelectedInput(0)}
+                  onChange={(event) => handleInputChange(event, index)}
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, padding: 0 }}
+                  animate={{
+                    opacity: selectedInput === index + 1 ? 1 : 0,
+                    padding: selectedInput === index + 1 ? 2 : 0,
+                  }}
+                  className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl bg-transparent bg-violet-500"
+                >
+                  <div className="h-full w-full rounded-[14px] bg-white"></div>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+
+          <motion.button
+            className={`relative isolate mt-12 h-14 w-full overflow-hidden rounded-full bg-[#F2F2F4] duration-200 hover:scale-95 active:scale-90 ${ready ? "text-white" : "text-[#D0CFD9]"}`}
+            onClick={() => setSuccess(true)}
+          >
+            Connect
+            {ready && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute inset-0 -z-10"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #8355FF 0%, #A480FF 50%, #8355FF 100%)",
+                  }}
+                ></motion.div>
+              </>
+            )}
+          </motion.button>
+        </div>
+      </IphoneSimulator>
+    </div>
+  );
+}

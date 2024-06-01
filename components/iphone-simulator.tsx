@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/utils";
 import React from "react";
 import { MotionConfig, motion, type Transition } from "framer-motion";
