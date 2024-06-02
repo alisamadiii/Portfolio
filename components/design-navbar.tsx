@@ -12,6 +12,8 @@ import { useParams } from "next/navigation";
 export default function DesignNavbar() {
   const [isExpand, setIsExpand] = useState(false);
 
+  const hiddenMenu = true;
+
   const params = useParams();
 
   return (
@@ -57,31 +59,33 @@ export default function DesignNavbar() {
           </motion.div>
         )}
 
-        <motion.button
-          key={"button"}
-          layout
-          whileTap={{ scale: 0.8 }}
-          transition={{ duration: 0.5, type: "spring", bounce: 0 }}
-          className="pointer-events-auto mb-4 ml-4 flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white text-2xl text-black"
-          onClick={() => setIsExpand(!isExpand)}
-        >
-          <div
-            className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-white"
-            style={{ boxShadow: "0 5px 10px rgba(0,0,0,.1)" }}
+        {hiddenMenu && (
+          <motion.button
+            key={"button"}
+            layout
+            whileTap={{ scale: 0.8 }}
+            transition={{ duration: 0.5, type: "spring", bounce: 0 }}
+            className="pointer-events-auto mb-4 ml-4 flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white text-2xl text-black"
+            onClick={() => setIsExpand(!isExpand)}
           >
-            <AnimatePresence mode="popLayout">
-              {isExpand ? (
-                <motion.p key={"close"} transition={{ duration: 2 }}>
-                  <IoClose />
-                </motion.p>
-              ) : (
-                <motion.p key={"menu"} transition={{ duration: 2 }}>
-                  <IoMenu />
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.button>
+            <div
+              className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-white"
+              style={{ boxShadow: "0 5px 10px rgba(0,0,0,.1)" }}
+            >
+              <AnimatePresence mode="popLayout">
+                {isExpand ? (
+                  <motion.p key={"close"} transition={{ duration: 2 }}>
+                    <IoClose />
+                  </motion.p>
+                ) : (
+                  <motion.p key={"menu"} transition={{ duration: 2 }}>
+                    <IoMenu />
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.button>
+        )}
       </AnimatePresence>
     </div>
   );
