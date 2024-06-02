@@ -1,23 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Reorder } from "framer-motion";
+import React from "react";
 
 const InesActiveCard = () => {
-  const [items, setItems] = useState([0, 1, 2, 3]);
-
   return (
-    <Reorder.Group axis="y" values={items} onReorder={setItems}>
-      {items.map((item) => (
-        <Reorder.Item
-          key={item}
-          value={item}
-          className="relative mb-4 w-96 rounded-xl bg-gray-100 p-4"
-        >
-          {item}
-        </Reorder.Item>
-      ))}
-    </Reorder.Group>
+    <div className="container flex h-screen items-center justify-center bg-slate-50"></div>
   );
 };
 
