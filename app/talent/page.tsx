@@ -6,7 +6,7 @@ import { NewIndex } from "./designs";
 
 export default function Home() {
   const Component = NewIndex["50-day-challenge"].find(
-    (value) => value.name.toLowerCase() === "day-2"
+    (value) => value.name.toLowerCase() === "day-17"
   )?.component;
 
   return (

@@ -1,5 +1,6 @@
-import DesignNavbar from "@/components/design-navbar";
 import React from "react";
+
+import DesignNavbar from "@/components/design-navbar";
 
 interface Props {
   children: React.ReactNode;

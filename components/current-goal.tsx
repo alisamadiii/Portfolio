@@ -49,7 +49,7 @@ export default async function CurrentGoal() {
     return (
       <Link
         href={"/talent/50-day-challenge/intro"}
-        className="relative mb-8 flex h-36 items-center overflow-hidden rounded-md border border-border bg-white p-4 text-black md:h-24"
+        className="relative isolate mb-8 flex h-36 items-center overflow-hidden rounded-md border border-border bg-white p-4 text-black md:h-24"
       >
         <div className="self-start">
           <h3 className="text-lg font-medium">{currentGoal.title}</h3>
@@ -58,11 +58,11 @@ export default async function CurrentGoal() {
             {daySuffix} day.
           </p>
         </div>
-        <p className="absolute right-0 translate-y-14 text-[12rem] font-black md:translate-y-4">
+        <p className="absolute right-0 -z-20 translate-y-14 text-[12rem] font-black md:translate-y-4">
           {currentDay}
         </p>
 
-        <div className="absolute bottom-0 right-0 h-full w-1/2 bg-gradient-to-t from-white to-transparent"></div>
+        <div className="absolute bottom-0 right-0 -z-10 h-1/2 w-full bg-gradient-to-t from-white to-transparent md:h-full"></div>
       </Link>
     );
   } catch (error) {
