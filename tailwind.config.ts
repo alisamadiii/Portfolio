@@ -26,6 +26,9 @@ const config: Config = {
       animation: {
         "badge-circle-expand": "badge-circle-expand 1s infinite linear",
       },
+      height: {
+        dvh: "100dvh",
+      },
       keyframes: {
         "badge-circle-expand": {
           from: {
