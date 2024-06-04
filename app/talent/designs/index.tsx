@@ -22,44 +22,16 @@ export interface IndexData {
 export const NewIndex: IndexData = {
   general: [
     {
-      name: "blurry-input",
-      component: React.lazy(() => import("./blurry-input")),
-    },
-    {
-      name: "sonner",
-      component: React.lazy(() => import("./sonner/index")),
-    },
-    {
-      name: "drag-profiles-picture",
-      component: React.lazy(() => import("./drag-profiles-picture")),
-    },
-    {
-      name: "expand-profiles-picture",
-      component: React.lazy(() => import("./expand-profiles-picture")),
-    },
-    {
       name: "forms",
       component: React.lazy(() => import("./forms")),
-    },
-    {
-      name: "loading",
-      component: React.lazy(() => import("./loading")),
     },
     {
       name: "number-animation",
       component: React.lazy(() => import("./number-animation")),
     },
     {
-      name: "blur-text",
-      component: React.lazy(() => import("./blur-text")),
-    },
-    {
-      name: "textarea-tagging",
-      component: React.lazy(() => import("./textarea-tagging")),
-    },
-    {
-      name: "sub-list-toggle",
-      component: React.lazy(() => import("./sub-list-toggle")),
+      name: "morph-css",
+      component: React.lazy(() => import("./morph-css")),
     },
     {
       name: "Theme-Toggle",
@@ -156,6 +128,10 @@ export const NewIndex: IndexData = {
     {
       name: "day-18",
       component: React.lazy(() => import("./50-day-challenge/day-18")),
+    },
+    {
+      name: "day-19",
+      component: React.lazy(() => import("./50-day-challenge/day-19/index")),
     },
     // {
     //   name: "test",
