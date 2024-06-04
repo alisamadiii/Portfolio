@@ -4,6 +4,7 @@ import IphoneSimulator from "@/components/iphone-simulator";
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { PiStarFourFill } from "react-icons/pi";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function Day16() {
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
@@ -31,10 +32,8 @@ export default function Day16() {
     }
   };
 
-  console.log(success);
-
   return (
-    <div>
+    <Wrapper>
       <IphoneSimulator>
         <div className="absolute inset-0 -z-10 bg-white" />
         <div className="relative flex flex-col items-center justify-center px-12 pt-16 text-black">
@@ -141,6 +140,6 @@ export default function Day16() {
           </motion.button>
         </div>
       </IphoneSimulator>
-    </div>
+    </Wrapper>
   );
 }

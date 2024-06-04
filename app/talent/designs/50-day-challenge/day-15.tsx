@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import IphoneSimulator from "@/components/iphone-simulator";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function Day15() {
   const [off, setOff] = useState(false);
@@ -11,7 +12,7 @@ export default function Day15() {
   const onOffClickHandler = () => setOff(!off);
 
   return (
-    <div>
+    <Wrapper>
       <IphoneSimulator
         mixBlend={false}
         topElements={{ left: false, right: !off }}
@@ -76,6 +77,6 @@ export default function Day15() {
           </motion.h2>
         </motion.div>
       </IphoneSimulator>
-    </div>
+    </Wrapper>
   );
 }

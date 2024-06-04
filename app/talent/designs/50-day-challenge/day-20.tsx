@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { MotionConfig, motion } from "framer-motion";
 import WhatILearnt from "@/components/WhatILearnt";
+import Wrapper from "@/components/designs/wrapper";
 
 const inputText = "is there an orange warning message saying “a person”";
 
@@ -21,7 +22,7 @@ export default function Day20() {
           text: "Inspired by Hristiyan Iv",
         }}
       />
-      <div className="flex h-dvh w-full items-center justify-center bg-[#0B0B0B] text-white">
+      <Wrapper className="bg-[#0B0B0B] text-white">
         <div
           className="relative flex h-[388px] w-full max-w-[333px] flex-col items-end gap-6 overflow-hidden rounded-[10px] border border-[#262626] bg-[#181818] py-7"
           onMouseEnter={onMouseEnter}
@@ -185,7 +186,7 @@ export default function Day20() {
             </div>
           </MotionConfig>
         </div>
-      </div>
+      </Wrapper>
     </>
   );
 }

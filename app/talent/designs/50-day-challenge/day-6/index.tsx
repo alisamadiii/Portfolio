@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import uniqid from "uniqid";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import Wrapper from "@/components/designs/wrapper";
 
 export interface ToasterTypes {
   id: string;
@@ -30,7 +31,7 @@ export default function Day6() {
   };
 
   return (
-    <div>
+    <Wrapper>
       <button
         className="h-8 rounded-md bg-black px-6 text-white"
         onClick={() =>
@@ -75,6 +76,6 @@ export default function Day6() {
           </motion.ul>
         )}
       </MotionConfig>
-    </div>
+    </Wrapper>
   );
 }

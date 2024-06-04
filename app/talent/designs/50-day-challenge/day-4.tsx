@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import useMeasure from "react-use-measure";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function Day4() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +15,7 @@ export default function Day4() {
   const [ref, { height }] = useMeasure();
 
   return (
-    <div>
+    <Wrapper>
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <motion.div
           animate={{ height: height > 0 ? height : undefined }}
@@ -224,6 +225,6 @@ export default function Day4() {
           </div>
         </motion.div>
       </MotionConfig>
-    </div>
+    </Wrapper>
   );
 }

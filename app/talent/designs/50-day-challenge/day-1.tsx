@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import LoadingSpinner from "@/components/loading-spinner";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function Day1() {
   const [section, setSection] = useState<0 | 1 | 2>(0);
@@ -26,7 +27,7 @@ export default function Day1() {
   }, [section]);
 
   return (
-    <div className="flex h-full w-full justify-center overflow-hidden">
+    <Wrapper>
       <button
         className="flex h-12 w-64 items-center justify-center rounded-lg border bg-black px-12 text-xl text-white duration-100 active:!scale-95"
         onClick={onClickHandler}
@@ -87,6 +88,6 @@ export default function Day1() {
           </AnimatePresence>
         </MotionConfig>
       </button>
-    </div>
+    </Wrapper>
   );
 }

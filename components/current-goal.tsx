@@ -48,7 +48,7 @@ export default async function CurrentGoal() {
 
     return (
       <Link
-        href={"/talent/50-day-challenge/intro"}
+        href={"/goals/mastering-framer-motion"}
         className="relative isolate mb-8 flex h-36 items-center overflow-hidden rounded-md border border-border bg-white p-4 text-black md:h-24"
       >
         <div className="self-start">

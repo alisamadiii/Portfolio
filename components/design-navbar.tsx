@@ -17,7 +17,7 @@ export default function DesignNavbar() {
   const params = useParams();
 
   return (
-    <div className="pointer-events-none fixed bottom-0 left-0 z-50 flex h-screen items-end">
+    <div className="pointer-events-none fixed bottom-0 left-0 z-50 flex h-screen items-end text-black">
       <AnimatePresence mode="popLayout">
         {isExpand && (
           <motion.div

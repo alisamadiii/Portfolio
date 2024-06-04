@@ -8,6 +8,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { FaCamera } from "react-icons/fa";
 import { IoIosFlashlight } from "react-icons/io";
 import { IoArrowBackSharp } from "react-icons/io5";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function Day10() {
   const [images, setImages] = useState(["/my-image.jpg"]);
@@ -90,7 +91,7 @@ export default function Day10() {
   }, [capturedImageUrl]);
 
   return (
-    <div>
+    <Wrapper>
       <IphoneSimulator
         topElements={{ left: !isCamera, right: !isCamera }}
         pillChildren={
@@ -230,6 +231,6 @@ export default function Day10() {
           </AnimatePresence>
         </MotionConfig>
       </IphoneSimulator>
-    </div>
+    </Wrapper>
   );
 }

@@ -8,9 +8,9 @@ interface Props {
 
 export default function DesignLayout({ children }: Props) {
   return (
-    <div className="bg-white text-black">
+    <>
       {children}
       <DesignNavbar />
-    </div>
+    </>
   );
 }

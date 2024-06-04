@@ -3,6 +3,7 @@
 import React, { type ChangeEvent, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import EachList from "./each-list";
+import Wrapper from "@/components/designs/wrapper";
 
 export interface ValuesTypes {
   id: number;
@@ -137,7 +138,7 @@ export default function Day19() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
+    <Wrapper>
       <div className="h-[600px] w-full max-w-4xl">
         <form onSubmit={onSubmit}>
           <label className="flex w-full items-center gap-2 rounded-lg border p-3 text-[#525252] ring-2 ring-transparent ring-offset-2 duration-100 focus-within:ring-[#939393]">
@@ -170,6 +171,6 @@ export default function Day19() {
           </ul>
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 }

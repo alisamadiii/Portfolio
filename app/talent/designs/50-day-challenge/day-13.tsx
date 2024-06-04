@@ -1,10 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AnimatePresence, MotionConfig, type Variants, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  MotionConfig,
+  type Variants,
+  motion,
+} from "framer-motion";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 import { cn } from "@/utils";
+import Wrapper from "@/components/designs/wrapper";
 
 interface initialTypes {
   id: number;
@@ -89,7 +95,7 @@ export default function Day13() {
   }, [disabled]);
 
   return (
-    <div className="flex gap-8">
+    <Wrapper className="gap-8">
       <button
         onClick={() => onArrowClickHandler("back")}
         className="z-20 text-2xl disabled:cursor-not-allowed"
@@ -140,6 +146,6 @@ export default function Day13() {
       >
         <IoIosArrowForward />
       </button>
-    </div>
+    </Wrapper>
   );
 }

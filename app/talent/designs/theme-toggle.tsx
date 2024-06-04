@@ -9,6 +9,7 @@ import {
   useMotionTemplate,
   useMotionValue,
 } from "framer-motion";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function ThemeToggle() {
   const color = useMotionValue(
@@ -34,7 +35,7 @@ export default function ThemeToggle() {
   }, [toggle]);
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
+    <Wrapper>
       <AnimatePresence initial={false}>
         <MotionConfig
           transition={{ ease: "easeInOut", duration: toggle ? 0.5 : 0.3 }}
@@ -190,10 +191,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -228,10 +226,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -266,10 +261,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -304,10 +296,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -342,10 +331,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -380,10 +366,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -418,10 +401,7 @@ export default function ThemeToggle() {
                         filterUnits="userSpaceOnUse"
                         colorInterpolationFilters="sRGB"
                       >
-                        <feFlood
-                          floodOpacity="0"
-                          result="BackgroundImageFix"
-                        />
+                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
                         <feColorMatrix
                           in="SourceAlpha"
                           type="matrix"
@@ -455,6 +435,6 @@ export default function ThemeToggle() {
           </motion.button>
         </MotionConfig>
       </AnimatePresence>
-    </div>
+    </Wrapper>
   );
 }

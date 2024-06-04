@@ -54,9 +54,9 @@ const Blog = defineDocumentType(() => ({
   computedFields,
 }));
 
-const Service = defineDocumentType(() => ({
-  name: "Service",
-  filePathPattern: "service/**/*.mdx",
+const Goals = defineDocumentType(() => ({
+  name: "Goals",
+  filePathPattern: "goals/**/*.mdx",
   contentType: "mdx",
   fields: {
     advance: {
@@ -85,7 +85,7 @@ const Service = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: "./content",
-  documentTypes: [Blog, Service],
+  documentTypes: [Blog, Goals],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [

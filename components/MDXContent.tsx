@@ -20,6 +20,7 @@ import Gallery from "./gallery";
 import Video from "./video";
 import DisplayAnimatedContents from "./display-animated-contents";
 import ImageExplain from "./ImageExplain";
+import FramerMotionWorks from "./Showcase/FramerMotion";
 
 const components = {
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -77,7 +78,10 @@ const components = {
     />
   ),
   code: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
-    <code className={`text-sm ${GeistMono.className}`} {...props}></code>
+    <code
+      className={`rounded-md bg-white/10 px-1 py-1 text-sm ${GeistMono.className}`}
+      {...props}
+    ></code>
   ),
   blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <blockquote
@@ -120,8 +124,14 @@ const components = {
       {...props}
     />
   ),
-  Image: ({ className, alt, ...props }: React.ComponentProps<typeof Image>) => (
-    <Image className={cn("rounded-md", className)} alt={alt} {...props} />
+  img: ({ className, alt, ...props }: React.ComponentProps<typeof Image>) => (
+    <Image
+      className={cn("my-8 rounded-md", className)}
+      width={800}
+      height={800}
+      alt={alt}
+      {...props}
+    />
   ),
   FaqFrontEnd: FAQ,
   LinkMetadata,
@@ -129,6 +139,7 @@ const components = {
   Video,
   DisplayAnimatedContents,
   ImageExplain,
+  FramerMotionWorks,
 };
 
 export function Mdx({ code }: { code: string }) {
@@ -136,6 +147,7 @@ export function Mdx({ code }: { code: string }) {
 
   return (
     <div className="mdx">
+      {/* @ts-ignore */}
       <Component components={components} />
     </div>
   );

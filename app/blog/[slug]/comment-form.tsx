@@ -77,8 +77,7 @@ export default function CommentForm({ slug, blogImage }: Props) {
       className="mt-8"
     >
       <div ref={ref} className="flex flex-col">
-        <Balancer className="text-3xl font-bold">Comment</Balancer>
-        <Badge className="mb-5">Public Beta</Badge>
+        <Balancer className="mb-4 text-3xl font-bold">Comment</Balancer>
         <AnimatePresence mode="wait" initial={false}>
           {isSuccess ? (
             <motion.div

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/utils";
+import Wrapper from "@/components/designs/wrapper";
 
 const getRandomHeight = () => Math.floor(Math.random() * 120) + 60;
 
@@ -33,23 +34,25 @@ export default function MorphCSS() {
   }, []);
 
   return (
-    <div
-      className="flex h-screen w-full items-center justify-center gap-1 bg-white"
-      style={{ filter: done ? "blur(10px) contrast(20)" : undefined }}
-    >
-      {Array.from({ length: 4 }).map((_, index) => (
-        <motion.div
-          key={index}
-          layout
-          className={cn("bg-black", done ? "translate-x-12" : "")}
-          style={{
-            height: heights[index],
-            width: done ? 200 : 80,
-            borderRadius: 9999,
-            position: done ? "absolute" : "static",
-          }}
-        />
-      ))}
-    </div>
+    <Wrapper>
+      <div
+        className="flex h-full w-full items-center justify-center gap-1 bg-white"
+        style={{ filter: done ? "blur(10px) contrast(20)" : undefined }}
+      >
+        {Array.from({ length: 4 }).map((_, index) => (
+          <motion.div
+            key={index}
+            layout
+            className={cn("bg-black", done ? "translate-x-12" : "")}
+            style={{
+              height: heights[index],
+              width: done ? 200 : 80,
+              borderRadius: 9999,
+              position: done ? "absolute" : "static",
+            }}
+          />
+        ))}
+      </div>
+    </Wrapper>
   );
 }

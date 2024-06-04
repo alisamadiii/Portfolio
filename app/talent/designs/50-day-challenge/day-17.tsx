@@ -5,6 +5,7 @@ import React, { useState } from "react";
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import WhatILearnt from "@/components/WhatILearnt";
+import Wrapper from "@/components/designs/wrapper";
 
 export default function Day17() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +22,7 @@ export default function Day17() {
         ]}
       />
 
-      <div className="flex gap-12">
+      <Wrapper>
         <IphoneSimulator topElements={{ left: !isOpen, right: !isOpen }}>
           <div className="absolute inset-0 -z-10 bg-white"></div>
           <MotionConfig
@@ -221,7 +222,7 @@ export default function Day17() {
             </div>
           </MotionConfig>
         </IphoneSimulator>
-      </div>
+      </Wrapper>
     </>
   );
 }
