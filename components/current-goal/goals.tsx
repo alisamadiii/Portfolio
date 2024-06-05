@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function Goals({ goals }: Props) {
-  const [hover, setHover] = useState(true);
+  const [hover, setHover] = useState(false);
 
   const onMouseEnter = () => setHover(true);
   const onMouseLeave = () => setHover(false);
