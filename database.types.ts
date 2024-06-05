@@ -57,27 +57,27 @@ export interface Database {
         };
         Relationships: [];
       };
-      goal: {
+      goals: {
         Row: {
           created_at: string;
-          duration: number | null;
-          from: string | null;
-          id: string;
-          title: string | null;
+          duration: number;
+          from: string;
+          id: number;
+          title: string;
         };
         Insert: {
           created_at?: string;
-          duration?: number | null;
-          from?: string | null;
-          id?: string;
-          title?: string | null;
+          duration?: number;
+          from: string;
+          id?: number;
+          title?: string;
         };
         Update: {
           created_at?: string;
-          duration?: number | null;
-          from?: string | null;
-          id?: string;
-          title?: string | null;
+          duration?: number;
+          from?: string;
+          id?: number;
+          title?: string;
         };
         Relationships: [];
       };

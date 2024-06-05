@@ -6,8 +6,8 @@ import Badge from "../components/badge";
 import TextShadow from "../components/text-shadow";
 import GlassAnimation from "../components/glass-animation";
 import ContentWrapper from "@/components/content-wrapper";
-import CurrentGoal from "@/components/current-goal";
 import LoadingSpinner from "@/components/loading-spinner";
+import CurrentGoal from "@/components/current-goal";
 
 const technologies: Technology[] = ["nextjs", "supabase", "tailwind"];
 

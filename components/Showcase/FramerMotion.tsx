@@ -2,13 +2,17 @@
 
 import React from "react";
 
-import {
-  AppleCardExpanding,
-  HoverCardAnimation,
-  MacosHoverClone,
-  RabbitAI,
-} from "./Components";
 import Link from "next/link";
+import { motion } from "framer-motion";
+
+import { cn } from "@/utils";
+
+const videos = [
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/ios-app-store.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/expanding-list.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/spotify.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/card-animation.mp4",
+];
 
 export default function FramerMotionWorks() {
   return (
@@ -17,10 +21,32 @@ export default function FramerMotionWorks() {
       style={{ clipPath: "inset(0 -100vmax)" }}
     >
       <div className="absolute inset-0 -z-10 bg-white"></div>
-      <HoverCardAnimation />
+
+      <div className="flex flex-col">
+        {videos.map((video, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ margin: "-300px" }}
+            className={cn("")}
+          >
+            <video
+              src={video}
+              autoPlay
+              muted
+              playsInline
+              loop
+              className="rounded-xl"
+            ></video>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* <HoverCardAnimation />
       <AppleCardExpanding />
       <RabbitAI />
-      <MacosHoverClone />
+      <MacosHoverClone /> */}
 
       <Link
         href={"/talent"}
