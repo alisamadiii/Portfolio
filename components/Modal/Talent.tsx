@@ -47,7 +47,7 @@ export default function Talent() {
             {show && (
               <motion.div
                 layoutId="talent-wrapper"
-                className="relative isolate w-full max-w-[600px] overflow-hidden bg-white p-4"
+                className="relative isolate w-full max-w-[600px] overflow-hidden p-4"
                 style={{ borderRadius: 24 }}
               >
                 <motion.div

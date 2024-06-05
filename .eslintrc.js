@@ -37,6 +37,7 @@ module.exports = {
     "@typescript-eslint/prefer-ts-expect-error": "off",
     "@typescript-eslint/prefer-nullish-coalescing": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/ban-types": "off",
   },
   settings: {
     react: {

@@ -53,7 +53,7 @@ export default function Home() {
         <Badge className="mb-8">Hear My Story</Badge>
       </Link> */}
       <p className="mb-5 leading-6 text-muted">
-        I&apos;m Ali Reza! I&apos;ve got 2+ years of web dev experience, mainly
+        I&apos;m Ali Reza! I&apos;ve got 3 years of web dev experience, mainly
         focusing on front-end magic with ReactJS. I&apos;m all about embracing
         new challenges and learning opportunities. Let&apos;s build something
         awesome together!

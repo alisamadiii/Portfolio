@@ -103,7 +103,7 @@ export default function EachGoal({ goals, goal, index, hover }: Props) {
 
         <div
           className={cn(
-            "absolute bottom-0 right-0 -z-10 h-1/2 w-full bg-gradient-to-t to-transparent md:h-full",
+            "absolute bottom-0 right-0 -z-10 h-1/2 w-full translate-y-2 bg-gradient-to-t to-transparent md:h-full",
             notFirstIndex ? "from-box" : "from-white"
           )}
         ></div>
