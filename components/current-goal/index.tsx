@@ -24,7 +24,7 @@ export default async function CurrentGoal() {
       return null;
     }
 
-    return <Goals goals={data} />;
+    return <Goals goals={data.sort((a, b) => a.id - b.id)} />;
   } catch (error) {
     return null;
   }

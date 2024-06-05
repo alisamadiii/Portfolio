@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function Goals({ goals }: Props) {
-  const [hover, setHover] = useState(false);
+  const [hover, setHover] = useState(true);
 
   const onMouseEnter = () => setHover(true);
   const onMouseLeave = () => setHover(false);
@@ -21,7 +21,13 @@ export default function Goals({ goals }: Props) {
       onMouseLeave={onMouseLeave}
     >
       {goals.map((goal, index) => (
-        <EachGoal key={goal.id} goal={goal} index={index} hover={hover} />
+        <EachGoal
+          key={goal.id}
+          goals={goals}
+          goal={goal}
+          index={index}
+          hover={hover}
+        />
       ))}
     </ul>
   );

@@ -4,6 +4,9 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+import { SiReactquery, SiSupabase } from "react-icons/si";
+import { RiSecurePaymentFill } from "react-icons/ri";
+
 import { type Database } from "@/database.types";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/utils";
@@ -26,12 +29,13 @@ function getDaySuffix(day: number) {
 }
 
 interface Props {
+  goals: Array<Database["public"]["Tables"]["goals"]["Row"]>;
   goal: Database["public"]["Tables"]["goals"]["Row"];
   index: number;
   hover: boolean;
 }
 
-export default function EachGoal({ goal, index, hover }: Props) {
+export default function EachGoal({ goals, goal, index, hover }: Props) {
   const currentDay = getCurrentDay(goal.from || "");
   const daySuffix = getDaySuffix(currentDay);
 
@@ -53,7 +57,7 @@ export default function EachGoal({ goal, index, hover }: Props) {
       className="relative [--margin-top:-145px] md:[--margin-top:-100px]"
     >
       <Link
-        href={"/goals/mastering-framer-motion"}
+        href={hover ? "/goals/mastering-framer-motion" : "#"}
         className={cn(
           "relative isolate flex h-36 items-center overflow-hidden rounded-md border border-border bg-white p-4 text-black md:h-24",
           notFirstIndex && "bg-box text-white"
@@ -61,13 +65,21 @@ export default function EachGoal({ goal, index, hover }: Props) {
       >
         <div className="self-start">
           <h3 className="text-lg font-medium">{goal.title}</h3>
-          {!notFirstIndex ? (
-            <p className="text-sm text-muted-2">
-              I am on {currentDay}
-              {daySuffix} day.
-            </p>
+          {index < 2 ? (
+            !notFirstIndex ? (
+              <p className="text-sm text-muted-2">
+                I am on {currentDay}
+                {daySuffix} day.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-2">
+                I will start on {goal.from}.
+              </p>
+            )
           ) : (
-            <p className="text-sm text-muted-2">I will start on {goal.from}.</p>
+            <p className="text-sm text-muted-2">
+              I will start after {goals[index - 1].title}.
+            </p>
           )}
         </div>
 
@@ -77,9 +89,24 @@ export default function EachGoal({ goal, index, hover }: Props) {
           </p>
         )}
 
-        {!notFirstIndex && (
-          <div className="absolute bottom-0 right-0 -z-10 h-1/2 w-full bg-gradient-to-t from-white to-transparent md:h-full"></div>
-        )}
+        {notFirstIndex ? (
+          <div className="absolute right-0 -z-20 translate-y-14 text-[12rem] font-black md:translate-y-4 md:text-[8rem]">
+            {goal.title.toLowerCase().includes("query") ? (
+              <SiReactquery />
+            ) : goal.title.toLowerCase().includes("supabase") ? (
+              <SiSupabase />
+            ) : goal.title.toLowerCase().includes("lemon") ? (
+              <RiSecurePaymentFill />
+            ) : null}
+          </div>
+        ) : null}
+
+        <div
+          className={cn(
+            "absolute bottom-0 right-0 -z-10 h-1/2 w-full bg-gradient-to-t to-transparent md:h-full",
+            notFirstIndex ? "from-box" : "from-white"
+          )}
+        ></div>
       </Link>
     </motion.li>
   );
