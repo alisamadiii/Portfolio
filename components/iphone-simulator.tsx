@@ -13,6 +13,7 @@ interface Props {
   mixBlend?: boolean;
   onPowerClickHandler?: () => void;
   transition?: Transition | undefined;
+  mainClassName?: string;
 }
 
 export default function IphoneSimulator({
@@ -24,6 +25,7 @@ export default function IphoneSimulator({
   mixBlend = true,
   onPowerClickHandler = () => {},
   transition,
+  mainClassName,
 }: Props) {
   return (
     <div
@@ -161,7 +163,12 @@ export default function IphoneSimulator({
                 </svg>
               </motion.div>
             </header>
-            <main className="no-scrollbar -z-10 grow overflow-auto">
+            <main
+              className={cn(
+                "no-scrollbar -z-10 grow overflow-auto",
+                mainClassName
+              )}
+            >
               {children}
             </main>
             <footer className="flex justify-center py-[10px]">

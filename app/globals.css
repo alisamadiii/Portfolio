@@ -143,21 +143,6 @@ code[data-line-numbers] > [data-line]::before {
   mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0));
 }
 
-.testing {
-  mask-image: linear-gradient(
-    0deg,
-    transparent calc(var(--x-background) + 20%),
-    white calc(var(--x-background) + 35%),
-    transparent calc(var(--x-background) + 80%)
-  );
-  -webkit-mask-image: linear-gradient(
-    -75deg,
-    transparent calc(var(--x-background) + 20%),
-    white calc(var(--x-background) + 35%),
-    transparent calc(var(--x-background) + 80%)
-  );
-}
-
 .text_gradient {
   background: linear-gradient(to top, rgb(161, 161, 161), white);
   -webkit-background-clip: text;
@@ -642,4 +627,9 @@ input[type="number"] {
   100% {
     opacity: 0.15;
   }
+}
+
+.paragraph-fade-end {
+  mask-image: linear-gradient(transparent 20%, white 35%, transparent 80%);
+  -webkit-mask-image: linear-gradient(white 35%, transparent 80%);
 }
