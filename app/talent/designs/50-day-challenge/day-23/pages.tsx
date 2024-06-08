@@ -21,7 +21,7 @@ const animations: Variants = {
   }),
 };
 
-export default function Page({ selectedPanel }: Props) {
+export default function Pages({ selectedPanel }: Props) {
   const { direction } = directionStore();
 
   return (

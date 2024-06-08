@@ -6,7 +6,7 @@ import IphoneSimulator from "@/components/iphone-simulator";
 import Header from "./header";
 import Buttons from "./buttons";
 import Hr from "@/components/hr";
-import Page from "./page";
+import Page from "./pages";
 
 export type panelsType =
   | "posts"
@@ -15,7 +15,7 @@ export type panelsType =
   | "articles"
   | "media";
 
-export default function Day22() {
+export default function Day23() {
   const [selectedPanel, setSelectedPanel] = useState<panelsType>("posts");
 
   return (
