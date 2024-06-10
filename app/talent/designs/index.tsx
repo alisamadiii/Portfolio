@@ -34,6 +34,10 @@ export const NewIndex: IndexData = {
       component: React.lazy(() => import("./morph-css")),
     },
     {
+      name: "tutorial",
+      component: React.lazy(() => import("./tutorial")),
+    },
+    {
       name: "Theme-Toggle",
       component: React.lazy(() => import("./theme-toggle")),
       from: {
@@ -153,9 +157,13 @@ export const NewIndex: IndexData = {
       name: "day-24",
       component: React.lazy(() => import("./50-day-challenge/day-24/index")),
     },
-    // {
-    //   name: "test",
-    //   component: React.lazy(() => import("./50-day-challenge/test/index")),
-    // },
+    {
+      name: "day-25",
+      component: React.lazy(() => import("./50-day-challenge/day-25/index")),
+    },
+    {
+      name: "test",
+      component: React.lazy(() => import("./50-day-challenge/test/index")),
+    },
   ],
 };
