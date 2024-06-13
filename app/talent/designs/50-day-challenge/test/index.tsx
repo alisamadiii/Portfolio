@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import useMeasure from "react-use-measure";
@@ -63,11 +64,13 @@ export default function MultiStepComponent() {
 
   const onContinue = () => {
     if (currentStep === 2) {
+      setCurrentStep(0);
+      setDirection(-1);
       return;
     }
 
     setDirection(1);
-    setCurrentStep(currentStep + 1);
+    setCurrentStep((prev) => prev + 1);
   };
 
   const onBack = () => {
@@ -76,29 +79,26 @@ export default function MultiStepComponent() {
     }
 
     setDirection(-1);
-    setCurrentStep(currentStep - 1);
+    setCurrentStep((prev) => prev - 1);
   };
 
   useEffect(() => {
-    function keydownHandler(event: any) {
+    const onKeydownHandler = (event: KeyboardEvent) => {
       if (event.key === "ArrowRight") {
         onContinue();
       } else if (event.key === "ArrowLeft") {
         onBack();
       }
-    }
+    };
 
-    window.addEventListener("keydown", keydownHandler);
-
+    window.addEventListener("keydown", onKeydownHandler);
     return () => {
-      window.removeEventListener("keydown", keydownHandler);
+      window.removeEventListener("keydown", onKeydownHandler);
     };
   }, [currentStep]);
 
-  console.log("testing");
-
   return (
-    <MotionConfig transition={{ duration: 2, type: "spring", bounce: 0 }}>
+    <MotionConfig transition={{ duration: 0.7, type: "spring", bounce: 0 }}>
       <motion.div
         animate={{ height: bounds.height }}
         className="multi-step-wrapper"
@@ -142,7 +142,7 @@ const variants = {
   initial: (direction: number) => {
     return { x: `${110 * direction}%`, opacity: 0 };
   },
-  active: { x: "0%", opacity: 1 },
+  active: { x: 0, opacity: 1 },
   exit: (direction: number) => {
     return { x: `${-110 * direction}%`, opacity: 0 };
   },
