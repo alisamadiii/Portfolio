@@ -6,30 +6,46 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { cn } from "@/utils";
+import { Skeleton } from "../skeleton";
 
 const videos = [
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/ios-app-store.mp4",
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/expanding-list.mp4",
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/spotify.mp4",
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/card-animation.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/card-expand.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/custom-ease.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/dimension.mp4",
 ];
 
 export default function FramerMotionWorks() {
   return (
-    <div className="relative isolate my-12 flex flex-col items-center justify-center gap-8 py-12">
+    <div className="relative isolate flex flex-col items-center justify-center gap-8 py-12">
       <div className="grid grid-cols-2 gap-2">
         {videos.map((video, index) => (
-          <motion.div key={index} className={cn("")}>
+          <motion.div
+            key={index}
+            className={cn("relative isolate aspect-square w-full")}
+          >
             <video
               src={video}
               autoPlay
               muted
               playsInline
               loop
-              className="rounded-lg border border-border"
+              className="h-full w-full rounded-lg border border-border object-cover"
             ></video>
+
+            <Skeleton className="absolute inset-0 -z-10 rounded-lg" />
           </motion.div>
         ))}
+        <motion.div
+          className={cn(
+            "relative isolate grid aspect-square w-full place-items-center rounded-lg border border-border bg-box text-muted"
+          )}
+        >
+          Coming...
+        </motion.div>
       </div>
 
       <Link
