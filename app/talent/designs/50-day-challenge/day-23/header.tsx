@@ -3,7 +3,7 @@ import React, { memo } from "react";
 
 function Header() {
   return (
-    <div className="-mt-[48px]">
+    <div>
       <Image
         src={
           "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/general/banner-day-22.jpg"

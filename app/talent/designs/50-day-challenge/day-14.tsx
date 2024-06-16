@@ -32,9 +32,7 @@ export default function Day14() {
 
   return (
     <div className="flex h-dvh w-full items-center justify-center bg-gradient-to-tr from-[#111111] to-[#212121]">
-      <IphoneSimulator>
-        <div className="absolute inset-0 -z-10 bg-[#131113]"></div>
-
+      <IphoneSimulator mainClassName="bg-[#131113] pb-0">
         <MotionConfig transition={{ duration: 0.7, type: "spring", bounce: 0 }}>
           <motion.div
             animate={{
@@ -66,7 +64,7 @@ export default function Day14() {
               <h1>resent listens</h1>
             </header>
 
-            <section className="mt-4 flex flex-col gap-4 overflow-auto px-4 pb-28">
+            <section className="mt-4 flex flex-col gap-4 overflow-auto px-4">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="flex w-full gap-4">
                   <div className="flex aspect-square w-14 items-center justify-center rounded-lg bg-[#343234] text-[#716F71]">
@@ -83,9 +81,9 @@ export default function Day14() {
             </section>
           </motion.div>
 
-          <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-full bg-gradient-to-b from-transparent to-[#131113] to-55%"></div>
+          <div className="sticky bottom-0 left-0 w-full px-4 pb-8">
+            <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-full bg-gradient-to-b from-transparent to-[#131113] to-55%"></div>
 
-          <div className="absolute bottom-0 left-0 w-full px-4 pb-8">
             <motion.div
               className="relative isolate flex w-full cursor-pointer items-center gap-4 py-3 pl-3 pr-4"
               onClick={onClickHandler}

@@ -16,6 +16,7 @@ const videos = [
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/card-expand.mp4",
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/custom-ease.mp4",
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/dimension.mp4",
+  "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/telegram_profile_expanding.mp4",
 ];
 
 export default function FramerMotionWorks() {
@@ -39,13 +40,6 @@ export default function FramerMotionWorks() {
             <Skeleton className="absolute inset-0 -z-10 rounded-lg" />
           </motion.div>
         ))}
-        <motion.div
-          className={cn(
-            "relative isolate grid aspect-square w-full place-items-center rounded-lg border border-border bg-box text-muted"
-          )}
-        >
-          Coming...
-        </motion.div>
       </div>
 
       <Link

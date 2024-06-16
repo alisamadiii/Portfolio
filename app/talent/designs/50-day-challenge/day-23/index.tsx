@@ -20,8 +20,7 @@ export default function Day23() {
 
   return (
     <div className="flex h-dvh w-full items-center justify-center bg-[#E1E1E1] text-black">
-      <IphoneSimulator mixBlend={false} mainClassName="overflow-visible">
-        <div className="absolute inset-0 -z-10 bg-[#E1E1E1]"></div>
+      <IphoneSimulator mixBlend={false} mainClassName="bg-[#E1E1E1] pt-0">
         <div className="text-black">
           <Header />
           <Buttons

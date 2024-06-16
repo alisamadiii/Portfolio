@@ -36,7 +36,7 @@ export default function EachValue({ value }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 -z-10 bg-black/50 backdrop-blur-xl"
+                className="absolute inset-0 -z-10 rounded-[51px] bg-black/50 backdrop-blur-xl"
               />
             )}
           </AnimatePresence>

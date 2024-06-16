@@ -35,7 +35,6 @@ export default function Pages({ selectedPanel }: Props) {
           exit="exit"
           transition={{ duration: 0.5, type: "spring", bounce: 0 }}
           key={selectedPanel}
-          className="h-96"
         >
           {selectedPanel === "posts"
             ? Array.from({ length: 4 }).map((_, index) => (
