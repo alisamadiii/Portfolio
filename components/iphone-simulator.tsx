@@ -14,6 +14,7 @@ interface Props {
   onPowerClickHandler?: () => void;
   transition?: Transition | undefined;
   mainClassName?: string;
+  backgroundImage?: string;
 }
 
 export default function IphoneSimulator({
@@ -26,6 +27,7 @@ export default function IphoneSimulator({
   onPowerClickHandler = () => {},
   transition,
   mainClassName,
+  backgroundImage,
 }: Props) {
   return (
     <div
@@ -161,6 +163,15 @@ export default function IphoneSimulator({
             </svg>
           </motion.div>
         </header>
+
+        {backgroundImage ? (
+          <div
+            className="absolute bottom-1 left-1/2 top-1/2 h-[calc(100%-8px)] w-[calc(100%-8px)] -translate-x-1/2 -translate-y-1/2 rounded-[56px]"
+            style={{
+              background: `url(${backgroundImage}) center/cover no-repeat`,
+            }}
+          />
+        ) : null}
 
         <main
           className={cn(

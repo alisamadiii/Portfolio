@@ -1,7 +1,11 @@
 "use client";
 
 import React, { Fragment, useState } from "react";
-import { MdKeyboardArrowRight, MdKeyboardArrowLeft , MdNotificationsActive } from "react-icons/md";
+import {
+  MdKeyboardArrowRight,
+  MdKeyboardArrowLeft,
+  MdNotificationsActive,
+} from "react-icons/md";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 
 import Wrapper from "@/components/designs/wrapper";
