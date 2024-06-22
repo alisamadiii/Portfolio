@@ -20,6 +20,7 @@ export default function Day35() {
       <div className="h-96">
         <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
           <motion.div
+            layout="preserve-aspect"
             animate={{ height: height > 0 ? height : undefined }}
             className="relative w-[340px] overflow-hidden rounded-xl border border-[#EEEEEE] bg-white shadow-[0_2px_10px_rgba(0,0,0,.05)]"
           >
