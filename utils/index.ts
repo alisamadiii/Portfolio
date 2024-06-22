@@ -46,9 +46,8 @@ function validEmail(email: string) {
   return email.toLocaleLowerCase().match(validRegex);
 }
 
-function myImage() {
-  return "https://pbs.twimg.com/profile_images/1774123575248830466/e0rbeSop_400x400.jpg";
-}
+const myImage =
+  "https://pbs.twimg.com/profile_images/1774123575248830466/e0rbeSop_400x400.jpg";
 
 export {
   cn,

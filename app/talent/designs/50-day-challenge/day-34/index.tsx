@@ -79,7 +79,7 @@ export default function Day34() {
               </button>
               <div className="flex grow items-center gap-2">
                 <Image
-                  src={myImage()}
+                  src={myImage}
                   width={40}
                   height={40}
                   alt="my-image"
