@@ -166,7 +166,7 @@ export default function IphoneSimulator({
 
         {backgroundImage ? (
           <div
-            className="absolute bottom-1 left-1/2 top-1/2 h-[calc(100%-8px)] w-[calc(100%-8px)] -translate-x-1/2 -translate-y-1/2 rounded-[56px]"
+            className="absolute bottom-1 left-1/2 top-1/2 h-[calc(100%-8px)] w-[calc(100%-8px)] -translate-x-1/2 -translate-y-1/2 rounded-[52px]"
             style={{
               background: `url(${backgroundImage}) center/cover no-repeat`,
             }}
@@ -175,7 +175,8 @@ export default function IphoneSimulator({
 
         <main
           className={cn(
-            "no-scrollbar relative isolate h-full w-full overflow-auto rounded-[52px] bg-[#222] py-12",
+            "no-scrollbar relative isolate h-full w-full overflow-auto rounded-[52px] py-12",
+            backgroundImage ? "" : "bg-[#222]",
             mainClassName
           )}
         >
