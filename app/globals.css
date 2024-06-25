@@ -722,3 +722,35 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+.intro-card {
+  animation: card-intro 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards 2s;
+  animation-timing-function: ease-out;
+}
+
+@keyframes card-intro {
+  from {
+    transform: scale(1.2) translateY(40px) rotate(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0px) rotate(90deg);
+    opacity: 1;
+  }
+}
+
+.intro-card-2 {
+  animation: card-intro-2 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards 2s;
+  animation-timing-function: ease-out;
+}
+
+@keyframes card-intro-2 {
+  from {
+    transform: scale(1.2) translate(40px, 40px) rotate(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translate(50px, 50px) rotate(90deg);
+    opacity: 1;
+  }
+}

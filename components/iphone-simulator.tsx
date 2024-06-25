@@ -15,6 +15,7 @@ interface Props {
   transition?: Transition | undefined;
   mainClassName?: string;
   backgroundImage?: string;
+  roundedCorners?: boolean;
 }
 
 export default function IphoneSimulator({
@@ -28,11 +29,13 @@ export default function IphoneSimulator({
   transition,
   mainClassName,
   backgroundImage,
+  roundedCorners = true,
 }: Props) {
   return (
     <div
       className={cn(
-        "relative aspect-[4/8] w-[367px] overflow-hidden rounded-[56px] border-[1.5px] border-[#7E7D7E] bg-[#2C2C2B] p-1 text-[var(--ios-simulator-color)]"
+        "relative aspect-[4/8] w-[367px] overflow-hidden border-[1.5px] border-[#7E7D7E] bg-[#2C2C2B] p-1 text-[var(--ios-simulator-color)]",
+        roundedCorners && " rounded-[56px]"
       )}
       // @ts-ignore
       style={{ "--ios-simulator-color": textColor }}
@@ -175,9 +178,10 @@ export default function IphoneSimulator({
 
         <main
           className={cn(
-            "no-scrollbar relative isolate h-full w-full overflow-auto rounded-[52px] py-12",
+            "no-scrollbar relative isolate h-full w-full overflow-auto py-12",
             backgroundImage ? "" : "bg-[#222]",
-            mainClassName
+            mainClassName,
+            roundedCorners && "rounded-[52px]"
           )}
         >
           {children}

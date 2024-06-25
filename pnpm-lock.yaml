@@ -125,6 +125,9 @@ dependencies:
   unist-util-visit:
     specifier: ^5.0.0
     version: 5.0.0
+  use-long-press:
+    specifier: ^3.2.0
+    version: 3.2.0(react@18.2.0)
   usehooks-ts:
     specifier: ^3.1.0
     version: 3.1.0(react@18.2.0)
@@ -8038,6 +8041,14 @@ packages:
       '@types/react': 18.2.73
       react: 18.2.0
       tslib: 2.6.2
+    dev: false
+
+  /use-long-press@3.2.0(react@18.2.0):
+    resolution: {integrity: sha512-uq5o2qFR1VRjHn8Of7Fl344/AGvgk7C5Mcb4aSb1ZRVp6PkgdXJJLdRrlSTJQVkkQcDuqFbFc3mDX4COg7mRTA==}
+    peerDependencies:
+      react: '>=16.8.0'
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /use-sidecar@1.1.2(@types/react@18.2.73)(react@18.2.0):
