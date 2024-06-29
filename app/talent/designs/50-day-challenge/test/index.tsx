@@ -1,90 +1,69 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import clsx from "clsx";
-import { ArrowDown } from "lucide-react";
-import Wrapper from "@/components/designs/wrapper";
+import React from "react";
+import { motion, useAnimation } from "framer-motion";
 
-const menuItems = ["testing", "testings124"];
+export default function Day44() {
+  const controls = useAnimation();
 
-enum Direction {
-  ROW = "row",
-  COLUMN = "column",
-}
-
-export default function Navigation() {
-  const [activeTab, setActiveTab] = useState<number | null>(null);
-  const [direction, setDirection] = useState<Direction.ROW | Direction.COLUMN>(
-    Direction.ROW
-  );
+  React.useEffect(() => {
+    const animate = async () => {
+      await controls.start({
+        x1: ["-13%", "100%"],
+        x2: ["0%", "113%"],
+        transition: {
+          x1: {
+            repeat: Infinity,
+            repeatType: "loop",
+            duration: 5,
+            ease: "linear",
+          },
+          x2: {
+            repeat: Infinity,
+            repeatType: "loop",
+            duration: 5,
+            ease: "linear",
+          },
+        },
+      });
+    };
+    console.log("rendering");
+    animate();
+  }, [controls]);
 
   return (
-    <Wrapper className="container flex min-h-screen flex-col items-center justify-center p-2 lg:w-1/2">
-      <nav>
-        <motion.ul
-          className={clsx(
-            "relative flex gap-4",
-            direction === Direction.ROW ? "flex-row" : "flex-col"
-          )}
-          transition={{ duration: 2, ease: "easeInOut" }}
-          layout
+    <div>
+      <svg
+        width="335"
+        height="163"
+        viewBox="0 0 335 163"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="text-neutral-600"
+      >
+        <g opacity="0.75">
+          <path
+            d="M335 151L317.491 36.2214C317.166 34.0879 316.477 32.0245 315.57 30.0659C307.713 13.0898 308.853 1 284 1C257.738 1 244.262 37.1622 218 37.1622C191.738 37.1622 195.262 67.5 169 67.5C142.738 67.5 141.262 37.1622 115 37.1622C88.7381 37.1622 88.7141 76.5675 62.4522 76.5675C36.1902 76.5675 36.1902 54.6756 9.9283 54.6756H0"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          ></path>
+        </g>
+        <path
+          d="M335 151L317.491 36.2214C317.166 34.0879 316.477 32.0245 315.57 30.0659C307.713 13.0898 308.853 1 284 1C257.738 1 244.262 37.1622 218 37.1622C191.738 37.1622 195.262 67.5 169 67.5C142.738 67.5 141.262 37.1622 115 37.1622C88.7381 37.1622 88.7141 76.5675 62.4522 76.5675C36.1902 76.5675 36.1902 54.6756 9.9283 54.6756H0"
+          stroke="url(#gradient-3)"
+          strokeWidth="1.5"
+        ></path>
+        <motion.linearGradient
+          id="gradient-3"
+          animate={controls}
+          y1="0%"
+          y2="0%"
         >
-          {menuItems.map((item, index) => (
-            <motion.li
-              layout
-              key={index}
-              tabIndex={0}
-              className={clsx(
-                "relative cursor-pointer rounded-lg px-3 py-1 text-center text-sm leading-relaxed transition-colors focus:outline-dotted focus:outline-1 focus:outline-slate-800",
-                activeTab === index ? "text-gray-900" : "text-gray-700"
-              )}
-              transition={{ duration: 2, ease: "easeInOut" }}
-              onFocus={() => setActiveTab(index)}
-              onMouseOver={() => setActiveTab(index)}
-              onMouseLeave={() => setActiveTab(index)}
-            >
-              {activeTab === index ? (
-                <motion.div
-                  layoutId="tab-indicator"
-                  className="absolute inset-0 rounded-lg bg-gray-700/5"
-                />
-              ) : null}
-              <motion.span
-                layout
-                className="relative inline-block text-inherit"
-              >
-                {item}
-              </motion.span>
-            </motion.li>
-          ))}
-          <motion.li
-            layout
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className={clsx(
-              direction === Direction.ROW ? "ml-8" : "mt-8 text-center"
-            )}
-          >
-            <motion.button
-              layout
-              className="rounded-lg p-2 text-gray-800 transition-colors duration-300 hover:bg-neutral-100 focus:outline-dotted focus:outline-1 focus:outline-slate-800"
-              onClick={() =>
-                setDirection(
-                  direction === Direction.ROW ? Direction.COLUMN : Direction.ROW
-                )
-              }
-            >
-              <ArrowDown
-                size={16}
-                className={clsx(
-                  "transform transition-transform duration-300 ease-in-out",
-                  direction === Direction.ROW ? "rotate-0" : "-rotate-90"
-                )}
-              />
-            </motion.button>
-          </motion.li>
-        </motion.ul>
-      </nav>
-    </Wrapper>
+          <stop stopColor="#001AFF" stopOpacity="0"></stop>
+          <stop offset="1" stopColor="#6DD4F5"></stop>
+          <stop offset="1" stopColor="#6DD4F5" stopOpacity="0"></stop>
+        </motion.linearGradient>
+      </svg>
+    </div>
   );
 }

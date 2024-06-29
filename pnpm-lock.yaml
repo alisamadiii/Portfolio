@@ -20,6 +20,9 @@ dependencies:
   '@react-email/components':
     specifier: ^0.0.17
     version: 0.0.17(@types/react@18.2.73)(react@18.2.0)
+  '@studio-freight/lenis':
+    specifier: ^1.0.33
+    version: 1.0.42
   '@supabase/supabase-js':
     specifier: ^2.43.1
     version: 2.43.1
@@ -2161,6 +2164,11 @@ packages:
 
   /@shikijs/core@1.4.0:
     resolution: {integrity: sha512-CxpKLntAi64h3j+TwWqVIQObPTED0FyXLHTTh3MKXtqiQNn2JGcMQQ362LftDbc9kYbDtrksNMNoVmVXzKFYUQ==}
+    dev: false
+
+  /@studio-freight/lenis@1.0.42:
+    resolution: {integrity: sha512-HJAGf2DeM+BTvKzHv752z6Z7zy6bA643nZM7W88Ft9tnw2GsJSp6iJ+3cekjyMIWH+cloL2U9X82dKXgdU8kPg==}
+    deprecated: '''@studio-freight/lenis'' has been renamed to just ''lenis'', run ''npx @darkroom.engineering/codemods'' to update your dependecies accordingly.'
     dev: false
 
   /@supabase/auth-js@2.64.2:
