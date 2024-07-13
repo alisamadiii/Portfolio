@@ -10,13 +10,14 @@ export interface ComponentInfo {
 }
 
 export type CollectionsTypes = Array<
-  "general" | "animations-dev" | "50-day-challenge"
+  "general" | "animations-dev" | "50-day-challenge" | "clip-path"
 >;
 
 export interface IndexData {
   general: ComponentInfo[];
   "animations-dev": ComponentInfo[];
   "50-day-challenge": ComponentInfo[];
+  "clip-path": ComponentInfo[];
 }
 
 export const NewIndex: IndexData = {
@@ -37,6 +38,7 @@ export const NewIndex: IndexData = {
       name: "tutorial",
       component: React.lazy(() => import("./tutorial")),
     },
+
     {
       name: "Theme-Toggle",
       component: React.lazy(() => import("./theme-toggle")),
@@ -55,6 +57,16 @@ export const NewIndex: IndexData = {
     //   name: "practice",
     //   component: React.lazy(() => import("./practice")),
     // },
+  ],
+  "clip-path": [
+    {
+      name: "clip-path",
+      component: React.lazy(() => import("./clip-path/clip-path")),
+    },
+    {
+      name: "stripe-select-button",
+      component: React.lazy(() => import("./clip-path/stripe-select-button")),
+    },
   ],
   "50-day-challenge": [
     {
@@ -261,9 +273,9 @@ export const NewIndex: IndexData = {
       name: "day-50",
       component: React.lazy(() => import("./50-day-challenge/day-50")),
     },
-    // {
-    //   name: "test",
-    //   component: React.lazy(() => import("./50-day-challenge/test/index")),
-    // },
+    {
+      name: "test",
+      component: React.lazy(() => import("./50-day-challenge/test/index")),
+    },
   ],
 };

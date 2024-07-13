@@ -13,6 +13,7 @@ const collections: CollectionsTypes = [
   "general",
   "animations-dev",
   "50-day-challenge",
+  "clip-path",
 ];
 
 // or Dynamic metadata
