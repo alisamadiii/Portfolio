@@ -2,21 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* * {
-  scroll-behavior: smooth;
-} */
-
 :root {
   --size-spinning: 40px;
   --color-spinning: #a7a7a9;
 
   --ios-simulator-color: white;
 }
-
-/* ::selection {
-  background-color: white;
-  color: black;
-} */
 
 ::-webkit-scrollbar {
   @apply w-2 bg-muted-2/20;

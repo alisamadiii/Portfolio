@@ -1,0 +1,14 @@
+.how {
+  color: red;
+  animation: fadein 1s infinite linear;
+}
+
+@keyframes fadein {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
