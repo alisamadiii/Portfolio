@@ -1,12 +1,115 @@
-.how {
-  color: red;
-  animation: fadein 1s infinite linear;
+.animate-wrapper {
+  animation: rotate 10s infinite linear;
+}
+.animate-wrapper.animate-reverse {
+  animation: rotate-wrapper-reverse 10s infinite linear;
 }
 
-@keyframes fadein {
+#social-media-wrapper {
+  position: absolute;
+  inset: -40px;
+  display: flex;
+  justify-content: center;
+  transform: rotate(calc(60deg * var(--i)));
+}
+
+#social-media-wrapper.image {
+  inset: -32px;
+}
+
+#social-media-wrapper > span {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  transform: rotate(calc(-60deg * var(--i)));
+  background-color: white;
+  padding: 1.5rem;
+  box-shadow:
+    0 0 0 1px #0e3f7e0a,
+    0 1px 1px -0.5px #2a33450a,
+    0 3px 3px -1.5px #2a33460a,
+    0 6px 6px -3px #2a33460a,
+    0 12px 12px -6px #0e3f7e0a,
+    0 24px 24px -12px #0e3f7e0a;
+  animation: rotate-reverse 10s infinite linear;
+}
+
+#social-media-wrapper > span:not(:has(img)) {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+#social-media-wrapper > span:not(:has(img))::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  box-shadow:
+    0 0 0 1px #0e3f7e0a,
+    0 1px 1px -0.5px #2a33450a,
+    0 3px 3px -1.5px #2a33460a,
+    0 6px 6px -3px #2a33460a,
+    0 12px 12px -6px #0e3f7e0a,
+    0 24px 24px -12px #0e3f7e0a;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.animate-wrapper.animate-reverse #social-media-wrapper {
+  transform: rotate(calc(-60deg * var(--i)));
+}
+.animate-wrapper.animate-reverse #social-media-wrapper > span {
+  transform: rotate(calc(60deg * var(--i)));
+  animation: rotate-children-reverse 10s infinite linear;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rotate-wrapper-reverse {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes rotate-reverse {
+  from {
+    transform: rotate(calc(-60deg * var(--i)));
+  }
+  to {
+    transform: rotate(calc(-360deg - 60deg * var(--i)));
+  }
+}
+@keyframes rotate-children-reverse {
+  from {
+    transform: rotate(calc(60deg * var(--i)));
+  }
+  to {
+    transform: rotate(calc(360deg + 60deg * var(--i)));
+  }
+}
+
+.dot-animation {
+  animation: fade-in 1.5s infinite ease-in-out;
+  animation-delay: calc(0.1s * var(--i));
+}
+
+@keyframes fade-in {
   0%,
   100% {
-    opacity: 0;
+    opacity: 0.1;
   }
   50% {
     opacity: 1;
