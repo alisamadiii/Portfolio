@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { IoMenu, IoClose } from "react-icons/io5";
-import { IoIosArrowRoundBack , IoIosArrowDown } from "react-icons/io";
+import { IoIosArrowRoundBack, IoIosArrowDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { type ComponentInfo, NewIndex } from "@/app/talent/designs";
@@ -79,7 +79,7 @@ function EachSection({ collection, data }: { collection: string; data: any }) {
                   href={`/talent/${collection}/${d.name}`}
                   className={cn(
                     "inline-block w-full rounded-md p-1 text-sm capitalize hover:bg-gray-100 active:bg-gray-200",
-                    params.design[1] === d.name && "font-bold"
+                    params.design && params.design[1] === d.name && "font-bold"
                   )}
                 >
                   {d.name.replaceAll("-", " ")}
