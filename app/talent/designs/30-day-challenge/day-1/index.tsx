@@ -4,9 +4,17 @@ import React from "react";
 import "./style.css";
 import Wrapper from "@/components/designs/wrapper";
 
+import GivingCredit from "@/components/credit";
+
 export default function Day1() {
   return (
     <Wrapper className="px-8">
+      <GivingCredit
+        name="Necati"
+        website="https://antimetal.com/"
+        url="https://twitter.com/necatikcl"
+      />
+
       <div className="relative flex h-[474px] w-full max-w-[960px] flex-col items-center justify-center border">
         {/* Small Circles */}
         <div className="pointer-events-none absolute left-0 top-0 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-white shadow-[0_0_0_5px_white]" />
