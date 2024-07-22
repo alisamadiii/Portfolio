@@ -1,0 +1,132 @@
+body {
+  background-color: #0b0b0b;
+  color: rgb(176, 176, 176);
+}
+
+.wrapper {
+  position: relative;
+  width: 285px;
+  height: 400px;
+  background-color: #181818;
+  border: 1px solid #262626;
+  border-radius: 12px;
+  padding: 30px 30px 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: 200ms;
+}
+
+.wrapper:hover {
+  background-color: #1a1a1a;
+}
+
+.wrapper .header p {
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+b {
+  color: white;
+}
+
+.animation-section {
+  position: relative;
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  aspect-ratio: 1/1;
+  transform: translateY(80px);
+}
+
+.circles {
+  transition: 350ms ease-out;
+  transition-delay: calc(0.1s * var(--i));
+}
+
+.circle-1 {
+  width: 200px;
+  height: 200px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.circles:not(.circle-1) {
+  position: relative;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 116, 19);
+  position: absolute;
+  inset: 0px;
+  opacity: calc(1 - 0.13 * var(--i));
+}
+
+.circle-3 {
+  inset: -12px !important;
+}
+.circle-4 {
+  inset: -22px !important;
+}
+.circle-5 {
+  inset: -32px !important;
+}
+.circle-6 {
+  inset: -52px !important;
+}
+.circle-7 {
+  inset: -72px !important;
+}
+
+.dots {
+  position: absolute;
+  inset: -79px;
+  border-radius: 999px;
+  display: flex;
+  justify-content: center;
+  animation: rotate 200s infinite linear;
+  transition: 350ms ease-out;
+  transition-delay: calc(0.1s * 7);
+}
+
+.dots::after {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 100%;
+  background-color: rgb(255, 116, 19);
+}
+
+.dots.dots-2 {
+  inset: -77px;
+}
+.dots-2::after {
+  background-color: rgb(91, 42, 8);
+  width: 10px;
+  height: 10px;
+}
+
+.wrapper:hover .circles,
+.wrapper:hover .dots {
+  transform: scale(1.1);
+}
+
+.background-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to top, #181818, #18181800);
+}
+
+@keyframes rotate {
+  from {
+    rotate: var(--i);
+  }
+  to {
+    rotate: 360deg;
+  }
+}
