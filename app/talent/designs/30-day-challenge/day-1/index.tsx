@@ -1,5 +1,17 @@
 // @ts-nocheck
 
+// ===============================================================================
+//                                 IMPORTANT NOTICE
+// ===============================================================================
+
+// Inspired by:
+
+// Creator: Necati
+// Website: https://antimetal.com/
+// About: https://twitter.com/necatikcl
+
+// ===============================================================================
+
 import React from "react";
 import "./style.css";
 import Wrapper from "@/components/designs/wrapper";
