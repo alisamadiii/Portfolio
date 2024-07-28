@@ -1,0 +1,60 @@
+body {
+  background-color: black;
+  color: white;
+  padding: 0 1rem;
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 390px;
+  background: linear-gradient(110deg, #272727 0.06%, #171717);
+  box-shadow: inset 0 0 6px hsla(0, 0%, 100%, 0.1);
+  border-radius: 1rem;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.dots-animation {
+  --duration: 1000ms;
+  --col: 18;
+
+  display: grid;
+  grid-template-columns: repeat(var(--col), 1fr);
+  gap: 19px;
+  pointer-events: none;
+}
+
+.dots-animation div {
+  transition: 300ms;
+  transition-delay: 0s;
+}
+
+.dots-animation div[data-light] {
+  width: 1px;
+  height: 1px;
+  background-color: #888;
+  border-radius: 50%;
+}
+
+.dots-animation div[data-state="high"] {
+  background-color: white;
+  box-shadow:
+    0 0 1px 1px rgba(50, 145, 255, 0.8),
+    0 0 2px 1px rgba(50, 145, 255, 0.25);
+  transition-delay: calc(0.03s * var(--i));
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+p {
+  margin-top: 4px;
+  max-width: min(25ch, 80%);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
