@@ -20,7 +20,7 @@ export default function Navbar() {
 
   return (
     <div
-      className={`mx-auto mt-16 max-w-2xl ${pathname.includes("/talent") ? "hidden" : "block  max-md:px-4"}`}
+      className={`mx-auto mt-16 max-w-2xl ${pathname.includes("/talent") || pathname.includes("/client") ? "hidden" : "block  max-md:px-4"}`}
     >
       <nav className="-ml-3 mb-16 flex max-w-2xl">
         <Suspense fallback={null}>

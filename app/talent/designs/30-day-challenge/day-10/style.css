@@ -1,0 +1,45 @@
+body {
+  color: #e7ecf1;
+}
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: scale-up 1s forwards cubic-bezier(0.65, 0, 0.35, 1) 0.9s;
+}
+
+svg {
+  width: 150px;
+}
+
+.svg-lines {
+  stroke-dasharray: var(--dasharray);
+  stroke-dashoffset: var(--dashoffset);
+  animation: draw 1.5s forwards cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+img {
+  position: absolute;
+  width: 150px;
+  opacity: 0;
+  animation: fade-in 0.3s forwards cubic-bezier(0.65, 0, 0.35, 1) 1.3s;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0; /* Reveal the stroke */
+  }
+}
+
+@keyframes fade-in {
+  to {
+    opacity: 1; /* Reveal the stroke */
+  }
+}
+
+@keyframes scale-up {
+  to {
+    scale: 1.1; /* Reveal the stroke */
+  }
+}

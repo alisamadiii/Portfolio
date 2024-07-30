@@ -40,3 +40,5 @@ next-env.d.ts
 
 # Contentlayer
 .contentlayer
+
+/app/client

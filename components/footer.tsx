@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer
-      className={`mx-auto my-16 max-w-2xl ${pathname.includes("/talent") ? "hidden" : "block max-md:px-4"}`}
+      className={`mx-auto my-16 max-w-2xl ${pathname.includes("/talent") || pathname.includes("/client") ? "hidden" : "block max-md:px-4"}`}
     >
       <div className="mb-1 flex gap-3">
         <Magnetic>
