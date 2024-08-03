@@ -61,6 +61,6 @@ module.exports = {
     "/app/components/hover-card.tsx",
     "/app/components/tooltip.tsx",
     "/react-email-starter",
-    "/app/talent/designs/30-day-challenge",
+    "/app/talent/designs/15-day-challenge",
   ],
 };
