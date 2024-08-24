@@ -10,6 +10,11 @@ const nextConfig = {
         hostname: "pbs.twimg.com",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "ldxedhzbfnmrovkzozxc.supabase.co",
+        port: "",
+      },
     ],
   },
 };

@@ -11,6 +11,7 @@ import CopyButton from "./CopyButton";
 import { Tab, Tabs } from "./Tabs";
 import ComponentPreview from "./PreviewComponent";
 import { Files, File } from "./FilesTab";
+import FramerMotionWorks from "./FramerMotion";
 
 const components = {
   h1: ({
@@ -213,7 +214,7 @@ const components = {
             )}
           >
             <button
-              className="text-background pointer-events-auto absolute bottom-6 rounded-lg bg-foreground px-3 py-2 text-sm"
+              className="pointer-events-auto absolute bottom-6 rounded-lg bg-foreground px-3 py-2 text-sm text-background"
               onClick={() => {
                 setIsLong(!isLong);
                 if (figureRef.current) {
@@ -317,6 +318,7 @@ const components = {
   Files,
   File,
   ComponentPreview,
+  FramerMotionWorks,
 };
 
 export function Mdx({ code }: { code: string }) {

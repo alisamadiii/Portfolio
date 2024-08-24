@@ -2,5 +2,6 @@
 
 import blogs__eslintSetupMdx from './blogs__eslint-setup.mdx.json' assert { type: 'json' }
 import blogs__makingWebsiteMdx from './blogs__making-website.mdx.json' assert { type: 'json' }
+import blogs__masteringFramerMotionMdx from './blogs__mastering-framer-motion.mdx.json' assert { type: 'json' }
 
-export const allBlogs = [blogs__eslintSetupMdx, blogs__makingWebsiteMdx]
+export const allBlogs = [blogs__eslintSetupMdx, blogs__makingWebsiteMdx, blogs__masteringFramerMotionMdx]
