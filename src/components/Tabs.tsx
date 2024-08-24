@@ -35,7 +35,7 @@ export const Tabs: React.FC<TabsProps> = ({ children, id }) => {
                 <motion.div
                   layoutId="tab-underline"
                   transition={{ duration: 0.4, type: "spring", bounce: 0 }}
-                  className="absolute bottom-0 left-0 h-0.5 w-full bg-primary"
+                  className="absolute bottom-0 left-0 h-0.5 w-full bg-foreground"
                 />
               )}
             </button>

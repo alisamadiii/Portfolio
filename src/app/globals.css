@@ -50,6 +50,7 @@ html.dark {
 body {
   background-color: rgb(var(--background));
   color: rgba(var(--foreground));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 code[data-theme*=" "],

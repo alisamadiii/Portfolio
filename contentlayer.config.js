@@ -54,10 +54,25 @@ const computedFields = {
       return headingMatches;
     },
   },
+  parentFolder: {
+    type: "string",
+    resolve: (doc) => {
+      const pathParts = doc._raw.flattenedPath.split("/");
+      return pathParts.length > 1 ? pathParts[pathParts.length - 2] : null;
+    },
+  },
+  isChallenge: {
+    type: "string",
+    resolve: (doc) => {
+      const slug = `/${doc._raw.flattenedPath}`;
+      const hasNumberAtEnd = /\d+$/.test(slug);
+      return hasNumberAtEnd ? true : false;
+    },
+  },
 };
 
-const Blogs = defineDocumentType(() => ({
-  name: "Blogs",
+const Contents = defineDocumentType(() => ({
+  name: "Contents",
   filePathPattern: "./**/*.mdx",
   contentType: "mdx",
 
@@ -72,7 +87,7 @@ const Blogs = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: "./src/contents/",
-  documentTypes: [Blogs],
+  documentTypes: [Contents],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [

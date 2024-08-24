@@ -43,10 +43,25 @@ var computedFields = {
       });
       return headingMatches;
     }
+  },
+  parentFolder: {
+    type: "string",
+    resolve: (doc) => {
+      const pathParts = doc._raw.flattenedPath.split("/");
+      return pathParts.length > 1 ? pathParts[pathParts.length - 2] : null;
+    }
+  },
+  isChallenge: {
+    type: "string",
+    resolve: (doc) => {
+      const slug = `/${doc._raw.flattenedPath}`;
+      const hasNumberAtEnd = /\d+$/.test(slug);
+      return hasNumberAtEnd ? true : false;
+    }
   }
 };
-var Blogs = defineDocumentType(() => ({
-  name: "Blogs",
+var Contents = defineDocumentType(() => ({
+  name: "Contents",
   filePathPattern: "./**/*.mdx",
   contentType: "mdx",
   fields: {
@@ -59,7 +74,7 @@ var Blogs = defineDocumentType(() => ({
 }));
 var contentlayer_config_default = makeSource({
   contentDirPath: "./src/contents/",
-  documentTypes: [Blogs],
+  documentTypes: [Contents],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
@@ -88,4 +103,4 @@ var contentlayer_config_default = makeSource({
 export {
   contentlayer_config_default as default
 };
-//# sourceMappingURL=compiled-contentlayer-config-OK42XF6B.mjs.map
+//# sourceMappingURL=compiled-contentlayer-config-55YBGQWF.mjs.map

@@ -3,55 +3,59 @@
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { allBlogs } from "contentlayer/generated";
+import { allContents } from "contentlayer/generated";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "@/utils";
 import { useSidebar } from "@/context/useSidebar";
 
 export function RightSidebar() {
-  const { blogs } = useParams<{ blogs: string[] }>();
+  const { contents } = useParams<{ contents: string[] }>();
   const { currentHeading } = useSidebar();
 
-  const findingDocs = allBlogs.find(
-    (doc) => doc.slug === `/${blogs.join("/")}`
+  const findingDocs = allContents.find(
+    (doc) => doc.slug === `/${contents.join("/")}`
   );
 
-  console.log(currentHeading);
-
   return (
-    <div className="bg-background sticky top-8 z-[9999] mt-8 overflow-hidden rounded-md border-wrapper p-4">
-      <div className="flex items-center justify-between gap-8">
-        <h3 className="shrink-0">Table of Contents</h3>
-        <AnimatePresence initial={false} mode="popLayout">
-          <motion.span
-            key={currentHeading}
-            initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
-            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-            exit={{ opacity: 0, filter: "blur(4px)", y: -10 }}
-            transition={{ duration: 0.4, type: "spring", bounce: 0 }}
-            className="block grow text-end text-sm text-muted"
-          >
-            {currentHeading}
-          </motion.span>
-        </AnimatePresence>
-      </div>
-      <motion.ul initial={{ height: 0 }} className="w-[280px] opacity-0">
-        {findingDocs?.headings.map(
-          (
-            heading: { id: string; text: string; level: number },
-            index: number
-          ) => (
-            <EachLink
-              key={index}
-              id={heading.id}
-              text={heading.text}
-              level={heading.level}
-            />
-          )
-        )}
-      </motion.ul>
-    </div>
+    !findingDocs?.isChallenge && (
+      <>
+        <div className="fixed left-1/2 top-0 z-50 h-24 w-full max-w-4xl -translate-x-1/2 rounded-b-[100%] bg-gradient-to-b from-background to-background/10 backdrop-blur-[2px]"></div>
+
+        <div className="sticky top-8 z-[9999] mt-8 overflow-hidden rounded-md border-wrapper bg-background p-4">
+          <div className="flex items-center justify-between gap-8">
+            <h3 className="shrink-0">Table of Contents</h3>
+            <AnimatePresence initial={false} mode="popLayout">
+              <motion.span
+                key={currentHeading}
+                initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
+                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                exit={{ opacity: 0, filter: "blur(4px)", y: -10 }}
+                transition={{ duration: 0.4, type: "spring", bounce: 0 }}
+                className="block grow text-end text-sm text-muted"
+              >
+                {currentHeading}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+          <motion.ul initial={{ height: 0 }} className="w-[280px] opacity-0">
+            {findingDocs?.headings.map(
+              (
+                heading: { id: string; text: string; level: number },
+                index: number
+              ) => (
+                <EachLink
+                  key={index}
+                  id={heading.id}
+                  text={heading.text}
+                  level={heading.level}
+                />
+              )
+            )}
+          </motion.ul>
+        </div>
+      </>
+    )
   );
 }
 

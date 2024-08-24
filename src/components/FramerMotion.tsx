@@ -5,6 +5,7 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/utils";
+import Link from "next/link";
 
 const videos = [
   "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/goals/ios-app-store.mp4",
@@ -40,12 +41,12 @@ export default function FramerMotionWorks() {
         ))}
       </div>
 
-      {/* <Link
-        href={"/talent"}
+      <Link
+        href={"/challenges/framer-motion/1"}
         className="flex h-8 items-center justify-center rounded-lg bg-white px-4 text-black duration-100 hover:bg-opacity-80 active:scale-95"
       >
         See more
-      </Link> */}
+      </Link>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import TechSection from "@/components/TechSection";
 import BlogSection from "@/components/BlogSection";
 import ProjectSection from "@/components/ProjectSection";
 import SocialMedia from "@/components/SocialMedia";
+import ChallengesSection from "@/components/ChallengesSection";
 
 export default function Home() {
   const name = "Ali Reza Samadi";
@@ -74,6 +75,15 @@ export default function Home() {
         <h2 className="mt-10">Projects</h2>
 
         <ProjectSection />
+      </div>
+
+      <div
+        className="animate-blur opacity-0 blur-sm"
+        style={{ animationDelay: "1.4s" }}
+      >
+        <h2 className="mt-10">Challenges</h2>
+
+        <ChallengesSection />
       </div>
     </main>
   );

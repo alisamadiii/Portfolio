@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { cn } from "@/utils";
+import { useElementsOpening } from "@/context/useElementOpening";
+import { useParams } from "next/navigation";
+import { allContents } from "contentlayer/generated";
 
 type Props = {
   value: string;
@@ -8,6 +11,13 @@ type Props = {
 
 export default function CopyButton({ value, className }: Props) {
   const [copied, setCopied] = useState(false);
+  const { setCurrentOpen, currentOpen } = useElementsOpening();
+
+  const { contents } = useParams<{ contents: string[] }>();
+
+  const findingContents = allContents.find(
+    (post) => `/${contents.join("/")}` === post.slug
+  );
 
   useEffect(() => {
     if (copied) {
@@ -25,12 +35,18 @@ export default function CopyButton({ value, className }: Props) {
     navigator.clipboard.writeText(value || "");
 
     setCopied(true);
+
+    if (findingContents?.isChallenge) {
+      setTimeout(() => {
+        setCurrentOpen("github-repo");
+      }, 500);
+    }
   };
 
   return (
     <button
       className={cn(
-        "text-muted flex h-8 w-8 items-center justify-center rounded-md duration-200 hover:bg-[#ebebeb] dark:hover:bg-[#1f1f1f]",
+        "flex h-8 w-8 items-center justify-center rounded-md text-muted duration-200 hover:bg-[#ebebeb] dark:hover:bg-[#1f1f1f]",
         className
       )}
       onClick={handleCopy}
