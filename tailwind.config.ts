@@ -6,6 +6,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        background: "rgb(var(--background) / <alpha-value>)",
         foreground: "rgb(var(--foreground) / <alpha-value>)",
         primary: "hsl(var(--primary) / <alpha-value>)",
         "primary-hover": "hsl(var(--primary-hover) / <alpha-value>)",
@@ -25,9 +26,20 @@ const config: Config = {
         "wrapper-2": "1px",
         code: "1px",
       },
+      animation: {
+        blur: "blur 1s forwards",
+      },
       fontFamily: {
         sans: ["var(--font-geist-sans)"],
         mono: ["var(--font-geist-mono)"],
+      },
+      keyframes: {
+        blur: {
+          to: {
+            opacity: "1",
+            filter: "blur(0px)",
+          },
+        },
       },
     },
   },

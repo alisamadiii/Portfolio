@@ -2,6 +2,16 @@
 
 const { withContentlayer } = require("next-contentlayer");
 
-const nextConfig = {};
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "pbs.twimg.com",
+        port: "",
+      },
+    ],
+  },
+};
 
 module.exports = withContentlayer(nextConfig);

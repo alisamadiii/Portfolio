@@ -20,7 +20,7 @@ export function RightSidebar() {
   console.log(currentHeading);
 
   return (
-    <div className="sticky top-8 z-[9999] mt-8 overflow-hidden rounded-md border-wrapper bg-white p-4 backdrop-blur">
+    <div className="bg-background sticky top-8 z-[9999] mt-8 overflow-hidden rounded-md border-wrapper p-4">
       <div className="flex items-center justify-between gap-8">
         <h3 className="shrink-0">Table of Contents</h3>
         <AnimatePresence initial={false} mode="popLayout">
