@@ -5,8 +5,6 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
-/hidden_assets
-/.next
 
 # testing
 /coverage
@@ -36,9 +34,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-
-# Contentlayer
-.contentlayer
-
-/app/client

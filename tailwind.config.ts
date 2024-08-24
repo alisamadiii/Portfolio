@@ -1,43 +1,43 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        background: "#111010",
-        foreground: "#FFFFFF",
-        muted: {
-          DEFAULT: "#737373",
-          2: "#A3A3A3",
-          3: "#d4d4d4",
-        },
-        box: "#262626",
-        border: "#404040",
+        background: "rgb(var(--background) / <alpha-value>)",
+        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        primary: "hsl(var(--primary) / <alpha-value>)",
+        "primary-hover": "hsl(var(--primary-hover) / <alpha-value>)",
+        muted: "hsl(var(--muted)/ <alpha-value>)",
+        code: "hsl(var(--code-bg)/ <alpha-value>)",
+        "code-figcaption": "hsl(var(--code-figcaption-bg)/ <alpha-value>)",
+        "code-gradient-from": "hsla(var(--code-gradient-from) / 0)",
+        "code-gradient-to": "hsl(var(--code-gradient-to))",
       },
-      boxShadow: {
-        "box-focus": "0 0 0 2px #111010, 0 0 0 4px white",
-        "input-focus": "0 0 0 2px #111010, 0 0 0 4px white",
+      borderColor: {
+        wrapper: "hsl(var(--border) / <alpha-value>)",
+        "wrapper-2": "hsl(var(--border-2) / <alpha-value>)",
+        code: "hsl(var(--code-border) / <alpha-value>)",
+      },
+      borderWidth: {
+        wrapper: "1px",
+        "wrapper-2": "1px",
+        code: "1px",
       },
       animation: {
-        "badge-circle-expand": "badge-circle-expand 1s infinite linear",
+        blur: "blur 1s forwards",
       },
-      height: {
-        dvh: "100dvh",
+      fontFamily: {
+        sans: ["var(--font-geist-sans)"],
+        mono: ["var(--font-geist-mono)"],
       },
       keyframes: {
-        "badge-circle-expand": {
-          from: {
-            transform: "scale(1)",
-            opacity: "1",
-          },
+        blur: {
           to: {
-            transform: "scale(2)",
-            opacity: "0",
+            opacity: "1",
+            filter: "blur(0px)",
           },
         },
       },

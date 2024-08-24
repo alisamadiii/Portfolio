@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --background: 255 255 255;
+  --foreground: 23 23 23;
+
+  /* MDX Colors */
+  --primary: 215 100% 50%;
+  --primary-hover: 209 95% 70%;
+
+  --muted: 0 0% 40%;
+  --border: 0 0% 92%;
+  --border-2: 0 0% 92%;
+  --code-bg: 0 0% 97%;
+  --code-border: 0 0% 93%;
+  --code-figcaption-bg: 0 0% 98%;
+
+  --code-gradient-from: 0 0% 100%;
+  --code-gradient-to: 0 0% 100%;
+
+  --line-add: #2ea0432f;
+  --line-remove: #f8524944;
+
+  --code-opacity: 0.2;
+}
+
+html.dark {
+  --background: 0 0 0;
+  --foreground: 237 237 237;
+
+  --muted: 0 0% 63%;
+  --border: 0 0% 18%;
+  --border-2: 0 0% 12%;
+  --code-bg: 0 2% 16%;
+  --code-border: 0 2% 24%;
+  --code-figcaption-bg: 0 0% 0%;
+
+  --code-gradient-from: 0 0% 0%;
+  --code-gradient-to: 0 0% 0%;
+
+  --code-opacity: 0.5;
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgba(var(--foreground));
+}
+
+code[data-theme*=" "],
+code[data-theme*=" "] span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+html.dark {
+  code[data-theme*=" "],
+  code[data-theme*=" "] span {
+    color: var(--shiki-dark);
+    background-color: var(--shiki-dark-bg);
+  }
+}
+
+[data-rehype-pretty-code-figure] code[data-line-numbers] {
+  counter-reset: line;
+}
+
+[data-rehype-pretty-code-figure] code[data-line-numbers] > [data-line]::before {
+  @apply mr-4 md:mr-8;
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1rem;
+  text-align: right;
+  color: #a8a8a8;
+}
+
+[data-chars-id="add"] {
+  background-color: var(--line-add);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+[data-highlighted-line-id="add"] {
+  background-color: var(--line-add) !important;
+}
+
+[data-highlighted-line-id="remove"] {
+  background-color: var(--line-remove) !important;
+}
+
+[data-highlighted-line-id="opacity"] {
+  opacity: var(--code-opacity);
+}
+
+[data-highlighted-line-id="remove"]::after {
+  content: "-";
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
+
+[data-highlighted-line-id="add"]::after {
+  content: "+";
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
