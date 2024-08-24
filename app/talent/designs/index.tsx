@@ -43,6 +43,14 @@ export const NewIndex: IndexData = {
       component: React.lazy(() => import("./card-sliding")),
     },
     {
+      name: "canada-airplane",
+      component: React.lazy(() => import("./canada-airplane")),
+    },
+    {
+      name: "button",
+      component: React.lazy(() => import("./button")),
+    },
+    {
       name: "Theme-Toggle",
       component: React.lazy(() => import("./theme-toggle")),
       from: {
@@ -55,6 +63,10 @@ export const NewIndex: IndexData = {
     {
       name: "form-popover",
       component: React.lazy(() => import("./form-popover")),
+    },
+    {
+      name: "dynamic-island",
+      component: React.lazy(() => import("./dynamic-island/index")),
     },
     // {
     //   name: "practice",
