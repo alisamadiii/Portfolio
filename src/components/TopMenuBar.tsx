@@ -15,7 +15,7 @@ export function Wrapper({ children, className }: GeneralProps) {
   return (
     <header
       className={cn(
-        "border-dark-500 sticky left-0 top-0 z-[100] mb-[1.6rem] flex h-[46px] w-full shrink-0 items-center justify-center border-b-[0.33px] bg-white md:mb-[1.13rem] md:h-[68px] md:border-b md:bg-transparent",
+        "sticky left-0 top-0 z-[100] mb-[1.6rem] flex h-[46px] w-full shrink-0 items-center justify-center border-b-[0.33px] border-b-wrapper bg-background md:mb-[1.13rem] md:h-[68px] md:bg-transparent",
         className
       )}
     >

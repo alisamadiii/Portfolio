@@ -47,7 +47,7 @@ export function Dialog({ children, className, id }: Id) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: "var(--opacity-exit)" }}
-            className="absolute inset-0 -z-10 bg-white/80 backdrop-blur-sm max-md:[--opacity-exit:0]"
+            className="absolute inset-0 -z-10 bg-background/80 backdrop-blur-sm max-md:[--opacity-exit:0]"
             onClick={() => setCurrentOpen(null)}
           />
           {children}
@@ -72,7 +72,7 @@ export function Content({ children, className }: props) {
         x: "var(--x-from)",
       }}
       className={cn(
-        "relative h-full w-full overflow-auto rounded-xl bg-white shadow-md [--x-from:100%] [--x-to:0px] [--y-from:0px] [--y-to:0px] md:h-auto md:max-h-[90dvh] md:max-w-xl md:pb-8 md:[--x-from:0px] md:[--y-from:20px] md:[--y-to:0px]",
+        "relative h-full w-full overflow-auto bg-background shadow-md [--x-from:100%] [--x-to:0px] [--y-from:0px] [--y-to:0px] md:h-auto md:max-h-[90dvh] md:max-w-xl md:rounded-xl md:pb-8 md:[--x-from:0px] md:[--y-from:20px] md:[--y-to:0px] md:dark:border-wrapper",
         className
       )}
       transition={{ duration: 0.5, type: "spring", bounce: 0 }}

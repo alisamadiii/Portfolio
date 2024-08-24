@@ -94,7 +94,7 @@ export default function SocialMedia() {
                 key={data.id}
                 href={data.link}
                 target="_blank"
-                className="inline-block w-full rounded-lg p-3 hover:bg-code-figcaption max-md:py-2"
+                className="inline-block w-full p-3 hover:bg-code-figcaption dark:hover:bg-white/10 max-md:py-2 md:rounded-lg"
               >
                 <div className="flex items-center gap-4">
                   <div className="relative aspect-square w-12 shrink-0 self-start md:w-16">
