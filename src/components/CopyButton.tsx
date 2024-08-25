@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useCookie } from "react-use";
+
 import { cn } from "@/utils";
 import { useElementsOpening } from "@/context/useElementOpening";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { allContents } from "contentlayer/generated";
 
 type Props = {
@@ -10,10 +12,14 @@ type Props = {
 };
 
 export default function CopyButton({ value, className }: Props) {
+  const [cookieValue, updateCookie] = useCookie("github");
+
   const [copied, setCopied] = useState(false);
-  const { setCurrentOpen, currentOpen } = useElementsOpening();
+  const { setCurrentOpen } = useElementsOpening();
 
   const { contents } = useParams<{ contents: string[] }>();
+
+  const router = useRouter();
 
   const findingContents = allContents.find(
     (post) => `/${contents.join("/")}` === post.slug
@@ -36,10 +42,30 @@ export default function CopyButton({ value, className }: Props) {
 
     setCopied(true);
 
-    if (findingContents?.isChallenge) {
-      setTimeout(() => {
-        setCurrentOpen("github-repo");
-      }, 500);
+    if (cookieValue !== "opened") {
+      if (findingContents?.isChallenge) {
+        setTimeout(() => {
+          setCurrentOpen("github-repo");
+
+          const expires = new Date();
+          expires.setMinutes(expires.getMinutes() + 20);
+
+          updateCookie("opened", {
+            expires,
+            path: "/",
+          });
+
+          router.refresh();
+        }, 500);
+      }
+    } else {
+      const expires = new Date();
+      expires.setMinutes(expires.getMinutes() + 20);
+
+      updateCookie("opened", {
+        expires,
+        path: "/",
+      });
     }
   };
 

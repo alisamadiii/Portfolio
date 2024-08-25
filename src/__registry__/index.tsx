@@ -8,6 +8,12 @@ export const Index: Record<string, any> = {
     name: "button",
     component: dynamic(() => import("@/preview/button.tsx"), { ssr: false }),
   },
+  "designs-travel-shots": {
+    name: "designs-travel-shots",
+    component: dynamic(() => import("@/preview/designs/travel-shots.tsx"), {
+      ssr: false,
+    }),
+  },
   "framer-motion-day-1": {
     name: "framer-motion-day-1",
     component: dynamic(() => import("@/preview/framer-motion/day-1.tsx"), {
@@ -26,8 +32,8 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-12-index": {
-    name: "framer-motion-day-12-index",
+  "framer-motion-day-12": {
+    name: "framer-motion-day-12",
     component: dynamic(
       () => import("@/preview/framer-motion/day-12/index.tsx"),
       { ssr: false }
@@ -69,8 +75,8 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-19-index": {
-    name: "framer-motion-day-19-index",
+  "framer-motion-day-19": {
+    name: "framer-motion-day-19",
     component: dynamic(
       () => import("@/preview/framer-motion/day-19/index.tsx"),
       { ssr: false }
@@ -94,36 +100,36 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-22-index": {
-    name: "framer-motion-day-22-index",
+  "framer-motion-day-22": {
+    name: "framer-motion-day-22",
     component: dynamic(
       () => import("@/preview/framer-motion/day-22/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-23-index": {
-    name: "framer-motion-day-23-index",
+  "framer-motion-day-23": {
+    name: "framer-motion-day-23",
     component: dynamic(
       () => import("@/preview/framer-motion/day-23/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-24-index": {
-    name: "framer-motion-day-24-index",
+  "framer-motion-day-24": {
+    name: "framer-motion-day-24",
     component: dynamic(
       () => import("@/preview/framer-motion/day-24/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-25-index": {
-    name: "framer-motion-day-25-index",
+  "framer-motion-day-25": {
+    name: "framer-motion-day-25",
     component: dynamic(
       () => import("@/preview/framer-motion/day-25/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-26-index": {
-    name: "framer-motion-day-26-index",
+  "framer-motion-day-26": {
+    name: "framer-motion-day-26",
     component: dynamic(
       () => import("@/preview/framer-motion/day-26/index.tsx"),
       { ssr: false }
@@ -135,8 +141,8 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-28-index": {
-    name: "framer-motion-day-28-index",
+  "framer-motion-day-28": {
+    name: "framer-motion-day-28",
     component: dynamic(
       () => import("@/preview/framer-motion/day-28/index.tsx"),
       { ssr: false }
@@ -148,8 +154,8 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-3-index": {
-    name: "framer-motion-day-3-index",
+  "framer-motion-day-3": {
+    name: "framer-motion-day-3",
     component: dynamic(
       () => import("@/preview/framer-motion/day-3/index.tsx"),
       { ssr: false }
@@ -161,29 +167,29 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-31-index": {
-    name: "framer-motion-day-31-index",
+  "framer-motion-day-31": {
+    name: "framer-motion-day-31",
     component: dynamic(
       () => import("@/preview/framer-motion/day-31/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-32-index": {
-    name: "framer-motion-day-32-index",
+  "framer-motion-day-32": {
+    name: "framer-motion-day-32",
     component: dynamic(
       () => import("@/preview/framer-motion/day-32/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-33-index": {
-    name: "framer-motion-day-33-index",
+  "framer-motion-day-33": {
+    name: "framer-motion-day-33",
     component: dynamic(
       () => import("@/preview/framer-motion/day-33/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-34-index": {
-    name: "framer-motion-day-34-index",
+  "framer-motion-day-34": {
+    name: "framer-motion-day-34",
     component: dynamic(
       () => import("@/preview/framer-motion/day-34/index.tsx"),
       { ssr: false }
@@ -207,15 +213,15 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-38-index": {
-    name: "framer-motion-day-38-index",
+  "framer-motion-day-38": {
+    name: "framer-motion-day-38",
     component: dynamic(
       () => import("@/preview/framer-motion/day-38/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-39-index": {
-    name: "framer-motion-day-39-index",
+  "framer-motion-day-39": {
+    name: "framer-motion-day-39",
     component: dynamic(
       () => import("@/preview/framer-motion/day-39/index.tsx"),
       { ssr: false }
@@ -233,15 +239,15 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-41-index": {
-    name: "framer-motion-day-41-index",
+  "framer-motion-day-41": {
+    name: "framer-motion-day-41",
     component: dynamic(
       () => import("@/preview/framer-motion/day-41/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-42-index": {
-    name: "framer-motion-day-42-index",
+  "framer-motion-day-42": {
+    name: "framer-motion-day-42",
     component: dynamic(
       () => import("@/preview/framer-motion/day-42/index.tsx"),
       { ssr: false }
@@ -271,15 +277,15 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-47-index": {
-    name: "framer-motion-day-47-index",
+  "framer-motion-day-47": {
+    name: "framer-motion-day-47",
     component: dynamic(
       () => import("@/preview/framer-motion/day-47/index.tsx"),
       { ssr: false }
     ),
   },
-  "framer-motion-day-48-index": {
-    name: "framer-motion-day-48-index",
+  "framer-motion-day-48": {
+    name: "framer-motion-day-48",
     component: dynamic(
       () => import("@/preview/framer-motion/day-48/index.tsx"),
       { ssr: false }
@@ -303,8 +309,8 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-day-6-index": {
-    name: "framer-motion-day-6-index",
+  "framer-motion-day-6": {
+    name: "framer-motion-day-6",
     component: dynamic(
       () => import("@/preview/framer-motion/day-6/index.tsx"),
       { ssr: false }
@@ -328,8 +334,8 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
-  "framer-motion-helping-others-index": {
-    name: "framer-motion-helping-others-index",
+  "framer-motion-helping-others": {
+    name: "framer-motion-helping-others",
     component: dynamic(
       () => import("@/preview/framer-motion/helping-others/index.tsx"),
       { ssr: false }

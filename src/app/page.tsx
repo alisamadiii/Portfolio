@@ -1,28 +1,35 @@
 "use client";
 
-import { useEffect } from "react";
-import { useLocalStorage } from "react-use";
+import { useEffect, useState } from "react";
+import { useCookie } from "react-use";
 
 import TechSection from "@/components/TechSection";
 import BlogSection from "@/components/BlogSection";
 import ProjectSection from "@/components/ProjectSection";
 import SocialMedia from "@/components/SocialMedia";
 import ChallengesSection from "@/components/ChallengesSection";
+import { cn } from "@/utils";
 
 export default function Home() {
   const name = "Ali Reza Samadi";
 
-  // const [newUser, setNewUser] = useLocalStorage("newUser", true);
+  const [animation, setAnimation] = useState(false);
 
-  // useEffect(() => {
-  //   if (newUser) {
-  //     setTimeout(() => {
-  //       setNewUser(false);
-  //     }, 1000);
-  //   }
-  // }, [newUser, setNewUser]);
+  const [cookieValue, updateCookie] = useCookie("old-user");
 
-  const newUser = true;
+  useEffect(() => {
+    console.log(cookieValue);
+    if (cookieValue !== "true") {
+      setAnimation(true);
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 1);
+
+      updateCookie("true", {
+        expires,
+        path: "/",
+      });
+    }
+  }, []);
 
   return (
     <main className="mx-auto max-w-3xl py-8 md:py-24">
@@ -31,17 +38,20 @@ export default function Home() {
           {name.split("").map((letter, index) => (
             <span
               key={index}
-              className="animate-blur opacity-0 blur-sm"
+              className={cn("", animation && "animate-blur opacity-0 blur-sm")}
               style={{ animationDelay: `${index * 0.03}s` }}
             >
               {letter}
             </span>
           ))}
         </h1>
-        <SocialMedia />
+        <SocialMedia animation={animation} />
       </div>
       <p
-        className="animate-blur mt-3 text-muted opacity-0 blur-sm"
+        className={cn(
+          "mt-3 text-muted",
+          animation && "animate-blur opacity-0 blur-sm"
+        )}
         style={{ animationDelay: ".5s" }}
       >
         I&apos;m Ali Reza! I&apos;ve got 3 years of web dev experience, mainly
@@ -51,7 +61,7 @@ export default function Home() {
       </p>
 
       <div
-        className="animate-blur opacity-0 blur-sm"
+        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: ".7s" }}
       >
         <h2 className="mt-10">My Tech Stacks</h2>
@@ -60,7 +70,7 @@ export default function Home() {
       </div>
 
       <div
-        className="animate-blur opacity-0 blur-sm"
+        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: "1s" }}
       >
         <h2 className="mt-10">Blogs</h2>
@@ -69,7 +79,7 @@ export default function Home() {
       </div>
 
       <div
-        className="animate-blur opacity-0 blur-sm"
+        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: "1.2s" }}
       >
         <h2 className="mt-10">Projects</h2>
@@ -78,7 +88,7 @@ export default function Home() {
       </div>
 
       <div
-        className="animate-blur opacity-0 blur-sm"
+        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: "1.4s" }}
       >
         <h2 className="mt-10">Challenges</h2>

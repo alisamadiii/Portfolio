@@ -1,0 +1,23 @@
+---
+title: Day 1 - Mastering Framer Motion
+---
+
+# Day 1 - Mastering Framer Motion
+
+<Tabs id="day-1">
+
+<Tab label="Preview">
+
+<ComponentPreview name="framer-motion-day-1" />
+
+</Tab>
+
+<Tab label="Code">
+
+```tsx title="components/day-1.tsx" showLineNumbers
+
+```
+
+</Tab>
+
+</Tabs>

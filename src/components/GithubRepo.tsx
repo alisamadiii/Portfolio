@@ -32,7 +32,7 @@ export default function GithubRepo({}: Props) {
           </svg>
           <p>Your support is so much valuable.</p>
           <p>
-            We really appreciate it if you give the{" "}
+            We really appreciate if you give the{" "}
             <a
               href="https://github.com/AliReza1083/Portfolio"
               target="_blank"

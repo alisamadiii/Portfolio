@@ -1,0 +1,84 @@
+.wrapper {
+  --svg-duration: 2.5s;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #e7ecf1;
+  animation: scale-up 1s forwards calc(var(--svg-duration) - 0.8s);
+}
+
+@keyframes scale-up {
+  to {
+    scale: 1.05;
+  }
+}
+
+svg {
+  width: 100%;
+  max-width: 150px;
+}
+
+.svg-lines {
+  stroke-dashoffset: var(--dashoffset);
+  stroke-dasharray: var(--dasharray);
+  animation: path var(--svg-duration) forwards;
+}
+
+.line-reverse {
+  transform: rotateY(180deg) translateX(-100%);
+}
+
+@keyframes path {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.image {
+  max-width: 150px;
+  position: absolute;
+  opacity: 0;
+  animation: fade-in 0.4s forwards calc(var(--svg-duration) - 0.4s);
+}
+
+@keyframes fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.front-image {
+  transform: translateY(-9px);
+}
+
+.credit-card {
+  max-width: 200px;
+  bottom: -100px;
+  transform: translateY(150px);
+  animation: bring-up 1.4s forwards calc(var(--svg-duration) - 0.4s);
+}
+
+@keyframes bring-up {
+  20%,
+  40% {
+    opacity: 1;
+    transform: translateY(150px);
+  }
+  100% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+.approve-text {
+  position: absolute;
+  opacity: 0;
+  animation: fade-in-text 0.4s forwards calc(var(--svg-duration) + 1.2s);
+}
+
+@keyframes fade-in-text {
+  to {
+    opacity: 1;
+  }
+}

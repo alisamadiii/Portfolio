@@ -18,7 +18,8 @@ export function RightSidebar() {
   );
 
   return (
-    !findingDocs?.isChallenge && (
+    !findingDocs?.isChallenge &&
+    findingDocs?.parentFolder !== "designs" && (
       <>
         <div className="fixed left-1/2 top-0 z-50 h-24 w-full max-w-4xl -translate-x-1/2 rounded-b-[100%] bg-gradient-to-b from-background to-background/10 backdrop-blur-[2px]"></div>
 

@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { List, AutoSizer, ScrollSync } from "react-virtualized";
+
 import DateList from "./date-list";
 import { isToday } from "date-fns";
 import { LayoutGroup } from "framer-motion";
 import AnyList from "./any-list";
 
-interface Props { data: any[]; id: string; type: "date" | "any" }
+interface Props {
+  data: any[];
+  id: string;
+  type: "date" | "any";
+}
 
 export default function ListsWrapper({ data, id, type }: Props) {
   const [scrollTop, setScrollTop] = useState(0);

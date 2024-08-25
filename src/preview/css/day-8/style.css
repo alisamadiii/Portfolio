@@ -1,0 +1,117 @@
+body {
+  --background: white;
+  --color: black;
+  --border: rgba(0, 0, 0, 0.15);
+  --background-logo: rgba(0, 0, 0, 0.3);
+  ---background-logo-to: rgba(0, 0, 0, 0.5);
+  /* --background: black;
+  --color: white;
+  --border: rgba(255, 255, 255, 0.15);
+  --background-logo: rgba(255, 255, 255, 0.3);
+  ---background-logo-to: rgba(255, 255, 255, 0.5); */
+  --duration: 4000ms;
+  --delay: 0ms;
+
+  background-color: var(--background);
+  overflow: hidden;
+}
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+}
+
+.wrapper .background {
+  position: absolute;
+  inset: 0px;
+  mask-image: url("./border.png");
+  -webkit-mask-image: url("./border.png");
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.wrapper .background::after {
+  --delay: 0.2s;
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.1);
+  width: 100%;
+  aspect-ratio: 1;
+  background: conic-gradient(transparent 260deg, var(--color));
+  animation: rotate var(--duration) infinite linear var(--delay);
+}
+
+.wrapper .background.reverse::after {
+  background: conic-gradient(var(--color) 20deg, transparent 120deg);
+}
+
+.wrapper .background::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.1);
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--border);
+}
+
+@keyframes rotate {
+  to {
+    transform: translate(-50%, -50%) scale(1.1) rotate(360deg);
+  }
+}
+
+.wrapper .background:nth-child(2) {
+  transform: scale(1.05, 1.15);
+}
+
+.wrapper .background:nth-child(2)::after {
+  animation-direction: reverse;
+}
+
+.logo {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  background-color: var(--background-logo);
+  backdrop-filter: blur(5px);
+  border-radius: 1rem;
+  z-index: 20;
+  animation: color var(--duration) infinite;
+}
+
+@keyframes color {
+  0% {
+    background-color: var(--background-logo);
+  }
+  10% {
+    background-color: var(--color);
+    scale: 1.05;
+    box-shadow: 0 0 50px var(--background-logo-to);
+  }
+  30% {
+    background-color: var(--background-logo);
+    scale: 1;
+    box-shadow: 0 0 0px var(--background-logo-to);
+  }
+  100% {
+    background-color: var(--background-logo);
+  }
+}
+
+#canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}

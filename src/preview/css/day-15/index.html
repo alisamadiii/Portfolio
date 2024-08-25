@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day 15: Mastering CSS Animation</title>
+    <link rel="stylesheet" href="../reset.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="svg">
+        <div class="badge">Invite this person</div>
+        <svg viewBox="0 0 288 256" fill="none" aria-hidden="true" class="">
+          <path
+            d="M4 0v112c0 8.837 7.163 16 16 16h248c8.837 0 16 7.163 16 16v112"
+            stroke="currentColor"
+          ></path>
+          <path
+            d="M4 0v112c0 8.837 7.163 16 16 16h248c8.837 0 16 7.163 16 16v112"
+            stroke="url(#line-gradient)"
+          ></path>
+          <defs>
+            <linearGradient id="line-gradient" x1="0%" x2="0%" y1="0%" y2="0%">
+              <stop stop-color="white" stop-opacity="0"></stop>
+              <stop stop-color="black" offset="60%"></stop>
+              <stop stop-color="black" offset="100%" stop-opacity="0"></stop>
+
+              <animate
+                attributeName="y1"
+                values="0%; 120%"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="y2"
+                values="-20%; 100%"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+
+              <animate
+                attributeName="x1"
+                values="-20%; 120%"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="x2"
+                values="-40%; 100%"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <div>
+        <h3>Day 15: Mastering CSS Animation</h3>
+        <p>Thanks god, I am feeling better when working with CSS Animation.</p>
+      </div>
+    </div>
+  </body>
+</html>

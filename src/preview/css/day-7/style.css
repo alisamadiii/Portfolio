@@ -1,0 +1,121 @@
+.wrapper {
+  --duration: 300ms;
+
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  height: 500px;
+  background-color: white;
+  border-radius: 2rem;
+  box-shadow:
+    0 0 0 1px #0e3f7e0a,
+    0 1px 1px -0.5px #2a33450a,
+    0 3px 3px -1.5px #2a33460a,
+    0 6px 6px -3px #2a33460a,
+    0 12px 12px -6px #0e3f7e0a,
+    0 24px 24px -12px #0e3f7e0a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wrapper h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.wrapper .buttons {
+  position: absolute;
+  bottom: 4rem;
+}
+
+.wrapper h2 span {
+  position: relative;
+  transition: var(--duration) ease;
+}
+
+.wrapper h2 .active {
+  color: white;
+}
+
+.wrapper h2:has(span.active) span:not(.active) {
+  color: #e3e3e6;
+}
+
+.wrapper h2 span::after {
+  content: attr(data-user);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: linear-gradient(#4520e4, #765aef);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 0.2rem 0;
+  opacity: 0;
+  transition: var(--duration);
+}
+
+.wrapper h2 span.active::after {
+  opacity: 1;
+}
+
+.buttons {
+  display: flex;
+}
+
+.buttons button {
+  background-color: transparent;
+  outline: none;
+  border: none;
+  font-size: 1.2rem;
+  width: 40px;
+}
+
+.buttons:hover button:not(:hover) {
+  color: #757575;
+}
+
+.buttons button i {
+  transition: var(--duration);
+}
+
+.buttons button:hover i {
+  transform: translateY(-4px);
+}
+
+.border {
+  --width: 0px;
+  --left: 0px;
+  position: absolute;
+  left: var(--left, 0px);
+  width: var(--width, 0px);
+  height: 20px;
+  border: 2.5px dashed #d9d7db;
+  border-top: none;
+  transform: translateY(40px);
+  transition: var(--duration);
+  opacity: 0;
+  transform: translateY(-20px);
+  display: flex;
+  justify-content: center;
+}
+
+.border.active {
+  opacity: 1;
+  transform: translateY(40px);
+}
+
+.border p {
+  color: #6e6e6e;
+  transform: translateY(30px);
+  text-transform: capitalize;
+  position: absolute;
+  opacity: 0;
+  transition: var(--duration);
+}
+
+.border p.active {
+  opacity: 1;
+}

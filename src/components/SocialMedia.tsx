@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import * as Dialog from "./Dialog";
 import * as TopMenuBar from "./TopMenuBar";
+import { cn } from "@/utils";
 
 const twitter = [
   {
@@ -24,11 +25,14 @@ const twitter = [
   },
 ];
 
-export default function SocialMedia() {
+export default function SocialMedia({ animation }: { animation: boolean }) {
   return (
     <>
       <div
-        className="animate-blur flex items-center gap-2 opacity-0 blur-sm"
+        className={cn(
+          "flex items-center gap-2",
+          animation && "animate-blur opacity-0 blur-sm"
+        )}
         style={{ animationDelay: ".3s" }}
       >
         <Dialog.Wrapper>

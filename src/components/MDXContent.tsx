@@ -191,7 +191,7 @@ const components = {
         ref={figureRef}
         className={cn(
           "group relative my-4 w-full overflow-auto rounded-md border-wrapper [&_[data-line]]:px-[20px] [&_code]:rounded-none [&_code]:border-none [&_code]:!bg-transparent [&_code]:px-0 [&_code]:py-[20px] [&_code]:text-[13px]",
-          !initialized && "max-h-[400px] overflow-hidden",
+          !initialized && "max-h-[200px] overflow-hidden",
           isLong && "max-h-[200px]",
           spanNum > 30 && isLong && "overflow-hidden",
           !isLong && spanNum > 30 && "max-h-[600px]"
@@ -224,16 +224,7 @@ const components = {
                 }
               }}
             >
-              {isLong ? (
-                <span>
-                  Expand{" "}
-                  <span className="text-xs opacity-80">
-                    ({spanNum - 30} lines)
-                  </span>
-                </span>
-              ) : (
-                "Collapse"
-              )}
+              {isLong ? "Expand" : "Collapse"}
             </button>
           </div>
         )}

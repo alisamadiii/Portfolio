@@ -38,9 +38,11 @@ for (const file of READ_PATH) {
   const relativePath = path.relative(REGISTRY_PATH, file);
   let componentName = relativePath.replace(/\.tsx$/, "").replace(/\//g, "-");
 
-  // Remove '_index' if it's an index file
+  // Remove '_index' if it's an index file and remove '-index' if it's part of the folder name
   if (componentName.endsWith("_index")) {
     componentName = componentName.replace(/_index$/, "");
+  } else {
+    componentName = componentName.replace(/-index$/, "");
   }
 
   index += `
