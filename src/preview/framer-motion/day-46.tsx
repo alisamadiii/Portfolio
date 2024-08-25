@@ -7,14 +7,12 @@ export default function Day46() {
   const [checked, setChecked] = useState(false);
   const [pressed, setPressed] = useState(false);
 
-  console.log(pressed);
-
   const onClickHandler = () => setChecked(!checked);
 
   return (
     <div>
       <button
-        className={`flex h-48 w-96 rounded-full bg-box p-4 ${checked ? "justify-end" : ""}`}
+        className={`bg-box flex h-48 w-96 rounded-full p-4 ${checked ? "justify-end" : ""}`}
         onClick={onClickHandler}
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}

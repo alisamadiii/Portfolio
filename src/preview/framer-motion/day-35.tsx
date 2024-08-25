@@ -27,7 +27,7 @@ export default function Day35() {
             <div ref={ref}>
               <div className="px-5 py-4">
                 {/* Title */}
-                <h2 className="text-xl font-medium ">Share</h2>
+                <h2 className="text-xl font-medium">Share</h2>
                 {/* Toggle Items */}
                 <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#F5F4F9] p-2">
                   <div
@@ -122,8 +122,6 @@ function Form() {
 
     setInput("");
   };
-
-  console.log(invited);
 
   return (
     <div className="mt-2">

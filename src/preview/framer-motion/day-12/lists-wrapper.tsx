@@ -152,7 +152,6 @@ export function ListsWrapperNoOptimization({
           `[data-name="${name}-${middleIndex}"]`
         );
 
-        console.log(middleElement);
 
         if (middleElement) {
           const dateTimeValue = middleElement.getAttribute("data-value");

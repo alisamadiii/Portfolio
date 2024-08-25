@@ -9,8 +9,11 @@ import ThemeButton from "@/components/ThemeButton";
 import GithubRepo from "@/components/GithubRepo";
 
 export const metadata: Metadata = {
-  title: "Ali Samadi",
-  description: "Let's build something awesome together!",
+  title: {
+    template: "%s | Ali Samadi",
+    default: "Ali Samadi",
+  },
+  description: "My portfolio",
 };
 
 export default function RootLayout({

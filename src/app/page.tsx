@@ -11,14 +11,13 @@ import ChallengesSection from "@/components/ChallengesSection";
 import { cn } from "@/utils";
 
 export default function Home() {
-  const name = "Ali Reza Samadi";
+  const name = "Ali Samadi";
 
   const [animation, setAnimation] = useState(false);
 
   const [cookieValue, updateCookie] = useCookie("old-user");
 
   useEffect(() => {
-    console.log(cookieValue);
     if (cookieValue !== "true") {
       setAnimation(true);
       const expires = new Date();
@@ -54,7 +53,7 @@ export default function Home() {
         )}
         style={{ animationDelay: ".5s" }}
       >
-        I&apos;m Ali Reza! I&apos;ve got 3 years of web dev experience, mainly
+        I&apos;m Ali! I&apos;ve got 3 years of web dev experience, mainly
         focusing on front-end magic with ReactJS. I&apos;m all about embracing
         new challenges and learning opportunities. Let&apos;s build something
         awesome together!

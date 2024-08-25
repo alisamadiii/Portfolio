@@ -7,11 +7,11 @@ import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 export default function Day43() {
   return (
     <div className="w-full">
-      <div className="flex h-dvh w-full flex-col items-center justify-center bg-box">
+      <div className="bg-box flex h-dvh w-full flex-col items-center justify-center">
         <h1 className="text-4xl font-medium">Scroll down</h1>
       </div>
       <MiddleContent />
-      <div className="flex h-dvh w-full flex-col items-center justify-center bg-box">
+      <div className="bg-box flex h-dvh w-full flex-col items-center justify-center">
         <h1 className="text-4xl font-medium">Scroll up</h1>
       </div>
     </div>
@@ -92,8 +92,6 @@ function MiddleContent() {
 
     setSelectedImage(value);
   };
-
-  console.log(selectedImage);
 
   return (
     <div ref={container} className="h-[300dvh] w-full bg-background">

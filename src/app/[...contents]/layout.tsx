@@ -10,6 +10,21 @@ export async function generateStaticParams() {
   }));
 }
 
+// or Dynamic metadata
+export async function generateMetadata({
+  params,
+}: {
+  params: { contents: string[] };
+}) {
+  const findingGoal = allContents.find(
+    (post) => `/${params.contents.join("/")}` === post.slug
+  );
+
+  return {
+    title: findingGoal?.title,
+  };
+}
+
 type Props = {
   children: React.ReactNode;
 };

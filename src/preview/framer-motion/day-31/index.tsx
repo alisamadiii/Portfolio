@@ -12,14 +12,12 @@ export default function Day31() {
 
   const onIconClickHandler = () => setIsOpen(!isOpen);
 
-  console.log("rendering");
-
   return (
     <Wrapper className="bg-[#0F0F0F] text-white">
       <MotionConfig transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}>
         <motion.button
           layoutId="wrapper"
-          className="group flex h-12 w-32 items-center justify-center gap-1 border border-border bg-[#161716] p-2 active:bg-[#222422]"
+          className="border-border group flex h-12 w-32 items-center justify-center gap-1 border bg-[#161716] p-2 active:bg-[#222422]"
           onClick={onIconClickHandler}
           style={{ borderRadius: 14 }}
         >
@@ -38,7 +36,7 @@ export default function Day31() {
           {isOpen && (
             <motion.div
               layoutId="wrapper"
-              className="relative w-full max-w-96 overflow-hidden border border-border bg-[#161716] p-2"
+              className="border-border relative w-full max-w-96 overflow-hidden border bg-[#161716] p-2"
               style={{ borderRadius: 12 }}
             >
               <Items onCloseHandler={onIconClickHandler} isOpen={isOpen} />
