@@ -9,6 +9,7 @@ import ProjectSection from "@/components/ProjectSection";
 import SocialMedia from "@/components/SocialMedia";
 import ChallengesSection from "@/components/ChallengesSection";
 import { cn } from "@/utils";
+import HireMe from "@/components/HireMe";
 
 export default function Home() {
   const name = "Ali Samadi";
@@ -60,40 +61,42 @@ export default function Home() {
       </p>
 
       <div
-        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
+        className={cn("mt-10", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: ".7s" }}
       >
-        <h2 className="mt-10">My Tech Stacks</h2>
+        <h2>My Tech Stacks</h2>
 
         <TechSection />
       </div>
 
       <div
-        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
+        className={cn("mt-10", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: "1s" }}
       >
-        <h2 className="mt-10">Blogs</h2>
+        <h2>Blogs</h2>
 
         <BlogSection />
       </div>
 
       <div
-        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
+        className={cn("mt-10", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: "1.2s" }}
       >
-        <h2 className="mt-10">Projects</h2>
+        <h2>Projects</h2>
 
         <ProjectSection />
       </div>
 
       <div
-        className={cn("", animation && "animate-blur opacity-0 blur-sm")}
+        className={cn("mt-10", animation && "animate-blur opacity-0 blur-sm")}
         style={{ animationDelay: "1.4s" }}
       >
-        <h2 className="mt-10">Challenges</h2>
+        <h2>Challenges</h2>
 
         <ChallengesSection />
       </div>
+
+      <HireMe />
     </main>
   );
 }
