@@ -14,6 +14,7 @@ export type Contents = {
   _raw: Local.RawDocumentData
   type: 'Contents'
   title: string
+  codeFilePath?: string | undefined
   /** MDX file body */
   body: MDX
   slug: string

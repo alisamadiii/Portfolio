@@ -32,14 +32,14 @@ export const Files: React.FC<FilesProps> = ({ children, id }) => {
                 {activeTab === index && (
                   <motion.div
                     layoutId="tab-underline"
-                    className="bg-background absolute inset-0 border-wrapper shadow-sm"
+                    className="absolute inset-0 border-wrapper bg-background shadow-sm"
                     style={{ borderRadius: 6 }}
                   />
                 )}
 
                 <span
                   className={cn(
-                    "text-foreground relative z-20",
+                    "relative z-20 text-foreground",
                     activeTab !== index && "text-muted"
                   )}
                 >

@@ -53,6 +53,17 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+::-webkit-scrollbar {
+  @apply h-1 w-1 bg-code-figcaption;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-2xl bg-muted;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 code[data-theme*=" "],
 code[data-theme*=" "] span {
   color: var(--shiki-light);

@@ -12,6 +12,8 @@ export default function DocsPage({ params: { contents } }: Props) {
     (post) => `/${contents.join("/")}` === post.slug
   );
 
+  console.log(findingGoal);
+
   return findingGoal ? (
     <Mdx code={findingGoal.body.code} />
   ) : (

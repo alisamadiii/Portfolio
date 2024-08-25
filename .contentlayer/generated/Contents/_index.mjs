@@ -6,8 +6,19 @@ import challenges__cssAnimationMdx from './challenges__css-animation.mdx.json' a
 import challenges__framerMotionMdx from './challenges__framer-motion.mdx.json' assert { type: 'json' }
 import designs__travelShotsMdx from './designs__travel-shots.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__1Mdx from './challenges__framer-motion__1.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__10Mdx from './challenges__framer-motion__10.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__11Mdx from './challenges__framer-motion__11.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__12Mdx from './challenges__framer-motion__12.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__13Mdx from './challenges__framer-motion__13.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__14Mdx from './challenges__framer-motion__14.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__15Mdx from './challenges__framer-motion__15.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__2Mdx from './challenges__framer-motion__2.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__3Mdx from './challenges__framer-motion__3.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__4Mdx from './challenges__framer-motion__4.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__5Mdx from './challenges__framer-motion__5.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__6Mdx from './challenges__framer-motion__6.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__7Mdx from './challenges__framer-motion__7.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__8Mdx from './challenges__framer-motion__8.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__9Mdx from './challenges__framer-motion__9.mdx.json' assert { type: 'json' }
 
-export const allContents = [blogs__eslintSetupMdx, blogs__makingWebsiteMdx, challenges__cssAnimationMdx, challenges__framerMotionMdx, designs__travelShotsMdx, challenges__framerMotion__1Mdx, challenges__framerMotion__2Mdx, challenges__framerMotion__3Mdx, challenges__framerMotion__4Mdx]
+export const allContents = [blogs__eslintSetupMdx, blogs__makingWebsiteMdx, challenges__cssAnimationMdx, challenges__framerMotionMdx, designs__travelShotsMdx, challenges__framerMotion__1Mdx, challenges__framerMotion__10Mdx, challenges__framerMotion__11Mdx, challenges__framerMotion__12Mdx, challenges__framerMotion__13Mdx, challenges__framerMotion__14Mdx, challenges__framerMotion__15Mdx, challenges__framerMotion__2Mdx, challenges__framerMotion__3Mdx, challenges__framerMotion__4Mdx, challenges__framerMotion__5Mdx, challenges__framerMotion__6Mdx, challenges__framerMotion__7Mdx, challenges__framerMotion__8Mdx, challenges__framerMotion__9Mdx]

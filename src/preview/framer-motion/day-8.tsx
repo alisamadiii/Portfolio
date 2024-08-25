@@ -23,25 +23,17 @@ export default function Day8() {
 
   return (
     <div className="px-4">
-      <div className="relative flex max-w-4xl flex-col items-center text-center">
-        <h1 className="text-4xl font-black tracking-tight lg:text-7xl">
-          50 Days Challenge Mastering Framer Motion
-        </h1>
-        <p className="mt-2">
-          In these 50 days, I will be trying to master myself in framer
-        </p>
-        <button
-          className="mt-8 flex h-10 w-full items-center justify-center rounded-md bg-black text-white duration-200 hover:bg-opacity-80 active:scale-95 md:w-[200px]"
-          onClick={onClickHandler}
-        >
-          Drawer
-        </button>
-      </div>
+      <button
+        className="mt-8 flex h-10 w-full items-center justify-center rounded-md bg-black text-white duration-200 hover:bg-opacity-80 active:scale-95 md:w-[200px]"
+        onClick={onClickHandler}
+      >
+        Drawer
+      </button>
 
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <AnimatePresence>
           {isOpen && (
-            <div className="fixed left-0  top-0 flex h-full w-full justify-end p-4">
+            <div className="fixed left-0 top-0 flex h-full w-full justify-end p-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

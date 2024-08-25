@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import uniqid from "uniqid";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import Wrapper from "@/components/designs/wrapper";
 
 export interface ToasterTypes {
   id: string;
@@ -31,7 +30,7 @@ export default function Day6() {
   };
 
   return (
-    <Wrapper>
+    <div>
       <button
         className="h-8 rounded-md bg-black px-6 text-white"
         onClick={() =>
@@ -56,7 +55,7 @@ export default function Day6() {
                     scale: 1 - (toaster.length - 1 - index) * 0.1,
                   }}
                   exit={{ y: 40, opacity: 0 }}
-                  className={`relative flex w-[356px] flex-col justify-center rounded-lg border border-[hsl(0,0%,93%)] bg-white  p-4 shadow-[0_4px_12px_#0000001a] ${index !== toaster.length - 1 && "mb-[-60px]"}`}
+                  className={`relative flex w-[356px] flex-col justify-center rounded-lg border border-[hsl(0,0%,93%)] bg-white p-4 shadow-[0_4px_12px_#0000001a] ${index !== toaster.length - 1 && "mb-[-60px]"}`}
                 >
                   <div className="flex justify-between">
                     <p>{value.title}</p>
@@ -76,6 +75,6 @@ export default function Day6() {
           </motion.ul>
         )}
       </MotionConfig>
-    </Wrapper>
+    </div>
   );
 }

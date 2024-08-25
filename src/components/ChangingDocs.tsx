@@ -13,26 +13,29 @@ export default function ChangingDocs() {
     (post) => `/${contents.join("/")}` === post.slug
   );
 
-  // const docsIndx = allContents.findIndex(
-  //   (doc) => doc.slug === `/${contents.join("/")}`
-  // );
+  const filteredContents = allContents
+    .filter((content) => {
+      if (findingGoal?.isChallenge) {
+        return content.isChallenge;
+      } else {
+        return !content.isChallenge;
+      }
+    })
+    .sort((a, b) => {
+      const getDayNumber = (title: string) => {
+        const match = title.match(/Day (\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      };
 
-  const filteredContents = allContents.filter((content) => {
-    if (findingGoal?.isChallenge) {
-      return content.isChallenge;
-    } else {
-      return !content.isChallenge;
-    }
-  });
+      return getDayNumber(a.title) - getDayNumber(b.title);
+    });
 
   const docsIndx = filteredContents.findIndex(
     (doc) => doc.slug === `/${contents.join("/")}`
   );
 
-  console.log(filteredContents);
-
   return (
-    <div className="mt-8 flex justify-between border-t-wrapper pt-6 text-muted">
+    <div className="mt-8 flex justify-between gap-8 border-t-wrapper pt-6 text-muted">
       {filteredContents[docsIndx - 1] && (
         <Link
           href={filteredContents[docsIndx - 1].slug}
@@ -45,7 +48,7 @@ export default function ChangingDocs() {
       {filteredContents[docsIndx + 1] && (
         <Link
           href={filteredContents[docsIndx + 1].slug}
-          className="ml-auto flex flex-col items-end gap-1 hover:text-foreground"
+          className="ml-auto flex flex-col items-end gap-1 text-right hover:text-foreground"
         >
           <span className="text-sm">Next</span>
           {filteredContents[docsIndx + 1].title}

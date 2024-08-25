@@ -7,17 +7,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pbs.twimg.com",
-        port: "",
-      },
-      {
-        protocol: "https",
-        hostname: "ldxedhzbfnmrovkzozxc.supabase.co",
-        port: "",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "**",
         port: "",
       },
     ],

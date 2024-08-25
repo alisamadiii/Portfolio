@@ -16,16 +16,6 @@ export default function Day3() {
     setIsOpen(!isOpen);
   };
 
-  console.log(displayDate);
-
-  //! date-fns
-  // let today = startOfToday();
-
-  // let newDays = eachDayOfInterval({
-  //   start: startOfMonth(today),
-  //   end: endOfMonth(today),
-  // });
-
   return (
     <div className="relative h-screen max-h-[696px] w-full max-w-[561px] overflow-hidden rounded-[14px] bg-[#0D0D0D] p-3 text-white shadow-[0px_8px_66px_19px_rgba(0,0,0,0.28)]">
       <button

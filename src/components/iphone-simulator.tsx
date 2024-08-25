@@ -34,7 +34,7 @@ export default function IphoneSimulator({
   return (
     <div
       className={cn(
-        "relative aspect-[4/8] w-[367px] overflow-hidden border-[1.5px] border-[#7E7D7E] bg-[#2C2C2B] p-1 text-[var(--ios-simulator-color)]",
+        "relative aspect-[4/8] w-[367px] border-[1.5px] border-[#7E7D7E] bg-[#2C2C2B] p-1 text-[var(--ios-simulator-color)]",
         roundedCorners && "rounded-[56px]"
       )}
       // @ts-ignore

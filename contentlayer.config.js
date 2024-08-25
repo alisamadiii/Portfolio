@@ -69,6 +69,11 @@ const computedFields = {
       return hasNumberAtEnd ? true : false;
     },
   },
+  // codeContent: {
+  //   type: "string",
+  //   resolve: (doc) =>
+  //     doc.codeFilePath ? readFileContent(doc.codeFilePath) : null,
+  // },
 };
 
 const Contents = defineDocumentType(() => ({
@@ -81,6 +86,7 @@ const Contents = defineDocumentType(() => ({
       type: "string",
       required: true,
     },
+    codeFilePath: { type: "string", required: false },
   },
   computedFields,
 }));

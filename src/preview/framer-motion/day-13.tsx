@@ -95,7 +95,7 @@ export default function Day13() {
   }, [disabled]);
 
   return (
-    <Wrapper className="gap-8">
+    <div className="flex gap-8">
       <button
         onClick={() => onArrowClickHandler("back")}
         className="z-20 text-2xl disabled:cursor-not-allowed"
@@ -146,6 +146,6 @@ export default function Day13() {
       >
         <IoIosArrowForward />
       </button>
-    </Wrapper>
+    </div>
   );
 }
