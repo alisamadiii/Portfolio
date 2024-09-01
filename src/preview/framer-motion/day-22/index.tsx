@@ -25,18 +25,16 @@ const initialValues: valuesTypes[] = [
 
 export default function Day22() {
   return (
-    <div className="flex h-dvh w-full items-center justify-center bg-[#E1E1E1] text-black">
-      <IphoneSimulator mixBlend={false} mainClassName="bg-[#E1E1E1]">
-        <div className="text-black">
-          <Header />
+    <IphoneSimulator mixBlend={false} mainClassName="bg-[#E1E1E1]">
+      <div className="text-black">
+        <Header />
 
-          <ul className="px-4">
-            {initialValues.map((value) => (
-              <EachValue key={value.id} value={value} />
-            ))}
-          </ul>
-        </div>
-      </IphoneSimulator>
-    </div>
+        <ul className="px-4">
+          {initialValues.map((value) => (
+            <EachValue key={value.id} value={value} />
+          ))}
+        </ul>
+      </div>
+    </IphoneSimulator>
   );
 }

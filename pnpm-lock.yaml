@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@mantine/hooks':
+    specifier: ^7.12.2
+    version: 7.12.2(react@18.3.1)
   class-variance-authority:
     specifier: ^0.7.0
     version: 0.7.0
@@ -673,6 +676,14 @@ packages:
     dependencies:
       jsbi: 4.3.0
       tslib: 2.7.0
+    dev: false
+
+  /@mantine/hooks@7.12.2(react@18.3.1):
+    resolution: {integrity: sha512-dVMw8jpM0hAzc8e7/GNvzkk9N0RN/m+PKycETB3H6lJGuXJJSRR4wzzgQKpEhHwPccktDpvb4rkukKDq2jA8Fg==}
+    peerDependencies:
+      react: ^18.2.0
+    dependencies:
+      react: 18.3.1
     dev: false
 
   /@mdx-js/esbuild@2.3.0(esbuild@0.23.1):

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaApple } from "react-icons/fa";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import useMeasure from "react-use-measure";
+import { useFullscreen } from "@mantine/hooks";
 
 const initialValues: any = {
   store: {
@@ -22,9 +23,11 @@ export default function Day26() {
 
   const [ref, { height }] = useMeasure();
 
-  return (
-    <div className="h-dvh w-full bg-white text-black">
-      <nav className="fixed left-0 top-0 isolate z-50 w-full">
+  const { toggle, fullscreen } = useFullscreen();
+
+  return fullscreen ? (
+    <div className="fixed left-0 top-0 z-50 h-full w-full bg-white text-black">
+      <nav className="absolute left-0 top-0 isolate z-10 w-full">
         <MotionConfig transition={{ duration: 0.8, type: "spring", bounce: 0 }}>
           <div className="mx-auto flex h-11 w-full max-w-5xl items-center gap-2">
             <Link href={"#"} className="px-2">
@@ -133,5 +136,12 @@ export default function Day26() {
         ></video>
       </div>
     </div>
+  ) : (
+    <button
+      className="h-8 rounded-md bg-foreground px-4 text-background"
+      onClick={toggle}
+    >
+      See the design in full screen
+    </button>
   );
 }

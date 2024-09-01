@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function Day27() {
   const [progress, setProgress] = useState(0);
@@ -26,7 +26,7 @@ export default function Day27() {
   }, []);
 
   return (
-    <div className="flex h-dvh w-full items-center justify-center text-6xl font-bold">
+    <div className="flex items-center justify-center text-6xl font-bold">
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.h1
           key={progress}

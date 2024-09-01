@@ -12,8 +12,24 @@ import challenges__framerMotion__12Mdx from './challenges__framer-motion__12.mdx
 import challenges__framerMotion__13Mdx from './challenges__framer-motion__13.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__14Mdx from './challenges__framer-motion__14.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__15Mdx from './challenges__framer-motion__15.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__16Mdx from './challenges__framer-motion__16.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__17Mdx from './challenges__framer-motion__17.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__18Mdx from './challenges__framer-motion__18.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__19Mdx from './challenges__framer-motion__19.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__2Mdx from './challenges__framer-motion__2.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__20Mdx from './challenges__framer-motion__20.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__21Mdx from './challenges__framer-motion__21.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__22Mdx from './challenges__framer-motion__22.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__23Mdx from './challenges__framer-motion__23.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__24Mdx from './challenges__framer-motion__24.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__25Mdx from './challenges__framer-motion__25.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__26Mdx from './challenges__framer-motion__26.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__27Mdx from './challenges__framer-motion__27.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__28Mdx from './challenges__framer-motion__28.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__29Mdx from './challenges__framer-motion__29.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__3Mdx from './challenges__framer-motion__3.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__30Mdx from './challenges__framer-motion__30.mdx.json' assert { type: 'json' }
+import challenges__framerMotion__31Mdx from './challenges__framer-motion__31.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__4Mdx from './challenges__framer-motion__4.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__5Mdx from './challenges__framer-motion__5.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__6Mdx from './challenges__framer-motion__6.mdx.json' assert { type: 'json' }
@@ -21,4 +37,4 @@ import challenges__framerMotion__7Mdx from './challenges__framer-motion__7.mdx.j
 import challenges__framerMotion__8Mdx from './challenges__framer-motion__8.mdx.json' assert { type: 'json' }
 import challenges__framerMotion__9Mdx from './challenges__framer-motion__9.mdx.json' assert { type: 'json' }
 
-export const allContents = [blogs__eslintSetupMdx, blogs__makingWebsiteMdx, challenges__cssAnimationMdx, challenges__framerMotionMdx, designs__travelShotsMdx, challenges__framerMotion__1Mdx, challenges__framerMotion__10Mdx, challenges__framerMotion__11Mdx, challenges__framerMotion__12Mdx, challenges__framerMotion__13Mdx, challenges__framerMotion__14Mdx, challenges__framerMotion__15Mdx, challenges__framerMotion__2Mdx, challenges__framerMotion__3Mdx, challenges__framerMotion__4Mdx, challenges__framerMotion__5Mdx, challenges__framerMotion__6Mdx, challenges__framerMotion__7Mdx, challenges__framerMotion__8Mdx, challenges__framerMotion__9Mdx]
+export const allContents = [blogs__eslintSetupMdx, blogs__makingWebsiteMdx, challenges__cssAnimationMdx, challenges__framerMotionMdx, designs__travelShotsMdx, challenges__framerMotion__1Mdx, challenges__framerMotion__10Mdx, challenges__framerMotion__11Mdx, challenges__framerMotion__12Mdx, challenges__framerMotion__13Mdx, challenges__framerMotion__14Mdx, challenges__framerMotion__15Mdx, challenges__framerMotion__16Mdx, challenges__framerMotion__17Mdx, challenges__framerMotion__18Mdx, challenges__framerMotion__19Mdx, challenges__framerMotion__2Mdx, challenges__framerMotion__20Mdx, challenges__framerMotion__21Mdx, challenges__framerMotion__22Mdx, challenges__framerMotion__23Mdx, challenges__framerMotion__24Mdx, challenges__framerMotion__25Mdx, challenges__framerMotion__26Mdx, challenges__framerMotion__27Mdx, challenges__framerMotion__28Mdx, challenges__framerMotion__29Mdx, challenges__framerMotion__3Mdx, challenges__framerMotion__30Mdx, challenges__framerMotion__31Mdx, challenges__framerMotion__4Mdx, challenges__framerMotion__5Mdx, challenges__framerMotion__6Mdx, challenges__framerMotion__7Mdx, challenges__framerMotion__8Mdx, challenges__framerMotion__9Mdx]

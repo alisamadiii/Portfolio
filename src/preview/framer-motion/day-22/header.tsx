@@ -1,6 +1,7 @@
-import Hr from "@/components/hr";
-import Image from "next/image";
 import React from "react";
+import Image from "next/image";
+
+import Hr from "@/components/hr";
 
 export default function Header() {
   return (

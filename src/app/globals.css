@@ -78,6 +78,18 @@ html.dark {
   }
 }
 
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 [data-rehype-pretty-code-figure] code[data-line-numbers] {
   counter-reset: line;
 }

@@ -3,7 +3,6 @@
 import React, { type ChangeEvent, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import EachList from "./each-list";
-import Wrapper from "@/components/designs/wrapper";
 
 export interface ValuesTypes {
   id: number;
@@ -138,39 +137,37 @@ export default function Day19() {
   };
 
   return (
-    <Wrapper>
-      <div className="h-[600px] w-full max-w-4xl">
-        <form onSubmit={onSubmit}>
-          <label className="flex w-full items-center gap-2 rounded-lg border p-3 text-[#525252] ring-2 ring-transparent ring-offset-2 duration-100 focus-within:ring-[#939393]">
-            <FaPlus className="text-[#939393]" />
-            <input
-              type="text"
-              placeholder="insert a plain text"
-              className="outline-none placeholder:text-[#939393]"
-              onFocus={() => setFormFocus(true)}
-              onBlur={() => setFormFocus(false)}
+    <div className="h-[600px] w-full max-w-4xl px-8">
+      <form onSubmit={onSubmit}>
+        <label className="flex w-full items-center gap-2 rounded-lg border p-3 text-[#525252] ring-2 ring-transparent ring-offset-2 duration-100 focus-within:ring-[#939393]">
+          <FaPlus className="text-[#939393]" />
+          <input
+            type="text"
+            placeholder="insert a plain text"
+            className="outline-none placeholder:text-[#939393]"
+            onFocus={() => setFormFocus(true)}
+            onBlur={() => setFormFocus(false)}
+          />
+        </label>
+      </form>
+
+      <div className="mt-8">
+        <header className="flex justify-between border-b py-4 text-[#939393]">
+          <h3>Title</h3>
+          <p>Created at</p>
+        </header>
+
+        <ul className="mt-2">
+          {values.map((value) => (
+            <EachList
+              key={value.id}
+              value={value}
+              selectedValue={selectedValue}
+              formFocus={formFocus}
             />
-          </label>
-        </form>
-
-        <div className="mt-8">
-          <header className="flex justify-between border-b py-4 text-[#939393]">
-            <h3>Title</h3>
-            <p>Created at</p>
-          </header>
-
-          <ul className="mt-2">
-            {values.map((value) => (
-              <EachList
-                key={value.id}
-                value={value}
-                selectedValue={selectedValue}
-                formFocus={formFocus}
-              />
-            ))}
-          </ul>
-        </div>
+          ))}
+        </ul>
       </div>
-    </Wrapper>
+    </div>
   );
 }

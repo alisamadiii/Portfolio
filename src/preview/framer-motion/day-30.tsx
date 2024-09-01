@@ -61,7 +61,7 @@ export default function Day30() {
             animate={{
               height: reduceMotion ? "auto" : height > 0 ? height : undefined,
             }}
-            className=" overflow-hidden rounded-3xl border border-border bg-background/50 backdrop-blur-md"
+            className="border-border overflow-hidden rounded-3xl border bg-background/50 backdrop-blur-md"
           >
             <div
               ref={ref}
@@ -299,7 +299,9 @@ function Avatars({
 }
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn(cn("h-4 w-4 rounded-lg bg-box", className))}></div>;
+  return (
+    <div className={cn(cn("h-4 w-4 rounded-lg bg-muted", className))}></div>
+  );
 }
 
 const reduceMotionVariants: Variants = {

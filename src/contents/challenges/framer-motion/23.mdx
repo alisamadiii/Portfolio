@@ -1,0 +1,352 @@
+---
+title: Day 23 - Mastering Framer Motion
+---
+
+# Day 23 - Mastering Framer Motion
+
+<Tabs id="day-23">
+
+<Tab label="Preview">
+
+<ComponentPreview name="framer-motion-day-23" className="bg-[#E1E1E1]" />
+
+</Tab>
+
+<Tab label="Code">
+
+<Files id="day-23">
+
+<File label="index.tsx">
+
+```tsx showLineNumbers
+"use client";
+
+import React, { useState } from "react";
+
+import IphoneSimulator from "@/components/iphone-simulator";
+import Header from "./header";
+import Buttons from "./buttons";
+import Hr from "@/components/hr";
+import Page from "./pages";
+
+export type panelsType =
+  | "posts"
+  | "replies"
+  | "highlights"
+  | "articles"
+  | "media";
+
+export default function Day23() {
+  const [selectedPanel, setSelectedPanel] = useState<panelsType>("posts");
+
+  return (
+    <IphoneSimulator mixBlend={false} mainClassName="bg-[#E1E1E1] pt-0">
+      <div className="text-black">
+        <Header />
+        <Buttons
+          selectedPanel={selectedPanel}
+          setSelectedPanel={setSelectedPanel}
+        />
+
+        <Hr className="mt-0 bg-[#D7D7D7]" />
+
+        <Page selectedPanel={selectedPanel} />
+      </div>
+    </IphoneSimulator>
+  );
+}
+```
+
+</File>
+
+<File label="header.tsx">
+
+```tsx showLineNumbers
+import Image from "next/image";
+import React, { memo } from "react";
+
+function Header() {
+  return (
+    <div>
+      <Image
+        src={
+          "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/general/banner-day-22.jpg"
+        }
+        width={800}
+        height={400}
+        alt=""
+        className="aspect-[16/10] origin-top object-cover object-top"
+      />
+
+      <div className="relative mt-[-32px] px-4">
+        <Image
+          src={
+            "https://ldxedhzbfnmrovkzozxc.supabase.co/storage/v1/object/public/general/profile-image-day-22.jpg"
+          }
+          width={400}
+          height={400}
+          alt=""
+          className="aspect-square h-16 w-16 rounded-full border-4 border-[#E1E1E1] object-cover"
+        />
+
+        <h2 className="mt-1 text-lg font-bold leading-5 tracking-tight">
+          Ali Reza Samadi
+        </h2>
+        <p className="mt-1 max-w-[250px] text-sm leading-[1.1rem] text-[#A5A5A5]">
+          I love building with Framer-Motion and helping others with solutions.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default memo(Header);
+```
+
+</File>
+
+<File label="pages.tsx">
+
+```tsx showLineNumbers
+import React from "react";
+import { AnimatePresence, type Variants, motion } from "framer-motion";
+
+import { type panelsType } from ".";
+import { directionStore } from "./context";
+import { cn } from "@/utils";
+
+interface Props {
+  selectedPanel: panelsType;
+}
+
+const animations: Variants = {
+  hidden: (direction: -1 | 1) => ({
+    x: direction === -1 ? "-120%" : "120%",
+  }),
+  visible: {
+    x: 0,
+  },
+  exit: (direction: -1 | 1) => ({
+    x: direction === -1 ? "120%" : "-120%",
+  }),
+};
+
+export default function Pages({ selectedPanel }: Props) {
+  const { direction } = directionStore();
+
+  return (
+    <div className="px-4">
+      <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+        <motion.div
+          variants={animations}
+          custom={direction}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.5, type: "spring", bounce: 0 }}
+          key={selectedPanel}
+        >
+          {selectedPanel === "posts"
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="mb-4 flex w-full gap-2">
+                  <Skeleton className="rounded-full" />
+                  <div className="flex grow flex-col gap-1">
+                    <Skeleton className="h-2 w-1/4" />
+                    <Skeleton className="h-1 w-full" />
+                    <Skeleton className="h-1 w-full" />
+                    <Skeleton className="h-1 w-1/4" />
+                    <Skeleton className="mt-2 aspect-video h-auto w-full" />
+                  </div>
+                </div>
+              ))
+            : selectedPanel === "replies"
+              ? Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="mb-4 flex w-full gap-2">
+                    <Skeleton className="rounded-full" />
+                    <div className="flex grow flex-col gap-1">
+                      <Skeleton className="h-2 w-1/4" />
+                      <Skeleton className="h-1 w-full" />
+                      <Skeleton className="h-1 w-full" />
+                      <Skeleton className="h-1 w-1/4" />
+
+                      <div className="mt-4 flex gap-2">
+                        <Skeleton className="rounded-full" />
+                        <div className="flex grow flex-col gap-1">
+                          <Skeleton className="h-2 w-1/4" />
+                          <Skeleton className="h-1 w-full" />
+                          <Skeleton className="h-1 w-full" />
+                          <Skeleton className="h-1 w-1/4" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              : selectedPanel === "highlights"
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="mb-4 flex w-full flex-col gap-2"
+                    >
+                      <Skeleton className="rounded-full" />
+                      <div className="mb-4 flex w-full gap-2">
+                        <div className="flex grow flex-col gap-1">
+                          <Skeleton className="h-2 w-1/4" />
+                          <Skeleton className="h-1 w-full" />
+                          <Skeleton className="h-1 w-full" />
+                          <Skeleton className="h-1 w-1/4" />
+                          <Skeleton className="mt-2 aspect-video h-auto w-full" />
+                        </div>
+                      </div>
+                      <Skeleton className="rounded-full" />
+                      <div className="flex grow flex-col gap-1">
+                        <Skeleton className="aspect-[24/9] h-auto w-full" />
+                      </div>
+                    </div>
+                  ))
+                : selectedPanel === "articles"
+                  ? Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="mb-4 flex w-full flex-col gap-2"
+                      >
+                        <Skeleton className="rounded-full" />
+                        <div className="mb-2 flex w-full gap-2">
+                          <div className="flex grow flex-col gap-1">
+                            <Skeleton className="h-2 w-1/4" />
+                            <Skeleton className="h-1 w-full" />
+                            <Skeleton className="h-1 w-full" />
+                            <Skeleton className="h-1 w-1/4" />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  : selectedPanel === "media"
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                        <div
+                          key={index}
+                          className="mb-4 flex w-full flex-col gap-2"
+                        >
+                          <Skeleton className="aspect-[24/9] h-auto w-full" />
+                        </div>
+                      ))
+                    : null}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Skeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("h-8 w-8 rounded-md bg-[#cfcfcf]", className)}></div>
+  );
+}
+```
+
+</File>
+
+<File label="button.tsx">
+
+```tsx showLineNumbers
+import React, { useEffect, useRef, useState } from "react";
+
+import { cn } from "@/utils";
+import { type panelsType } from ".";
+import { directionStore } from "./context";
+
+interface Props {
+  selectedPanel: panelsType;
+  setSelectedPanel: (a: panelsType) => void;
+}
+
+const buttons: panelsType[] = [
+  "posts",
+  "replies",
+  "highlights",
+  "articles",
+  "media",
+];
+
+export default function Buttons({ selectedPanel, setSelectedPanel }: Props) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const { setDirection } = directionStore();
+
+  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const underlineRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const activeButton = buttonRefs.current[selectedIndex];
+    const underline = underlineRef.current;
+
+    if (underline && activeButton) {
+      const wrapperBoundingBox =
+        underline.parentElement?.getBoundingClientRect() || { left: 0 };
+      const tabBoundingBox = activeButton.getBoundingClientRect();
+
+      underline.style.width = `${tabBoundingBox.width}px`;
+      underline.style.left = `${tabBoundingBox.left - wrapperBoundingBox.left}px`;
+    }
+  }, [selectedIndex]);
+
+  return (
+    <div className="no-scrollbar relative mt-4 flex gap-4 overflow-auto px-4 py-2">
+      {buttons.map((button, index) => (
+        <button
+          key={button}
+          ref={(el) => {
+            buttonRefs.current[index] = el;
+          }}
+          className={cn(
+            "text-sm capitalize outline-none",
+            selectedPanel === button ? "text-black" : "text-[#A5A5A5]"
+          )}
+          style={{ flex: "0 0 auto" }}
+          onClick={() => {
+            setSelectedPanel(button);
+            setSelectedIndex((prevIndex) => {
+              const newDirection = prevIndex < index ? 1 : -1;
+              setDirection(newDirection);
+              return index;
+            });
+          }}
+        >
+          {button}
+        </button>
+      ))}
+
+      <div
+        ref={underlineRef}
+        className="absolute bottom-0 h-px bg-black"
+        style={{ transition: "width 200ms, left 200ms" }}
+      ></div>
+    </div>
+  );
+}
+```
+
+</File>
+
+<File label="context.ts">
+
+```tsx showLineNumbers
+import { create } from "zustand";
+
+interface directionTypes {
+  direction: -1 | 1;
+  setDirection: (a: -1 | 1) => void;
+}
+
+export const directionStore = create<directionTypes>((set) => ({
+  direction: -1,
+  setDirection: (a) => set({ direction: a }),
+}));
+```
+
+</File>
+
+</Files>
+
+</Tab>
+
+</Tabs>

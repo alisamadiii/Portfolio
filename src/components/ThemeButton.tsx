@@ -1,17 +1,26 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
 export default function ThemeButton() {
+  const [mounted, setMounted] = useState(false);
   const { setTheme, resolvedTheme } = useTheme();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div className="fixed bottom-4 right-4">
+    <header className="fixed bottom-4 right-4">
       {resolvedTheme === "dark" ? (
         <button
           onClick={() => setTheme("light")}
-          className="focus:border-wrapper flex h-8 w-8 items-center justify-center rounded-md"
+          className="flex h-8 w-8 items-center justify-center rounded-md focus:border-wrapper"
         >
           <svg
             width="18"
@@ -29,7 +38,7 @@ export default function ThemeButton() {
       ) : resolvedTheme === "light" ? (
         <button
           onClick={() => setTheme("dark")}
-          className="focus:border-wrapper flex h-8 w-8 items-center justify-center rounded-md"
+          className="flex h-8 w-8 items-center justify-center rounded-md focus:border-wrapper"
         >
           <svg
             width="18"
@@ -45,6 +54,6 @@ export default function ThemeButton() {
           </svg>
         </button>
       ) : null}
-    </div>
+    </header>
   );
 }

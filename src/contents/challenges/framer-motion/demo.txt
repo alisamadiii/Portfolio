@@ -1,23 +1,46 @@
 ---
-title: Day 1 - Mastering Framer Motion
+title: Day 3 - Mastering Framer Motion
 ---
 
-# Day 1 - Mastering Framer Motion
+# Day 3 - Mastering Framer Motion
 
-<Tabs id="day-1">
+<Tabs id="day-3">
 
 <Tab label="Preview">
 
-<ComponentPreview name="framer-motion-day-1" />
+<ComponentPreview name="framer-motion-day-3" />
 
 </Tab>
 
 <Tab label="Code">
 
-```tsx title="components/day-1.tsx" showLineNumbers
+```tsx title="components/day-3.tsx" showLineNumbers
 
 ```
 
 </Tab>
 
 </Tabs>
+
+
+
+
+<Files id="day-3">
+
+<File label="index.tsx">
+
+```tsx showLineNumbers
+
+```
+
+</File>
+
+<File label="header.tsx">
+
+```tsx showLineNumbers
+
+```
+
+</File>
+
+</Files>

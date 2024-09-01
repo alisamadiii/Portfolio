@@ -67,50 +67,48 @@ export default function Day21() {
   const [ref, { height }] = useMeasure();
 
   return (
-    <div className="flex h-dvh w-full items-center justify-center bg-[#0E0C0E] px-4">
-      <div className="w-full max-w-4xl">
-        <h1 className="text-xl font-bold tracking-tight">
-          What are your favorite language?
-        </h1>
+    <div className="w-full max-w-4xl">
+      <h1 className="text-xl font-bold tracking-tight">
+        What are your favorite language?
+      </h1>
 
-        <MotionConfig
-          transition={{
-            duration: 0.7,
-            type: "spring",
-            bounce: filter ? 0 : undefined,
-          }}
+      <MotionConfig
+        transition={{
+          duration: 0.7,
+          type: "spring",
+          bounce: filter ? 0 : undefined,
+        }}
+      >
+        <motion.div
+          initial={{ height: "auto" }}
+          animate={{ height: height > 0 ? height : undefined }}
         >
-          <motion.div
-            initial={{ height: "auto" }}
-            animate={{ height: height > 0 ? height : undefined }}
-          >
-            <motion.ul ref={ref} className="mt-4 flex w-full flex-wrap gap-2">
-              <LayoutGroup>
-                <AnimatePresence initial={false} mode="popLayout">
-                  {Object.entries(values)
-                    .filter(([key, value]) => !filter || value)
-                    .map(([key, value]) => (
-                      <EachSport
-                        key={key}
-                        sport={key}
-                        isSelected={value}
-                        setValues={setValues}
-                      />
-                    ))}
-                </AnimatePresence>
-              </LayoutGroup>
-            </motion.ul>
-          </motion.div>
-        </MotionConfig>
+          <motion.ul ref={ref} className="mt-4 flex w-full flex-wrap gap-2">
+            <LayoutGroup>
+              <AnimatePresence initial={false} mode="popLayout">
+                {Object.entries(values)
+                  .filter(([key, value]) => !filter || value)
+                  .map(([key, value]) => (
+                    <EachSport
+                      key={key}
+                      sport={key}
+                      isSelected={value}
+                      setValues={setValues}
+                    />
+                  ))}
+              </AnimatePresence>
+            </LayoutGroup>
+          </motion.ul>
+        </motion.div>
+      </MotionConfig>
 
-        <div className="flex justify-center py-8">
-          <button
-            className="h-8 rounded border border-[#452C28] bg-[#1C1210] px-4 text-[#EA885A] duration-200 active:scale-95"
-            onClick={onClickHandler}
-          >
-            Submit
-          </button>
-        </div>
+      <div className="flex justify-center py-8">
+        <button
+          className="h-8 rounded border border-[#452C28] bg-[#1C1210] px-4 text-[#EA885A] duration-200 active:scale-95"
+          onClick={onClickHandler}
+        >
+          Submit
+        </button>
       </div>
     </div>
   );

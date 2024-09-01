@@ -1,6 +1,6 @@
 "use client";
 
-import WhatILearnt from "@/components/WhatILearnt";
+import React, { useRef } from "react";
 import {
   type MotionValue,
   useMotionValue,
@@ -8,7 +8,8 @@ import {
   useTransform,
   useSpring,
 } from "framer-motion";
-import React, { useRef } from "react";
+
+import { useFullscreen } from "@mantine/hooks";
 
 const initialValues = [
   {
@@ -64,39 +65,32 @@ const initialValues = [
 export default function Day18() {
   const mouseX = useMotionValue(Infinity);
 
-  return (
-    <>
-      <WhatILearnt
-        values={[
-          `I didn't know that we can use function for <b>useTransform()</b>.`,
-          `Working with <b>useTransform()</b>'s values are sometimes confusing, but now I am a bit better when it comes to using to it.`,
-          `We can use <b>Infinity</b> for one of the value of useMotionValue. the icons get big based on a value. So when it is 0, the icon's size must get bigger, that is why using Infinity solve the issue.`,
-          `I learned how to get the center position of each element in the DOM. First we need to determine where our mouse is on the page then subtract the x-axis from the position of the element from the left and subtract again by half of the width of the element to find the center of the element.`,
-        ]}
-        credit={{
-          text: "All thanks to this video",
-          link: "https://youtu.be/JV5BlbRy_mg?si=-rPV7M_SSa0vyRCf",
-        }}
+  const { toggle, fullscreen } = useFullscreen();
+
+  return fullscreen ? (
+    <div className="isolate z-50">
+      <img
+        src="https://preview.redd.it/which-do-you-prefer-macos-or-windows-11-wallpapers-v0-d4d201nxe1sa1.jpg?width=2880&format=pjpg&auto=webp&s=21d9bc5db16537a34c906e30fd0dafec04707fc7"
+        className="fixed left-0 top-0 -z-10 h-full w-full object-cover"
       />
 
-      <div className="isolate">
-        {/* Wallpaper */}
-        <img
-          src="https://preview.redd.it/which-do-you-prefer-macos-or-windows-11-wallpapers-v0-d4d201nxe1sa1.jpg?width=2880&format=pjpg&auto=webp&s=21d9bc5db16537a34c906e30fd0dafec04707fc7"
-          className="fixed left-0 top-0 -z-10 h-full w-full object-cover"
-        />
-
-        <div
-          onMouseMove={(e) => mouseX.set(e.pageX)}
-          onMouseLeave={() => mouseX.set(Infinity)}
-          className="fixed bottom-8 left-1/2 flex h-[65px] -translate-x-1/2 items-end gap-2 rounded-3xl border border-white/20 bg-black/20 px-2 pb-[8px] backdrop-blur"
-        >
-          {initialValues.map((value, index) => (
-            <EachIcon key={index} mouseX={mouseX} value={value} />
-          ))}
-        </div>
+      <div
+        onMouseMove={(e) => mouseX.set(e.pageX)}
+        onMouseLeave={() => mouseX.set(Infinity)}
+        className="fixed bottom-8 left-1/2 flex h-[65px] -translate-x-1/2 items-end gap-2 rounded-3xl border border-white/20 bg-black/20 px-2 pb-[8px] backdrop-blur"
+      >
+        {initialValues.map((value, index) => (
+          <EachIcon key={index} mouseX={mouseX} value={value} />
+        ))}
       </div>
-    </>
+    </div>
+  ) : (
+    <button
+      className="h-8 rounded-md bg-foreground px-4 text-background"
+      onClick={toggle}
+    >
+      See the design in full screen
+    </button>
   );
 }
 

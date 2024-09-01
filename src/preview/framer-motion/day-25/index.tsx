@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import React, { useState } from "react";
+import Image from "next/image";
 import { LayoutGroup, MotionConfig, motion } from "framer-motion";
 
 import SideContent from "./side-content";
+import { useFullscreen } from "@mantine/hooks";
 
 const initialValues = [
   {
@@ -27,47 +28,13 @@ const initialValues = [
 
 export default function Day25() {
   const [currentStory, setCurrentStory] = useState(1);
-  // const [remainingTime, setRemainingTime] = useState(2000);
 
   const middleStory = initialValues.find((value) => value.id === currentStory);
 
-  // const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-  // const startTimeRef = useRef<number | null>(null);
+  const { toggle, fullscreen } = useFullscreen();
 
-  // const cycleStories = () => {
-  //   setCurrentStory((prevStory) =>
-  //     prevStory >= initialValues.length ? 1 : prevStory + 1
-  //   );
-  //   setRemainingTime(2000); // Reset remaining time for the next story
-  // };
-
-  // useEffect(() => {
-  //   if (!isStop) {
-  //     const handleResume = () => {
-  //       startTimeRef.current = Date.now();
-  //       timeoutIdRef.current = setTimeout(() => {
-  //         cycleStories();
-  //         startTimeRef.current = Date.now();
-  //         timeoutIdRef.current = setInterval(cycleStories, 2000);
-  //       }, remainingTime);
-  //     };
-
-  //     handleResume();
-
-  //     return () => {
-  //       if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
-  //     };
-  //   } else {
-  //     if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
-  //     if (startTimeRef.current) {
-  //       const elapsedTime = Date.now() - startTimeRef.current;
-  //       setRemainingTime((prev) => prev - elapsedTime);
-  //     }
-  //   }
-  // }, [isStop]);
-
-  return (
-    <div className="relative flex h-dvh w-full items-center justify-center overflow-hidden bg-[#1A1A1A]">
+  return fullscreen ? (
+    <div className="fixed left-0 top-0 flex h-full w-full items-center justify-center overflow-hidden bg-[#1A1A1A]">
       <MotionConfig transition={{ duration: 0.7, type: "spring", bounce: 0 }}>
         <LayoutGroup>
           <SideContent
@@ -108,5 +75,12 @@ export default function Day25() {
         </LayoutGroup>
       </MotionConfig>
     </div>
+  ) : (
+    <button
+      className="h-8 rounded-md bg-foreground px-4 text-background"
+      onClick={toggle}
+    >
+      See the design in full screen
+    </button>
   );
 }

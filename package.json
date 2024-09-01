@@ -11,6 +11,7 @@
     "build:registry": "node ./src/scripts/build-registry.js && prettier --write ./src/__registry__/index.tsx"
   },
   "dependencies": {
+    "@mantine/hooks": "^7.12.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "contentlayer": "^0.3.4",
