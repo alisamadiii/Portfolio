@@ -2,12 +2,11 @@
 
 import React, { useRef, useState } from "react";
 import { useLongPress } from "use-long-press";
-import { AnimatePresence, motion , MotionConfig } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
+import Image from "next/image";
 
-import Wrapper from "@/components/designs/wrapper";
 import IphoneSimulator from "@/components/iphone-simulator";
 import { cn, myImage } from "@/utils";
-import Image from "next/image";
 
 interface InitialValueTypes {
   id: number;
@@ -111,26 +110,24 @@ export default function Day40() {
   const [fade, setFade] = useState(true);
 
   return (
-    <Wrapper>
-      <IphoneSimulator
-        textColor="black"
-        roundedCorners={false}
-        topElements={{ left: fade, right: fade }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="absolute inset-0 -z-10 bg-white"></div>
-        <div className="mt-4">
-          {initialValues.map((value, index) => (
-            <EachUser
-              key={value.id}
-              value={value}
-              index={index}
-              onFadeChange={() => setFade(!fade)}
-            />
-          ))}
-        </div>
-      </IphoneSimulator>
-    </Wrapper>
+    <IphoneSimulator
+      textColor="black"
+      roundedCorners={false}
+      topElements={{ left: fade, right: fade }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="absolute inset-0 -z-10 bg-white"></div>
+      <div className="mt-4">
+        {initialValues.map((value, index) => (
+          <EachUser
+            key={value.id}
+            value={value}
+            index={index}
+            onFadeChange={() => setFade(!fade)}
+          />
+        ))}
+      </div>
+    </IphoneSimulator>
   );
 }
 

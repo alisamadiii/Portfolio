@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion, useAnimate } from "framer-motion";
-
-import Wrapper from "@/components/designs/wrapper";
-import IphoneSimulator from "@/components/iphone-simulator";
 import Image from "next/image";
+
+import IphoneSimulator from "@/components/iphone-simulator";
 
 const images = [
   {
@@ -86,24 +85,22 @@ export default function Day37() {
   console.log(iconOpen);
 
   return (
-    <Wrapper>
-      <IphoneSimulator>
-        <img
-          src="https://9to5mac.com/wp-content/uploads/sites/6/2023/09/iPhone-15-Pro-White-wallpaper-5.jpeg?quality=82&strip=all"
-          className="absolute left-0 top-0 -z-10 h-full w-full"
-        />
-        <ul className="grid grid-cols-4 gap-4 p-4">
-          {images.map((image) => (
-            <EachIcon
-              key={image.id}
-              data={image}
-              iconOpen={iconOpen}
-              setIconOpen={setIconOpen}
-            />
-          ))}
-        </ul>
-      </IphoneSimulator>
-    </Wrapper>
+    <IphoneSimulator>
+      <img
+        src="https://9to5mac.com/wp-content/uploads/sites/6/2023/09/iPhone-15-Pro-White-wallpaper-5.jpeg?quality=82&strip=all"
+        className="absolute left-0 top-0 -z-10 h-full w-full"
+      />
+      <ul className="grid grid-cols-4 gap-4 p-4">
+        {images.map((image) => (
+          <EachIcon
+            key={image.id}
+            data={image}
+            iconOpen={iconOpen}
+            setIconOpen={setIconOpen}
+          />
+        ))}
+      </ul>
+    </IphoneSimulator>
   );
 }
 

@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 
-import Wrapper from "@/components/designs/wrapper";
 import { cn, myImage } from "@/utils";
 import IphoneSimulator from "@/components/iphone-simulator";
 import Checkbox from "@/components/checkbox";
+import { NavigatingClick } from "@/components/Navigating";
 
 const messages = [
   { from: 0, message: "How are you?" },
@@ -30,7 +30,7 @@ export default function Day38() {
   const onClickHandler = () => setIsOpen(!isOpen);
 
   return (
-    <Wrapper>
+    <div>
       <label className="mb-8 flex items-center gap-2">
         <Checkbox
           variant={"square"}
@@ -90,7 +90,11 @@ export default function Day38() {
               </div>
 
               <div className="flex justify-end pr-2">
-                <button className="active:opacity-50" onClick={onClickHandler}>
+                <button
+                  className="relative flex items-center justify-center active:opacity-50"
+                  onClick={onClickHandler}
+                >
+                  <NavigatingClick />
                   <motion.img
                     layoutId="avatar-image"
                     src={myImage}
@@ -176,7 +180,10 @@ export default function Day38() {
                 <motion.header
                   layoutId="header"
                   className="sticky top-0 z-10 flex h-96 flex-col items-start justify-end rounded-t-[52px] bg-white/80 p-4 pt-14 font-medium backdrop-blur-lg"
-                  style={{ borderTopLeftRadius: 52, borderTopRightRadius: 52 }}
+                  style={{
+                    borderTopLeftRadius: 52,
+                    borderTopRightRadius: 52,
+                  }}
                 >
                   <motion.img
                     layoutId="avatar-image"
@@ -236,6 +243,6 @@ export default function Day38() {
           </AnimatePresence>
         </MotionConfig>
       </IphoneSimulator>
-    </Wrapper>
+    </div>
   );
 }

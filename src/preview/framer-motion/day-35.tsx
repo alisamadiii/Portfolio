@@ -6,7 +6,6 @@ import { TbWorld } from "react-icons/tb";
 import { RxCopy } from "react-icons/rx";
 import { LuUserPlus2 } from "react-icons/lu";
 
-import Wrapper from "@/components/designs/wrapper";
 import { cn, myImage } from "@/utils";
 import useMeasure from "react-use-measure";
 
@@ -16,64 +15,60 @@ export default function Day35() {
   const [ref, { height }] = useMeasure();
 
   return (
-    <Wrapper className="bg-[#FEFEFE]">
-      <div className="h-96">
-        <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
-          <motion.div
-            layout="preserve-aspect"
-            animate={{ height: height > 0 ? height : undefined }}
-            className="relative w-[340px] overflow-hidden rounded-xl border border-[#EEEEEE] bg-white shadow-[0_2px_10px_rgba(0,0,0,.05)]"
-          >
-            <div ref={ref}>
-              <div className="px-5 py-4">
-                {/* Title */}
-                <h2 className="text-xl font-medium">Share</h2>
-                {/* Toggle Items */}
-                <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#F5F4F9] p-2">
-                  <div
-                    className="flex aspect-square w-10 items-center justify-center rounded-xl bg-white text-2xl text-[#838385]"
-                    style={{ flex: "0 0 auto" }}
-                  >
-                    <TbWorld />
-                  </div>
-                  <div className="flex grow flex-col">
-                    <h3 className="font-medium">Anyone</h3>
-                    <small className="-mt-1 inline-block text-[#838385]">
-                      Everyone with link can access
-                    </small>
-                  </div>
-                  <Checkbox state={isAnyone} setState={setIsAnyone} />
+    <div className="h-96">
+      <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
+        <motion.div
+          layout="preserve-aspect"
+          animate={{ height: height > 0 ? height : undefined }}
+          className="relative w-[340px] overflow-hidden rounded-xl border border-[#EEEEEE] bg-white shadow-[0_2px_10px_rgba(0,0,0,.05)]"
+        >
+          <div ref={ref}>
+            <div className="px-5 py-4">
+              {/* Title */}
+              <h2 className="text-xl font-medium">Share</h2>
+              {/* Toggle Items */}
+              <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#F5F4F9] p-2">
+                <div
+                  className="flex aspect-square w-10 items-center justify-center rounded-xl bg-white text-2xl text-[#838385]"
+                  style={{ flex: "0 0 auto" }}
+                >
+                  <TbWorld />
                 </div>
-                {/* Copy Link */}
-                <div className="mt-2 flex justify-between px-2 text-[#919193]">
-                  <small>goals/mastering-framer-motion</small>
-                  <button>
-                    <RxCopy />
-                  </button>
+                <div className="flex grow flex-col">
+                  <h3 className="font-medium">Anyone</h3>
+                  <small className="-mt-1 inline-block text-[#838385]">
+                    Everyone with link can access
+                  </small>
                 </div>
+                <Checkbox state={isAnyone} setState={setIsAnyone} />
               </div>
-
-              {/* Adding users */}
-              <AnimatePresence>
-                {!isAnyone ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, position: "absolute" }}
-                    className="w-full px-5 pb-4"
-                  >
-                    <h3 className="text-lg font-medium text-[#717172]">
-                      Invite
-                    </h3>
-                    <Form />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
+              {/* Copy Link */}
+              <div className="mt-2 flex justify-between px-2 text-[#919193]">
+                <small>goals/mastering-framer-motion</small>
+                <button>
+                  <RxCopy />
+                </button>
+              </div>
             </div>
-          </motion.div>
-        </MotionConfig>
-      </div>
-    </Wrapper>
+
+            {/* Adding users */}
+            <AnimatePresence>
+              {!isAnyone ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, position: "absolute" }}
+                  className="w-full px-5 pb-4"
+                >
+                  <h3 className="text-lg font-medium text-[#717172]">Invite</h3>
+                  <Form />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </MotionConfig>
+    </div>
   );
 }
 

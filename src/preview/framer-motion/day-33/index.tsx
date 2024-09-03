@@ -8,9 +8,9 @@ import {
 } from "react-icons/md";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 
-import Wrapper from "@/components/designs/wrapper";
 import Hr from "@/components/hr";
 import IphoneSimulator from "@/components/iphone-simulator";
+import { NavigatingClick } from "@/components/Navigating";
 
 const buttons = ["notifications", "sound-&-haptics", "focus", "screen-time"];
 const buttons2 = ["schedules-summary", "show-preview", "screen-sharing"];
@@ -24,7 +24,7 @@ export default function Day33() {
   const onDurationHandler = (value: number) => setDuration(value);
 
   return (
-    <Wrapper>
+    <div>
       <div className="my-8 flex gap-4">
         {[0.7, 1.5, 2].map((value) => (
           <button
@@ -49,9 +49,10 @@ export default function Day33() {
               {buttons.map((button, index) => (
                 <Fragment key={button}>
                   <button
-                    className="flex h-10 w-full items-center gap-2 px-4 text-start text-sm active:bg-[#E5E5EA]"
+                    className="flex h-10 w-full items-center justify-end gap-2 px-4 text-start text-sm active:bg-[#E5E5EA]"
                     onClick={() => onClickHandler(button)}
                   >
+                    {index === 0 && <NavigatingClick />}
                     <div>
                       <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#FF3B30] text-lg text-white">
                         <MdNotificationsActive />
@@ -81,7 +82,7 @@ export default function Day33() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="pointer-events-none absolute inset-0 bg-black/10"
+                  className="pointer-events-none absolute inset-0 -z-10 bg-black/10"
                 />
                 <motion.button
                   initial={{ opacity: 0 }}
@@ -141,6 +142,6 @@ export default function Day33() {
           </AnimatePresence>
         </MotionConfig>
       </IphoneSimulator>
-    </Wrapper>
+    </div>
   );
 }

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import Wrapper from "@/components/designs/wrapper";
 import ConnectWallet from "./connect-wallet";
 import useMeasure from "react-use-measure";
 
@@ -17,7 +16,7 @@ export default function Day39() {
   const onScanClickHandler = () => setIsScanOpen(!isScanOpen);
 
   return (
-    <Wrapper>
+    <div>
       <button
         className="h-9 rounded-xl bg-[#00CFFF] px-4 text-sm font-medium text-white shadow-[0_2px_4px_0_rgba(0,0,0,.02)] duration-200 hover:bg-[#00C1FF]"
         onClick={onClickHandler}
@@ -180,6 +179,6 @@ export default function Day39() {
           </div>
         ) : null}
       </AnimatePresence>
-    </Wrapper>
+    </div>
   );
 }

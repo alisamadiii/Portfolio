@@ -6,6 +6,7 @@ import { FaApple } from "react-icons/fa";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import useMeasure from "react-use-measure";
 import { useFullscreen } from "@mantine/hooks";
+import { NavigatingHover } from "@/components/Navigating";
 
 const initialValues: any = {
   store: {
@@ -40,6 +41,7 @@ export default function Day26() {
                   className="flex h-full cursor-pointer items-center justify-center px-2 text-xs capitalize text-black/80 hover:text-black"
                   onMouseOver={() => setHovered(key)}
                 >
+                  {index === 0 && <NavigatingHover />}
                   {key}
                 </li>
               ))}

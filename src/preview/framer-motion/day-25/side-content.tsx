@@ -1,7 +1,8 @@
-import { useMotionValue , motion } from "framer-motion";
+import { useMotionValue, motion } from "framer-motion";
 import Image from "next/image";
 import React, { useEffect } from "react";
 import { cn } from "@/utils";
+import { NavigatingClick } from "@/components/Navigating";
 
 interface Props {
   values: Array<{ id: number; url: string }>;
@@ -57,14 +58,15 @@ export default function SideContent({
             return value.id < currentStory;
           }
         })
-        .map((value) => (
+        .map((value, index) => (
           <motion.div
             key={value.id}
             layoutId={value.id.toString()}
-            className="relative aspect-[9/16] h-full overflow-hidden"
+            className="relative flex aspect-[9/16] h-full items-center justify-center overflow-hidden"
             style={{ flex: "0 0 auto", borderRadius: 8 }}
             onClick={() => setCurrentStory(value.id)}
           >
+            <NavigatingClick />
             <Image
               src={value.url}
               width={600}

@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/utils";
 import { type panelsType } from ".";
 import { directionStore } from "./context";
+import { NavigatingClick } from "@/components/Navigating";
 
 interface Props {
   selectedPanel: panelsType;
@@ -48,7 +49,7 @@ export default function Buttons({ selectedPanel, setSelectedPanel }: Props) {
             buttonRefs.current[index] = el;
           }}
           className={cn(
-            "text-sm capitalize outline-none",
+            "flex items-center justify-center text-sm capitalize outline-none",
             selectedPanel === button ? "text-black" : "text-[#A5A5A5]"
           )}
           style={{ flex: "0 0 auto" }}
@@ -61,6 +62,7 @@ export default function Buttons({ selectedPanel, setSelectedPanel }: Props) {
             });
           }}
         >
+          {index >= 1 && <NavigatingClick className="h-8 w-8" />}
           {button}
         </button>
       ))}

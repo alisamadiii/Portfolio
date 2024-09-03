@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 
-import Wrapper from "@/components/designs/wrapper";
 import IphoneSimulator from "@/components/iphone-simulator";
 import { cn } from "@/utils";
 import Checkbox from "@/components/checkbox";
 import Hr from "@/components/hr";
+import { NavigatingClick } from "@/components/Navigating";
 
 export default function Day32() {
   const [isSlow, setIsSlow] = useState(false);
@@ -17,7 +17,7 @@ export default function Day32() {
   const onClickHandler = () => setExpand(!expand);
 
   return (
-    <Wrapper>
+    <div>
       <label className="mb-8 flex items-center gap-2">
         <Checkbox
           variant={"square"}
@@ -68,19 +68,20 @@ export default function Day32() {
             >
               <motion.button
                 layoutId="user-avatar"
-                className="aspect-square w-16 overflow-hidden bg-red-800"
+                className="relative flex aspect-square w-16 items-start justify-center overflow-hidden"
                 onClick={onClickHandler}
                 style={{
                   borderRadius: 34,
                 }}
               >
+                <NavigatingClick className="top-1" />
                 <img
                   src="https://pbs.twimg.com/profile_images/1774123575248830466/e0rbeSop_400x400.jpg"
                   className="pointer-events-none h-full w-full object-cover"
                 />
               </motion.button>
               <motion.div
-                className={`relative z-20 flex flex-col ${expand ? " items-start" : "items-center"}`}
+                className={`relative z-20 flex flex-col ${expand ? "items-start" : "items-center"}`}
               >
                 <motion.h2
                   layout
@@ -144,6 +145,6 @@ export default function Day32() {
           </MotionConfig>
         </div>
       </IphoneSimulator>
-    </Wrapper>
+    </div>
   );
 }
