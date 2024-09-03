@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { AnimatePresence, motion, useAnimate, type Variants } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useAnimate,
+  type Variants,
+} from "framer-motion";
 import { FaPlus, FaMinus } from "react-icons/fa6";
 import { cn } from "@/utils";
 
@@ -31,7 +36,7 @@ export default function Day49() {
   };
 
   return (
-    <div className="flex h-96 w-96 flex-col items-center justify-center gap-8">
+    <div className="flex flex-col items-center justify-center gap-8">
       <div
         ref={scope}
         className="flex items-center justify-center gap-8 text-4xl"
@@ -39,7 +44,7 @@ export default function Day49() {
         <button
           onClick={() => onClickHandler("decrease")}
           className={cn(
-            "flex h-14 w-14 items-center justify-center rounded-full bg-box text-xl active:scale-90",
+            "bg-box flex h-14 w-14 items-center justify-center rounded-full text-xl active:scale-90",
             num === 0 && "opacity-50"
           )}
         >
@@ -68,7 +73,7 @@ export default function Day49() {
         <button
           onClick={() => onClickHandler("increase")}
           className={cn(
-            "flex h-14 w-14 items-center justify-center rounded-full bg-box text-xl active:scale-90",
+            "bg-box flex h-14 w-14 items-center justify-center rounded-full text-xl active:scale-90",
             num === 20 && "opacity-50"
           )}
         >

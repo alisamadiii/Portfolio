@@ -1,20 +1,20 @@
 ---
-title: Day 3 - Mastering Framer Motion
+title: Day 4 - Mastering Framer Motion
 ---
 
-# Day 3 - Mastering Framer Motion
+# Day 4 - Mastering Framer Motion
 
-<Tabs id="day-3">
+<Tabs id="day-4">
 
 <Tab label="Preview">
 
-<ComponentPreview name="framer-motion-day-3" />
+<ComponentPreview name="framer-motion-day-4" />
 
 </Tab>
 
 <Tab label="Code">
 
-```tsx title="components/day-3.tsx" showLineNumbers
+```tsx title="components/day-4.tsx" showLineNumbers
 
 ```
 
@@ -25,7 +25,7 @@ title: Day 3 - Mastering Framer Motion
 
 
 
-<Files id="day-3">
+<Files id="day-4">
 
 <File label="index.tsx">
 

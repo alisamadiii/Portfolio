@@ -20,7 +20,7 @@ export default function Day46() {
         <MotionConfig transition={{ duration: 0.4, type: "tween" }}>
           <motion.div
             layout
-            className={`relative aspect-square h-full rounded-full bg-white`}
+            className={`relative aspect-square h-full rounded-full bg-foreground`}
           >
             <motion.div
               animate={{
@@ -28,7 +28,7 @@ export default function Day46() {
                 originX: checked ? "right" : "left",
               }}
               transition={{ originX: { delay: 0.5 } }}
-              className={`absolute inset-0 rounded-full bg-white`}
+              className={`absolute inset-0 rounded-full bg-foreground`}
             ></motion.div>
           </motion.div>
         </MotionConfig>

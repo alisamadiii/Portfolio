@@ -5,7 +5,6 @@ import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { FaReply } from "react-icons/fa";
 import { Circle } from "rc-progress";
 
-import Wrapper from "@/components/designs/wrapper";
 import { cn, myImage } from "@/utils";
 import IphoneSimulator from "@/components/iphone-simulator";
 
@@ -30,81 +29,79 @@ export default function Day45() {
   const onClickHandler = () => setIsOpen(!isOpen);
 
   return (
-    <Wrapper>
-      <IphoneSimulator
-        mainClassName="py-0"
-        textColor="black"
-        backgroundImage="https://s2-ug.ap4r.com/image-aigc-article/seoPic/origin/c760a93722d17be2764d101ef31824a28259b463.jpg"
-      >
-        <div>
-          <header
-            className="sticky top-0 z-30 grid grid-cols-3 items-center bg-white/80 pb-2 pt-14 font-medium backdrop-blur-lg"
-            style={{ borderTopLeftRadius: 52, borderTopRightRadius: 52 }}
-          >
-            <button className="flex w-12 items-center gap-1 pl-2 text-blue-500">
-              <svg
-                viewBox="0 0 12 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-3"
-                style={{ flex: "0 0 auto" }}
-              >
-                <path
-                  d="M10.5312 1.36963L2.1398 9.47206C2.07194 9.53759 2.07194 9.64633 2.1398 9.71186L10.5312 17.8143"
-                  stroke="currentColor"
-                  strokeWidth="2.66667"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="rounded-full bg-blue-500 px-1 py-0.5 text-xs text-white">
-                522
-              </span>
+    <IphoneSimulator
+      mainClassName="py-0"
+      textColor="black"
+      backgroundImage="https://s2-ug.ap4r.com/image-aigc-article/seoPic/origin/c760a93722d17be2764d101ef31824a28259b463.jpg"
+    >
+      <div>
+        <header
+          className="sticky top-0 z-30 grid grid-cols-3 items-center bg-white/80 pb-2 pt-14 font-medium backdrop-blur-lg"
+          style={{ borderTopLeftRadius: 52, borderTopRightRadius: 52 }}
+        >
+          <button className="flex w-12 items-center gap-1 pl-2 text-blue-500">
+            <svg
+              viewBox="0 0 12 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-3"
+              style={{ flex: "0 0 auto" }}
+            >
+              <path
+                d="M10.5312 1.36963L2.1398 9.47206C2.07194 9.53759 2.07194 9.64633 2.1398 9.71186L10.5312 17.8143"
+                stroke="currentColor"
+                strokeWidth="2.66667"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="rounded-full bg-blue-500 px-1 py-0.5 text-xs text-white">
+              522
+            </span>
+          </button>
+
+          <div className="flex grow flex-col items-center">
+            <h2>Ali Samadi</h2>
+            <small className="-mt-1 inline-block text-xs font-light text-[#727472]">
+              699 subscribers
+            </small>
+          </div>
+
+          <div className="flex justify-end pr-2">
+            <button className="active:opacity-50" onClick={onClickHandler}>
+              <img
+                src={myImage}
+                width={40}
+                height={40}
+                alt="my-image"
+                className="h-8 w-8 object-cover"
+                style={{ borderRadius: 16 }}
+              />
             </button>
+          </div>
 
-            <div className="flex grow flex-col items-center">
-              <h2>Ali Samadi</h2>
-              <small className="-mt-1 inline-block text-xs font-light text-[#727472]">
-                699 subscribers
-              </small>
-            </div>
-
-            <div className="flex justify-end pr-2">
-              <button className="active:opacity-50" onClick={onClickHandler}>
-                <img
-                  src={myImage}
-                  width={40}
-                  height={40}
-                  alt="my-image"
-                  className="h-8 w-8 object-cover"
-                  style={{ borderRadius: 16 }}
-                />
+          <div className="pointer-events-none absolute bottom-0 left-0 z-10 mt-2 grid w-full grid-cols-4 gap-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <button
+                key={index}
+                className="flex aspect-[8/6] w-full items-center justify-center rounded-lg bg-[#A2A2A4]/80 text-sm text-white opacity-0 backdrop-blur"
+              >
+                Button
               </button>
-            </div>
-
-            <div className="pointer-events-none absolute bottom-0 left-0 z-10 mt-2 grid w-full grid-cols-4 gap-2">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <button
-                  key={index}
-                  className="flex aspect-[8/6] w-full items-center justify-center rounded-lg bg-[#A2A2A4]/80 text-sm text-white opacity-0 backdrop-blur"
-                >
-                  Button
-                </button>
-              ))}
-            </div>
-          </header>
-
-          <ul className="mt-3 flex h-full flex-col px-2">
-            {messages.map((message, index) => (
-              <EachMessage key={index} message={message} />
             ))}
-          </ul>
+          </div>
+        </header>
 
-          <footer className="absolute bottom-0 z-10 flex h-16 w-full justify-center rounded-b-[53px] bg-white pt-2 font-normal text-[#1172E7]">
-            Mute
-          </footer>
-        </div>
-      </IphoneSimulator>
-    </Wrapper>
+        <ul className="mt-3 flex h-full flex-col px-2">
+          {messages.map((message, index) => (
+            <EachMessage key={index} message={message} />
+          ))}
+        </ul>
+
+        <footer className="absolute bottom-0 z-10 flex h-16 w-full justify-center rounded-b-[53px] bg-white pt-2 font-normal text-[#1172E7]">
+          Mute
+        </footer>
+      </div>
+    </IphoneSimulator>
   );
 }
 

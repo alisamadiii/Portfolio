@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { IoShareOutline } from "react-icons/io5";
 
-import Wrapper from "@/components/designs/wrapper";
 import IphoneSimulator from "@/components/iphone-simulator";
 import EachImageSelector from "./each-image-selector";
 
@@ -70,150 +69,146 @@ export default function Day41() {
   }, [selectedImage, isClicked]);
 
   return (
-    <Wrapper>
-      <IphoneSimulator
-        textColor={isOpen ? "white" : "black"}
-        mainClassName="py-0"
-      >
-        <MotionConfig transition={{ duration: 0.6, type: "spring", bounce: 0 }}>
-          <motion.div
-            animate={isOpen ? { scale: 0.85 } : {}}
-            className="h-full overflow-hidden rounded-xl"
-          >
+    <IphoneSimulator
+      textColor={isOpen ? "white" : "black"}
+      mainClassName="py-0"
+    >
+      <MotionConfig transition={{ duration: 0.6, type: "spring", bounce: 0 }}>
+        <motion.div
+          animate={isOpen ? { scale: 0.85 } : {}}
+          className="h-full overflow-hidden rounded-xl"
+        >
+          <div
+            className={`absolute inset-0 -z-10 duration-150 ${isClicked ? "bg-white" : "bg-black"}`}
+          ></div>
+          <div className="h-full">
+            <AnimatePresence>
+              {isClicked ? (
+                <motion.header
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-0 z-20 h-24 w-full border-b bg-[#FAF9F9]"
+                ></motion.header>
+              ) : null}
+            </AnimatePresence>
             <div
-              className={`absolute inset-0 -z-10 duration-150 ${isClicked ? "bg-white" : "bg-black"}`}
-            ></div>
-            <div className="h-full">
-              <AnimatePresence>
-                {isClicked ? (
-                  <motion.header
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute left-0 top-0 z-20 h-24 w-full border-b bg-[#FAF9F9]"
-                  ></motion.header>
-                ) : null}
-              </AnimatePresence>
-              <div
-                className="flex h-full items-center justify-center overflow-hidden"
-                onClick={onClickHandler}
-              >
+              className="flex h-full items-center justify-center overflow-hidden"
+              onClick={onClickHandler}
+            >
+              <motion.img
+                key={selectedImage}
+                layoutId={images
+                  .find((image) => image.id === selectedImage)
+                  ?.id.toString()}
+                src={images.find((image) => image.id === selectedImage)?.url}
+                className="max-h-[600px] w-full object-cover"
+              />
+            </div>
+            <AnimatePresence>
+              {isClicked ? (
+                <motion.footer
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute bottom-0 left-0 h-32 w-full border-t bg-[#FAF9F9] pt-0.5"
+                >
+                  <div
+                    ref={containerRef}
+                    className="no-scrollbar flex gap-0.5 overflow-auto"
+                  >
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="h-8 w-8"
+                        style={{ flex: "0 0 auto" }}
+                      ></div>
+                    ))}
+                    <AnimatePresence initial={false}>
+                      {images.map((image) => (
+                        <EachImageSelector
+                          key={image.id}
+                          id={image.id}
+                          url={image.url}
+                          selectedImage={selectedImage}
+                          onImageClickHandler={setSelectedImage}
+                        />
+                      ))}
+                    </AnimatePresence>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="h-8 w-8"
+                        style={{ flex: "0 0 auto" }}
+                      ></div>
+                    ))}
+                  </div>
+
+                  <div className="p-4">
+                    <button
+                      className="text-2xl text-blue-500"
+                      onClick={onShareClickHandler}
+                    >
+                      <IoShareOutline />
+                    </button>
+                  </div>
+                </motion.footer>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        <AnimatePresence>
+          {isOpen ? (
+            <motion.div
+              className="absolute bottom-0 left-0 isolate flex h-[90%] w-full flex-col pt-8"
+              onClick={onShareClickHandler}
+            >
+              <motion.div
+                initial={{ transform: "translateY(100%)" }}
+                animate={{ transform: "translateY(0%)" }}
+                exit={{ transform: "translateY(100%)" }}
+                className="absolute inset-0 -z-10 rounded-t-xl bg-white"
+              />
+
+              <div className="flex justify-center">
                 <motion.img
-                  key={selectedImage}
                   layoutId={images
                     .find((image) => image.id === selectedImage)
                     ?.id.toString()}
                   src={images.find((image) => image.id === selectedImage)?.url}
-                  className="max-h-[600px] w-full object-cover"
+                  className="w-48 object-cover"
+                  style={{ borderRadius: 12 }}
                 />
               </div>
-              <AnimatePresence>
-                {isClicked ? (
-                  <motion.footer
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute bottom-0 left-0 h-32 w-full border-t bg-[#FAF9F9] pt-0.5"
-                  >
-                    <div
-                      ref={containerRef}
-                      className="no-scrollbar flex gap-0.5 overflow-auto"
-                    >
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="h-8 w-8"
-                          style={{ flex: "0 0 auto" }}
-                        ></div>
-                      ))}
-                      <AnimatePresence initial={false}>
-                        {images.map((image) => (
-                          <EachImageSelector
-                            key={image.id}
-                            id={image.id}
-                            url={image.url}
-                            selectedImage={selectedImage}
-                            onImageClickHandler={setSelectedImage}
-                          />
-                        ))}
-                      </AnimatePresence>
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="h-8 w-8"
-                          style={{ flex: "0 0 auto" }}
-                        ></div>
-                      ))}
-                    </div>
-
-                    <div className="p-4">
-                      <button
-                        className="text-2xl text-blue-500"
-                        onClick={onShareClickHandler}
-                      >
-                        <IoShareOutline />
-                      </button>
-                    </div>
-                  </motion.footer>
-                ) : null}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-          <AnimatePresence>
-            {isOpen ? (
-              <motion.div
-                className="absolute bottom-0 left-0 isolate flex h-[90%] w-full flex-col pt-8"
-                onClick={onShareClickHandler}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.3 } }}
+                exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                className="mt-4 px-4 text-center text-sm leading-5 text-[#909092]"
               >
-                <motion.div
-                  initial={{ transform: "translateY(100%)" }}
-                  animate={{ transform: "translateY(0%)" }}
-                  exit={{ transform: "translateY(100%)" }}
-                  className="absolute inset-0 -z-10 rounded-t-xl bg-white"
-                />
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Harum
+                accusamus obcaecati quidem reprehenderit porro sunt nostrum
+                deserunt assumenda, dolor illum debitis quisquam autem ab ipsum
+                architecto! Inventore voluptatibus commodi assumenda?
+              </motion.p>
 
-                <div className="flex justify-center">
-                  <motion.img
-                    layoutId={images
-                      .find((image) => image.id === selectedImage)
-                      ?.id.toString()}
-                    src={
-                      images.find((image) => image.id === selectedImage)?.url
-                    }
-                    className="w-48 object-cover"
-                    style={{ borderRadius: 12 }}
-                  />
-                </div>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, transition: { delay: 0.3 } }}
-                  exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                  className="mt-4 px-4 text-center text-sm leading-5 text-[#909092]"
-                >
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Harum
-                  accusamus obcaecati quidem reprehenderit porro sunt nostrum
-                  deserunt assumenda, dolor illum debitis quisquam autem ab
-                  ipsum architecto! Inventore voluptatibus commodi assumenda?
-                </motion.p>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, transition: { delay: 0.3 } }}
-                  exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                  className="mb-4 mt-auto p-4"
-                >
-                  <button className="h-10 w-full rounded-lg bg-blue-500 font-medium text-white">
-                    Share
-                  </button>
-                </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.3 } }}
+                exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                className="mb-4 mt-auto p-4"
+              >
+                <button className="h-10 w-full rounded-lg bg-blue-500 font-medium text-white">
+                  Share
+                </button>
               </motion.div>
-            ) : null}
-          </AnimatePresence>
-        </MotionConfig>
-      </IphoneSimulator>
-    </Wrapper>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </MotionConfig>
+    </IphoneSimulator>
   );
 }

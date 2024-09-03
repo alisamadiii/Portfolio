@@ -3,9 +3,12 @@
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { useFullscreen } from "@mantine/hooks";
 
 export default function Day43() {
-  return (
+  const { toggle, fullscreen } = useFullscreen();
+
+  return fullscreen ? (
     <div className="w-full">
       <div className="bg-box flex h-dvh w-full flex-col items-center justify-center">
         <h1 className="text-4xl font-medium">Scroll down</h1>
@@ -15,6 +18,13 @@ export default function Day43() {
         <h1 className="text-4xl font-medium">Scroll up</h1>
       </div>
     </div>
+  ) : (
+    <button
+      className="h-8 rounded-md bg-foreground px-4 text-background"
+      onClick={toggle}
+    >
+      See the design in full screen
+    </button>
   );
 }
 

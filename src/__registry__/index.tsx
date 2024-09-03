@@ -8,6 +8,25 @@ export const Index: Record<string, any> = {
     name: "button",
     component: dynamic(() => import("@/preview/button.tsx"), { ssr: false }),
   },
+  "designs-canada-airplane": {
+    name: "designs-canada-airplane",
+    component: dynamic(() => import("@/preview/designs/canada-airplane.tsx"), {
+      ssr: false,
+    }),
+  },
+  "designs-clip-path": {
+    name: "designs-clip-path",
+    component: dynamic(() => import("@/preview/designs/clip-path.tsx"), {
+      ssr: false,
+    }),
+  },
+  "designs-stripe-select-button": {
+    name: "designs-stripe-select-button",
+    component: dynamic(
+      () => import("@/preview/designs/stripe-select-button.tsx"),
+      { ssr: false }
+    ),
+  },
   "designs-travel-shots": {
     name: "designs-travel-shots",
     component: dynamic(() => import("@/preview/designs/travel-shots.tsx"), {
