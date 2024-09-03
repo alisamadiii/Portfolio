@@ -3,6 +3,7 @@ import "./globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/react";
 
 import { ThemeProvider } from "next-themes";
 import ThemeButton from "@/components/ThemeButton";
@@ -35,6 +36,7 @@ export default function RootLayout({
 
           <GithubRepo />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
