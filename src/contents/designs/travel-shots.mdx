@@ -58,7 +58,7 @@ export default function TravelShots({}: Props) {
     <div className="flex flex-wrap items-start gap-4 px-4">
       <MotionConfig transition={{ duration: 0.8, type: "spring", bounce: 0 }}>
         {images.map((image) => (
-          <EachImage image={image.img} id={image.img} />
+          <EachImage key={image.id} image={image.img} id={image.img} />
         ))}
       </MotionConfig>
     </div>
