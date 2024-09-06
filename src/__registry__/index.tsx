@@ -20,6 +20,12 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
+  "designs-helping-other": {
+    name: "designs-helping-other",
+    component: dynamic(() => import("@/preview/designs/helping-other.tsx"), {
+      ssr: false,
+    }),
+  },
   "designs-stripe-select-button": {
     name: "designs-stripe-select-button",
     component: dynamic(
