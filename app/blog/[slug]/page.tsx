@@ -1,21 +1,32 @@
 import "../../blog.css";
 
 import React from "react";
-
-import { allBlogs } from "contentlayer/generated";
-import { Mdx } from "@/components/MDX/MDXContent.blog";
+import { notFound } from "next/navigation";
 import Link from "next/link";
+import { allBlogs } from "contentlayer/generated";
+
+import { Mdx } from "@/components/MDX/MDXContent.blog";
 
 type Props = {
   params: { slug: string };
 };
 
+export async function generateStaticParams() {
+  return allBlogs.map((post) => ({
+    slug: post.slugAsParams,
+  }));
+}
+
 export default function DocsPage({ params: { slug } }: Props) {
   const findingGoal = allBlogs.find((post) => slug === post.slugAsParams);
 
-  return findingGoal ? (
+  if (!findingGoal) {
+    return notFound();
+  }
+
+  return (
     <div className="px-6">
-      <div className="max-w-xl mx-auto my-11">
+      <div className="mx-auto my-11 max-w-xl">
         <Link href="/">
           <svg
             width="24"
@@ -29,7 +40,7 @@ export default function DocsPage({ params: { slug } }: Props) {
         </Link>
       </div>
       <Mdx code={findingGoal.body.code} />
-      <div className="max-w-xl mx-auto my-11">
+      <div className="mx-auto my-11 max-w-xl">
         <Link href="/">
           <svg
             width="24"
@@ -43,7 +54,5 @@ export default function DocsPage({ params: { slug } }: Props) {
         </Link>
       </div>
     </div>
-  ) : (
-    <div>NO DOCS</div>
   );
 }

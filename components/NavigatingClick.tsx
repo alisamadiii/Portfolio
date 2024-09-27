@@ -17,28 +17,69 @@ const NavigatingClick = React.memo(({ className }: Props) => {
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: 1,
-            scale: [1, 0.7, 1],
-            transition: {
-              scale: { delay: 0.7, duration: 0.7 },
-              opacity: { delay: 0.2, duration: 0.4 },
-            },
-          }}
-          exit={{ opacity: 0 }}
-          className={cn(
-            "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 h-14 w-14 rounded-full border border-gray-300 bg-gray-200/60",
-            className,
-          )}
-        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              scale: [1, 0.7, 1],
+              transition: {
+                scale: { delay: 0.7, duration: 0.7 },
+                opacity: { delay: 0.2, duration: 0.4 },
+              },
+            }}
+            exit={{ opacity: 0 }}
+            className={cn(
+              "pointer-events-none z-50 aspect-square h-14 rounded-full border border-gray-300 bg-gray-200/60",
+              className
+            )}
+          />
+        </div>
       )}
     </AnimatePresence>
   );
 });
 
 NavigatingClick.displayName = "NavigatingClick";
+
+const NavigatingDrag = React.memo(({ className }: Props) => {
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setShow(false);
+    }, 1600);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              scale: [1, 0.7, 0.7, 1],
+              x: [100, 100, 0],
+              transition: {
+                scale: { delay: 0.7, duration: 0.7 },
+                x: { delay: 0.7, duration: 0.7 },
+                opacity: { delay: 0.2, duration: 0.4 },
+              },
+            }}
+            exit={{ opacity: 0 }}
+            className={cn(
+              "pointer-events-none z-50 h-14 w-14 rounded-full border border-gray-300 bg-gray-200/60",
+              className
+            )}
+          />
+        </div>
+      )}
+    </AnimatePresence>
+  );
+});
+
+NavigatingDrag.displayName = "NavigatingDrag";
 
 const NavigatingHover = React.memo(({ className }: Props) => {
   const [show, setShow] = useState(true);
@@ -64,7 +105,7 @@ const NavigatingHover = React.memo(({ className }: Props) => {
           transition={{ delay: 0.4, duration: 1, type: "spring", bounce: 0.1 }}
           className={cn(
             "pointer-events-none absolute z-50 h-10 w-10 rounded-full border border-gray-300 bg-gray-200/60",
-            className,
+            className
           )}
         />
       )}
@@ -74,4 +115,4 @@ const NavigatingHover = React.memo(({ className }: Props) => {
 
 NavigatingHover.displayName = "NavigatingHovers";
 
-export { NavigatingHover, NavigatingClick };
+export { NavigatingHover, NavigatingClick, NavigatingDrag };

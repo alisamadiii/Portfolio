@@ -18,8 +18,8 @@ export default function ComponentPreview({ name, className }: Props) {
     <div
       id="preview-container"
       className={cn(
-        "relative mb-12 bg-natural-150 shadow-custom-card max-w-3xl mx-auto flex min-h-96 flex-col items-center justify-center overflow-hidden rounded-md border-wrapper py-8",
-        className,
+        "border-wrapper relative mx-auto mb-12 flex min-h-96 max-w-3xl flex-col items-center justify-center overflow-hidden rounded-md bg-natural-150 px-8 py-8 shadow-custom-card",
+        className
       )}
     >
       <Component />

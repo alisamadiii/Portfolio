@@ -6,6 +6,10 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -84,7 +88,7 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground px-0;
+    @apply bg-background px-0 text-foreground;
   }
 }
 
@@ -149,7 +153,7 @@ html.dark {
 }
 
 .paragraph {
-  @apply max-w-xl mx-auto;
+  @apply mx-auto max-w-xl;
 }
 
 .paragraph:has(img) {

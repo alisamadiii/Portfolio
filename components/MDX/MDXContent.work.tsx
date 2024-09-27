@@ -20,7 +20,7 @@ const components = {
       element="h1"
       variant={"h1"}
       {...props}
-      className="mb-8 scroll-mt-8 max-w-xl mx-auto"
+      className="mx-auto mb-8 max-w-xl scroll-mt-8"
     >
       {children}
 
@@ -51,7 +51,7 @@ const components = {
     <Text
       element="h2"
       variant={"h2"}
-      className="mt-8 mb-5 scroll-mt-8 max-w-xl mx-auto"
+      className="mx-auto mb-5 mt-8 max-w-xl scroll-mt-8"
       {...props}
     >
       {children}
@@ -84,7 +84,7 @@ const components = {
     <Text
       element="h3"
       variant={"h3"}
-      className="mt-6 mb-5 scroll-mt-8 max-w-xl mx-auto"
+      className="mx-auto mb-5 mt-6 max-w-xl scroll-mt-8"
       {...props}
     >
       {children}
@@ -117,13 +117,13 @@ const components = {
     <Text
       element="p"
       variant={"p1-r"}
-      className="text-natural-800 mb-4 paragraph"
+      className="paragraph mb-4 text-natural-800"
       {...props}
     />
   ),
   ul: ({ ...props }: React.HTMLAttributes<HTMLUListElement>) => (
     <ul
-      className="my-5 scroll-m-20 max-w-xl mx-auto pl-8 text-base leading-7"
+      className="mx-auto my-5 max-w-xl scroll-m-20 pl-8 text-base leading-7"
       {...props}
     />
   ),
@@ -135,7 +135,7 @@ const components = {
   ),
   code: ({ ...props }: React.HTMLAttributes<HTMLElement>) => (
     <code
-      className="rounded-md border-code bg-natural-200 px-[0.25rem] py-[0.12rem] text-sm"
+      className="border-code rounded-md bg-natural-200 px-[0.25rem] py-[0.12rem] text-sm"
       {...props}
     ></code>
   ),
@@ -149,13 +149,13 @@ const components = {
     <table
       className={cn(
         "[&_a>code]: my-8 w-full text-sm [&>thead]:hidden [&_a>code:hover]:text-opacity-70 [&_a>code]:!text-primary [&_code]:text-[12.25px]",
-        className,
+        className
       )}
       {...props}
     />
   ),
   tr: ({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
-    <tr className={cn("h-[41px] border-t-wrapper-2", className)} {...props} />
+    <tr className={cn("border-t-wrapper-2 h-[41px]", className)} {...props} />
   ),
   th: ({ className, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => (
     <th className={cn("px-4 py-2 text-left font-bold", className)} {...props} />
@@ -174,7 +174,7 @@ const components = {
       <figure
         ref={figureRef}
         className={cn(
-          "group relative my-4 max-h-96 w-full bg-natural-150 shadow-custom-card overflow-auto rounded-md border-wrapper [&_[data-line]]:px-[20px] [&_code]:rounded-none [&_code]:border-none [&_code]:!bg-transparent [&_code]:px-0 [&_code]:py-[20px] [&_code]:text-[13px] max-w-xl mx-auto",
+          "border-wrapper group relative mx-auto my-4 max-h-96 w-full max-w-xl overflow-auto rounded-md bg-natural-150 shadow-custom-card [&_[data-line]]:px-[20px] [&_code]:rounded-none [&_code]:border-none [&_code]:!bg-transparent [&_code]:px-0 [&_code]:py-[20px] [&_code]:text-[13px]"
         )}
         {...props}
       >
@@ -204,7 +204,7 @@ const components = {
     return (
       <figcaption
         ref={copyTextRef}
-        className="sticky left-0 top-0 flex h-[48px] items-center gap-2 border-b pl-4 pr-3 text-[13px] text-natural-700"
+        className="sticky left-0 top-0 flex h-[48px] items-center gap-2 border-b bg-natural-150 pl-4 pr-3 text-[13px] text-natural-700"
         {...props}
       >
         <TechIcons
@@ -217,7 +217,7 @@ const components = {
             onClick={() =>
               navigator.clipboard.writeText(
                 copyTextRef.current?.querySelector("span")
-                  ?.textContent as string,
+                  ?.textContent as string
               )
             }
             className="hover:opacity-80 active:scale-95"
@@ -241,8 +241,8 @@ const components = {
   a: ({ className, ...props }: React.ComponentProps<typeof Link>) => (
     <Link
       className={cn(
-        "font-medium text-primary hover:text-primary-hover",
-        className,
+        "hover:text-primary-hover font-medium text-primary",
+        className
       )}
       {...props}
     />
@@ -250,8 +250,8 @@ const components = {
   img: ({ className, alt, ...props }: React.ComponentProps<typeof Image>) => (
     <Image
       className={cn(
-        "my-8 rounded-md w-full border border-natural-200",
-        className,
+        "my-8 w-full rounded-md border border-natural-200",
+        className
       )}
       width={800}
       height={800}

@@ -23,6 +23,7 @@
     "pnpm": "^9.11.0",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
+    "rc-progress": "^4.0.0",
     "react": "^18",
     "react-dom": "^18",
     "react-use-measure": "^2.1.1",

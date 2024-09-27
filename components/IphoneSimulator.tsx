@@ -17,14 +17,14 @@ export default function IphoneSimulator({
     <div
       className={cn(
         "relative aspect-[9/18.5505] w-[380px] overflow-hidden rounded-[56px] bg-[#C1C1C1] p-[6.62px]",
-        classWrapper,
+        classWrapper
       )}
     >
       <div className="h-full w-full rounded-[51px] bg-black p-[7.76px]">
         <div
           className={cn(
             "no-scrollbar relative isolate h-full w-full overflow-auto rounded-[42px] bg-[#636363]",
-            className,
+            className
           )}
         >
           <div className="sticky top-0 z-50 flex h-[48px] shrink-0 items-center justify-center">
