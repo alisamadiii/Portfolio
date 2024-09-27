@@ -16,7 +16,7 @@ var computedFields = {
 };
 var Blogs = defineDocumentType(() => ({
   name: "Blogs",
-  filePathPattern: "./**/*.mdx",
+  filePathPattern: "./blogs/**/*.mdx",
   contentType: "mdx",
   fields: {
     title: {
@@ -34,9 +34,21 @@ var Blogs = defineDocumentType(() => ({
   },
   computedFields
 }));
+var Works = defineDocumentType(() => ({
+  name: "Works",
+  filePathPattern: "./works/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true
+    }
+  },
+  computedFields
+}));
 var contentlayer_config_default = makeSource({
-  contentDirPath: "./contents/blogs",
-  documentTypes: [Blogs],
+  contentDirPath: "./contents",
+  documentTypes: [Blogs, Works],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
@@ -65,4 +77,4 @@ var contentlayer_config_default = makeSource({
 export {
   contentlayer_config_default as default
 };
-//# sourceMappingURL=compiled-contentlayer-config-CVUY6C3T.mjs.map
+//# sourceMappingURL=compiled-contentlayer-config-SUWRVOCL.mjs.map

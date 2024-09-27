@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:registry": "node ./scripts/build-registry.js && prettier --write ./__registry__/index.tsx"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -19,6 +21,8 @@
     "next": "14.2.13",
     "next-contentlayer2": "^0.5.1",
     "pnpm": "^9.11.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
     "react": "^18",
     "react-dom": "^18",
     "react-use-measure": "^2.1.1",

@@ -3,7 +3,7 @@ import "../../blog.css";
 import React from "react";
 
 import { allBlogs } from "contentlayer/generated";
-import { Mdx } from "@/components/blogs/MDXContent.blog";
+import { Mdx } from "@/components/MDX/MDXContent.blog";
 import Link from "next/link";
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function DocsPage({ params: { slug } }: Props) {
-  const findingGoal = allBlogs.find((post) => `/${slug}` === post.slug);
+  const findingGoal = allBlogs.find((post) => slug === post.slugAsParams);
 
   return findingGoal ? (
     <div className="px-6">

@@ -85,7 +85,7 @@ export default function Home() {
           </Text>
         </div>
         <Link
-          href={"/works"}
+          href={"/work/1"}
           className={buttonVariants({
             className:
               "text-lg animate-element-in delay-150 opacity-0 !rounded-full",
@@ -170,7 +170,7 @@ export default function Home() {
           {allBlogs.map((blog) => (
             <Link
               key={blog._id}
-              href={`/blog${blog.slug}`}
+              href={`/blog/${blog.slugAsParams}`}
               className="bg-neutral-100 rounded-lg shadow-custom-card overflow-hidden hover:bg-opacity-50 duration-100"
             >
               <Image

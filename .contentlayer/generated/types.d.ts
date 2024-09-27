@@ -20,6 +20,18 @@ export type Blogs = {
   body: MDX
   slug: string
   slugAsParams: string
+}
+
+export type Works = {
+  /** File path relative to `contentDirPath` */
+  _id: string
+  _raw: Local.RawDocumentData
+  type: 'Works'
+  title: string
+  /** MDX file body */
+  body: MDX
+  slug: string
+  slugAsParams: string
 }  
 
 /** Nested types */
@@ -30,8 +42,8 @@ export type Blogs = {
 export type AllTypes = DocumentTypes | NestedTypes
 export type AllTypeNames = DocumentTypeNames | NestedTypeNames
 
-export type DocumentTypes = Blogs
-export type DocumentTypeNames = 'Blogs'
+export type DocumentTypes = Blogs | Works
+export type DocumentTypeNames = 'Blogs' | 'Works'
 
 export type NestedTypes = never
 export type NestedTypeNames = never
@@ -39,6 +51,7 @@ export type NestedTypeNames = never
 export type DataExports = {
   allDocuments: DocumentTypes[]
   allBlogs: Blogs[]
+  allWorks: Works[]
 }
 
 
@@ -59,6 +72,7 @@ declare global {
 
 export type DocumentTypeMap = {
   Blogs: Blogs
+  Works: Works
 }
 
 export type NestedTypeMap = {
