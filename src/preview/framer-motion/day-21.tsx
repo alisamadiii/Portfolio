@@ -68,7 +68,7 @@ export default function Day21() {
 
   return (
     <div className="w-full max-w-4xl">
-      <h1 className="text-xl font-bold tracking-tight">
+      <h1 className="text-xl font-bold tracking-tight text-white">
         What are your favorite language?
       </h1>
 

@@ -1,9 +1,9 @@
 "use client";
 
-import IphoneSimulator from "@/components/iphone-simulator";
 import React, { useState } from "react";
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import IphoneSimulator from "@/components/IphoneSimulator";
 
 export default function Day17() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +11,7 @@ export default function Day17() {
   const onClickHandler = () => setIsOpen(!isOpen);
 
   return (
-    <IphoneSimulator topElements={{ left: !isOpen, right: !isOpen }}>
+    <IphoneSimulator>
       <div className="absolute inset-0 -z-10 bg-white"></div>
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <div className="px-4 pt-4 text-black">
@@ -103,7 +103,7 @@ export default function Day17() {
               >
                 <motion.div
                   whileTap={{ scale: 0.97 }}
-                  className="relative isolate z-50 cursor-pointer shadow-2xl"
+                  className="relative isolate z-20 cursor-pointer shadow-2xl"
                   onClick={onClickHandler}
                   style={{ borderRadius: 0 }}
                 >

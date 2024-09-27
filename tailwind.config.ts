@@ -43,6 +43,10 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addVariant }: any) {
+      addVariant("nth-child-6n", "&:nth-child(6n)");
+    },
+  ],
 };
 export default config;

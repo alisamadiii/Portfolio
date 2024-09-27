@@ -1,6 +1,6 @@
 import React from "react";
 
-import { RightSidebar } from "@/components/Sidebar";
+import { LeftSidebar, RightSidebar } from "@/components/Sidebar";
 import { allContents } from "contentlayer/generated";
 import ChangingDocs from "@/components/ChangingDocs";
 
@@ -31,11 +31,14 @@ type Props = {
 
 export default function DocsLayout({ children }: Props) {
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <RightSidebar />
-      <main className="w-full overflow-hidden py-8">
-        {children}
-        <ChangingDocs />
+    <div className="mx-auto flex w-full items-start">
+      <LeftSidebar />
+      <main className="grow overflow-hidden">
+        <div className="mx-auto w-full max-w-[800px] py-8">
+          <RightSidebar />
+          {children}
+          <ChangingDocs />
+        </div>
       </main>
     </div>
   );

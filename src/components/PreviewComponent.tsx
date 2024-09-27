@@ -10,9 +10,14 @@ interface Props {
   name: string;
   children: React.ReactNode;
   className?: string;
+  showFullScreen?: boolean;
 }
 
-export default function ComponentPreview({ name, className }: Props) {
+export default function ComponentPreview({
+  name,
+  className,
+  showFullScreen,
+}: Props) {
   const Component = Index[name].component;
   const { toggle, fullscreen } = useFullscreen();
 
@@ -28,7 +33,7 @@ export default function ComponentPreview({ name, className }: Props) {
           className
         )}
       >
-        {!fullscreen && (
+        {showFullScreen && !fullscreen && (
           <div className="w-full px-4 pb-4">
             <button
               className="h-8 rounded-md bg-foreground px-4 text-sm text-background"

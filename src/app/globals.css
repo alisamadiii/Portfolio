@@ -135,3 +135,54 @@ input[type="number"] {
   right: 8px;
   color: inherit;
 }
+
+:root {
+  --mask-level: 5;
+}
+
+.scroll-fade-content-top {
+  -webkit-mask: linear-gradient(
+    to bottom,
+    transparent calc(var(--mask-level) * 1%),
+    black calc(var(--mask-level) * 10%),
+    black calc(var(--mask-level) * 10%)
+  );
+  mask: linear-gradient(
+    to bottom,
+    transparent calc(var(--mask-level) * 1%),
+    black calc(var(--mask-level) * 10%),
+    black calc(var(--mask-level) * 10%)
+  );
+}
+
+.scroll-fade-content-y {
+  -webkit-mask: linear-gradient(
+    to bottom,
+    transparent calc(var(--mask-level) * 1%),
+    black calc(var(--mask-level) * 10%),
+    black calc(100% - var(--mask-level) * 10%),
+    transparent 100%
+  );
+  mask: linear-gradient(
+    to bottom,
+    transparent calc(var(--mask-level) * 1%),
+    black calc(var(--mask-level) * 10%),
+    black calc(100% - var(--mask-level) * 10%),
+    transparent 100%
+  );
+}
+
+.scroll-fade-content-bottom {
+  -webkit-mask: linear-gradient(
+    to top,
+    transparent calc(var(--mask-level) * 1%),
+    black calc(var(--mask-level) * 10%),
+    black calc(var(--mask-level) * 10%)
+  );
+  mask: linear-gradient(
+    to top,
+    transparent calc(var(--mask-level) * 1%),
+    black calc(var(--mask-level) * 10%),
+    black calc(var(--mask-level) * 10%)
+  );
+}

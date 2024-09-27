@@ -16,6 +16,7 @@ interface Props {
   mainClassName?: string;
   backgroundImage?: string;
   roundedCorners?: boolean;
+  outsideContent?: React.ReactNode;
 }
 
 export default function IphoneSimulator({
@@ -30,6 +31,7 @@ export default function IphoneSimulator({
   mainClassName,
   backgroundImage,
   roundedCorners = true,
+  outsideContent,
 }: Props) {
   return (
     <div
@@ -78,6 +80,8 @@ export default function IphoneSimulator({
             <div className="h-0.5 w-full bg-[#585857]" />
           </motion.button>
         </div>
+
+        {outsideContent}
       </MotionConfig>
 
       <MotionConfig transition={transition || { duration: 0.3 }}>

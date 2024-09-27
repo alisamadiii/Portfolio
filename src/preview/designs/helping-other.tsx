@@ -1,197 +1,170 @@
-"use client";
-
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
-import { useOnClickOutside } from "usehooks-ts";
+import { type SVGProps, useState } from "react";
 
-export default function Popover() {
-  const [open, setOpen] = useState(false);
-  const [formState, setFormState] = useState("idle");
-  const [feedback, setFeedback] = useState("");
-  const ref = useRef(null);
-  useOnClickOutside(ref, () => setOpen(false));
+export function HomeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      className="size-12"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <title>svg</title>
+      <path
+        fill="currentColor"
+        d="M4 19v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-3q-.425 0-.712-.288T14 20v-5q0-.425-.288-.712T13 14h-2q-.425 0-.712.288T10 15v5q0 .425-.288.713T9 21H6q-.825 0-1.412-.587T4 19"
+      />
+    </svg>
+  );
+}
 
-  function submit() {
-    setFormState("loading");
-    setTimeout(() => {
-      setFormState("success");
-    }, 1500);
+export function Back(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      className="size-12"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <title>svg</title>
+      <path
+        fill="currentColor"
+        d="m5.916 12.5l3.746 3.746q.14.14.15.345q.01.203-.15.363t-.354.16t-.354-.16l-4.389-4.389q-.13-.13-.183-.267q-.053-.136-.053-.298t.053-.298t.184-.267l4.388-4.389q.14-.14.344-.15t.364.15t.16.354t-.16.354L5.916 11.5H19.5q.214 0 .357.143T20 12t-.143.357t-.357.143z"
+      />
+    </svg>
+  );
+}
 
-    setTimeout(() => {
-      setOpen(false);
-    }, 3300);
+export function Edit(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      className="size-12"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <title>svg</title>
+      <path
+        fill="currentColor"
+        d="M10 15q-.425 0-.712-.288T9 14v-2.425q0-.4.15-.763t.425-.637l8.6-8.6q.3-.3.675-.45t.75-.15q.4 0 .763.15t.662.45L22.425 3q.275.3.425.663T23 4.4t-.137.738t-.438.662l-8.6 8.6q-.275.275-.637.438t-.763.162zm9.6-9.2l1.425-1.4l-1.4-1.4L18.2 4.4zM5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h6.5q.35 0 .575.175t.35.45t.087.55t-.287.525l-4.65 4.65q-.275.275-.425.638T7 10.75V15q0 .825.588 1.412T9 17h4.225q.4 0 .763-.15t.637-.425L19.3 11.75q.25-.25.525-.288t.55.088t.45.35t.175.575V19q0 .825-.587 1.413T19 21z"
+      />
+    </svg>
+  );
+}
+
+export function Dots(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      className="size-12"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 256 256"
+      {...props}
+    >
+      <title>svg</title>
+      <path
+        fill="currentColor"
+        d="M144 128a16 16 0 1 1-16-16a16 16 0 0 1 16 16m-84-16a16 16 0 1 0 16 16a16 16 0 0 0-16-16m136 0a16 16 0 1 0 16 16a16 16 0 0 0-16-16"
+      />
+    </svg>
+  );
+}
+
+type Nav = "home" | "edit" | "view";
+
+function getActiveNav(nav: Nav) {
+  switch (nav) {
+    case "home":
+      return (
+        <motion.div
+          key="home"
+          className="flex flex-row items-center justify-between gap-2"
+        >
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+          >
+            <HomeIcon />
+          </motion.div>
+          <motion.div>
+            <HomeIcon />
+          </motion.div>
+          <motion.div layoutId="edit">
+            <Edit />
+          </motion.div>
+          <motion.div>
+            <HomeIcon />
+          </motion.div>
+          <motion.div>
+            <HomeIcon />
+          </motion.div>
+        </motion.div>
+      );
+
+    case "edit":
+      return (
+        <motion.div
+          key="edit-icon"
+          className="flex flex-row items-center justify-between gap-2"
+        >
+          <motion.div layoutId="left">
+            <Back />
+          </motion.div>
+          <motion.div layoutId="edit">
+            <Edit />
+          </motion.div>
+          <Dots />
+        </motion.div>
+      );
+
+    case "view":
+      return (
+        <motion.div
+          key="view-icon"
+          className="flex flex-row items-center justify-between gap-2"
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -100 }}
+        >
+          <motion.div layoutId="left">
+            <Back />
+          </motion.div>
+          <motion.div>
+            <HomeIcon />
+          </motion.div>
+          <Dots />
+        </motion.div>
+      );
+    default:
+      return null;
   }
+}
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key === "Enter" &&
-        open &&
-        formState === "idle"
-      ) {
-        submit();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, formState]);
-
-  console.log(feedback);
+export default function LinearAppNav() {
+  const [currentNav, setCurrentNav] = useState<Nav>("home");
 
   return (
-    <div className="font-figtree grid h-dvh w-full place-items-center bg-[#F9F5F1]">
-      {/* Feedback Wrapper */}
-      <div className="flex h-[500px] w-full items-center justify-center">
-        {/* Initial Button */}
-        <motion.button
-          layoutId="wrapper"
-          onClick={() => {
-            setOpen(true);
-            setFormState("idle");
-            setFeedback("");
-          }}
-          className="group flex h-10 items-center gap-1 border border-[#E7E3E0] bg-white pl-3 pr-4 text-sm font-medium text-[#191716] transition-colors duration-200 ease-out hover:bg-[#B0AEAC]/5"
-          key="button"
-          style={{
-            borderRadius: 8,
-          }}
-        >
-          <motion.span layoutId="title" className="inline-block">
-            Add note
-          </motion.span>
-        </motion.button>
-        {/* Open Popover */}
-        <AnimatePresence>
-          {open ? (
-            <motion.div
-              layoutId="wrapper"
-              className="absolute h-[210px] w-[316px] overflow-hidden border border-[#e7e3e0] bg-[#F2EDE8] p-1"
-              style={{ borderRadius: 16 }}
-              ref={ref}
-            >
-              <motion.span
-                aria-hidden
-                layoutId="title"
-                className={`absolute left-[21px] top-[20px] inline-block text-sm font-normal text-[#191716]/30 ${feedback && "!opacity-0"}`}
-                style={{ opacity: feedback ? 0 : 1 }}
-              >
-                Add note
-              </motion.span>
-
-              <AnimatePresence mode="popLayout">
-                {formState === "success" ? (
-                  <motion.div
-                    key="success"
-                    initial={{ y: -40, opacity: 0, filter: "blur(5px)" }}
-                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-                    className="flex h-full flex-col items-center justify-center"
-                  >
-                    <svg
-                      width="32"
-                      height="32"
-                      viewBox="0 0 32 32"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="-mt-1"
-                    >
-                      <rect
-                        x="0.5"
-                        y="0.5"
-                        width="31"
-                        height="31"
-                        rx="15.5"
-                        fill="#3A94FF"
-                        fill-opacity="0.16"
-                      />
-                      <rect
-                        x="0.5"
-                        y="0.5"
-                        width="31"
-                        height="31"
-                        rx="15.5"
-                        stroke="#3A94FF"
-                      />
-                      <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        d="M24.2639 9.63605C24.6544 10.0266 24.6544 10.6597 24.2639 11.0503L13.6568 21.6569C13.2663 22.0474 12.6332 22.0474 12.2426 21.6569L7.29289 16.7071C6.90237 16.3166 6.90237 15.6834 7.29289 15.2929C7.68342 14.9024 8.31658 14.9024 8.70711 15.2929L12.9498 19.5355L22.8497 9.63602C23.2402 9.2455 23.8734 9.24552 24.2639 9.63605Z"
-                        fill="#3A94FF"
-                      />
-                    </svg>
-                    <h3 className="font-figtree mb-1 mt-2 text-base font-semibold text-[#191716]">
-                      Note added
-                    </h3>
-                    <p className="font-figtree max-w-[240px] text-center text-sm font-medium text-[#B0AEAC]">
-                      You can edit or delete your note from your Exercise
-                      History at any time.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    exit={{ y: 8, opacity: 0, filter: "blur(4px)" }}
-                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-                    key="form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!feedback) return;
-                      submit();
-                    }}
-                    className="rounded-xl border border-[#E7E3E0] bg-white"
-                  >
-                    <textarea
-                      autoFocus
-                      placeholder="Add note"
-                      onChange={(e) => setFeedback(e.target.value)}
-                      className="font-figtree h-[144px] w-full resize-none rounded-t-xl rounded-tr-xl p-4 text-sm font-normal text-[#191716] outline-none placeholder:opacity-0"
-                      required
-                    />
-                    <div className="FEEDBACK-FOOTER relative flex h-12 items-center justify-end px-2">
-                      {/* <span className="absolute left-0 top-0 -translate-x-px -translate-y-1/2">
-                        <HalfCircleLeft />
-                      </span>
-                      <span className="absolute right-0 top-0 -translate-y-1/2 translate-x-px">
-                        <HalfCircleRight />
-                      </span> */}
-                      <div className="absolute -top-[0.5px] left-[7px] right-[6px] h-[1px] bg-[repeating-linear-gradient(90deg,#E7E3E0,#E7E3E0_2px,transparent_2px,transparent_4px)]" />
-                      <button
-                        type="submit"
-                        className="font-figtree flex h-8 w-24 items-center justify-center rounded-lg bg-[#191716] px-4 text-sm font-medium text-white"
-                      >
-                        <AnimatePresence mode="popLayout" initial={false}>
-                          <motion.span
-                            transition={{
-                              type: "spring",
-                              duration: 0.3,
-                              bounce: 0,
-                            }}
-                            initial={{ opacity: 0, y: -25 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 25 }}
-                            key={formState}
-                          >
-                            {formState === "loading" ? (
-                              <span>loading...</span>
-                            ) : (
-                              <span>Save note</span>
-                            )}
-                          </motion.span>
-                        </AnimatePresence>
-                      </button>
-                    </div>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </div>
+    <div className="relative m-5 flex w-full flex-col">
+      <button
+        type="button"
+        className="mx-auto my-5"
+        onClick={() => {
+          setCurrentNav((p) => {
+            if (p === "home") {
+              return "edit";
+            }
+            // if (p === 'edit') {
+            //   return 'view';
+            // }
+            return "home";
+          });
+        }}
+      >
+        Change Nav
+      </button>
+      <AnimatePresence mode="popLayout">
+        {getActiveNav(currentNav)}
+      </AnimatePresence>
     </div>
   );
 }

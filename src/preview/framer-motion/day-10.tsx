@@ -1,6 +1,5 @@
 "use client";
 
-import IphoneSimulator from "@/components/iphone-simulator";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
@@ -8,6 +7,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { FaCamera } from "react-icons/fa";
 import { IoIosFlashlight } from "react-icons/io";
 import { IoArrowBackSharp } from "react-icons/io5";
+import IphoneSimulator from "@/components/IphoneSimulator";
 
 export default function Day10() {
   const [images, setImages] = useState(["/my-image.jpg"]);
@@ -90,23 +90,7 @@ export default function Day10() {
   }, [capturedImageUrl]);
 
   return (
-    <IphoneSimulator
-      topElements={{ left: !isCamera, right: !isCamera }}
-      pillChildren={
-        <div>
-          <AnimatePresence>
-            {isCamera && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute right-5 top-1/2 h-1 w-1 -translate-y-1/2 rounded-full bg-green-500"
-              />
-            )}
-          </AnimatePresence>
-        </div>
-      }
-    >
+    <IphoneSimulator className="overflow-hidden">
       <Image
         src={
           "https://media.idownloadblog.com/wp-content/uploads/2022/09/iPhone-14-Pro-Deep-Purple-wallpaper.png"
@@ -140,7 +124,7 @@ export default function Day10() {
             <motion.div
               layoutId="camera-wrapper"
               className="absolute inset-0 flex flex-col items-center justify-between overflow-hidden bg-black px-4 py-14"
-              style={{ borderRadius: 44 }}
+              style={{ borderRadius: 40 }}
             >
               <div className="flex h-20 w-full items-start justify-between">
                 <button onClick={onCameraClickHandler}>

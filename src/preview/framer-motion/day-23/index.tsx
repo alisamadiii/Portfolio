@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 
-import IphoneSimulator from "@/components/iphone-simulator";
 import Header from "./header";
 import Buttons from "./buttons";
 import Hr from "@/components/hr";
 import Page from "./pages";
+import IphoneSimulator from "@/components/IphoneSimulator";
 
 export type panelsType =
   | "posts"
@@ -19,7 +19,7 @@ export default function Day23() {
   const [selectedPanel, setSelectedPanel] = useState<panelsType>("posts");
 
   return (
-    <IphoneSimulator mixBlend={false} mainClassName="bg-[#E1E1E1] pt-0">
+    <IphoneSimulator className="bg-[#E1E1E1]">
       <div className="text-black">
         <Header />
         <Buttons

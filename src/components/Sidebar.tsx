@@ -9,6 +9,55 @@ import { useParams } from "next/navigation";
 import { cn } from "@/utils";
 import { useSidebar } from "@/context/useSidebar";
 
+const contentNames = ["blogs", "challenges", "ui", "designs", "framer-motion"];
+
+export function LeftSidebar() {
+  const { contents } = useParams<{ contents: string[] }>();
+
+  return (
+    <div className="fixed top-0 z-20 h-dvh w-[280px] -translate-x-[120%] overflow-auto rounded-md border-r-wrapper bg-background p-4 md:sticky md:translate-x-0">
+      <ul>
+        {contentNames.map((name) => (
+          <li>
+            <span className="mb-2 mt-4 inline-block text-xs text-muted">
+              {name}
+            </span>
+            <ul>
+              {allContents
+                .filter((content) => content.parentFolder === name)
+                .sort((a, b) => {
+                  const dayA = parseInt(
+                    a.title.match(/Day (\d+)/)?.[1] || "0",
+                    10
+                  );
+                  const dayB = parseInt(
+                    b.title.match(/Day (\d+)/)?.[1] || "0",
+                    10
+                  );
+                  return dayA - dayB;
+                })
+                .map((content) => (
+                  <li>
+                    <Link
+                      href={`${content.slug}`}
+                      className={cn(
+                        "inline-block w-full truncate p-0.5 text-sm hover:opacity-70",
+                        content.slug === `/${contents.join("/")}` &&
+                          "text-primary"
+                      )}
+                    >
+                      {content.title}
+                    </Link>
+                  </li>
+                ))}{" "}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function RightSidebar() {
   const { contents } = useParams<{ contents: string[] }>();
   const { currentHeading } = useSidebar();
@@ -18,44 +67,39 @@ export function RightSidebar() {
   );
 
   return (
-    !findingDocs?.isChallenge &&
-    findingDocs?.parentFolder !== "designs" && (
-      <>
-        <div className="fixed left-1/2 top-0 z-50 h-24 w-full max-w-4xl -translate-x-1/2 rounded-b-[100%] bg-gradient-to-b from-background to-background/10 backdrop-blur-[2px]"></div>
-
-        <div className="sticky top-8 z-[9999] mt-8 overflow-hidden rounded-md border-wrapper bg-background p-4">
-          <div className="flex items-center justify-between gap-8">
-            <h3 className="shrink-0">Table of Contents</h3>
-            <AnimatePresence initial={false} mode="popLayout">
-              <motion.span
-                key={currentHeading}
-                initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
-                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                exit={{ opacity: 0, filter: "blur(4px)", y: -10 }}
-                transition={{ duration: 0.4, type: "spring", bounce: 0 }}
-                className="block grow text-end text-sm text-muted"
-              >
-                {currentHeading}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-          <motion.ul initial={{ height: 0 }} className="w-[280px] opacity-0">
-            {findingDocs?.headings.map(
-              (
-                heading: { id: string; text: string; level: number },
-                index: number
-              ) => (
-                <EachLink
-                  key={index}
-                  id={heading.id}
-                  text={heading.text}
-                  level={heading.level}
-                />
-              )
-            )}
-          </motion.ul>
+    findingDocs?.headings.length > 4 && (
+      <div className="sticky top-8 z-[20] mb-5 overflow-hidden rounded-md border-wrapper bg-background p-4">
+        <div className="flex items-center justify-between gap-8">
+          <h3 className="shrink-0">Table of Contents</h3>
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.span
+              key={currentHeading}
+              initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
+              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+              exit={{ opacity: 0, filter: "blur(4px)", y: -10 }}
+              transition={{ duration: 0.4, type: "spring", bounce: 0 }}
+              className="block grow text-end text-sm text-muted"
+            >
+              {currentHeading}
+            </motion.span>
+          </AnimatePresence>
         </div>
-      </>
+        <motion.ul initial={{ height: 0 }} className="w-[280px] opacity-0">
+          {findingDocs?.headings.map(
+            (
+              heading: { id: string; text: string; level: number },
+              index: number
+            ) => (
+              <EachLink
+                key={index}
+                id={heading.id}
+                text={heading.text}
+                level={heading.level}
+              />
+            )
+          )}
+        </motion.ul>
+      </div>
     )
   );
 }

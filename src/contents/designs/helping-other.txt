@@ -1,7 +1,0 @@
----
-title: Travel Shots
----
-
-# Travel Shots
-
-<ComponentPreview name="designs-helping-other" />

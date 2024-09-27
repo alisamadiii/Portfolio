@@ -8,6 +8,12 @@ export const Index: Record<string, any> = {
     name: "button",
     component: dynamic(() => import("@/preview/button.tsx"), { ssr: false }),
   },
+  "designs-camera-control": {
+    name: "designs-camera-control",
+    component: dynamic(() => import("@/preview/designs/camera-control.tsx"), {
+      ssr: false,
+    }),
+  },
   "designs-canada-airplane": {
     name: "designs-canada-airplane",
     component: dynamic(() => import("@/preview/designs/canada-airplane.tsx"), {
@@ -369,6 +375,18 @@ export const Index: Record<string, any> = {
   "framer-motion-intro": {
     name: "framer-motion-intro",
     component: dynamic(() => import("@/preview/framer-motion/intro.tsx"), {
+      ssr: false,
+    }),
+  },
+  "ui-dropdown": {
+    name: "ui-dropdown",
+    component: dynamic(() => import("@/preview/ui/dropdown.tsx"), {
+      ssr: false,
+    }),
+  },
+  "ui-fade-scroll-content": {
+    name: "ui-fade-scroll-content",
+    component: dynamic(() => import("@/preview/ui/fade-scroll-content.tsx"), {
       ssr: false,
     }),
   },

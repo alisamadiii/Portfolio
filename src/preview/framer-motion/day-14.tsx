@@ -10,8 +10,7 @@ import {
   useAnimate,
 } from "framer-motion";
 import { RxTrackNext } from "react-icons/rx";
-
-import IphoneSimulator from "@/components/iphone-simulator";
+import IphoneSimulator from "@/components/IphoneSimulator";
 
 export default function Day14() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +30,7 @@ export default function Day14() {
   };
 
   return (
-    <IphoneSimulator mainClassName="bg-[#131113] pb-0">
+    <IphoneSimulator className="bg-[#131113] text-white">
       <MotionConfig transition={{ duration: 0.7, type: "spring", bounce: 0 }}>
         <motion.div
           animate={{

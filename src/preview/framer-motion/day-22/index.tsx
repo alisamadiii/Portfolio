@@ -2,9 +2,9 @@
 
 import React from "react";
 
-import IphoneSimulator from "@/components/iphone-simulator";
 import Header from "./header";
 import EachValue from "./each-value";
+import IphoneSimulator from "@/components/IphoneSimulator";
 
 export interface valuesTypes {
   id: number;
@@ -25,7 +25,7 @@ const initialValues: valuesTypes[] = [
 
 export default function Day22() {
   return (
-    <IphoneSimulator mixBlend={false} mainClassName="bg-[#E1E1E1]">
+    <IphoneSimulator className="bg-[#E1E1E1]">
       <div className="text-black">
         <Header />
 
