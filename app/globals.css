@@ -159,3 +159,8 @@ html.dark {
 .paragraph:has(img) {
   @apply max-w-2xl;
 }
+
+.selection::selection {
+  background-color: var(--background-color);
+  color: var(--color);
+}

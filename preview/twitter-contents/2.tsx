@@ -75,6 +75,7 @@ export default function TwitterContents2() {
           </SelectContent>
         </Select>
         <ColorPicker
+          value={border.color}
           onValueChange={(value) => setBorder({ ...border, color: value })}
         />
       </Element.Settings>

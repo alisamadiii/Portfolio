@@ -2,5 +2,6 @@
 
 import twitterContents__1Mdx from './twitter-contents__1.mdx.json' with { type: 'json' }
 import twitterContents__2Mdx from './twitter-contents__2.mdx.json' with { type: 'json' }
+import twitterContents__3Mdx from './twitter-contents__3.mdx.json' with { type: 'json' }
 
-export const allTwitterContents = [twitterContents__1Mdx, twitterContents__2Mdx]
+export const allTwitterContents = [twitterContents__1Mdx, twitterContents__2Mdx, twitterContents__3Mdx]
