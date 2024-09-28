@@ -17,23 +17,23 @@ export const CodePreview: React.FC<FilesProps> = ({ children }) => {
 
   return (
     <>
-      <div className="fixed left-1/2 bottom-10 p-1 w-80 bg-natural-200 h-12 rounded-full grid grid-cols-2 -translate-x-1/2">
+      <div className="fixed bottom-10 left-1/2 grid h-12 w-80 -translate-x-1/2 grid-cols-2 rounded-full bg-natural-200 p-1">
         <Button
-          className="h-full rounded-full relative isolate"
+          className="relative isolate h-full rounded-full"
           variant={"ghost"}
         >
           {!isCode && (
             <motion.div
               layoutId="preview-bg"
               transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-natural-300/50 -z-10"
+              className="absolute inset-0 -z-10 bg-natural-300/50"
               style={{ borderRadius: 24 }}
             />
           )}
           Preview
         </Button>
         <Button
-          className="h-full rounded-full relative isolate"
+          className="relative isolate h-full rounded-full"
           variant={"ghost"}
           onClick={() => setIsCode(!isCode)}
         >
@@ -41,7 +41,7 @@ export const CodePreview: React.FC<FilesProps> = ({ children }) => {
             <motion.div
               layoutId="preview-bg"
               transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-natural-300/50 -z-10"
+              className="absolute inset-0 -z-10 bg-natural-300/50"
               style={{ borderRadius: 24 }}
             />
           )}

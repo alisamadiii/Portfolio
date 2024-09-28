@@ -13,8 +13,7 @@ export default function Work1() {
   const onClickHandler = () => setIsOpen(!isOpen);
 
   return (
-    <IphoneSimulator className="bg-white overflow-hidden">
-      <div className="absolute inset-0 -z-10 bg-white"></div>
+    <IphoneSimulator className="overflow-hidden bg-white">
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <div className="px-4 pt-4 text-black">
           <h2 className="text-2xl font-semibold tracking-tight">

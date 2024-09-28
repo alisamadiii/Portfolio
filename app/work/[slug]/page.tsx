@@ -6,6 +6,8 @@ import Link from "next/link";
 import { allWorks } from "contentlayer/generated";
 import { Mdx } from "@/components/MDX/MDXContent.work";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type Props = {
   params: { slug: string };
@@ -38,11 +40,34 @@ export default function DocsPage({ params: { slug } }: Props) {
             <path d="M4 21V9L12 3L20 9V21H14V14H10V21H4Z" fill="#5D5D5D" />
           </svg>
         </Link>
-        <div className="flex gap-4 tabular-nums">
-          <span className="text-natural-700">
-            {String(Number(slug)).padStart(2, "0")}
-          </span>{" "}
-          <span>/</span> <span>{String(allWorks.length).padStart(2, "0")}</span>
+        <div className="flex w-full items-center justify-between">
+          <div className="flex gap-4 tabular-nums">
+            <span className="text-natural-700">
+              {String(Number(slug)).padStart(2, "0")}
+            </span>{" "}
+            <span>/</span>{" "}
+            <span>{String(allWorks.length).padStart(2, "0")}</span>
+          </div>
+          <div>
+            <Button
+              variant={"ghost"}
+              className="h-8 w-8 p-0"
+              disabled={Number(slug) === 1}
+            >
+              <Link href={`/work/${Number(slug) - 1}`}>
+                <ChevronLeft />
+              </Link>
+            </Button>
+            <Button
+              variant={"ghost"}
+              className="h-8 w-8 p-0"
+              disabled={Number(slug) === allWorks.length}
+            >
+              <Link href={`/work/${Number(slug) + 1}`}>
+                <ChevronRight />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
       <Mdx code={findingGoal.body.code} />

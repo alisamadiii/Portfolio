@@ -7,7 +7,7 @@ const textVariants = cva("", {
   variants: {
     variant: {
       h1: "text-[40px] font-lora font-semibold leading-[125%]",
-      h2: "text-[32px] font-lora font-semibold leading-[125%]",
+      h2: "text-[24px] md:text-[32px] font-lora font-semibold leading-[125%]",
       h3: "text-2xl font-lora font-semibold leading-[125%]",
       h4: "text-lg font-lora font-semibold leading-[125%]",
       h5: "text-sm font-lora font-semibold leading-[125%]",

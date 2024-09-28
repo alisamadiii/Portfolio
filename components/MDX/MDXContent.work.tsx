@@ -168,7 +168,13 @@ const components = {
     children,
     ...props
   }: React.HTMLAttributes<HTMLPreElement> & {}) => {
+    const [value, setValue] = useState("");
+
     const figureRef = useRef<HTMLPreElement>(null);
+
+    useEffect(() => {
+      setValue(figureRef.current?.querySelector("pre")?.textContent || "");
+    }, []);
 
     return (
       <figure
@@ -178,12 +184,10 @@ const components = {
         )}
         {...props}
       >
-        {!figureRef.current?.querySelector("figcaption") && (
-          <CopyButton
-            value={figureRef.current?.querySelector("pre")?.textContent || ""}
-            className="sticky left-2 right-2 top-2 mb-[-32px] ml-auto hidden group-hover:flex"
-          />
-        )}
+        <CopyButton
+          value={value || ""}
+          className="sticky left-2 right-2 top-2 mb-[-32px] ml-auto group-hover:flex md:hidden"
+        />
         {children}
       </figure>
     );

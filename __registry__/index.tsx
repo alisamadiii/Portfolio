@@ -12,6 +12,14 @@ export const Index: Record<string, any> = {
     name: "10",
     component: dynamic(() => import("@/preview/10.tsx"), { ssr: false }),
   },
+  "11": {
+    name: "11",
+    component: dynamic(() => import("@/preview/11.tsx"), { ssr: false }),
+  },
+  "12": {
+    name: "12",
+    component: dynamic(() => import("@/preview/12.tsx"), { ssr: false }),
+  },
   "2": {
     name: "2",
     component: dynamic(() => import("@/preview/2.tsx"), { ssr: false }),
