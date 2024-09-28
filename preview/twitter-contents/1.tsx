@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import SyntaxHighlighter from "@/components/SyntaxHighlighter";
 
+import SyntaxHighlighter from "@/components/SyntaxHighlighter";
 import * as Element from "@/components/TwitterContentsElement";
 import Image from "next/image";
 import { showcaseImage, showcaseImage2 } from "@/lib/utils";

@@ -10,6 +10,12 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
+  "twitter-contents-2": {
+    name: "twitter-contents-2",
+    component: dynamic(() => import("@/preview/twitter-contents/2.tsx"), {
+      ssr: false,
+    }),
+  },
   "works-1": {
     name: "works-1",
     component: dynamic(() => import("@/preview/works/1.tsx"), { ssr: false }),

@@ -23,7 +23,7 @@ export function Preview({ children, className }: Props) {
     <div data-preview className="relative [&+[data-preview]]:mt-6">
       <div
         className={cn(
-          "border-wrapper relative isolate mx-auto flex min-h-96 max-w-3xl flex-col items-center justify-center overflow-hidden rounded-md bg-natural-150 px-8 py-8 shadow-custom-card",
+          "border-wrapper relative isolate mx-auto flex min-h-96 max-w-3xl flex-col items-center justify-center gap-4 overflow-hidden rounded-md bg-natural-150 px-8 py-8 shadow-custom-card",
           className
         )}
       >
