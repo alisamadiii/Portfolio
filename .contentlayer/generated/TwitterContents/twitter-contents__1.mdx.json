@@ -1,0 +1,18 @@
+{
+  "title": "1",
+  "body": {
+    "raw": "\n<ComponentPreview name=\"twitter-contents-1\" />\n",
+    "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var _=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),j=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},m=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var C=(t,e,n)=>(n=t!=null?x(w(t)):{},m(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>m(r({},\"__esModule\",{value:!0}),t);var f=_((h,s)=>{s.exports=_jsx_runtime});var b={};j(b,{default:()=>p,frontmatter:()=>v});var i=C(f()),v={title:\"1\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||y(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-1\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function y(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(b);})();\n;return Component;"
+  },
+  "_id": "twitter-contents/1.mdx",
+  "_raw": {
+    "sourceFilePath": "twitter-contents/1.mdx",
+    "sourceFileName": "1.mdx",
+    "sourceFileDir": "twitter-contents",
+    "contentType": "mdx",
+    "flattenedPath": "twitter-contents/1"
+  },
+  "type": "TwitterContents",
+  "slug": "/twitter-contents/1",
+  "slugAsParams": "1"
+}

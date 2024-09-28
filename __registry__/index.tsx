@@ -4,52 +4,58 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 
 export const Index: Record<string, any> = {
-  "1": {
-    name: "1",
-    component: dynamic(() => import("@/preview/1.tsx"), { ssr: false }),
+  "twitter-contents-1": {
+    name: "twitter-contents-1",
+    component: dynamic(() => import("@/preview/twitter-contents/1.tsx"), {
+      ssr: false,
+    }),
   },
-  "10": {
-    name: "10",
-    component: dynamic(() => import("@/preview/10.tsx"), { ssr: false }),
+  "works-1": {
+    name: "works-1",
+    component: dynamic(() => import("@/preview/works/1.tsx"), { ssr: false }),
   },
-  "11": {
-    name: "11",
-    component: dynamic(() => import("@/preview/11.tsx"), { ssr: false }),
+  "works-10": {
+    name: "works-10",
+    component: dynamic(() => import("@/preview/works/10.tsx"), { ssr: false }),
   },
-  "12": {
-    name: "12",
-    component: dynamic(() => import("@/preview/12.tsx"), { ssr: false }),
+  "works-11": {
+    name: "works-11",
+    component: dynamic(() => import("@/preview/works/11.tsx"), { ssr: false }),
   },
-  "2": {
-    name: "2",
-    component: dynamic(() => import("@/preview/2.tsx"), { ssr: false }),
+  "works-12": {
+    name: "works-12",
+    component: dynamic(() => import("@/preview/works/12.tsx"), { ssr: false }),
   },
-  "3": {
-    name: "3",
-    component: dynamic(() => import("@/preview/3.tsx"), { ssr: false }),
+  "works-2": {
+    name: "works-2",
+    component: dynamic(() => import("@/preview/works/2.tsx"), { ssr: false }),
   },
-  "4": {
-    name: "4",
-    component: dynamic(() => import("@/preview/4.tsx"), { ssr: false }),
+  "works-3": {
+    name: "works-3",
+    component: dynamic(() => import("@/preview/works/3.tsx"), { ssr: false }),
   },
-  "5": {
-    name: "5",
-    component: dynamic(() => import("@/preview/5.tsx"), { ssr: false }),
+  "works-4": {
+    name: "works-4",
+    component: dynamic(() => import("@/preview/works/4.tsx"), { ssr: false }),
   },
-  "6": {
-    name: "6",
-    component: dynamic(() => import("@/preview/6.tsx"), { ssr: false }),
+  "works-5": {
+    name: "works-5",
+    component: dynamic(() => import("@/preview/works/5.tsx"), { ssr: false }),
   },
-  "7": {
-    name: "7",
-    component: dynamic(() => import("@/preview/7.tsx"), { ssr: false }),
+  "works-6": {
+    name: "works-6",
+    component: dynamic(() => import("@/preview/works/6.tsx"), { ssr: false }),
   },
-  "8": {
-    name: "8",
-    component: dynamic(() => import("@/preview/8.tsx"), { ssr: false }),
+  "works-7": {
+    name: "works-7",
+    component: dynamic(() => import("@/preview/works/7.tsx"), { ssr: false }),
   },
-  "9": {
-    name: "9",
-    component: dynamic(() => import("@/preview/9.tsx"), { ssr: false }),
+  "works-8": {
+    name: "works-8",
+    component: dynamic(() => import("@/preview/works/8.tsx"), { ssr: false }),
+  },
+  "works-9": {
+    name: "works-9",
+    component: dynamic(() => import("@/preview/works/9.tsx"), { ssr: false }),
   },
 };

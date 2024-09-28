@@ -46,9 +46,21 @@ var Works = defineDocumentType(() => ({
   },
   computedFields
 }));
+var TwitterContents = defineDocumentType(() => ({
+  name: "TwitterContents",
+  filePathPattern: "./twitter-contents/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true
+    }
+  },
+  computedFields
+}));
 var contentlayer_config_default = makeSource({
   contentDirPath: "./contents",
-  documentTypes: [Blogs, Works],
+  documentTypes: [Blogs, Works, TwitterContents],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
@@ -77,4 +89,4 @@ var contentlayer_config_default = makeSource({
 export {
   contentlayer_config_default as default
 };
-//# sourceMappingURL=compiled-contentlayer-config-SUWRVOCL.mjs.map
+//# sourceMappingURL=compiled-contentlayer-config-OQWPKB4N.mjs.map

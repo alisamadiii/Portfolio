@@ -49,9 +49,22 @@ const Works = defineDocumentType(() => ({
   computedFields,
 }));
 
+const TwitterContents = defineDocumentType(() => ({
+  name: "TwitterContents",
+  filePathPattern: "./twitter-contents/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true,
+    },
+  },
+  computedFields,
+}));
+
 export default makeSource({
   contentDirPath: "./contents",
-  documentTypes: [Blogs, Works],
+  documentTypes: [Blogs, Works, TwitterContents],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
