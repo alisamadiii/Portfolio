@@ -19,6 +19,16 @@ export async function generateStaticParams() {
   }));
 }
 
+export async function generateMetadata({ params }: Props) {
+  const findingGoal = allTwitterContents.find(
+    (post) => params.slug === post.slugAsParams
+  );
+
+  return {
+    title: findingGoal?.title,
+  };
+}
+
 export default function DocsPage({ params: { slug } }: Props) {
   const findingGoal = allTwitterContents.find(
     (post) => slug === post.slugAsParams

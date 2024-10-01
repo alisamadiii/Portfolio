@@ -17,6 +17,17 @@ export async function generateStaticParams() {
   }));
 }
 
+export async function generateMetadata({ params }: Props) {
+  const findingGoal = allBlogs.find(
+    (post) => params.slug === post.slugAsParams
+  );
+
+  return {
+    title: findingGoal?.title,
+    description: findingGoal?.description,
+  };
+}
+
 export default function DocsPage({ params: { slug } }: Props) {
   const findingGoal = allBlogs.find((post) => slug === post.slugAsParams);
 
