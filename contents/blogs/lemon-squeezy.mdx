@@ -1,0 +1,838 @@
+---
+title: Lemon Squeezy API Endpoints
+description: Lemon Squeezy is a platform that allows you to sell digital products.
+image: /lemon-squeezy-api.png
+---
+
+# Lemon Squeezy API
+
+General Types
+
+```ts showLineNumbers
+type Category = "subscription" | "one_time" | "lead_magnet" | "pwyw";
+type Tax_Code = "saas" | "eservice" | "ebook";
+type Status = "pending" | "draft" | "published";
+```
+
+## Get List of All Products
+
+<Files>
+
+<File label="action.ts">
+
+```ts showLineNumbers
+import type { GetListAllProductsTypes } from "./lemon_squeezy.type";
+
+export async function getListAllProducts(): Promise<{
+  data: GetListAllProductsTypes;
+  error: string | null;
+  status: number;
+}> {
+  try {
+    const res = await fetch("https://api.lemonsqueezy.com/v1/products", {
+      method: "GET",
+      headers: {
+        accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+        authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+      },
+      next: { revalidate: 60 },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: {} as GetListAllProductsTypes,
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: {} as GetListAllProductsTypes,
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+}
+```
+
+</File>
+
+<File label="type.ts">
+
+```ts showLineNumbers
+export interface GetListAllProductsTypes {
+  meta: {
+    page: {
+      currentPage: number;
+      from: number;
+      lastPage: number;
+      perPage: number;
+      to: number;
+      total: number;
+    };
+  };
+  jsonapi: {
+    version: string;
+  };
+  links: {
+    first: string;
+    last: string;
+  };
+  data: Array<{
+    type: string;
+    id: string;
+    attributes: {
+      store_id: number;
+      name: string;
+      slug: string;
+      description: string;
+      status: Status;
+      status_formatted: string;
+      thumb_url: string | null;
+      large_thumb_url: string | null;
+      price: number;
+      price_formatted: string;
+      from_price: number;
+      to_price: number;
+      pay_what_you_want: boolean;
+      buy_now_url: string;
+      from_price_formatted: string;
+      to_price_formatted: string;
+      created_at: string;
+      updated_at: string;
+      test_mode: boolean;
+    };
+    relationships: {
+      store: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      variants: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+    };
+    links: {
+      self: string;
+    };
+  }>;
+}
+```
+
+</File>
+
+</Files>
+
+
+## Get A Product
+
+<Files>
+
+<File label="action.ts">
+
+```ts showLineNumbers
+import type { GetAProductTypes } from "./lemon_squeezy.type";
+
+export async function getAProduct(id?: string): Promise<{
+  data: GetAProductTypes;
+  error: string | null;
+  status: number;
+}> {
+  const productId = id || process.env.PRODUCT_ID;
+
+  try {
+    const res = await fetch(
+      `https://api.lemonsqueezy.com/v1/products/${productId}`,
+      {
+        method: "GET",
+        headers: {
+          accept: "application/vnd.api+json",
+          "Content-Type": "application/vnd.api+json",
+          authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+        },
+        next: { revalidate: 60 },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: {} as GetAProductTypes,
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: {} as GetAProductTypes,
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+
+```
+
+</File>
+
+<File label="type.ts">
+
+```ts showLineNumbers
+export interface GetAProductTypes {
+  jsonapi: {
+    version: string;
+  };
+  links: {
+    self: string;
+  };
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      store_id: number;
+      name: string;
+      slug: string;
+      description: string;
+      status: Status;
+      status_formatted: string;
+      thumb_url: string | null;
+      large_thumb_url: string | null;
+      price: number;
+      price_formatted: string;
+      from_price: number;
+      to_price: number;
+      pay_what_you_want: boolean;
+      buy_now_url: string;
+      from_price_formatted: string;
+      to_price_formatted: string;
+      created_at: string;
+      updated_at: string;
+      test_mode: boolean;
+    };
+    relationships: {
+      store: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      variants: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+    };
+    links: {
+      self: string;
+    };
+  };
+}
+```
+
+</File>
+
+</Files>
+
+## Get List of All Variants
+
+<Files>
+
+<File label="action.ts">
+
+```ts showLineNumbers
+import type { GetListAllVariantsTypes } from "./lemon_squeezy.type";
+
+export async function getListAllVariants(productId?: string): Promise<{
+  data: GetListAllVariantsTypes;
+  error: string | null;
+  status: number;
+}> {
+  try {
+    const res = await fetch(
+      `https://api.lemonsqueezy.com/v1/variants${
+        productId ? `?filter[product_id]=${productId}` : ""
+      }`,
+      {
+        method: "GET",
+        headers: {
+          accept: "application/vnd.api+json",
+          "Content-Type": "application/vnd.api+json",
+          authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+        },
+        next: { revalidate: 60 },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: {} as GetListAllVariantsTypes,
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: {} as GetListAllVariantsTypes,
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+}
+```
+
+</File>
+
+<File label="type.ts">
+
+```ts showLineNumbers
+export interface GetListAllVariantsTypes {
+  meta: {
+    page: {
+      currentPage: number;
+      from: number;
+      lastPage: number;
+      perPage: number;
+      to: number;
+      total: number;
+    };
+  };
+  jsonapi: {
+    version: string;
+  };
+  links: {
+    first: string;
+    last: string;
+  };
+  data: Array<{
+    type: string;
+    id: string;
+    attributes: {
+      price: number;
+      is_subscription: boolean;
+      interval: string;
+      interval_count: number;
+      has_free_trial: boolean;
+      trial_interval: string;
+      trial_interval_count: number;
+      pay_what_you_want: boolean;
+      min_price: number;
+      suggested_price: number;
+      product_id: number;
+      name: string;
+      slug: string;
+      description: string;
+      links: { title: string; url: string }[];
+      has_license_keys: boolean;
+      license_activation_limit: number;
+      is_license_limit_unlimited: boolean;
+      license_length_value: number;
+      license_length_unit: string;
+      is_license_length_unlimited: boolean;
+      sort: number;
+      status: Status;
+      status_formatted: string;
+      created_at: string;
+      updated_at: string;
+      test_mode: boolean;
+    };
+    relationships: {
+      product: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      files: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      "price-model": {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+    };
+    links: {
+      self: string;
+    };
+  }>;
+}
+```
+
+</File>
+
+</Files>
+
+
+## Get A Variant
+
+<Files>
+
+<File label="action.ts">
+
+```ts showLineNumbers
+import type { GetAVariantTypes } from "./lemon_squeezy.type";
+
+export async function getAVariant(id: number): Promise<{
+  data: GetAVariantTypes;
+  error: string | null;
+  status: number;
+}> {
+  try {
+    const res = await fetch(`https://api.lemonsqueezy.com/v1/variants/${id}`, {
+      method: "GET",
+      headers: {
+        accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+        authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+      },
+      next: { revalidate: 60 },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: {} as GetAVariantTypes,
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: {} as GetAVariantTypes,
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+}
+```
+
+</File>
+
+<File label="type.ts">
+
+```ts showLineNumbers
+export interface GetAVariantTypes {
+  jsonapi: {
+    version: string;
+  };
+  links: {
+    self: string;
+  };
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      price: number;
+      is_subscription: boolean;
+      interval: string;
+      interval_count: number;
+      has_free_trial: boolean;
+      trial_interval: string;
+      trial_interval_count: number;
+      pay_what_you_want: boolean;
+      min_price: number;
+      suggested_price: number;
+      product_id: number;
+      name: string;
+      slug: string;
+      description: string;
+      links: { title: string; url: string }[];
+      has_license_keys: boolean;
+      license_activation_limit: number;
+      is_license_limit_unlimited: boolean;
+      license_length_value: number;
+      license_length_unit: string;
+      is_license_length_unlimited: boolean;
+      sort: number;
+      status: Status;
+      status_formatted: string;
+      created_at: string;
+      updated_at: string;
+      test_mode: boolean;
+    };
+    relationships: {
+      product: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      files: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      "price-model": {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+    };
+    links: {
+      self: string;
+    };
+  };
+}
+```
+
+</File>
+
+</Files>
+
+
+## Get List of All Prices
+
+<Files>
+
+<File label="action.ts">
+
+```ts showLineNumbers
+import type { GetListAllPricesTypes } from "./lemon_squeezy.type";
+
+export async function getListAllPrices(): Promise<{
+  data: GetListAllPricesTypes;
+  error: string | null;
+  status: number;
+}> {
+  try {
+    const res = await fetch("https://api.lemonsqueezy.com/v1/prices", {
+      method: "GET",
+      headers: {
+        accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+        authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+      },
+      next: { revalidate: 60 },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: {} as GetListAllPricesTypes,
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: {} as GetListAllPricesTypes,
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+}
+```
+
+</File>
+
+<File label="type.ts">
+
+```ts showLineNumbers
+export interface GetListAllPricesTypes {
+  meta: {
+    page: {
+      currentPage: number;
+      from: number;
+      lastPage: number;
+      perPage: number;
+      to: number;
+      total: number;
+    };
+  };
+  jsonapi: {
+    version: string;
+  };
+  links: {
+    first: string;
+    last: string;
+  };
+  data: Array<{
+    type: string;
+    id: string;
+    attributes: {
+      variant_id: number;
+      category: Category;
+      scheme: string;
+      usage_aggregation: string | null;
+      unit_price: number;
+      unit_price_decimal: string | null;
+      setup_fee_enabled: boolean | null;
+      setup_fee: number | null;
+      package_size: number;
+      tiers: any | null;
+      renewal_interval_unit: string | null;
+      renewal_interval_quantity: number | null;
+      trial_interval_unit: string | null;
+      trial_interval_quantity: number | null;
+      min_price: number | null;
+      suggested_price: number | null;
+      tax_code: Tax_Code;
+      created_at: string;
+      updated_at: string;
+    };
+    relationships: {
+      variant: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+    };
+    links: {
+      self: string;
+    };
+  }>;
+}
+```
+
+</File>
+
+</Files>
+
+
+## Get A Price
+
+<Files>
+
+<File label="action.ts">
+
+```ts showLineNumbers
+import type { GetListAllCustomersTypes } from "./lemon_squeezy.type";
+
+export async function getAPrice(id: string): Promise<{
+  data: GetListAllPricesTypes;
+  error: string | null;
+  status: number;
+}> {
+  try {
+    const res = await fetch(`https://api.lemonsqueezy.com/v1/prices/${id}`, {
+      method: "GET",
+      headers: {
+        accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+        authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+      },
+      next: { revalidate: 60 },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: {} as GetListAllPricesTypes,
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: {} as GetListAllPricesTypes,
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+}
+```
+
+</File>
+
+<File label="type.ts">
+
+```ts showLineNumbers
+export interface GetListAllCustomersTypes {
+  meta: {
+    page: {
+      currentPage: number;
+      from: number;
+      lastPage: number;
+      perPage: number;
+      to: number;
+      total: number;
+    };
+  };
+  jsonapi: {
+    version: string;
+  };
+  links: {
+    first: string;
+    last: string;
+  };
+  data: Array<{
+    type: string;
+    id: string;
+    attributes: {
+      store_id: number;
+      name: string;
+      email: string;
+      status: string;
+      city: string | null;
+      region: string | null;
+      country: string | null;
+      total_revenue_currency: number;
+      mrr: number;
+      status_formatted: string;
+      country_formatted: string | null;
+      total_revenue_currency_formatted: string;
+      mrr_formatted: string;
+      urls: {
+        customer_portal: string | null;
+      };
+      created_at: string;
+      updated_at: string;
+      test_mode: boolean;
+    };
+    relationships: {
+      store: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      orders: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      subscriptions: {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+      "license-keys": {
+        links: {
+          related: string;
+          self: string;
+        };
+      };
+    };
+    links: {
+      self: string;
+    };
+  }>;
+}
+```
+
+</File>
+
+</Files>
+
+
+## Create A Checkout
+
+```ts showLineNumbers title="action.ts"
+export async function createCheckout(variantId: string): Promise<{
+  data: string;
+  error: string | null;
+  status: number;
+}> {
+  try {
+    const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
+      method: "POST",
+      headers: {
+        accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+        authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+      },
+      body: JSON.stringify({
+        data: {
+          type: "checkouts",
+          relationships: {
+            store: {
+              data: {
+                type: "stores",
+                id: process.env.STORE_ID?.toString(),
+              },
+            },
+            variant: {
+              data: {
+                type: "variants",
+                id: variantId,
+              },
+            },
+          },
+        },
+      }),
+      next: { revalidate: 0 },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        data: "",
+        error: data,
+        status: res.status,
+      };
+    }
+
+    return {
+      data: data.data.attributes.url,
+      error: null,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      data: "",
+      error: error || "An unknown error occurred",
+      status: error.status || 500,
+    };
+  }
+}
+```
+

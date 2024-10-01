@@ -1,5 +1,5 @@
 import React, { useState, ReactNode } from "react";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ export const Files: React.FC<FilesProps> = ({ children, id }) => {
 
   return (
     <>
-      <div className="flex h-[40px] items-center gap-1 rounded-t-md border-wrapper bg-code-figcaption pl-2 pr-3 text-[13px] text-muted [&+div_figure]:my-0 [&+div_figure]:rounded-t-none [&+div_figure]:border-t-0">
+      <div className="mx-auto flex h-[40px] max-w-xl items-center gap-1 rounded-t-md bg-natural-150 pl-2 pr-3 text-[13px] text-muted [&+div_figure]:my-0 [&+div_figure]:rounded-t-none [&+div_figure]:border-t-0">
         <LayoutGroup id={id}>
           {React.Children.map(children, (child, index) => {
             if (!React.isValidElement(child)) return null;
@@ -27,24 +27,12 @@ export const Files: React.FC<FilesProps> = ({ children, id }) => {
               <button
                 key={child.props.label}
                 onClick={() => setActiveTab(index)}
-                className="relative p-1"
-              >
-                {activeTab === index && (
-                  <motion.div
-                    layoutId="tab-underline"
-                    className="bg-background absolute inset-0 border-wrapper shadow-sm"
-                    style={{ borderRadius: 6 }}
-                  />
+                className={cn(
+                  "relative p-1 text-natural-700",
+                  activeTab !== index && "text-natural-500"
                 )}
-
-                <span
-                  className={cn(
-                    "text-foreground relative z-20",
-                    activeTab !== index && "text-muted"
-                  )}
-                >
-                  {child.props.label}
-                </span>
+              >
+                {child.props.label}
               </button>
             );
           })}

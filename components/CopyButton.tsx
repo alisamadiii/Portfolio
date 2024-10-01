@@ -30,7 +30,7 @@ export default function CopyButton({ value, className }: Props) {
   return (
     <button
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-md duration-200 hover:bg-[#ebebeb] dark:hover:bg-[#1f1f1f]",
+        "flex h-8 w-8 items-center justify-center rounded-md bg-natural-150 duration-200 hover:bg-[#ebebeb] dark:hover:bg-[#1f1f1f]",
         className
       )}
       onClick={handleCopy}
