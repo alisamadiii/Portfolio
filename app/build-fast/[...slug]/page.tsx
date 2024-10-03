@@ -7,6 +7,7 @@ import { allBuildFasts } from "contentlayer/generated";
 
 import { Mdx } from "@/components/MDX/MDXContent.blog";
 import Navbar from "./Navbar";
+import Menu from "./Menu";
 
 type Props = {
   params: { slug: string[] };
@@ -39,7 +40,7 @@ export default function DocsPage({ params: { slug } }: Props) {
   return (
     <div className="px-6">
       <Navbar slug={slug.join("/")} />
-      <div className="mx-auto my-11 max-w-xl">
+      <div className="mx-auto my-11 flex max-w-xl items-center justify-between">
         <Link href="/">
           <svg
             width="24"
@@ -51,6 +52,7 @@ export default function DocsPage({ params: { slug } }: Props) {
             <path d="M4 21V9L12 3L20 9V21H14V14H10V21H4Z" fill="#5D5D5D" />
           </svg>
         </Link>
+        <Menu slug={slug.join("/")} />
       </div>
       <Mdx code={findingGoal.body.code} />
       <div className="mx-auto my-11 max-w-xl">

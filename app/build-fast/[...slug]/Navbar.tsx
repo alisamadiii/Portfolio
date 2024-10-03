@@ -11,7 +11,7 @@ type Props = {
 
 export default function Navbar({ slug }: Props) {
   return (
-    <div className="fixed left-0 top-0 flex h-full w-56 flex-col border-r bg-natural-150 p-2">
+    <div className="fixed left-0 top-0 z-50 hidden h-full w-56 flex-col border-r bg-natural-150 p-2 lg:flex">
       {allBuildFasts
         .sort((a, b) => {
           if (!a.order && !b.order) return 0;
