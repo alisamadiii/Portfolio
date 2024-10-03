@@ -93,16 +93,27 @@ export default function Home() {
             the way. Let&apos;s create something awesome together!
           </Text>
         </div>
-        <Link
-          href={"/work/1"}
-          className={buttonVariants({
-            className:
-              "mt-8 animate-element-in !rounded-full text-lg opacity-0 delay-150 md:mt-0",
-            size: "lg",
-          })}
-        >
-          My Works
-        </Link>
+        <div className="mt-8 flex animate-element-in flex-col items-center gap-4 opacity-0 delay-150 md:mt-0">
+          <Link
+            href={"/work/1"}
+            className={buttonVariants({
+              className: "!rounded-full text-lg",
+              size: "lg",
+            })}
+          >
+            My Works
+          </Link>
+          <Text variant={"p2-r"} className="text-natural-700">
+            I am trying to build a{" "}
+            <Link
+              href={"/build-fast/requirements"}
+              className="font-semibold underline"
+            >
+              page
+            </Link>{" "}
+            that can help me to build fast.
+          </Text>
+        </div>
       </div>
 
       <div className="bg-natural-100 px-6 md:-mt-[120px] md:rounded-b-[140px]">
