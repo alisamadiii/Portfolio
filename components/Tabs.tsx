@@ -17,7 +17,7 @@ export const Tabs: React.FC<TabsProps> = ({ children, id }) => {
 
   return (
     <LayoutGroup id={id}>
-      <div className="mb-4 flex border-b-code">
+      <div className="border-b-code mx-auto mb-4 flex max-w-xl">
         {React.Children.map(children, (child, index) => {
           if (!React.isValidElement(child)) return null;
           return (

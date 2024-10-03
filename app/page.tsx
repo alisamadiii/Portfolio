@@ -59,7 +59,7 @@ export default function Home() {
           <Text
             element="h1"
             variant={"h1"}
-            className="delay-50 animate-element-in text-4xl leading-[125%] opacity-0 md:text-center lg:text-6xl"
+            className="delay-50 animate-element-in text-4xl !leading-[125%] opacity-0 md:text-center lg:text-6xl"
           >
             Building{" "}
             <span className="relative text-primary">

@@ -1,0 +1,18 @@
+{
+  "title": "NPM Packages",
+  "body": {
+    "raw": "\n# NPM Packages",
+    "code": "var Component=(()=>{var u=Object.create;var c=Object.defineProperty;var d=Object.getOwnPropertyDescriptor;var p=Object.getOwnPropertyNames;var x=Object.getPrototypeOf,f=Object.prototype.hasOwnProperty;var g=(n,e)=>()=>(e||n((e={exports:{}}).exports,e),e.exports),k=(n,e)=>{for(var t in e)c(n,t,{get:e[t],enumerable:!0})},s=(n,e,t,r)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let a of p(e))!f.call(n,a)&&a!==t&&c(n,a,{get:()=>e[a],enumerable:!(r=d(e,a))||r.enumerable});return n};var M=(n,e,t)=>(t=n!=null?u(x(n)):{},s(e||!n||!n.__esModule?c(t,\"default\",{value:n,enumerable:!0}):t,n)),_=n=>s(c({},\"__esModule\",{value:!0}),n);var m=g((b,i)=>{i.exports=_jsx_runtime});var j={};k(j,{default:()=>l,frontmatter:()=>P});var o=M(m()),P={title:\"NPM Packages\"};function h(n){let e={a:\"a\",h1:\"h1\",...n.components};return(0,o.jsx)(e.h1,{id:\"npm-packages\",children:(0,o.jsx)(e.a,{className:\"subheading-anchor\",\"aria-label\":\"Link to section\",href:\"#npm-packages\",children:\"NPM Packages\"})})}function l(n={}){let{wrapper:e}=n.components||{};return e?(0,o.jsx)(e,{...n,children:(0,o.jsx)(h,{...n})}):h(n)}return _(j);})();\n;return Component;"
+  },
+  "_id": "build-fast/npm-packages.mdx",
+  "_raw": {
+    "sourceFilePath": "build-fast/npm-packages.mdx",
+    "sourceFileName": "npm-packages.mdx",
+    "sourceFileDir": "build-fast",
+    "contentType": "mdx",
+    "flattenedPath": "build-fast/npm-packages"
+  },
+  "type": "buildFast",
+  "slug": "/build-fast/npm-packages",
+  "slugAsParams": "npm-packages"
+}

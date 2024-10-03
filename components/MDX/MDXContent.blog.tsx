@@ -13,6 +13,7 @@ import CopyButton from "../CopyButton";
 import { Tab, Tabs } from "../Tabs";
 import { Files, File } from "../FilesTab";
 import { Text } from "../ui/text";
+import ComponentPreview from "../ComponentPreview";
 
 const components = {
   h1: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -248,8 +249,14 @@ const components = {
     return <pre {...props} />;
   },
   // END - Code Syntax Highlighter
-  a: ({ className, ...props }: React.ComponentProps<typeof Link>) => (
+  a: ({ className, href, ...props }: React.ComponentProps<typeof Link>) => (
     <Link
+      href={href}
+      target={
+        typeof href === "string" && href.startsWith("http")
+          ? "_blank"
+          : undefined
+      }
       className={cn(
         "hover:text-primary-hover font-medium text-primary",
         className
@@ -273,6 +280,7 @@ const components = {
   Tab,
   Files,
   File,
+  ComponentPreview,
 };
 
 export function Mdx({ code }: { code: string }) {

@@ -4,6 +4,58 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 
 export const Index: Record<string, any> = {
+  "build-fast-hotKeys": {
+    name: "build-fast-hotKeys",
+    component: dynamic(() => import("@/preview/build-fast/hotKeys.tsx"), {
+      ssr: false,
+    }),
+  },
+  "build-fast-input-otp": {
+    name: "build-fast-input-otp",
+    component: dynamic(() => import("@/preview/build-fast/input-otp.tsx"), {
+      ssr: false,
+    }),
+  },
+  "build-fast-react-pdf": {
+    name: "build-fast-react-pdf",
+    component: dynamic(() => import("@/preview/build-fast/react-pdf.tsx"), {
+      ssr: false,
+    }),
+  },
+  "build-fast-use-click-outside": {
+    name: "build-fast-use-click-outside",
+    component: dynamic(
+      () => import("@/preview/build-fast/use-click-outside.tsx"),
+      { ssr: false }
+    ),
+  },
+  "build-fast-use-debounced-state": {
+    name: "build-fast-use-debounced-state",
+    component: dynamic(
+      () => import("@/preview/build-fast/use-debounced-state.tsx"),
+      { ssr: false }
+    ),
+  },
+  "build-fast-use-fullscreen": {
+    name: "build-fast-use-fullscreen",
+    component: dynamic(
+      () => import("@/preview/build-fast/use-fullscreen.tsx"),
+      { ssr: false }
+    ),
+  },
+  "build-fast-use-media-query": {
+    name: "build-fast-use-media-query",
+    component: dynamic(
+      () => import("@/preview/build-fast/use-media-query.tsx"),
+      { ssr: false }
+    ),
+  },
+  "build-fast-uuid": {
+    name: "build-fast-uuid",
+    component: dynamic(() => import("@/preview/build-fast/uuid.tsx"), {
+      ssr: false,
+    }),
+  },
   "twitter-contents-1": {
     name: "twitter-contents-1",
     component: dynamic(() => import("@/preview/twitter-contents/1.tsx"), {
@@ -37,6 +89,10 @@ export const Index: Record<string, any> = {
   "works-12": {
     name: "works-12",
     component: dynamic(() => import("@/preview/works/12.tsx"), { ssr: false }),
+  },
+  "works-13": {
+    name: "works-13",
+    component: dynamic(() => import("@/preview/works/13.tsx"), { ssr: false }),
   },
   "works-2": {
     name: "works-2",

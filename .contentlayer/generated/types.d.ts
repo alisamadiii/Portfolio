@@ -22,6 +22,19 @@ export type Blogs = {
   slugAsParams: string
 }
 
+export type buildFast = {
+  /** File path relative to `contentDirPath` */
+  _id: string
+  _raw: Local.RawDocumentData
+  type: 'buildFast'
+  title: string
+  order?: string | undefined
+  /** MDX file body */
+  body: MDX
+  slug: string
+  slugAsParams: string
+}
+
 export type TwitterContents = {
   /** File path relative to `contentDirPath` */
   _id: string
@@ -54,8 +67,8 @@ export type Works = {
 export type AllTypes = DocumentTypes | NestedTypes
 export type AllTypeNames = DocumentTypeNames | NestedTypeNames
 
-export type DocumentTypes = Blogs | TwitterContents | Works
-export type DocumentTypeNames = 'Blogs' | 'TwitterContents' | 'Works'
+export type DocumentTypes = Blogs | buildFast | TwitterContents | Works
+export type DocumentTypeNames = 'Blogs' | 'buildFast' | 'TwitterContents' | 'Works'
 
 export type NestedTypes = never
 export type NestedTypeNames = never
@@ -65,6 +78,7 @@ export type DataExports = {
   allBlogs: Blogs[]
   allWorks: Works[]
   allTwitterContents: TwitterContents[]
+  allBuildFasts: buildFast[]
 }
 
 
@@ -85,6 +99,7 @@ declare global {
 
 export type DocumentTypeMap = {
   Blogs: Blogs
+  buildFast: buildFast
   TwitterContents: TwitterContents
   Works: Works
 }

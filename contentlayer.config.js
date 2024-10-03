@@ -62,9 +62,25 @@ const TwitterContents = defineDocumentType(() => ({
   computedFields,
 }));
 
+const buildFast = defineDocumentType(() => ({
+  name: "buildFast",
+  filePathPattern: "./build-fast/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true,
+    },
+    order: {
+      type: "string",
+    },
+  },
+  computedFields,
+}));
+
 export default makeSource({
   contentDirPath: "./contents",
-  documentTypes: [Blogs, Works, TwitterContents],
+  documentTypes: [Blogs, Works, TwitterContents, buildFast],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [

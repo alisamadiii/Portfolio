@@ -58,9 +58,24 @@ var TwitterContents = defineDocumentType(() => ({
   },
   computedFields
 }));
+var buildFast = defineDocumentType(() => ({
+  name: "buildFast",
+  filePathPattern: "./build-fast/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true
+    },
+    order: {
+      type: "string"
+    }
+  },
+  computedFields
+}));
 var contentlayer_config_default = makeSource({
   contentDirPath: "./contents",
-  documentTypes: [Blogs, Works, TwitterContents],
+  documentTypes: [Blogs, Works, TwitterContents, buildFast],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
@@ -89,4 +104,4 @@ var contentlayer_config_default = makeSource({
 export {
   contentlayer_config_default as default
 };
-//# sourceMappingURL=compiled-contentlayer-config-OQWPKB4N.mjs.map
+//# sourceMappingURL=compiled-contentlayer-config-DU4B7RQS.mjs.map

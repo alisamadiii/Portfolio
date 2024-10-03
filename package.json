@@ -10,15 +10,18 @@
     "build:registry": "node ./scripts/build-registry.js && prettier --write ./__registry__/index.tsx"
   },
   "dependencies": {
+    "@mantine/hooks": "^7.13.1",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-slider": "^1.2.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@react-pdf/renderer": "^4.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "contentlayer2": "^0.5.1",
     "framer-motion": "^11.8.0",
     "i": "^0.3.7",
+    "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
     "next": "14.2.13",
     "next-contentlayer2": "^0.5.1",
@@ -28,6 +31,7 @@
     "rc-progress": "^4.0.0",
     "react": "^18",
     "react-dom": "^18",
+    "react-hotkeys-hook": "^4.5.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-use-measure": "^2.1.1",
     "rehype-autolink-headings": "^7.1.0",
@@ -36,13 +40,15 @@
     "remark-gfm": "^4.0.0",
     "resend": "^4.0.0",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/uuid": "^10.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.13",
     "postcss": "^8",

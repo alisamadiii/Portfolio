@@ -1,0 +1,102 @@
+---
+title: Framer Motion
+---
+
+# Framer Motion
+
+<Files id="framer-motion">
+
+<File label="index.html">
+
+```html showLineNumbers
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+</html>
+
+```
+
+</File>
+
+<File label="style.css">
+
+```css showLineNumbers
+[data-chars-id="add"] {
+  background-color: var(--line-add);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+[data-highlighted-line-id="add"] {
+  background-color: var(--line-add) !important;
+}
+
+[data-highlighted-line-id="remove"] {
+  background-color: var(--line-remove) !important;
+}
+
+[data-highlighted-line-id="opacity"] {
+  opacity: var(--code-opacity);
+}
+
+[data-highlighted-line-id="remove"]::after {
+  content: "-";
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
+
+[data-highlighted-line-id="add"]::after {
+  content: "+";
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
+```
+
+</File>
+
+<File label="app.js">
+
+```css showLineNumbers
+[data-chars-id="add"] {
+  background-color: var(--line-add);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+[data-highlighted-line-id="add"] {
+  background-color: var(--line-add) !important;
+}
+
+[data-highlighted-line-id="remove"] {
+  background-color: var(--line-remove) !important;
+}
+
+[data-highlighted-line-id="opacity"] {
+  opacity: var(--code-opacity);
+}
+
+[data-highlighted-line-id="remove"]::after {
+  content: "-";
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
+
+[data-highlighted-line-id="add"]::after {
+  content: "+";
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
+```
+
+</File>
+
+</Files>

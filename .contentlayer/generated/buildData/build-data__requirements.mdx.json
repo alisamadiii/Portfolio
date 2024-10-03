@@ -1,0 +1,18 @@
+{
+  "title": "requirements",
+  "body": {
+    "raw": "\n# Requirements",
+    "code": "var Component=(()=>{var l=Object.create;var i=Object.defineProperty;var d=Object.getOwnPropertyDescriptor;var x=Object.getOwnPropertyNames;var f=Object.getPrototypeOf,_=Object.prototype.hasOwnProperty;var q=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports),j=(e,t)=>{for(var n in t)i(e,n,{get:t[n],enumerable:!0})},s=(e,t,n,a)=>{if(t&&typeof t==\"object\"||typeof t==\"function\")for(let r of x(t))!_.call(e,r)&&r!==n&&i(e,r,{get:()=>t[r],enumerable:!(a=d(t,r))||a.enumerable});return e};var p=(e,t,n)=>(n=e!=null?l(f(e)):{},s(t||!e||!e.__esModule?i(n,\"default\",{value:e,enumerable:!0}):n,e)),M=e=>s(i({},\"__esModule\",{value:!0}),e);var m=q((L,c)=>{c.exports=_jsx_runtime});var C={};j(C,{default:()=>h,frontmatter:()=>b});var o=p(m()),b={title:\"requirements\"};function u(e){let t={a:\"a\",h1:\"h1\",...e.components};return(0,o.jsx)(t.h1,{id:\"requirements\",children:(0,o.jsx)(t.a,{className:\"subheading-anchor\",\"aria-label\":\"Link to section\",href:\"#requirements\",children:\"Requirements\"})})}function h(e={}){let{wrapper:t}=e.components||{};return t?(0,o.jsx)(t,{...e,children:(0,o.jsx)(u,{...e})}):u(e)}return M(C);})();\n;return Component;"
+  },
+  "_id": "build-data/requirements.mdx",
+  "_raw": {
+    "sourceFilePath": "build-data/requirements.mdx",
+    "sourceFileName": "requirements.mdx",
+    "sourceFileDir": "build-data",
+    "contentType": "mdx",
+    "flattenedPath": "build-data/requirements"
+  },
+  "type": "buildData",
+  "slug": "/build-data/requirements",
+  "slugAsParams": "requirements"
+}
