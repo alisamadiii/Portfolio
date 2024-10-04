@@ -8,17 +8,23 @@ interface FileProps {
   children: ReactNode;
 }
 
-interface FilesProps {
+export interface FilesProps {
   id: string;
   children: ReactNode;
+  className?: string;
 }
 
-export const Files: React.FC<FilesProps> = ({ children, id }) => {
+export const Files: React.FC<FilesProps> = ({ children, id, className }) => {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
     <>
-      <div className="mx-auto flex h-[40px] max-w-xl items-center gap-1 rounded-t-md bg-natural-150 pl-2 pr-3 text-[13px] text-muted [&+div_figure]:my-0 [&+div_figure]:rounded-t-none [&+div_figure]:border-t-0">
+      <div
+        className={cn(
+          "mx-auto flex h-[40px] max-w-xl items-center gap-1 rounded-t-md bg-natural-150 pl-2 pr-3 text-[13px] text-muted [&+div_figure]:my-0 [&+div_figure]:rounded-t-none [&+div_figure]:border-t-0",
+          className
+        )}
+      >
         <LayoutGroup id={id}>
           {React.Children.map(children, (child, index) => {
             if (!React.isValidElement(child)) return null;

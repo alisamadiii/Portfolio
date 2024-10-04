@@ -8,12 +8,12 @@ import buildFast__requirementsMdx from './build-fast__requirements.mdx.json' wit
 import buildFast__serverMdx from './build-fast__server.mdx.json' with { type: 'json' }
 import buildFast__supbaseMdx from './build-fast__supbase.mdx.json' with { type: 'json' }
 import buildFast__designs__chartsMdx from './build-fast__designs__charts.mdx.json' with { type: 'json' }
-import buildFast__reusableComponents__buttonMdx from './build-fast__reusable-components__button.mdx.json' with { type: 'json' }
 import buildFast__reactLibries__generalHooksMdx from './build-fast__react-libries__general-hooks.mdx.json' with { type: 'json' }
 import buildFast__reactLibries__reactHotkeysHookMdx from './build-fast__react-libries__react-hotkeys-hook.mdx.json' with { type: 'json' }
 import buildFast__reactLibries__reactPdfMdx from './build-fast__react-libries__react-pdf.mdx.json' with { type: 'json' }
+import buildFast__reusableComponents__buttonMdx from './build-fast__reusable-components__button.mdx.json' with { type: 'json' }
 import buildFast__thirdParty__framerMotionMdx from './build-fast__third-party__framer-motion.mdx.json' with { type: 'json' }
 import buildFast__thirdParty__inputOtpMdx from './build-fast__third-party__input-otp.mdx.json' with { type: 'json' }
 import buildFast__thirdParty__uuidMdx from './build-fast__third-party__uuid.mdx.json' with { type: 'json' }
 
-export const allBuildFasts = [buildFast__errorHandlingMdx, buildFast__linksMdx, buildFast__mdxSetupMdx, buildFast__npmPackagesMdx, buildFast__requirementsMdx, buildFast__serverMdx, buildFast__supbaseMdx, buildFast__designs__chartsMdx, buildFast__reusableComponents__buttonMdx, buildFast__reactLibries__generalHooksMdx, buildFast__reactLibries__reactHotkeysHookMdx, buildFast__reactLibries__reactPdfMdx, buildFast__thirdParty__framerMotionMdx, buildFast__thirdParty__inputOtpMdx, buildFast__thirdParty__uuidMdx]
+export const allBuildFasts = [buildFast__errorHandlingMdx, buildFast__linksMdx, buildFast__mdxSetupMdx, buildFast__npmPackagesMdx, buildFast__requirementsMdx, buildFast__serverMdx, buildFast__supbaseMdx, buildFast__designs__chartsMdx, buildFast__reactLibries__generalHooksMdx, buildFast__reactLibries__reactHotkeysHookMdx, buildFast__reactLibries__reactPdfMdx, buildFast__reusableComponents__buttonMdx, buildFast__thirdParty__framerMotionMdx, buildFast__thirdParty__inputOtpMdx, buildFast__thirdParty__uuidMdx]

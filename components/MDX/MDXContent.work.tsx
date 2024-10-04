@@ -13,6 +13,9 @@ import CopyButton from "../CopyButton";
 import { Text } from "../ui/text";
 import { CodePreview } from "../CodePreview";
 import ComponentPreview from "../ComponentPreview";
+import { Files, File, FilesProps } from "../FilesTab";
+import { Tab, Tabs, TabsProps } from "../Tabs";
+import { Badge } from "../ui/badge";
 
 const components = {
   h1: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -20,7 +23,7 @@ const components = {
       element="h1"
       variant={"h1"}
       {...props}
-      className="mx-auto mb-8 max-w-xl scroll-mt-8"
+      className="mx-auto mb-8 max-w-3xl scroll-mt-8"
     >
       {children}
 
@@ -51,7 +54,7 @@ const components = {
     <Text
       element="h2"
       variant={"h2"}
-      className="mx-auto mb-5 mt-8 max-w-xl scroll-mt-8"
+      className="mx-auto mb-5 mt-8 max-w-3xl scroll-mt-8"
       {...props}
     >
       {children}
@@ -84,7 +87,7 @@ const components = {
     <Text
       element="h3"
       variant={"h3"}
-      className="mx-auto mb-5 mt-6 max-w-xl scroll-mt-8"
+      className="mx-auto mb-5 mt-6 max-w-3xl scroll-mt-8"
       {...props}
     >
       {children}
@@ -117,13 +120,13 @@ const components = {
     <Text
       element="p"
       variant={"p1-r"}
-      className="paragraph mb-4 text-natural-800"
+      className="paragraph mx-auto mb-4 !max-w-3xl text-natural-800"
       {...props}
     />
   ),
   ul: ({ ...props }: React.HTMLAttributes<HTMLUListElement>) => (
     <ul
-      className="mx-auto my-5 max-w-xl scroll-m-20 pl-8 text-base leading-7"
+      className="mx-auto my-5 max-w-3xl scroll-m-20 pl-8 text-base leading-7"
       {...props}
     />
   ),
@@ -180,7 +183,7 @@ const components = {
       <figure
         ref={figureRef}
         className={cn(
-          "border-wrapper group relative mx-auto my-4 max-h-96 w-full max-w-xl overflow-auto rounded-md bg-natural-150 shadow-custom-card [&_[data-line]]:px-[20px] [&_code]:rounded-none [&_code]:border-none [&_code]:!bg-transparent [&_code]:px-0 [&_code]:py-[20px] [&_code]:text-[13px]"
+          "border-wrapper group relative mx-auto my-4 max-h-96 w-full max-w-3xl overflow-auto rounded-md bg-natural-150 shadow-custom-card [&_[data-line]]:px-[20px] [&_code]:rounded-none [&_code]:border-none [&_code]:!bg-transparent [&_code]:px-0 [&_code]:py-[20px] [&_code]:text-[13px]"
         )}
         {...props}
       >
@@ -263,8 +266,17 @@ const components = {
       {...props}
     />
   ),
+  Tabs: ({ className, ...props }: TabsProps) => (
+    <Tabs className={"max-w-3xl"} {...props} />
+  ),
+  Tab,
+  Files: ({ className, ...props }: FilesProps) => (
+    <Files className={"max-w-3xl"} {...props} />
+  ),
+  File,
   CodePreview,
   ComponentPreview,
+  Badge,
 };
 
 export function Mdx({ code }: { code: string }) {

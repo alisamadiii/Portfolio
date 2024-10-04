@@ -74,6 +74,32 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
+  "twitter-contents-4": {
+    name: "twitter-contents-4",
+    component: dynamic(() => import("@/preview/twitter-contents/4.tsx"), {
+      ssr: false,
+    }),
+  },
+  "twitter-contents-5-design-1": {
+    name: "twitter-contents-5-design-1",
+    component: dynamic(
+      () => import("@/preview/twitter-contents/5/design-1.tsx"),
+      { ssr: false }
+    ),
+  },
+  "twitter-contents-5-design-2": {
+    name: "twitter-contents-5-design-2",
+    component: dynamic(
+      () => import("@/preview/twitter-contents/5/design-2.tsx"),
+      { ssr: false }
+    ),
+  },
+  "twitter-contents-5": {
+    name: "twitter-contents-5",
+    component: dynamic(() => import("@/preview/twitter-contents/5/index.tsx"), {
+      ssr: false,
+    }),
+  },
   "works-1": {
     name: "works-1",
     component: dynamic(() => import("@/preview/works/1.tsx"), { ssr: false }),

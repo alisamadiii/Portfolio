@@ -7,17 +7,20 @@ interface TabProps {
   children: ReactNode;
 }
 
-interface TabsProps {
+export interface TabsProps {
   id: string;
   children: ReactNode;
+  className?: string;
 }
 
-export const Tabs: React.FC<TabsProps> = ({ children, id }) => {
+export const Tabs: React.FC<TabsProps> = ({ children, id, className }) => {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
     <LayoutGroup id={id}>
-      <div className="border-b-code mx-auto mb-4 flex max-w-xl">
+      <div
+        className={cn("border-b-code mx-auto my-4 flex max-w-xl", className)}
+      >
         {React.Children.map(children, (child, index) => {
           if (!React.isValidElement(child)) return null;
           return (

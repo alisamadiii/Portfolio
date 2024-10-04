@@ -39,7 +39,7 @@ export default function DocsPage({ params: { slug } }: Props) {
   }
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       <div className="pointer-events-none fixed left-0 top-0 h-full w-full select-none">
         <div className="mx-auto h-full w-full max-w-[780px] border-x-2 border-dashed border-natural-200"></div>
       </div>
@@ -69,7 +69,7 @@ export default function DocsPage({ params: { slug } }: Props) {
               className="h-8 w-8 p-0"
               disabled={Number(slug) === 1}
             >
-              <Link href={`/work/${Number(slug) - 1}`}>
+              <Link href={`/twitter-content/${Number(slug) - 1}`}>
                 <ChevronLeft />
               </Link>
             </Button>
@@ -78,7 +78,7 @@ export default function DocsPage({ params: { slug } }: Props) {
               className="h-8 w-8 p-0"
               disabled={Number(slug) === allTwitterContents.length}
             >
-              <Link href={`/work/${Number(slug) + 1}`}>
+              <Link href={`/twitter-content/${Number(slug) + 1}`}>
                 <ChevronRight />
               </Link>
             </Button>

@@ -7,18 +7,13 @@ function getFilesRecursive(directory) {
   const files = [];
   const items = fs.readdirSync(directory);
 
-  const hasIndex = items.includes("index.tsx");
-
-  if (hasIndex) {
-    files.push(path.join(directory, "index.tsx"));
-  } else {
-    for (const item of items) {
-      const fullPath = path.join(directory, item);
-      if (fs.statSync(fullPath).isDirectory()) {
-        files.push(...getFilesRecursive(fullPath));
-      } else if (item.endsWith(".tsx")) {
-        files.push(fullPath);
-      }
+  // Remove the check for index.tsx
+  for (const item of items) {
+    const fullPath = path.join(directory, item);
+    if (fs.statSync(fullPath).isDirectory()) {
+      files.push(...getFilesRecursive(fullPath));
+    } else if (item.endsWith(".tsx")) {
+      files.push(fullPath);
     }
   }
 

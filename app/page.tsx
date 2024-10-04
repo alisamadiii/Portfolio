@@ -93,7 +93,7 @@ export default function Home() {
             the way. Let&apos;s create something awesome together!
           </Text>
         </div>
-        <div className="mt-8 flex animate-element-in flex-col items-center gap-4 opacity-0 delay-150 md:mt-0">
+        <div className="mt-8 flex animate-element-in flex-col gap-4 opacity-0 delay-150 md:mt-0 md:items-center">
           <Link
             href={"/work/1"}
             className={buttonVariants({
@@ -230,11 +230,19 @@ export default function Home() {
         <div className="flex w-full max-w-7xl items-center justify-between border-t border-natural-300 pt-10">
           <Text>© 2024 All rights reserved.</Text>
           <div className="flex justify-end gap-4">
-            <a href="#" className="text-natural-700 hover:text-natural-900">
+            <a
+              href="https://www.linkedin.com/in/alireza17/"
+              className="text-natural-700 hover:text-natural-900"
+              target="_blank"
+            >
               LinkedIn
             </a>
             <span>/</span>
-            <a href="#" className="text-natural-700 hover:text-natural-900">
+            <a
+              href="https://x.com/alisamadi__"
+              className="text-natural-700 hover:text-natural-900"
+              target="_blank"
+            >
               X
             </a>
           </div>
