@@ -20,6 +20,7 @@ export type Blogs = {
   body: MDX
   slug: string
   slugAsParams: string
+  folder: string
 }
 
 export type buildFast = {
@@ -33,6 +34,7 @@ export type buildFast = {
   body: MDX
   slug: string
   slugAsParams: string
+  folder: string
 }
 
 export type TwitterContents = {
@@ -41,10 +43,12 @@ export type TwitterContents = {
   _raw: Local.RawDocumentData
   type: 'TwitterContents'
   title: string
+  tech: string
   /** MDX file body */
   body: MDX
   slug: string
   slugAsParams: string
+  folder: string
 }
 
 export type Works = {
@@ -57,6 +61,7 @@ export type Works = {
   body: MDX
   slug: string
   slugAsParams: string
+  folder: string
 }  
 
 /** Nested types */

@@ -17,7 +17,8 @@
     },
     "type": "Blogs",
     "slug": "/blogs/eslint-setup",
-    "slugAsParams": "eslint-setup"
+    "slugAsParams": "eslint-setup",
+    "folder": "blogs"
   },
   {
     "title": "Lemon Squeezy API Endpoints",
@@ -37,7 +38,8 @@
     },
     "type": "Blogs",
     "slug": "/blogs/lemon-squeezy",
-    "slugAsParams": "lemon-squeezy"
+    "slugAsParams": "lemon-squeezy",
+    "folder": "blogs"
   },
   {
     "title": "Making Website",
@@ -57,6 +59,7 @@
     },
     "type": "Blogs",
     "slug": "/blogs/making-website",
-    "slugAsParams": "making-website"
+    "slugAsParams": "making-website",
+    "folder": "blogs"
   }
 ]

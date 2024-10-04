@@ -14,5 +14,6 @@
   },
   "type": "Works",
   "slug": "/works/10",
-  "slugAsParams": "10"
+  "slugAsParams": "10",
+  "folder": "works"
 }

@@ -16,5 +16,6 @@
   },
   "type": "Blogs",
   "slug": "/blogs/lemon-squeezy",
-  "slugAsParams": "lemon-squeezy"
+  "slugAsParams": "lemon-squeezy",
+  "folder": "blogs"
 }

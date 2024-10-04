@@ -15,7 +15,8 @@
     },
     "type": "Works",
     "slug": "/works/1",
-    "slugAsParams": "1"
+    "slugAsParams": "1",
+    "folder": "works"
   },
   {
     "title": "10",
@@ -33,7 +34,8 @@
     },
     "type": "Works",
     "slug": "/works/10",
-    "slugAsParams": "10"
+    "slugAsParams": "10",
+    "folder": "works"
   },
   {
     "title": "11",
@@ -51,7 +53,8 @@
     },
     "type": "Works",
     "slug": "/works/11",
-    "slugAsParams": "11"
+    "slugAsParams": "11",
+    "folder": "works"
   },
   {
     "title": "12",
@@ -69,7 +72,8 @@
     },
     "type": "Works",
     "slug": "/works/12",
-    "slugAsParams": "12"
+    "slugAsParams": "12",
+    "folder": "works"
   },
   {
     "title": "Works-13",
@@ -87,7 +91,8 @@
     },
     "type": "Works",
     "slug": "/works/13",
-    "slugAsParams": "13"
+    "slugAsParams": "13",
+    "folder": "works"
   },
   {
     "title": "2",
@@ -105,7 +110,8 @@
     },
     "type": "Works",
     "slug": "/works/2",
-    "slugAsParams": "2"
+    "slugAsParams": "2",
+    "folder": "works"
   },
   {
     "title": "3",
@@ -123,7 +129,8 @@
     },
     "type": "Works",
     "slug": "/works/3",
-    "slugAsParams": "3"
+    "slugAsParams": "3",
+    "folder": "works"
   },
   {
     "title": "4",
@@ -141,7 +148,8 @@
     },
     "type": "Works",
     "slug": "/works/4",
-    "slugAsParams": "4"
+    "slugAsParams": "4",
+    "folder": "works"
   },
   {
     "title": "5",
@@ -159,7 +167,8 @@
     },
     "type": "Works",
     "slug": "/works/5",
-    "slugAsParams": "5"
+    "slugAsParams": "5",
+    "folder": "works"
   },
   {
     "title": "6",
@@ -177,7 +186,8 @@
     },
     "type": "Works",
     "slug": "/works/6",
-    "slugAsParams": "6"
+    "slugAsParams": "6",
+    "folder": "works"
   },
   {
     "title": "7",
@@ -195,7 +205,8 @@
     },
     "type": "Works",
     "slug": "/works/7",
-    "slugAsParams": "7"
+    "slugAsParams": "7",
+    "folder": "works"
   },
   {
     "title": "8",
@@ -213,7 +224,8 @@
     },
     "type": "Works",
     "slug": "/works/8",
-    "slugAsParams": "8"
+    "slugAsParams": "8",
+    "folder": "works"
   },
   {
     "title": "9",
@@ -231,6 +243,7 @@
     },
     "type": "Works",
     "slug": "/works/9",
-    "slugAsParams": "9"
+    "slugAsParams": "9",
+    "folder": "works"
   }
 ]

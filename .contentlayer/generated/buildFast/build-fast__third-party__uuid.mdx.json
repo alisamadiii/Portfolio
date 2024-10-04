@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/third-party/uuid",
-  "slugAsParams": "third-party/uuid"
+  "slugAsParams": "third-party/uuid",
+  "folder": "third-party"
 }

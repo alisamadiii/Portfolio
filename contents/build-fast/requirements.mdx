@@ -5,20 +5,16 @@ order: "1"
 
 # Requirements
 
-## Next.js
+## UI Shadcn
 
 ```bash title="Terminal"
-pnpm create next-app@latest <name>
+pnpm dlx shadcn@latest init
 ```
 
+Use the following for downloading the components.
+
 ```bash title="Terminal"
-What is your project named? my-app
-Would you like to use TypeScript? Yes
-Would you like to use ESLint? Yes
-Would you like to use Tailwind CSS? Yes
-Would you like to use `src/` directory? Yes
-Would you like to use App Router? (recommended) Yes
-Would you like to customize the default import alias (@/*)? No
+pnpm dlx shadcn@latest add button
 ```
 
 ## cn
@@ -38,6 +34,8 @@ export function cn(...inputs: ClassValue[]): any {
   return twMerge(clsx(inputs));
 }
 ```
+
+> You will get it automatically by installing the `shadcn`.
 
 ## Giest Font - `Optional`
 
@@ -303,7 +301,6 @@ export default function RootLayout({
   );
 }
 ```
-
 
 ## Prettier
 

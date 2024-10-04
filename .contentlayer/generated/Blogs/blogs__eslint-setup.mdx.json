@@ -16,5 +16,6 @@
   },
   "type": "Blogs",
   "slug": "/blogs/eslint-setup",
-  "slugAsParams": "eslint-setup"
+  "slugAsParams": "eslint-setup",
+  "folder": "blogs"
 }

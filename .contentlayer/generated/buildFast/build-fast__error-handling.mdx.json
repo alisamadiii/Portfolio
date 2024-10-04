@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/error-handling",
-  "slugAsParams": "error-handling"
+  "slugAsParams": "error-handling",
+  "folder": "build-fast"
 }

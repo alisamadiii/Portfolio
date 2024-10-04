@@ -12,6 +12,13 @@ var computedFields = {
   slugAsParams: {
     type: "string",
     resolve: (doc) => doc._raw.flattenedPath.split("/").slice(1).join("/")
+  },
+  folder: {
+    type: "string",
+    resolve: (doc) => {
+      const pathParts = doc._raw.flattenedPath.split("/");
+      return pathParts.length > 1 ? pathParts[pathParts.length - 2] : null;
+    }
   }
 };
 var Blogs = defineDocumentType(() => ({
@@ -52,6 +59,10 @@ var TwitterContents = defineDocumentType(() => ({
   contentType: "mdx",
   fields: {
     title: {
+      type: "string",
+      required: true
+    },
+    tech: {
       type: "string",
       required: true
     }
@@ -104,4 +115,4 @@ var contentlayer_config_default = makeSource({
 export {
   contentlayer_config_default as default
 };
-//# sourceMappingURL=compiled-contentlayer-config-DU4B7RQS.mjs.map
+//# sourceMappingURL=compiled-contentlayer-config-QX7RG4LG.mjs.map

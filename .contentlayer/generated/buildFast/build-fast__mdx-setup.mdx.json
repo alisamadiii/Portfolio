@@ -15,5 +15,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/mdx-setup",
-  "slugAsParams": "mdx-setup"
+  "slugAsParams": "mdx-setup",
+  "folder": "build-fast"
 }

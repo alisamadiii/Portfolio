@@ -13,6 +13,13 @@ const computedFields = {
     type: "string",
     resolve: (doc) => doc._raw.flattenedPath.split("/").slice(1).join("/"),
   },
+  folder: {
+    type: "string",
+    resolve: (doc) => {
+      const pathParts = doc._raw.flattenedPath.split("/");
+      return pathParts.length > 1 ? pathParts[pathParts.length - 2] : null;
+    },
+  },
 };
 
 const Blogs = defineDocumentType(() => ({
@@ -55,6 +62,10 @@ const TwitterContents = defineDocumentType(() => ({
   contentType: "mdx",
   fields: {
     title: {
+      type: "string",
+      required: true,
+    },
+    tech: {
       type: "string",
       required: true,
     },

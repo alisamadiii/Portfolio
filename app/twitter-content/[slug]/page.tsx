@@ -8,6 +8,7 @@ import { Mdx } from "@/components/MDX/MDXContent.work";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 type Props = {
   params: { slug: string };
@@ -62,6 +63,9 @@ export default function DocsPage({ params: { slug } }: Props) {
             </span>{" "}
             <span>/</span>{" "}
             <span>{String(allTwitterContents.length).padStart(2, "0")}</span>
+            {findingGoal.tech && (
+              <Badge className="uppercase">{findingGoal.tech}</Badge>
+            )}
           </div>
           <div>
             <Button

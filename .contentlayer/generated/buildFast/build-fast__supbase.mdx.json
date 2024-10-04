@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/supbase",
-  "slugAsParams": "supbase"
+  "slugAsParams": "supbase",
+  "folder": "build-fast"
 }

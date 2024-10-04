@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/designs/charts",
-  "slugAsParams": "designs/charts"
+  "slugAsParams": "designs/charts",
+  "folder": "designs"
 }

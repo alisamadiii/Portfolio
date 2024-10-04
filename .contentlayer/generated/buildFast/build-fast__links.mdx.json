@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/links",
-  "slugAsParams": "links"
+  "slugAsParams": "links",
+  "folder": "build-fast"
 }

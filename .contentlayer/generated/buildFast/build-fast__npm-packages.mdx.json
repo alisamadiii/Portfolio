@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/npm-packages",
-  "slugAsParams": "npm-packages"
+  "slugAsParams": "npm-packages",
+  "folder": "build-fast"
 }

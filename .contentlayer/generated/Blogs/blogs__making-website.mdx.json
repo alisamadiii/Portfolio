@@ -16,5 +16,6 @@
   },
   "type": "Blogs",
   "slug": "/blogs/making-website",
-  "slugAsParams": "making-website"
+  "slugAsParams": "making-website",
+  "folder": "blogs"
 }

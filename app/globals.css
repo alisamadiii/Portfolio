@@ -54,6 +54,11 @@ body {
     --natural-700: 0 0% 36%;
     --natural-800: 0 0% 26%;
     --natural-900: 0 0% 14%;
+
+    --line-add: #2ea0432f;
+    --line-remove: #f8524944;
+
+    --code-opacity: 0.2;
   }
   .dark {
     --background: 0 0% 3.9%;

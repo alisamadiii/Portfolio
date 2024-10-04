@@ -130,7 +130,7 @@ const components = {
   ),
   li: ({ ...props }: React.HTMLAttributes<HTMLLIElement>) => (
     <li
-      className="text-muted-3 relative my-2 flex items-center before:absolute before:top-3 before:h-px before:w-[6.8px] before:-translate-x-5 before:bg-[#888]"
+      className="text-muted-3 relative my-1 before:absolute before:top-3 before:h-px before:w-[6.8px] before:-translate-x-5 before:bg-[#888]"
       {...props}
     />
   ),
@@ -142,7 +142,7 @@ const components = {
   ),
   blockquote: ({ ...props }: React.HTMLAttributes<HTMLElement>) => (
     <blockquote
-      className="border-wrapper rounded-md p-[22.4px] text-sm [&_code]:text-xs [&_li]:block [&_li]:text-sm [&_p]:my-0"
+      className="mx-auto max-w-xl rounded-md border border-natural-200 p-[22.4px] text-sm [&_code]:text-xs [&_li]:block [&_li]:text-sm [&_p]:my-0"
       {...props}
     ></blockquote>
   ),
@@ -249,21 +249,36 @@ const components = {
     return <pre {...props} />;
   },
   // END - Code Syntax Highlighter
-  a: ({ className, href, ...props }: React.ComponentProps<typeof Link>) => (
-    <Link
-      href={href}
-      target={
-        typeof href === "string" && href.startsWith("http")
-          ? "_blank"
-          : undefined
-      }
-      className={cn(
-        "hover:text-primary-hover font-medium text-primary",
-        className
-      )}
-      {...props}
-    />
-  ),
+  a: ({ className, href, ...props }: React.ComponentProps<typeof Link>) => {
+    const [isInsideHeading, setIsInsideHeading] = useState(false);
+    const linkRef = useRef<HTMLAnchorElement>(null);
+
+    useEffect(() => {
+      // Check if the link is inside any heading element (h1, h2, h3, etc.)
+      const parentHeading = linkRef.current?.closest?.(
+        "h1, h2, h3, h4, h5, h6"
+      );
+      setIsInsideHeading(!!parentHeading);
+    }, []);
+
+    return (
+      <Link
+        ref={linkRef}
+        href={href}
+        target={
+          typeof href === "string" && href.startsWith("http")
+            ? "_blank"
+            : undefined
+        }
+        className={cn(
+          "font-medium",
+          !isInsideHeading && "text-blue-600 underline hover:text-blue-400",
+          className
+        )}
+        {...props}
+      />
+    );
+  },
   img: ({ className, alt, ...props }: React.ComponentProps<typeof Image>) => (
     <Image
       className={cn(

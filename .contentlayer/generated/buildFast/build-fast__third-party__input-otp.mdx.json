@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/third-party/input-otp",
-  "slugAsParams": "third-party/input-otp"
+  "slugAsParams": "third-party/input-otp",
+  "folder": "third-party"
 }

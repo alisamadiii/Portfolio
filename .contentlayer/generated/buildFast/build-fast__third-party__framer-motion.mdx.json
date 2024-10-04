@@ -14,5 +14,6 @@
   },
   "type": "buildFast",
   "slug": "/build-fast/third-party/framer-motion",
-  "slugAsParams": "third-party/framer-motion"
+  "slugAsParams": "third-party/framer-motion",
+  "folder": "third-party"
 }
