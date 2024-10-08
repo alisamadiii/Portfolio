@@ -9,6 +9,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import FixedImage from "@/components/FixedImage";
 import { allBlogs } from "@/.contentlayer/generated";
+import Experience from "@/components/experience";
+
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Home() {
   const [isImage, setIsImage] = useState(false);
@@ -27,6 +30,14 @@ export default function Home() {
       <FixedImage isImage={isImage} isForm={isForm} setIsForm={setIsForm} />
       <div className="relative z-10 flex min-h-dvh w-full flex-col justify-center gap-4 bg-natural-200 px-6 md:items-center md:gap-10 md:rounded-b-[140px] md:px-0">
         <div className="absolute top-11 flex w-full max-w-7xl justify-end gap-4 px-6 max-md:left-0">
+          <div className="grow">
+            <Dialog>
+              <DialogTrigger>My experience</DialogTrigger>
+              <DialogContent className="h-full w-full max-w-3xl overflow-hidden px-0 py-0 text-natural-700 hover:text-natural-900 md:h-[95%] md:rounded-3xl">
+                <Experience />
+              </DialogContent>
+            </Dialog>
+          </div>
           <a
             href="https://www.linkedin.com/in/alireza17/"
             className="text-natural-700 hover:text-natural-900"
@@ -183,27 +194,29 @@ export default function Home() {
           Sometimes I write blogs as well
         </Text>
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {allBlogs.map((blog) => (
-            <Link
-              key={blog._id}
-              href={`/blog/${blog.slugAsParams}`}
-              className="overflow-hidden rounded-lg bg-neutral-100 shadow-custom-card duration-100 hover:bg-opacity-50"
-            >
-              <Image
-                src={blog.image}
-                alt={blog.title}
-                width={300}
-                height={300}
-                className="aspect-video w-full object-cover"
-              />
-              <div className="space-y-2 p-4 pb-6 text-start">
-                <Text element="h3" variant={"h3"}>
-                  {blog.title}
-                </Text>
-                <Text variant={"p2-r"}>{blog.description}</Text>
-              </div>
-            </Link>
-          ))}
+          {allBlogs
+            .filter((blog) => !blog.hidden)
+            .map((blog) => (
+              <Link
+                key={blog._id}
+                href={`/blog/${blog.slugAsParams}`}
+                className="overflow-hidden rounded-lg bg-neutral-100 shadow-custom-card duration-100 hover:bg-opacity-50"
+              >
+                <Image
+                  src={blog.image}
+                  alt={blog.title}
+                  width={300}
+                  height={300}
+                  className="aspect-video w-full object-cover"
+                />
+                <div className="space-y-2 p-4 pb-6 text-start">
+                  <Text element="h3" variant={"h3"}>
+                    {blog.title}
+                  </Text>
+                  <Text variant={"p2-r"}>{blog.description}</Text>
+                </div>
+              </Link>
+            ))}
         </div>
       </div>
 
@@ -228,7 +241,7 @@ export default function Home() {
         </Button>
 
         <div className="flex w-full max-w-7xl items-center justify-between border-t border-natural-300 pt-10">
-          <Text>© 2024 All rights reserved.</Text>
+          <Text>© {new Date().getFullYear()} All rights reserved.</Text>
           <div className="flex justify-end gap-4">
             <a
               href="https://www.linkedin.com/in/alireza17/"

@@ -39,6 +39,9 @@ const Blogs = defineDocumentType(() => ({
       type: "string",
       required: true,
     },
+    hidden: {
+      type: "boolean",
+    },
   },
   computedFields,
 }));

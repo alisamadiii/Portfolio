@@ -37,6 +37,9 @@ var Blogs = defineDocumentType(() => ({
     image: {
       type: "string",
       required: true
+    },
+    hidden: {
+      type: "boolean"
     }
   },
   computedFields
@@ -115,4 +118,4 @@ var contentlayer_config_default = makeSource({
 export {
   contentlayer_config_default as default
 };
-//# sourceMappingURL=compiled-contentlayer-config-QX7RG4LG.mjs.map
+//# sourceMappingURL=compiled-contentlayer-config-R5EPTL46.mjs.map

@@ -16,6 +16,7 @@ export type Blogs = {
   title: string
   description: string
   image: string
+  hidden?: boolean | undefined
   /** MDX file body */
   body: MDX
   slug: string

@@ -78,130 +78,32 @@
       "hasWarnings": false,
       "documentTypeName": "Blogs"
     },
-    "twitter-contents/1.mdx": {
+    "blogs/my-experience.mdx": {
       "document": {
-        "title": "1",
-        "tech": "css",
+        "title": "My Experience",
+        "description": "Since 2023, I’ve been working with my very first client on a complex and challenging project.",
+        "image": "/my-experience.png",
+        "hidden": true,
         "body": {
-          "raw": "\n<ComponentPreview name=\"twitter-contents-1\" />\n",
-          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var _=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),j=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var C=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=_((g,m)=>{m.exports=_jsx_runtime});var y={};j(y,{default:()=>p,frontmatter:()=>h});var i=C(f()),h={title:\"1\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-1\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
+          "raw": "\nSince 2023, I’ve been working with my very first client on a `complex` and `challenging` project. As the lead developer from the start, I was responsible for building the website and implementing several intricate features, including:\n\n- Trimming and cropping elements.\n- Managing stored data across the entire site.\n- Developing seamless animations between panels, which turned out fantastic.\n- Exporting edited videos, initially using FFmpeg before transitioning this task to the backend for improved performance.\n- Creating smooth page animations.\n- Ensuring responsive design on various pages.\n\nThis project allowed me to tackle new challenges, expand my skill set, and deliver high-quality results.\n\nThroughout the project, I encountered several key challenges, including:\n\n- Animations not working properly in Safari.\n- Issues with exporting images in Safari.\n- Perfecting the trimming tool for better functionality.\n- Frequent \"application errors\" that occasionally broke the website.\n- Finding the best approach for storing and managing data efficiently.\n- Getting 8 frames of a video + Converting video url to blob url\n- Creating a pixel-perfect website: One of the Figma design values was 12.31131px, which I initially implemented. However, my client suggested rounding it off for a cleaner look.\n\nThe project involved posting and scheduling content across various social media platforms, including Shorts, Stories, Photos, Long Videos, and Texts. My primary challenge was to establish an effective data flow for storing post details.\n\nI explored numerous approaches to reach our current solution. Initially, I attempted to use separate data structures for each post type, but I quickly found this method overwhelming and code-intensive. After several iterations, I discovered that a more efficient solution was to use a single data structure for the first four post types, while keeping a separate structure for text posts. This approach significantly streamlined the code and improved overall data management.\n\nI am grateful to be a member of this project, as it has provided me with numerous learning opportunities.\n\nI noticed that our backend team is using FastAPI, and I have experience working with APIs, including how to cache and utilize them effectively.\n",
+          "code": "var Component=(()=>{var p=Object.create;var o=Object.defineProperty;var g=Object.getOwnPropertyDescriptor;var u=Object.getOwnPropertyNames;var m=Object.getPrototypeOf,f=Object.prototype.hasOwnProperty;var v=(i,e)=>()=>(e||i((e={exports:{}}).exports,e),e.exports),w=(i,e)=>{for(var t in e)o(i,t,{get:e[t],enumerable:!0})},l=(i,e,t,a)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let r of u(e))!f.call(i,r)&&r!==t&&o(i,r,{get:()=>e[r],enumerable:!(a=g(e,r))||a.enumerable});return i};var y=(i,e,t)=>(t=i!=null?p(m(i)):{},l(e||!i||!i.__esModule?o(t,\"default\",{value:i,enumerable:!0}):t,i)),x=i=>l(o({},\"__esModule\",{value:!0}),i);var c=v((j,s)=>{s.exports=_jsx_runtime});var I={};w(I,{default:()=>h,frontmatter:()=>b});var n=y(c()),b={title:\"My Experience\",description:\"Since 2023, I\\u2019ve been working with my very first client on a complex and challenging project.\",image:\"/my-experience.png\",hidden:!0};function d(i){let e={code:\"code\",li:\"li\",p:\"p\",ul:\"ul\",...i.components};return(0,n.jsxs)(n.Fragment,{children:[(0,n.jsxs)(e.p,{children:[\"Since 2023, I\\u2019ve been working with my very first client on a \",(0,n.jsx)(e.code,{children:\"complex\"}),\" and \",(0,n.jsx)(e.code,{children:\"challenging\"}),\" project. As the lead developer from the start, I was responsible for building the website and implementing several intricate features, including:\"]}),`\n`,(0,n.jsxs)(e.ul,{children:[`\n`,(0,n.jsx)(e.li,{children:\"Trimming and cropping elements.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Managing stored data across the entire site.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Developing seamless animations between panels, which turned out fantastic.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Exporting edited videos, initially using FFmpeg before transitioning this task to the backend for improved performance.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Creating smooth page animations.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Ensuring responsive design on various pages.\"}),`\n`]}),`\n`,(0,n.jsx)(e.p,{children:\"This project allowed me to tackle new challenges, expand my skill set, and deliver high-quality results.\"}),`\n`,(0,n.jsx)(e.p,{children:\"Throughout the project, I encountered several key challenges, including:\"}),`\n`,(0,n.jsxs)(e.ul,{children:[`\n`,(0,n.jsx)(e.li,{children:\"Animations not working properly in Safari.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Issues with exporting images in Safari.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Perfecting the trimming tool for better functionality.\"}),`\n`,(0,n.jsx)(e.li,{children:'Frequent \"application errors\" that occasionally broke the website.'}),`\n`,(0,n.jsx)(e.li,{children:\"Finding the best approach for storing and managing data efficiently.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Getting 8 frames of a video + Converting video url to blob url\"}),`\n`,(0,n.jsx)(e.li,{children:\"Creating a pixel-perfect website: One of the Figma design values was 12.31131px, which I initially implemented. However, my client suggested rounding it off for a cleaner look.\"}),`\n`]}),`\n`,(0,n.jsx)(e.p,{children:\"The project involved posting and scheduling content across various social media platforms, including Shorts, Stories, Photos, Long Videos, and Texts. My primary challenge was to establish an effective data flow for storing post details.\"}),`\n`,(0,n.jsx)(e.p,{children:\"I explored numerous approaches to reach our current solution. Initially, I attempted to use separate data structures for each post type, but I quickly found this method overwhelming and code-intensive. After several iterations, I discovered that a more efficient solution was to use a single data structure for the first four post types, while keeping a separate structure for text posts. This approach significantly streamlined the code and improved overall data management.\"}),`\n`,(0,n.jsx)(e.p,{children:\"I am grateful to be a member of this project, as it has provided me with numerous learning opportunities.\"}),`\n`,(0,n.jsx)(e.p,{children:\"I noticed that our backend team is using FastAPI, and I have experience working with APIs, including how to cache and utilize them effectively.\"})]})}function h(i={}){let{wrapper:e}=i.components||{};return e?(0,n.jsx)(e,{...i,children:(0,n.jsx)(d,{...i})}):d(i)}return x(I);})();\n;return Component;"
         },
-        "_id": "twitter-contents/1.mdx",
+        "_id": "blogs/my-experience.mdx",
         "_raw": {
-          "sourceFilePath": "twitter-contents/1.mdx",
-          "sourceFileName": "1.mdx",
-          "sourceFileDir": "twitter-contents",
+          "sourceFilePath": "blogs/my-experience.mdx",
+          "sourceFileName": "my-experience.mdx",
+          "sourceFileDir": "blogs",
           "contentType": "mdx",
-          "flattenedPath": "twitter-contents/1"
+          "flattenedPath": "blogs/my-experience"
         },
-        "type": "TwitterContents",
-        "slug": "/twitter-contents/1",
-        "slugAsParams": "1",
-        "folder": "twitter-contents"
+        "type": "Blogs",
+        "slug": "/blogs/my-experience",
+        "slugAsParams": "my-experience",
+        "folder": "blogs"
       },
-      "documentHash": "1728062818364",
+      "documentHash": "1728348248041",
       "hasWarnings": false,
-      "documentTypeName": "TwitterContents"
-    },
-    "twitter-contents/2.mdx": {
-      "document": {
-        "title": "Twitter Contents 2",
-        "tech": "css",
-        "body": {
-          "raw": "\n<ComponentPreview name=\"twitter-contents-2\" />\n",
-          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var j=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=C((g,m)=>{m.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>h});var i=j(f()),h={title:\"Twitter Contents 2\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-2\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
-        },
-        "_id": "twitter-contents/2.mdx",
-        "_raw": {
-          "sourceFilePath": "twitter-contents/2.mdx",
-          "sourceFileName": "2.mdx",
-          "sourceFileDir": "twitter-contents",
-          "contentType": "mdx",
-          "flattenedPath": "twitter-contents/2"
-        },
-        "type": "TwitterContents",
-        "slug": "/twitter-contents/2",
-        "slugAsParams": "2",
-        "folder": "twitter-contents"
-      },
-      "documentHash": "1728062824064",
-      "hasWarnings": false,
-      "documentTypeName": "TwitterContents"
-    },
-    "twitter-contents/3.mdx": {
-      "document": {
-        "title": "Twitter Contents 3",
-        "tech": "css",
-        "body": {
-          "raw": "\n<ComponentPreview name=\"twitter-contents-3\" />\n",
-          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var j=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=C((g,m)=>{m.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>h});var i=j(f()),h={title:\"Twitter Contents 3\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-3\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
-        },
-        "_id": "twitter-contents/3.mdx",
-        "_raw": {
-          "sourceFilePath": "twitter-contents/3.mdx",
-          "sourceFileName": "3.mdx",
-          "sourceFileDir": "twitter-contents",
-          "contentType": "mdx",
-          "flattenedPath": "twitter-contents/3"
-        },
-        "type": "TwitterContents",
-        "slug": "/twitter-contents/3",
-        "slugAsParams": "3",
-        "folder": "twitter-contents"
-      },
-      "documentHash": "1728062826934",
-      "hasWarnings": false,
-      "documentTypeName": "TwitterContents"
-    },
-    "twitter-contents/4.mdx": {
-      "document": {
-        "title": "Twitter Contents 4",
-        "tech": "css",
-        "body": {
-          "raw": "\n<ComponentPreview name=\"twitter-contents-4\" />\n",
-          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var j=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=C((g,m)=>{m.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>h});var i=j(f()),h={title:\"Twitter Contents 4\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-4\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
-        },
-        "_id": "twitter-contents/4.mdx",
-        "_raw": {
-          "sourceFilePath": "twitter-contents/4.mdx",
-          "sourceFileName": "4.mdx",
-          "sourceFileDir": "twitter-contents",
-          "contentType": "mdx",
-          "flattenedPath": "twitter-contents/4"
-        },
-        "type": "TwitterContents",
-        "slug": "/twitter-contents/4",
-        "slugAsParams": "4",
-        "folder": "twitter-contents"
-      },
-      "documentHash": "1728062829454",
-      "hasWarnings": false,
-      "documentTypeName": "TwitterContents"
-    },
-    "twitter-contents/5.mdx": {
-      "document": {
-        "title": "Twitter Contents 5",
-        "tech": "html",
-        "body": {
-          "raw": "\n<ComponentPreview name=\"twitter-contents-5\" />\n\n### We can design it\n\n<Badge>Tailwind CSS</Badge>\n\n<Tabs id=\"design-tabs\">\n\n<Tab label=\"Design 1\">\n\n```html showLineNumbers title=\"index.html\"\n<details className=\"group\">\n  <summary\n    className=\"w-fit cursor-pointer rounded-lg border border-neutral-300 bg-neutral-200 p-3\"\n  >\n    System Requirements\n  </summary>\n  <p\n    className=\"mt-2 rounded-xl border border-natural-200 bg-natural-100 p-2 opacity-0 shadow-sm group-open:opacity-100 group-open:animate-in group-open:slide-in-from-bottom-10\"\n  >\n    Requires a computer running an operating system. The computer must have some\n    memory and ideally some kind of long-term storage. An input device as well\n    as some form of output device is recommended.\n  </p>\n</details>\n```\n\n<ComponentPreview name=\"twitter-contents-5-design-1\" />\n\n</Tab>\n\n<Tab label=\"Design 2\">\n\n```html showLineNumbers title=\"index.html\"\n<details className=\"group\">\n  <summary\n    className=\"w-fit cursor-pointer rounded-lg border border-blue-700 bg-blue-600 p-3 text-white duration-200 group-open:rounded-b-none\"\n  >\n    System Requirements\n  </summary>\n  <p\n    className=\"rounded-xl rounded-tl-none border border-natural-200 bg-natural-100 p-2 shadow-sm\"\n  >\n    Requires a computer running an operating system. The computer must have some\n    memory and ideally some kind of long-term storage. An input device as well\n    as some form of output device is recommended.\n  </p>\n</details>\n```\n\n<ComponentPreview name=\"twitter-contents-5-design-2\" />\n\n</Tab>\n\n</Tabs>\n",
-          "code": "var Component=(()=>{var o=Object.create;var h=Object.defineProperty;var m=Object.getOwnPropertyDescriptor;var u=Object.getOwnPropertyNames;var y=Object.getPrototypeOf,A=Object.prototype.hasOwnProperty;var D=(n,i)=>()=>(i||n((i={exports:{}}).exports,i),i.exports),F=(n,i)=>{for(var s in i)h(n,s,{get:i[s],enumerable:!0})},r=(n,i,s,t)=>{if(i&&typeof i==\"object\"||typeof i==\"function\")for(let a of u(i))!A.call(n,a)&&a!==s&&h(n,a,{get:()=>i[a],enumerable:!(t=m(i,a))||t.enumerable});return n};var C=(n,i,s)=>(s=n!=null?o(y(n)):{},r(i||!n||!n.__esModule?h(s,\"default\",{value:n,enumerable:!0}):s,n)),B=n=>r(h({},\"__esModule\",{value:!0}),n);var c=D((w,k)=>{k.exports=_jsx_runtime});var f={};F(f,{default:()=>g,frontmatter:()=>b});var e=C(c()),b={title:\"Twitter Contents 5\",tech:\"html\"};function p(n){let i={a:\"a\",code:\"code\",figcaption:\"figcaption\",figure:\"figure\",h3:\"h3\",pre:\"pre\",span:\"span\",...n.components},{Badge:s,ComponentPreview:t,Tab:a,Tabs:d}=i;return s||l(\"Badge\",!0),t||l(\"ComponentPreview\",!0),a||l(\"Tab\",!0),d||l(\"Tabs\",!0),(0,e.jsxs)(e.Fragment,{children:[(0,e.jsx)(t,{name:\"twitter-contents-5\"}),`\n`,(0,e.jsx)(i.h3,{id:\"we-can-design-it\",children:(0,e.jsx)(i.a,{className:\"subheading-anchor\",\"aria-label\":\"Link to section\",href:\"#we-can-design-it\",children:\"We can design it\"})}),`\n`,(0,e.jsx)(s,{children:\"Tailwind CSS\"}),`\n`,(0,e.jsxs)(d,{id:\"design-tabs\",children:[(0,e.jsxs)(a,{label:\"Design 1\",children:[(0,e.jsxs)(i.figure,{\"data-rehype-pretty-code-figure\":\"\",children:[(0,e.jsx)(i.figcaption,{\"data-rehype-pretty-code-title\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:\"index.html\"}),(0,e.jsx)(i.pre,{tabIndex:\"0\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:(0,e.jsxs)(i.code,{\"data-line-numbers\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",style:{display:\"grid\"},\"data-line-numbers-max-digits\":\"2\",children:[(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"<\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\" className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"group\"'}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"w-fit cursor-pointer rounded-lg border border-neutral-300 bg-neutral-200 p-3\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    System Requirements\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"mt-2 rounded-xl border border-natural-200 bg-natural-100 p-2 opacity-0 shadow-sm group-open:opacity-100 group-open:animate-in group-open:slide-in-from-bottom-10\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    Requires a computer running an operating system. The computer must have some\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    memory and ideally some kind of long-term storage. An input device as well\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    as some form of output device is recommended.\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"</\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]})]})})]}),(0,e.jsx)(t,{name:\"twitter-contents-5-design-1\"})]}),(0,e.jsxs)(a,{label:\"Design 2\",children:[(0,e.jsxs)(i.figure,{\"data-rehype-pretty-code-figure\":\"\",children:[(0,e.jsx)(i.figcaption,{\"data-rehype-pretty-code-title\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:\"index.html\"}),(0,e.jsx)(i.pre,{tabIndex:\"0\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:(0,e.jsxs)(i.code,{\"data-line-numbers\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",style:{display:\"grid\"},\"data-line-numbers-max-digits\":\"2\",children:[(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"<\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\" className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"group\"'}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"w-fit cursor-pointer rounded-lg border border-blue-700 bg-blue-600 p-3 text-white duration-200 group-open:rounded-b-none\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    System Requirements\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"rounded-xl rounded-tl-none border border-natural-200 bg-natural-100 p-2 shadow-sm\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    Requires a computer running an operating system. The computer must have some\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    memory and ideally some kind of long-term storage. An input device as well\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    as some form of output device is recommended.\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"</\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]})]})})]}),(0,e.jsx)(t,{name:\"twitter-contents-5-design-2\"})]})]})]})}function g(n={}){let{wrapper:i}=n.components||{};return i?(0,e.jsx)(i,{...n,children:(0,e.jsx)(p,{...n})}):p(n)}function l(n,i){throw new Error(\"Expected \"+(i?\"component\":\"object\")+\" `\"+n+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return B(f);})();\n;return Component;"
-        },
-        "_id": "twitter-contents/5.mdx",
-        "_raw": {
-          "sourceFilePath": "twitter-contents/5.mdx",
-          "sourceFileName": "5.mdx",
-          "sourceFileDir": "twitter-contents",
-          "contentType": "mdx",
-          "flattenedPath": "twitter-contents/5"
-        },
-        "type": "TwitterContents",
-        "slug": "/twitter-contents/5",
-        "slugAsParams": "5",
-        "folder": "twitter-contents"
-      },
-      "documentHash": "1728062834950",
-      "hasWarnings": false,
-      "documentTypeName": "TwitterContents"
+      "documentTypeName": "Blogs"
     },
     "build-fast/error-handling.mdx": {
       "document": {
@@ -372,6 +274,131 @@
       "documentHash": "1727916798996",
       "hasWarnings": false,
       "documentTypeName": "buildFast"
+    },
+    "twitter-contents/1.mdx": {
+      "document": {
+        "title": "1",
+        "tech": "css",
+        "body": {
+          "raw": "\n<ComponentPreview name=\"twitter-contents-1\" />\n",
+          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var _=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),j=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var C=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=_((g,m)=>{m.exports=_jsx_runtime});var y={};j(y,{default:()=>p,frontmatter:()=>h});var i=C(f()),h={title:\"1\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-1\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
+        },
+        "_id": "twitter-contents/1.mdx",
+        "_raw": {
+          "sourceFilePath": "twitter-contents/1.mdx",
+          "sourceFileName": "1.mdx",
+          "sourceFileDir": "twitter-contents",
+          "contentType": "mdx",
+          "flattenedPath": "twitter-contents/1"
+        },
+        "type": "TwitterContents",
+        "slug": "/twitter-contents/1",
+        "slugAsParams": "1",
+        "folder": "twitter-contents"
+      },
+      "documentHash": "1728062818364",
+      "hasWarnings": false,
+      "documentTypeName": "TwitterContents"
+    },
+    "twitter-contents/2.mdx": {
+      "document": {
+        "title": "Twitter Contents 2",
+        "tech": "css",
+        "body": {
+          "raw": "\n<ComponentPreview name=\"twitter-contents-2\" />\n",
+          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var j=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=C((g,m)=>{m.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>h});var i=j(f()),h={title:\"Twitter Contents 2\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-2\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
+        },
+        "_id": "twitter-contents/2.mdx",
+        "_raw": {
+          "sourceFilePath": "twitter-contents/2.mdx",
+          "sourceFileName": "2.mdx",
+          "sourceFileDir": "twitter-contents",
+          "contentType": "mdx",
+          "flattenedPath": "twitter-contents/2"
+        },
+        "type": "TwitterContents",
+        "slug": "/twitter-contents/2",
+        "slugAsParams": "2",
+        "folder": "twitter-contents"
+      },
+      "documentHash": "1728062824064",
+      "hasWarnings": false,
+      "documentTypeName": "TwitterContents"
+    },
+    "twitter-contents/3.mdx": {
+      "document": {
+        "title": "Twitter Contents 3",
+        "tech": "css",
+        "body": {
+          "raw": "\n<ComponentPreview name=\"twitter-contents-3\" />\n",
+          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var j=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=C((g,m)=>{m.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>h});var i=j(f()),h={title:\"Twitter Contents 3\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-3\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
+        },
+        "_id": "twitter-contents/3.mdx",
+        "_raw": {
+          "sourceFilePath": "twitter-contents/3.mdx",
+          "sourceFileName": "3.mdx",
+          "sourceFileDir": "twitter-contents",
+          "contentType": "mdx",
+          "flattenedPath": "twitter-contents/3"
+        },
+        "type": "TwitterContents",
+        "slug": "/twitter-contents/3",
+        "slugAsParams": "3",
+        "folder": "twitter-contents"
+      },
+      "documentHash": "1728062826934",
+      "hasWarnings": false,
+      "documentTypeName": "TwitterContents"
+    },
+    "twitter-contents/4.mdx": {
+      "document": {
+        "title": "Twitter Contents 4",
+        "tech": "css",
+        "body": {
+          "raw": "\n<ComponentPreview name=\"twitter-contents-4\" />\n",
+          "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},s=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var j=(t,e,n)=>(n=t!=null?x(w(t)):{},s(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),M=t=>s(r({},\"__esModule\",{value:!0}),t);var f=C((g,m)=>{m.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>h});var i=j(f()),h={title:\"Twitter Contents 4\",tech:\"css\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-4\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
+        },
+        "_id": "twitter-contents/4.mdx",
+        "_raw": {
+          "sourceFilePath": "twitter-contents/4.mdx",
+          "sourceFileName": "4.mdx",
+          "sourceFileDir": "twitter-contents",
+          "contentType": "mdx",
+          "flattenedPath": "twitter-contents/4"
+        },
+        "type": "TwitterContents",
+        "slug": "/twitter-contents/4",
+        "slugAsParams": "4",
+        "folder": "twitter-contents"
+      },
+      "documentHash": "1728062829454",
+      "hasWarnings": false,
+      "documentTypeName": "TwitterContents"
+    },
+    "twitter-contents/5.mdx": {
+      "document": {
+        "title": "Twitter Contents 5",
+        "tech": "html",
+        "body": {
+          "raw": "\n<ComponentPreview name=\"twitter-contents-5\" />\n\n### We can design it\n\n<Badge>Tailwind CSS</Badge>\n\n<Tabs id=\"design-tabs\">\n\n<Tab label=\"Design 1\">\n\n```html showLineNumbers title=\"index.html\"\n<details className=\"group\">\n  <summary\n    className=\"w-fit cursor-pointer rounded-lg border border-neutral-300 bg-neutral-200 p-3\"\n  >\n    System Requirements\n  </summary>\n  <p\n    className=\"mt-2 rounded-xl border border-natural-200 bg-natural-100 p-2 opacity-0 shadow-sm group-open:opacity-100 group-open:animate-in group-open:slide-in-from-bottom-10\"\n  >\n    Requires a computer running an operating system. The computer must have some\n    memory and ideally some kind of long-term storage. An input device as well\n    as some form of output device is recommended.\n  </p>\n</details>\n```\n\n<ComponentPreview name=\"twitter-contents-5-design-1\" />\n\n</Tab>\n\n<Tab label=\"Design 2\">\n\n```html showLineNumbers title=\"index.html\"\n<details className=\"group\">\n  <summary\n    className=\"w-fit cursor-pointer rounded-lg border border-blue-700 bg-blue-600 p-3 text-white duration-200 group-open:rounded-b-none\"\n  >\n    System Requirements\n  </summary>\n  <p\n    className=\"rounded-xl rounded-tl-none border border-natural-200 bg-natural-100 p-2 shadow-sm\"\n  >\n    Requires a computer running an operating system. The computer must have some\n    memory and ideally some kind of long-term storage. An input device as well\n    as some form of output device is recommended.\n  </p>\n</details>\n```\n\n<ComponentPreview name=\"twitter-contents-5-design-2\" />\n\n</Tab>\n\n</Tabs>\n",
+          "code": "var Component=(()=>{var o=Object.create;var h=Object.defineProperty;var m=Object.getOwnPropertyDescriptor;var u=Object.getOwnPropertyNames;var y=Object.getPrototypeOf,A=Object.prototype.hasOwnProperty;var D=(n,i)=>()=>(i||n((i={exports:{}}).exports,i),i.exports),F=(n,i)=>{for(var s in i)h(n,s,{get:i[s],enumerable:!0})},r=(n,i,s,t)=>{if(i&&typeof i==\"object\"||typeof i==\"function\")for(let a of u(i))!A.call(n,a)&&a!==s&&h(n,a,{get:()=>i[a],enumerable:!(t=m(i,a))||t.enumerable});return n};var C=(n,i,s)=>(s=n!=null?o(y(n)):{},r(i||!n||!n.__esModule?h(s,\"default\",{value:n,enumerable:!0}):s,n)),B=n=>r(h({},\"__esModule\",{value:!0}),n);var c=D((w,k)=>{k.exports=_jsx_runtime});var f={};F(f,{default:()=>g,frontmatter:()=>b});var e=C(c()),b={title:\"Twitter Contents 5\",tech:\"html\"};function p(n){let i={a:\"a\",code:\"code\",figcaption:\"figcaption\",figure:\"figure\",h3:\"h3\",pre:\"pre\",span:\"span\",...n.components},{Badge:s,ComponentPreview:t,Tab:a,Tabs:d}=i;return s||l(\"Badge\",!0),t||l(\"ComponentPreview\",!0),a||l(\"Tab\",!0),d||l(\"Tabs\",!0),(0,e.jsxs)(e.Fragment,{children:[(0,e.jsx)(t,{name:\"twitter-contents-5\"}),`\n`,(0,e.jsx)(i.h3,{id:\"we-can-design-it\",children:(0,e.jsx)(i.a,{className:\"subheading-anchor\",\"aria-label\":\"Link to section\",href:\"#we-can-design-it\",children:\"We can design it\"})}),`\n`,(0,e.jsx)(s,{children:\"Tailwind CSS\"}),`\n`,(0,e.jsxs)(d,{id:\"design-tabs\",children:[(0,e.jsxs)(a,{label:\"Design 1\",children:[(0,e.jsxs)(i.figure,{\"data-rehype-pretty-code-figure\":\"\",children:[(0,e.jsx)(i.figcaption,{\"data-rehype-pretty-code-title\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:\"index.html\"}),(0,e.jsx)(i.pre,{tabIndex:\"0\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:(0,e.jsxs)(i.code,{\"data-line-numbers\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",style:{display:\"grid\"},\"data-line-numbers-max-digits\":\"2\",children:[(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"<\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\" className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"group\"'}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"w-fit cursor-pointer rounded-lg border border-neutral-300 bg-neutral-200 p-3\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    System Requirements\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"mt-2 rounded-xl border border-natural-200 bg-natural-100 p-2 opacity-0 shadow-sm group-open:opacity-100 group-open:animate-in group-open:slide-in-from-bottom-10\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    Requires a computer running an operating system. The computer must have some\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    memory and ideally some kind of long-term storage. An input device as well\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    as some form of output device is recommended.\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"</\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]})]})})]}),(0,e.jsx)(t,{name:\"twitter-contents-5-design-1\"})]}),(0,e.jsxs)(a,{label:\"Design 2\",children:[(0,e.jsxs)(i.figure,{\"data-rehype-pretty-code-figure\":\"\",children:[(0,e.jsx)(i.figcaption,{\"data-rehype-pretty-code-title\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:\"index.html\"}),(0,e.jsx)(i.pre,{tabIndex:\"0\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",children:(0,e.jsxs)(i.code,{\"data-line-numbers\":\"\",\"data-language\":\"html\",\"data-theme\":\"github-light-default github-dark-dimmed\",style:{display:\"grid\"},\"data-line-numbers-max-digits\":\"2\",children:[(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"<\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\" className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"group\"'}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"w-fit cursor-pointer rounded-lg border border-blue-700 bg-blue-600 p-3 text-white duration-200 group-open:rounded-b-none\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    System Requirements\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"summary\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  <\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0550AE\",\"--shiki-dark\":\"#6CB6FF\"},children:\"    className\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"=\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#0A3069\",\"--shiki-dark\":\"#96D0FF\"},children:'\"rounded-xl rounded-tl-none border border-natural-200 bg-natural-100 p-2 shadow-sm\"'})]}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  >\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    Requires a computer running an operating system. The computer must have some\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    memory and ideally some kind of long-term storage. An input device as well\"})}),`\n`,(0,e.jsx)(i.span,{\"data-line\":\"\",children:(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"    as some form of output device is recommended.\"})}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"  </\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"p\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]}),`\n`,(0,e.jsxs)(i.span,{\"data-line\":\"\",children:[(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\"</\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#116329\",\"--shiki-dark\":\"#8DDB8C\"},children:\"details\"}),(0,e.jsx)(i.span,{style:{\"--shiki-light\":\"#1F2328\",\"--shiki-dark\":\"#ADBAC7\"},children:\">\"})]})]})})]}),(0,e.jsx)(t,{name:\"twitter-contents-5-design-2\"})]})]})]})}function g(n={}){let{wrapper:i}=n.components||{};return i?(0,e.jsx)(i,{...n,children:(0,e.jsx)(p,{...n})}):p(n)}function l(n,i){throw new Error(\"Expected \"+(i?\"component\":\"object\")+\" `\"+n+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return B(f);})();\n;return Component;"
+        },
+        "_id": "twitter-contents/5.mdx",
+        "_raw": {
+          "sourceFilePath": "twitter-contents/5.mdx",
+          "sourceFileName": "5.mdx",
+          "sourceFileDir": "twitter-contents",
+          "contentType": "mdx",
+          "flattenedPath": "twitter-contents/5"
+        },
+        "type": "TwitterContents",
+        "slug": "/twitter-contents/5",
+        "slugAsParams": "5",
+        "folder": "twitter-contents"
+      },
+      "documentHash": "1728062834950",
+      "hasWarnings": false,
+      "documentTypeName": "TwitterContents"
     },
     "works/1.mdx": {
       "document": {
@@ -780,32 +807,6 @@
       "documentHash": "1728066345101",
       "hasWarnings": false,
       "documentTypeName": "buildFast"
-    },
-    "blogs/my-experience.mdx": {
-      "document": {
-        "title": "My Experience",
-        "description": "Since 2023, I’ve been working with my very first client on a complex and challenging project.",
-        "image": "/my-experience.png",
-        "body": {
-          "raw": "\nSince 2023, I’ve been working with my very first client on a complex and challenging project. As the lead developer from the start, I was responsible for building the website and implementing several intricate features, including:\n\n- Trimming and cropping elements.\n- Managing stored data across the entire site.\n- Developing seamless animations between panels, which turned out fantastic.\n- Exporting edited videos, initially using FFmpeg before transitioning this task to the backend for improved performance.\n- Creating smooth page animations.\n- Ensuring responsive design on various pages.\n\nThis project allowed me to tackle new challenges, expand my skill set, and deliver high-quality results.\n\nThroughout the project, I encountered several key challenges, including:\n\n- Animations not working properly in Safari.\n- Issues with exporting images in Safari.\n- Perfecting the trimming tool for better functionality.\n- Frequent \"application errors\" that occasionally broke the website.\n- Finding the best approach for storing and managing data efficiently.\n- Getting 8 frames of a video + Converting video url to blob url\n- Creating a pixel-perfect website: One of the Figma design values was 12.31131px, which I initially implemented. However, my client suggested rounding it off for a cleaner look.\n\nThe project involved posting and scheduling content across various social media platforms, including Shorts, Stories, Photos, Long Videos, and Texts. My primary challenge was to establish an effective data flow for storing post details.\n\nI explored numerous approaches to reach our current solution. Initially, I attempted to use separate data structures for each post type, but I quickly found this method overwhelming and code-intensive. After several iterations, I discovered that a more efficient solution was to use a single data structure for the first four post types, while keeping a separate structure for text posts. This approach significantly streamlined the code and improved overall data management.\n\nI am grateful to be a member of this project, as it has provided me with numerous learning opportunities.\n\nI noticed that your backend team is using FastAPI, and I have experience working with APIs, including how to cache and utilize them effectively.\n",
-          "code": "var Component=(()=>{var p=Object.create;var o=Object.defineProperty;var g=Object.getOwnPropertyDescriptor;var u=Object.getOwnPropertyNames;var m=Object.getPrototypeOf,f=Object.prototype.hasOwnProperty;var v=(i,e)=>()=>(e||i((e={exports:{}}).exports,e),e.exports),w=(i,e)=>{for(var t in e)o(i,t,{get:e[t],enumerable:!0})},s=(i,e,t,a)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let r of u(e))!f.call(i,r)&&r!==t&&o(i,r,{get:()=>e[r],enumerable:!(a=g(e,r))||a.enumerable});return i};var y=(i,e,t)=>(t=i!=null?p(m(i)):{},s(e||!i||!i.__esModule?o(t,\"default\",{value:i,enumerable:!0}):t,i)),x=i=>s(o({},\"__esModule\",{value:!0}),i);var c=v((j,l)=>{l.exports=_jsx_runtime});var I={};w(I,{default:()=>h,frontmatter:()=>b});var n=y(c()),b={title:\"My Experience\",description:\"Since 2023, I\\u2019ve been working with my very first client on a complex and challenging project.\",image:\"/my-experience.png\"};function d(i){let e={li:\"li\",p:\"p\",ul:\"ul\",...i.components};return(0,n.jsxs)(n.Fragment,{children:[(0,n.jsx)(e.p,{children:\"Since 2023, I\\u2019ve been working with my very first client on a complex and challenging project. As the lead developer from the start, I was responsible for building the website and implementing several intricate features, including:\"}),`\n`,(0,n.jsxs)(e.ul,{children:[`\n`,(0,n.jsx)(e.li,{children:\"Trimming and cropping elements.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Managing stored data across the entire site.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Developing seamless animations between panels, which turned out fantastic.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Exporting edited videos, initially using FFmpeg before transitioning this task to the backend for improved performance.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Creating smooth page animations.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Ensuring responsive design on various pages.\"}),`\n`]}),`\n`,(0,n.jsx)(e.p,{children:\"This project allowed me to tackle new challenges, expand my skill set, and deliver high-quality results.\"}),`\n`,(0,n.jsx)(e.p,{children:\"Throughout the project, I encountered several key challenges, including:\"}),`\n`,(0,n.jsxs)(e.ul,{children:[`\n`,(0,n.jsx)(e.li,{children:\"Animations not working properly in Safari.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Issues with exporting images in Safari.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Perfecting the trimming tool for better functionality.\"}),`\n`,(0,n.jsx)(e.li,{children:'Frequent \"application errors\" that occasionally broke the website.'}),`\n`,(0,n.jsx)(e.li,{children:\"Finding the best approach for storing and managing data efficiently.\"}),`\n`,(0,n.jsx)(e.li,{children:\"Getting 8 frames of a video + Converting video url to blob url\"}),`\n`,(0,n.jsx)(e.li,{children:\"Creating a pixel-perfect website: One of the Figma design values was 12.31131px, which I initially implemented. However, my client suggested rounding it off for a cleaner look.\"}),`\n`]}),`\n`,(0,n.jsx)(e.p,{children:\"The project involved posting and scheduling content across various social media platforms, including Shorts, Stories, Photos, Long Videos, and Texts. My primary challenge was to establish an effective data flow for storing post details.\"}),`\n`,(0,n.jsx)(e.p,{children:\"I explored numerous approaches to reach our current solution. Initially, I attempted to use separate data structures for each post type, but I quickly found this method overwhelming and code-intensive. After several iterations, I discovered that a more efficient solution was to use a single data structure for the first four post types, while keeping a separate structure for text posts. This approach significantly streamlined the code and improved overall data management.\"}),`\n`,(0,n.jsx)(e.p,{children:\"I am grateful to be a member of this project, as it has provided me with numerous learning opportunities.\"}),`\n`,(0,n.jsx)(e.p,{children:\"I noticed that your backend team is using FastAPI, and I have experience working with APIs, including how to cache and utilize them effectively.\"})]})}function h(i={}){let{wrapper:e}=i.components||{};return e?(0,n.jsx)(e,{...i,children:(0,n.jsx)(d,{...i})}):d(i)}return x(I);})();\n;return Component;"
-        },
-        "_id": "blogs/my-experience.mdx",
-        "_raw": {
-          "sourceFilePath": "blogs/my-experience.mdx",
-          "sourceFileName": "my-experience.mdx",
-          "sourceFileDir": "blogs",
-          "contentType": "mdx",
-          "flattenedPath": "blogs/my-experience"
-        },
-        "type": "Blogs",
-        "slug": "/blogs/my-experience",
-        "slugAsParams": "my-experience",
-        "folder": "blogs"
-      },
-      "documentHash": "1728347288451",
-      "hasWarnings": false,
-      "documentTypeName": "Blogs"
     }
   }
 }
