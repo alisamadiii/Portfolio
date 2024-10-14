@@ -1,0 +1,20 @@
+{
+  "title": "Twitter Contents 7",
+  "tech": "html",
+  "body": {
+    "raw": "\n<ComponentPreview name=\"twitter-contents-7\" />\n",
+    "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var C=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),_=(t,e)=>{for(var n in e)r(t,n,{get:e[n],enumerable:!0})},m=(t,e,n,c)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let o of d(e))!l.call(t,o)&&o!==n&&r(t,o,{get:()=>e[o],enumerable:!(c=a(e,o))||c.enumerable});return t};var h=(t,e,n)=>(n=t!=null?x(w(t)):{},m(e||!t||!t.__esModule?r(n,\"default\",{value:t,enumerable:!0}):n,t)),j=t=>m(r({},\"__esModule\",{value:!0}),t);var f=C((g,s)=>{s.exports=_jsx_runtime});var y={};_(y,{default:()=>p,frontmatter:()=>M});var i=h(f()),M={title:\"Twitter Contents 7\",tech:\"html\"};function u(t){let{ComponentPreview:e}=t.components||{};return e||v(\"ComponentPreview\",!0),(0,i.jsx)(e,{name:\"twitter-contents-7\"})}function p(t={}){let{wrapper:e}=t.components||{};return e?(0,i.jsx)(e,{...t,children:(0,i.jsx)(u,{...t})}):u(t)}function v(t,e){throw new Error(\"Expected \"+(e?\"component\":\"object\")+\" `\"+t+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return j(y);})();\n;return Component;"
+  },
+  "_id": "twitter-contents/7.mdx",
+  "_raw": {
+    "sourceFilePath": "twitter-contents/7.mdx",
+    "sourceFileName": "7.mdx",
+    "sourceFileDir": "twitter-contents",
+    "contentType": "mdx",
+    "flattenedPath": "twitter-contents/7"
+  },
+  "type": "TwitterContents",
+  "slug": "/twitter-contents/7",
+  "slugAsParams": "7",
+  "folder": "twitter-contents"
+}

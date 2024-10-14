@@ -7,27 +7,25 @@ import { useRef, useState, useEffect } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import FixedImage from "@/components/FixedImage";
+import FixedImage, { useSkillStore } from "@/components/FixedImage";
 import { allBlogs } from "@/.contentlayer/generated";
 import Experience from "@/components/experience";
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Home() {
-  const [isImage, setIsImage] = useState(false);
-  const [isForm, setIsForm] = useState(false);
-
   const imageRef = useRef<HTMLDivElement>(null);
 
   const isInView = useInView(imageRef);
 
+  const { setIsVisible, setExpand } = useSkillStore();
+
   useEffect(() => {
-    setIsImage(!isInView);
+    setIsVisible(!isInView);
   }, [isInView]);
 
   return (
     <div className="bg-natural-200">
-      <FixedImage isImage={isImage} isForm={isForm} setIsForm={setIsForm} />
       <div className="relative z-10 flex min-h-dvh w-full flex-col justify-center gap-4 bg-natural-200 px-6 md:items-center md:gap-10 md:rounded-b-[140px] md:px-0">
         <div className="absolute top-11 flex w-full max-w-7xl justify-end gap-4 px-6 max-md:left-0">
           <div className="grow">
@@ -236,7 +234,7 @@ export default function Home() {
           </Text>
         </div>
 
-        <Button size={"lg"} className="text-lg" onClick={() => setIsForm(true)}>
+        <Button size={"lg"} className="text-lg" onClick={() => setExpand(true)}>
           Hire me!
         </Button>
 

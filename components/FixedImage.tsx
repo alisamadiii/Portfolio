@@ -1,26 +1,30 @@
+"use client";
+
 import Image from "next/image";
 import React, { FormEvent, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { create } from "zustand";
 
 import { Text } from "./ui/text";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
 
-type Props = {
-  isImage?: boolean;
-  isForm: boolean;
-  setIsForm: (isForm: boolean) => void;
-};
-
-export default function FixedImage({
-  isImage = true,
-  isForm,
-  setIsForm,
-}: Props) {
+export default function FixedImage() {
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
+
+  const { isVisible, setIsVisible, expand, setExpand } = useSkillStore();
+
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setIsVisible(true);
+    }
+  }, [pathname]);
 
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,15 +57,15 @@ export default function FixedImage({
 
   return (
     <AnimatePresence>
-      {isImage ? (
+      {isVisible ? (
         <motion.div
           exit={{ opacity: 0, transform: "translateY(40px)" }}
           className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2"
         >
           <AnimatePresence>
-            {isForm ? (
+            {expand ? (
               <motion.div
-                key={`${isForm.toString()}-form`}
+                key={`${expand.toString()}-form`}
                 layoutId="form-wrapper"
                 className="relative mb-4 w-72 overflow-hidden bg-natural-100 p-4 shadow-custom-card"
                 style={{ borderRadius: 12 }}
@@ -120,7 +124,7 @@ export default function FixedImage({
                 )}
               </motion.div>
             ) : (
-              <MySkill key={`${isForm.toString()}-skill`} />
+              <MySkill key={`${expand.toString()}-skill`} />
             )}
           </AnimatePresence>
           <motion.button
@@ -128,11 +132,11 @@ export default function FixedImage({
             animate={{ opacity: 1, transform: "translateY(0px)" }}
             transition={{ duration: 0.2 }}
             className="relative z-20 h-12 w-12 rounded-full"
-            onClick={() => setIsForm(!isForm)}
+            onClick={() => setExpand(!expand)}
           >
             <motion.div
               layoutId="form-wrapper"
-              className="absolute -inset-0.5 bg-natural-100"
+              className="absolute -inset-0.5 bg-natural-200"
               style={{ borderRadius: 40 }}
             ></motion.div>
             <Image
@@ -149,9 +153,9 @@ export default function FixedImage({
 }
 
 const mySkills = [
-  "I know how to make animation.",
-  "I use Zustand for global management.",
-  "I use Framer-Motion for animating things.",
+  "Hire me - I know how to make animation.",
+  "Hire me - I use Zustand for global management.",
+  "Hire me - I use Framer-Motion for animating things.",
 ];
 
 function MySkill() {
@@ -193,3 +197,17 @@ function MySkill() {
     </motion.div>
   );
 }
+
+interface SkillState {
+  isVisible: boolean;
+  setIsVisible: (visible: boolean) => void;
+  expand: boolean;
+  setExpand: (expand: boolean) => void;
+}
+
+export const useSkillStore = create<SkillState>((set) => ({
+  isVisible: true,
+  setIsVisible: (visible) => set({ isVisible: visible }),
+  expand: false,
+  setExpand: (expand) => set({ expand }),
+}));

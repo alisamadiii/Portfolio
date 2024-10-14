@@ -276,7 +276,11 @@ const components = {
   File,
   CodePreview,
   ComponentPreview,
-  Badge,
+  Badge: ({ children, ...props }: React.ComponentProps<typeof Badge>) => (
+    <div className="mx-auto max-w-3xl">
+      <Badge {...props}>{children}</Badge>
+    </div>
+  ),
 };
 
 export function Mdx({ code }: { code: string }) {

@@ -100,6 +100,26 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
+  "twitter-contents-6-block-elements": {
+    name: "twitter-contents-6-block-elements",
+    component: dynamic(
+      () => import("@/preview/twitter-contents/6/block-elements.tsx"),
+      { ssr: false }
+    ),
+  },
+  "twitter-contents-6-inline-elements": {
+    name: "twitter-contents-6-inline-elements",
+    component: dynamic(
+      () => import("@/preview/twitter-contents/6/inline-elements.tsx"),
+      { ssr: false }
+    ),
+  },
+  "twitter-contents-7": {
+    name: "twitter-contents-7",
+    component: dynamic(() => import("@/preview/twitter-contents/7.tsx"), {
+      ssr: false,
+    }),
+  },
   "works-1": {
     name: "works-1",
     component: dynamic(() => import("@/preview/works/1.tsx"), { ssr: false }),

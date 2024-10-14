@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Inter } from "next/font/google";
 import "./globals.css";
+import FixedImage from "@/components/FixedImage";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -24,6 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lora.variable} ${inter.variable} antialiased`}>
+        <FixedImage />
+
         {children}
       </body>
     </html>
