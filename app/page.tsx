@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import FixedImage, { useSkillStore } from "@/components/FixedImage";
+import { useSkillStore } from "@/components/FixedImage";
 import { allBlogs } from "@/.contentlayer/generated";
 import Experience from "@/components/experience";
 
