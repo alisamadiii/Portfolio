@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, Suspense } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -19,9 +19,6 @@ export default function Home() {
 
   const isInView = useInView(imageRef);
 
-  const router = useRouter();
-  const searchParams = useSearchParams().get("experience");
-
   const { setIsVisible, setExpand } = useSkillStore();
 
   useEffect(() => {
@@ -33,21 +30,9 @@ export default function Home() {
       <div className="relative z-10 flex min-h-dvh w-full flex-col justify-center gap-4 bg-natural-200 px-6 md:items-center md:gap-10 md:rounded-b-[140px] md:px-0">
         <div className="absolute top-11 flex w-full max-w-7xl justify-end gap-4 px-6 max-md:left-0">
           <div className="grow">
-            <Dialog
-              onOpenChange={(open) => {
-                if (!open) {
-                  router.push("/");
-                } else {
-                  router.push("/?experience=true");
-                }
-              }}
-              defaultOpen={searchParams === "true"}
-            >
-              <DialogTrigger>My experience</DialogTrigger>
-              <DialogContent className="h-full w-full max-w-3xl overflow-hidden px-0 py-0 text-natural-700 hover:text-natural-900 md:h-[95%] md:rounded-3xl">
-                <Experience />
-              </DialogContent>
-            </Dialog>
+            <Suspense>
+              <ExperienceContent />
+            </Suspense>
           </div>
           <a
             href="https://www.linkedin.com/in/alireza17/"
@@ -273,5 +258,28 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ExperienceContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams().get("experience");
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) {
+          router.push("/");
+        } else {
+          router.push("/?experience=true");
+        }
+      }}
+      defaultOpen={searchParams === "true"}
+    >
+      <DialogTrigger>My experience</DialogTrigger>
+      <DialogContent className="h-full w-full max-w-3xl overflow-hidden px-0 py-0 text-natural-700 hover:text-natural-900 md:h-[95%] md:rounded-3xl">
+        <Experience />
+      </DialogContent>
+    </Dialog>
   );
 }
