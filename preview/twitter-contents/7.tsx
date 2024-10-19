@@ -3,13 +3,6 @@ import React, { useState } from "react";
 import * as Element from "@/components/TwitterContentsElement";
 import SyntaxHighlighter from "@/components/SyntaxHighlighter";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import ColorPicker from "@/components/ColorPicker";
 
 export default function TwitterContents2() {
