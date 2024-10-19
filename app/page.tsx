@@ -12,11 +12,15 @@ import { allBlogs } from "@/.contentlayer/generated";
 import Experience from "@/components/experience";
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
   const imageRef = useRef<HTMLDivElement>(null);
 
   const isInView = useInView(imageRef);
+
+  const router = useRouter();
+  const searchParams = useSearchParams().get("experience");
 
   const { setIsVisible, setExpand } = useSkillStore();
 
@@ -29,7 +33,16 @@ export default function Home() {
       <div className="relative z-10 flex min-h-dvh w-full flex-col justify-center gap-4 bg-natural-200 px-6 md:items-center md:gap-10 md:rounded-b-[140px] md:px-0">
         <div className="absolute top-11 flex w-full max-w-7xl justify-end gap-4 px-6 max-md:left-0">
           <div className="grow">
-            <Dialog>
+            <Dialog
+              onOpenChange={(open) => {
+                if (!open) {
+                  router.push("/");
+                } else {
+                  router.push("/?experience=true");
+                }
+              }}
+              defaultOpen={searchParams === "true"}
+            >
               <DialogTrigger>My experience</DialogTrigger>
               <DialogContent className="h-full w-full max-w-3xl overflow-hidden px-0 py-0 text-natural-700 hover:text-natural-900 md:h-[95%] md:rounded-3xl">
                 <Experience />
