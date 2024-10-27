@@ -7,6 +7,8 @@ import works__12Mdx from './works__12.mdx.json' with { type: 'json' }
 import works__13Mdx from './works__13.mdx.json' with { type: 'json' }
 import works__14Mdx from './works__14.mdx.json' with { type: 'json' }
 import works__15Mdx from './works__15.mdx.json' with { type: 'json' }
+import works__16Mdx from './works__16.mdx.json' with { type: 'json' }
+import works__17Mdx from './works__17.mdx.json' with { type: 'json' }
 import works__2Mdx from './works__2.mdx.json' with { type: 'json' }
 import works__3Mdx from './works__3.mdx.json' with { type: 'json' }
 import works__4Mdx from './works__4.mdx.json' with { type: 'json' }
@@ -16,4 +18,4 @@ import works__7Mdx from './works__7.mdx.json' with { type: 'json' }
 import works__8Mdx from './works__8.mdx.json' with { type: 'json' }
 import works__9Mdx from './works__9.mdx.json' with { type: 'json' }
 
-export const allWorks = [works__1Mdx, works__10Mdx, works__11Mdx, works__12Mdx, works__13Mdx, works__14Mdx, works__15Mdx, works__2Mdx, works__3Mdx, works__4Mdx, works__5Mdx, works__6Mdx, works__7Mdx, works__8Mdx, works__9Mdx]
+export const allWorks = [works__1Mdx, works__10Mdx, works__11Mdx, works__12Mdx, works__13Mdx, works__14Mdx, works__15Mdx, works__16Mdx, works__17Mdx, works__2Mdx, works__3Mdx, works__4Mdx, works__5Mdx, works__6Mdx, works__7Mdx, works__8Mdx, works__9Mdx]

@@ -80,6 +80,7 @@ const config: Config = {
       animation: {
         "element-in": "element-in .4s ease-in-out forwards",
         spotlight: "spotlight .7s .1s ease-in-out forwards",
+        progress: "progress 4s linear forwards",
       },
       keyframes: {
         "element-in": {
@@ -102,6 +103,14 @@ const config: Config = {
           "100%": {
             // transform: "translate(96px, 20px)",
             opacity: "1",
+          },
+        },
+        progress: {
+          "0%": {
+            transform: "translateX(-100%)",
+          },
+          "100%": {
+            transform: "translateX(0)",
           },
         },
       },

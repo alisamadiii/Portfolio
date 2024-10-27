@@ -3,6 +3,8 @@ import { Lora, Inter } from "next/font/google";
 import "./globals.css";
 import FixedImage from "@/components/FixedImage";
 
+import { Toaster } from "@/components/ui/sonner";
+
 const lora = Lora({
   subsets: ["latin"],
   variable: "--font-lora",
@@ -25,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lora.variable} ${inter.variable} antialiased`}>
-        <FixedImage />
+        {/* <FixedImage /> */}
 
         {children}
+
+        <Toaster position="bottom-center" />
       </body>
     </html>
   );

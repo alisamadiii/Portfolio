@@ -27,7 +27,10 @@ export default function IphoneSimulator({
             className
           )}
         >
-          <div className="sticky top-0 z-50 flex h-[48px] shrink-0 items-center justify-center bg-inherit">
+          <div
+            data-top
+            className="sticky top-0 z-50 flex h-[48px] shrink-0 items-center justify-center bg-inherit"
+          >
             <div className="h-[28.43px] w-[96.25px] rounded-full bg-black"></div>
           </div>
           <div className="min-h-[calc(100%-48px)] pb-[26px]">{children}</div>
