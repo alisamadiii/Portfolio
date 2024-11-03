@@ -8,6 +8,9 @@ dependencies:
   '@mantine/hooks':
     specifier: ^7.13.1
     version: 7.13.1(react@18.3.1)
+  '@number-flow/react':
+    specifier: ^0.3.0
+    version: 0.3.0(react-dom@18.3.1)(react@18.3.1)
   '@radix-ui/react-dialog':
     specifier: ^1.1.1
     version: 1.1.1(@types/react-dom@18.3.0)(@types/react@18.3.9)(react-dom@18.3.1)(react@18.3.1)
@@ -912,6 +915,17 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
     dev: true
+
+  /@number-flow/react@0.3.0(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-UExgUckxyeR1R36NfoD1An/6ZKe3VuzSxiVZgEYQmnjfeg/BVFjITi5MohnNzNt6RNAEKjDbQBpmSYUA/LO2lw==}
+    peerDependencies:
+      react: ^18 || ^19.0.0-rc-915b914b3a-20240515
+      react-dom: ^18
+    dependencies:
+      number-flow: 0.3.5
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    dev: false
 
   /@one-ini/wasm@0.1.1:
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
@@ -5278,6 +5292,10 @@ packages:
     resolution: {integrity: sha512-r9KHKG2UUeB5LoTouwDzBy2VxXlHsiM6fyLQvnJa0S5hrhzqElH/CH7TUGhT1fVvIYBIKf3OpY4YJ4CK+iaqHg==}
     dependencies:
       svg-arc-to-cubic-bezier: 3.2.0
+    dev: false
+
+  /number-flow@0.3.5:
+    resolution: {integrity: sha512-PJ5SNbPcMmtIRZpV7Qbp2VjJ4ekT54QFo7sheTmAaJfz+t6T+rcNNEzVJaNtb87+AqkZu+SndXJ6AnnJqWnOeQ==}
     dev: false
 
   /object-assign@4.1.1:

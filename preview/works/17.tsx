@@ -1,7 +1,9 @@
 import React, { memo, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { Circle } from "rc-progress";
-import Link from "next/link";
+import NumberFlow from "@number-flow/react";
 
 import { cn } from "@/lib/utils";
 
@@ -118,61 +120,57 @@ export default function Works17() {
   const [selected, setSelected] = useState("");
 
   return (
-    <div>
-      <MotionConfig
-        transition={{ duration: 0.7, type: "spring", bounce: 0.25 }}
-      >
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              className="fixed inset-0 z-30 bg-white/30 backdrop-blur-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            ></motion.div>
-          )}
-        </AnimatePresence>
-        <div className="fixed left-1/2 top-12 z-40 -translate-x-1/2">
+    <MotionConfig transition={{ duration: 0.7, type: "spring", bounce: 0.25 }}>
+      <AnimatePresence>
+        {open && (
           <motion.div
-            layout
-            initial={{
-              height: 44,
-              width: 240,
-            }}
-            animate={{
-              height: open ? "auto" : 44,
-              width: open ? 300 : 240,
-            }}
-            className="relative cursor-pointer overflow-hidden bg-natural-900 text-white"
-            style={{ borderRadius: 22 }}
+            className="fixed inset-0 z-30 bg-white/30 backdrop-blur-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          ></motion.div>
+        )}
+      </AnimatePresence>
+      <div className="fixed left-1/2 top-12 z-40 -translate-x-1/2">
+        <motion.div
+          layout
+          initial={{
+            height: 44,
+            width: 240,
+          }}
+          animate={{
+            height: open ? "auto" : 44,
+            width: open ? 320 : 260,
+          }}
+          className="relative cursor-pointer overflow-hidden bg-natural-900 text-white"
+          style={{ borderRadius: 22 }}
+        >
+          <header
+            className="flex h-11 cursor-pointer items-center gap-2 px-4"
+            onClick={() => setOpen(!open)}
           >
-            <header
-              className="flex h-11 cursor-pointer items-center gap-2 px-4"
-              onClick={() => setOpen(!open)}
-            >
-              <ProgressCircle />
-              <h1 className="grow font-bold">Nature's Beauty</h1>
-              <ScrollPercentage />
-            </header>
-            <div className="mt-2 flex flex-col gap-2 px-4 pb-4">
-              {initialValues.map((item) => (
-                <Link
-                  className="whitespace-nowrap text-sm text-natural-400 hover:text-natural-200"
-                  href={item.link}
-                  onClick={() => {
-                    setOpen(false);
-                    setSelected(item.link);
-                  }}
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-        <Sections selected={selected} />
-      </MotionConfig>
-    </div>
+            <ProgressCircle />
+            <h1 className="grow font-bold">Nature's Beauty</h1>
+            <ScrollPercentage />
+          </header>
+          <div className="mt-2 flex flex-col gap-2 px-4 pb-4">
+            {initialValues.map((item) => (
+              <Link
+                className="whitespace-nowrap text-sm text-natural-400 hover:text-natural-200"
+                href={item.link}
+                onClick={() => {
+                  setOpen(false);
+                  setSelected(item.link);
+                }}
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+      <Sections selected={selected} />
+    </MotionConfig>
   );
 }
 
@@ -282,5 +280,13 @@ function ScrollPercentage() {
     return () => window.removeEventListener("scroll", updatePageScroll);
   }, []);
 
-  return <p>{Math.round(scrollPercentage * 100)}%</p>;
+  return (
+    <>
+      <NumberFlow
+        value={scrollPercentage}
+        format={{ style: "percent" }} // Intl.NumberFormat options
+        locales="en-US" // Intl.NumberFormat locales
+      />
+    </>
+  );
 }
