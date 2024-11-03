@@ -1,0 +1,73 @@
+---
+title: Twitter Contents 11
+tech: "js"
+---
+
+## Stopwatch
+
+<Tabs>
+
+<Tab label="HTML">
+
+```html
+<div id="stopwatch">00:00.000</div>
+<div class="m-4">
+  <button id="start">Start</button>
+  <button id="pause">Pause</button>
+</div>
+```
+
+</Tab>
+
+<Tab label="JavaScript">
+
+```js showLineNumbers
+const startButton = document.getElementById("start");
+const pauseButton = document.getElementById("pause");
+const stopwatch = document.getElementById("stopwatch");
+
+let startTime;
+let animationFrameId;
+let isRunning = false;
+
+function updateStopwatch() {
+  if (!startTime) {
+    startTime = performance.now();
+  }
+
+  const currentTime = performance.now();
+  const elapsedTime = currentTime - startTime;
+
+  const minutes = Math.floor(elapsedTime / 60000);
+  const seconds = Math.floor((elapsedTime % 60000) / 1000);
+  const milliseconds = Math.floor(elapsedTime % 1000);
+
+  stopwatch.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`;
+
+  animationFrameId = requestAnimationFrame(updateStopwatch);
+}
+
+startButton.addEventListener("click", () => {
+  if (isRunning) return;
+
+  pauseButton.textContent = "Pause";
+  if (!startTime) {
+    startTime = performance.now();
+  } else {
+    startTime = performance.now() - (performance.now() - startTime);
+  }
+  isRunning = true;
+  requestAnimationFrame(updateStopwatch);
+});
+
+pauseButton.addEventListener("click", () => {
+  cancelAnimationFrame(animationFrameId);
+  isRunning = false;
+});
+```
+
+</Tab>
+
+</Tabs>
+
+<ComponentPreview name="twitter-contents-11" />

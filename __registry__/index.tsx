@@ -68,6 +68,18 @@ export const Index: Record<string, any> = {
       ssr: false,
     }),
   },
+  "twitter-contents-11": {
+    name: "twitter-contents-11",
+    component: dynamic(() => import("@/preview/twitter-contents/11.tsx"), {
+      ssr: false,
+    }),
+  },
+  "twitter-contents-12": {
+    name: "twitter-contents-12",
+    component: dynamic(() => import("@/preview/twitter-contents/12.tsx"), {
+      ssr: false,
+    }),
+  },
   "twitter-contents-2": {
     name: "twitter-contents-2",
     component: dynamic(() => import("@/preview/twitter-contents/2.tsx"), {

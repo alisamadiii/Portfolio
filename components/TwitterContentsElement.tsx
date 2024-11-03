@@ -6,8 +6,8 @@ type Props = {
   className?: string;
 };
 
-export function Wrapper({ children }: Props) {
-  return <div className="relative mb-12 px-6 md:px-0">{children}</div>;
+export function Wrapper({ children, className }: Props) {
+  return <div className={cn("relative mb-12", className)}>{children}</div>;
 }
 
 export function Code({ children, className }: Props) {

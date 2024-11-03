@@ -55,6 +55,10 @@ export default function FixedImage() {
     setIsPending(false);
   };
 
+  if (pathname === "/volleyball-count") {
+    return null;
+  }
+
   return (
     <AnimatePresence>
       {isVisible ? (
