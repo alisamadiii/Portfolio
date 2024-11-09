@@ -14,6 +14,7 @@ export default function VolleyballCount() {
     red: 0,
     blue: 0,
   });
+  const [clicked, setClicked] = useState<null | "red" | "blue">(null);
 
   const [history, setHistory] = useState<Array<{ red: number; blue: number }>>(
     []
@@ -63,9 +64,13 @@ export default function VolleyballCount() {
                 transition: { zIndex: { delay: 0.5 } },
               }}
               className={cn(
-                "flex items-center justify-center bg-red-500 text-[10rem] font-bold text-white hover:bg-red-600"
+                "flex items-center justify-center bg-red-500 text-[10rem] font-bold text-white transition-opacity duration-100",
+                clicked !== "red" && clicked !== null && "opacity-50"
               )}
-              onClick={() => handleScore("red")}
+              onClick={() => {
+                handleScore("red");
+                setClicked("red");
+              }}
               disabled={winner !== null}
             >
               <motion.span layout className="inline-block w-full max-w-[300px]">
@@ -80,10 +85,14 @@ export default function VolleyballCount() {
               layout
               exit={{ opacity: 0, zIndex: -1 }}
               className={cn(
-                "relative flex items-center justify-center bg-blue-500 text-[10rem] font-bold text-white hover:bg-blue-600",
-                winner === "blue" && "z-20"
+                "relative flex items-center justify-center bg-blue-500 text-[10rem] font-bold text-white transition-opacity duration-100",
+                winner === "blue" && "z-20",
+                clicked !== "blue" && clicked !== null && "opacity-50"
               )}
-              onClick={() => handleScore("blue")}
+              onClick={() => {
+                handleScore("blue");
+                setClicked("blue");
+              }}
               disabled={winner !== null}
             >
               <motion.span layout className="inline-block w-full max-w-[300px]">
@@ -118,6 +127,7 @@ export default function VolleyballCount() {
                 setCount({ red: 0, blue: 0 });
                 setWinner(null);
                 setHistory([]);
+                setClicked(null);
               }}
             >
               Restart

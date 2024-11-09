@@ -6,10 +6,6 @@
   scroll-behavior: smooth;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

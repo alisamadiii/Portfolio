@@ -26,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${lora.variable} ${inter.variable} antialiased`}>
+      <body
+        className={`${lora.variable} ${inter.variable} bg-natural-100 antialiased`}
+      >
         <FixedImage />
 
         {children}

@@ -55,7 +55,7 @@ export default function FixedImage() {
     setIsPending(false);
   };
 
-  if (pathname === "/volleyball-count") {
+  if (pathname === "/volleyball") {
     return null;
   }
 

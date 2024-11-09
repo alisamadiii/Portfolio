@@ -17,6 +17,7 @@ const textVariants = cva("", {
       "p2-b": "leading-[150%] text-sm font-medium",
       "p3-r": "leading-[150%] text-xs",
       "p3-b": "leading-[150%] text-xs font-medium",
+      label: "text-sm font-medium text-neutral-500",
     },
   },
   defaultVariants: {
