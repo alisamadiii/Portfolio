@@ -1,0 +1,70 @@
+---
+title: Twitter Content 13
+tech: "js"
+---
+
+## Browser Popup
+
+<Tabs>
+
+<Tab label="Alert">
+
+```html title="index.html"
+<button>Alert</button>
+```
+
+```js title="index.js"
+const button = document.querySelector("button");
+
+button.addEventListener("click", () => {
+  window.alert("Hello! This is a popup message.");
+});
+```
+
+</Tab>
+
+<Tab label="Confirm">
+
+```html title="index.html"
+<button>Confirm</button>
+```
+
+```js title="index.js"
+const button = document.querySelector("button");
+
+button.addEventListener("click", () => {
+  const result = window.confirm("Do you want to proceed?");
+  if (result) {
+    window.alert("You clicked OK!");
+  } else {
+    window.alert("You clicked Cancel!");
+  }
+});
+```
+
+</Tab>
+
+<Tab label="Prompt">
+
+```html title="index.html"
+<button>Prompt</button>
+```
+
+```js title="index.js"
+const button = document.querySelector("button");
+
+button.addEventListener("click", () => {
+  const name = window.prompt("What's your name?", "Ali Samadi");
+  if (name) {
+    window.alert(`Hello, ${name}!`);
+  } else {
+    window.alert("You cancelled the prompt!");
+  }
+});
+```
+
+</Tab>
+
+</Tabs>
+
+<ComponentPreview name="twitter-contents-13" />

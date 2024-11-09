@@ -1,0 +1,17 @@
+---
+title: Twitter Contents 14
+tech: "js"
+---
+
+```js showLineNumbers title="app.js"
+const h1 = document.querySelector("h1");
+
+function updateClock() {
+  const time = new Date();
+  h1.textContent = time.toLocaleTimeString();
+}
+
+setInterval(updateClock, 1000);
+```
+
+<ComponentPreview name="twitter-contents-14" />
