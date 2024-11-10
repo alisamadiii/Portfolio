@@ -3,6 +3,8 @@
 import { useScroll, motion, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+
 import { allBlogs } from "@/.contentlayer/generated";
 import { Text } from "@/components/ui/text";
 import { Linkedin } from "lucide-react";
@@ -283,6 +285,14 @@ export default function Home() {
 
 function ExperienceContent() {
   const router = useRouter();
+  return (
+    <Suspense fallback={null}>
+      <ExperienceDialog router={router} />
+    </Suspense>
+  );
+}
+
+function ExperienceDialog({ router }: { router: any }) {
   const searchParams = useSearchParams().get("experience");
 
   return (
