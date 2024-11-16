@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { allBlogs } from "@/.contentlayer/generated";
+import { allBlogs, allTwitterContents, allWorks } from "contentlayer/generated";
+
 import { Text } from "@/components/ui/text";
 import { Linkedin } from "lucide-react";
 import { Github } from "lucide-react";
@@ -205,10 +206,10 @@ export default function Home() {
         </Text>
 
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 14 }).map((value, index) => (
+          {allTwitterContents.map((content, index) => (
             <Link
-              href={`/x-content/${index + 1}`}
-              key={index}
+              href={`/x-content/${content.slugAsParams}`}
+              key={content._id}
               className="flex min-h-12 grow basis-32 items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
             >
               {index + 1}
@@ -223,10 +224,10 @@ export default function Home() {
         </Text>
 
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 17 }).map((value, index) => (
+          {allWorks.map((work, index) => (
             <Link
-              href={`/work/${index + 1}`}
-              key={index}
+              href={`/work/${work.slugAsParams}`}
+              key={work._id}
               className="flex min-h-12 grow basis-32 items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
             >
               {index + 1}
