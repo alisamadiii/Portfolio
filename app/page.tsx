@@ -208,7 +208,7 @@ export default function Home() {
         <div className="flex flex-wrap gap-2">
           {allTwitterContents.map((content, index) => (
             <Link
-              href={`/x-content/${content.slugAsParams}`}
+              href={`/x-content/${index + 1}`}
               key={content._id}
               className="flex min-h-12 grow basis-32 items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
             >
@@ -226,7 +226,7 @@ export default function Home() {
         <div className="flex flex-wrap gap-2">
           {allWorks.map((work, index) => (
             <Link
-              href={`/work/${work.slugAsParams}`}
+              href={`/work/${index + 1}`}
               key={work._id}
               className="flex min-h-12 grow basis-32 items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
             >

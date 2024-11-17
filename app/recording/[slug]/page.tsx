@@ -13,7 +13,7 @@ export default function DocsPage({ params: { slug } }: Props) {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-white">
-      <div className="mx-auto max-w-3xl pt-36">
+      <div className="mx-auto max-w-3xl">
         <Component />
       </div>
     </div>
