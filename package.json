@@ -19,6 +19,7 @@
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slider": "^1.2.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.4",
     "@react-pdf/renderer": "^4.0.0",
     "@resvg/resvg-wasm": "^2.6.2",
     "class-variance-authority": "^0.7.0",

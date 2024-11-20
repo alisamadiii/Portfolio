@@ -169,3 +169,20 @@ html.dark {
   background-color: var(--background-color);
   color: var(--color);
 }
+
+#background-blur {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+#background-blur::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  background: rgba(255, 255, 255, 0.5);
+  mask: linear-gradient(to top, black 54%, transparent);
+  backdrop-filter: blur(10px);
+}

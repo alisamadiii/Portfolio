@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Lora, Inter } from "next/font/google";
 import "./globals.css";
-import FixedImage from "@/components/FixedImage";
 
 import { Toaster } from "@/components/ui/sonner";
+import HireMe from "@/components/hire-me";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${lora.variable} ${inter.variable} bg-natural-100 antialiased`}
       >
-        <FixedImage />
+        <HireMe />
 
         {children}
 
