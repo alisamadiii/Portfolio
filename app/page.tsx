@@ -243,7 +243,8 @@ export default function Home() {
 
         <div className="flex flex-col gap-4">
           <Link
-            href={`/volleyball`}
+            href={`https://github.com/NowShip`}
+            target="_blank"
             className="group opacity-80 transition hover:opacity-100"
           >
             <Text

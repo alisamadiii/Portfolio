@@ -9,17 +9,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { usePathname } from "next/navigation";
 
 type Props = {};
 
 export default function HireMe({}: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setTimeout(() => {
       setIsOpen(true);
     }, 1000);
   }, []);
+
+  if (pathname === "/volleyball") {
+    return null;
+  }
 
   return (
     <AnimatePresence>
