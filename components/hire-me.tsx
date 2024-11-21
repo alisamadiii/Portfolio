@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { X } from "lucide-react";
 
 import {
   Tooltip,
@@ -9,7 +11,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { usePathname } from "next/navigation";
 
 type Props = {};
 
@@ -35,6 +36,7 @@ export default function HireMe({}: Props) {
             className="absolute -z-10 h-[300px] w-full"
             initial={{ y: 300 }}
             animate={{ y: 0 }}
+            exit={{ y: 300 }}
             transition={{ duration: 1, type: "spring", bounce: 0 }}
           >
             <div id="background-blur"></div>
@@ -42,8 +44,11 @@ export default function HireMe({}: Props) {
           <motion.div
             className="text-sm font-medium"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.7 }}
+            animate={{
+              opacity: 1,
+              transition: { delay: 0.6, duration: 0.7 },
+            }}
+            exit={{ opacity: 0 }}
           >
             <TooltipProvider delayDuration={0}>
               <Tooltip>
@@ -62,6 +67,21 @@ export default function HireMe({}: Props) {
               </Tooltip>
             </TooltipProvider>
           </motion.div>
+
+          {pathname !== "/" && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: 1,
+                transition: { delay: 0.6, duration: 0.7 },
+              }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-natural-600"
+            >
+              <X />
+            </motion.button>
+          )}
         </div>
       )}
     </AnimatePresence>

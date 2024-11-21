@@ -161,12 +161,6 @@ export default function Works18() {
           </Button>
         ))}
       </div>
-      <p className="line-clamp-1">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem
-        dolores illum atque corrupti suscipit iste eveniet labore porro natus
-        modi, nam perspiciatis expedita ducimus. Nemo maxime earum esse
-        consectetur reprehenderit?
-      </p>
     </div>
   );
 }
