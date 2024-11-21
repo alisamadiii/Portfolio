@@ -161,6 +161,12 @@ export default function Works18() {
           </Button>
         ))}
       </div>
+      <p className="line-clamp-1">
+        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem
+        dolores illum atque corrupti suscipit iste eveniet labore porro natus
+        modi, nam perspiciatis expedita ducimus. Nemo maxime earum esse
+        consectetur reprehenderit?
+      </p>
     </div>
   );
 }
@@ -207,19 +213,19 @@ function TextWrapper({ selectedIndex }: { selectedIndex: number }) {
 
 function LabelWrapper({ selectedIndex }: { selectedIndex: number }) {
   return (
-    <div className="flex h-4 flex-col overflow-hidden text-sm">
+    <div className="flex h-5 flex-col overflow-hidden text-sm">
       {initialValues.map((item) => (
-        <motion.div
+        <motion.p
           key={item.title}
           animate={{
             y: `-${selectedIndex * 100}%`,
           }}
           className={cn(
-            "flex h-4 shrink-0 cursor-pointer items-center rounded-md px-4"
+            "line-clamp-1 h-5 shrink-0 cursor-pointer rounded-md px-4"
           )}
         >
           {item.info}
-        </motion.div>
+        </motion.p>
       ))}
     </div>
   );
