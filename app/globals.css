@@ -186,3 +186,13 @@ html.dark {
   mask: linear-gradient(to top, black 54%, transparent);
   backdrop-filter: blur(10px);
 }
+
+.gradient-bg {
+  background: linear-gradient(to right, red, orange);
+}
+.gradient-clip {
+  -webkit-background-clip: text;
+}
+.gradient-fill {
+  -webkit-text-fill-color: transparent;
+}

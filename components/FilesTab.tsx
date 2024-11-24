@@ -44,7 +44,7 @@ export const Files: React.FC<FilesProps> = ({ children, id, className }) => {
           })}
         </LayoutGroup>
       </div>
-      <div>{React.Children.toArray(children)[activeTab]}</div>
+      <div className="mb-4">{React.Children.toArray(children)[activeTab]}</div>
     </>
   );
 };

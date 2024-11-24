@@ -228,9 +228,10 @@ export default function Home() {
             <Link
               href={`/x-content/${index + 1}`}
               key={content._id}
-              className="flex min-h-12 grow basis-32 items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
+              className="flex min-h-12 grow basis-32 flex-col items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
             >
               {index + 1}
+              {/* <span className="text-xs">{content.slug}</span> */}
             </Link>
           ))}
         </div>

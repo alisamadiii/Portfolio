@@ -1,0 +1,35 @@
+---
+title: Custom Cursor
+tech: CSS
+---
+
+# Custom Cursor
+
+<Files>
+
+<File label="index.html">
+    
+```html showLineNumbers
+<div>Hover me</div>
+```
+
+</File>
+
+<File label="style.css">
+    
+```css showLineNumbers
+div {
+  cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23FFF" stroke="%23000" stroke-width="2" stroke-linejoin="round" d="M18 14.88 8.16 3.15c-.26-.31-.76-.12-.76.28v15.31c0 .36.42.56.7.33l3.1-2.6 1.55 4.25c.08.22.33.34.55.26l1.61-.59a.43.43 0 0 0 .26-.55l-1.55-4.25h4.05c.36 0 .56-.42.33-.7Z"></path></svg>'),
+    pointer;
+}
+/* You can include image as a cursor. */
+/* div {
+  cursor: url('image.png'), pointer;
+} */
+```
+
+</File>
+
+</Files>
+
+<ComponentPreview name="twitter-contents-17" />
