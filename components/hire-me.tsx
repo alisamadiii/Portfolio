@@ -33,7 +33,7 @@ export default function HireMe({}: Props) {
       {isOpen && (
         <div className="fixed bottom-0 left-0 isolate z-50 flex h-12 w-full items-center justify-center">
           <motion.div
-            className="absolute -z-10 h-[300px] w-full"
+            className="pointer-events-none absolute -z-10 h-[300px] w-full"
             initial={{ y: 300 }}
             animate={{ y: 0 }}
             exit={{ y: 300 }}

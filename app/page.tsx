@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Experience from "@/components/experience";
+import Apps from "@/components/apps";
 
 const skills = [
   {
@@ -37,6 +38,15 @@ const skills = [
     name: "Redix UI",
     description:
       "An open source UI component library for building high-quality interfaces",
+  },
+  {
+    name: "Drizzle ORM",
+    description:
+      "A TypeScript ORM for SQL databases with a focus on type safety",
+  },
+  {
+    name: "Better Auth",
+    description: "A modern authentication library built",
   },
 ];
 
@@ -169,6 +179,14 @@ export default function Home() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="my-20">
+        <Text element="h2" variant="label" className="mb-8">
+          The App/Website I&apos;m using
+        </Text>
+
+        <Apps />
       </section>
 
       <section className="my-20">
