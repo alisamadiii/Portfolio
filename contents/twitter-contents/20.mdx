@@ -1,0 +1,51 @@
+---
+title: Text Revealing Animation
+tech: CSS
+---
+
+# Text Revealing Animation
+
+<Files>
+
+<File label="index.html">
+
+```html
+<h1>Text Revealing Animation</h1>
+```
+
+</File>
+
+<File label="style.css">
+
+```css
+.animate-text {
+  opacity: 0;
+  animation: reveal 0.5s var(--i) ease-in-out forwards;
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+  }
+}
+```
+
+</File>
+
+<File label="app.js">
+
+```js
+const text = document.querySelector("h1");
+
+text.innerHTML = text.textContent.replace(
+  /\S/g,
+  (char, index) =>
+    `<span class='animate-text' style='--i:${index * 0.05}s'>${char}</span>`
+);
+```
+
+</File>
+
+</Files>
+
+<ComponentPreview name="twitter-contents-20" />
