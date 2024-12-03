@@ -42,42 +42,64 @@ const NavigatingClick = React.memo(({ className }: Props) => {
 
 NavigatingClick.displayName = "NavigatingClick";
 
-const NavigatingDrag = React.memo(({ className }: Props) => {
-  const [show, setShow] = useState(true);
+interface NavigatingDragProps extends Props {
+  direction: "up" | "down" | "left" | "right";
+}
 
-  useEffect(() => {
-    setTimeout(() => {
-      setShow(false);
-    }, 1600);
-  }, []);
+const NavigatingDrag = React.memo(
+  ({ className, direction }: NavigatingDragProps) => {
+    const [show, setShow] = useState(true);
 
-  return (
-    <AnimatePresence>
-      {show && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: 1,
-              scale: [1, 0.7, 0.7, 1],
-              x: [100, 100, 0],
-              transition: {
-                scale: { delay: 0.7, duration: 0.7 },
-                x: { delay: 0.7, duration: 0.7 },
-                opacity: { delay: 0.2, duration: 0.4 },
-              },
-            }}
-            exit={{ opacity: 0 }}
+    useEffect(() => {
+      setTimeout(() => {
+        setShow(false);
+      }, 1600);
+    }, []);
+
+    return (
+      <AnimatePresence>
+        {show && (
+          <div
             className={cn(
-              "pointer-events-none z-50 h-14 w-14 rounded-full border border-gray-300 bg-gray-200/60",
+              "pointer-events-none absolute inset-0 flex items-center justify-center",
               className
             )}
-          />
-        </div>
-      )}
-    </AnimatePresence>
-  );
-});
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: 1,
+                scale: [1, 0.7, 0.7, 1],
+                x:
+                  direction === "left"
+                    ? [100, 100, 0]
+                    : direction === "right"
+                      ? [-100, -100, 0]
+                      : [0, 0, 0],
+                y:
+                  direction === "up"
+                    ? [100, 100, 0]
+                    : direction === "down"
+                      ? [-100, -100, 0]
+                      : [0, 0, 0],
+                transition: {
+                  scale: { delay: 0.7, duration: 0.7 },
+                  x: { delay: 0.7, duration: 0.7 },
+                  y: { delay: 0.7, duration: 0.7 },
+                  opacity: { delay: 0.2, duration: 0.4 },
+                },
+              }}
+              exit={{ opacity: 0 }}
+              className={cn(
+                "pointer-events-none z-50 h-14 w-14 rounded-full border border-gray-300 bg-gray-200/60"
+              )}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+    );
+  }
+);
 
 NavigatingDrag.displayName = "NavigatingDrag";
 

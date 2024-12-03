@@ -22,7 +22,7 @@ export default function Work7() {
   return (
     <>
       <AnimationSpeed onValueChange={setDuration} speeds={[0.7, 1.5, 2]} />
-      <IphoneSimulator className="bg-[#f4f3fa]">
+      <IphoneSimulator className="bg-[#f4f3fa] [&>[data-top]]:bg-transparent">
         <MotionConfig transition={{ duration, type: "spring", bounce: 0 }}>
           <header className="sticky top-0 -mt-[48px] flex items-center justify-center border-b border-[#D4D2D4] bg-[#FAF9FB] pb-2 pt-14 font-medium">
             <motion.h2 layoutId="settings-text" className="z-20">

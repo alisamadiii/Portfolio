@@ -19,7 +19,9 @@ export default function Work8() {
     <>
       <AnimationSpeed onValueChange={setDuration} speeds={[0.4, 1, 2]} />
 
-      <IphoneSimulator className={`bg-[#F1F1F6] ${expand ? "pt-0" : ""}`}>
+      <IphoneSimulator
+        className={`bg-[#F1F1F6] ${expand ? "pt-0" : ""} [&>[data-top]]:bg-transparent`}
+      >
         <div className={cn("", expand && "-mt-12")}>
           <MotionConfig
             transition={{

@@ -4,6 +4,7 @@ import IphoneSimulator from "@/components/IphoneSimulator";
 import { cn } from "@/lib/utils";
 import { CheckSquare, FolderKanban } from "lucide-react";
 import { Smartphone } from "lucide-react";
+import { NavigatingDrag } from "@/components/NavigatingClick";
 
 interface Todo {
   id: number;
@@ -49,6 +50,7 @@ export default function Works16() {
 
   return (
     <IphoneSimulator className="bg-natural-900 text-white [&_[data-top]]:bg-transparent">
+      <NavigatingDrag direction="down" className="items-start pt-40" />
       <MotionConfig transition={{ duration: 0.4, type: "spring", bounce: 0 }}>
         <motion.div
           drag="y"

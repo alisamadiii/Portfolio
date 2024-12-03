@@ -31,7 +31,7 @@ export default function Work5() {
   const onClickHandler = () => setIsOpen(!isOpen);
 
   return (
-    <IphoneSimulator className="overflow-hidden bg-neutral-400">
+    <IphoneSimulator className="overflow-hidden bg-neutral-400 [&>[data-top]]:bg-transparent">
       <div className="absolute inset-0">
         <header
           className="sticky top-0 z-30 grid grid-cols-3 items-center bg-white/80 pb-2 pt-14 font-medium backdrop-blur-lg"
@@ -140,7 +140,7 @@ function EachMessage({
           message.from === 0 ? "bg-white" : "self-end bg-blue-500 text-white"
         )}
       >
-        {index === 2 ? <NavigatingDrag /> : null}
+        {index === 2 ? <NavigatingDrag direction="left" /> : null}
         {message.message}
         <small className="self-end opacity-50">4:00 AM</small>
       </motion.li>

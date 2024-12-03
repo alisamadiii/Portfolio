@@ -23,6 +23,7 @@ import Image from "next/image";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { NavigatingClick } from "@/components/NavigatingClick";
 
 interface Message {
   date: string;
@@ -169,6 +170,7 @@ export default function Work14() {
           <button className="flex h-8 w-8 items-center justify-center">
             <ChevronLeft strokeWidth={1} size={30} />
           </button>
+          <NavigatingClick />
           <motion.button
             layoutId="wrapper"
             className="relative grow overflow-hidden bg-[#232429] p-0.5"

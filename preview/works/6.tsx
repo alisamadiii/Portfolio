@@ -52,7 +52,7 @@ export default function Work6() {
   const onMoreClickHandler = () => setIsMore(!isMore);
 
   return (
-    <IphoneSimulator className="bg-neutral-900 text-white">
+    <IphoneSimulator className="bg-neutral-900 text-white [&>[data-top]]:bg-transparent">
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <header className="sticky top-0 z-10 -mt-12 flex items-center rounded-t-[42px] bg-[#3B3A3D]/40 pb-2 pt-14 font-medium backdrop-blur-lg">
           <button className="w-12 pl-2 text-[#2099D6]">

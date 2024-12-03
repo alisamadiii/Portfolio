@@ -24,7 +24,7 @@ export default function Work9() {
   const scale = useTransform(ySmooth, [0, 200], isOpen ? [0.8, 1] : [1, 1]);
 
   return (
-    <IphoneSimulator className="overflow-hidden bg-black text-white">
+    <IphoneSimulator className="overflow-hidden bg-black text-white [&>[data-top]]:bg-transparent">
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <motion.div layout style={{ scale }} className="px-4">
           <h2 className="mb-3 mt-3">Lorem Ipsum</h2>

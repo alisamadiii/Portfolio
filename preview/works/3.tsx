@@ -51,7 +51,7 @@ export default function Work3() {
           <Minus />
         </button>
         <h3 className="w-12 text-center">
-          <AnimatePresence mode="popLayout" custom={direction}>
+          <AnimatePresence mode="popLayout" custom={direction} initial={false}>
             {num
               .toString()
               .split("")

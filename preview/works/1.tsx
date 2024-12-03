@@ -13,7 +13,10 @@ export default function Work1() {
   const onClickHandler = () => setIsOpen(!isOpen);
 
   return (
-    <IphoneSimulator className="overflow-hidden bg-white">
+    <IphoneSimulator
+      classWrapper="w-[400px]"
+      className="overflow-hidden bg-white [&>[data-top]]:bg-transparent"
+    >
       <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0 }}>
         <div className="px-4 pt-4 text-black">
           <h2 className="text-2xl font-semibold tracking-tight">
