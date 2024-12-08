@@ -280,3 +280,20 @@ html.dark {
   background: linear-gradient(45deg, #ecf0f1, #bdc3c7);
   border-radius: 8px;
 }
+
+.custom-image-animate {
+  animation: element-in 0.5s ease-out forwards;
+}
+
+@keyframes element-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px) perspective(1000px) rotateX(-25deg);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) perspective(1000px) rotateX(0);
+    filter: blur(0px);
+  }
+}

@@ -87,7 +87,7 @@ export default function DocsPage({ params: { slug } }: Props) {
           </div>
         </div>
       </div>
-      <div className="px-8 md:px-0">
+      <div className="px-8 pb-48 md:px-0">
         <Mdx code={findingGoal.body.code} />
       </div>
     </>

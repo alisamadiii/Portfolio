@@ -3,7 +3,7 @@ import { Lora, Inter } from "next/font/google";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
-import HireMe from "@/components/hire-me";
+// import HireMe from "@/components/hire-me";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${lora.variable} ${inter.variable} bg-natural-100 antialiased`}
       >
-        <HireMe />
+        {/* <HireMe /> */}
 
         {children}
 
