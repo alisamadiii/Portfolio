@@ -228,6 +228,25 @@
     "folder": "works"
   },
   {
+    "title": "Works-20",
+    "body": {
+      "raw": "\n<ComponentPreview name=\"works-20\" />\n",
+      "code": "var Component=(()=>{var x=Object.create;var r=Object.defineProperty;var a=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,l=Object.prototype.hasOwnProperty;var _=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports),j=(e,t)=>{for(var o in t)r(e,o,{get:t[o],enumerable:!0})},s=(e,t,o,c)=>{if(t&&typeof t==\"object\"||typeof t==\"function\")for(let n of d(t))!l.call(e,n)&&n!==o&&r(e,n,{get:()=>t[n],enumerable:!(c=a(t,n))||c.enumerable});return e};var C=(e,t,o)=>(o=e!=null?x(w(e)):{},s(t||!e||!e.__esModule?r(o,\"default\",{value:e,enumerable:!0}):o,e)),M=e=>s(r({},\"__esModule\",{value:!0}),e);var f=_((g,m)=>{m.exports=_jsx_runtime});var y={};j(y,{default:()=>p,frontmatter:()=>k});var i=C(f()),k={title:\"Works-20\"};function u(e){let{ComponentPreview:t}=e.components||{};return t||v(\"ComponentPreview\",!0),(0,i.jsx)(t,{name:\"works-20\"})}function p(e={}){let{wrapper:t}=e.components||{};return t?(0,i.jsx)(t,{...e,children:(0,i.jsx)(u,{...e})}):u(e)}function v(e,t){throw new Error(\"Expected \"+(t?\"component\":\"object\")+\" `\"+e+\"` to be defined: you likely forgot to import, pass, or provide it.\")}return M(y);})();\n;return Component;"
+    },
+    "_id": "works/20.mdx",
+    "_raw": {
+      "sourceFilePath": "works/20.mdx",
+      "sourceFileName": "20.mdx",
+      "sourceFileDir": "works",
+      "contentType": "mdx",
+      "flattenedPath": "works/20"
+    },
+    "type": "Works",
+    "slug": "/works/20",
+    "slugAsParams": "20",
+    "folder": "works"
+  },
+  {
     "title": "3",
     "body": {
       "raw": "\n<ComponentPreview name=\"works-3\" />\n\n<CodePreview>\n\n```tsx showLineNumbers\n\"use client\";\n\nimport React, { useState } from \"react\";\nimport {\n  AnimatePresence,\n  motion,\n  useAnimate,\n  type Variants,\n} from \"framer-motion\";\nimport { cn } from \"@/lib/utils\";\nimport { Minus, Plus } from \"lucide-react\";\n\nexport default function Day49() {\n  const [num, setNum] = useState(0);\n  const [direction, setDirection] = useState(1);\n\n  const [scope, animate] = useAnimate();\n\n  const onClickHandler = (action: \"decrease\" | \"increase\") => {\n    if (action === \"decrease\") {\n      if (num === 0) {\n        animate(scope.current, { x: [0, 5, -5, 0] }, { duration: 0.2 });\n        return;\n      }\n\n      setNum(num - 1);\n      setDirection(-1);\n    } else if (action === \"increase\") {\n      if (num === 20) {\n        animate(scope.current, { x: [0, 5, -5, 0] }, { duration: 0.2 });\n        return;\n      }\n      setNum(num + 1);\n      setDirection(1);\n    }\n  };\n\n  return (\n    <div className=\"flex flex-col items-center justify-center gap-8\">\n      <div\n        ref={scope}\n        className=\"flex items-center justify-center gap-8 text-4xl\"\n      >\n        <button\n          onClick={() => onClickHandler(\"decrease\")}\n          className={cn(\n            \"bg-box flex h-14 w-14 items-center justify-center rounded-full text-xl active:scale-90\",\n            num === 0 && \"opacity-50\"\n          )}\n        >\n          <Minus />\n        </button>\n        <h3 className=\"w-12 text-center\">\n          <AnimatePresence mode=\"popLayout\" custom={direction}>\n            {num\n              .toString()\n              .split(\"\")\n              .map((value, index) => (\n                <motion.span\n                  key={`${value} ${index}`}\n                  variants={animation}\n                  initial=\"hidden\"\n                  animate=\"visible\"\n                  exit=\"exit\"\n                  custom={direction}\n                  className=\"inline-block tabular-nums\"\n                >\n                  {value}\n                </motion.span>\n              ))}\n          </AnimatePresence>\n        </h3>\n        <button\n          onClick={() => onClickHandler(\"increase\")}\n          className={cn(\n            \"bg-box flex h-14 w-14 items-center justify-center rounded-full text-xl active:scale-90\",\n            num === 20 && \"opacity-50\"\n          )}\n        >\n          <Plus />\n        </button>\n      </div>\n      <p className=\"text-muted-2\">20 is the max number.</p>\n    </div>\n  );\n}\n\nconst animation: Variants = {\n  hidden: (direction: -1 | 1) => ({\n    y: direction === 1 ? 30 : -30,\n    opacity: 0,\n    filter: \"blur(4px)\",\n  }),\n  visible: {\n    y: 0,\n    opacity: 1,\n    filter: \"blur(0px)\",\n  },\n  exit: (direction: -1 | 1) => ({\n    y: direction === 1 ? -30 : 30,\n    opacity: 0,\n    filter: \"blur(4px)\",\n  }),\n};\n```\n\n</CodePreview>\n",
