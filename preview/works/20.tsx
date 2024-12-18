@@ -217,7 +217,9 @@ export default function Work20() {
                 setExpandedMusic(false);
               }}
             >
-              <motion.div className="h-[150px] rounded-3xl bg-neutral-900"></motion.div>
+              <motion.div className="flex h-[150px] items-center justify-center rounded-3xl bg-neutral-900">
+                <p>Contents</p>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
