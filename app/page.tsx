@@ -3,7 +3,7 @@
 import { useScroll, motion, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 import { allBlogs, allTwitterContents, allWorks } from "contentlayer/generated";
 
@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Experience from "@/components/experience";
 import Apps from "@/components/apps";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const skills = [
   {
@@ -218,42 +220,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="my-20">
-        <Text element="h2" variant="label" className="mb-8">
-          Contents
-        </Text>
-
-        <div className="flex flex-wrap gap-2">
-          {allTwitterContents.map((content, index) => (
-            <Link
-              href={`/x-content/${index + 1}`}
-              key={content._id}
-              className="flex min-h-12 grow basis-32 flex-col items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
-            >
-              {index + 1}
-              {/* <span className="text-xs">{content.slug}</span> */}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="my-20">
-        <Text element="h2" variant="label" className="mb-8">
-          Animations
-        </Text>
-
-        <div className="flex flex-wrap gap-2">
-          {allWorks.map((work, index) => (
-            <Link
-              href={`/work/${index + 1}`}
-              key={work._id}
-              className="flex min-h-12 grow basis-32 items-center justify-center rounded-lg bg-neutral-100 transition hover:bg-neutral-200"
-            >
-              {index + 1}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <TwitterContents />
+      <Works />
 
       <section className="my-20">
         <Text element="h2" variant="label" className="mb-8">
@@ -334,5 +302,101 @@ function ExperienceDialog({ router }: { router: any }) {
         <Experience />
       </DialogContent>
     </Dialog>
+  );
+}
+
+function TwitterContents() {
+  const [showMore, setShowMore] = useState(false);
+
+  return (
+    <section className="relative my-20">
+      <Text element="h2" variant="label" className="mb-8">
+        Contents
+      </Text>
+
+      <div
+        className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}
+        style={{
+          maskImage: !showMore
+            ? "linear-gradient(to top, transparent 10%, black 100%)"
+            : "",
+        }}
+      >
+        {allTwitterContents
+          .sort((a, b) => Number(a.slugAsParams) - Number(b.slugAsParams))
+          .slice(0, showMore ? allTwitterContents.length : 15)
+          .map((content, index) => (
+            <Link
+              href={`/x-content/${index + 1}`}
+              key={content._id}
+              className="group rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md"
+            >
+              <span className="mb-2 block text-xs text-neutral-500">
+                #{index + 1}
+              </span>
+              <h3 className="text-base font-medium text-neutral-900 transition-colors group-hover:text-primary">
+                {allTwitterContents[index].title}
+              </h3>
+            </Link>
+          ))}
+      </div>
+      <Button
+        onClick={() => setShowMore(!showMore)}
+        className={cn(
+          "absolute bottom-8 left-1/2 -translate-x-1/2",
+          showMore && "bottom-[-54px]"
+        )}
+      >
+        {showMore ? "Show Less" : "Show More"}
+      </Button>
+    </section>
+  );
+}
+
+function Works() {
+  const [showMore, setShowMore] = useState(false);
+
+  return (
+    <section className="relative my-20">
+      <Text element="h2" variant="label" className="mb-8">
+        Works (Animations)
+      </Text>
+
+      <div
+        className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}
+        style={{
+          maskImage: !showMore
+            ? "linear-gradient(to top, transparent 10%, black 100%)"
+            : "",
+        }}
+      >
+        {allWorks
+          .sort((a, b) => Number(a.slugAsParams) - Number(b.slugAsParams))
+          .slice(0, showMore ? allWorks.length : 15)
+          .map((work, index) => (
+            <Link
+              href={`/work/${index + 1}`}
+              key={work._id}
+              className="group rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md"
+            >
+              <span className="mb-2 block text-xs text-neutral-500">
+                #{index + 1}
+              </span>
+              <h3 className="text-base font-medium text-neutral-900 transition-colors group-hover:text-primary">
+                {work.title}
+              </h3>
+            </Link>
+          ))}
+      </div>
+      <Button
+        onClick={() => setShowMore(!showMore)}
+        className={cn(
+          "absolute bottom-8 left-1/2 -translate-x-1/2",
+          showMore && "bottom-[-54px]"
+        )}
+      >
+        {showMore ? "Show Less" : "Show More"}
+      </Button>
+    </section>
   );
 }

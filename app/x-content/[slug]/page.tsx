@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Text } from "@/components/ui/text";
 
 type Props = {
   params: { slug: string };
@@ -88,6 +89,13 @@ export default function DocsPage({ params: { slug } }: Props) {
         </div>
       </div>
       <div className="px-8 pb-48 md:px-0">
+        <Text
+          element="h1"
+          variant="h1"
+          className="mx-auto mb-8 max-w-3xl scroll-mt-8"
+        >
+          {findingGoal.title}
+        </Text>
         <Mdx code={findingGoal.body.code} />
       </div>
     </>
