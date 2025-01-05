@@ -20,5 +20,6 @@ import works__6Mdx from './works__6.mdx.json' with { type: 'json' }
 import works__7Mdx from './works__7.mdx.json' with { type: 'json' }
 import works__8Mdx from './works__8.mdx.json' with { type: 'json' }
 import works__9Mdx from './works__9.mdx.json' with { type: 'json' }
+import works__21Mdx from './works__21.mdx.json' with { type: 'json' }
 
-export const allWorks = [works__1Mdx, works__10Mdx, works__11Mdx, works__12Mdx, works__13Mdx, works__14Mdx, works__15Mdx, works__16Mdx, works__17Mdx, works__18Mdx, works__19Mdx, works__2Mdx, works__20Mdx, works__3Mdx, works__4Mdx, works__5Mdx, works__6Mdx, works__7Mdx, works__8Mdx, works__9Mdx]
+export const allWorks = [works__1Mdx, works__10Mdx, works__11Mdx, works__12Mdx, works__13Mdx, works__14Mdx, works__15Mdx, works__16Mdx, works__17Mdx, works__18Mdx, works__19Mdx, works__2Mdx, works__20Mdx, works__3Mdx, works__4Mdx, works__5Mdx, works__6Mdx, works__7Mdx, works__8Mdx, works__9Mdx, works__21Mdx]
