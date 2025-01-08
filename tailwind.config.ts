@@ -7,6 +7,7 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./preview/**/*.{js,ts,jsx,tsx,mdx}",
+    "./contents/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
