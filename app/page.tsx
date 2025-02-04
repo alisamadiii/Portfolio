@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 
-import { allBlogs, allTwitterContents, allWorks } from "contentlayer/generated";
+import { allBlogs, allTwitterContents } from "contentlayer/generated";
 
 import { Text } from "@/components/ui/text";
 import { Linkedin } from "lucide-react";
@@ -58,6 +58,20 @@ export default function Home() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-8 py-24">
+      <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight">Motion UI</h2>
+          <p className="text-sm text-gray-300">
+            Explore my collection of animation components and interactive UI
+            elements built with Motion.
+          </p>
+        </div>
+        <Link href="https://motion.alisamadii.com/">
+          <Button variant="outline" className="text-black">
+            Visit
+          </Button>
+        </Link>
+      </div>
       <div className="absolute inset-0 isolate -z-20 max-h-dvh overflow-hidden">
         <motion.div
           style={{ y: backgroundY }}
@@ -142,7 +156,7 @@ export default function Home() {
       </div>
 
       <Badge className="mt-7 text-xs">
-        Currently building UI Reusable Components with Redix UI
+        Currently building Motion UI with Framer Motion
       </Badge>
 
       <div className="mt-2">
@@ -221,7 +235,7 @@ export default function Home() {
       </section>
 
       <TwitterContents />
-      <Works />
+      {/* <Works /> */}
 
       <section className="my-20">
         <Text element="h2" variant="label" className="mb-8">
@@ -353,50 +367,50 @@ function TwitterContents() {
   );
 }
 
-function Works() {
-  const [showMore, setShowMore] = useState(false);
+// function Works() {
+//   const [showMore, setShowMore] = useState(false);
 
-  return (
-    <section className="relative my-20">
-      <Text element="h2" variant="label" className="mb-8">
-        Works (Animations)
-      </Text>
+//   return (
+//     <section className="relative my-20">
+//       <Text element="h2" variant="label" className="mb-8">
+//         Works (Animations)
+//       </Text>
 
-      <div
-        className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}
-        style={{
-          maskImage: !showMore
-            ? "linear-gradient(to top, transparent 10%, black 100%)"
-            : "",
-        }}
-      >
-        {allWorks
-          .sort((a, b) => Number(a.slugAsParams) - Number(b.slugAsParams))
-          .slice(0, showMore ? allWorks.length : 15)
-          .map((work, index) => (
-            <Link
-              href={`/work/${index + 1}`}
-              key={work._id}
-              className="group rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md"
-            >
-              <span className="mb-2 block text-xs text-neutral-500">
-                #{index + 1}
-              </span>
-              <h3 className="text-base font-medium text-neutral-900 transition-colors group-hover:text-primary">
-                {work.title}
-              </h3>
-            </Link>
-          ))}
-      </div>
-      <Button
-        onClick={() => setShowMore(!showMore)}
-        className={cn(
-          "absolute bottom-8 left-1/2 -translate-x-1/2",
-          showMore && "bottom-[-54px]"
-        )}
-      >
-        {showMore ? "Show Less" : "Show More"}
-      </Button>
-    </section>
-  );
-}
+//       <div
+//         className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}
+//         style={{
+//           maskImage: !showMore
+//             ? "linear-gradient(to top, transparent 10%, black 100%)"
+//             : "",
+//         }}
+//       >
+//         {allWorks
+//           .sort((a, b) => Number(a.slugAsParams) - Number(b.slugAsParams))
+//           .slice(0, showMore ? allWorks.length : 15)
+//           .map((work, index) => (
+//             <Link
+//               href={`/work/${index + 1}`}
+//               key={work._id}
+//               className="group rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md"
+//             >
+//               <span className="mb-2 block text-xs text-neutral-500">
+//                 #{index + 1}
+//               </span>
+//               <h3 className="text-base font-medium text-neutral-900 transition-colors group-hover:text-primary">
+//                 {work.title}
+//               </h3>
+//             </Link>
+//           ))}
+//       </div>
+//       <Button
+//         onClick={() => setShowMore(!showMore)}
+//         className={cn(
+//           "absolute bottom-8 left-1/2 -translate-x-1/2",
+//           showMore && "bottom-[-54px]"
+//         )}
+//       >
+//         {showMore ? "Show Less" : "Show More"}
+//       </Button>
+//     </section>
+//   );
+// }
