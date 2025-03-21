@@ -52,6 +52,19 @@ const skills = [
   },
 ];
 
+const projects = [
+  {
+    name: "Snappy UI",
+    description: "Component & Animation Library for Modern Projects",
+    link: "https://snappy.alisamadii.com/",
+  },
+  {
+    name: "NPM Insight",
+    description: "A tool to get insights about npm packages",
+    link: "https://www.npminsight.com/analytics?packages=next%2Creact",
+  },
+];
+
 export default function Home() {
   const { scrollY } = useScroll();
   const backgroundY = useTransform(scrollY, [0, 500], [0, 250]);
@@ -66,7 +79,7 @@ export default function Home() {
             elements built with Motion.
           </p>
         </div>
-        <Link href="https://motion.alisamadii.com/">
+        <Link href="https://snappy.alisamadii.com/">
           <Button variant="outline" className="text-black">
             Visit
           </Button>
@@ -195,6 +208,34 @@ export default function Home() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="my-20">
+        <Text element="h2" variant="label" className="mb-8">
+          Projects
+        </Text>
+
+        <div className="flex flex-col gap-4">
+          {projects.map((project) => (
+            <Link
+              key={project.name}
+              href={project.link}
+              target="_blank"
+              className="group opacity-80 transition hover:opacity-100"
+            >
+              <Text
+                element="h3"
+                variant="h3"
+                className="mb-1 font-sans text-xl group-hover:underline"
+              >
+                {project.name}
+              </Text>
+              <Text variant="p2-r" className="text-natural-700">
+                {project.description}
+              </Text>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="my-20">

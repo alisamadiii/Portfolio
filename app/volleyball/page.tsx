@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const numbers: [15, 25] = [15, 25];
 
 export default function VolleyballCount() {
-  const [target, setTarget] = useState<15 | 25>(25);
+  const [target, setTarget] = useState<15 | 25>(15);
 
   const [winner, setWinner] = useState<null | "red" | "blue">(null);
   const [count, setCount] = useState({
@@ -48,7 +48,7 @@ export default function VolleyballCount() {
   return (
     <div
       className={cn(
-        "relative grid h-dvh w-screen grid-cols-2 justify-center overflow-hidden",
+        "relative isolate grid h-dvh w-screen grid-cols-2 justify-center overflow-hidden",
         winner && "grid-cols-1"
       )}
     >
@@ -60,8 +60,6 @@ export default function VolleyballCount() {
               layout
               exit={{
                 opacity: 0,
-                zIndex: 1,
-                transition: { zIndex: { delay: 0.5 } },
               }}
               className={cn(
                 "flex items-center justify-center bg-red-500 text-[10rem] font-bold text-white transition-opacity duration-100",
@@ -83,10 +81,11 @@ export default function VolleyballCount() {
             <motion.button
               key="blue"
               layout
+              initial={{ zIndex: -1 }}
+              animate={{ zIndex: 0, transition: { zIndex: { delay: 0.5 } } }}
               exit={{ opacity: 0, zIndex: -1 }}
               className={cn(
                 "relative flex items-center justify-center bg-blue-500 text-[10rem] font-bold text-white transition-opacity duration-100",
-                winner === "blue" && "z-20",
                 clicked !== "blue" && clicked !== null && "opacity-50"
               )}
               onClick={() => {
