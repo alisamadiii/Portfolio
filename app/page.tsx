@@ -54,9 +54,9 @@ const skills = [
 
 const projects = [
   {
-    name: "Snappy UI",
-    description: "Component & Animation Library for Modern Projects",
-    link: "https://snappy.alisamadii.com/",
+    name: "Zuude UI",
+    description: "Library of components and animations",
+    link: "https://www.zuude-ui.com/",
   },
   {
     name: "NPM Insight",
@@ -73,13 +73,13 @@ export default function Home() {
     <main className="mx-auto w-full max-w-3xl px-8 py-24">
       <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">Motion UI</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Zuude UI</h2>
           <p className="text-sm text-gray-300">
             Explore my collection of animation components and interactive UI
             elements built with Motion.
           </p>
         </div>
-        <Link href="https://snappy.alisamadii.com/">
+        <Link href="https://pro.zuude-ui.com/">
           <Button variant="outline" className="text-black">
             Visit
           </Button>
