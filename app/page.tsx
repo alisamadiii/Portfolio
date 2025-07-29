@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 
-import { allBlogs, allTwitterContents } from "contentlayer/generated";
+import { allTwitterContents } from "contentlayer/generated";
 
 import { Text } from "@/components/ui/text";
 import { Linkedin } from "lucide-react";
