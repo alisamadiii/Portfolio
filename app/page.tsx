@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Experience from "@/components/experience";
 import Apps from "@/components/apps";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const skills = [
@@ -33,11 +33,11 @@ const skills = [
     description: "A utility-first CSS framework for rapid UI development",
   },
   {
-    name: "Framer Motion",
+    name: "Motion",
     description: "A production-ready motion library for React",
   },
   {
-    name: "Redix UI",
+    name: "Shadcn UI",
     description:
       "An open source UI component library for building high-quality interfaces",
   },
@@ -49,6 +49,10 @@ const skills = [
   {
     name: "Better Auth",
     description: "A modern authentication library built",
+  },
+  {
+    name: "Lemon Squeezy",
+    description: "A platform for selling digital products",
   },
 ];
 
@@ -85,6 +89,15 @@ export default function Home() {
           </Button>
         </Link>
       </div>
+      {/* <div className="absolute right-0 top-0 -z-20 h-[100dvh] bg-red-500 opacity-10">
+        <video
+          src="https://vztpjn0djt.ufs.sh/f/RAHCy45jEybltJ6sRJQSzao8JKyu7h1mvi6bR3WYqeXkUV9Z"
+          muted
+          autoPlay
+          loop
+          className="aspect-[3/4] h-full object-cover"
+        />
+      </div> */}
       <div className="absolute inset-0 isolate -z-20 max-h-dvh overflow-hidden">
         <motion.div
           style={{ y: backgroundY }}
@@ -169,7 +182,7 @@ export default function Home() {
       </div>
 
       <Badge className="mt-7 text-xs">
-        Currently building Motion UI with Framer Motion
+        Currently building Motion UI with Motion
       </Badge>
 
       <div className="mt-2">
@@ -177,12 +190,17 @@ export default function Home() {
           Building <span className="text-primary">Website</span> is My Passion!
         </Text>
         <Text element="p" className="mt-2 text-lg text-natural-700">
-          Hey, I&apos;m Ali! I&apos;ve been working in web development for 3
+          Hey, I&apos;m Ali! I&apos;ve been working in web development for 4
           years, mainly focusing on front-end development with ReactJS.
         </Text>
       </div>
 
-      <ExperienceContent />
+      <div className="mt-8 flex flex-col items-start gap-1">
+        <a href="mailto:a@alisamadii.com" className={buttonVariants({})}>
+          Let&apos;s collaborate
+        </a>
+        <ExperienceContent />
+      </div>
 
       <section className="my-20">
         <Text element="h2" variant="label" className="mb-8">
@@ -246,7 +264,7 @@ export default function Home() {
         <Apps />
       </section>
 
-      <section className="my-20">
+      {/* <section className="my-20">
         <Text element="h2" variant="label" className="mb-8">
           Blogs
         </Text>
@@ -273,7 +291,7 @@ export default function Home() {
               </Link>
             ))}
         </div>
-      </section>
+      </section> */}
 
       <TwitterContents />
       {/* <Works /> */}
@@ -350,7 +368,7 @@ function ExperienceDialog({ router }: { router: any }) {
       }}
       defaultOpen={searchParams === "true"}
     >
-      <DialogTrigger className="mt-4 text-natural-700 underline">
+      <DialogTrigger className="text-natural-700 underline">
         My experience
       </DialogTrigger>
       <DialogContent className="h-full w-full max-w-3xl overflow-hidden px-0 py-0 text-natural-700 hover:text-natural-900 md:h-[95%] md:rounded-3xl">

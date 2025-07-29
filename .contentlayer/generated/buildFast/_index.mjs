@@ -7,9 +7,9 @@ import buildFast__npmPackagesMdx from './build-fast__npm-packages.mdx.json' with
 import buildFast__requirementsMdx from './build-fast__requirements.mdx.json' with { type: 'json' }
 import buildFast__serverMdx from './build-fast__server.mdx.json' with { type: 'json' }
 import buildFast__supbaseMdx from './build-fast__supbase.mdx.json' with { type: 'json' }
-import buildFast__ui__usefulComponentsMdx from './build-fast__ui__useful-components.mdx.json' with { type: 'json' }
 import buildFast__reactLibraries__generalHooksMdx from './build-fast__react-libraries__general-hooks.mdx.json' with { type: 'json' }
 import buildFast__reactLibraries__reactHotkeysHookMdx from './build-fast__react-libraries__react-hotkeys-hook.mdx.json' with { type: 'json' }
 import buildFast__reactLibraries__reactPdfMdx from './build-fast__react-libraries__react-pdf.mdx.json' with { type: 'json' }
+import buildFast__ui__usefulComponentsMdx from './build-fast__ui__useful-components.mdx.json' with { type: 'json' }
 
-export const allBuildFasts = [buildFast__errorHandlingMdx, buildFast__linksMdx, buildFast__mdxSetupMdx, buildFast__npmPackagesMdx, buildFast__requirementsMdx, buildFast__serverMdx, buildFast__supbaseMdx, buildFast__ui__usefulComponentsMdx, buildFast__reactLibraries__generalHooksMdx, buildFast__reactLibraries__reactHotkeysHookMdx, buildFast__reactLibraries__reactPdfMdx]
+export const allBuildFasts = [buildFast__errorHandlingMdx, buildFast__linksMdx, buildFast__mdxSetupMdx, buildFast__npmPackagesMdx, buildFast__requirementsMdx, buildFast__serverMdx, buildFast__supbaseMdx, buildFast__reactLibraries__generalHooksMdx, buildFast__reactLibraries__reactHotkeysHookMdx, buildFast__reactLibraries__reactPdfMdx, buildFast__ui__usefulComponentsMdx]
