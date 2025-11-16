@@ -8,7 +8,7 @@ import { Suspense, useState } from "react";
 import { allTwitterContents } from "contentlayer/generated";
 
 import { Text } from "@/components/ui/text";
-import { Linkedin } from "lucide-react";
+import { FileUser, Linkedin } from "lucide-react";
 import { Github } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -190,15 +190,30 @@ export default function Home() {
           Building <span className="text-primary">Website</span> is My Passion!
         </Text>
         <Text element="p" className="mt-2 text-lg text-natural-700">
-          Hey, I&apos;m Ali! I&apos;ve been working in web development for 4
-          years, mainly focusing on front-end development with ReactJS.
+          Hey, I&apos;m Ali! I&apos;ve been working in web development for 5
+          years, mainly focusing on frontend and fullstack development with
+          ReactJS.
         </Text>
       </div>
 
       <div className="mt-8 flex flex-col items-start gap-1">
-        <a href="mailto:a@alisamadii.com" className={buttonVariants({})}>
-          Let&apos;s collaborate
-        </a>
+        <div className="flex gap-2">
+          <a href="mailto:a@alisamadii.com" className={buttonVariants({})}>
+            Let&apos;s collaborate
+          </a>
+          <a
+            href="https://personal-work-ali.s3.us-west-2.amazonaws.com/alisamadi.pdf"
+            download
+            target="_blank"
+            className={buttonVariants({
+              variant: "outline",
+              className: "gap-1",
+            })}
+          >
+            <FileUser size={18} />
+            Download CV
+          </a>
+        </div>
         <ExperienceContent />
       </div>
 
