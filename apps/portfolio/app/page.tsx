@@ -186,7 +186,7 @@ export default function Home() {
       </Badge>
 
       <div className="mt-2">
-        <h1 className="text-3xl">
+        <h1 className="text-3xl md:text-4xl">
           Building <span className="text-primary">Website</span> is My Passion!
         </h1>
         <p className="text-natural-700 mt-2 text-lg">
@@ -218,7 +218,9 @@ export default function Home() {
       </div>
 
       <section className="my-20">
-        <h2 className="mb-8">What I use</h2>
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          What I use
+        </h2>
 
         <ul className="flex flex-col gap-4">
           {skills.map((skill) => (
@@ -234,7 +236,9 @@ export default function Home() {
       </section>
 
       <section className="my-20">
-        <h2 className="mb-8">Projects</h2>
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          Projects
+        </h2>
 
         <div className="flex flex-col gap-4">
           {projects.map((project) => (
@@ -254,7 +258,9 @@ export default function Home() {
       </section>
 
       <section className="my-20">
-        <h2 className="mb-8">The App/Website I&apos;m using</h2>
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          The App/Website I&apos;m using
+        </h2>
 
         <Apps />
       </section>
@@ -292,7 +298,9 @@ export default function Home() {
       {/* <Works /> */}
 
       <section className="my-20">
-        <h2 className="mb-8">Random Stuff</h2>
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          Random Stuff
+        </h2>
 
         <div className="flex flex-col gap-4">
           <Link
@@ -368,7 +376,9 @@ function TwitterContents() {
 
   return (
     <section className="relative my-20">
-      <h2 className="mb-8">Contents</h2>
+      <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+        Contents
+      </h2>
 
       {/* <div
         className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}

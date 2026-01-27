@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cabin_Condensed, Geist, Geist_Mono } from "next/font/google";
 
 import "@workspace/ui/globals.css";
 
@@ -12,6 +12,12 @@ import { TRPCReactProvider } from "@workspace/trpc/client";
 const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
+});
+
+const fontHeading = Cabin_Condensed({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-heading",
 });
 
 const fontMono = Geist_Mono({
@@ -48,7 +54,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
+        className={`${fontSans.variable} ${fontHeading.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <TRPCReactProvider>
           <Providers>
