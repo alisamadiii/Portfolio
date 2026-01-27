@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import Image from "next/image";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileUser, Github, Linkedin } from "lucide-react";
@@ -14,7 +13,6 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { cn } from "@workspace/ui/lib/utils";
 
 import Apps from "../components/apps";
 import Experience from "../components/experience";
@@ -127,8 +125,8 @@ export default function Home() {
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <Image
-          src="/my-image.png"
+        <img
+          src="https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png"
           alt="Profile picture"
           width={128}
           height={128}
@@ -339,16 +337,16 @@ export default function Home() {
 }
 
 function ExperienceContent() {
-  const router = useRouter();
   return (
     <Suspense fallback={null}>
-      <ExperienceDialog router={router} />
+      <ExperienceDialog />
     </Suspense>
   );
 }
 
-function ExperienceDialog({ router }: { router: any }) {
+function ExperienceDialog() {
   const searchParams = useSearchParams().get("experience");
+  const router = useRouter();
 
   return (
     <Dialog
@@ -370,99 +368,3 @@ function ExperienceDialog({ router }: { router: any }) {
     </Dialog>
   );
 }
-
-function TwitterContents() {
-  const [showMore, setShowMore] = useState(false);
-
-  return (
-    <section className="relative my-20">
-      <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
-        Contents
-      </h2>
-
-      {/* <div
-        className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}
-        style={{
-          maskImage: !showMore
-            ? "linear-gradient(to top, transparent 10%, black 100%)"
-            : "",
-        }}
-      >
-        {allTwitterContents
-          .sort((a, b) => Number(a.slugAsParams) - Number(b.slugAsParams))
-          .slice(0, showMore ? allTwitterContents.length : 15)
-          .map((content, index) => (
-            <Link
-              href={`/x-content/${index + 1}`}
-              key={content._id}
-              className="group rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md"
-            >
-              <span className="mb-2 block text-xs text-neutral-500">
-                #{index + 1}
-              </span>
-              <h3 className="group-hover:text-primary text-base font-medium text-neutral-900 transition-colors">
-                {allTwitterContents[index].title}
-              </h3>
-            </Link>
-          ))}
-      </div> */}
-      <Button
-        onClick={() => setShowMore(!showMore)}
-        className={cn(
-          "absolute bottom-8 left-1/2 -translate-x-1/2",
-          showMore && "bottom-[-54px]"
-        )}
-      >
-        {showMore ? "Show Less" : "Show More"}
-      </Button>
-    </section>
-  );
-}
-
-// function Works() {
-//   const [showMore, setShowMore] = useState(false);
-
-//   return (
-//     <section className="relative my-20">
-//       <Text element="h2" variant="label" className="mb-8">
-//         Works (Animations)
-//       </Text>
-
-//       <div
-//         className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3")}
-//         style={{
-//           maskImage: !showMore
-//             ? "linear-gradient(to top, transparent 10%, black 100%)"
-//             : "",
-//         }}
-//       >
-//         {allWorks
-//           .sort((a, b) => Number(a.slugAsParams) - Number(b.slugAsParams))
-//           .slice(0, showMore ? allWorks.length : 15)
-//           .map((work, index) => (
-//             <Link
-//               href={`/work/${index + 1}`}
-//               key={work._id}
-//               className="group rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition-all hover:border-neutral-300 hover:shadow-md"
-//             >
-//               <span className="mb-2 block text-xs text-neutral-500">
-//                 #{index + 1}
-//               </span>
-//               <h3 className="text-base font-medium text-neutral-900 transition-colors group-hover:text-primary">
-//                 {work.title}
-//               </h3>
-//             </Link>
-//           ))}
-//       </div>
-//       <Button
-//         onClick={() => setShowMore(!showMore)}
-//         className={cn(
-//           "absolute bottom-8 left-1/2 -translate-x-1/2",
-//           showMore && "bottom-[-54px]"
-//         )}
-//       >
-//         {showMore ? "Show Less" : "Show More"}
-//       </Button>
-//     </section>
-//   );
-// }
