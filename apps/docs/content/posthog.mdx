@@ -1,0 +1,79 @@
+---
+title: PostHog
+---
+
+```npm
+npm install posthog-js
+```
+
+```tsx title="posthog.ts"
+import posthog from "posthog-js";
+```
+
+```tsx title="providers.tsx"
+"use client";
+
+import { useEffect } from "react";
+import posthog from "posthog-js";
+import { PostHogProvider as PHProvider } from "posthog-js/react";
+
+export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+      api_host:
+        process.env.NEXT_PUBLIC_POSTHOG_HOST! || "https://us.i.posthog.com",
+      // Use 'identified_only' to create profiles only for users identified by email (like Gmail)
+      // This ensures person profiles are created when users are identified via posthog.identify()
+      person_profiles: "identified_only",
+      defaults: "2025-11-30",
+    });
+  }, []);
+
+  return <PHProvider client={posthog}>{children}</PHProvider>;
+}
+```
+
+```tsx title="server.ts"
+import { PostHog } from "posthog-node";
+
+export const PostHogClient = () => {
+  const posthogClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+    flushAt: 1,
+    flushInterval: 0,
+  });
+  return posthogClient;
+};
+```
+
+```tsx title="use-posthog-identify.ts"
+"use client";
+
+import { useEffect } from "react";
+import posthog from "posthog-js";
+
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+
+/**
+ * Hook to identify users in PostHog by their email
+ * This creates person profiles using email addresses (like Gmail)
+ */
+export const PostHogIdentify = () => {
+  const { data: userData } = useCurrentUser();
+
+  useEffect(() => {
+    if (userData?.user?.email && userData?.user?.id) {
+      // Identify user by email (e.g., Gmail address)
+      // This creates a person profile in PostHog using the email as the identifier
+      posthog.identify(userData.user.id, {
+        email: userData.user.email,
+      });
+    } else {
+      // Reset identification when user logs out
+      posthog.reset();
+    }
+  }, [userData?.user?.email, userData?.user?.id]);
+
+  return null;
+};
+```

@@ -1,13 +1,118 @@
 ---
-title: Hello World
-description: Your first document
+title: Useful Packages
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+```npm
+npm install prettier prettier-plugin-tailwindcss @ianvs/prettier-plugin-sort-imports
+```
 
-## What is Next?
+- ```json title=".prettierrc"
+  {
+    "plugins": [
+      "@ianvs/prettier-plugin-sort-imports",
+      "prettier-plugin-tailwindcss"
+    ],
+    "importOrder": [
+      "^(react/(.*)$)|^(react$)",
+      "^(next/(.*)$)|^(next$)",
+      "<THIRD_PARTY_MODULES>",
+      "",
+      "^types$",
+      "^@/env(.*)$",
+      "^@/types/(.*)$",
+      "",
+      "^(.*)/helper$",
+      "^@/db",
+      "",
+      "^@/providers/(.*)$",
+      "^@/emails/(.*)$",
+      "^@/db/(.*)$",
+      "^@/config/(.*)$",
+      "^@/lib/(.*)$",
+      "^@/hooks/(.*)$",
+      "",
+      "^@/components/ui/(.*)$",
+      "^@/components/(.*)$",
+      "",
+      "^@/styles/(.*)$",
+      "^@/app/(.*)$",
+      "",
+      "^[./]"
+    ],
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": false,
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "singleAttributePerLine": false
+  }
+  ```
+  ```json title=".prettierrc"
+    .eslintrc.json
+  pnpm-lock.yaml
+  .lintstagedrc
+  .next
+  ```
 
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
-</Cards>
+```npm
+ npm install date-fns
+```
+
+```npm
+npm install zod
+```
+
+```npm
+npm install next-themes
+```
+
+- ```tsx
+  "use client";
+
+  import * as React from "react";
+  import { ThemeProvider as NextThemesProvider } from "next-themes";
+
+  export function NextThemeProviders({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) {
+    return (
+      <NextThemesProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+        enableColorScheme
+      >
+        {children}
+      </NextThemesProvider>
+    );
+  }
+  ```
+
+```npm
+npm install motion
+```
+
+```npm
+npm install axios
+```
+
+```npm
+npm install lucide-react
+```
+
+```npm
+npm install react-hotkeys-hook
+```
+
+```npm
+npm install zustand
+```
+
+
+```npm
+https://ionicframework.com/docs/api/spinner
+```

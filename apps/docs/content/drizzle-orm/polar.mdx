@@ -1,0 +1,831 @@
+---
+title: Polar + Better Auth + TRPC
+---
+
+```npm
+npm install @polar-sh/sdk @polar-sh/better-auth
+```
+
+```tsx title="auth.ts"
+import {
+  checkout,
+  polar,
+  portal,
+  usage,
+  webhooks,
+} from "@polar-sh/better-auth";
+import { Polar } from "@polar-sh/sdk";
+```
+
+```tsx title="schema.ts"
+import { sql } from "drizzle-orm";
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+
+export const products = pgTable("product", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  trialInterval: text("trial_interval", {
+    enum: ["day", "week", "month", "year"],
+  }),
+  trialIntervalCount: integer("trial_interval_count").default(0),
+  popular: boolean("popular").notNull().default(false),
+  slug: text("slug").unique().notNull(),
+  priceAmount: integer("price_amount").notNull(),
+  priceCurrency: text("price_currency").notNull().default("usd"),
+  recurringInterval: text("recurring_interval", {
+    enum: ["day", "week", "month", "year"],
+  }),
+  isRecurring: boolean("is_recurring").notNull().default(true),
+  isArchived: boolean("is_archived").notNull().default(false),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const subscriptions = pgTable("subscription", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  email: text("email").notNull(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("usd"),
+  productId: text("product_id").notNull(),
+  status: text("status", {
+    enum: Object.values(SubscriptionStatus) as [SubscriptionStatus],
+  }).notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  trialStart: timestamp("trial_start"),
+  trialEnd: timestamp("trial_end"),
+  startedAt: timestamp("started_at"),
+  canceledAt: timestamp("canceled_at"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  recurringInterval: text("recurring_interval", {
+    enum: Object.values(SubscriptionRecurringInterval) as [
+      SubscriptionRecurringInterval
+    ],
+  }),
+  customerCancellationReason: text("customer_cancellation_reason"),
+  customerCancellationComment: text("customer_cancellation_comment"),
+  metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
+});
+
+export const orders = pgTable("order", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  email: text("email").notNull(),
+  productId: text("product_id").notNull(),
+  billingName: text("billing_name").notNull(),
+  subscriptionId: text("subscription_id").notNull(),
+  billingReason: text("billing_reason", {
+    enum: Object.values(OrderBillingReason) as [OrderBillingReason],
+  }).notNull(),
+  totalAmount: integer("total_amount").notNull(),
+  invoiceNumber: text("invoice_number").notNull(),
+  status: text("status", {
+    enum: Object.values(OrderStatus) as [OrderStatus],
+  }).notNull(),
+  discountAmount: integer("discount_amount").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const webhookEvents = pgTable("webhook_events", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  timestamp: timestamp("timestamp").notNull(),
+  type: text("type").notNull(), // e.g. subscription.updated
+  createdAt: timestamp("created_at").defaultNow(),
+  payload: jsonb("payload").$type<unknown>().notNull(),
+});
+
+// Products
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+export type UpdateProduct = typeof products.$inferSelect;
+
+// Subscriptions
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+export type UpdateSubscription = typeof subscriptions.$inferSelect;
+
+// Orders
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+export type UpdateOrder = typeof orders.$inferSelect;
+
+// Webhook Events
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+export type UpdateWebhookEvent = typeof webhookEvents.$inferSelect;
+```
+
+```tsx title="auth.ts"
+import {
+  createCustomer,
+  createOrder,
+  createProduct,
+  createSubscription,
+  deleteCustomer,
+  revokeSubscriptionOnRefund,
+  updateCustomer,
+  updateOrder,
+  updateProduct,
+  updateSubscription,
+} from "./auth-action";
+
+export const polarClient = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN!,
+  // Use 'sandbox' if you're using the Polar Sandbox environment
+  // Remember that access tokens, products, etc. are completely separated between environments.
+  // Access tokens obtained in Production are for instance not usable in the Sandbox environment.
+  server: process.env.POLAR_SERVER as "sandbox" | "production",
+});
+
+ plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      use: [
+        portal(),
+        usage(),
+        webhooks({
+          secret: process.env.POLAR_WEBHOOK_SECRET!,
+          onPayload: async (payload) => {
+            await db.insert(webhookEvents).values({
+              timestamp: payload.timestamp,
+              type: payload.type,
+              payload: payload.data,
+            });
+
+            if (payload.type === "order.updated") {
+              await updateOrder(payload.data);
+            }
+          },
+          onProductCreated: async ({ data }) => {
+            await createProduct(data);
+          },
+          onProductUpdated: async ({ data }) => {
+            await updateProduct(data);
+          },
+          onOrderCreated: async ({ data }) => {
+            await createOrder(data);
+          },
+          onOrderRefunded: async ({ data }) => {
+            await updateOrder(data);
+            await revokeSubscriptionOnRefund(data.subscriptionId ?? "");
+          },
+          onCustomerCreated: async ({ data }) => {
+            // Wait for 1 second to ensure the customer is created in the database
+            setTimeout(async () => {
+              await createCustomer(data);
+              const { status } = await auth.api.requestPasswordReset({
+                body: {
+                  email: data.email,
+                  redirectTo: `${process.env.BETTER_AUTH_URL}/onboarding`,
+                },
+                headers: await headers(),
+              });
+
+              if (!status) {
+                throw new APIError(403, {
+                  message: "Failed to send password reset email",
+                });
+              }
+            }, 1000);
+          },
+          onCustomerUpdated: async ({ data }) => {
+            await updateCustomer(data);
+          },
+          onCustomerDeleted: async ({ data }) => {
+            await deleteCustomer(data);
+          },
+          onSubscriptionCreated: async ({ data }) => {
+            await createSubscription(data);
+          },
+          onSubscriptionUpdated: async ({ data }) => {
+            await updateSubscription(data);
+          },
+        }),
+      ],
+    }),
+  ],
+```
+
+```tsx title="auth-action.ts"
+import { Customer } from "@polar-sh/sdk/models/components/customer.js";
+import { Order } from "@polar-sh/sdk/models/components/order.js";
+import type { Product } from "@polar-sh/sdk/models/components/product.js";
+import { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
+import { eq } from "drizzle-orm";
+
+import { db } from "@/db";
+import { account, orders, products, subscriptions, user } from "@/db/schema";
+
+import { polarClient } from "./auth";
+import { encrypt } from "./encryption";
+
+// ----------------------------
+// 📦 Products
+// ----------------------------
+export const createProduct = async (data: Product) => {
+  await db.insert(products).values({
+    id: data.id,
+    name: data.name,
+    description: data.description ?? null,
+    popular: false,
+    slug: `/${data.name.toLowerCase().replace(/ /g, "-")}`,
+    // @ts-ignore
+    priceAmount: data.prices[0]?.priceAmount || 0,
+    // @ts-ignore
+    priceCurrency: data.prices[0]?.priceCurrency || "usd",
+    recurringInterval: data.recurringInterval ?? null,
+    isRecurring: data.isRecurring,
+    isArchived: false,
+    trialInterval: data.trialInterval ?? null,
+    trialIntervalCount: data.trialIntervalCount ?? 0,
+    createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+    updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
+  });
+};
+
+export const updateProduct = async (data: Product) => {
+  await db
+    .update(products)
+    .set({
+      name: data.name,
+      description: data.description ?? null,
+      slug: `/${data.name.toLowerCase().replace(/ /g, "-")}`,
+      // @ts-ignore
+      priceAmount: data.prices[0]?.priceAmount || 0,
+      // @ts-ignore
+      priceCurrency: data.prices[0]?.priceCurrency || "usd",
+      recurringInterval: data.recurringInterval ?? null,
+      isRecurring: data.isRecurring,
+      isArchived: data.isArchived,
+      trialInterval: data.trialInterval ?? null,
+      trialIntervalCount: data.trialIntervalCount ?? 0,
+      updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
+    })
+    .where(eq(products.id, data.id));
+};
+// ----------------------------
+// 📦 Products END
+// ----------------------------
+
+// ----------------------------
+// 🛒 Orders
+// ----------------------------
+export const createOrder = async (data: Order) => {
+  if (!data.customer.externalId)
+    throw new Error("Customer external ID is required");
+
+  await db.insert(orders).values({
+    id: data.id,
+    subscriptionId: data.subscriptionId ?? "",
+    email: data.customer.email ?? "",
+    userId: data.customer.externalId,
+    billingReason: data.billingReason,
+    productId: data.productId,
+    billingName: data.billingName ?? "",
+    totalAmount: data.totalAmount,
+    invoiceNumber: data.invoiceNumber,
+    status: data.status,
+    discountAmount: data.discountAmount,
+    createdAt: data.createdAt,
+    updatedAt: data.modifiedAt,
+  });
+};
+export const updateOrder = async (data: Order) => {
+  await db
+    .update(orders)
+    .set({
+      subscriptionId: data.subscriptionId ?? "",
+      email: data.customer.email,
+      userId: data.customer.externalId ?? undefined,
+      productId: data.productId,
+      billingName: data.billingName ?? undefined,
+      totalAmount: data.totalAmount,
+      invoiceNumber: data.invoiceNumber,
+      status: data.status,
+      discountAmount: data.discountAmount,
+      updatedAt: data.modifiedAt,
+    })
+    .where(eq(orders.id, data.id));
+};
+export const revokeSubscriptionOnRefund = async (subscriptionId: string) => {
+  if (!subscriptionId) throw new Error("Subscription ID is required");
+
+  await polarClient.subscriptions.revoke({
+    id: subscriptionId,
+  });
+};
+// ----------------------------
+// 🛒 Orders END
+// ----------------------------
+
+// ----------------------------
+// 👤 Customers
+// ----------------------------
+export const createCustomer = async (data: Customer) => {
+  if (!data.externalId) throw new Error("Customer external ID is required");
+
+  await db.insert(user).values({
+    id: data.externalId,
+    name: data.name ?? "",
+    email: data.email ?? "",
+    emailVerified: false,
+    createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+    updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
+  });
+
+  await db.insert(account).values({
+    id: data.id,
+    accountId: data.externalId,
+    providerId: "credential",
+    userId: data.externalId,
+    password: null,
+    createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+    updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
+  });
+};
+export const updateCustomer = async (data: Customer) => {
+  if (!data.externalId) throw new Error("Customer external ID is required");
+
+  // Encrypt billing address before storing
+  const encryptedBillingAddress = data.billingAddress
+    ? await encrypt(JSON.stringify(data.billingAddress))
+    : undefined;
+
+  await db
+    .update(user)
+    .set({
+      name: data.name ?? undefined,
+      email: data.email ?? undefined,
+      metadata: data.metadata ?? undefined,
+      billingAddress: encryptedBillingAddress ?? undefined,
+    })
+    .where(eq(user.id, data.externalId));
+};
+export const deleteCustomer = async (data: Customer) => {
+  if (!data.email) throw new Error("Customer email is required");
+
+  await db.delete(user).where(eq(user.email, data.email));
+};
+// ----------------------------
+// 👤 Customers END
+// ----------------------------
+
+// ----------------------------
+// 📅 Subscriptions
+// ----------------------------
+export const createSubscription = async (data: Subscription) => {
+  await db.insert(subscriptions).values({
+    id: data.id,
+    status: data.status,
+    email: data.customer.email ?? "",
+    userId: data.customer.externalId ?? "",
+    productId: data.productId,
+    amount: data.amount,
+    currency: data.currency,
+    createdAt: data.createdAt,
+    updatedAt: data.modifiedAt,
+    trialStart: data.trialStart,
+    trialEnd: data.trialEnd,
+    startedAt: data.startedAt,
+    canceledAt: data.canceledAt,
+    cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+    recurringInterval: data.recurringInterval,
+    customerCancellationReason: data.customerCancellationReason,
+    customerCancellationComment: data.customerCancellationComment,
+    metadata: data.metadata ?? {},
+  });
+};
+export const updateSubscription = async (data: Subscription) => {
+  await db
+    .update(subscriptions)
+    .set({
+      status: data.status,
+      email: data.customer.email ?? "",
+      userId: data.customer.externalId ?? "",
+      productId: data.productId,
+      amount: data.amount,
+      currency: data.currency,
+      updatedAt: data.modifiedAt,
+      trialStart: data.trialStart,
+      trialEnd: data.trialEnd,
+      startedAt: data.startedAt,
+      canceledAt: data.canceledAt,
+      cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      recurringInterval: data.recurringInterval,
+      customerCancellationReason: data.customerCancellationReason,
+      customerCancellationComment: data.customerCancellationComment,
+      metadata: data.metadata ?? {},
+    })
+    .where(eq(subscriptions.id, data.id));
+};
+// ----------------------------
+// 📅 Subscriptions END
+// ----------------------------
+```
+
+```tsx title="auth-client.ts"
+export const authClient = createAuthClient({
+  baseURL: process.env.BETTER_AUTH_URL!,
+  plugins: [polarClient()],
+});
+```
+
+```tsx title="trpc/routers/payment.ts"
+import { cacheLife } from "next/cache";
+import { cookies } from "next/headers";
+import type { SubscriptionProrationBehavior } from "@polar-sh/sdk/models/components/subscriptionprorationbehavior.js";
+import { TRPCError } from "@trpc/server";
+import { asc, desc, eq, or } from "drizzle-orm";
+import { z } from "zod";
+
+import { db } from "@/db";
+import {
+  orders,
+  products,
+  subscriptions,
+  UpdateProduct,
+  type InsertProduct,
+} from "@/db/schema";
+
+import {
+  adminProcedure,
+  authenticatedProcedure,
+  baseProcedure,
+  createTRPCRouter,
+} from "@/trpc/init";
+
+import { polarClient } from "@/lib/auth";
+
+export const paymentsRouter = createTRPCRouter({
+  /**
+   * Fetches all products ordered by price amount
+   * @returns Array of products sorted by price
+   */
+  getProducts: baseProcedure.query(async () => {
+    "use cache";
+    cacheLife("minutes");
+    try {
+      const productsList = await db
+        .select()
+        .from(products)
+        .orderBy(asc(products.priceAmount));
+      return productsList;
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error ? error.message : "Failed to fetch products",
+        cause: error,
+      });
+    }
+  }),
+
+  /**
+   * Creates a new product
+   * @param product - The product data to insert
+   * @returns The created product
+   */
+  createProduct: adminProcedure
+    .input(z.any() as z.ZodType<InsertProduct>)
+    .mutation(async ({ input }) => {
+      try {
+        const [newProduct] = await db
+          .insert(products)
+          .values(input)
+          .returning();
+        return newProduct;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to create product",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Updates an existing product
+   * @param id - The ID of the product to update
+   * @param product - Partial product data to update
+   * @returns The updated product
+   */
+  updateProduct: adminProcedure
+    .input(z.any() as z.ZodType<UpdateProduct>)
+    .mutation(async ({ input }) => {
+      try {
+        const { id, ...productData } = input;
+        const [updatedProduct] = await db
+          .update(products)
+          .set({
+            ...productData,
+            updatedAt: new Date(),
+          })
+          .where(eq(products.id, id))
+          .returning();
+        return updatedProduct;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to update product",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Deletes a product by ID
+   * @param id - The ID of the product to delete
+   * @returns The deleted product
+   */
+  deleteProduct: adminProcedure
+    .input(z.string())
+    .mutation(async ({ input }) => {
+      try {
+        const [deletedProduct] = await db
+          .delete(products)
+          .where(eq(products.id, input))
+          .returning();
+        return deletedProduct;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to delete product",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Creates a checkout session for a product
+   * @param productId - The ID of the product to checkout
+   * @param successUrl - Optional custom success URL
+   * @param discountId - Optional discount code ID
+   * @returns Checkout session response
+   */
+  createCheckout: authenticatedProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        successUrl: z.string().optional(),
+        discountId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const { productId, successUrl, discountId } = input;
+
+        const checkoutIdPlaceholder = "{CHECKOUT_ID}";
+        let url: string;
+        if (successUrl) {
+          const delimiter = successUrl.includes("?") ? "&" : "?";
+          url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
+        } else {
+          const base = (process.env.BETTER_AUTH_URL || "").replace(/\/$/, "");
+          url = `${base}/success?checkout_id=${checkoutIdPlaceholder}`;
+        }
+
+        const response = await polarClient.checkouts.create({
+          products: [productId],
+          externalCustomerId: ctx.session.user.id,
+          successUrl: url,
+          discountId: discountId ?? undefined,
+        });
+        return response;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to create checkout",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Retrieves a checkout session by ID
+   * @param checkoutId - The ID of the checkout session
+   * @returns Checkout session data
+   */
+  getCheckoutSession: baseProcedure
+    .input(z.string())
+    .query(async ({ input }) => {
+      try {
+        const response = await polarClient.checkouts.get({
+          id: input,
+        });
+        return response;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to get checkout session",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Switches a subscription to a different product/plan
+   * @param subscriptionId - The ID of the subscription to update
+   * @param toProductId - The ID of the new product/plan
+   * @param prorationBehavior - Optional proration behavior
+   * @returns Response from the subscription update
+   */
+  switchPlan: authenticatedProcedure
+    .input(
+      z.object({
+        subscriptionId: z.string(),
+        toProductId: z.string(),
+        prorationBehavior: z
+          .enum([
+            "prorate",
+            "invoice",
+          ] as const satisfies readonly SubscriptionProrationBehavior[])
+          .optional()
+          .default("prorate"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { subscriptionId, toProductId, prorationBehavior } = input;
+        const response = await polarClient.subscriptions.update({
+          id: subscriptionId,
+          subscriptionUpdate: {
+            productId: toProductId,
+            prorationBehavior:
+              prorationBehavior as SubscriptionProrationBehavior,
+          },
+        });
+        return response;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to switch plan",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Deletes a customer and clears all cookies
+   * @param userId - The ID of the user/customer to delete
+   * @returns Response from the customer deletion
+   */
+  deleteCustomer: authenticatedProcedure
+    .input(z.string())
+    .mutation(async ({ input }) => {
+      try {
+        const cookieStore = await cookies();
+        await polarClient.customers.deleteExternal({
+          externalId: input,
+        });
+
+        // Delete all cookies
+        cookieStore.getAll().forEach((cookie) => {
+          cookieStore.delete(cookie.name);
+        });
+
+        return true;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to delete customer",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Fetches orders for a specific user by user ID or email
+   * @param userId - The ID of the user to get orders for
+   * @param email - The email of the user to get orders for
+   * @returns Promise<{data?: Order[], error?: string}> - Array of orders sorted by creation date (newest first)
+   */
+  getOrders: authenticatedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        email: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const { userId, email } = input;
+        const ordersList = await db
+          .select()
+          .from(orders)
+          .where(or(eq(orders.userId, userId), eq(orders.email, email)))
+          .orderBy(desc(orders.createdAt));
+
+        return ordersList;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to fetch orders",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Fetches subscriptions for a specific user by user ID
+   * @param userId - The ID of the user to get subscriptions for
+   * @returns Promise<{data?: Subscription[], error?: string}> - Array of subscriptions sorted by creation date (newest first)
+   */
+  getSubscriptions: authenticatedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const { userId } = input;
+
+        const subscriptionsList = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.userId, userId))
+          .orderBy(desc(subscriptions.createdAt));
+
+        return subscriptionsList;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch subscriptions",
+          cause: error,
+        });
+      }
+    }),
+});
+```
+
+```tsx title="trpc/init.ts"
+export const authenticatedProcedure = baseProcedure.use(
+  async ({ next, ctx }) => {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    // Session is already fetched and cached in context (via React cache())
+    if (!session) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to access this resource",
+      });
+    }
+
+    return next({ ctx: { ...ctx, session } });
+  }
+);
+export const adminProcedure = authenticatedProcedure.use(
+  async ({ next, ctx }) => {
+    if (ctx.session.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "You are not authorized to access this resource",
+      });
+    }
+
+    return next({ ctx });
+  }
+);
+```

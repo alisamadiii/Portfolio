@@ -1,0 +1,457 @@
+---
+title: Functions
+description: How to work with functions
+---
+
+```json title=".env"
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+AWS_BUCKET_ORIGIN=
+AWS_BUCKET_NAME=
+NEXT_PUBLIC_AWS_URL=
+```
+
+```json title="policy"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPublicReadForPublicPrefix",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::<bucket-name>/public/*"
+    }
+  ]
+}
+```
+
+```json title="cors"
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "GET"],
+    "AllowedOrigins": ["http://localhost:3000", "https://<your-domain>.com"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+```json title="policy-for-user"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::<bucket-name>/*"
+    }
+  ]
+}
+```
+
+```tsx title="schema.ts"
+export const s3Bucket = pgTable("s3_bucket", {
+  path: text("path").notNull().primaryKey(),
+  name: text("name").notNull(),
+  isPublic: boolean("is_public").notNull().default(false),
+  size: integer("size").notNull(),
+  contentType: text("content_type").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+});
+
+// S3 Buckets
+export type S3Bucket = typeof s3Bucket.$inferSelect;
+export type InsertS3Bucket = typeof s3Bucket.$inferInsert;
+export type UpdateS3Bucket = typeof s3Bucket.$inferSelect;
+```
+
+```tsx title="action.ts"
+"use server";
+
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl as getSignedUrlV4 } from "@aws-sdk/s3-request-presigner";
+import { desc, eq, ilike, inArray } from "drizzle-orm";
+
+import { db } from "@/db";
+import { InsertS3Bucket, s3Bucket } from "@/db/schema";
+
+const s3 = new S3Client({
+  region: process.env.AWS_BUCKET_ORIGIN!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY!,
+    secretAccessKey: process.env.AWS_SECRET_KEY!,
+  },
+});
+
+/**
+ * Generates a signed URL for uploading files to S3
+ * @param key - The S3 key/path for the file
+ * @returns Promise<{data?: string, error?: string}> - Signed URL for file upload (expires in 1 minute)
+ */
+export const getSignedUrl = async (key: string) => {
+  try {
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: key,
+    });
+    const signedUrl = await getSignedUrlV4(s3, command, {
+      expiresIn: 60, // 1 minute
+    });
+
+    return { data: signedUrl };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to generate signed URL",
+    };
+  }
+};
+
+/**
+ * Deletes multiple files from S3 bucket
+ * @param paths - Array of S3 keys/paths to delete
+ * @returns Promise<{data?: void, error?: string}>
+ */
+export const deleteFilesFromS3 = async (paths: string[]) => {
+  try {
+    const command = new DeleteObjectsCommand({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Delete: {
+        Objects: paths.map((path) => ({ Key: path })),
+      },
+    });
+    await s3.send(command);
+    return { data: undefined };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete files from S3",
+    };
+  }
+};
+
+/**
+ * Generates a signed URL for accessing/downloading files from S3
+ * @param path - The S3 key/path of the file
+ * @param expiresIn - Expiration time in seconds for the signed URL
+ * @returns Promise<{data?: string, error?: string}> - Signed URL for file access
+ */
+export const generatePublicUrl = async ({
+  path,
+  expiresIn,
+}: {
+  path: string;
+  expiresIn: number;
+}) => {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: path,
+    });
+    const signedUrl = await getSignedUrlV4(s3, command, {
+      expiresIn,
+    });
+
+    return { data: signedUrl };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to generate public URL",
+    };
+  }
+};
+
+/**
+ * Adds or updates a file record in the database
+ * @param props - File metadata to insert/update
+ * @returns Promise<{data?: void, error?: string}>
+ */
+export const addFile = async (props: InsertS3Bucket) => {
+  try {
+    await db
+      .insert(s3Bucket)
+      .values(props)
+      .onConflictDoUpdate({
+        target: s3Bucket.path,
+        set: {
+          name: props.name,
+          isPublic: props.isPublic,
+          path: props.path,
+          size: props.size,
+          contentType: props.contentType,
+          userId: props.userId,
+        },
+      });
+    return { data: undefined };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to add file",
+    };
+  }
+};
+
+/**
+ * Deletes files from both S3 and database
+ * @param paths - Array of S3 keys/paths to delete
+ * @returns Promise<{data?: void, error?: string}>
+ */
+export const deleteFiles = async (paths: string[]) => {
+  try {
+    await deleteFilesFromS3(paths);
+    await db.delete(s3Bucket).where(inArray(s3Bucket.path, paths));
+    return { data: undefined };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to delete files",
+    };
+  }
+};
+
+/**
+ * Fetches the most recent 10 files from the database
+ * @returns Promise<{data?: S3Bucket[], error?: string}> - Array of file records sorted by creation date (newest first)
+ */
+export const getFiles = async ({ searchByPath }: { searchByPath?: string }) => {
+  try {
+    const files = await db
+      .select()
+      .from(s3Bucket)
+      .orderBy(desc(s3Bucket.createdAt))
+      .where(
+        searchByPath ? ilike(s3Bucket.path, `%${searchByPath}%`) : undefined
+      )
+      .limit(10)
+      .offset(0);
+
+    return { data: files };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to fetch files",
+    };
+  }
+};
+```
+
+```tsx title="hooks.tsx"
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
+
+import { getKeyFromUrl } from "@/lib/utils";
+
+import {
+  addFile,
+  deleteFiles,
+  generatePublicUrl,
+  getSignedUrl,
+} from "./action";
+
+/**
+ * Custom hook for file upload functionality with progress tracking
+ * @returns Object containing upload state and functions
+ */
+export const useUpload = () => {
+  const queryClient = useQueryClient();
+
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+
+  /**
+   * Uploads multiple files to S3 with progress tracking
+   * @param files - Array of files to upload
+   * @param path - Path configuration for file storage
+   * @param userId - Optional user ID for file ownership
+   * @returns Promise<string[]> - Array of uploaded file keys
+   */
+  const uploadFiles = async (
+    files: File[],
+    {
+      path,
+      userId,
+    }: {
+      path: {
+        value?: string;
+        use?: boolean;
+      };
+      userId?: string;
+    }
+  ) => {
+    try {
+      setIsUploading(true);
+      setError(null);
+      setProgress(0);
+      setUploadedFiles([]);
+
+      const { value: pathValue, use: usePath } = path ?? {};
+
+      // Create all signed URLs in parallel
+      const uploadPromises = files.map(async (file) => {
+        let key = `${pathValue}/${uuidv4()}`;
+
+        if (!pathValue) {
+          key = `${uuidv4()}`;
+        }
+
+        if (usePath) {
+          key = pathValue || "";
+        }
+
+        const { data: signedUrl, error: signedUrlError } = await getSignedUrl(
+          key
+        );
+
+        if (signedUrlError) {
+          throw new Error(signedUrlError);
+        }
+
+        return {
+          file,
+          key,
+          signedUrl,
+        };
+      });
+
+      const uploadData = await Promise.all(uploadPromises);
+
+      // Upload all files in parallel with progress tracking
+      const uploadResults = await Promise.all(
+        uploadData.map(async ({ file, key, signedUrl }, index) => {
+          try {
+            if (!signedUrl) {
+              throw new Error("Signed URL is undefined");
+            }
+
+            const response = await axios.put(signedUrl, file, {
+              headers: {
+                "Content-Type": file.type,
+              },
+              onUploadProgress: (progressEvent) => {
+                setProgress(
+                  (progressEvent.loaded / (progressEvent.total ?? 1)) * 100
+                );
+              },
+            });
+
+            // Add to database
+            await addFile({
+              name: file.name,
+              isPublic: pathValue?.startsWith("public") ?? false,
+              path: getKeyFromUrl(signedUrl.split("?")?.[0] || "") || "",
+              size: file.size,
+              contentType: file.type,
+              userId,
+            });
+
+            // Update progress
+            // setProgress(((index + 1) / files.length) * 100);
+            setUploadedFiles((prev) => [...prev, file.name]);
+
+            return signedUrl.split("?")[0];
+          } catch (err) {
+            console.error(`Failed to upload ${file.name}:`, err);
+            throw err;
+          }
+        })
+      );
+
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      return uploadResults.map((result) => getKeyFromUrl(result || ""));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+      console.error("Upload error:", err);
+      throw err;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  /**
+   * Mutation for deleting files from S3 and database
+   */
+  const deleteFilesMutation = useMutation({
+    mutationFn: deleteFiles,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+    },
+    onError: (error) => {
+      console.error("Delete files error:", error);
+    },
+    meta: {
+      invalidateQuery: ["files"],
+    },
+  });
+
+  /**
+   * Mutation for generating public URLs for file access
+   */
+  const generatePublicUrlMutation = useMutation({
+    mutationFn: generatePublicUrl,
+    onSuccess: ({ data }) => {
+      window.open(data, "_blank");
+    },
+    onError: (error) => {
+      toast.error("Failed to generate public URL", {
+        description: error.message,
+      });
+      console.error("Generate public URL error:", error);
+    },
+  });
+
+  return {
+    progress,
+    error,
+    isUploading,
+    uploadedFiles,
+    uploadFiles,
+    deleteFilesMutation,
+    generatePublicUrlMutation,
+  };
+};
+```
+
+```tsx title="query.tsx"
+import { useQuery } from "@tanstack/react-query";
+
+import { getFiles } from "./action";
+
+/**
+ * Custom hook for fetching files from the database
+ * @returns UseQueryResult<S3Bucket[]> - Query result containing files array
+ */
+export const useGetFiles = ({ searchByPath }: { searchByPath?: string }) => {
+  return useQuery({
+    queryKey: ["files", searchByPath],
+    queryFn: async () => {
+      const { data, error } = await getFiles({ searchByPath });
+      if (error) {
+        throw new Error(error);
+      }
+      return data;
+    },
+  });
+};
+```

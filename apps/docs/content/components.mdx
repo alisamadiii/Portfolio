@@ -1,0 +1,571 @@
+---
+title: Components
+description: How to work with components
+---
+
+```tsx title="data-table.tsx"
+"use client";
+
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  Row,
+  Table as TableType,
+  useReactTable,
+} from "@tanstack/react-table";
+import { TRPCClientErrorBase } from "@trpc/client";
+import { DefaultErrorShape } from "@trpc/server/unstable-core-do-not-import";
+
+import { cn } from "@/lib/utils";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type DataTableProps<TData, TValue> = {
+  isLoading?: boolean | number;
+  error?: TRPCClientErrorBase<DefaultErrorShape> | null;
+  className?: string;
+} & (
+  | {
+      table: TableType<TData>;
+      onRowClick?: (row: Row<TData>) => void;
+    }
+  | {
+      columns: ColumnDef<TData, TValue>[];
+      data: TData[];
+      onRowClick?: (row: Row<TData>) => void;
+    }
+);
+
+export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
+  const tableConfig =
+    "table" in props
+      ? props.table
+      : useReactTable({
+          data: props.data,
+          columns: props.columns,
+          getCoreRowModel: getCoreRowModel(),
+        });
+
+  const { onRowClick, className, error } = props;
+
+  return (
+    <div
+      className={cn("bg-muted isolate overflow-hidden rounded-xl", className)}
+    >
+      <Table>
+        <TableHeader>
+          {tableConfig.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="border-b-0">
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead key={header.id} className="px-4">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {/* In HTML, <span> cannot be a child of <tbody>. This will cause a hydration error. */}
+          {/* I have to use a <TableRow> to fix this. */}
+          <TableRow className="pointer-events-none absolute inset-0">
+            <TableCell
+              colSpan={tableConfig.getAllColumns().length}
+              className="p-0"
+            >
+              <span className="bg-background absolute inset-0 -z-10 rounded-xl border"></span>
+            </TableCell>
+          </TableRow>
+          {/* =============================== */}
+          {props.isLoading ? (
+            Array.from({
+              length: typeof props.isLoading === "number" ? props.isLoading : 4,
+            }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell
+                  className="h-16 px-4"
+                  colSpan={tableConfig.getAllColumns().length}
+                >
+                  <Skeleton className="h-full w-full" />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : tableConfig.getRowModel().rows?.length ? (
+            tableConfig.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+                className={cn(
+                  "h-16",
+                  onRowClick
+                    ? "hover:bg-muted/50 cursor-pointer transition-colors"
+                    : ""
+                )}
+                onClick={() => onRowClick?.(row)}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="px-4">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={
+                  "columns" in props
+                    ? props.columns.length
+                    : tableConfig.getAllColumns().length
+                }
+                className="h-24 text-center"
+              >
+                {error ? error.message : "No results."}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+```
+
+## Forms
+
+```tsx title="reusable-form.tsx"
+import { Check, ChevronsUpDown } from "lucide-react";
+import { Path, UseFormRegisterReturn, UseFormReturn } from "react-hook-form";
+
+import { cn } from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { InputError } from "@/components/custom/label-input";
+
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Label } from "../ui/label";
+
+type InputType =
+  | "text"
+  | "number"
+  | "email"
+  | "password"
+  | "select"
+  | "separator"
+  | "checkbox"
+  | "file";
+
+type Inputs<T> =
+  | {
+      type: "separator";
+    }
+  | {
+      label?: string;
+      name: Path<T>;
+      type: "file";
+      accept?: string;
+      url?: string;
+      placeholder?: string;
+      defaultValue?: string;
+      description?: string;
+      customComponent?: (
+        field: UseFormRegisterReturn<Path<T>>
+      ) => React.ReactNode;
+    }
+  | {
+      label: string;
+      name: Path<T>;
+      type: Exclude<InputType, "select">;
+      placeholder?: string;
+      disabled?: boolean;
+    }
+  | {
+      label: string;
+      name: Path<T>;
+      type: "select";
+      options: { label: string; value: string }[];
+      customSelect?: (option: {
+        label: string;
+        value: string;
+      }) => React.ReactNode;
+      placeholder?: string;
+      onSearch?: (search: string) => void;
+    };
+
+interface ReusableFormProps<T> {
+  form: UseFormReturn<T | any>;
+  inputs: Inputs<T>[];
+  formRef?: React.RefObject<HTMLFormElement | null>;
+  onSubmit: (values: T) => void;
+  className?: string;
+}
+
+export const ReusableForm = <T extends Record<string, any>>({
+  form,
+  inputs,
+  formRef,
+  onSubmit,
+  className,
+}: ReusableFormProps<T>) => {
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={cn("flex w-full flex-col gap-6", className)}
+        ref={formRef}
+      >
+        {inputs.map((input) =>
+          input.type === "separator" ? (
+            <Separator key={input.type} />
+          ) : (
+            <FormField
+              key={input.type}
+              control={form.control}
+              name={input.name}
+              render={({ field }) => (
+                <FormItem>
+                  {input.type === "checkbox" ? (
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>{input.label}</FormLabel>
+                    </div>
+                  ) : input.type === "file" ? (
+                    <>
+                      {"label" in input && input.label && (
+                        <FormLabel>{input.label}</FormLabel>
+                      )}
+                      {"description" in input && input.description && (
+                        <p className="text-muted-foreground -mt-1 text-xs">
+                          {input.description}
+                        </p>
+                      )}
+                      {"customComponent" in input && input.customComponent && (
+                        <FormControl>
+                          {/* @ts-ignore */}
+                          {input.customComponent(field)}
+                        </FormControl>
+                      )}
+                      {!("customComponent" in input) && (
+                        <>
+                          <FormControl>
+                            {"url" in input && input.url ? (
+                              <Label>
+                                <Avatar
+                                  key={
+                                    field.value
+                                      ? URL.createObjectURL(field.value)
+                                      : input.url
+                                  }
+                                  className="motion-opacity-in-0 size-24"
+                                >
+                                  <AvatarImage
+                                    src={
+                                      field.value
+                                        ? URL.createObjectURL(field.value)
+                                        : input.url
+                                    }
+                                  />
+                                  <AvatarFallback />
+                                </Avatar>
+                                <Input
+                                  type="file"
+                                  accept={
+                                    "accept" in input ? input.accept : undefined
+                                  }
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      field.onChange({
+                                        target: {
+                                          value: file,
+                                        },
+                                      });
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                              </Label>
+                            ) : (
+                              <Input
+                                type="file"
+                                accept={
+                                  "accept" in input ? input.accept : undefined
+                                }
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    field.onChange({
+                                      target: {
+                                        value: file,
+                                      },
+                                    });
+                                  }
+                                }}
+                              />
+                            )}
+                          </FormControl>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <FormLabel>{input.label}</FormLabel>
+                      <FormControl>
+                        {input.type === "select" ? (
+                          input.onSearch ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                  aria-invalid={
+                                    !!form.formState.errors[input.name]?.message
+                                  }
+                                >
+                                  {field.value
+                                    ? input.options.find(
+                                        (option) => option.value === field.value
+                                      )?.label
+                                    : "Select an option"}
+                                  <ChevronsUpDown className="opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="pointer-events-auto w-full p-0">
+                                <Command>
+                                  <CommandInput
+                                    placeholder="Search options..."
+                                    onValueChange={(value) => {
+                                      input.onSearch?.(value);
+                                    }}
+                                  />
+                                  <CommandList>
+                                    <CommandEmpty>
+                                      No options found.
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {input.options.map((option) => (
+                                        <CommandItem
+                                          key={option.value}
+                                          value={option.value}
+                                          onSelect={(currentValue) => {
+                                            field.onChange(currentValue);
+                                          }}
+                                        >
+                                          {input.customSelect
+                                            ? input.customSelect(option)
+                                            : option.label}
+                                          <Check
+                                            className={cn(
+                                              "ml-auto",
+                                              field.value === option.value
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                          />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger
+                                className="w-full"
+                                aria-invalid={
+                                  !!form.formState.errors[input.name]?.message
+                                }
+                              >
+                                <SelectValue placeholder="Select an option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {input.options.map((option) => (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {input.customSelect
+                                      ? input.customSelect(option)
+                                      : option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )
+                        ) : (
+                          <Input
+                            type={input.type}
+                            {...field}
+                            placeholder={input.placeholder}
+                            disabled={input.disabled}
+                          />
+                        )}
+                      </FormControl>
+                    </>
+                  )}
+
+                  <InputError
+                    error={form.formState.errors[input.name]?.message as string}
+                  />
+                </FormItem>
+              )}
+            />
+          )
+        )}
+
+        {/* {form.formState.errors.root?.message && (
+          <p className="text-destructive -mt-3 text-sm">
+            {form.formState.errors.root?.message}
+          </p>
+        )} */}
+        <InputError error={form.formState.errors.root?.message as string} />
+        <button type="submit" className="sr-only">
+          Submit
+        </button>
+      </form>
+    </Form>
+  );
+};
+```
+
+```tsx title="use-form.tsx"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm as useReactHookForm } from "react-hook-form";
+import { z } from "zod";
+
+export const useForm = <T extends z.ZodSchema<any>>(
+  formSchema: T,
+  defaultValues: z.infer<T>
+) => {
+  return useReactHookForm<z.infer<T>>({
+    resolver: zodResolver(formSchema as any),
+    defaultValues,
+  });
+};
+```
+
+```tsx title="usage"
+import { useRef } from "react";
+import { useForm } from "@/hooks/use-form";
+
+const formRef = useRef<HTMLFormElement>(null);
+
+const form = useForm(organizationSchema, {
+  name: "",
+});
+
+<ReusableForm
+  form={form}
+  formRef={formRef}
+  onSubmit={(values) =>
+    createOrganization.mutate(values, {
+      onSuccess: (data) => {
+        closeDialog();
+        // router.push(`/admin/organizations/${data?.[0]?.id}`);
+      },
+    })
+  }
+  inputs={[
+    {
+      label: "Name",
+      name: "name",
+      type: "text",
+      placeholder: "Enter a name for your organization",
+    },
+
+    {
+      label: "Slug",
+      name: "slug",
+      type: "text",
+      placeholder: "Enter a slug for your organization",
+    },
+    {
+      label: "Owner",
+      name: "ownerId",
+      type: "select",
+      placeholder: "Select a user",
+      onSearch: (search) => {
+        setSearch(search);
+      },
+      options:
+        users?.map((user) => ({
+          label: user.name,
+          value: user.id,
+        })) ?? [],
+      customSelect: (option) => {
+        const user = users?.find((user) => user.id === option.value);
+
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar>
+              <AvatarImage src={getUrlFromKey(user?.image || "")} />
+              <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col text-start">
+              <p className="text-xs font-medium">{user?.id}</p>
+              <p className="text-muted-foreground text-xs font-normal">
+                {user?.email}
+              </p>
+            </div>
+          </div>
+        );
+      },
+    },
+  ]}
+/>;
+```

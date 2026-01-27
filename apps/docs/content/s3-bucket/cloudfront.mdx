@@ -1,0 +1,241 @@
+---
+title: CloudFront
+description: How to work with CloudFront
+---
+
+## Request SSL certificate (ACM)
+
+<Steps>
+
+<Step>
+
+Go to AWS Console → Certificate Manager (ACM).
+
+![opening ACM](/s3-bucket/1.opening-acm.png)
+
+</Step>
+
+<Step>
+
+Click `Request a certificate` → Request a public certificate.
+
+![requesting a new SSL certificate](/s3-bucket/2.request-certificate.png)
+![requesting a new SSL certificate](/s3-bucket/3.public-certificate.png)
+
+</Step>
+
+<Step>
+
+Just type your domain name: `cdn.alisamadii.com` and then leave the rest as default.
+
+![fully qualified domain name](/s3-bucket/4.adding-domain.png)
+
+</Step>
+
+<Step>
+
+After clicking `Request`, you will see a page like this.
+
+![validation records](/s3-bucket/5.validation-records.png)
+
+</Step>
+
+<Step>
+
+Now open your DNS provider and add the validation records.
+
+| Field     | Value                                                                |
+| --------- | -------------------------------------------------------------------- |
+| Type      | `CNAME`                                                              |
+| Name/Host | `_b650899b76c1412c1d362313c113413a0.cdn.alisamadii.com.`             |
+| Value     | `_21eca67ee134aed0c7f90ae7e5dcd5123.jkddzztszm.acm-validations.aws.` |
+
+Important notes: Remove the final dot “.” at the end. Namecheap does NOT want trailing dots. Namecheap automatically appends .alisamadii.com behind the scenes.
+
+```text
+- _b650899b76c1412c1d362313c113413a0.cdn.alisamadii.com.
++ _b650899b76c1412c1d362313c113413a0.cdn
+```
+
+</Step>
+
+<Step>
+
+Give it a few minutes. Then you can check the status of the certificate.
+
+![successful](/s3-bucket/6.successful-certificate.png)
+
+<Banner
+  variant="rainbow"
+  rainbowColors={[
+    "rgba(0,180,60, 0.5)",
+    "rgba(30,200,120, 0.5)",
+    "transparent",
+    "rgba(40,220,90, 0.5)",
+    "transparent",
+    "rgba(80,200,120, 0.5)",
+    "transparent",
+  ]}
+>
+  Congratulations! You have a successful SSL certificate.
+</Banner>
+
+</Step>
+
+</Steps>
+
+## Create CloudFront distribution
+
+<Steps>
+
+<Step>
+
+Go to AWS Console → `CloudFront` → `Create Distribution`.
+
+![open CloudFront](/s3-bucket/7.open-cloudfront.png)
+![create distribution](/s3-bucket/8.create-distribution.png)
+
+</Step>
+
+<Step>
+
+Only add a name
+
+![get started](/s3-bucket/9.get-started.png)
+
+</Step>
+
+<Step>
+
+Specify the origin.
+
+![specify the origin](/s3-bucket/10.specify-origin.png)
+
+</Step>
+
+<Step>
+
+Leave the rest as default here.
+
+![enable security](/s3-bucket/11.enable-security.png)
+
+</Step>
+
+<Step>
+
+Now create the distribution.
+
+![create distribution](/s3-bucket/12.create.png)
+
+![success page](/s3-bucket/13.success-page.png)
+
+<Banner
+  variant="rainbow"
+  rainbowColors={[
+    "rgba(0,180,60, 0.5)",
+    "rgba(30,200,120, 0.5)",
+    "transparent",
+    "rgba(40,220,90, 0.5)",
+    "transparent",
+    "rgba(80,200,120, 0.5)",
+    "transparent",
+  ]}
+>
+  Congratulations! You have a successful created CloudFront distribution.
+</Banner>
+
+</Step>
+
+</Steps>
+
+## Final step
+
+Go to your DNS provider and add the CNAME record.
+
+![copy URL](/s3-bucket/14.copy-url.png)
+
+| Field     | Value                           |
+| --------- | ------------------------------- |
+| Type      | `CNAME`                         |
+| Name/Host | `cdn`                           |
+| Value     | `d1zqwy******y9.cloudfront.net` |
+
+## Errors
+
+You might encounter the following errors:
+
+![error](/s3-bucket/15.error.png)
+
+<Steps>
+
+<Step>
+
+Right now CloudFront is returning 403 because it’s not allowed to read from the bucket (or is using Origin Access Control without matching bucket policy). Easiest fix for you: treat S3 as a public origin.
+
+![make public](/s3-bucket/16.make-public.png)
+![settings save](/s3-bucket/17.settings-save.png)
+
+</Step>
+
+<Step>
+
+The 403 is about S3 access.
+The `Not Secure` text in Chrome is separate and will clear once:
+
+![add domain](/s3-bucket/18.add-domain.png)
+
+Add your domain:
+
+![configure domain](/s3-bucket/19.configure-domain.png)
+
+Add your certificate:
+
+![add certificate](/s3-bucket/20.add-your-certificate.png)
+![add domain](/s3-bucket/21.add-domains.png)
+![success](/s3-bucket/22.success.png)
+
+</Step>
+
+</Steps>
+
+<Banner
+  variant="rainbow"
+  rainbowColors={[
+    "rgba(0,180,60, 0.5)",
+    "rgba(30,200,120, 0.5)",
+    "transparent",
+    "rgba(40,220,90, 0.5)",
+    "transparent",
+    "rgba(80,200,120, 0.5)",
+    "transparent",
+  ]}
+>
+  Congratulations! You have a successful fixed the errors.
+</Banner>
+
+# But My Domain is Not secure?
+
+![not secure](/s3-bucket/23.not-secure.png)
+
+We’ve fully set up a secure CDN for your media files.
+Your domain cdn.alisamadii.com is now connected to Amazon CloudFront, which provides fast global delivery and HTTPS encryption.
+
+At the moment, everything is configured correctly:
+
+- The SSL certificate has been issued and attached to CloudFront
+- The CDN domain is pointing to the CloudFront distribution
+- All files are being served securely over HTTPS
+- Other browsers already show the secure lock icon
+
+If Chrome still shows a “Not Secure” message, that’s only because Chrome cached older settings from before HTTPS was enabled. Clearing the cache or opening the URL in an incognito window will immediately show the secure lock.
+
+Your content is now fully protected and ready to be used with TikTok, Instagram, X, or any other platform that requires HTTPS.
+
+# Conclusion
+
+Enjoy your secure CDN!
+
+# Important Note
+
+I am chatting with AI regarding the payment process that I was getting each day.
+[Chat](https://t3.chat/share/9pllifum0n)

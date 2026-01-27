@@ -1,0 +1,333 @@
+---
+title: Better Auth
+---
+
+```npm
+npm install better-auth
+```
+
+```json title=".env"
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
+```
+
+[Generate Secret](https://www.better-auth.com/docs/installation#set-environment-variables)
+
+```ts title="schema.ts"
+import { sql } from "drizzle-orm";
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified")
+    .$defaultFn(() => false)
+    .notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  role: text("role"),
+  banned: boolean("banned"),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
+  metadata: jsonb("metadata").default({}),
+  billingAddress: text("billing_address"),
+});
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  impersonatedBy: text("impersonated_by"),
+  activeOrganizationId: text("active_organization_id"),
+});
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").$defaultFn(
+    () => /* @__PURE__ */ new Date()
+  ),
+  updatedAt: timestamp("updated_at").$defaultFn(
+    () => /* @__PURE__ */ new Date()
+  ),
+});
+
+export const organization = pgTable("organization", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").unique(),
+  logo: text("logo"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  metadata: text("metadata"),
+  ownerId: text("owner_id").references(() => user.id),
+});
+
+export const member = pgTable("member", {
+  id: text("id").primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["member", "admin"] })
+    .default("member")
+    .notNull(),
+  createdAt: timestamp("created_at").notNull(),
+});
+
+export const invitation = pgTable("invitation", {
+  id: text("id").primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: text("role"),
+  status: text("status").default("pending").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  inviterId: text("inviter_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
+// Users
+export type User = typeof user.$inferSelect;
+export type InsertUser = typeof user.$inferInsert;
+export type UpdateUser = typeof user.$inferSelect;
+
+// Sessions
+export type Session = typeof session.$inferSelect;
+export type InsertSession = typeof session.$inferInsert;
+export type UpdateSession = typeof session.$inferSelect;
+
+// Accounts
+export type Account = typeof account.$inferSelect;
+export type InsertAccount = typeof account.$inferInsert;
+export type UpdateAccount = typeof account.$inferSelect;
+
+// Organizations
+export type Organization = typeof organization.$inferSelect;
+export type InsertOrganization = typeof organization.$inferInsert;
+export type UpdateOrganization = typeof organization.$inferSelect;
+
+// Members
+export type Member = typeof member.$inferSelect;
+export type InsertMember = typeof member.$inferInsert;
+export type UpdateMember = typeof member.$inferSelect;
+
+// Invitations
+export type Invitation = typeof invitation.$inferSelect;
+export type InsertInvitation = typeof invitation.$inferInsert;
+export type UpdateInvitation = typeof invitation.$inferSelect;
+```
+
+```ts title="auth.ts"
+import { headers } from "next/headers";
+import { APIError, betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
+import { admin, emailOTP, organization } from "better-auth/plugins";
+import { and, eq } from "drizzle-orm";
+
+import { db } from "@/db";
+import {
+  account,
+  member,
+  organization as organizationTable,
+  session,
+  user,
+  verification,
+  webhookEvents,
+} from "@/db/schema";
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      user,
+      account,
+      session,
+      verification,
+      member,
+      organization: organizationTable,
+    },
+  }),
+  emailAndPassword: {
+    enabled: true,
+    // sendResetPassword: async ({ user, url, token }) => {
+    //   // Check if user has a password (to determine if this is setup or reset)
+    //   const [userAccount] = await db
+    //     .select()
+    //     .from(account)
+    //     .where(
+    //       and(eq(account.userId, user.id), eq(account.providerId, "credential"))
+    //     )
+    //     .limit(1);
+
+    //   const hasPassword = userAccount?.password != null;
+
+    //   await sendResetPassword({
+    //     email: user.email,
+    //     resetPasswordLink: `${url}?token=${token}`,
+    //     type: hasPassword ? "reset-password" : "setup-account",
+    //     customerName: user.name,
+    //   });
+    // },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
+      allowDifferentEmails: true,
+      updateUserInfoOnLink: true,
+    },
+  },
+  user: {
+    deleteUser: {
+      enabled: true,
+    },
+    additionalFields: {
+      billingAddress: {
+        type: "string",
+      },
+      metadata: {
+        type: "json",
+      },
+    },
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  //   databaseHooks: {
+  //     user: {
+  //       create: {
+  //         after: async (user) => {
+  //           if (!process.env.RESEND_AUDIENCE_GENERAL_ID) {
+  //             throw new APIError(403, {
+  //               message: "RESEND_AUDIENCE_GENERAL_ID is not set",
+  //             });
+  //           }
+
+  //           const { error } = await createAudience({
+  //             email: user.email,
+  //             firstName: user.name,
+  //             unsubscribed: false,
+  //             audienceId: process.env.RESEND_AUDIENCE_GENERAL_ID as string,
+  //           });
+
+  //           if (error) {
+  //             throw new APIError(403, { message: error.message });
+  //           }
+  //         },
+  //       },
+  //     },
+  //   },
+  plugins: [
+    admin(),
+    organization({
+      organizationCreation: {
+        beforeCreate: async ({ organization, user }) => {
+          // Run custom logic before organization is created
+          // Optionally modify the organization data
+          return {
+            data: {
+              ...organization,
+              metadata: {
+                max_allowed_memberships: 20,
+                admin_delete_enabled: false,
+                created_by: user.id,
+              },
+            },
+          };
+        },
+      },
+    }),
+    emailOTP({
+      overrideDefaultEmailVerification: true,
+      async sendVerificationOTP({ email, otp, type }) {
+        if (type === "sign-in") {
+          // Send the OTP for sign in
+        } else if (type === "email-verification") {
+          // Send the OTP for email verification
+        } else {
+          // Send the OTP for password reset
+        }
+      },
+    }),
+    nextCookies(),
+  ],
+});
+```
+
+```ts title="auth-client.ts"
+import {
+  adminClient,
+  emailOTPClient,
+  inferAdditionalFields,
+  organizationClient,
+} from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react";
+
+import { auth } from "./auth";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.BETTER_AUTH_URL!,
+  plugins: [
+    adminClient(),
+    organizationClient(),
+    inferAdditionalFields<typeof auth>(),
+    emailOTPClient(),
+  ],
+});
+
+export const { signIn, signUp, signOut, useSession } = createAuthClient();
+```

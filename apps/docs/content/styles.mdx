@@ -1,0 +1,28 @@
+---
+title: Styles
+---
+
+## Shadows
+
+```css title="globals.css"
+:root {
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 0 0 1px rgba(9, 9, 11, 0.07),
+    0 0.7px 0.9px -1px rgba(9, 9, 11, 0.08), 0 3px 4px -2px rgba(9, 9, 11, 0.14);
+  --shadow-card-inside: 0px 1px 0px 0px #fff inset, 0px 1px 0px 0px var(--black-4, rgba(2, 2, 3, 0.04)),
+    0px 0px 0px 1px var(--black-7, rgba(2, 2, 3, 0.07)), 0px 15px 6px -3px rgba(0, 0, 0, 0.01),
+    0px 6px 5px -2px rgba(0, 0, 0, 0.02), 0px 3px 3px -1px rgba(0, 0, 0, 0.04),
+    0px 1px 2px -0.5px rgba(0, 0, 0, 0.04);
+  --shadow-dropdown: 0 0 0 1px rgba(25, 28, 33, 0.08), 0 16px 36px -6px
+      color-mix(in srgb, black calc(0.07 * 100%), transparent),
+    0 6px 16px -2px color-mix(in srgb, black calc(0.2 * 100%), transparent);
+  --shadow-dialog: 0 32px 72px -12px rgba(25, 28, 33, 0.2), 0 16px 32px -6px
+      color-mix(in srgb, black calc(0.2 * 100%), transparent);
+  --shadow-dialog-body: 0 1px 2px rgba(25, 28, 33, 0.06), 0 0 2px color-mix(in
+          srgb, black calc(0.08 * 100%), transparent);
+  --shadow-toast-save: inset 0 0 0 1px #2f3037, inset 0 2px 0 color-mix(in srgb, white
+          calc(0.12 * 100%), transparent),
+    inset 0 0 2px 2px color-mix(in srgb, white calc(0.06 * 100%), transparent), 0
+      16px 36px -6px color-mix(in srgb, black calc(0.36 * 100%), transparent),
+    0 6px 16px -2px color-mix(in srgb, black calc(0.2 * 100%), transparent);
+}
+```
