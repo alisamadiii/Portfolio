@@ -1,11 +1,11 @@
 "use client";
 
+import { GeneralAvatar } from "apps/portfolio/components/settings/general/avatar";
+import { EmailName } from "apps/portfolio/components/settings/general/email-name";
+
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-
-import { GeneralAvatar } from "@/components/settings/general/avatar";
-import { EmailName } from "@/components/settings/general/email-name";
 
 export default function GeneralPage() {
   const user = useCurrentUser();

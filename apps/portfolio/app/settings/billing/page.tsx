@@ -1,12 +1,12 @@
 "use client";
 
+import { BillingInvoices } from "apps/portfolio/components/settings/billing/invoices";
+import { BillingPortal } from "apps/portfolio/components/settings/billing/portal";
+import { BillingSubscriptions } from "apps/portfolio/components/settings/billing/subscriptions";
+
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-
-import { BillingInvoices } from "@/components/settings/billing/invoices";
-import { BillingPortal } from "@/components/settings/billing/portal";
-import { BillingSubscriptions } from "@/components/settings/billing/subscriptions";
 
 export default function BillingPage() {
   const updateUser = useCurrentUser();

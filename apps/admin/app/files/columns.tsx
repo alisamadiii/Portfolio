@@ -1,4 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { storage } from "apps/portfolio/project.config";
 import { format } from "date-fns";
 import {
   Copy,
@@ -9,8 +10,6 @@ import {
   Trash,
 } from "lucide-react";
 import { toast } from "sonner";
-
-import { storage } from "@/project.config";
 
 import { Button } from "@workspace/ui/components/button";
 import {

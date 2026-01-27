@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
+import { storage } from "apps/portfolio/project.config";
 import { AnimatePresence, motion } from "motion/react";
 import { useDropzone } from "react-dropzone";
-
-import { storage } from "@/project.config";
 
 import { Input } from "@workspace/ui/components/input";
 import { DataTable } from "@workspace/ui/custom/data-table";
@@ -91,7 +90,7 @@ export default function FilesPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="bg-background/50 text-muted-foreground backdrop-blur-xs absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 text-xl"
+              className="bg-background/50 text-muted-foreground absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 text-xl backdrop-blur-xs"
             >
               {Math.floor(progress)}%{" "}
               <p className="text-sm opacity-80">Uploading...</p>
@@ -128,7 +127,7 @@ export default function FilesPage() {
           <p>Upload private files</p>
         </div>
       </div>
-      <p className="text-muted-foreground mb-6 mt-2 max-w-sm px-4 text-xs">
+      <p className="text-muted-foreground mt-2 mb-6 max-w-sm px-4 text-xs">
         Hover your mouse over the folders to select them. You can also paste or
         drag and drop files into the folders.
       </p>

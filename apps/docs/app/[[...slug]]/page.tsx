@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/mdx-components";
+import { getPageImage, source } from "apps/portfolio/lib/source";
 import {
   DocsBody,
   DocsDescription,
@@ -8,8 +9,6 @@ import {
   DocsTitle,
 } from "fumadocs-ui/layouts/docs/page";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-
-import { getPageImage, source } from "@/lib/source";
 
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
 

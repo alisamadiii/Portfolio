@@ -1,7 +1,6 @@
 import React, { useState } from "react";
+import { storage } from "apps/portfolio/project.config";
 import { toast } from "sonner";
-
-import { storage } from "@/project.config";
 
 import {
   Avatar,
