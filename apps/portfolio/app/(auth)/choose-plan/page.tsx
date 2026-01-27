@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Pricing } from "apps/portfolio/components/pricing";
 
 import { buttonVariants } from "@workspace/ui/components/button";
+
+import { Pricing } from "@/components/pricing";
 
 export default function ChoosePlanPage() {
   return (

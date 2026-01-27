@@ -2,13 +2,15 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { mdxComponents } from "apps/portfolio/components/mdx";
-import { source } from "apps/portfolio/lib/source";
 import { ArrowLeftIcon } from "lucide-react";
 
 import { buttonVariants } from "@workspace/ui/components/button";
 import { Separator } from "@workspace/ui/components/separator";
 import { generateMetadata as generateSEOMetadata } from "@workspace/ui/lib/seo";
+
+import { source } from "@/lib/source";
+
+import { mdxComponents } from "@/components/mdx";
 
 export async function generateMetadata({
   params,

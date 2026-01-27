@@ -1,8 +1,8 @@
-import { HeaderPage } from "apps/portfolio/components/header-page";
-import { ProtectRoute } from "apps/portfolio/components/protect-route";
-import { SettingsLinks } from "apps/portfolio/components/settings/links";
-
 import { generateMetadata } from "@workspace/ui/lib/seo";
+
+import { HeaderPage } from "@/components/header-page";
+import { ProtectRoute } from "@/components/protect-route";
+import { SettingsLinks } from "@/components/settings/links";
 
 export const metadata = generateMetadata({
   title: "Settings",

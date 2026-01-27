@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { storage } from "apps/portfolio/project.config";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+
+import { storage } from "@/project.config";
 
 import {
   Avatar,

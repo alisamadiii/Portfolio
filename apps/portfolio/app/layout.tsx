@@ -4,12 +4,13 @@ import "@workspace/ui/globals.css";
 
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { AppSidebar } from "apps/portfolio/components/app-sidebar";
 
 import { SidebarProvider } from "@workspace/ui/components/sidebar";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
+
+import { AppSidebar } from "@/components/app-sidebar";
 
 const fontSans = Geist({
   subsets: ["latin"],

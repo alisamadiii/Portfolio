@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
-import { storage } from "apps/portfolio/project.config";
 import { AnimatePresence, motion } from "motion/react";
 import { useDropzone } from "react-dropzone";
+
+import { storage } from "@/project.config";
 
 import { Input } from "@workspace/ui/components/input";
 import { DataTable } from "@workspace/ui/custom/data-table";

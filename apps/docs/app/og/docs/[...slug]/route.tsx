@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
-import { getPageImage, source } from "apps/portfolio/lib/source";
 import { generate as DefaultImage } from "fumadocs-ui/og";
+
+import { getPageImage, source } from "@/lib/source";
 
 export const revalidate = false;
 

@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
-import { source } from "apps/portfolio/lib/source";
+
+import { source } from "@/lib/source";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Use Vercel production URL if available, otherwise fallback to localhost
