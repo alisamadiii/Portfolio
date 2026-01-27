@@ -1,0 +1,39 @@
+{
+  "name": "@workspace/auth",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts",
+    "./hooks/use-user": "./src/hooks/use-user.tsx",
+    "./hooks/use-admin": "./src/hooks/use-admin.tsx",
+    "./hooks/use-functions": "./src/hooks/use-functions.tsx"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@workspace/email": "workspace:*",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@better-auth/expo": "^1.4.17",
+    "@polar-sh/better-auth": "^1.6.3",
+    "@polar-sh/sdk": "^0.41.5",
+    "@workspace/drizzle": "workspace:*",
+    "better-auth": "^1.4.17",
+    "zod": "^4.1.13"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.45.0",
+    "@tanstack/react-query": "^5.90.20",
+    "next": "16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}

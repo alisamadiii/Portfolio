@@ -1,0 +1,17 @@
+{
+  "extends": "@workspace/typescript-config/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/trpc/*": ["./packages/trpc/src/*"],
+      "@workspace/auth/*": ["./packages/auth/*"],
+      "@workspace/drizzle/*": ["./packages/drizzle/src/*"],
+      "@workspace/ui/*": ["./packages/ui/src/*"],
+      "@workspace/email/*": ["./packages/email/emails/*"],
+      "@workspace/storage/*": ["./packages/storage/*"],
+      "@/*": ["apps/dashboard/*"]
+    }
+  },
+  "include": ["packages/**/*", "apps/**/*"],
+  "exclude": ["node_modules", "dist", ".next"]
+}

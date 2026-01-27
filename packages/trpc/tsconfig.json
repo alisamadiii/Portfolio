@@ -1,0 +1,14 @@
+{
+  "extends": "@workspace/typescript-config/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/trpc/*": ["./src/*"],
+      "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"],
+      "@workspace/auth/*": ["../../packages/auth/src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

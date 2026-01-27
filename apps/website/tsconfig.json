@@ -1,0 +1,29 @@
+{
+  "extends": "@workspace/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "fumadocs-mdx:collections/*": [".source/*"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"],
+      "@workspace/trpc/*": ["../../packages/trpc/src/*"],
+      "@workspace/auth/*": ["../../packages/auth/src/*"],
+      "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
+      "@workspace/storage/*": ["../../packages/storage/src/*"],
+      "@workspace/email/*": ["../../packages/email/src/*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

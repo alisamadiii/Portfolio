@@ -1,0 +1,46 @@
+{
+  "name": "monorepo-template",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "turbo:up": "pnpm up --latest -r",
+    "turbo:syncpack:list": "pnpm dlx syncpack list-mismatches",
+    "turbo:syncpack:fix": "pnpm dlx syncpack fix-mismatches",
+    "turbo:email:dev": "cd packages/email && pnpm dev",
+    "typecheck": "tsc --noEmit",
+    "audit": "pnpm audit --audit-level moderate",
+    "audit:fix": "pnpm audit --fix",
+    "db:generate": "cd packages/drizzle && npx drizzle-kit generate",
+    "db:migrate": "cd packages/drizzle && npx drizzle-kit migrate",
+    "db:push": "cd packages/drizzle && npx drizzle-kit push",
+    "db:studio": "cd packages/drizzle && npx drizzle-kit studio",
+    "reset": "pnpm -r exec rm -rf node_modules .next .turbo && rm -rf node_modules .next .turbo",
+    "run-api": "cd apps/dashboard && pnpm dev",
+    "ios": "cd apps/mobile && pnpm ios",
+    "android": "expo run:android"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
+    "@types/node": "^25.0.5",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "prettier": "^3.7.4",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "turbo": "^2.6.3",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.4.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "eslint": "^9.39.1",
+    "expo": "~54.0.32",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
+  }
+}

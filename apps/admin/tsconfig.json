@@ -1,0 +1,31 @@
+{
+  "extends": "@workspace/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"],
+      "@workspace/auth/*": ["../../packages/auth/*"],
+      "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
+      "@workspace/trpc/*": ["../../packages/trpc/src/*"],
+      "@workspace/email/*": ["../../packages/email/emails/*"],
+      "@workspace/storage/*": ["../../packages/storage/*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../dashboard/components/navbar.tsx",
+    "../dashboard/components/verify-discount.tsx",
+    "../dashboard/components/footer.tsx"
+  ],
+  "exclude": ["node_modules"]
+}
