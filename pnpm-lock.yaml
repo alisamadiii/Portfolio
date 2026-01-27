@@ -20,9 +20,6 @@ importers:
       react-native:
         specifier: 0.81.5
         version: 0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.1.0)
-      zod:
-        specifier: ^4.1.13
-        version: 4.3.5
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.7.0
