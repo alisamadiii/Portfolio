@@ -5,12 +5,9 @@ import "@workspace/ui/globals.css";
 import { Suspense } from "react";
 import { Metadata } from "next";
 
-import { SidebarProvider } from "@workspace/ui/components/sidebar";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
-
-import { AppSidebar } from "@/components/app-sidebar";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -55,12 +52,7 @@ export default async function RootLayout({
       >
         <TRPCReactProvider>
           <Providers>
-            <Suspense>
-              <SidebarProvider>
-                <AppSidebar />
-                <main className="grow">{children}</main>
-              </SidebarProvider>
-            </Suspense>
+            <Suspense>{children}</Suspense>
           </Providers>
         </TRPCReactProvider>
       </body>
