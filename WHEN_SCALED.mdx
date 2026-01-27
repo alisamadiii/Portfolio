@@ -1,0 +1,63 @@
+# **Add Error Tracking (Sentry/LogRocket)** 🔍
+
+**Recommendation:** Integrate error tracking for production:
+
+```typescript
+// packages/logger/src/sentry.ts
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: 1.0,
+});
+```
+
+# **Add Request ID Middleware** 🆔
+
+**Create:** `packages/trpc/src/middleware/request-id.ts`
+
+```typescript
+import { v4 as uuidv4 } from "uuid";
+
+export function addRequestId() {
+  return async ({ ctx, next }: { ctx: any; next: any }) => {
+    const requestId = uuidv4();
+    return next({
+      ctx: {
+        ...ctx,
+        requestId,
+      },
+    });
+  };
+}
+```
+
+# **Add Database Query Timeout** ⏱️
+
+**Recommendation:** Add query timeouts to prevent hanging queries:
+
+```typescript
+// packages/drizzle/src/index.ts
+export const db = drizzle(sql, {
+  maxRetries: 3,
+  retryDelay: 1000,
+});
+```
+
+# No Pre-commit Hooks
+
+**Issue**: No Husky or lint-staged configuration to enforce code quality before commits.
+
+**Recommendation**:
+
+- Install Husky and lint-staged
+- Configure pre-commit hooks for:
+  - Linting
+  - Type checking
+  - Formatting
+  - Test running (optional)
+
+**Action**: Set up Husky with lint-staged configuration.
+
+---

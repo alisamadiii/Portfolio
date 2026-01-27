@@ -1,0 +1,17 @@
+{
+  "extends": "@workspace/typescript-config/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/ui/*": ["./src/*"],
+      "@workspace/trpc/*": ["../../packages/trpc/src/*"],
+      "@workspace/auth/*": ["../../packages/auth/src/*"]
+    }
+  },
+  "include": [
+    ".",
+    "../../apps/admin/components/show-json-dialog.tsx",
+    "../../apps/admin/components/json-format.tsx"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

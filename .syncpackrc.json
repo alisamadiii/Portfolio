@@ -1,0 +1,7 @@
+{
+    "dependencyTypes": [
+        "dev",
+        "peer",
+        "prod"
+    ]
+}

@@ -1,0 +1,370 @@
+"use client";
+
+import { Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FileUser, Github, Linkedin } from "lucide-react";
+import { motion, useScroll, useTransform } from "motion/react";
+
+import { Badge } from "@workspace/ui/components/badge";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@workspace/ui/components/dialog";
+
+import Apps from "../components/apps";
+import Experience from "../components/experience";
+
+const skills = [
+  {
+    name: "ReactJS",
+    description: "A JavaScript library for building user interfaces",
+  },
+  {
+    name: "NextJS",
+    description: "The React framework for production-grade applications",
+  },
+  {
+    name: "TailwindCSS",
+    description: "A utility-first CSS framework for rapid UI development",
+  },
+  {
+    name: "Motion",
+    description: "A production-ready motion library for React",
+  },
+  {
+    name: "Shadcn UI",
+    description:
+      "An open source UI component library for building high-quality interfaces",
+  },
+  {
+    name: "Drizzle ORM",
+    description:
+      "A TypeScript ORM for SQL databases with a focus on type safety",
+  },
+  {
+    name: "Better Auth",
+    description: "A modern authentication library built",
+  },
+  {
+    name: "Lemon Squeezy",
+    description: "A platform for selling digital products",
+  },
+];
+
+const projects = [
+  {
+    name: "Zuude UI",
+    description: "Library of components and animations",
+    link: "https://www.zuude-ui.com/",
+  },
+  {
+    name: "NPM Insight",
+    description: "A tool to get insights about npm packages",
+    link: "https://www.npminsight.com/analytics?packages=next%2Creact",
+  },
+];
+
+export default function Home() {
+  const { scrollY } = useScroll();
+  const backgroundY = useTransform(scrollY, [0, 500], [0, 250]);
+
+  return (
+    <main className="mx-auto w-full max-w-3xl px-8 py-24">
+      <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight">Zuude UI</h2>
+          <p className="text-sm text-gray-300">
+            Explore my collection of animation components and interactive UI
+            elements built with Motion.
+          </p>
+        </div>
+        <Link href="https://pro.zuude-ui.com/">
+          <Button variant="outline" className="text-black">
+            Visit
+          </Button>
+        </Link>
+      </div>
+      {/* <div className="absolute right-0 top-0 -z-20 h-[100dvh] bg-red-500 opacity-10">
+        <video
+          src="https://vztpjn0djt.ufs.sh/f/RAHCy45jEybltJ6sRJQSzao8JKyu7h1mvi6bR3WYqeXkUV9Z"
+          muted
+          autoPlay
+          loop
+          className="aspect-[3/4] h-full object-cover"
+        />
+      </div> */}
+      <div className="absolute inset-0 isolate -z-20 max-h-dvh overflow-hidden">
+        <motion.div
+          style={{ y: backgroundY }}
+          className="bg-natural-100 mx-auto h-full w-full max-w-3xl translate-y-8 scale-110 blur-3xl"
+        />
+
+        <motion.div
+          className="absolute inset-0 -z-10 h-full w-full"
+          style={{
+            y: backgroundY,
+          }}
+        >
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundColor: "#e5e5f7",
+              opacity: 0.05,
+              backgroundImage:
+                "repeating-linear-gradient(45deg, #000000 25%, transparent 25%, transparent 75%, #000000 75%, #000000), repeating-linear-gradient(45deg, #000000 25%, #ffffff 25%, #ffffff 75%, #000000 75%, #000000)",
+              backgroundPosition: "0 0, 40px 40px",
+              backgroundSize: "80px 80px",
+              maskImage: "linear-gradient(to top, transparent 45%, black)",
+              transform: "skew(12deg) scale(1.5)",
+            }}
+          />
+        </motion.div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <img
+          src="https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png"
+          alt="Profile picture"
+          width={128}
+          height={128}
+          className="h-24 w-24 rounded-full object-cover"
+        />
+        <div className="flex">
+          <Link
+            href="https://x.com/alirdev"
+            className="flex size-8 items-center justify-center"
+          >
+            <svg
+              stroke="currentColor"
+              fill="currentColor"
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-5"
+            >
+              <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
+            </svg>
+          </Link>
+          <Link
+            href="https://x.com/alisamadi__"
+            className="relative flex size-8 items-center justify-center"
+          >
+            <svg
+              stroke="currentColor"
+              fill="currentColor"
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-5"
+            >
+              <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
+            </svg>
+            <span className="bg-primary absolute right-0 bottom-0 flex size-4 items-center justify-center rounded-full text-xs text-white">
+              2
+            </span>
+          </Link>
+          <Link
+            href="https://github.com/alisamadiii"
+            className="flex size-8 items-center justify-center"
+          >
+            <Github />
+          </Link>
+          <Link
+            href="https://www.linkedin.com/in/alireza17/"
+            className="flex size-8 items-center justify-center"
+          >
+            <Linkedin />
+          </Link>
+        </div>
+      </div>
+
+      <Badge className="mt-7 text-xs">
+        Currently building Motion UI with Motion
+      </Badge>
+
+      <div className="mt-2">
+        <h1 className="text-3xl md:text-4xl">
+          Building <span className="text-primary">Website</span> is My Passion!
+        </h1>
+        <p className="text-natural-700 mt-2 text-lg">
+          Hey, I&apos;m Ali! I&apos;ve been working in web development for 5
+          years, mainly focusing on frontend and fullstack development with
+          ReactJS.
+        </p>
+      </div>
+
+      <div className="mt-8 flex flex-col items-start gap-1">
+        <div className="flex gap-2">
+          <a href="mailto:a@alisamadii.com" className={buttonVariants({})}>
+            Let&apos;s collaborate
+          </a>
+          <Link
+            href="https://personal-work-ali.s3.us-west-2.amazonaws.com/alisamadi.pdf"
+            download
+            target="_blank"
+            className={buttonVariants({
+              variant: "outline",
+              className: "gap-1",
+            })}
+          >
+            <FileUser size={18} />
+            Download CV
+          </Link>
+        </div>
+        <ExperienceContent />
+      </div>
+
+      <section className="my-20">
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          What I use
+        </h2>
+
+        <ul className="flex flex-col gap-4">
+          {skills.map((skill) => (
+            <li
+              key={skill.name}
+              className="flex flex-col gap-2 md:flex-row md:items-center"
+            >
+              <h3 className="mb-1 font-sans text-xl">{skill.name}</h3>
+              <p className="text-natural-700">{skill.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="my-20">
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          Projects
+        </h2>
+
+        <div className="flex flex-col gap-4">
+          {projects.map((project) => (
+            <Link
+              key={project.name}
+              href={project.link}
+              target="_blank"
+              className="group opacity-80 transition hover:opacity-100"
+            >
+              <h3 className="mb-1 font-sans text-xl group-hover:underline">
+                {project.name}
+              </h3>
+              <p className="text-natural-700">{project.description}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="my-20">
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          The App/Website I&apos;m using
+        </h2>
+
+        <Apps />
+      </section>
+
+      {/* <section className="my-20">
+        <Text element="h2" variant="label" className="mb-8">
+          Blogs
+        </Text>
+
+        <div className="flex flex-col gap-4">
+          {allBlogs
+            .filter((blog) => !blog.hidden)
+            .map((blog) => (
+              <Link
+                key={blog._id}
+                href={`/blog/${blog.slugAsParams}`}
+                className="group opacity-80 transition hover:opacity-100"
+              >
+                <Text
+                  element="h3"
+                  variant="h3"
+                  className="mb-1 font-sans text-xl group-hover:underline"
+                >
+                  {blog.title}
+                </Text>
+                <Text variant="p2-r" className="text-natural-700">
+                  {blog.description}
+                </Text>
+              </Link>
+            ))}
+        </div>
+      </section> */}
+
+      {/* <TwitterContents /> */}
+      {/* <Works /> */}
+
+      <section className="my-20">
+        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+          Random Stuff
+        </h2>
+
+        <div className="flex flex-col gap-4">
+          <Link
+            href={`https://github.com/NowShip`}
+            target="_blank"
+            className="group opacity-80 transition hover:opacity-100"
+          >
+            <h3 className="mb-1 font-sans text-xl group-hover:underline">
+              Ship Now Organization
+            </h3>
+            <p className="text-natural-700">
+              I created this organization to help me build projects quickly,
+              since previously I had to spend time going through documentation
+              to get projects working properly.
+            </p>
+          </Link>
+          <Link
+            href={`/volleyball`}
+            className="group opacity-80 transition hover:opacity-100"
+          >
+            <h3 className="mb-1 font-sans text-xl group-hover:underline">
+              Volleyball Counter
+            </h3>
+            <p className="text-natural-700">
+              One night, I was the referee for a volleyball game. I was
+              frustrated that I had to count the points manually. So, I made
+              this simple counter for tracking points and games. Later that day,
+              It helped me a lot to focus on the game not remembering the number
+              of points.
+            </p>
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ExperienceContent() {
+  return (
+    <Suspense fallback={null}>
+      <ExperienceDialog />
+    </Suspense>
+  );
+}
+
+function ExperienceDialog() {
+  const searchParams = useSearchParams().get("experience");
+  const router = useRouter();
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) {
+          router.push("/");
+        } else {
+          router.push("/?experience=true");
+        }
+      }}
+      defaultOpen={searchParams === "true"}
+    >
+      <DialogTrigger className="text-natural-700 underline">
+        My experience
+      </DialogTrigger>
+      <DialogContent className="text-natural-700 hover:text-natural-900 h-full w-full max-w-3xl overflow-hidden px-0 py-0 md:h-[95%] md:rounded-3xl">
+        <Experience />
+      </DialogContent>
+    </Dialog>
+  );
+}
