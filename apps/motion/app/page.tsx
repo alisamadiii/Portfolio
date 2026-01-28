@@ -14,10 +14,14 @@ import { Pricing } from "@/components/pricing";
 export default function Home() {
   return (
     <main className="container py-48">
-      <h1 className="text-4xl font-bold md:text-6xl">Motion</h1>
-      <p className="text-muted-foreground text-lg">
-        Motion is a library for creating beautiful animations and interactions.
-      </p>
+      {/* Header with text */}
+      <div className="relative">
+        <h1 className="text-4xl font-bold md:text-6xl">Motion</h1>
+        <p className="text-muted-foreground text-lg">
+          Motion is a library for creating beautiful animations and
+          interactions.
+        </p>
+      </div>
       <Carousel>
         <CarouselContent className="my-12">
           {Array.from({ length: 10 }).map((_, index) => (
