@@ -98,9 +98,13 @@ export const useCheckout = () => {
         /* eslint-disable-next-line react-hooks/immutability */
         window.location.href = data.url;
       },
-      onError: (error) => {
+      onError: (error, variables) => {
         if (error.data?.code === "UNAUTHORIZED") {
-          router.push("/signup");
+          router.push(
+            process.env.NODE_ENV === "development"
+              ? `http://localhost:3000/signup?purchase=${variables.productId}`
+              : `https://motion.alisamadii.com/signup?purchase=${variables.productId}`
+          );
           return;
         }
       },

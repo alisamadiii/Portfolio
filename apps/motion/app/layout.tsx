@@ -58,7 +58,9 @@ export default async function RootLayout({
       >
         <TRPCReactProvider>
           <Providers>
-            <Suspense>{children}</Suspense>
+            <Suspense>
+              <main className="overflow-x-hidden">{children}</main>
+            </Suspense>
           </Providers>
         </TRPCReactProvider>
       </body>

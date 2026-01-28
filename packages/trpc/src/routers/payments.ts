@@ -54,6 +54,31 @@ export const paymentsRouter = createTRPCRouter({
   }),
 
   /**
+   * Fetches a product by ID
+   * @param id - The ID of the product to fetch
+   * @returns Promise<Product> - The product
+   */
+  getProductById: baseProcedure.input(z.string()).query(async ({ input }) => {
+    try {
+      const product = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, input))
+        .limit(1)
+        .then((result) => result[0]);
+
+      return product;
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error ? error.message : "Failed to fetch product",
+        cause: error,
+      });
+    }
+  }),
+
+  /**
    * Updates an existing product
    * @param id - The ID of the product to update
    * @param product - Partial product data to update
