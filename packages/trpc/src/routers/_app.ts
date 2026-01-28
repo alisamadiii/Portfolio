@@ -1,10 +1,11 @@
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
-import { baseProcedure, createTRPCRouter } from "../init";
+import { createTRPCRouter } from "../init";
 import { adminRouter } from "./admin/_index";
 import { discountsRouter } from "./discounts";
 import { paymentsRouter } from "./payments";
 import { sessionsRouter } from "./sessions";
+import { sourceRouter } from "./source/_index";
 import { userRouter } from "./user";
 
 export const appRouter = createTRPCRouter({
@@ -13,11 +14,7 @@ export const appRouter = createTRPCRouter({
   payments: paymentsRouter,
   sessions: sessionsRouter,
   user: userRouter,
-  trigger: baseProcedure.mutation(() => {
-    return {
-      message: "Hello, world!",
-    };
-  }),
+  source: sourceRouter,
 });
 
 // export type definition of API

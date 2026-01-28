@@ -40,7 +40,7 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
       <>
         <NavbarAdmin />
-        <div className="pb-16">{children}</div>
+        {children}
       </>
     );
   } catch (error) {

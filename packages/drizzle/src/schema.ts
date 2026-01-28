@@ -178,3 +178,59 @@ export const webhookEvents = pgTable("webhook_events", {
   createdAt: timestamp("created_at").defaultNow(),
   payload: jsonb("payload").$type<unknown>().notNull(),
 });
+
+export const source = pgTable("source", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+
+  title: text("title").notNull(),
+  description: text("description"),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sourceFile = pgTable("source_file", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+
+  sourceId: uuid("source_id")
+    .notNull()
+    .references(() => source.id, { onDelete: "cascade" }),
+
+  filename: text("filename").notNull(),
+  path: text("path"), // optional: "src/components/Button.tsx"
+  content: text("content").notNull(),
+  isPrivate: boolean("is_private").notNull().default(true),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sourceMedia = pgTable("source_media", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+
+  sourceId: uuid("source_id")
+    .notNull()
+    .references(() => source.id, { onDelete: "cascade" }),
+
+  type: text("type", {
+    enum: ["image", "video"],
+  }).notNull(), // "image" | "video"
+  theme: text("theme", {
+    enum: ["light", "dark"],
+  }), // "light" | "dark" | null
+  url: text("url").notNull(),
+
+  alt: text("alt"),
+  width: integer("width"),
+  height: integer("height"),
+
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type SourceMedia = typeof sourceMedia.$inferSelect;

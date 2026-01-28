@@ -15,12 +15,15 @@ const links = [
     href: `${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`,
   },
   { label: "Files", href: "/files" },
+  { label: "Code", href: "/code" },
 ];
 
 export const NavbarAdmin = () => {
   const pathname = usePathname();
   const isActive = (link: (typeof links)[number]) =>
     link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+
+  if (pathname.startsWith("/code/")) return null;
 
   return (
     <div className="bg-muted sticky top-0 z-50 w-full border-b px-4">
