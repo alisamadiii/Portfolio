@@ -43,6 +43,7 @@ export const sourceFileRouter = createTRPCRouter({
         path: z.string().optional(),
         content: z.string().optional(),
         isPrivate: z.boolean().optional(),
+        index: z.number().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -95,4 +96,23 @@ export const sourceFileRouter = createTRPCRouter({
       });
     }
   }),
+  reorder: adminProcedure
+    .input(z.array(z.object({ id: z.string(), index: z.number() })))
+    .mutation(async ({ input }) => {
+      try {
+        await Promise.all(
+          input.map(({ id, index }) =>
+            db.update(sourceFile).set({ index }).where(eq(sourceFile.id, id))
+          )
+        );
+        return { success: true };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to reorder files",
+          cause: error,
+        });
+      }
+    }),
 });

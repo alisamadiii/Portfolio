@@ -196,6 +196,8 @@ export const sourceFile = pgTable("source_file", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
 
+  index: integer("index").notNull().default(0),
+
   sourceId: uuid("source_id")
     .notNull()
     .references(() => source.id, { onDelete: "cascade" }),
