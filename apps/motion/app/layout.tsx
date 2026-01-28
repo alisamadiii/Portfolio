@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cabin_Condensed, Geist, Geist_Mono } from "next/font/google";
 
 import "@workspace/ui/globals.css";
 
@@ -9,12 +9,15 @@ import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navbar";
-
 const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
+});
+
+const fontHeading = Cabin_Condensed({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-heading",
 });
 
 const fontMono = Geist_Mono({
@@ -51,19 +54,11 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
+        className={`${fontSans.variable} ${fontHeading.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <TRPCReactProvider>
           <Providers>
-            <Suspense>
-              <Suspense>
-                <Navbar />
-              </Suspense>
-              {children}
-              <Suspense>
-                <Footer />
-              </Suspense>
-            </Suspense>
+            <Suspense>{children}</Suspense>
           </Providers>
         </TRPCReactProvider>
       </body>

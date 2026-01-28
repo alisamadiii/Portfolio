@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { CircleCheck } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { Button } from "@workspace/ui/components/button";
 import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
+import { Spinner } from "@workspace/ui/components/spinner";
 import { Switch } from "@workspace/ui/components/switch";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 import { cn } from "@workspace/ui/lib/utils";
@@ -43,17 +43,19 @@ export function Pricing() {
         </Label>
       </div>
       {/* Pricing Cards */}
-      <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
-        {products.data
-          ?.filter((plan) => plan.isArchived === false && plan.isRecurring)
-          .filter((plan) =>
-            isYearly
-              ? plan.recurringInterval === "year"
-              : plan.recurringInterval === "month"
-          )
-          .map((plan) => (
-            <EachPlan key={plan.name} plan={plan} />
-          ))}
+      <div className="mx-auto flex max-w-6xl flex-wrap gap-8">
+        {products.isPending ? (
+          <Spinner />
+        ) : (
+          products.data
+            ?.filter((plan) => plan.isArchived === false && plan.isRecurring)
+            .filter((plan) =>
+              isYearly
+                ? plan.recurringInterval === "year"
+                : plan.recurringInterval === "month"
+            )
+            .map((plan) => <EachPlan key={plan.name} plan={plan} />)
+        )}
       </div>
     </div>
   );
@@ -210,22 +212,16 @@ const EachPlan = ({
           Switch to {plan.name.replace("month", "").replace("year", "")}
         </Button>
       ) : (
-        <Link
-          href={
-            process.env.NODE_ENV === "development"
-              ? `http://localhost:3000/signup`
-              : `https://app.polar.so`
-          }
-          className={buttonVariants({
-            variant: plan.popular ? "default" : "outline",
-            size: "lg",
-            className: "mt-auto w-full",
-          })}
+        <Button
+          variant={plan.popular ? "default" : "outline"}
+          size="lg"
+          className="mt-auto w-full"
+          onClick={() => checkout.mutate({ productId: plan.id })}
         >
           {plan.trialIntervalCount && plan.trialIntervalCount > 0
             ? `Start your free ${plan.trialIntervalCount} ${plan.trialInterval}${plan.trialIntervalCount > 1 ? "s" : ""} trial`
             : "Get Started"}
-        </Link>
+        </Button>
       )}
       {currentUser && (
         <PageLoading

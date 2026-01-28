@@ -207,6 +207,121 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  apps/motion:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.946.0
+        version: 3.946.0
+      '@aws-sdk/s3-request-presigner':
+        specifier: ^3.946.0
+        version: 3.946.0
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.68.0(react@19.2.3))
+      '@radix-ui/react-portal':
+        specifier: ^1.1.10
+        version: 1.1.10(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@tanstack/react-query':
+        specifier: ^5.90.20
+        version: 5.90.20(react@19.2.3)
+      '@trpc/server':
+        specifier: ^11.7.2
+        version: 11.7.2(typescript@5.9.3)
+      '@workspace/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@workspace/drizzle':
+        specifier: workspace:*
+        version: link:../../packages/drizzle
+      '@workspace/email':
+        specifier: workspace:*
+        version: link:../../packages/email
+      '@workspace/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
+      '@workspace/trpc':
+        specifier: workspace:*
+        version: link:../../packages/trpc
+      '@workspace/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      better-auth:
+        specifier: ^1.4.17
+        version: 1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      canvas-confetti:
+        specifier: ^1.9.4
+        version: 1.9.4
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      fumadocs-core:
+        specifier: 16.4.7
+        version: 16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.3.5)
+      fumadocs-mdx:
+        specifier: 14.2.6
+        version: 14.2.6(@types/react@19.2.9)(fumadocs-core@16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.3.5))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+      fumadocs-ui:
+        specifier: 16.4.7
+        version: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(fumadocs-core@16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.3.5))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
+      lucide-react:
+        specifier: ^0.562.0
+        version: 0.562.0(react@19.2.3)
+      motion:
+        specifier: ^12.29.0
+        version: 12.29.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next:
+        specifier: 16.1.1
+        version: 16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: ^19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ^19.2.3
+        version: 19.2.3(react@19.2.3)
+      react-hook-form:
+        specifier: ^7.68.0
+        version: 7.68.0(react@19.2.3)
+      react-use-measure:
+        specifier: ^2.1.7
+        version: 2.1.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      zod:
+        specifier: ^4.1.13
+        version: 4.3.5
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.18
+        version: 4.1.18
+      '@types/canvas-confetti':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@types/mdx':
+        specifier: ^2.0.13
+        version: 2.0.13
+      '@types/react':
+        specifier: ^19.2.8
+        version: 19.2.9
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.9)
+      '@workspace/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@workspace/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   apps/portfolio:
     dependencies:
       '@aws-sdk/client-s3':
@@ -322,99 +437,11 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  apps/website:
-    dependencies:
-      '@radix-ui/react-portal':
-        specifier: ^1.1.10
-        version: 1.1.10(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@tanstack/react-query':
-        specifier: ^5.90.20
-        version: 5.90.20(react@19.2.3)
-      '@workspace/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
-      '@workspace/drizzle':
-        specifier: workspace:*
-        version: link:../../packages/drizzle
-      '@workspace/email':
-        specifier: workspace:*
-        version: link:../../packages/email
-      '@workspace/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
-      '@workspace/trpc':
-        specifier: workspace:*
-        version: link:../../packages/trpc
-      '@workspace/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      canvas-confetti:
-        specifier: ^1.9.4
-        version: 1.9.4
-      fumadocs-core:
-        specifier: 16.4.7
-        version: 16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.1.13)
-      fumadocs-mdx:
-        specifier: 14.2.6
-        version: 14.2.6(@types/react@19.2.9)(fumadocs-core@16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.1.13))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
-      fumadocs-ui:
-        specifier: 16.4.7
-        version: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(fumadocs-core@16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.1.13))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
-      lucide-react:
-        specifier: ^0.562.0
-        version: 0.562.0(react@19.2.3)
-      motion:
-        specifier: ^12.29.0
-        version: 12.29.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      next:
-        specifier: 16.1.1
-        version: 16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      react:
-        specifier: ^19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: ^19.2.3
-        version: 19.2.3(react@19.2.3)
-      react-use-measure:
-        specifier: ^2.1.7
-        version: 2.1.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      zod:
-        specifier: ^4.1.13
-        version: 4.1.13
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4.1.18
-        version: 4.1.18
-      '@types/canvas-confetti':
-        specifier: ^1.9.0
-        version: 1.9.0
-      '@types/mdx':
-        specifier: ^2.0.13
-        version: 2.0.13
-      '@types/react':
-        specifier: ^19.2.8
-        version: 19.2.9
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.9)
-      '@workspace/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@workspace/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      eslint:
-        specifier: ^9.39.1
-        version: 9.39.1(jiti@2.6.1)
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   packages/auth:
     dependencies:
       '@better-auth/expo':
         specifier: ^1.4.17
-        version: 1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))(better-auth@1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(expo-constants@18.0.13)(expo-linking@8.0.11)(expo-network@8.0.8(expo@54.0.32)(react@19.2.3))(expo-web-browser@15.0.10(expo@54.0.32)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.2.3)))
+        version: 1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))(better-auth@1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(expo-constants@18.0.13)(expo-linking@8.0.11)(expo-network@8.0.8(expo@54.0.32)(react@19.2.3))(expo-web-browser@15.0.10(expo@54.0.32)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.2.3)))
       '@polar-sh/better-auth':
         specifier: ^1.6.3
         version: 1.6.3(@polar-sh/sdk@0.41.5)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(better-auth@1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react-is@19.2.3)(react@19.2.3)(redux@5.0.1)(zod@4.1.13)
@@ -8701,6 +8728,7 @@ packages:
   tar@7.5.6:
     resolution: {integrity: sha512-xqUeu2JAIJpXyvskvU3uvQW8PAmHrtXp2KDuMJwQqW8Sqq0CaZBAQ+dKS3RBXVhU4wC5NjAdKrmh84241gO9cA==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
@@ -10806,7 +10834,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)':
+  '@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)':
     dependencies:
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
@@ -10817,9 +10845,9 @@ snapshots:
       nanostores: 1.1.0
       zod: 4.3.5
 
-  '@better-auth/expo@1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))(better-auth@1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(expo-constants@18.0.13)(expo-linking@8.0.11)(expo-network@8.0.8(expo@54.0.32)(react@19.2.3))(expo-web-browser@15.0.10(expo@54.0.32)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.2.3)))':
+  '@better-auth/expo@1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))(better-auth@1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(expo-constants@18.0.13)(expo-linking@8.0.11)(expo-network@8.0.8(expo@54.0.32)(react@19.2.3))(expo-web-browser@15.0.10(expo@54.0.32)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.2.3)))':
     dependencies:
-      '@better-auth/core': 1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
+      '@better-auth/core': 1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       better-call: 1.1.8(zod@4.3.5)
@@ -10830,9 +10858,9 @@ snapshots:
       expo-linking: 8.0.11(expo@54.0.32)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.2.3))(react@19.2.3)
       expo-web-browser: 15.0.10(expo@54.0.32)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.9)(react@19.2.3))
 
-  '@better-auth/telemetry@1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))':
+  '@better-auth/telemetry@1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))':
     dependencies:
-      '@better-auth/core': 1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
+      '@better-auth/core': 1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
 
@@ -14367,13 +14395,13 @@ snapshots:
 
   better-auth@1.4.17(drizzle-kit@0.31.8)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@types/pg@8.15.6)(kysely@0.28.8))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      '@better-auth/core': 1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
-      '@better-auth/telemetry': 1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))
+      '@better-auth/core': 1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
+      '@better-auth/telemetry': 1.4.17(@better-auth/core@1.4.17(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
       '@noble/ciphers': 2.0.1
       '@noble/hashes': 2.0.1
-      better-call: 1.1.8(zod@4.1.13)
+      better-call: 1.1.8(zod@4.3.5)
       defu: 6.1.4
       jose: 6.1.3
       kysely: 0.28.8
@@ -15822,33 +15850,6 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
       zod: 4.3.5
-    transitivePeerDependencies:
-      - supports-color
-
-  fumadocs-mdx@14.2.6(@types/react@19.2.9)(fumadocs-core@16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.1.13))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3):
-    dependencies:
-      '@mdx-js/mdx': 3.1.1
-      '@standard-schema/spec': 1.1.0
-      chokidar: 5.0.0
-      esbuild: 0.27.2
-      estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.4.7(@types/react@19.2.9)(lucide-react@0.562.0(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.1.13)
-      js-yaml: 4.1.1
-      mdast-util-to-markdown: 2.1.2
-      picocolors: 1.1.1
-      picomatch: 4.0.3
-      remark-mdx: 3.1.1
-      tinyexec: 1.0.2
-      tinyglobby: 0.2.15
-      unified: 11.0.5
-      unist-util-remove-position: 5.0.0
-      unist-util-visit: 5.0.0
-      vfile: 6.0.3
-      zod: 4.3.5
-    optionalDependencies:
-      '@types/react': 19.2.9
-      next: 16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      react: 19.2.3
     transitivePeerDependencies:
       - supports-color
 
