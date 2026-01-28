@@ -41,3 +41,5 @@ npm-debug.log*
 
 
 next-env.d.ts
+
+apps/**/global.css

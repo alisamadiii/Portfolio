@@ -25,29 +25,25 @@ export function Pricing() {
 
   return (
     <div className="container mx-auto flex flex-col items-center px-4 py-16">
-      <div className="relative flex w-full max-w-2xl flex-col rounded-2xl bg-zinc-100 p-8 text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100">
+      <div className="bg-muted shadow-card relative flex w-full max-w-2xl flex-col rounded-3xl p-8">
         <CreditCards className="size-20" />
 
         {/* Plan Name */}
-        <h3 className="mt-4 text-xl font-semibold text-zinc-700 dark:text-zinc-300">
-          Motion
-        </h3>
+        <h3 className="mt-4 text-xl font-semibold">Motion</h3>
 
         {/* Price Section */}
         <div className="mt-4">
-          <p className="text-5xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          <p className="text-5xl font-bold tracking-tight">
             ${product.data?.priceAmount ? product.data.priceAmount / 100 : 0}
           </p>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            one-time payment
-          </p>
+          <p className="text-muted-foreground mt-1 text-sm">one-time payment</p>
         </div>
 
         {/* CTA Button */}
         <div className="mt-6">
           {isCurrentPlan ? (
             <Button
-              className="w-full rounded-xl bg-zinc-300 py-6 text-base font-medium text-zinc-600 hover:bg-zinc-400 dark:bg-zinc-600 dark:text-zinc-300"
+              className="bg-muted text-muted-foreground hover:bg-muted/80 w-full rounded-xl py-6 text-base font-medium"
               disabled
             >
               Current plan
@@ -67,9 +63,7 @@ export function Pricing() {
 
         {/* Features Section */}
         <div className="mt-8">
-          <p className="mb-4 text-sm font-semibold text-zinc-900 dark:text-white">
-            Motion includes:
-          </p>
+          <p className="mb-4 text-sm font-semibold">Motion includes:</p>
           <ul className="space-y-3">
             {features.map((feature, index) => (
               <li
