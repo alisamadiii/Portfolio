@@ -1,7 +1,5 @@
 import { MetadataRoute } from "next";
 
-import { source } from "@/lib/source";
-
 export default function sitemap(): MetadataRoute.Sitemap {
   // Use Vercel production URL if available, otherwise fallback to localhost
   const baseUrl =
@@ -41,13 +39,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Dynamic routes from posts
-  const postRoutes: MetadataRoute.Sitemap = source.getPages().map((page) => ({
-    url: `${baseUrl}${page.url}`,
-    lastModified: new Date(page.data.date),
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
-
-  return [...staticRoutes, ...postRoutes];
+  return [...staticRoutes];
 }
