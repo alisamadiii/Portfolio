@@ -130,6 +130,7 @@ export default function DangerPage() {
                 placeholder="Type confirm to proceed"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
+                label="Confirm"
               />
               <AlertDialogFooter className="grid grid-cols-2 gap-2">
                 <AlertDialogCancel asChild>

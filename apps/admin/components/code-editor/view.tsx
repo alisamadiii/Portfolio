@@ -1,7 +1,7 @@
 import React from "react";
 import { useCodeEditor } from "@/context/code-editor";
 import { useMutation } from "@tanstack/react-query";
-import { FolderOpen, Lock, Unlock, X } from "lucide-react";
+import { FolderOpen, X } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import { Spinner } from "@workspace/ui/components/spinner";
@@ -16,7 +16,7 @@ import { MediaView } from "./media-view";
 export const CodeEditorView = ({
   source,
 }: {
-  source: RouterOutputs["source"]["readById"];
+  source: RouterOutputs["admin"]["sources"]["readById"];
 }) => {
   const { selectedTab, setSelectedTab } = useCodeEditor();
 
@@ -24,7 +24,9 @@ export const CodeEditorView = ({
   const selectedMedia = source.media.find((m) => m.id === selectedTab);
 
   const trpc = useTRPC();
-  const updateFile = useMutation(trpc.source.file.update.mutationOptions());
+  const updateFile = useMutation(
+    trpc.admin.sources.file.update.mutationOptions()
+  );
 
   return (
     <div key={selectedTab} className="flex flex-1 flex-col overflow-hidden">
@@ -51,11 +53,6 @@ export const CodeEditorView = ({
                 {selectedFile?.filename}
               </span>
               <div className="flex items-center gap-2">
-                {selectedFile.isPrivate ? (
-                  <Lock className="h-4 w-4 text-red-500" />
-                ) : (
-                  <Unlock className="h-4 w-4 text-green-500" />
-                )}
                 <p className="text-xs">
                   {updateFile.isPending ? <Spinner /> : "Save (Cmd+S)"}
                 </p>

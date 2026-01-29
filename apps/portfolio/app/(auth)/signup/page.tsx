@@ -6,12 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
+import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 
@@ -61,15 +56,13 @@ export default function SignUpPage() {
           name="name"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Name</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  placeholder="Name"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                placeholder="John Doe"
+                aria-invalid={fieldState.invalid}
+                label="Name"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -79,16 +72,14 @@ export default function SignUpPage() {
           name="email"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  type="email"
-                  placeholder="Email"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                type="email"
+                placeholder="example@email.com"
+                aria-invalid={fieldState.invalid}
+                label="Email"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -98,16 +89,14 @@ export default function SignUpPage() {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="Password"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                type="password"
+                placeholder="********"
+                aria-invalid={fieldState.invalid}
+                label="Password"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -119,7 +108,8 @@ export default function SignUpPage() {
       <Button
         onClick={form.handleSubmit(handleSubmit)}
         isLoading={signup.isPending}
-        className="w-full max-w-sm"
+        className="mt-8 w-full max-w-sm"
+        size="lg"
       >
         Create Account
       </Button>
@@ -128,6 +118,7 @@ export default function SignUpPage() {
         variant={"outline"}
         className="w-full max-w-sm"
         onClick={() => onSignInWithProvider.mutate({ redirectUrl: "/" })}
+        size="lg"
       >
         Login with Google
       </Button>

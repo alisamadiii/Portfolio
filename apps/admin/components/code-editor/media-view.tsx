@@ -3,7 +3,7 @@ import React from "react";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 interface MediaViewProps {
-  media: RouterOutputs["source"]["readById"]["media"][number];
+  media: RouterOutputs["admin"]["sources"]["readById"]["media"][number];
 }
 
 export const MediaView = ({ media }: MediaViewProps) => {

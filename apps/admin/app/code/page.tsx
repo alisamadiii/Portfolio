@@ -21,7 +21,7 @@ import { CreateForm } from "@/components/code-editor/create-form";
 
 export default function CodePage() {
   const trpc = useTRPC();
-  const sourcesQuery = useQuery(trpc.source.read.queryOptions());
+  const sourcesQuery = useQuery(trpc.admin.sources.read.queryOptions());
 
   return (
     <div className="container max-w-6xl pt-8">

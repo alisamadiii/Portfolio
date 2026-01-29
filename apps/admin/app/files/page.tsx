@@ -138,6 +138,7 @@ export default function FilesPage() {
         value={searchById}
         onChange={(e) => setSearchById(e.target.value)}
         className="mb-4 max-w-64"
+        label="Search by ID"
       />
 
       <DataTable

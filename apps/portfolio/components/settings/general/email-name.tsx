@@ -18,12 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
+import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { useResendEmailVerification } from "@workspace/auth/hooks/use-functions";
@@ -88,11 +83,12 @@ export const EmailName = () => {
             name="name"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Name</FieldLabel>
-                <FieldContent>
-                  <Input {...field} aria-invalid={fieldState.invalid} />
-                  <FieldError errors={[fieldState.error]} />
-                </FieldContent>
+                <Input
+                  {...field}
+                  aria-invalid={fieldState.invalid}
+                  label="Name"
+                />
+                <FieldError errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -102,16 +98,14 @@ export const EmailName = () => {
             name="email"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Email</FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    type="email"
-                    disabled
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </FieldContent>
+                <Input
+                  {...field}
+                  type="email"
+                  disabled
+                  aria-invalid={fieldState.invalid}
+                  label="Email"
+                />
+                <FieldError errors={[fieldState.error]} />
               </Field>
             )}
           />

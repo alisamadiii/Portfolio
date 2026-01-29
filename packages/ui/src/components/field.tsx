@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { AlertTriangle } from "lucide-react";
+import { AnimatePresence, motion, MotionProps } from "motion/react";
 
 import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
@@ -55,7 +57,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const fieldVariants = cva(
-  "group/field flex w-full gap-3 data-[invalid=true]:text-destructive",
+  "group/field flex w-full data-[invalid=true]:text-destructive",
   {
     variants: {
       orientation: {
@@ -115,7 +117,7 @@ function FieldLabel({
     <Label
       data-slot="field-label"
       className={cn(
-        "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50",
+        "group/field-label peer/field-label mb-1.5 flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border *:data-[slot=field]:p-4",
         "has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:border-primary dark:has-data-[state=checked]:bg-primary/10",
         className
@@ -143,7 +145,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="field-description"
       className={cn(
-        "text-muted-foreground text-sm leading-normal font-normal group-has-data-[orientation=horizontal]/field:text-balance",
+        "text-muted-foreground px-4 pt-1 text-sm leading-normal font-normal group-has-data-[orientation=horizontal]/field:text-balance",
         "last:mt-0 nth-last-2:-mt-1 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
         className
@@ -188,9 +190,10 @@ function FieldError({
   children,
   errors,
   ...props
-}: React.ComponentProps<"div"> & {
-  errors?: Array<{ message?: string } | undefined>;
-}) {
+}: React.ComponentProps<"div"> &
+  MotionProps & {
+    errors?: Array<{ message?: string } | undefined>;
+  }) {
   const content = useMemo(() => {
     if (children) {
       return children;
@@ -218,19 +221,29 @@ function FieldError({
     );
   }, [children, errors]);
 
-  if (!content) {
-    return null;
-  }
-
   return (
-    <div
-      role="alert"
-      data-slot="field-error"
-      className={cn("text-destructive text-sm font-normal", className)}
-      {...props}
-    >
-      {content}
-    </div>
+    <AnimatePresence>
+      {content && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          role="alert"
+          data-slot="field-error"
+          className={cn(
+            "text-destructive max-w-full overflow-hidden text-xs font-normal break-all",
+            className
+          )}
+          {...props}
+        >
+          <div className="flex items-center gap-1 px-2 py-1.5">
+            <AlertTriangle className="size-3" />
+            {content}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

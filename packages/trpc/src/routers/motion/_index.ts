@@ -1,0 +1,121 @@
+import { headers } from "next/headers";
+import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
+import z from "zod";
+
+import { baseProcedure, createTRPCRouter } from "@workspace/trpc/init";
+import { auth } from "@workspace/auth/auth";
+import { db } from "@workspace/drizzle/index";
+import { orders, source, sourceFile } from "@workspace/drizzle/schema";
+
+export const motionRouter = createTRPCRouter({
+  getFiles: baseProcedure
+    .input(
+      z.object({
+        sourceId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        // Check if the source is private
+        const [getSource] = await db
+          .select({ isPrivate: source.isPrivate })
+          .from(source)
+          .where(eq(source.id, input.sourceId));
+
+        const isPrivate = getSource.isPrivate;
+
+        console.log({ isPrivate });
+
+        if (!isPrivate) {
+          const files = await db
+            .select()
+            .from(sourceFile)
+            .where(eq(sourceFile.sourceId, input.sourceId));
+
+          return files;
+        }
+
+        const motionProductId = process.env.NEXT_PUBLIC_MOTION_PRODUCT;
+
+        if (!motionProductId) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Motion product ID is not set",
+          });
+        }
+
+        // Check if the user is authenticated
+        const session = await auth.api.getSession({
+          headers: await headers(),
+        });
+
+        if (!session) {
+          const files = await db
+            .select()
+            .from(sourceFile)
+            .where(eq(sourceFile.sourceId, input.sourceId));
+
+          return files.map((file) =>
+            isPrivate
+              ? {
+                  ...file,
+                  content: null,
+                  preview:
+                    typeof file.content === "string"
+                      ? file.content.split("\n").slice(0, 16).join("\n")
+                      : null,
+                }
+              : file
+          );
+        }
+
+        // Check if the user has access to the motion product
+        const findMotionOrder = await db
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.userId, session.user.id),
+              eq(orders.productId, motionProductId),
+              eq(orders.status, "paid")
+            )
+          );
+
+        if (findMotionOrder.length === 0) {
+          const files = await db
+            .select()
+            .from(sourceFile)
+            .where(eq(sourceFile.sourceId, input.sourceId));
+
+          return files.map((file) =>
+            isPrivate
+              ? {
+                  ...file,
+                  content: null,
+                  preview:
+                    typeof file.content === "string"
+                      ? file.content.split("\n").slice(0, 16).join("\n")
+                      : null,
+                }
+              : file
+          );
+        }
+
+        const files = await db
+          .select()
+          .from(sourceFile)
+          .where(eq(sourceFile.sourceId, input.sourceId));
+
+        return files;
+      } catch (error) {
+        throw new TRPCError({
+          code:
+            error instanceof TRPCError ? error.code : "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to fetch files",
+          cause: error,
+        });
+      }
+    }),
+});

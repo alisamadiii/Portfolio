@@ -18,7 +18,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 interface SourceInfoCardProps {
-  source: RouterOutputs["source"]["readById"];
+  source: RouterOutputs["admin"]["sources"]["readById"];
   sourceId: string;
 }
 
@@ -30,10 +30,10 @@ export function SourceInfoCard({ source, sourceId }: SourceInfoCardProps) {
   const [description, setDescription] = useState(source.description || "");
 
   const updateSource = useMutation(
-    trpc.source.update.mutationOptions({
+    trpc.admin.sources.update.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: trpc.source.readById.queryKey(sourceId),
+          queryKey: trpc.admin.sources.readById.queryKey(sourceId),
         });
       },
     })
@@ -49,6 +49,7 @@ export function SourceInfoCard({ source, sourceId }: SourceInfoCardProps) {
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
+              label="Title"
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -58,6 +59,7 @@ export function SourceInfoCard({ source, sourceId }: SourceInfoCardProps) {
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Input
+              label="Description"
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}

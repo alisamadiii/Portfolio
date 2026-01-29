@@ -24,7 +24,7 @@ interface MediaUploadProps {
 }
 
 type Theme = NonNullable<
-  RouterOutputs["source"]["readById"]["media"][number]["theme"]
+  RouterOutputs["admin"]["sources"]["readById"]["media"][number]["theme"]
 >;
 
 export function MediaUpload({ sourceId }: MediaUploadProps) {
@@ -37,10 +37,10 @@ export function MediaUpload({ sourceId }: MediaUploadProps) {
   const [localError, setLocalError] = useState<string | null>(null);
 
   const createMedia = useMutation(
-    trpc.source.media.create.mutationOptions({
+    trpc.admin.sources.media.create.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: trpc.source.readById.queryKey(sourceId),
+          queryKey: trpc.admin.sources.readById.queryKey(sourceId),
         });
       },
     })

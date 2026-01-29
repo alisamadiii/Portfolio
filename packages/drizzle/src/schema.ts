@@ -186,6 +186,7 @@ export const source = pgTable("source", {
 
   title: text("title").notNull(),
   description: text("description"),
+  isPrivate: boolean("is_private").notNull().default(true),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -205,7 +206,6 @@ export const sourceFile = pgTable("source_file", {
   filename: text("filename").notNull(),
   path: text("path"), // optional: "src/components/Button.tsx"
   content: text("content").notNull(),
-  isPrivate: boolean("is_private").notNull().default(true),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

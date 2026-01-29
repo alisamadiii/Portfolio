@@ -42,16 +42,15 @@ export const sourceFileRouter = createTRPCRouter({
         filename: z.string().optional(),
         path: z.string().optional(),
         content: z.string().optional(),
-        isPrivate: z.boolean().optional(),
         index: z.number().optional(),
       })
     )
     .mutation(async ({ input }) => {
       try {
-        const { id, ...data } = input;
+        const { id, filename, path, content, index } = input;
         const [file] = await db
           .update(sourceFile)
-          .set(data)
+          .set({ filename, path, content, index })
           .where(eq(sourceFile.id, id))
           .returning();
 

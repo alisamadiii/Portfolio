@@ -14,12 +14,7 @@ import {
   AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { buttonVariants } from "@workspace/ui/components/button";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
+import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 
@@ -145,15 +140,13 @@ export const PersonalInformation = () => {
           name="name"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Name</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  placeholder="John Doe"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                placeholder="John Doe"
+                aria-invalid={fieldState.invalid}
+                label="Name"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />

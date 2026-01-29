@@ -11,10 +11,8 @@ import {
   GripVertical,
   Image,
   ImagePlus,
-  Lock,
   Pencil,
   Trash2,
-  Unlock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,7 +33,7 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 export const Sidebar = ({
   source,
 }: {
-  source: RouterOutputs["source"]["readById"];
+  source: RouterOutputs["admin"]["sources"]["readById"];
 }) => {
   const {
     fileExpanded,
@@ -52,7 +50,7 @@ export const Sidebar = ({
 
   const trpc = useTRPC();
   const createFile = useMutation(
-    trpc.source.file.create.mutationOptions({
+    trpc.admin.sources.file.create.mutationOptions({
       onSuccess: (data) => {
         invalidate();
         setShowNewFile(false);
@@ -63,16 +61,20 @@ export const Sidebar = ({
   );
 
   const deleteFile = useMutation(
-    trpc.source.file.delete.mutationOptions({ onSuccess: () => invalidate() })
+    trpc.admin.sources.file.delete.mutationOptions({
+      onSuccess: () => invalidate(),
+    })
   );
 
   const deleteMedia = useMutation(
-    trpc.source.media.delete.mutationOptions({ onSuccess: () => invalidate() })
+    trpc.admin.sources.media.delete.mutationOptions({
+      onSuccess: () => invalidate(),
+    })
   );
 
   const invalidate = () => {
     queryClient.invalidateQueries({
-      queryKey: trpc.source.readById.queryKey(source.id),
+      queryKey: trpc.admin.sources.readById.queryKey(source.id),
     });
   };
 
@@ -100,7 +102,6 @@ export const Sidebar = ({
                 sortedFiles.map((file, index) => (
                   <FileItem
                     key={file.id}
-                    sourceId={source.id}
                     file={file}
                     isActive={selectedTab === file.id}
                     onClick={() => setSelectedTab(file.id)}
@@ -118,6 +119,7 @@ export const Sidebar = ({
                 <div className="bg-muted mx-1 flex items-center gap-1 rounded p-1">
                   <FileCode className="text-muted-foreground size-4 shrink-0" />
                   <Input
+                    label="Filename"
                     autoFocus
                     value={newFile}
                     onChange={(e) => setNewFile(e.target.value)}
@@ -191,9 +193,9 @@ function FileList({
   source,
   children,
 }: {
-  source: RouterOutputs["source"]["readById"];
+  source: RouterOutputs["admin"]["sources"]["readById"];
   children: (
-    sortedFiles: RouterOutputs["source"]["readById"]["files"],
+    sortedFiles: RouterOutputs["admin"]["sources"]["readById"]["files"],
     dragHandlers: (index: number) => {
       draggable: boolean;
       onDragStart: (e: React.DragEvent) => void;
@@ -208,11 +210,11 @@ function FileList({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const reorderFiles = useMutation(
-    trpc.source.file.reorder.mutationOptions({
+    trpc.admin.sources.file.reorder.mutationOptions({
       onMutate: async (updates) => {
         // Optimistically update the cache
         queryClient.setQueryData(
-          trpc.source.readById.queryKey(source.id),
+          trpc.admin.sources.readById.queryKey(source.id),
           (old) => {
             if (!old) return old;
             return {
@@ -229,7 +231,7 @@ function FileList({
         toast.error(error.message || "Failed to reorder files");
         // Refetch to restore correct order on error
         queryClient.invalidateQueries({
-          queryKey: trpc.source.readById.queryKey(source.id),
+          queryKey: trpc.admin.sources.readById.queryKey(source.id),
         });
       },
     })
@@ -283,7 +285,6 @@ function FileList({
 }
 
 function FileItem({
-  sourceId,
   file,
   isActive,
   onClick,
@@ -292,8 +293,7 @@ function FileItem({
   dragHandlers,
   isReordering,
 }: {
-  sourceId: string;
-  file: RouterOutputs["source"]["readById"]["files"][number];
+  file: RouterOutputs["admin"]["sources"]["readById"]["files"][number];
   isActive: boolean;
   onClick: () => void;
   onDelete: () => void;
@@ -307,11 +307,6 @@ function FileItem({
   };
   isReordering?: boolean;
 }) {
-  const trpc = useTRPC();
-  const updateFile = useMutation(trpc.source.file.update.mutationOptions());
-
-  const isLoading = updateFile.isPending || isReordering;
-
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -333,48 +328,12 @@ function FileItem({
           )}
           <File className={cn("size-4 shrink-0", "text-muted-foreground")} />
           <span className="flex-1 truncate">{file.filename}</span>
-          {isLoading ? null : file.isPrivate ? (
-            <Lock className="size-3 text-red-500" />
-          ) : (
-            <Unlock className="size-3 text-green-500" />
-          )}
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={onClick}>
           <Pencil className="mr-2 size-4" />
           Open
-        </ContextMenuItem>
-        <ContextMenuItem
-          onClick={() =>
-            updateFile.mutate(
-              { id: file.id, isPrivate: !file.isPrivate },
-              {
-                onSuccess: () => {
-                  queryClient.setQueryData(
-                    trpc.source.readById.queryKey(sourceId),
-                    (old) => {
-                      if (!old) return old;
-                      return {
-                        ...old,
-                        files: old.files.map((f) =>
-                          f.id === file.id
-                            ? { ...f, isPrivate: !f.isPrivate }
-                            : f
-                        ),
-                      };
-                    }
-                  );
-                },
-                onError: (error) => {
-                  toast.error(error.message);
-                },
-              }
-            )
-          }
-        >
-          <Lock className="mr-2 size-4" />
-          {file.isPrivate ? "Make Public" : "Make Private"}
         </ContextMenuItem>
         <ContextMenuItem onClick={onCopy}>
           <Copy className="mr-2 size-4" />
@@ -398,7 +357,7 @@ function MediaItem({
   onDelete,
   onCopyUrl,
 }: {
-  media: RouterOutputs["source"]["readById"]["media"][number];
+  media: RouterOutputs["admin"]["sources"]["readById"]["media"][number];
   onDelete: () => void;
   onCopyUrl: () => void;
 }) {

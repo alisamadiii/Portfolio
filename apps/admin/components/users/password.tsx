@@ -130,16 +130,14 @@ export const Password = () => {
               name="password"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Password</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="Enter new password"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    <FieldError errors={[fieldState.error]} />
-                  </FieldContent>
+                  <Input
+                    {...field}
+                    type="password"
+                    placeholder="Enter new password"
+                    aria-invalid={fieldState.invalid}
+                    label="Password"
+                  />
+                  <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
@@ -149,16 +147,14 @@ export const Password = () => {
               name="confirmPassword"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Confirm password</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="Confirm new password"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    <FieldError errors={[fieldState.error]} />
-                  </FieldContent>
+                  <Input
+                    {...field}
+                    type="password"
+                    placeholder="Confirm new password"
+                    aria-invalid={fieldState.invalid}
+                    label="Confirm password"
+                  />
+                  <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />

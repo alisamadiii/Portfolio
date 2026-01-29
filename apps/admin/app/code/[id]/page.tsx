@@ -18,7 +18,9 @@ export default function EditSourcePage() {
   const trpc = useTRPC();
   const sourceId = params.id as string;
 
-  const sourceQuery = useQuery(trpc.source.readById.queryOptions(sourceId));
+  const sourceQuery = useQuery(
+    trpc.admin.sources.readById.queryOptions(sourceId)
+  );
 
   if (sourceQuery.isPending) {
     return (

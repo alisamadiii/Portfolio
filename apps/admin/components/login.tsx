@@ -7,12 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
+import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 
@@ -64,16 +59,14 @@ export function Login() {
           name="email"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  type="email"
-                  placeholder="Email"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                type="email"
+                placeholder="Email"
+                aria-invalid={fieldState.invalid}
+                label="Email"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -83,16 +76,14 @@ export function Login() {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="Password"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                type="password"
+                placeholder="Password"
+                aria-invalid={fieldState.invalid}
+                label="Password"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -108,6 +99,7 @@ export function Login() {
         onClick={form.handleSubmit(handleSubmit)}
         isLoading={signin.isPending}
         className="w-full max-w-sm"
+        size="lg"
       >
         Login
       </Button>
@@ -116,6 +108,7 @@ export function Login() {
         variant={"outline"}
         className="w-full max-w-sm"
         onClick={() => onSignInWithProvider.mutate({ redirectUrl: "/" })}
+        size="lg"
       >
         Login with Google
       </Button>

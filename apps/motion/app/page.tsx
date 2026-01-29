@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   Carousel,
   CarouselContent,
@@ -8,6 +10,8 @@ import {
   CarouselPrevious,
 } from "@workspace/ui/components/carousel";
 import { IosSettings } from "@workspace/ui/motion/animation-svgs";
+
+import { animations } from "@/lib/animations";
 
 import { Pricing } from "@/components/pricing";
 
@@ -24,9 +28,10 @@ export default function Home() {
       </div>
       <Carousel>
         <CarouselContent className="my-12">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <CarouselItem
-              key={index}
+          {Object.entries(animations).map(([key, animation], index) => (
+            <Link
+              href={`/m/${key}`}
+              key={key}
               className="group ml-4 aspect-square basis-[400px] overflow-hidden p-0 duration-200 active:scale-95"
               style={{
                 perspective: "1000px",
@@ -35,7 +40,7 @@ export default function Home() {
               <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-x-24">
                 <IosSettings />
               </div>
-            </CarouselItem>
+            </Link>
           ))}
         </CarouselContent>
         <CarouselNext />

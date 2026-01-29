@@ -133,6 +133,7 @@ function InputGroupInput({
   ...props
 }: React.ComponentProps<"input">) {
   return (
+    // @ts-expect-error - Input is not a valid prop for InputGroupInput
     <Input
       data-slot="input-group-control"
       className={cn(

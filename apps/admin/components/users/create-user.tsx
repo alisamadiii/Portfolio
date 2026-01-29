@@ -97,15 +97,13 @@ export const CreateUser = () => {
             name="name"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Name</FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    placeholder="John Doe"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </FieldContent>
+                <Input
+                  {...field}
+                  placeholder="John Doe"
+                  aria-invalid={fieldState.invalid}
+                  label="Name"
+                />
+                <FieldError errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -115,16 +113,14 @@ export const CreateUser = () => {
             name="email"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Email</FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    type="email"
-                    placeholder="name@example.com"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </FieldContent>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="name@example.com"
+                  aria-invalid={fieldState.invalid}
+                  label="Email"
+                />
+                <FieldError errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -134,16 +130,14 @@ export const CreateUser = () => {
             name="password"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Password</FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    type="password"
-                    placeholder="********"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </FieldContent>
+                <Input
+                  {...field}
+                  type="password"
+                  placeholder="********"
+                  aria-invalid={fieldState.invalid}
+                  label="Password"
+                />
+                <FieldError errors={[fieldState.error]} />
               </Field>
             )}
           />

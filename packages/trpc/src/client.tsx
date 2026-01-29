@@ -119,31 +119,9 @@ export function TRPCReactProvider(
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={client} queryClient={queryClient}>
-        <StoredTRPC>
-          {props.children}
-          <ReactQueryDevtools />
-        </StoredTRPC>
+        {props.children}
+        <ReactQueryDevtools />
       </TRPCProvider>
     </QueryClientProvider>
   );
-}
-
-// Store the TRPC instance so it can be accessed without calling the hook
-// This is useful for queryOptions() and mutationOptions() which aren't hooks
-export let storedTRPC: ReturnType<typeof useTRPC> | undefined;
-
-/**
- * Internal component that stores the TRPC instance
- * Automatically initializes storedTRPC when TRPCReactProvider mounts
- */
-function StoredTRPC({ children }: { children: React.ReactNode }) {
-  const trpc = useTRPC();
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      storedTRPC = trpc;
-    }
-  }, [trpc]);
-
-  return <>{children}</>;
 }

@@ -9,7 +9,7 @@ import { source, sourceFile, sourceMedia } from "@workspace/drizzle/schema";
 import { sourceFileRouter } from "./file";
 import { sourceMediaRouter } from "./media";
 
-export const sourceRouter = createTRPCRouter({
+export const adminSourcesRouter = createTRPCRouter({
   read: adminProcedure.query(async () => {
     try {
       const rows = await db
@@ -149,15 +149,20 @@ export const sourceRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        title: z.string(),
+        title: z.string().optional(),
         description: z.string().optional(),
+        isPrivate: z.boolean().optional(),
       })
     )
     .mutation(async ({ input }) => {
       try {
         const [updated] = await db
           .update(source)
-          .set({ title: input.title, description: input.description })
+          .set({
+            title: input.title,
+            description: input.description,
+            isPrivate: input.isPrivate,
+          })
           .where(eq(source.id, input.id))
           .returning();
 

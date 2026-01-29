@@ -5,12 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
+import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { useResetPassword } from "@workspace/auth/hooks/use-functions";
@@ -60,16 +55,14 @@ export function ResetPassword({ token }: ResetPasswordProps) {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="Password"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </FieldContent>
+              <Input
+                {...field}
+                type="password"
+                placeholder="********"
+                aria-invalid={fieldState.invalid}
+                label="Password"
+              />
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -79,7 +72,8 @@ export function ResetPassword({ token }: ResetPasswordProps) {
       <Button
         onClick={form.handleSubmit(handleSubmit)}
         isLoading={resetPassword.isPending}
-        className="w-full max-w-sm"
+        className="mt-8 w-full max-w-sm"
+        size="lg"
       >
         {resetPassword.isSuccess
           ? "Password Reset Successfully"
