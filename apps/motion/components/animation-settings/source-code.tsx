@@ -14,6 +14,7 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { animations } from "@/lib/animations";
 
 import { LoginDrawer } from "../login-drawer";
+import { PricingDrawer } from "../pricing-drawer";
 
 const EXT_TO_LANG: Record<string, string> = {
   ts: "typescript",
@@ -191,7 +192,9 @@ const FileList = ({ animationId }: { animationId: string }) => {
                     purchasing the animation.
                   </p>
                   <div className="flex flex-col">
-                    <Button size="sm">Purchase Animation</Button>
+                    <PricingDrawer>
+                      <Button size="sm">Purchase Animation</Button>
+                    </PricingDrawer>
                     <LoginDrawer>
                       <Button
                         size="sm"

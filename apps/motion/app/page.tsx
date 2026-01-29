@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@workspace/ui/components/carousel";
@@ -28,7 +27,7 @@ export default function Home() {
       </div>
       <Carousel>
         <CarouselContent className="my-12">
-          {Object.entries(animations).map(([key, animation], index) => (
+          {Object.entries(animations).map(([key]) => (
             <Link
               href={`/m/${key}`}
               key={key}

@@ -43,9 +43,11 @@ export default function ComponentPage() {
           type: "spring",
           bounce: 0.3,
         }}
-        className="flex min-h-screen flex-col items-center-safe justify-center-safe py-8"
+        className="flex min-h-screen w-full flex-col items-center-safe justify-center-safe py-8"
       >
         <animation.component />
+        {/* <ViewComponentWrapper>
+        </ViewComponentWrapper> */}
       </motion.div>
 
       <div className="fixed top-4 right-4 z-100">
