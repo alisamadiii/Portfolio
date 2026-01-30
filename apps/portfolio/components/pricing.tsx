@@ -147,7 +147,7 @@ const EachPlan = ({
       })}
     >
       {plan.popular && (
-        <Badge className="absolute right-1/2 top-0 -translate-y-1/2 translate-x-1/2">
+        <Badge className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2">
           Most Popular
         </Badge>
       )}
@@ -216,7 +216,9 @@ const EachPlan = ({
           variant={plan.popular ? "default" : "outline"}
           size="lg"
           className="mt-auto w-full"
-          onClick={() => checkout.mutate({ productId: plan.id })}
+          onClick={() =>
+            checkout.mutate({ productId: plan.id, successUrl: "/portfolio" })
+          }
         >
           {plan.trialIntervalCount && plan.trialIntervalCount > 0
             ? `Start your free ${plan.trialIntervalCount} ${plan.trialInterval}${plan.trialIntervalCount > 1 ? "s" : ""} trial`

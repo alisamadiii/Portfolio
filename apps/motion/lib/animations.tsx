@@ -1,12 +1,17 @@
 import dynamic from "next/dynamic";
 
+import { AnimationLoading } from "../components/animation-loading";
+
 export const animations = {
   "ios-card": {
     id: "0ae1e574-9473-4bc2-9354-c53d6931af57",
     name: "IosCard",
     description:
       "IosCard is a component that displays a card with a phone mockup",
-    component: dynamic(() => import("@/animations/ios-card"), { ssr: false }),
+    component: dynamic(() => import("@/animations/ios-card"), {
+      ssr: false,
+      loading: AnimationLoading,
+    }),
   },
   "lume-city-selector": {
     id: "e4222471-86e4-4d0e-adee-65029cd0f6d3",
@@ -15,6 +20,7 @@ export const animations = {
       "LumeCitySelector is a component that displays a city selector with a phone mockup",
     component: dynamic(() => import("@/animations/lume-city-selector"), {
       ssr: false,
+      loading: AnimationLoading,
     }),
   },
 };

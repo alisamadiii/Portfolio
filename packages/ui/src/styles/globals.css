@@ -135,6 +135,33 @@
   --shadow-toast-save: inset 0 0 0 1px #2f3037, inset 0 2px 0 color-mix(in srgb, white calc(0.12 * 100%), transparent),
     inset 0 0 2px 2px color-mix(in srgb, white calc(0.06 * 100%), transparent), 0 16px 36px -6px color-mix(in srgb, black calc(0.36 * 100%), transparent),
     0 6px 16px -2px color-mix(in srgb, black calc(0.2 * 100%), transparent);
+
+  --animate-rotate: rotate .5s ease-in-out forwards;
+  --animate-dialog-in: dialog-in 1s cubic-bezier(0.785, 0.135, 0.15, 0.86) forwards;
+
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95) rotateY(45deg) rotateX(45deg) translateX(-20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1) rotateY(0deg) rotateX(0deg) translateX(0);
+    }
+  }
+
+
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
 }
 
 @layer base {
@@ -156,7 +183,7 @@
   h4,
   h5,
   h6 {
-    @apply font-heading font-semibold;
+    @apply font-bold tracking-tight;
   }
 }
 
@@ -180,4 +207,8 @@
 @utility custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--primary) var(--background);
+}
+
+#motion-container>* {
+  @apply animate-in fade-in-0 duration-600;
 }

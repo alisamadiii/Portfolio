@@ -3,7 +3,11 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import z from "zod";
 
-import { baseProcedure, createTRPCRouter } from "@workspace/trpc/init";
+import {
+  authenticatedProcedure,
+  baseProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { orders, source, sourceFile } from "@workspace/drizzle/schema";
@@ -118,4 +122,27 @@ export const motionRouter = createTRPCRouter({
         });
       }
     }),
+  isUserPurchased: authenticatedProcedure.query(async ({ ctx }) => {
+    const motionProductId = process.env.NEXT_PUBLIC_MOTION_PRODUCT;
+
+    if (!motionProductId) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Motion product ID is not set",
+      });
+    }
+
+    const findMotionOrder = await db
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.userId, ctx.session.user.id),
+          eq(orders.productId, motionProductId),
+          eq(orders.status, "paid")
+        )
+      );
+
+    return findMotionOrder.length > 0 ? true : false;
+  }),
 });

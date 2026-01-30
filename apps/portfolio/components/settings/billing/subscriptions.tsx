@@ -255,6 +255,7 @@ const EachProduct = ({ product }: EachProductProps) => {
     } else {
       checkout.mutate({
         productId: product.id,
+        successUrl: "/portfolio",
       });
     }
   };

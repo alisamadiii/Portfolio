@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { codeToHtml } from "shiki";
 
 import { Button } from "@workspace/ui/components/button";
@@ -130,6 +131,26 @@ const FileList = ({ animationId }: { animationId: string }) => {
 
   console.log(fileQuery.data);
 
+  useHotkeys(
+    "left",
+    () => {
+      if (fileIndex > 0) {
+        setSelectedFile(fileQuery.data?.[fileIndex - 1]?.id ?? null);
+      }
+    },
+    [fileIndex]
+  );
+
+  useHotkeys(
+    "right",
+    () => {
+      if (fileIndex < (fileQuery.data?.length ?? 0) - 1) {
+        setSelectedFile(fileQuery.data?.[fileIndex + 1]?.id ?? null);
+      }
+    },
+    [fileIndex]
+  );
+
   return (
     <>
       <header className="bg-muted sticky top-0 left-0 z-20 flex items-center border-b px-8 backdrop-blur-sm">
@@ -171,7 +192,7 @@ const FileList = ({ animationId }: { animationId: string }) => {
           <div
             key={file.id}
             className={cn(
-              "custom-scrollbar shrink-0 basis-full overflow-auto rounded-lg",
+              "custom-scrollbar shrink-0 basis-full overflow-auto",
               file.content === null && file.preview && "overflow-hidden"
             )}
           >

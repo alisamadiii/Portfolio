@@ -216,7 +216,7 @@ export default function Home() {
       </div>
 
       <section className="my-20">
-        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+        <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           What I use
         </h2>
 
@@ -234,7 +234,7 @@ export default function Home() {
       </section>
 
       <section className="my-20">
-        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+        <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           Projects
         </h2>
 
@@ -256,7 +256,7 @@ export default function Home() {
       </section>
 
       <section className="my-20">
-        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+        <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           The App/Website I&apos;m using
         </h2>
 
@@ -296,7 +296,7 @@ export default function Home() {
       {/* <Works /> */}
 
       <section className="my-20">
-        <h2 className="text-muted-foreground mb-8 text-sm tracking-[.3rem] uppercase">
+        <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           Random Stuff
         </h2>
 

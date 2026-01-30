@@ -41,6 +41,7 @@ function DialogOverlay({
         "data-[state=open]:animate-in data-[state=closed]:animate-out no-scrollbar data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 flex items-center-safe justify-center-safe overflow-y-auto bg-black/40 py-12 backdrop-blur-sm",
         className
       )}
+      style={{ perspective: "1000px" }}
       {...props}
     />
   );
@@ -50,21 +51,38 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  overlayClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  overlayClassName?: string;
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay onClick={(e) => e.stopPropagation()}>
+      <DialogOverlay
+        className={overlayClassName}
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogPrimitive.Content
           data-slot="dialog-content"
           className={cn(
-            "bg-background data-[state=open]:animate-in shadow-dialog-body data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 relative z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 duration-200 outline-none sm:max-w-lg",
+            "bg-background shadow-dialog-body data-[state=closed]:animate-out relative z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-4xl border p-6 backdrop-blur-sm duration-200 outline-none sm:max-w-lg",
+            "data-[state=open]:animate-dialog-in",
+            "data-[state=closed]:zoom-out-95 data-[state=closed]:blur-out-md data-[state=closed]:slide-out-to-bottom-30",
             className
           )}
           {...props}
         >
+          <span
+            className="pointer-events-none absolute -inset-px rounded-[inherit] bg-[linear-gradient(to_top_left,var(--foreground),transparent,var(--foreground))] p-px"
+            style={{
+              mask: "linear-gradient(black, black) content-box, linear-gradient(black, black)",
+              WebkitMask:
+                "linear-gradient(black, black) content-box, linear-gradient(black, black)",
+              maskComposite: "exclude",
+              WebkitMaskComposite: "xor",
+            }}
+          ></span>
           {children}
           {showCloseButton && (
             <DialogPrimitive.Close
@@ -85,7 +103,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-1 text-center sm:text-left", className)}
       {...props}
     />
   );
@@ -111,7 +129,10 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn(
+        "text-lg leading-none font-bold tracking-tight md:text-2xl lg:text-3xl",
+        className
+      )}
       {...props}
     />
   );
@@ -124,7 +145,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn("text-muted-foreground text-sm leading-[120%]", className)}
       {...props}
     />
   );
