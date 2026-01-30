@@ -163,7 +163,7 @@ export const paymentsRouter = createTRPCRouter({
     .input(
       z.object({
         productId: z.string(),
-        successUrl: z.string().optional(),
+        successUrl: z.string(),
         discountId: z.string().optional(),
       })
     )

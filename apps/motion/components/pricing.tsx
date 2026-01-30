@@ -53,7 +53,10 @@ export function Pricing() {
               size="lg"
               className="w-full"
               onClick={() =>
-                checkout.mutate({ productId: product.data?.id || "" })
+                checkout.mutate({
+                  productId: product.data?.id || "",
+                  successUrl: "http://localhost:3002/m/lume-city-selector",
+                })
               }
             >
               Upgrade to {product.data?.name}

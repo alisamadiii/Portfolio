@@ -9,6 +9,8 @@ import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 
+import { SuccessPurchaseDialog } from "@/components/success-purchase-dialog";
+
 const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -59,6 +61,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
+              <SuccessPurchaseDialog />
               <main className="overflow-x-hidden">{children}</main>
             </Suspense>
           </Providers>
