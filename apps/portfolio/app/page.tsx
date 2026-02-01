@@ -79,7 +79,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-8 py-24">
-      <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
+      {/* <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Zuude UI</h2>
           <p className="text-sm text-gray-300">
@@ -92,7 +92,7 @@ export default function Home() {
             Visit
           </Button>
         </Link>
-      </div>
+      </div> */}
       {/* <div className="absolute right-0 top-0 -z-20 h-[100dvh] bg-red-500 opacity-10">
         <video
           src="https://vztpjn0djt.ufs.sh/f/RAHCy45jEybltJ6sRJQSzao8JKyu7h1mvi6bR3WYqeXkUV9Z"
