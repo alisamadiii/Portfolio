@@ -6,7 +6,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@workspace/ui/components/avatar";
-import { Star } from "@workspace/ui/icons";
+import { MotionPremium } from "@workspace/ui/icons";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -26,7 +26,7 @@ export const UserProfile = () => {
           <AvatarFallback>{user?.user.name?.charAt(0)}</AvatarFallback>
         </Avatar>
         {isUserPurchased && (
-          <Star className="absolute right-0 bottom-0 size-4 text-yellow-500" />
+          <MotionPremium className="absolute right-0 bottom-0 size-4 text-yellow-500" />
         )}
       </div>
 

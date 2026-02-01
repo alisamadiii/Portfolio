@@ -138,6 +138,7 @@
 
   --animate-rotate: rotate .5s ease-in-out forwards;
   --animate-dialog-in: dialog-in 1s cubic-bezier(0.785, 0.135, 0.15, 0.86) forwards;
+  --animate-popover-in: popover-in .4s forwards;
 
   @keyframes dialog-in {
     from {
@@ -148,6 +149,20 @@
     to {
       opacity: 1;
       transform: scale(1) rotateY(0deg) rotateX(0deg) translateX(0);
+    }
+  }
+
+  @keyframes popover-in {
+    from {
+      opacity: 0;
+      filter: blur(4px);
+      transform: scale(0) rotateY(45deg) translateY(-60px);
+    }
+
+    to {
+      opacity: 1;
+      filter: blur(0px);
+      transform: scale(1) rotateY(0deg) translateY(0);
     }
   }
 
@@ -170,7 +185,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
   }
 
   button {

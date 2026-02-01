@@ -56,13 +56,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
+        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased [--primary:oklch(62.3%_0.214_259.815)]`}
       >
         <TRPCReactProvider>
           <Providers>
             <Suspense>
               <SuccessPurchaseDialog />
-              <main className="overflow-x-hidden">{children}</main>
+              {children}
             </Suspense>
           </Providers>
         </TRPCReactProvider>

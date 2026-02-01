@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Upload } from "lucide-react";
+import { useDropzone } from "react-dropzone";
+import { v4 as uuidv4 } from "uuid";
 
 import { storage } from "@/project.config";
 
@@ -27,12 +29,14 @@ type Theme = NonNullable<
   RouterOutputs["admin"]["sources"]["readById"]["media"][number]["theme"]
 >;
 
+const ACCEPT = {
+  "image/*": [],
+  "video/*": [".mp4", ".webm", ".ogg", ".mov"],
+} as const;
+
 export function MediaUpload({ sourceId }: MediaUploadProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [isDragging, setIsDragging] = useState(false);
   const [uploadTheme, setUploadTheme] = useState<Theme | undefined>(undefined);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -67,37 +71,69 @@ export function MediaUpload({ sourceId }: MediaUploadProps) {
     },
   });
 
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setLocalError(null);
-    try {
-      await uploadFiles(Array.from(files), { path: "public" });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Upload failed";
-      setLocalError(
-        message.includes("Network Error")
-          ? "Network Error: Check S3 CORS configuration and AWS credentials"
-          : message
-      );
-      console.error("Upload error:", err);
-    }
-  };
+  const processFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
+      setLocalError(null);
+      try {
+        await uploadFiles(
+          files.map((file) => ({ file, name: uuidv4() })),
+          { path: "public" }
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Upload failed";
+        setLocalError(
+          message.includes("Network Error")
+            ? "Network Error: Check S3 CORS configuration and AWS credentials"
+            : message
+        );
+        console.error("Upload error:", err);
+      }
+    },
+    [uploadFiles]
+  );
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleFileUpload(e.dataTransfer.files);
-  };
+  const handlePaste = useCallback(
+    (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item?.kind === "file") {
+          const file = item.getAsFile();
+          if (
+            file &&
+            (file.type.startsWith("image/") || file.type.startsWith("video/"))
+          ) {
+            files.push(file);
+          }
+        }
+      }
+      if (files.length > 0) {
+        e.preventDefault();
+        processFiles(files);
+      }
+    },
+    [processFiles]
+  );
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+  useEffect(() => {
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [handlePaste]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: ACCEPT,
+    multiple: true,
+    disabled: isUploading,
+    onDrop: processFiles,
+    onDropRejected: (rejections) => {
+      const msg = rejections[0]?.errors[0]?.message ?? "Invalid file";
+      setLocalError(msg);
+    },
+  });
 
   return (
     <Card>
@@ -124,23 +160,14 @@ export function MediaUpload({ sourceId }: MediaUploadProps) {
         </div>
 
         <div
-          className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-            isDragging
+          {...getRootProps()}
+          className={`relative cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+            isDragActive
               ? "border-primary bg-primary/5"
               : "border-muted-foreground/25 hover:border-muted-foreground/50"
           }`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            className="hidden"
-            onChange={(e) => handleFileUpload(e.target.files)}
-          />
+          <input {...getInputProps()} />
 
           {isUploading ? (
             <div className="space-y-3">
@@ -157,14 +184,11 @@ export function MediaUpload({ sourceId }: MediaUploadProps) {
             <>
               <Upload className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
               <p className="text-muted-foreground mb-2 text-sm">
-                Drag and drop images or videos here, or{" "}
-                <button
-                  type="button"
-                  className="text-primary underline-offset-4 hover:underline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                Drag and drop images or videos here,{" "}
+                <span className="text-primary underline-offset-4 hover:underline">
                   browse
-                </button>
+                </span>
+                , or paste (Ctrl+V)
               </p>
               <p className="text-muted-foreground text-xs">
                 Supports images and videos

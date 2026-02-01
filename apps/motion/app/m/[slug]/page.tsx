@@ -9,19 +9,35 @@ import { useTheme } from "next-themes";
 import { useHotkeys } from "react-hotkeys-hook";
 
 import { Button } from "@workspace/ui/components/button";
+import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Kbd, KbdGroup } from "@workspace/ui/components/kbd";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
-import { Code, Refresh, SquareCommand } from "@workspace/ui/icons";
+import {
+  Code,
+  Expand,
+  Refresh,
+  Settings,
+  SquareCommand,
+} from "@workspace/ui/icons";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
 import { animations } from "@/lib/animations";
+import { useSettings } from "@/hooks/settings";
 
 import { SourceCode } from "@/components/animation-settings/source-code";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
@@ -30,7 +46,9 @@ import { UserProfile } from "@/components/user-profile";
 export default function ComponentPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [isToggleElements, setIsToggleElements] = useState(false);
+  const [isToggleSettings, setIsToggleSettings] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { containerScale, setContainerScale, speed, setSpeed } = useSettings();
 
   const [isRefreshing, setIsRefreshing] = useState(0);
   const refresh = () => setIsRefreshing((prev) => prev + 1);
@@ -40,8 +58,11 @@ export default function ComponentPage() {
 
   useHotkeys("r", () => refresh(), [refresh]);
   useHotkeys("v", () => setIsOpen(!isOpen), [isOpen]);
-  useHotkeys("s", () => setIsToggleElements(!isToggleElements), [
+  useHotkeys("b", () => setIsToggleElements(!isToggleElements), [
     isToggleElements,
+  ]);
+  useHotkeys("s", () => setIsToggleSettings(!isToggleSettings), [
+    isToggleSettings,
   ]);
   useHotkeys("d", () => setTheme(theme === "dark" ? "light" : "dark"), [theme]);
 
@@ -69,7 +90,13 @@ export default function ComponentPage() {
           type: "spring",
           bounce: 0.3,
         }}
-        className="flex min-h-screen w-full flex-col items-center-safe justify-center-safe py-8"
+        className={cn(
+          "flex min-h-screen w-full origin-top flex-col items-center-safe justify-center-safe py-8"
+        )}
+        style={{
+          transform: `scale(${containerScale})`,
+          transition: "transform 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86)",
+        }}
         id="motion-container"
       >
         <ComponentView key={isRefreshing} />
@@ -134,6 +161,54 @@ export default function ComponentPage() {
                 </KbdGroup>
               </TooltipContent>
             </Tooltip>
+            <Popover open={isToggleSettings} onOpenChange={setIsToggleSettings}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button size="icon-lg" variant="outline">
+                      <Settings className="size-5.5" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Use this to configure the animation.
+                </TooltipContent>
+              </Tooltip>
+              <PopoverContent>
+                <PopoverHeader>
+                  <PopoverTitle>Settings</PopoverTitle>
+                  <PopoverDescription>
+                    Use this to configure the animation.
+                  </PopoverDescription>
+                </PopoverHeader>
+                <ButtonGroup>
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Button
+                      key={index}
+                      size="icon-lg"
+                      variant={
+                        index + 1 === containerScale ? "default" : "outline"
+                      }
+                      onClick={() => setContainerScale(index + 1)}
+                    >
+                      <Expand className="size-5.5" />
+                    </Button>
+                  ))}
+                </ButtonGroup>
+                <ButtonGroup>
+                  {[0.5, 1, 1.5, 2].map((s, index) => (
+                    <Button
+                      key={index}
+                      size="icon-lg"
+                      variant={speed === s ? "default" : "outline"}
+                      onClick={() => setSpeed(s)}
+                    >
+                      {s}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              </PopoverContent>
+            </Popover>
           </TooltipProvider>
         </div>
 

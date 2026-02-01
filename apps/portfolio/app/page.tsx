@@ -1,56 +1,62 @@
 "use client";
 
-import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FileUser, Github, Linkedin } from "lucide-react";
+import { FileUser } from "lucide-react";
 import { motion, useScroll, useTransform } from "motion/react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@workspace/ui/components/dialog";
+  BetterAuth,
+  Drizzle,
+  Motion,
+  NextJS,
+  Polar,
+  Shadcn,
+  TailwindCSS,
+} from "@workspace/ui/icons/tech";
+import { company } from "@workspace/ui/lib/company";
+import { cn } from "@workspace/ui/lib/utils";
 
 import Apps from "../components/apps";
-import Experience from "../components/experience";
 
 const skills = [
   {
-    name: "ReactJS",
-    description: "A JavaScript library for building user interfaces",
-  },
-  {
     name: "NextJS",
     description: "The React framework for production-grade applications",
+    icon: NextJS,
   },
   {
     name: "TailwindCSS",
     description: "A utility-first CSS framework for rapid UI development",
+    icon: TailwindCSS,
   },
   {
     name: "Motion",
     description: "A production-ready motion library for React",
+    icon: Motion,
   },
   {
     name: "Shadcn UI",
     description:
       "An open source UI component library for building high-quality interfaces",
+    icon: Shadcn,
   },
   {
     name: "Drizzle ORM",
     description:
       "A TypeScript ORM for SQL databases with a focus on type safety",
+    icon: Drizzle,
   },
   {
     name: "Better Auth",
     description: "A modern authentication library built",
+    icon: BetterAuth,
   },
   {
-    name: "Lemon Squeezy",
+    name: "Polar",
     description: "A platform for selling digital products",
+    icon: Polar,
   },
 ];
 
@@ -126,56 +132,22 @@ export default function Home() {
 
       <div className="flex items-center justify-between gap-4">
         <img
-          src="https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png"
+          src={company.myImage}
           alt="Profile picture"
           width={128}
           height={128}
           className="h-24 w-24 rounded-full object-cover"
         />
         <div className="flex">
-          <Link
-            href="https://x.com/alirdev"
-            className="flex size-8 items-center justify-center"
-          >
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              viewBox="0 0 512 512"
-              xmlns="http://www.w3.org/2000/svg"
-              className="size-5"
+          {company.social.map(({ icon: Icon, href, label }) => (
+            <Link
+              href={href}
+              key={label}
+              className="flex size-8 items-center justify-center"
             >
-              <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
-            </svg>
-          </Link>
-          <Link
-            href="https://x.com/alisamadi__"
-            className="relative flex size-8 items-center justify-center"
-          >
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              viewBox="0 0 512 512"
-              xmlns="http://www.w3.org/2000/svg"
-              className="size-5"
-            >
-              <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
-            </svg>
-            <span className="bg-primary absolute right-0 bottom-0 flex size-4 items-center justify-center rounded-full text-xs text-white">
-              2
-            </span>
-          </Link>
-          <Link
-            href="https://github.com/alisamadiii"
-            className="flex size-8 items-center justify-center"
-          >
-            <Github />
-          </Link>
-          <Link
-            href="https://www.linkedin.com/in/alireza17/"
-            className="flex size-8 items-center justify-center"
-          >
-            <Linkedin />
-          </Link>
+              <Icon className="size-6" />
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -196,11 +168,11 @@ export default function Home() {
 
       <div className="mt-8 flex flex-col items-start gap-1">
         <div className="flex gap-2">
-          <a href="mailto:a@alisamadii.com" className={buttonVariants({})}>
+          <a href={`mailto:${company.email}`} className={buttonVariants({})}>
             Let&apos;s collaborate
           </a>
           <Link
-            href="https://personal-work-ali.s3.us-west-2.amazonaws.com/alisamadi.pdf"
+            href={company.resume}
             download
             target="_blank"
             className={buttonVariants({
@@ -212,7 +184,6 @@ export default function Home() {
             Download CV
           </Link>
         </div>
-        <ExperienceContent />
       </div>
 
       <section className="my-20">
@@ -220,16 +191,36 @@ export default function Home() {
           What I use
         </h2>
 
-        <ul className="flex flex-col gap-4">
-          {skills.map((skill) => (
-            <li
-              key={skill.name}
-              className="flex flex-col gap-2 md:flex-row md:items-center"
-            >
-              <h3 className="mb-1 font-sans text-xl">{skill.name}</h3>
-              <p className="text-natural-700">{skill.description}</p>
-            </li>
+        <ul className="relative grid grid-cols-2 items-center justify-items-center">
+          <Divider />
+          {skills.slice(0, 2).map((skill) => (
+            <Skill key={skill.name} skill={skill} />
           ))}
+          <Divider />
+          {skills.slice(2, 4).map((skill) => (
+            <Skill key={skill.name} skill={skill} />
+          ))}
+          <Divider />
+          {skills.slice(4, 6).map((skill) => (
+            <Skill key={skill.name} skill={skill} />
+          ))}
+          <Divider />
+          {skills.slice(6, 8).map((skill) => (
+            <Skill key={skill.name} skill={skill} />
+          ))}
+          <Divider />
+          <Divider
+            borderTop
+            className="border-t-none absolute h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute left-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute right-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
         </ul>
       </section>
 
@@ -295,7 +286,7 @@ export default function Home() {
       {/* <TwitterContents /> */}
       {/* <Works /> */}
 
-      <section className="my-20">
+      {/* <section className="my-20">
         <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           Random Stuff
         </h2>
@@ -331,40 +322,45 @@ export default function Home() {
             </p>
           </Link>
         </div>
-      </section>
+      </section> */}
     </main>
   );
 }
 
-function ExperienceContent() {
+const Skill = ({ skill }: { skill: (typeof skills)[0] }) => {
   return (
-    <Suspense fallback={null}>
-      <ExperienceDialog />
-    </Suspense>
+    <div className="group h-full w-full">
+      <li className="relative flex h-30 w-full flex-1 flex-col items-center justify-center gap-2 **:duration-300 md:items-center">
+        <skill.icon className="size-16 group-hover:scale-50 group-hover:opacity-0 group-hover:blur-[2px]" />
+        <div className="absolute inset-0 flex scale-150 flex-col items-center justify-center p-4 opacity-0 group-hover:scale-100 group-hover:opacity-100">
+          <p className="text-sm font-bold">{skill.name}</p>
+          <p className="text-natural-700 text-muted-foreground max-w-48 text-center text-xs">
+            {skill.description}
+          </p>
+        </div>
+      </li>
+    </div>
   );
-}
+};
 
-function ExperienceDialog() {
-  const searchParams = useSearchParams().get("experience");
-  const router = useRouter();
-
+const Divider = ({
+  className,
+  borderTop,
+}: {
+  className?: string;
+  borderTop?: boolean;
+}) => {
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open) {
-          router.push("/");
-        } else {
-          router.push("/?experience=true");
-        }
+    <div
+      className={cn(
+        "pointer-events-none col-span-2 mx-auto w-[calc(100%+var(--width))] -translate-x-[calc(var(--width)/2)] border-t border-dashed [--width:720px]",
+        className
+      )}
+      style={{
+        mask: borderTop
+          ? "linear-gradient(to top, transparent, black, transparent)"
+          : "linear-gradient(to left, transparent, black, transparent)",
       }}
-      defaultOpen={searchParams === "true"}
-    >
-      <DialogTrigger className="text-natural-700 underline">
-        My experience
-      </DialogTrigger>
-      <DialogContent className="text-natural-700 hover:text-natural-900 h-full w-full max-w-3xl overflow-hidden px-0 py-0 md:h-[95%] md:rounded-3xl">
-        <Experience />
-      </DialogContent>
-    </Dialog>
+    ></div>
   );
-}
+};

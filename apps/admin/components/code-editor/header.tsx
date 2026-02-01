@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Lock, Unlock } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
@@ -34,8 +33,7 @@ export const CodeEditorHeader = ({
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <Input
-          label="Title"
+        <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="h-7 w-48 border-none bg-transparent px-2 text-sm font-medium"

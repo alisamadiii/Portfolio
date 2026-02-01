@@ -74,7 +74,7 @@ function DialogContent({
           {...props}
         >
           <span
-            className="pointer-events-none absolute -inset-px rounded-[inherit] bg-[linear-gradient(to_top_left,var(--foreground),transparent,var(--foreground))] p-px"
+            className="pointer-events-none absolute -inset-px rounded-[inherit] bg-[linear-gradient(to_top_left,var(--primary),transparent,var(--primary))] p-0.5"
             style={{
               mask: "linear-gradient(black, black) content-box, linear-gradient(black, black)",
               WebkitMask:

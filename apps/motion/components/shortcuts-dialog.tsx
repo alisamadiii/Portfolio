@@ -18,7 +18,8 @@ const shortcuts = [
   { key: ["r"], action: "Refresh" },
   { key: ["k"], action: "Keyboard shortcuts" },
   { key: ["d"], action: "Toggle dark/light mode" },
-  { key: ["s"], action: "Toggle elements" },
+  { key: ["b"], action: "Toggle elements" },
+  { key: ["s"], action: "Toggle settings" },
 ];
 
 export const ShortcutsDialog = ({

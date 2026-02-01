@@ -5,6 +5,7 @@ import "@workspace/ui/globals.css";
 import { Suspense } from "react";
 import { Metadata } from "next";
 
+import { Footer } from "@workspace/ui/components/footer";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
@@ -59,6 +60,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>{children}</Suspense>
+            <Footer />
           </Providers>
         </TRPCReactProvider>
       </body>

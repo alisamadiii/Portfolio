@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { storage } from "@/project.config";
+
 import {
   ContextMenu,
   ContextMenuContent,
@@ -66,9 +68,13 @@ export const Sidebar = ({
     })
   );
 
+  const deleteFilesMutation = storage.useDeleteFilesMutation();
   const deleteMedia = useMutation(
     trpc.admin.sources.media.delete.mutationOptions({
-      onSuccess: () => invalidate(),
+      onSuccess: async (data) => {
+        if (data) await deleteFilesMutation.mutateAsync([data.url]);
+        invalidate();
+      },
     })
   );
 

@@ -1,52 +1,82 @@
 "use client";
 
 import Link from "next/link";
+import { useTheme } from "next-themes";
 
 import {
-  Carousel,
-  CarouselContent,
-  CarouselNext,
-  CarouselPrevious,
-} from "@workspace/ui/components/carousel";
-import { IosSettings } from "@workspace/ui/motion/animation-svgs";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+import { MotionPremium } from "@workspace/ui/icons";
 
 import { animations } from "@/lib/animations";
 
+import { BgPattern } from "@/components/bg-pattern";
 import { Pricing } from "@/components/pricing";
 
 export default function Home() {
   return (
-    <main className="container py-48">
+    <main className="container space-y-12 py-48">
+      <BgPattern />
       {/* Header with text */}
-      <div className="relative">
-        <h1 className="text-4xl font-bold md:text-6xl">Motion</h1>
-        <p className="text-muted-foreground text-lg">
-          Motion is a library for creating beautiful animations and
-          interactions.
+      <div className="relative flex flex-col items-center gap-4 text-center">
+        <h1 className="text-4xl font-black md:text-6xl">
+          <span className="text-primary">Component & Animation</span> <br />{" "}
+          Library for Modern Projects
+        </h1>
+        <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+          Hey there! 👋 Check out this collection of polished React components
+          with animations, key points, and video demos to enhance your projects.
         </p>
       </div>
-      <Carousel>
-        <CarouselContent className="my-12">
-          {Object.entries(animations).map(([key]) => (
-            <Link
-              href={`/m/${key}`}
-              key={key}
-              className="group ml-4 aspect-square basis-[400px] overflow-hidden p-0 duration-200 active:scale-95"
-              style={{
-                perspective: "1000px",
-              }}
-            >
-              <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-x-24">
-                <IosSettings />
-              </div>
-            </Link>
-          ))}
-        </CarouselContent>
-        <CarouselNext />
-        <CarouselPrevious />
-      </Carousel>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(animations).map(([key, animation]) => (
+          <AnimationCard key={key} animationKey={key} animation={animation} />
+        ))}
+      </div>
 
       <Pricing />
     </main>
   );
 }
+
+const AnimationCard = ({
+  animationKey,
+  animation,
+}: {
+  animationKey: string;
+  animation: (typeof animations)[keyof typeof animations];
+}) => {
+  const { resolvedTheme } = useTheme();
+  return (
+    <Link
+      href={`/m/${animationKey}`}
+      className="group shadow-card aspect-4/3 basis-[400px] overflow-hidden rounded-3xl p-0 duration-200 active:scale-95 dark:border"
+      style={{
+        perspective: "1000px",
+      }}
+    >
+      <img
+        src={
+          resolvedTheme === "dark"
+            ? animation.darkImage || animation.image
+            : animation.image
+        }
+        alt={animation.name}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {animation.isPremium && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <MotionPremium className="absolute top-2 right-2 size-8 text-yellow-500" />
+            </TooltipTrigger>
+            <TooltipContent>Only available to premium users</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </Link>
+  );
+};
