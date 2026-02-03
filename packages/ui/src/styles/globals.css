@@ -139,6 +139,8 @@
   --animate-rotate: rotate .5s ease-in-out forwards;
   --animate-dialog-in: dialog-in 1s cubic-bezier(0.785, 0.135, 0.15, 0.86) forwards;
   --animate-popover-in: popover-in .4s forwards;
+  --animate-dots-rotate: dotsRotate 10s linear infinite;
+  --animate-dots-width: dotsWidth 1.5s ease-in-out infinite;
 
   @keyframes dialog-in {
     from {
@@ -177,6 +179,29 @@
     }
   }
 
+  @keyframes dotsWidth {
+    0% {
+      width: 100%;
+    }
+
+    50% {
+      width: var(--animate-width-to, 120%);
+    }
+
+    100% {
+      width: 100%;
+    }
+  }
+
+  @keyframes dotsRotate {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 @layer base {

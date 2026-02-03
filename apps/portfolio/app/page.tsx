@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { FileUser } from "lucide-react";
-import { motion, useScroll, useTransform } from "motion/react";
 
 import { Badge } from "@workspace/ui/components/badge";
+import { BgPattern } from "@workspace/ui/components/bg-pattern";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
 import {
   BetterAuth,
@@ -74,9 +74,6 @@ const projects = [
 ];
 
 export default function Home() {
-  const { scrollY } = useScroll();
-  const backgroundY = useTransform(scrollY, [0, 500], [0, 250]);
-
   return (
     <main className="mx-auto w-full max-w-3xl px-8 py-24">
       {/* <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
@@ -102,34 +99,6 @@ export default function Home() {
           className="aspect-[3/4] h-full object-cover"
         />
       </div> */}
-      <div className="absolute inset-0 isolate -z-20 max-h-dvh overflow-hidden">
-        <motion.div
-          style={{ y: backgroundY }}
-          className="bg-natural-100 mx-auto h-full w-full max-w-3xl translate-y-8 scale-110 blur-3xl"
-        />
-
-        <motion.div
-          className="absolute inset-0 -z-10 h-full w-full"
-          style={{
-            y: backgroundY,
-          }}
-        >
-          <div
-            className="h-full w-full"
-            style={{
-              backgroundColor: "#e5e5f7",
-              opacity: 0.05,
-              backgroundImage:
-                "repeating-linear-gradient(45deg, #000000 25%, transparent 25%, transparent 75%, #000000 75%, #000000), repeating-linear-gradient(45deg, #000000 25%, #ffffff 25%, #ffffff 75%, #000000 75%, #000000)",
-              backgroundPosition: "0 0, 40px 40px",
-              backgroundSize: "80px 80px",
-              maskImage: "linear-gradient(to top, transparent 45%, black)",
-              transform: "skew(12deg) scale(1.5)",
-            }}
-          />
-        </motion.div>
-      </div>
-
       <div className="flex items-center justify-between gap-4">
         <img
           src={company.myImage}

@@ -93,11 +93,10 @@ export function Pricing() {
 }
 
 const features = [
-  "Unlimited projects",
-  "Unlimited users",
-  "Unlimited storage",
-  "Unlimited bandwidth",
-  "Unlimited domains",
-  "Unlimited email accounts",
-  "Unlimited email accounts",
+  "All animations",
+  "Unlimited use",
+  "Lifetime access",
+  "No recurring fees",
+  "No hidden costs",
+  "No credit card required",
 ];

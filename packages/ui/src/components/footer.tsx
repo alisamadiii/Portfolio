@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Separator } from "@workspace/ui/components/separator";
 import { cn } from "@workspace/ui/lib/utils";
@@ -30,6 +31,7 @@ export interface FooterProps {
   email?: string;
   disclaimer?: string;
   curatedBy?: { label: string; href?: string };
+  hide?: string[];
 }
 
 const defaultColumns: FooterColumn[] = [
@@ -71,9 +73,15 @@ function Footer({
   description = company.description,
   email = company.email,
   disclaimer,
+  hide,
 }: FooterProps) {
   const year = "2026";
   const copyrightText = copyright ?? `© ${year} ${companyName}`;
+
+  const pathname = usePathname();
+
+  if (hide?.some((h) => pathname?.startsWith(h))) return null;
+
   return (
     <footer className={cn("bg-muted/60 text-foreground w-full", className)}>
       {/* Top section: navigation columns */}

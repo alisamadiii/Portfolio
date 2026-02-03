@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTheme } from "next-themes";
 
+import { BgPattern } from "@workspace/ui/components/bg-pattern";
 import {
   Tooltip,
   TooltipContent,
@@ -13,13 +14,12 @@ import { MotionPremium } from "@workspace/ui/icons";
 
 import { animations } from "@/lib/animations";
 
-import { BgPattern } from "@/components/bg-pattern";
 import { Pricing } from "@/components/pricing";
 
 export default function Home() {
   return (
-    <main className="container space-y-12 py-48">
-      <BgPattern />
+    <main className="container space-y-12 pt-48">
+      <BgPattern className="absolute inset-0 -z-10 h-full w-full" />
       {/* Header with text */}
       <div className="relative flex flex-col items-center gap-4 text-center">
         <h1 className="text-4xl font-black md:text-6xl">
@@ -53,7 +53,7 @@ const AnimationCard = ({
   return (
     <Link
       href={`/m/${animationKey}`}
-      className="group shadow-card aspect-4/3 basis-[400px] overflow-hidden rounded-3xl p-0 duration-200 active:scale-95 dark:border"
+      className="group shadow-card aspect-4/3 basis-[400px] overflow-hidden rounded-3xl p-0 duration-200 first-of-type:col-span-2 active:scale-95 dark:border"
       style={{
         perspective: "1000px",
       }}
