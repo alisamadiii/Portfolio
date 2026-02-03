@@ -62,7 +62,9 @@ export default async function RootLayout({
           <Providers>
             <BgPattern />
             <Suspense>{children}</Suspense>
-            <Footer />
+            <Suspense>
+              <Footer />
+            </Suspense>
           </Providers>
         </TRPCReactProvider>
       </body>

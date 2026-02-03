@@ -64,7 +64,9 @@ export default async function RootLayout({
             <Suspense>
               <SuccessPurchaseDialog />
               {children}
-              <Footer hide={["/m/"]} />
+              <Suspense>
+                <Footer hide={["/m/"]} />
+              </Suspense>
             </Suspense>
           </Providers>
         </TRPCReactProvider>
