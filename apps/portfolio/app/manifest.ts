@@ -2,10 +2,9 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Template - Modern SaaS Platform",
-    short_name: "Template",
-    description:
-      "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+    name: "Ali Samadi - Portfolio",
+    short_name: "Ali Samadi",
+    description: "A collection of my projects and experiences.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
@@ -27,7 +26,7 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
       },
     ],
-    categories: ["productivity", "business", "utilities"],
+    categories: ["portfolio", "projects", "experiences"],
     lang: "en",
     orientation: "portrait",
   };

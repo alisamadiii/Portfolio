@@ -30,22 +30,22 @@ const fontMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Template - Modern SaaS Platform",
-    template: "%s | Template",
+    default: "Motion - Component & Animation Library",
+    template: "%s | Motion",
   },
   description:
-    "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+    "A collection of polished React components with animations, key points, and video demos to enhance your projects.",
   openGraph: {
-    title: "Template - Modern SaaS Platform",
+    title: "Motion - Component & Animation Library",
     description:
-      "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+      "A collection of polished React components with animations, key points, and video demos to enhance your projects.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Template - Modern SaaS Platform",
+    title: "Motion - Component & Animation Library",
     description:
-      "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+      "A collection of polished React components with animations, key points, and video demos to enhance your projects.",
   },
 };
 
@@ -57,7 +57,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased [--primary:oklch(62.3%_0.214_259.815)]`}
+        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased [--primary:#2b7fff]`}
       >
         <TRPCReactProvider>
           <Providers>

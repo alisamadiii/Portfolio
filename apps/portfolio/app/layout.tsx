@@ -29,22 +29,19 @@ const fontMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Template - Modern SaaS Platform",
-    template: "%s | Template",
+    default: "Ali Samadi - Portfolio",
+    template: "%s | Ali Samadi",
   },
-  description:
-    "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+  description: "A collection of my projects and experiences.",
   openGraph: {
-    title: "Template - Modern SaaS Platform",
-    description:
-      "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+    title: "Ali Samadi - Portfolio",
+    description: "A collection of my projects and experiences.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Template - Modern SaaS Platform",
-    description:
-      "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+    title: "Ali Samadi - Portfolio",
+    description: "A collection of my projects and experiences.",
   },
 };
 

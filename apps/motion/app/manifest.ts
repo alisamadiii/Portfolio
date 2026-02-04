@@ -2,10 +2,10 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Template - Modern SaaS Platform",
-    short_name: "Template",
+    name: "Motion - Component & Animation Library",
+    short_name: "Motion",
     description:
-      "A modern, full-stack SaaS template with authentication, payments, admin dashboard, and more.",
+      "A collection of polished React components with animations, key points, and video demos to enhance your projects.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
@@ -27,7 +27,7 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
       },
     ],
-    categories: ["productivity", "business", "utilities"],
+    categories: ["components", "animations", "libraries"],
     lang: "en",
     orientation: "portrait",
   };

@@ -7,6 +7,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { codeToHtml } from "shiki";
 
 import { Button } from "@workspace/ui/components/button";
+import { Spinner } from "@workspace/ui/components/spinner";
 import { BoxShield, Empty, Error, TechIcons } from "@workspace/ui/icons";
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -104,7 +105,11 @@ export const SourceCode = () => {
       }}
     >
       <div className="bg-background shadow-dialog pointer-events-auto flex h-full w-full flex-col overflow-hidden rounded-[3rem] border">
-        {fileQuery.isError ? (
+        {fileQuery.isPending ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+            <Spinner className="size-8" />
+          </div>
+        ) : fileQuery.isError ? (
           <div className="bg-background text-destructive flex h-full w-full flex-col items-center justify-center gap-4">
             <Error className="size-48 mask-b-from-5" />
             <p className="-mt-4">
