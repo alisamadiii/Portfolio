@@ -103,7 +103,7 @@ export const useCheckout = () => {
           router.push(
             process.env.NODE_ENV === "development"
               ? `http://localhost:3000/signup?purchase=${variables.productId}`
-              : `https://motion.alisamadii.com/signup?purchase=${variables.productId}`
+              : `https://www.alisamadii.com/signup?purchase=${variables.productId}`
           );
           return;
         }

@@ -103,7 +103,11 @@ export default function ComponentPage() {
       </motion.div>
 
       <Link
-        href="http://localhost:3000/settings"
+        href={
+          process.env.NODE_ENV === "development"
+            ? "http://localhost:3000/settings"
+            : "https://www.alisamadii.com/settings"
+        }
         className={cn(
           "bg-muted fixed top-4 left-4 z-100 rounded-xl border p-3 pr-8",
           isToggleElements && "hidden"
