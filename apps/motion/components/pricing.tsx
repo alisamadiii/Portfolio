@@ -10,6 +10,8 @@ import { useTRPC } from "@workspace/trpc/client";
 import { useCheckout } from "@workspace/auth/hooks/use-payments";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { useIsPurchased } from "@/hooks/use-is-purchased";
+
 export function Pricing() {
   const trpc = useTRPC();
   const product = useQuery(
@@ -19,9 +21,9 @@ export function Pricing() {
   );
   const checkout = useCheckout();
   const { data: currentUser } = useCurrentUser();
-  // const { currentProductId } = useIsUserHaveAccess();
+  const { isPurchased } = useIsPurchased();
 
-  const isCurrentPlan = false;
+  const isCurrentPlan = isPurchased;
 
   return (
     <div className="container mx-auto flex flex-col items-center px-4 py-16">

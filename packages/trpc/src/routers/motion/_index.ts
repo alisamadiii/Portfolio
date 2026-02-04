@@ -32,9 +32,14 @@ export const motionRouter = createTRPCRouter({
           .from(source)
           .where(eq(source.id, input.sourceId));
 
-        const isPrivate = getSource.isPrivate;
+        if (!getSource) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Source not found",
+          });
+        }
 
-        console.log({ isPrivate });
+        const isPrivate = getSource.isPrivate;
 
         if (!isPrivate) {
           const files = await db

@@ -1,5 +1,4 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
 
 import {
   Avatar,
@@ -8,15 +7,14 @@ import {
 } from "@workspace/ui/components/avatar";
 import { MotionPremium } from "@workspace/ui/icons";
 
-import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+
+import { useIsPurchased } from "@/hooks/use-is-purchased";
 
 export const UserProfile = () => {
   const { data: user } = useCurrentUser();
-  const trpc = useTRPC();
-  const { data: isUserPurchased } = useQuery(
-    trpc.motion.isUserPurchased.queryOptions()
-  );
+
+  const { data: isUserPurchased } = useIsPurchased();
 
   return (
     <div className="flex items-center gap-2">

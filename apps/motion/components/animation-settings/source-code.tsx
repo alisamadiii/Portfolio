@@ -7,7 +7,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { codeToHtml } from "shiki";
 
 import { Button } from "@workspace/ui/components/button";
-import { BoxShield, TechIcons } from "@workspace/ui/icons";
+import { BoxShield, Empty, Error, TechIcons } from "@workspace/ui/icons";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -91,8 +91,6 @@ export const SourceCode = () => {
     )
   );
 
-  console.log(fileQuery.error);
-
   return (
     <motion.div
       initial={{ x: 400, scale: 0.8, filter: "blur(4px)", opacity: 0 }}
@@ -106,7 +104,21 @@ export const SourceCode = () => {
       }}
     >
       <div className="bg-background shadow-dialog pointer-events-auto flex h-full w-full flex-col overflow-hidden rounded-[3rem] border">
-        <FileList animationId={animation.id} />
+        {fileQuery.isError ? (
+          <div className="bg-background text-destructive flex h-full w-full flex-col items-center justify-center gap-4">
+            <Error className="size-48 mask-b-from-5" />
+            <p className="-mt-4">
+              {fileQuery.error.message ?? "Failed to load source code"}
+            </p>
+          </div>
+        ) : fileQuery.data?.length === 0 ? (
+          <div className="bg-background text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-4">
+            <Empty className="size-48 mask-b-from-5" />
+            <p className="-mt-4">No source code found</p>
+          </div>
+        ) : (
+          <FileList animationId={animation.id} />
+        )}
       </div>
     </motion.div>
   );
