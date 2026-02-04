@@ -18,9 +18,9 @@ export const BgPattern = ({ className }: { className?: string }) => {
         className="h-full w-full"
         style={{
           backgroundColor: "#e5e5f7",
-          opacity: 0.05,
+          opacity: 0.1,
           backgroundImage:
-            "repeating-linear-gradient(45deg, var(--primary) 25%, transparent 25%, transparent 75%, var(--primary) 75%, var(--primary)), repeating-linear-gradient(45deg, var(--primary) 25%, #ffffff 25%, #ffffff 75%, var(--primary) 75%, var(--primary))",
+            "repeating-linear-gradient(45deg, var(--primary) 25%, transparent 25%, transparent 75%, var(--primary) 75%, var(--primary)), repeating-linear-gradient(45deg, var(--primary) 25%, var(--background) 25%, var(--background) 75%, var(--primary) 75%, var(--primary))",
           backgroundPosition: "0 0, 40px 40px",
           backgroundSize: "80px 80px",
           maskImage: "linear-gradient(to top, transparent 45%, black)",

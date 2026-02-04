@@ -4,8 +4,7 @@ import Link from "next/link";
 import { FileUser } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { BgPattern } from "@workspace/ui/components/bg-pattern";
-import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   BetterAuth,
   Drizzle,
@@ -298,7 +297,7 @@ export default function Home() {
 
 const Skill = ({ skill }: { skill: (typeof skills)[0] }) => {
   return (
-    <div className="group h-full w-full">
+    <div className="group h-full w-full overflow-hidden">
       <li className="relative flex h-30 w-full flex-1 flex-col items-center justify-center gap-2 **:duration-300 md:items-center">
         <skill.icon className="size-16 group-hover:scale-50 group-hover:opacity-0 group-hover:blur-[2px]" />
         <div className="absolute inset-0 flex scale-150 flex-col items-center justify-center p-4 opacity-0 group-hover:scale-100 group-hover:opacity-100">

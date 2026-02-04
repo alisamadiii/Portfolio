@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
+import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -11,8 +12,6 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-
-import { animations } from "@/lib/animations";
 
 import { LoginDrawer } from "../login-drawer";
 import { PricingDrawer } from "../pricing-drawer";

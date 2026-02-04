@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
@@ -36,7 +37,6 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { animations } from "@/lib/animations";
 import { useSettings } from "@/hooks/settings";
 
 import { SourceCode } from "@/components/animation-settings/source-code";

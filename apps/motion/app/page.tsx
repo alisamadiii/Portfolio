@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { animations } from "@/animations/registry";
 import { useTheme } from "next-themes";
 
 import { BgPattern } from "@workspace/ui/components/bg-pattern";
@@ -11,8 +12,6 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 import { MotionPremium } from "@workspace/ui/icons";
-
-import { animations } from "@/lib/animations";
 
 import { Pricing } from "@/components/pricing";
 

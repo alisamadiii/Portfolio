@@ -5,11 +5,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3002",
-    "build": "next build",
+    "build": "pnpm get-codes && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "get-codes": "tsx script/get-codes.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "dotenv": "^17.2.3",
     "@types/canvas-confetti": "^1.9.0",
     "@types/mdx": "^2.0.13",
     "@types/react": "^19.2.8",

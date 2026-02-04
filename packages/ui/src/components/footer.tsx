@@ -80,7 +80,7 @@ function Footer({
 
   const pathname = usePathname();
 
-  if (hide?.some((h) => pathname?.startsWith(h))) return null;
+  if (hide?.some((h) => pathname?.startsWith(h) && h !== "/")) return null;
 
   return (
     <footer className={cn("bg-muted/60 text-foreground w-full", className)}>
