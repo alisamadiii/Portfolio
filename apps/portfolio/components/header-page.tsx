@@ -8,7 +8,7 @@ export const HeaderPage = () => {
   const title = pathname.split("/").pop() || "Dashboard";
 
   return (
-    <div className="container py-8">
+    <div className="py-8">
       <h1 className="text-2xl font-bold capitalize md:text-4xl">{title}</h1>
     </div>
   );

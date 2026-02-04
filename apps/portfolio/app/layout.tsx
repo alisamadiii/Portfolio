@@ -57,7 +57,9 @@ export default async function RootLayout({
       >
         <TRPCReactProvider>
           <Providers>
-            <BgPattern />
+            <Suspense>
+              <BgPattern lessVisibleOn={["/settings"]} />
+            </Suspense>
             <Suspense>{children}</Suspense>
             <Suspense>
               <Footer />

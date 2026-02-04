@@ -83,7 +83,9 @@ function Footer({
   if (hide?.some((h) => pathname?.startsWith(h) && h !== "/")) return null;
 
   return (
-    <footer className={cn("bg-muted/60 text-foreground w-full", className)}>
+    <footer
+      className={cn("bg-muted/60 text-foreground mt-20 w-full", className)}
+    >
       {/* Top section: navigation columns */}
       <div className="container px-6 py-12 md:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">

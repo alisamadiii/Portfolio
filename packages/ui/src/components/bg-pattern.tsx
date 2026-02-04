@@ -1,15 +1,29 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "motion/react";
 
 import { cn } from "../lib/utils";
 
-export const BgPattern = ({ className }: { className?: string }) => {
+export const BgPattern = ({
+  className,
+  lessVisibleOn,
+}: {
+  className?: string;
+  lessVisibleOn?: string[];
+}) => {
   const { scrollY } = useScroll();
   const backgroundY = useTransform(scrollY, [0, 500], [0, 250]);
+  const pathname = usePathname();
+
   return (
     <motion.div
-      className={cn("absolute inset-0 -z-10 h-full w-full", className)}
+      className={cn(
+        "absolute inset-0 -z-10 h-full w-full overflow-hidden",
+        lessVisibleOn?.some((path) => pathname.startsWith(path)) &&
+          "opacity-30",
+        className
+      )}
       style={{
         y: backgroundY,
       }}

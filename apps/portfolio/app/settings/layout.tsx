@@ -1,8 +1,6 @@
 import { generateMetadata } from "@workspace/ui/lib/seo";
 
-import { HeaderPage } from "@/components/header-page";
 import { ProtectRoute } from "@/components/protect-route";
-import { SettingsLinks } from "@/components/settings/links";
 
 export const metadata = generateMetadata({
   title: "Settings",
@@ -17,9 +15,11 @@ interface Props {
 export default function SettingsLayout({ children }: Props) {
   return (
     <ProtectRoute>
-      <HeaderPage />
-      <div className="container gap-8">
-        <SettingsLinks />
+      <div className="mx-auto max-w-3xl gap-8 pt-20">
+        <h1 className="mb-8 text-2xl font-bold capitalize md:text-4xl">
+          Settings
+        </h1>
+        {/* <SettingsLinks /> */}
         <div className="grow">{children}</div>
       </div>
     </ProtectRoute>

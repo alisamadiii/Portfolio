@@ -36,7 +36,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out no-scrollbar data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 flex items-center-safe justify-center-safe overflow-auto overflow-y-auto bg-black/50 py-12",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out no-scrollbar data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 flex items-center-safe justify-center-safe overflow-y-auto bg-black/40 py-12 backdrop-blur-sm",
         className
       )}
       {...props}

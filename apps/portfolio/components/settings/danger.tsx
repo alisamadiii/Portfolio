@@ -28,7 +28,7 @@ import { Spinner } from "@workspace/ui/components/spinner";
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-export default function DangerPage() {
+export const DangerSettings = () => {
   const user = useCurrentUser();
   const router = useRouter();
   const [confirm, setConfirm] = useState("");
@@ -159,4 +159,4 @@ export default function DangerPage() {
       </Card>
     </div>
   );
-}
+};

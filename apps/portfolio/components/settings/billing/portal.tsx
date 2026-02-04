@@ -18,8 +18,8 @@ export const BillingPortal = () => {
         <CardTitle>Portal</CardTitle>
       </CardHeader>
       <CardContent>
-        <Button onClick={() => generatePortalLink.mutate()}>
-          Manage Subscription
+        <Button onClick={() => generatePortalLink.mutate()} size={"lg"}>
+          Manage Billing
         </Button>
 
         <PageLoading

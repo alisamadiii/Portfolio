@@ -74,21 +74,25 @@ const projects = [
 
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-8 py-24">
-      {/* <div className="mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/95">
+    <main className="mx-auto w-full max-w-3xl space-y-20 px-8 pt-20">
+      <div className="shadow-dialog mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white backdrop-blur-sm transition-all hover:bg-black/95">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">Zuude UI</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Motion UI</h2>
           <p className="text-sm text-gray-300">
             Explore my collection of animation components and interactive UI
             elements built with Motion.
           </p>
         </div>
-        <Link href="https://pro.zuude-ui.com/">
-          <Button variant="outline" className="text-black">
-            Visit
-          </Button>
+        <Link
+          href="https://motion.alisamadii.com/"
+          className={buttonVariants({
+            variant: "outline",
+            className: "text-black",
+          })}
+        >
+          Visit
         </Link>
-      </div> */}
+      </div>
       {/* <div className="absolute right-0 top-0 -z-20 h-[100dvh] bg-red-500 opacity-10">
         <video
           src="https://vztpjn0djt.ufs.sh/f/RAHCy45jEybltJ6sRJQSzao8JKyu7h1mvi6bR3WYqeXkUV9Z"
@@ -98,63 +102,66 @@ export default function Home() {
           className="aspect-[3/4] h-full object-cover"
         />
       </div> */}
-      <div className="flex items-center justify-between gap-4">
-        <img
-          src={company.myImage}
-          alt="Profile picture"
-          width={128}
-          height={128}
-          className="h-24 w-24 rounded-full object-cover"
-        />
-        <div className="flex">
-          {company.social.map(({ icon: Icon, href, label }) => (
+      <section>
+        <div className="flex items-center justify-between gap-4">
+          <img
+            src={company.myImage}
+            alt="Profile picture"
+            width={128}
+            height={128}
+            className="h-24 w-24 rounded-full object-cover"
+          />
+          <div className="flex">
+            {company.social.map(({ icon: Icon, href, label }) => (
+              <Link
+                href={href}
+                key={label}
+                className="flex size-8 items-center justify-center"
+              >
+                <Icon className="size-6" />
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <Badge className="mt-7 text-xs">
+          Currently building Motion UI with Motion
+        </Badge>
+
+        <div className="mt-2">
+          <h1 className="text-3xl md:text-4xl">
+            Building <span className="text-primary">Website</span> is My
+            Passion!
+          </h1>
+          <p className="text-natural-700 mt-2 text-lg">
+            Hey, I&apos;m Ali! I&apos;ve been working in web development for 5
+            years, mainly focusing on frontend and fullstack development with
+            ReactJS.
+          </p>
+        </div>
+
+        <div className="mt-8 flex flex-col items-start gap-1">
+          <div className="flex gap-2">
+            <a href={`mailto:${company.email}`} className={buttonVariants({})}>
+              Let&apos;s collaborate
+            </a>
             <Link
-              href={href}
-              key={label}
-              className="flex size-8 items-center justify-center"
+              href={company.resume}
+              download
+              target="_blank"
+              className={buttonVariants({
+                variant: "outline",
+                className: "gap-1",
+              })}
             >
-              <Icon className="size-6" />
+              <FileUser size={18} />
+              Download CV
             </Link>
-          ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      <Badge className="mt-7 text-xs">
-        Currently building Motion UI with Motion
-      </Badge>
-
-      <div className="mt-2">
-        <h1 className="text-3xl md:text-4xl">
-          Building <span className="text-primary">Website</span> is My Passion!
-        </h1>
-        <p className="text-natural-700 mt-2 text-lg">
-          Hey, I&apos;m Ali! I&apos;ve been working in web development for 5
-          years, mainly focusing on frontend and fullstack development with
-          ReactJS.
-        </p>
-      </div>
-
-      <div className="mt-8 flex flex-col items-start gap-1">
-        <div className="flex gap-2">
-          <a href={`mailto:${company.email}`} className={buttonVariants({})}>
-            Let&apos;s collaborate
-          </a>
-          <Link
-            href={company.resume}
-            download
-            target="_blank"
-            className={buttonVariants({
-              variant: "outline",
-              className: "gap-1",
-            })}
-          >
-            <FileUser size={18} />
-            Download CV
-          </Link>
-        </div>
-      </div>
-
-      <section className="my-20">
+      <section>
         <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           What I use
         </h2>
@@ -192,7 +199,7 @@ export default function Home() {
         </ul>
       </section>
 
-      <section className="my-20">
+      <section>
         <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           Projects
         </h2>
@@ -214,7 +221,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="my-20">
+      <section>
         <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
           The App/Website I&apos;m using
         </h2>
