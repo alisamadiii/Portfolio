@@ -88,6 +88,7 @@ getCodes().then(async (codes) => {
       const filePath = resolve(folder, file.filename);
       await fs.writeFile(filePath, file.content);
     }
+    console.log(`Created folder ${folder} for ${source.title}`);
   }
 
   // Build registry with all sources (single file, no trailing = ${JSON.stringify(source)})
@@ -111,7 +112,9 @@ getCodes().then(async (codes) => {
   }`
   );
 
-  const registryContent = `import dynamic from "next/dynamic";
+  const registryContent = `"use client";
+
+import dynamic from "next/dynamic";
 
 import { AnimationLoading } from "../components/animation-loading";
 
