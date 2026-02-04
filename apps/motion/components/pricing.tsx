@@ -14,7 +14,7 @@ export function Pricing() {
   const trpc = useTRPC();
   const product = useQuery(
     trpc.payments.getProductById.queryOptions(
-      "15b61860-5972-4d27-ac18-afe276349f48"
+      process.env.NEXT_PUBLIC_MOTION_PRODUCT || ""
     )
   );
   const checkout = useCheckout();
