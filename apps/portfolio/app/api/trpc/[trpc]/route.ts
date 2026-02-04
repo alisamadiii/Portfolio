@@ -15,7 +15,8 @@ function getAllowedOrigins(): string[] {
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "http://127.0.0.1:3002",
-    "https://admin.alisamadii.com"
+    "https://admin.alisamadii.com",
+    "https://motion.alisamadii.com"
   );
 
   // Vercel preview URLs (if using Vercel)
