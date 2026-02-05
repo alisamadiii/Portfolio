@@ -131,7 +131,7 @@ function Footer({
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-2">
             <Link
-              href="#"
+              href="/"
               className="text-primary inline-block size-10 shrink-0 [&_svg]:size-full [&_svg]:h-auto"
               aria-label="Home"
             >

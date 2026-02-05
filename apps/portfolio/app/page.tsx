@@ -81,20 +81,17 @@ const projects = [
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-3xl space-y-20 px-8 pt-20">
-      <div className="shadow-dialog mb-8 flex items-center justify-between gap-8 rounded-xl bg-black/90 p-6 text-white backdrop-blur-sm transition-all hover:bg-black/95">
+      <div className="shadow-dialog dark bg-background text-foreground mb-8 flex items-center justify-between gap-8 rounded-xl p-6 backdrop-blur-sm transition-all dark:border">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Motion UI</h2>
-          <p className="text-sm text-gray-300">
+          <p className="text-muted-foreground text-sm">
             Explore my collection of animation components and interactive UI
             elements built with Motion.
           </p>
         </div>
         <Link
           href="https://motion.alisamadii.com/"
-          className={buttonVariants({
-            variant: "outline",
-            className: "text-black",
-          })}
+          className={buttonVariants({})}
         >
           Visit
         </Link>
