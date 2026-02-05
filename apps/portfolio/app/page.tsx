@@ -13,6 +13,7 @@ import {
   Polar,
   Shadcn,
   TailwindCSS,
+  TypeScript,
 } from "@workspace/ui/icons/tech";
 import { company } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
@@ -24,6 +25,11 @@ const skills = [
     name: "NextJS",
     description: "The React framework for production-grade applications",
     icon: NextJS,
+  },
+  {
+    name: "TypeScript",
+    description: "A superset of JavaScript that adds static typing",
+    icon: TypeScript,
   },
   {
     name: "TailwindCSS",

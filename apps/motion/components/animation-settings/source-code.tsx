@@ -115,6 +115,9 @@ export const SourceCode = () => {
             <p className="-mt-4">
               {fileQuery.error.message ?? "Failed to load source code"}
             </p>
+            <PricingDrawer>
+              <Button size="sm">Purchase Animation</Button>
+            </PricingDrawer>
           </div>
         ) : fileQuery.data?.length === 0 ? (
           <div className="bg-background text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-4">
