@@ -55,6 +55,7 @@ export function createUseUpload<TConfig extends StorageConfig | undefined>(
       files: File[] | { file: File; name: string }[],
       options?: {
         path?: PathFromConfig<TConfig>;
+        dontAddFileToDb?: boolean;
       }
     ) => {
       onMutate?.();
@@ -205,17 +206,19 @@ export function createUseUpload<TConfig extends StorageConfig | undefined>(
                   throw new Error("Failed to upload file");
                 }
 
-                addFile({
-                  name: file.name,
-                  isPublic,
-                  url: customSignedUrl
-                    ? customSignedUrl
-                    : signedUrl.split("?")[0],
-                  size: file.size,
-                  width,
-                  height,
-                  contentType: file.type,
-                });
+                if (!options?.dontAddFileToDb) {
+                  addFile({
+                    name: file.name,
+                    isPublic,
+                    url: customSignedUrl
+                      ? customSignedUrl
+                      : signedUrl.split("?")[0],
+                    size: file.size,
+                    width,
+                    height,
+                    contentType: file.type,
+                  });
+                }
 
                 // Update progress
                 // setProgress(((index + 1) / files.length) * 100);

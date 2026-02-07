@@ -68,7 +68,7 @@ export const Sidebar = ({
     })
   );
 
-  const deleteFilesMutation = storage.useDeleteFilesMutation();
+  const deleteFilesMutation = storage.useDeleteFilesMutation({});
   const deleteMedia = useMutation(
     trpc.admin.sources.media.delete.mutationOptions({
       onSuccess: async (data) => {

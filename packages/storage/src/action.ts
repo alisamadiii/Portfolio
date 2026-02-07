@@ -15,7 +15,7 @@ import { getSignedUrl as getSignedUrlV4 } from "@aws-sdk/s3-request-presigner";
 import { inArray } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { files } from "@workspace/drizzle/schema";
+import { clientWork, files } from "@workspace/drizzle/schema";
 
 import { getStorageConfig } from "./client";
 import { pathFromUrl } from "./utils";
@@ -89,7 +89,10 @@ const getSignedUrl = async (key: string) => {
  * @param urls - Array of storage URLs/keys to delete
  * @returns Promise<{data?: void, error?: string}>
  */
-const deleteFilesFromStorage = async (urls: string[]) => {
+const deleteFilesFromStorage = async (
+  urls: string[],
+  isClientWork?: boolean
+) => {
   try {
     const { s3, bucket } = getS3Client();
     const keys = urls.map((url) => pathFromUrl(url) || url).filter(Boolean);
@@ -101,7 +104,11 @@ const deleteFilesFromStorage = async (urls: string[]) => {
     });
     await s3.send(command);
 
-    await db.delete(files).where(inArray(files.url, urls));
+    if (isClientWork) {
+      await db.delete(clientWork).where(inArray(clientWork.url, urls));
+    } else {
+      await db.delete(files).where(inArray(files.url, urls));
+    }
 
     return { urls, success: true };
   } catch (error) {

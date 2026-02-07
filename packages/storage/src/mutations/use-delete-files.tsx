@@ -2,11 +2,15 @@ import { useMutation } from "@tanstack/react-query";
 
 import { deleteFilesFromStorage } from "@workspace/storage/action";
 
-export const useDeleteFilesMutation = () => {
+export const useDeleteFilesMutation = ({
+  isClientWork,
+}: {
+  isClientWork?: boolean;
+}) => {
   return useMutation({
     mutationFn: async (urls: string[]) => {
       try {
-        const result = await deleteFilesFromStorage(urls);
+        const result = await deleteFilesFromStorage(urls, isClientWork);
 
         if (result.error) {
           throw new Error(result.error);

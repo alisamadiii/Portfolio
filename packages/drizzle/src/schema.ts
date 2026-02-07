@@ -235,4 +235,22 @@ export const sourceMedia = pgTable("source_media", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const clientWork = pgTable("client_work", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  url: text("url").notNull(),
+  thumbnail: text("thumbnail"),
+  from: text("from", {
+    enum: ["crosspost", "bless", "area"],
+  }).notNull(),
+  isPhone: boolean("is_phone").default(false),
+  width: integer("width").notNull().default(0),
+  height: integer("height").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type SourceMedia = typeof sourceMedia.$inferSelect;
