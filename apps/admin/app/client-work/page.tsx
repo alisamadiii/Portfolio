@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useClientWorkStore } from "@/context/client-work";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Trash } from "lucide-react";
 import { useDropzone } from "react-dropzone";
@@ -8,7 +9,15 @@ import { toast } from "sonner";
 
 import { storage } from "@/project.config";
 
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
@@ -79,6 +88,7 @@ export default function ClientWorkPage() {
   const deleteFilesMutation = storage.useDeleteFilesMutation({
     isClientWork: true,
   });
+  const { clientWork, setClientWork } = useClientWorkStore();
 
   const trpc = useTRPC();
   const getClientWork = useQuery(trpc.admin.clientWork.get.queryOptions());
@@ -170,7 +180,7 @@ export default function ClientWorkPage() {
             description: "",
             url: videoUrl,
             thumbnail: thumbnailUrl,
-            from: "crosspost",
+            from: clientWork,
             isPhone: isPhone ?? false,
             width,
             height,
@@ -184,7 +194,7 @@ export default function ClientWorkPage() {
         }
       }
     },
-    [uploadFiles, addClientWork]
+    [uploadFiles, addClientWork, clientWork]
   );
 
   const clientWorkFolder = useDropzone({
@@ -213,6 +223,16 @@ export default function ClientWorkPage() {
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">
         Client Work
       </h1>
+      <Select value={clientWork} onValueChange={setClientWork}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select client work" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="crosspost">Crosspost</SelectItem>
+          <SelectItem value="bless">Bless</SelectItem>
+          <SelectItem value="area">Area</SelectItem>
+        </SelectContent>
+      </Select>
       <div>
         {Math.floor(progress)}% -{" "}
         {addClientWork.isPending ? "Adding..." : "Idle"}
@@ -259,6 +279,9 @@ export default function ClientWorkPage() {
                 controls
                 className="rounded-xl"
               />
+              <Badge className="absolute top-2 left-2 bg-purple-500">
+                {work.from}
+              </Badge>
               <Button
                 variant="destructive"
                 onClick={() => deleteClientWork.mutate(work.id)}
