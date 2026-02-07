@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { CirclePlay } from "@workspace/ui/icons/general";
+import { MediaPlay } from "@workspace/ui/icons/general";
 import { cn } from "@workspace/ui/lib/utils";
 
 interface VideoProps extends React.ComponentProps<"video"> {
@@ -30,12 +30,14 @@ export const Video = ({ className, ...props }: VideoProps) => {
         onClick={() => setIsPlaying(!isPlaying)}
         {...props}
       />
-      <CirclePlay
+      <div
         className={cn(
-          "pointer-events-none absolute top-1/2 left-1/2 size-20 -translate-x-1/2 -translate-y-1/2 duration-200",
+          "bg-background/50 pointer-events-none absolute bottom-4 left-4 flex size-10 items-center justify-center rounded-full border backdrop-blur-sm duration-200",
           isPlaying ? "scale-0 opacity-0" : "scale-100 opacity-100"
         )}
-      />
+      >
+        <MediaPlay className="size-6" />
+      </div>
     </div>
   );
 };

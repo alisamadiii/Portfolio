@@ -44,7 +44,7 @@ const defaultColumns: FooterColumn[] = [
     links: company.websites,
   },
   {
-    heading: "Clients",
+    heading: "Client",
     links: company.clients,
   },
 ];

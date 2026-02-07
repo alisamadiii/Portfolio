@@ -58,7 +58,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
-              <BgPattern lessVisibleOn={["/settings", "/crosspost"]} />
+              <BgPattern lessVisibleOn={["/settings", "/client/"]} />
             </Suspense>
             <Suspense>{children}</Suspense>
             <Suspense>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useClientWorkStore } from "@/context/client-work";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Trash } from "lucide-react";
@@ -11,6 +11,8 @@ import { storage } from "@/project.config";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { Checkbox } from "@workspace/ui/components/checkbox";
+import { Label } from "@workspace/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -88,7 +90,8 @@ export default function ClientWorkPage() {
   const deleteFilesMutation = storage.useDeleteFilesMutation({
     isClientWork: true,
   });
-  const { clientWork, setClientWork } = useClientWorkStore();
+  const { clientWork, setClientWork, isPhone, setIsPhone } =
+    useClientWorkStore();
 
   const trpc = useTRPC();
   const getClientWork = useQuery(trpc.admin.clientWork.get.queryOptions());
@@ -197,6 +200,21 @@ export default function ClientWorkPage() {
     [uploadFiles, addClientWork, clientWork]
   );
 
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      toast.info("Paste detected");
+      const files = Array.from(e.clipboardData?.files ?? []).filter(
+        (f) => f.type.startsWith("video/") || f.name.endsWith(".mp4")
+      );
+      if (files.length > 0) {
+        e.preventDefault();
+        onDrop(files, isPhone);
+      }
+    };
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [onDrop, isPhone]);
+
   const clientWorkFolder = useDropzone({
     onDrop: (acceptedFiles) => onDrop(acceptedFiles),
     onDropRejected: (rejections) => {
@@ -223,16 +241,22 @@ export default function ClientWorkPage() {
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">
         Client Work
       </h1>
-      <Select value={clientWork} onValueChange={setClientWork}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select client work" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="crosspost">Crosspost</SelectItem>
-          <SelectItem value="bless">Bless</SelectItem>
-          <SelectItem value="area">Area</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="mb-8 flex items-center gap-2">
+        <Select value={clientWork} onValueChange={setClientWork}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select client work" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="crosspost">Crosspost</SelectItem>
+            <SelectItem value="bless">Bless</SelectItem>
+            <SelectItem value="area">Area</SelectItem>
+          </SelectContent>
+        </Select>
+        <Label>
+          <Checkbox checked={isPhone} onCheckedChange={setIsPhone} />
+          <span>Is phone</span>
+        </Label>
+      </div>
       <div>
         {Math.floor(progress)}% -{" "}
         {addClientWork.isPending ? "Adding..." : "Idle"}

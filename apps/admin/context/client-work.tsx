@@ -8,6 +8,8 @@ interface ClientWorkState {
   setClientWork: (
     clientWork: RouterOutputs["admin"]["clientWork"]["get"][number]["from"]
   ) => void;
+  isPhone: boolean;
+  setIsPhone: (isPhone: boolean) => void;
 }
 
 export const useClientWorkStore = create<ClientWorkState>()(
@@ -15,6 +17,8 @@ export const useClientWorkStore = create<ClientWorkState>()(
     (set) => ({
       clientWork: "crosspost",
       setClientWork: (clientWork) => set({ clientWork }),
+      isPhone: false,
+      setIsPhone: (isPhone) => set({ isPhone }),
     }),
     { name: "client-work-storage" }
   )

@@ -5,12 +5,14 @@ import type { MDXComponents } from "mdx/types";
 
 import { cn } from "@workspace/ui/lib/utils";
 
+import { Videos } from "./videos";
+
 export const mdxComponents: MDXComponents = {
   ...defaultComponents,
   h1: ({ children, ...props }) => (
     <h1
       className={cn(
-        "hover:text-primary-hover [&+p]:mt-0! group mb-8 flex scroll-m-12 items-center gap-2 text-4xl font-bold [&_code]:text-[21px]",
+        "hover:text-primary-hover group mb-8 flex scroll-m-12 items-center gap-2 text-4xl font-bold [&_code]:text-[21px] [&+p]:mt-0!",
         "[&_a]:hover:text-foreground [&_a]:text-inherit [&_a]:no-underline"
       )}
       {...props}
@@ -21,7 +23,7 @@ export const mdxComponents: MDXComponents = {
   h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h2
       className={cn(
-        "hover:text-primary-hover [&+p]:mt-0! group mb-6 mt-12 flex w-full scroll-m-12 items-center gap-2 pt-6 text-2xl font-medium [&_code]:text-[21px]",
+        "hover:text-primary-hover group mt-12 mb-6 flex w-full scroll-m-12 items-center gap-2 pt-6 text-2xl font-medium [&_code]:text-[21px] [&+p]:mt-0!",
         "[&_a]:hover:text-foreground [&_a]:text-inherit [&_a]:no-underline"
       )}
       {...props}
@@ -32,7 +34,7 @@ export const mdxComponents: MDXComponents = {
   h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h3
       className={cn(
-        "hover:text-primary-hover [&+p]:mt-0! group mb-[0.6rem] mt-[1.6rem] flex scroll-m-12 items-center gap-2 text-xl font-medium [&_code]:text-[21px]",
+        "hover:text-primary-hover group mt-[1.6rem] mb-[0.6rem] flex scroll-m-12 items-center gap-2 text-xl font-medium [&_code]:text-[21px] [&+p]:mt-0!",
         "[&_a]:hover:text-foreground [&_a]:text-inherit [&_a]:no-underline"
       )}
       {...props}
@@ -42,7 +44,7 @@ export const mdxComponents: MDXComponents = {
   ),
   p: ({ ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <p
-      className="scroll-m-20 text-justify text-xl font-normal leading-relaxed [&:has(+p)]:mb-8"
+      className="scroll-m-20 text-justify text-xl leading-relaxed font-normal [&:has(+p)]:mb-8"
       {...props}
     />
   ),
@@ -76,7 +78,7 @@ export const mdxComponents: MDXComponents = {
   table: ({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
     <table
       className={cn(
-        "[&_a>code]: [&_a>code]:text-primary! my-8 w-full text-sm [&>thead]:hidden [&_a>code:hover]:text-opacity-70 [&_code]:text-[12.25px]",
+        "[&_a>code]: [&_a>code]:text-primary! [&_a>code:hover]:text-opacity-70 my-8 w-full text-sm [&_code]:text-[12.25px] [&>thead]:hidden",
         className
       )}
       {...props}
@@ -111,4 +113,5 @@ export const mdxComponents: MDXComponents = {
   // ),
   Step,
   Steps,
+  Videos,
 };
