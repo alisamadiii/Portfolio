@@ -22,7 +22,7 @@ export const company = {
     { label: "Packages", href: "https://packages.alisamadii.com" },
   ],
   clients: [
-    { label: "Crosspost", href: "https://crosspost.com" },
+    { label: "Crosspost", href: "/crosspost" },
     { label: "Bless", href: "https://bless.com" },
     { label: "Area", href: "https://area.com" },
   ],

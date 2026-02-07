@@ -145,7 +145,12 @@ export default function Home() {
 
         <div className="mt-8 flex flex-col items-start gap-1">
           <div className="flex gap-2">
-            <a href={`mailto:${company.email}`} className={buttonVariants({})}>
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href={`https://cal.com/alisamadii/15min`}
+              className={buttonVariants({})}
+            >
               Let&apos;s collaborate
             </a>
             <Link
