@@ -3,7 +3,6 @@ import React from "react";
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@workspace/ui/components/carousel";

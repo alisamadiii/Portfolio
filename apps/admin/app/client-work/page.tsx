@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useClientWorkStore } from "@/context/client-work";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Trash } from "lucide-react";
+import { Copy, Trash } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ import { storage } from "@/project.config";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Checkbox } from "@workspace/ui/components/checkbox";
+import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import {
   Select,
@@ -92,6 +93,7 @@ export default function ClientWorkPage() {
   });
   const { clientWork, setClientWork, isPhone, setIsPhone } =
     useClientWorkStore();
+  const [filename, setFilename] = useState("");
 
   const trpc = useTRPC();
   const getClientWork = useQuery(trpc.admin.clientWork.get.queryOptions());
@@ -202,18 +204,25 @@ export default function ClientWorkPage() {
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
-      toast.info("Paste detected");
+      if (!filename.trim()) {
+        return toast.error("Please enter a filename");
+      }
+
       const files = Array.from(e.clipboardData?.files ?? []).filter(
         (f) => f.type.startsWith("video/") || f.name.endsWith(".mp4")
       );
-      if (files.length > 0) {
+      const file = files[0];
+      if (file) {
         e.preventDefault();
-        onDrop(files, isPhone);
+        const base = filename.trim() || file.name.replace(/\.[^.]+$/, "");
+        const name = base.endsWith(".mp4") ? base : `${base}.mp4`;
+        const renamed = new File([file], name, { type: file.type });
+        onDrop([renamed], isPhone);
       }
     };
     document.addEventListener("paste", handlePaste);
     return () => document.removeEventListener("paste", handlePaste);
-  }, [onDrop, isPhone]);
+  }, [onDrop, isPhone, filename]);
 
   const clientWorkFolder = useDropzone({
     onDrop: (acceptedFiles) => onDrop(acceptedFiles),
@@ -256,6 +265,12 @@ export default function ClientWorkPage() {
           <Checkbox checked={isPhone} onCheckedChange={setIsPhone} />
           <span>Is phone</span>
         </Label>
+        <Input
+          placeholder="Filename"
+          value={filename}
+          onChange={(e) => setFilename(e.target.value)}
+          className="w-full max-w-xs"
+        />
       </div>
       <div>
         {Math.floor(progress)}% -{" "}
@@ -306,14 +321,50 @@ export default function ClientWorkPage() {
               <Badge className="absolute top-2 left-2 bg-purple-500">
                 {work.from}
               </Badge>
-              <Button
-                variant="destructive"
-                onClick={() => deleteClientWork.mutate(work.id)}
-                isLoading={deleteClientWork.isPending}
-                className="absolute top-2 right-2"
-              >
-                <Trash />
-              </Button>
+              <div className="absolute top-2 right-2 flex max-w-24 flex-wrap gap-1">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(work.url);
+                    toast.success("URL copied");
+                  }}
+                >
+                  <Copy className="mr-1 h-3 w-3" /> URL
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    if (work.thumbnail)
+                      navigator.clipboard.writeText(work.thumbnail);
+                    toast.success("Thumbnail copied");
+                  }}
+                  disabled={!work.thumbnail}
+                >
+                  <Copy className="mr-1 h-3 w-3" /> Thumb
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      JSON.stringify(work, null, 2)
+                    );
+                    toast.success("JSON copied");
+                  }}
+                >
+                  <Copy className="mr-1 h-3 w-3" /> JSON
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => deleteClientWork.mutate(work.id)}
+                  isLoading={deleteClientWork.isPending}
+                >
+                  <Trash />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
