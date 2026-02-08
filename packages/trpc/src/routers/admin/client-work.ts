@@ -30,7 +30,6 @@ export const adminClientWorkRouter = createTRPCRouter({
         url: z.string(),
         thumbnail: z.string(),
         from: z.enum(["crosspost", "bless", "area"]),
-        isPhone: z.boolean(),
         width: z.number(),
         height: z.number(),
       })

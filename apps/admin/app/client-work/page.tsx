@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import { Separator } from "@workspace/ui/components/separator";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
@@ -30,7 +31,8 @@ import { Content } from "@/components/content-admin";
 const THUMBNAIL_MAX_WIDTH = 1280;
 
 function captureFirstFrameAsBlob(
-  videoFile: File
+  videoFile: File,
+  frame: number
 ): Promise<{ blob: Blob; width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
@@ -41,7 +43,9 @@ function captureFirstFrameAsBlob(
     const url = URL.createObjectURL(videoFile);
 
     video.onloadeddata = () => {
-      video.currentTime = 0;
+      if (frame > 0) {
+        video.currentTime = frame;
+      }
     };
 
     video.onseeked = () => {
@@ -94,6 +98,7 @@ export default function ClientWorkPage() {
   const { clientWork, setClientWork, isPhone, setIsPhone } =
     useClientWorkStore();
   const [filename, setFilename] = useState("");
+  const [frame, setFrame] = useState<number>(0);
 
   const trpc = useTRPC();
   const getClientWork = useQuery(trpc.admin.clientWork.get.queryOptions());
@@ -159,19 +164,27 @@ export default function ClientWorkPage() {
     async (acceptedFiles: File[], isPhone?: boolean) => {
       for (const file of acceptedFiles) {
         try {
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          const videoName = isPhone ? `${baseName}-PHONE.mp4` : file.name;
+          const thumbName = isPhone
+            ? `${baseName}-PHONE.jpg`
+            : `${baseName}.jpg`;
+
           const {
             blob: thumbnailBlob,
             width,
             height,
-          } = await captureFirstFrameAsBlob(file);
-          const thumbnailFile = new File(
-            [thumbnailBlob],
-            file.name.replace(/\.[^.]+$/, "") + "-thumb.jpg",
-            { type: "image/jpeg" }
-          );
+          } = await captureFirstFrameAsBlob(file, frame);
+          const thumbnailFile = new File([thumbnailBlob], thumbName, {
+            type: "image/jpeg",
+          });
+
+          const videoFile = isPhone
+            ? new File([file], videoName, { type: file.type })
+            : file;
 
           const [videoUrl, thumbnailUrl] = await uploadFiles(
-            [file, thumbnailFile],
+            [videoFile, thumbnailFile],
             {
               path: "public/client-work",
               dontAddFileToDb: true,
@@ -186,7 +199,6 @@ export default function ClientWorkPage() {
             url: videoUrl,
             thumbnail: thumbnailUrl,
             from: clientWork,
-            isPhone: isPhone ?? false,
             width,
             height,
           });
@@ -199,7 +211,7 @@ export default function ClientWorkPage() {
         }
       }
     },
-    [uploadFiles, addClientWork, clientWork]
+    [uploadFiles, addClientWork, clientWork, frame]
   );
 
   useEffect(() => {
@@ -250,28 +262,39 @@ export default function ClientWorkPage() {
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">
         Client Work
       </h1>
-      <div className="mb-8 flex items-center gap-2">
-        <Select value={clientWork} onValueChange={setClientWork}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select client work" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="crosspost">Crosspost</SelectItem>
-            <SelectItem value="bless">Bless</SelectItem>
-            <SelectItem value="area">Area</SelectItem>
-          </SelectContent>
-        </Select>
-        <Label>
-          <Checkbox checked={isPhone} onCheckedChange={setIsPhone} />
-          <span>Is phone</span>
-        </Label>
-        <Input
-          placeholder="Filename"
-          value={filename}
-          onChange={(e) => setFilename(e.target.value)}
-          className="w-full max-w-xs"
-        />
+      <div className="flex flex-col gap-4">
+        <Badge>Pasting Settings</Badge>
+        <div className="flex items-center gap-2">
+          <Select value={clientWork} onValueChange={setClientWork}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select client work" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="crosspost">Crosspost</SelectItem>
+              <SelectItem value="bless">Bless</SelectItem>
+              <SelectItem value="area">Area</SelectItem>
+            </SelectContent>
+          </Select>
+          <Label>
+            <Checkbox checked={isPhone} onCheckedChange={setIsPhone} />
+            <span>Is phone</span>
+          </Label>
+          <Input
+            placeholder="Filename"
+            value={filename}
+            onChange={(e) => setFilename(e.target.value)}
+            className="w-full max-w-xs"
+          />
+          <Input
+            placeholder="Frame"
+            type="number"
+            value={frame}
+            onChange={(e) => setFrame(Number(e.target.value))}
+            className="w-full max-w-xs"
+          />
+        </div>
       </div>
+      <Separator className="my-4" />
       <div>
         {Math.floor(progress)}% -{" "}
         {addClientWork.isPending ? "Adding..." : "Idle"}
@@ -304,13 +327,7 @@ export default function ClientWorkPage() {
         <h2 className="mb-4 text-lg font-semibold tracking-tight">Videos</h2>
         <div className="grid grid-cols-4 gap-4">
           {getClientWork.data?.map((work) => (
-            <div
-              key={work.id}
-              className={cn(
-                "relative rounded-xl border p-2",
-                work.isPhone && "bg-blue-500"
-              )}
-            >
+            <div key={work.id} className={cn("relative rounded-xl border p-2")}>
               <video
                 src={work.url}
                 playsInline

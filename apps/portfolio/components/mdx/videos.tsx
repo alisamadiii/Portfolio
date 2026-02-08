@@ -10,7 +10,7 @@ import {
 import { Video } from "../video";
 
 interface VideosProps {
-  values: { url: string; thumbnail: string | null }[];
+  values: string[];
 }
 
 export const Videos = ({ values }: VideosProps) => {
@@ -18,12 +18,12 @@ export const Videos = ({ values }: VideosProps) => {
     <div className="my-8">
       <Carousel>
         <CarouselContent className="ml-0">
-          {values.map((value) => (
-            <div key={value.url} className="basis-1/2">
+          {values.map((value, index) => (
+            <div key={index} className="shrink-0 basis-auto">
               <Video
-                src={value.url}
-                poster={value.thumbnail ?? undefined}
-                className="rounded-3xl"
+                src={value}
+                poster={value.replace(/\.mp4(?=[?#]|$)/i, "-thumb.jpg")}
+                className="max-h-200 rounded-3xl"
               />
             </div>
           ))}

@@ -246,7 +246,6 @@ export const clientWork = pgTable("client_work", {
   from: text("from", {
     enum: ["crosspost", "bless", "area"],
   }).notNull(),
-  isPhone: boolean("is_phone").default(false),
   width: integer("width").notNull().default(0),
   height: integer("height").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
