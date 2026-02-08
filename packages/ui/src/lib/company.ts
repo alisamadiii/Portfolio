@@ -30,3 +30,22 @@ export const company = {
   myImage:
     "https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png",
 };
+
+export const urls = {
+  portfolio:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://alisamadii.com",
+  admin:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3001"
+      : "https://admin.alisamadii.com",
+  motion:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3002"
+      : "https://motion.alisamadii.com",
+  docs:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3003"
+      : "https://docs.alisamadii.com",
+};

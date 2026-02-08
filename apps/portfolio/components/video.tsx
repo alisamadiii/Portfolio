@@ -7,9 +7,14 @@ import { cn } from "@workspace/ui/lib/utils";
 
 interface VideoProps extends React.ComponentProps<"video"> {
   className?: string;
+  wrapperClassName?: string;
 }
 
-export const Video = ({ className, ...props }: VideoProps) => {
+export const Video = ({
+  className,
+  wrapperClassName,
+  ...props
+}: VideoProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -23,7 +28,7 @@ export const Video = ({ className, ...props }: VideoProps) => {
   }, [isPlaying]);
 
   return (
-    <div className="relative">
+    <div className={cn("relative", wrapperClassName)}>
       <video
         ref={videoRef}
         className={cn("rounded-3xl", className)}

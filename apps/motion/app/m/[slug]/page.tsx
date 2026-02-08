@@ -102,19 +102,7 @@ export default function ComponentPage() {
         <ComponentView key={isRefreshing} />
       </motion.div>
 
-      <Link
-        href={
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000/settings"
-            : "https://www.alisamadii.com/settings"
-        }
-        className={cn(
-          "bg-muted fixed top-4 left-4 z-100 rounded-xl border p-3 pr-8",
-          isToggleElements && "hidden"
-        )}
-      >
-        <UserProfile />
-      </Link>
+      <UserProfile isToggleElements={isToggleElements} />
 
       <div
         className={cn(

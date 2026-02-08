@@ -25,14 +25,16 @@ export const Videos = ({ values }: VideosProps) => {
               <div
                 key={index}
                 className={cn(
-                  "shrink-0 basis-auto rounded-3xl",
+                  "max-w-full shrink-0 basis-auto overflow-hidden rounded-3xl",
                   !isPhone && "outline"
                 )}
               >
                 <Video
                   src={value}
                   poster={value.replace(/\.mp4(?=[?#]|$)/i, ".jpg")}
-                  className="max-h-200 rounded-3xl"
+                  className="h-full max-h-100 w-full object-contain md:max-h-200"
+                  wrapperClassName="h-full bg-muted"
+                  loop
                 />
               </div>
             );

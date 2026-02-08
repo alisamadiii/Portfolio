@@ -62,7 +62,7 @@ export default async function RootLayout({
             </Suspense>
             <Suspense>{children}</Suspense>
             <Suspense>
-              <Footer />
+              <Footer isPortfolio />
             </Suspense>
           </Providers>
         </TRPCReactProvider>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -12,6 +13,7 @@ import {
 } from "@workspace/ui/components/drawer";
 import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
+import { urls } from "@workspace/ui/lib/company";
 
 import { useSignin } from "@workspace/auth/hooks/use-functions";
 
@@ -102,6 +104,14 @@ export const LoginDrawer = ({ children }: { children: React.ReactNode }) => {
             >
               Login
             </Button>
+            <Link
+              href={
+                urls.portfolio + "/signup?redirectUrl=" + window.location.href
+              }
+              className="text-muted-foreground hover:text-foreground text-center text-sm"
+            >
+              Signup
+            </Link>
           </form>
         </div>
       </DrawerContent>

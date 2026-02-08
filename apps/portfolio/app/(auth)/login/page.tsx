@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -33,12 +33,14 @@ export default function Login() {
 
   const signin = useSignin();
   const onSignInWithProvider = useSignInWithProvider("google");
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirectUrl");
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     signin.mutate(values, {
       onSuccess: () => {
         router.refresh();
-        router.push("/");
+        router.push(redirectUrl || "/");
       },
       onError: (error) => {
         form.setError("root", { message: error.message });

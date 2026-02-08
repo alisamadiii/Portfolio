@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -33,6 +34,8 @@ export default function SignUpPage() {
 
   const signup = useSignup();
   const onSignInWithProvider = useSignInWithProvider("google");
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirectUrl");
 
   const handleSubmit = (values: z.infer<typeof schema>) => {
     signup.mutate(values, {
@@ -125,7 +128,10 @@ export default function SignUpPage() {
 
       <p className="mt-3 text-sm">
         Already have an account?{" "}
-        <Link href="/login" className="underline">
+        <Link
+          href={`/login${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`}
+          className="underline"
+        >
           Login
         </Link>
       </p>

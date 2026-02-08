@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 import { CircleHalfDashedCheck, CreditCards } from "@workspace/ui/icons";
+import { urls } from "@workspace/ui/lib/company";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCheckout } from "@workspace/auth/hooks/use-payments";
@@ -57,7 +58,7 @@ export function Pricing() {
               onClick={() =>
                 checkout.mutate({
                   productId: product.data?.id || "",
-                  successUrl: "http://localhost:3002/m/lume-city-selector",
+                  successUrl: urls.motion + "/m/lume-city-selector",
                 })
               }
             >

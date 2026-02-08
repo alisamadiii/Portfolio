@@ -1,4 +1,4 @@
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
@@ -9,6 +9,8 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 const useSignup = () => {
   const router = useRouter();
   const trpc = useTRPC();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirectUrl");
 
   return useMutation({
     mutationFn: async (values: {
@@ -40,7 +42,9 @@ const useSignup = () => {
       return response;
     },
     onSuccess: () => {
-      router.push("/verify-email");
+      router.push(
+        `/verify-email${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`
+      );
       router.refresh();
       queryClient.setQueryData(trpc.user.getCurrentUser.queryKey(), (old) => {
         return old;
@@ -199,6 +203,8 @@ const useResetPassword = () => {
  */
 const useVerifyEmail = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirectUrl");
   const { data: user } = useCurrentUser();
 
   const trpc = useTRPC();
@@ -225,9 +231,15 @@ const useVerifyEmail = () => {
         };
       });
 
-      setTimeout(() => {
-        router.push("/choose-plan");
-      }, 2000);
+      if (redirectUrl) {
+        setTimeout(() => {
+          router.push(redirectUrl);
+        }, 2000);
+      } else {
+        setTimeout(() => {
+          router.push("/choose-plan");
+        }, 2000);
+      }
     },
     onError: () => {},
   });

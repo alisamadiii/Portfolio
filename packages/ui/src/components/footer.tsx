@@ -32,6 +32,7 @@ export interface FooterProps {
   disclaimer?: string;
   curatedBy?: { label: string; href?: string };
   hide?: string[];
+  isPortfolio?: boolean;
 }
 
 const defaultColumns: FooterColumn[] = [
@@ -74,6 +75,7 @@ function Footer({
   email = company.email,
   disclaimer,
   hide,
+  isPortfolio,
 }: FooterProps) {
   const year = "2026";
   const copyrightText = copyright ?? `© ${year} ${companyName}`;
@@ -88,44 +90,50 @@ function Footer({
     >
       {/* Top section: navigation columns */}
       <div className="container px-6 py-12 md:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {columns.map((col) => (
-            <nav key={col.heading} className="flex flex-col gap-4">
-              <h3 className="text-foreground font-semibold">{col.heading}</h3>
-              <ul className="flex flex-col gap-3">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
-          {/* Follow us column with social icons */}
-          <nav className="flex flex-col">
-            <h3 className="text-foreground font-semibold">Follow me</h3>
-            <ul className="flex items-center gap-2">
-              {company.social.map(({ icon: Icon, href, label }) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    aria-label={label}
-                    className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors"
-                  >
-                    <Icon className="size-7" />
-                  </Link>
-                </li>
+        {isPortfolio && (
+          <>
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+              {columns.map((col) => (
+                <nav key={col.heading} className="flex flex-col gap-4">
+                  <h3 className="text-foreground font-semibold">
+                    {col.heading}
+                  </h3>
+                  <ul className="flex flex-col gap-3">
+                    {col.links.map((link) => (
+                      <li key={link.label}>
+                        <Link
+                          href={link.href}
+                          className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
               ))}
-            </ul>
-          </nav>
-        </div>
+              {/* Follow us column with social icons */}
+              <nav className="flex flex-col">
+                <h3 className="text-foreground font-semibold">Follow me</h3>
+                <ul className="flex items-center gap-2">
+                  {company.social.map(({ icon: Icon, href, label }) => (
+                    <li key={label}>
+                      <Link
+                        href={href}
+                        aria-label={label}
+                        className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors"
+                      >
+                        <Icon className="size-7" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
 
-        <Separator className="my-8" />
+            <Separator className="my-8" />
+          </>
+        )}
 
         {/* Middle section: logo + description + legal */}
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
@@ -151,6 +159,24 @@ function Footer({
               </a>
             )}
           </div>
+          {!isPortfolio && (
+            <nav className="flex flex-col">
+              <h3 className="text-foreground font-semibold">Follow me</h3>
+              <ul className="flex items-center gap-2">
+                {company.social.map(({ icon: Icon, href, label }) => (
+                  <li key={label}>
+                    <Link
+                      href={href}
+                      aria-label={label}
+                      className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors"
+                    >
+                      <Icon className="size-7" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
           {/* <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-8">
             {legal.map((item) => (
               <div key={item.category} className="flex flex-col gap-2">
