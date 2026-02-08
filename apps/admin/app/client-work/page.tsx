@@ -65,7 +65,17 @@ function captureFirstFrameAsBlob(
           reject(new Error("Could not get canvas context"));
           return;
         }
-        ctx.drawImage(video, 0, 0);
+        ctx.drawImage(
+          video,
+          0,
+          0,
+          video.videoWidth,
+          video.videoHeight,
+          0,
+          0,
+          w,
+          h
+        );
         canvas.toBlob(
           (blob) => {
             URL.revokeObjectURL(url);
@@ -170,6 +180,8 @@ export default function ClientWorkPage() {
             ? `${baseName}-PHONE.jpg`
             : `${baseName}.jpg`;
 
+          console.log(frame);
+
           const {
             blob: thumbnailBlob,
             width,
@@ -234,7 +246,7 @@ export default function ClientWorkPage() {
     };
     document.addEventListener("paste", handlePaste);
     return () => document.removeEventListener("paste", handlePaste);
-  }, [onDrop, isPhone, filename]);
+  }, [onDrop, isPhone, filename, frame]);
 
   const clientWorkFolder = useDropzone({
     onDrop: (acceptedFiles) => onDrop(acceptedFiles),
