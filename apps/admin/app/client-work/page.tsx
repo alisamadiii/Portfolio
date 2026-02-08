@@ -28,7 +28,7 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 
 import { Content } from "@/components/content-admin";
 
-const THUMBNAIL_MAX_WIDTH = 1280;
+const THUMBNAIL_MAX_WIDTH = 3000;
 
 function captureFirstFrameAsBlob(
   videoFile: File,
@@ -43,7 +43,7 @@ function captureFirstFrameAsBlob(
     const url = URL.createObjectURL(videoFile);
 
     video.onloadeddata = () => {
-      if (frame > 0) {
+      if (frame >= 0) {
         video.currentTime = frame;
       }
     };
