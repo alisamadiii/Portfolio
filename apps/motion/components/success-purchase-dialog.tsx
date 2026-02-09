@@ -70,7 +70,8 @@ export const SuccessPurchaseDialog = () => {
   }, [open, succeeded]);
 
   const handleClose = () => {
-    router.replace(pathname);
+    // Strip all search params; stay on current path (pathname has no query)
+    router.push(pathname);
   };
 
   return (
