@@ -69,10 +69,8 @@ export default function ComponentPage() {
   const trpc = useTRPC();
   useQuery(
     trpc.motion.getFiles.queryOptions(
-      { sourceId: animation.id },
-      {
-        enabled: !!animation.id,
-      }
+      { sourceId: animation?.id ?? "" },
+      { enabled: !!animation?.id }
     )
   );
 
