@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@workspace/ui/components/button";
@@ -20,6 +21,7 @@ export function Pricing() {
       process.env.NEXT_PUBLIC_MOTION_PRODUCT || ""
     )
   );
+  const pathname = usePathname();
   const checkout = useCheckout();
   const { data: currentUser } = useCurrentUser();
   const { isPurchased } = useIsPurchased();
@@ -58,7 +60,7 @@ export function Pricing() {
               onClick={() =>
                 checkout.mutate({
                   productId: product.data?.id || "",
-                  successUrl: urls.motion + "/m/lume-city-selector",
+                  successUrl: urls.motion + pathname,
                 })
               }
             >

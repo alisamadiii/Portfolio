@@ -6,6 +6,8 @@ import { auth } from "@workspace/auth/auth";
 export async function proxy(request: Request) {
   const nextRequest = request as NextRequest;
   const pathname = nextRequest.nextUrl.pathname;
+  const searchParams = nextRequest.nextUrl.searchParams;
+  const redirectUrl = searchParams.get("redirectUrl");
 
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -24,7 +26,8 @@ export async function proxy(request: Request) {
 
   if (
     (pathname.startsWith("/login") || pathname.startsWith("/signup")) &&
-    session?.user?.id
+    session?.user?.id &&
+    !redirectUrl
   ) {
     return NextResponse.redirect(new URL("/", nextRequest.url));
   }

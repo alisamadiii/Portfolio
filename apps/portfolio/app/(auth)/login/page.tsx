@@ -39,8 +39,13 @@ export default function Login() {
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     signin.mutate(values, {
       onSuccess: () => {
-        router.refresh();
-        router.push(redirectUrl || "/");
+        console.log(redirectUrl);
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.refresh();
+          router.push("/");
+        }
       },
       onError: (error) => {
         form.setError("root", { message: error.message });

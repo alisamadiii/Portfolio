@@ -237,7 +237,7 @@ const useVerifyEmail = () => {
         }, 2000);
       } else {
         setTimeout(() => {
-          router.push("/choose-plan");
+          router.push("/");
         }, 2000);
       }
     },

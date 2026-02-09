@@ -102,8 +102,8 @@ export const useCheckout = () => {
         if (error.data?.code === "UNAUTHORIZED") {
           router.push(
             process.env.NODE_ENV === "development"
-              ? `http://localhost:3000/signup?purchase=${variables.productId}`
-              : `https://www.alisamadii.com/signup?purchase=${variables.productId}`
+              ? `http://localhost:3000/signup?redirectUrl=${window.location.href}`
+              : `https://www.alisamadii.com/signup?redirectUrl=${window.location.href}`
           );
           return;
         }
