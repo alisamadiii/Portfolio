@@ -97,7 +97,7 @@ export const SourceCode = () => {
       initial={{ x: 400, scale: 0.8, filter: "blur(4px)", opacity: 0 }}
       animate={{ x: 0, scale: 1, filter: "blur(0px)", opacity: 1 }}
       exit={{ x: 400, scale: 0.8, filter: "blur(4px)", opacity: 0 }}
-      className="dark text-foreground pointer-events-none fixed right-0 bottom-0 h-[calc(100vh-4rem)] w-full p-4 lg:w-[600px]"
+      className="dark text-foreground pointer-events-none fixed right-0 bottom-0 h-[calc(100dvh-4rem)] w-full p-4 lg:w-[600px]"
       transition={{
         duration: 0.5,
         type: "spring",

@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
-import { eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 
 config({
   path: resolve(dirname(fileURLToPath(import.meta.url)), "../.env"),
@@ -23,7 +23,8 @@ const getCodes = async () => {
     })
     .from(source)
     .leftJoin(sourceFile, eq(sourceFile.sourceId, source.id))
-    .leftJoin(sourceMedia, eq(sourceMedia.sourceId, source.id));
+    .leftJoin(sourceMedia, eq(sourceMedia.sourceId, source.id))
+    .orderBy(asc(source.isPrivate), desc(source.createdAt));
 
   const filesBySourceId = new Map<string, (typeof sourceFile.$inferSelect)[]>();
   const mediaBySourceId = new Map<

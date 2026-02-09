@@ -252,3 +252,13 @@
 /* #motion-container>* {
   @apply animate-in fade-in-0 duration-600;
 } */
+
+[data-vaul-drawer][data-vaul-drawer-direction="bottom"][data-state="open"] {
+  animation-duration: 550ms !important;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+[data-vaul-drawer][data-vaul-drawer-direction="bottom"][data-state="closed"] {
+  animation-duration: 250ms !important;
+  animation-timing-function: ease-in-out !important;
+}

@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
+import { useIsMobile } from "@workspace/ui/hooks/use-mobile";
 import {
   Code,
   Expand,
@@ -49,6 +50,8 @@ export default function ComponentPage() {
   const [isToggleSettings, setIsToggleSettings] = useState(false);
   const { theme, setTheme } = useTheme();
   const { containerScale, setContainerScale, speed, setSpeed } = useSettings();
+
+  const isMobile = useIsMobile;
 
   const [isRefreshing, setIsRefreshing] = useState(0);
   const refresh = () => setIsRefreshing((prev) => prev + 1);
@@ -82,14 +85,14 @@ export default function ComponentPage() {
     <>
       <motion.div
         initial={{ maxWidth: "100%" }}
-        animate={{ maxWidth: isOpen ? "80%" : "100%" }}
+        animate={{ maxWidth: isOpen && !isMobile ? "80%" : "100%" }}
         transition={{
           duration: 0.5,
           type: "spring",
           bounce: 0.3,
         }}
         className={cn(
-          "flex min-h-screen w-full origin-top flex-col items-center-safe justify-center-safe py-8"
+          "flex min-h-screen w-full origin-top flex-col items-center-safe justify-center-safe px-8 py-24 md:py-8"
         )}
         style={{
           transform: `scale(${containerScale})`,
