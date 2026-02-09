@@ -71,7 +71,7 @@ export const SuccessPurchaseDialog = () => {
 
   const handleClose = () => {
     // Strip all search params; stay on current path (pathname has no query)
-    router.push(pathname);
+    history.replaceState(null, "", pathname);
   };
 
   return (
@@ -129,7 +129,7 @@ export const SuccessPurchaseDialog = () => {
                 onClick={handleClose}
                 size="lg"
               >
-                <Link href="/m">Browse animations</Link>
+                <Link href="/">Browse animations</Link>
               </Button>
               <Button
                 variant="outline"
