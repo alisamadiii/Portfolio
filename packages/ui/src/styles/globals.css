@@ -209,8 +209,21 @@
     @apply border-border outline-ring/50;
   }
 
+  /* overflow on both html and body so iOS Safari respects it; clip works better than hidden on iOS */
+  html {
+    overflow-x: clip;
+  }
+
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply bg-background text-foreground;
+    overflow-x: clip;
+  }
+
+  @supports not (overflow-x: clip) {
+    html,
+    body {
+      overflow-x: hidden;
+    }
   }
 
   button {

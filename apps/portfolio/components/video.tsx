@@ -33,11 +33,12 @@ export const Video = ({
         ref={videoRef}
         className={cn("rounded-3xl", className)}
         onClick={() => setIsPlaying(!isPlaying)}
+        playsInline
         {...props}
       />
       <div
         className={cn(
-          "bg-background/50 pointer-events-none absolute bottom-4 left-4 flex size-10 items-center justify-center rounded-full border backdrop-blur-sm duration-200",
+          "bg-background/50 pointer-events-none absolute bottom-4 left-4 flex size-10 items-center justify-center rounded-full border backdrop-blur-sm duration-200 dark:border-none",
           isPlaying ? "scale-0 opacity-0" : "scale-100 opacity-100"
         )}
       >

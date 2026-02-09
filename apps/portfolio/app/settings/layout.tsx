@@ -15,10 +15,8 @@ interface Props {
 export default function SettingsLayout({ children }: Props) {
   return (
     <ProtectRoute>
-      <div className="mx-auto max-w-3xl gap-8 pt-20">
-        <h1 className="mb-8 text-2xl font-bold capitalize md:text-4xl">
-          Settings
-        </h1>
+      <div className="mx-auto max-w-3xl gap-8 px-8 pt-20">
+        <h1 className="mb-8 text-4xl font-bold capitalize">Settings</h1>
         {/* <SettingsLinks /> */}
         <div className="grow">{children}</div>
       </div>
