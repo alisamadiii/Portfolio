@@ -23,7 +23,7 @@ export const BillingPortal = () => {
         </Button>
 
         <PageLoading
-          active={generatePortalLink.isPending || generatePortalLink.isSuccess}
+          active={generatePortalLink.isPending}
           name={generatePortalLink.isSuccess ? "Redirecting" : "Generating"}
         />
       </CardContent>

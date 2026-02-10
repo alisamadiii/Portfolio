@@ -131,9 +131,7 @@ export default function Login() {
       </p>
 
       <PageLoading
-        active={
-          onSignInWithProvider.isPending || onSignInWithProvider.isSuccess
-        }
+        active={onSignInWithProvider.isPending}
         name="Signing in with Google"
       />
     </div>

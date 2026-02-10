@@ -227,7 +227,7 @@ const EachPlan = ({
       )}
       {currentUser && (
         <PageLoading
-          active={checkout.isPending || checkout.isSuccess}
+          active={checkout.isPending}
           name={checkout.isSuccess ? "Redirecting" : "Creating"}
         />
       )}

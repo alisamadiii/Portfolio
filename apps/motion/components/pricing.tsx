@@ -88,7 +88,7 @@ export function Pricing() {
         {/* Loading State */}
         {currentUser && (
           <PageLoading
-            active={checkout.isPending || checkout.isSuccess}
+            active={checkout.isPending}
             name={checkout.isSuccess ? "Redirecting" : "Creating"}
           />
         )}
