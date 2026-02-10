@@ -7,7 +7,7 @@ import { Separator } from "@workspace/ui/components/separator";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { Logo } from "../icons/logo";
-import { company } from "../lib/company";
+import { company, urls } from "../lib/company";
 
 export interface FooterColumn {
   heading: string;
@@ -51,8 +51,8 @@ const defaultColumns: FooterColumn[] = [
 ];
 
 const defaultLegal: FooterLegal[] = [
-  { category: "Privacy policy", href: "/privacy" },
-  { category: "Terms of Service", href: "/terms" },
+  { category: "Privacy policy", href: `${urls.portfolio}/privacy` },
+  { category: "Terms of Service", href: `${urls.portfolio}/terms` },
 ];
 
 function Footer({
