@@ -51,17 +51,8 @@ const defaultColumns: FooterColumn[] = [
 ];
 
 const defaultLegal: FooterLegal[] = [
-  {
-    category: "Legal",
-    href: "#",
-    subLinks: [{ label: "Country site map", href: "#" }],
-  },
-  {
-    category: "Privacy policy",
-    href: "#",
-    subLinks: [{ label: "Modern slavery statement", href: "#" }],
-  },
-  { category: "Cookie policy", href: "#" },
+  { category: "Privacy policy", href: "/privacy" },
+  { category: "Terms of Service", href: "/terms" },
 ];
 
 function Footer({
@@ -158,6 +149,26 @@ function Footer({
                 {email}
               </a>
             )}
+            <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2">
+              {legal.map((item) => (
+                <Link
+                  key={item.category}
+                  href={item.href}
+                  className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
+                >
+                  {item.category}
+                </Link>
+              ))}
+              {standaloneLinks?.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           </div>
           {!isPortfolio && (
             <nav className="flex flex-col">
@@ -177,36 +188,6 @@ function Footer({
               </ul>
             </nav>
           )}
-          {/* <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-8">
-            {legal.map((item) => (
-              <div key={item.category} className="flex flex-col gap-2">
-                <Link
-                  href={item.href}
-                  className="text-foreground text-sm font-medium underline-offset-4 hover:underline"
-                >
-                  {item.category}
-                </Link>
-                {item.subLinks?.map((sub) => (
-                  <Link
-                    key={sub.label}
-                    href={sub.href}
-                    className="text-muted-foreground text-sm underline-offset-4 hover:underline"
-                  >
-                    {sub.label}
-                  </Link>
-                ))}
-              </div>
-            ))}
-            {standaloneLinks?.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-muted-foreground text-sm underline-offset-4 hover:underline"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div> */}
         </div>
 
         <div className="mt-6 flex flex-col gap-2">
