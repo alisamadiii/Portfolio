@@ -1,16 +1,13 @@
 "use client";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { motion } from "motion/react";
 
-import { Button } from "@workspace/ui/components/button";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@workspace/ui/components/input-otp";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { InputOTP, InputOTPSlot } from "@workspace/ui/components/input-otp";
 import { Spinner } from "@workspace/ui/components/spinner";
+import { cn } from "@workspace/ui/lib/utils";
 
 import {
   useResendEmailVerification,
@@ -25,9 +22,8 @@ export default function VerifyEmail() {
     </Suspense>
   );
 }
-
 const Content = () => {
-  const { data: currentUser, isPending } = useCurrentUser();
+  const { isPending, data: currentUser } = useCurrentUser();
 
   const resendEmailVerificationMutation = useResendEmailVerification();
   const verifyEmailMutation = useVerifyEmail();
@@ -76,36 +72,57 @@ const Content = () => {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-2">
-      <h1 className="text-3xl font-bold">Verify your email</h1>
-      <p className="text-muted-foreground">
-        We&apos;ve sent a verification code to your email
-      </p>
-
-      <div className="mt-8">
+    <div className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center gap-2">
+      <h1 className="text-3xl font-bold">Welcome Back</h1>
+      <p className="text-muted-foreground">Login to get started</p>
+      <div className="relative mx-auto mt-8 mb-4 flex w-fit flex-col items-center justify-center gap-4">
         <InputOTP
           maxLength={6}
           onComplete={verifyEmailMutation.mutate}
           disabled={verifyEmailMutation.isPending}
+          onChange={() => verifyEmailMutation.reset()}
         >
-          <InputOTPGroup>
-            <InputOTPSlot index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-          </InputOTPGroup>
-          <InputOTPSeparator />
-          <InputOTPGroup>
-            <InputOTPSlot index={3} />
-            <InputOTPSlot index={4} />
-            <InputOTPSlot index={5} />
-          </InputOTPGroup>
+          <InputOTPSlot
+            index={0}
+            data-error={verifyEmailMutation.isError}
+            data-success={verifyEmailMutation.isSuccess}
+          />
+          <InputOTPSlot
+            index={1}
+            data-error={verifyEmailMutation.isError}
+            data-success={verifyEmailMutation.isSuccess}
+          />
+          <InputOTPSlot
+            index={2}
+            data-error={verifyEmailMutation.isError}
+            data-success={verifyEmailMutation.isSuccess}
+          />
+          <InputOTPSlot
+            index={3}
+            data-error={verifyEmailMutation.isError}
+            data-success={verifyEmailMutation.isSuccess}
+          />
+          <InputOTPSlot
+            index={4}
+            data-error={verifyEmailMutation.isError}
+            data-success={verifyEmailMutation.isSuccess}
+          />
+          <InputOTPSlot
+            index={5}
+            data-error={verifyEmailMutation.isError}
+            data-success={verifyEmailMutation.isSuccess}
+          />
         </InputOTP>
 
-        {verifyEmailMutation.isError && (
-          <p className="text-red-500">{verifyEmailMutation.error.message}</p>
-        )}
+        <Spinner
+          className={cn(
+            "absolute right-0 translate-x-[calc(100%+0.5rem)] animate-spin opacity-0 duration-300",
+            (verifyEmailMutation.isPending || verifyEmailMutation.isSuccess) &&
+              "opacity-100"
+          )}
+        />
 
-        <div className="mt-8 flex justify-center">
+        <div className="flex flex-col items-center justify-center">
           <Button
             variant="ghost"
             onClick={() => resendEmailVerificationMutation.mutate()}
@@ -117,6 +134,22 @@ const Content = () => {
             Resend verification email
           </Button>
         </div>
+      </div>
+      <div className="w-full">
+        <Link
+          href="/signup"
+          className={buttonVariants({
+            variant: "destructive",
+            size: "lg",
+            className: cn(
+              "pointer-events-none w-full translate-y-[calc(100%+2rem)] rounded-full! text-lg! opacity-0 blur-sm duration-300 md:translate-y-full",
+              verifyEmailMutation.isError &&
+                "pointer-events-auto translate-y-0 opacity-100 blur-none md:translate-y-0"
+            ),
+          })}
+        >
+          Change email
+        </Link>
       </div>
     </div>
   );
