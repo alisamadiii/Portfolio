@@ -51,7 +51,7 @@ async function PostsPage({ params }: { params: Promise<{ slug: string[] }> }) {
 
   if (slug.includes("client")) {
     return (
-      <div className="mx-auto min-h-screen max-w-2xl px-8 py-24">
+      <div className="animate-in fade-in mx-auto min-h-screen max-w-2xl px-8 py-24 duration-300">
         <header className="mx-auto mb-8 flex flex-col items-center">
           <Divider />
           <svg

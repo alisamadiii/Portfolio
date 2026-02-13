@@ -94,6 +94,9 @@ function Footer({
                       <li key={link.label}>
                         <Link
                           href={link.href}
+                          target={
+                            link.href.startsWith("https") ? "_blank" : undefined
+                          }
                           className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
                         >
                           {link.label}

@@ -23,8 +23,9 @@ export const company = {
   ],
   clients: [
     { label: "Crosspost", href: "/client/crosspost" },
-    { label: "Bless", href: "https://bless.com" },
-    { label: "Area", href: "https://area.com" },
+    { label: "Bless", href: "https://bless.network" },
+    { label: "Area", href: "https://www.area.club" },
+    { label: "B402", href: "https://www.b402.ai" },
   ],
   resume: "https://personal-work-ali.s3.us-west-2.amazonaws.com/alisamadi.pdf",
   myImage:

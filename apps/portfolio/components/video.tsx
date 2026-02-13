@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { MediaPlay } from "@workspace/ui/icons/general";
+import { Button } from "@workspace/ui/components/button";
+import { Fullscreen, MediaPlay } from "@workspace/ui/icons/general";
 import { cn } from "@workspace/ui/lib/utils";
 
 interface VideoProps extends React.ComponentProps<"video"> {
@@ -15,6 +16,7 @@ export const Video = ({
   wrapperClassName,
   ...props
 }: VideoProps) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -28,12 +30,11 @@ export const Video = ({
   }, [isPlaying]);
 
   return (
-    <div className={cn("relative", wrapperClassName)}>
+    <div className={cn("group relative", wrapperClassName)}>
       <video
         ref={videoRef}
-        className={cn("rounded-3xl", className)}
+        className={cn("rounded-3xl", isFullscreen && "bg-white", className)}
         onClick={() => setIsPlaying(!isPlaying)}
-        playsInline
         {...props}
       />
       <div
@@ -43,6 +44,19 @@ export const Video = ({
         )}
       >
         <MediaPlay className="size-6" />
+      </div>
+
+      <div className="absolute right-4 bottom-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <Button
+          onClick={() => {
+            videoRef.current?.requestFullscreen();
+            setIsFullscreen(true);
+          }}
+          variant="outline"
+          size="icon"
+        >
+          <Fullscreen className="size-6" />
+        </Button>
       </div>
     </div>
   );
