@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@workspace/ui/components/button";
@@ -33,6 +34,8 @@ export default function Login() {
 
   const signin = useSignin();
   const onSignInWithProvider = useSignInWithProvider("google");
+  const onSignInWithProviderGitHub = useSignInWithProvider("github");
+
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirectUrl");
 
@@ -114,14 +117,46 @@ export default function Login() {
         Login
       </Button>
       <div className="text-muted-foreground my-2 text-center text-sm">Or</div>
-      <Button
-        variant={"outline"}
-        className="w-full max-w-sm"
-        onClick={() => onSignInWithProvider.mutate({ redirectUrl: "/" })}
-        size="lg"
-      >
-        Login with Google
-      </Button>
+      <div className="grid w-full max-w-sm grid-cols-2 gap-2">
+        <Button
+          variant={"outline"}
+          className="w-full"
+          onClick={() =>
+            onSignInWithProvider.mutate(
+              {
+                redirectUrl: redirectUrl ? redirectUrl : "/",
+              },
+              {
+                onError: (error) => {
+                  toast.error(error.message);
+                },
+              }
+            )
+          }
+          size="lg"
+        >
+          Google
+        </Button>
+        <Button
+          variant={"outline"}
+          className="w-full"
+          onClick={() =>
+            onSignInWithProviderGitHub.mutate(
+              {
+                redirectUrl: redirectUrl ? redirectUrl : "/",
+              },
+              {
+                onError: (error) => {
+                  toast.error(error.message);
+                },
+              }
+            )
+          }
+          size="lg"
+        >
+          GitHub
+        </Button>
+      </div>
 
       <p className="mt-3 text-sm">
         Don&apos;t have an account?{" "}
@@ -133,6 +168,10 @@ export default function Login() {
       <PageLoading
         active={onSignInWithProvider.isPending}
         name="Signing in with Google"
+      />
+      <PageLoading
+        active={onSignInWithProviderGitHub.isPending}
+        name="Signing in with GitHub"
       />
     </div>
   );

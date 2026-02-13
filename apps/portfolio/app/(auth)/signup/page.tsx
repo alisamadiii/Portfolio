@@ -34,6 +34,8 @@ export default function SignUpPage() {
 
   const signup = useSignup();
   const onSignInWithProvider = useSignInWithProvider("google");
+  const onSignInWithProviderGitHub = useSignInWithProvider("github");
+
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirectUrl");
 
@@ -117,14 +119,32 @@ export default function SignUpPage() {
         Create Account
       </Button>
       <div className="text-muted-foreground my-2 text-center text-sm">Or</div>
-      <Button
-        variant={"outline"}
-        className="w-full max-w-sm"
-        onClick={() => onSignInWithProvider.mutate({ redirectUrl: "/" })}
-        size="lg"
-      >
-        Login with Google
-      </Button>
+      <div className="grid w-full max-w-sm grid-cols-2 gap-2">
+        <Button
+          variant={"outline"}
+          className="w-full"
+          onClick={() =>
+            onSignInWithProvider.mutate({
+              redirectUrl: redirectUrl ? redirectUrl : "/",
+            })
+          }
+          size="lg"
+        >
+          Google
+        </Button>
+        <Button
+          variant={"outline"}
+          className="w-full"
+          onClick={() =>
+            onSignInWithProviderGitHub.mutate({
+              redirectUrl: redirectUrl ? redirectUrl : "/",
+            })
+          }
+          size="lg"
+        >
+          GitHub
+        </Button>
+      </div>
 
       <p className="mt-3 text-sm">
         Already have an account?{" "}
@@ -139,6 +159,10 @@ export default function SignUpPage() {
       <PageLoading
         active={onSignInWithProvider.isPending}
         name="Signing up with Google"
+      />
+      <PageLoading
+        active={onSignInWithProviderGitHub.isPending}
+        name="Signing up with GitHub"
       />
     </div>
   );

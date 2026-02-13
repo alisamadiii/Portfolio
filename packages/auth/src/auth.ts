@@ -50,6 +50,8 @@ export const auth = betterAuth({
     "my-expo-app://",
     // Development mode - Expo's exp:// scheme
     ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**"] : []),
+    "http://localhost:3002",
+    "https://motion.alisamadii.com",
   ],
   emailAndPassword: {
     enabled: true,
@@ -63,7 +65,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"],
+      trustedProviders: ["google", "github"],
       allowDifferentEmails: true,
       updateUserInfoOnLink: true,
     },
@@ -82,6 +84,10 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     },
   },
   advanced: {

@@ -9,6 +9,7 @@ import { Spinner } from "@workspace/ui/components/spinner";
 import { useLogout } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { Accounts } from "@/components/settings/accounts";
 import { BillingInvoices } from "@/components/settings/billing/invoices";
 import { BillingPortal } from "@/components/settings/billing/portal";
 import { DangerSettings } from "@/components/settings/danger";
@@ -34,6 +35,10 @@ export default function SettingsPage() {
         <h2 className="text-3xl font-semibold capitalize">General</h2>
         <EmailName />
         <GeneralAvatar />
+      </div>
+      <div className="space-y-6">
+        <h2 className="text-3xl font-semibold capitalize">Accounts</h2>
+        <Accounts />
       </div>
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">Billing</h2>
