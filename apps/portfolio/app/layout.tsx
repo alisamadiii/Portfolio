@@ -59,9 +59,7 @@ export default async function RootLayout({
           <Providers>
             <Suspense>
               <BgPattern lessVisibleOn={["/settings", "/client/"]} />
-            </Suspense>
-            <Suspense>{children}</Suspense>
-            <Suspense>
+              {children}
               <Footer isPortfolio />
             </Suspense>
           </Providers>
