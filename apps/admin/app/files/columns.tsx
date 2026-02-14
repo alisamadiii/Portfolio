@@ -90,7 +90,7 @@ export const columns: ColumnDef<RouterOutputs["admin"]["getFiles"][number]>[] =
       cell: ({ row }) => {
         /* eslint-disable */
         const trpc = useTRPC();
-        const deleteFilesMutation = storage.useDeleteFilesMutation({});
+        const deleteFilesMutation = storage.useDeleteFilesMutation();
         const generatePublicUrlMutation =
           storage.useGeneratePublicUrlMutation();
 

@@ -6,14 +6,12 @@ import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import { files } from "@workspace/drizzle/schema";
 
-import { adminClientWorkRouter } from "./client-work";
 import { adminSourcesRouter } from "./source/_index";
 import { adminUsersRouter } from "./users";
 
 export const adminRouter = createTRPCRouter({
   users: adminUsersRouter,
   sources: adminSourcesRouter,
-  clientWork: adminClientWorkRouter,
   getFiles: adminProcedure
     .input(
       z.object({

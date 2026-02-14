@@ -16,8 +16,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { storage } from "@/project.config";
-
 import {
   ContextMenu,
   ContextMenuContent,
@@ -65,16 +63,6 @@ export const Sidebar = ({
   const deleteFile = useMutation(
     trpc.admin.sources.file.delete.mutationOptions({
       onSuccess: () => invalidate(),
-    })
-  );
-
-  const deleteFilesMutation = storage.useDeleteFilesMutation({});
-  const deleteMedia = useMutation(
-    trpc.admin.sources.media.delete.mutationOptions({
-      onSuccess: async (data) => {
-        if (data) await deleteFilesMutation.mutateAsync([data.url]);
-        invalidate();
-      },
     })
   );
 
@@ -167,10 +155,9 @@ export const Sidebar = ({
             <ChevronRight className="h-3 w-3" />
           )}
           Media
-          <span className="ml-auto opacity-50">{source.media.length}</span>
         </button>
 
-        {mediaExpanded && (
+        {/* {mediaExpanded && (
           <div className="space-y-0.5 px-1">
             {source.media.map((media) => (
               <MediaItem
@@ -188,7 +175,7 @@ export const Sidebar = ({
               Add media
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
@@ -344,68 +331,6 @@ function FileItem({
         <ContextMenuItem onClick={onCopy}>
           <Copy className="mr-2 size-4" />
           Copy Content
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem
-          onClick={onDelete}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 size-4" />
-          Delete
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  );
-}
-
-function MediaItem({
-  media,
-  onDelete,
-  onCopyUrl,
-}: {
-  media: RouterOutputs["admin"]["sources"]["readById"]["media"][number];
-  onDelete: () => void;
-  onCopyUrl: () => void;
-}) {
-  const { selectedTab, setSelectedTab } = useCodeEditor();
-
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className={cn(
-            "group flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs",
-            selectedTab === media.id
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-          onClick={() => setSelectedTab(media.id)}
-        >
-          {media.type === "image" ? (
-            <img
-              src={media.url}
-              alt={media.alt || ""}
-              className="h-5 w-5 shrink-0 rounded object-cover"
-            />
-          ) : (
-            <Image className="text-muted-foreground size-4 shrink-0" />
-          )}
-          <span className="flex-1 truncate">{media.url.split("/").pop()}</span>
-          {media.theme && (
-            <span className="bg-muted shrink-0 rounded px-1 text-[10px]">
-              {media.theme}
-            </span>
-          )}
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={onCopyUrl}>
-          <Copy className="mr-2 size-4" />
-          Copy URL
-        </ContextMenuItem>
-        <ContextMenuItem onClick={() => window.open(media.url, "_blank")}>
-          <Image className="mr-2 size-4" />
-          Open in New Tab
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem

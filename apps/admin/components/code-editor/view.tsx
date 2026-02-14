@@ -1,7 +1,7 @@
 import React from "react";
 import { useCodeEditor } from "@/context/code-editor";
 import { useMutation } from "@tanstack/react-query";
-import { FolderOpen, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import { Spinner } from "@workspace/ui/components/spinner";
@@ -10,8 +10,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { MediaUpload } from "./media-upload";
-import { MediaView } from "./media-view";
+import { UpdateFormSource } from "./update-source-form";
 
 export const CodeEditorView = ({
   source,
@@ -21,7 +20,6 @@ export const CodeEditorView = ({
   const { selectedTab, setSelectedTab } = useCodeEditor();
 
   const selectedFile = source.files.find((f) => f.id === selectedTab);
-  const selectedMedia = source.media.find((m) => m.id === selectedTab);
 
   const trpc = useTRPC();
   const updateFile = useMutation(
@@ -43,7 +41,6 @@ export const CodeEditorView = ({
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <MediaUpload sourceId={source.id} />
           </div>
         ) : selectedFile ? (
           <div className="flex h-full flex-col">
@@ -76,15 +73,9 @@ export const CodeEditorView = ({
               />
             </div>
           </div>
-        ) : selectedMedia ? (
-          <MediaView media={selectedMedia} />
         ) : (
-          <div className="text-muted-foreground flex h-full flex-col items-center justify-center">
-            <FolderOpen className="mb-4 h-16 w-16" />
-            <p className="text-sm">Select a file to edit</p>
-            <p className="mt-1 text-xs opacity-50">
-              or create a new one from the sidebar
-            </p>
+          <div className="flex h-full w-full flex-col items-center justify-center">
+            <UpdateFormSource />
           </div>
         )}
       </div>

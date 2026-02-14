@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Code, FileCode, Image } from "lucide-react";
+import { Code, FileCode } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -51,10 +51,6 @@ export default function CodePage() {
                   <span className="flex items-center gap-1">
                     <FileCode className="h-3 w-3" />
                     {source.files.length} files
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Image className="h-3 w-3" />
-                    {source.media.length} media
                   </span>
                 </div>
               </CardContent>

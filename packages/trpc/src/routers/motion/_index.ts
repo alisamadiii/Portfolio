@@ -10,12 +10,7 @@ import {
 } from "@workspace/trpc/init";
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import {
-  orders,
-  source,
-  sourceFile,
-  sourceMedia,
-} from "@workspace/drizzle/schema";
+import { orders, source, sourceFile } from "@workspace/drizzle/schema";
 
 export const motionRouter = createTRPCRouter({
   getFiles: baseProcedure
@@ -160,19 +155,13 @@ export const motionRouter = createTRPCRouter({
       .select({
         source,
         file: sourceFile,
-        media: sourceMedia,
       })
       .from(source)
-      .leftJoin(sourceFile, eq(sourceFile.sourceId, source.id))
-      .leftJoin(sourceMedia, eq(sourceMedia.sourceId, source.id));
+      .leftJoin(sourceFile, eq(sourceFile.sourceId, source.id));
 
     const filesBySourceId = new Map<
       string,
       (typeof sourceFile.$inferSelect)[]
-    >();
-    const mediaBySourceId = new Map<
-      string,
-      (typeof sourceMedia.$inferSelect)[]
     >();
     const sourcesOrder: (typeof source.$inferSelect)[] = [];
     const seenSourceIds = new Set<string>();
@@ -192,17 +181,11 @@ export const motionRouter = createTRPCRouter({
         if (!filesBySourceId.has(id)) filesBySourceId.set(id, []);
         filesBySourceId.get(id)!.push(row.file);
       }
-      if (row.media && !seenMediaIds.get(id)!.has(row.media.id)) {
-        seenMediaIds.get(id)!.add(row.media.id);
-        if (!mediaBySourceId.has(id)) mediaBySourceId.set(id, []);
-        mediaBySourceId.get(id)!.push(row.media);
-      }
     }
 
     return sourcesOrder.map((s) => ({
       ...s,
       files: filesBySourceId.get(s.id) ?? [],
-      media: mediaBySourceId.get(s.id) ?? [],
     }));
   }),
 });

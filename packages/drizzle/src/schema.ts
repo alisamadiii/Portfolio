@@ -187,6 +187,10 @@ export const source = pgTable("source", {
   title: text("title").notNull(),
   description: text("description"),
   isPrivate: boolean("is_private").notNull().default(true),
+  imageUrl: text("image_url"),
+  darkImageUrl: text("dark_image_url"),
+  videoUrl: text("video_url"),
+  darkVideoUrl: text("dark_video_url"),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -210,46 +214,3 @@ export const sourceFile = pgTable("source_file", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-export const sourceMedia = pgTable("source_media", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-
-  sourceId: uuid("source_id")
-    .notNull()
-    .references(() => source.id, { onDelete: "cascade" }),
-
-  type: text("type", {
-    enum: ["image", "video"],
-  }).notNull(), // "image" | "video"
-  theme: text("theme", {
-    enum: ["light", "dark"],
-  }), // "light" | "dark" | null
-  url: text("url").notNull(),
-
-  alt: text("alt"),
-  width: integer("width"),
-  height: integer("height"),
-
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const clientWork = pgTable("client_work", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  description: text("description"),
-  url: text("url").notNull(),
-  thumbnail: text("thumbnail"),
-  from: text("from", {
-    enum: ["crosspost", "bless", "area"],
-  }).notNull(),
-  width: integer("width").notNull().default(0),
-  height: integer("height").notNull().default(0),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export type SourceMedia = typeof sourceMedia.$inferSelect;

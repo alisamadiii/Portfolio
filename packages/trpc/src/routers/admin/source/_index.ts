@@ -1,13 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import z from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
-import { source, sourceFile, sourceMedia } from "@workspace/drizzle/schema";
+import { source, sourceFile } from "@workspace/drizzle/schema";
 
 import { sourceFileRouter } from "./file";
-import { sourceMediaRouter } from "./media";
 
 export const adminSourcesRouter = createTRPCRouter({
   read: adminProcedure.query(async () => {
@@ -16,7 +15,7 @@ export const adminSourcesRouter = createTRPCRouter({
         .select()
         .from(source)
         .leftJoin(sourceFile, eq(source.id, sourceFile.sourceId))
-        .leftJoin(sourceMedia, eq(source.id, sourceMedia.sourceId));
+        .orderBy(asc(source.isPrivate), desc(source.createdAt));
 
       // Group results by source
       const sourcesMap = new Map<
@@ -24,7 +23,6 @@ export const adminSourcesRouter = createTRPCRouter({
         {
           source: (typeof rows)[0]["source"];
           files: NonNullable<(typeof rows)[0]["source_file"]>[];
-          media: NonNullable<(typeof rows)[0]["source_media"]>[];
         }
       >();
 
@@ -38,28 +36,18 @@ export const adminSourcesRouter = createTRPCRouter({
           ) {
             existing.files.push(row.source_file);
           }
-          if (
-            row.source_media &&
-            !existing.media.some((m) => m.id === row.source_media!.id)
-          ) {
-            existing.media.push(row.source_media);
-          }
         } else {
           sourcesMap.set(row.source.id, {
             source: row.source,
             files: row.source_file ? [row.source_file] : [],
-            media: row.source_media ? [row.source_media] : [],
           });
         }
       }
 
-      return Array.from(sourcesMap.values()).map(
-        ({ source, files, media }) => ({
-          ...source,
-          files,
-          media,
-        })
-      );
+      return Array.from(sourcesMap.values()).map(({ source, files }) => ({
+        ...source,
+        files,
+      }));
     } catch (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -75,7 +63,6 @@ export const adminSourcesRouter = createTRPCRouter({
         .select()
         .from(source)
         .leftJoin(sourceFile, eq(source.id, sourceFile.sourceId))
-        .leftJoin(sourceMedia, eq(source.id, sourceMedia.sourceId))
         .where(eq(source.id, id));
 
       if (rows.length === 0) {
@@ -86,7 +73,6 @@ export const adminSourcesRouter = createTRPCRouter({
       }
 
       const files: (typeof sourceFile.$inferSelect)[] = [];
-      const media: (typeof sourceMedia.$inferSelect)[] = [];
 
       for (const row of rows) {
         if (
@@ -95,18 +81,11 @@ export const adminSourcesRouter = createTRPCRouter({
         ) {
           files.push(row.source_file);
         }
-        if (
-          row.source_media &&
-          !media.some((m) => m.id === row.source_media!.id)
-        ) {
-          media.push(row.source_media);
-        }
       }
 
       return {
         ...rows[0]!.source,
         files,
-        media,
       };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
@@ -152,18 +131,19 @@ export const adminSourcesRouter = createTRPCRouter({
         title: z.string().optional(),
         description: z.string().optional(),
         isPrivate: z.boolean().optional(),
+        imageUrl: z.string().optional(),
+        darkImageUrl: z.string().optional(),
+        videoUrl: z.string().optional(),
+        darkVideoUrl: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       try {
+        const { id, ...data } = input;
         const [updated] = await db
           .update(source)
-          .set({
-            title: input.title,
-            description: input.description,
-            isPrivate: input.isPrivate,
-          })
-          .where(eq(source.id, input.id))
+          .set(data)
+          .where(eq(source.id, id))
           .returning();
 
         if (!updated) {
@@ -184,6 +164,5 @@ export const adminSourcesRouter = createTRPCRouter({
         });
       }
     }),
-  media: sourceMediaRouter,
   file: sourceFileRouter,
 });

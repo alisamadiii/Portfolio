@@ -12,25 +12,18 @@ config({
 
 const getCodes = async () => {
   const { db } = await import("@workspace/drizzle/index");
-  const { source, sourceFile, sourceMedia } =
-    await import("@workspace/drizzle/schema");
+  const { source, sourceFile } = await import("@workspace/drizzle/schema");
 
   const rows = await db
     .select({
       source,
       file: sourceFile,
-      media: sourceMedia,
     })
     .from(source)
     .leftJoin(sourceFile, eq(sourceFile.sourceId, source.id))
-    .leftJoin(sourceMedia, eq(sourceMedia.sourceId, source.id))
     .orderBy(asc(source.isPrivate), desc(source.createdAt));
 
   const filesBySourceId = new Map<string, (typeof sourceFile.$inferSelect)[]>();
-  const mediaBySourceId = new Map<
-    string,
-    (typeof sourceMedia.$inferSelect)[]
-  >();
   const sourcesOrder: (typeof source.$inferSelect)[] = [];
   const seenSourceIds = new Set<string>();
   const seenFileIds = new Map<string, Set<string>>();
@@ -49,17 +42,11 @@ const getCodes = async () => {
       if (!filesBySourceId.has(id)) filesBySourceId.set(id, []);
       filesBySourceId.get(id)!.push(row.file);
     }
-    if (row.media && !seenMediaIds.get(id)!.has(row.media.id)) {
-      seenMediaIds.get(id)!.add(row.media.id);
-      if (!mediaBySourceId.has(id)) mediaBySourceId.set(id, []);
-      mediaBySourceId.get(id)!.push(row.media);
-    }
   }
 
   return sourcesOrder.map((s) => ({
     ...s,
     files: filesBySourceId.get(s.id) ?? [],
-    media: mediaBySourceId.get(s.id) ?? [],
   }));
 };
 
@@ -93,10 +80,6 @@ getCodes().then(async (codes) => {
   }
 
   // Build registry with all sources (single file, no trailing = ${JSON.stringify(source)})
-  const lightMedia = (s: (typeof codes)[0]) =>
-    s.media.find((m) => m.theme === "light" || !m.theme);
-  const darkMedia = (s: (typeof codes)[0]) =>
-    s.media.find((m) => m.theme === "dark");
 
   const entries = codes.map(
     (source) => `  "${slug(source.title)}": {
@@ -107,8 +90,8 @@ getCodes().then(async (codes) => {
       () => import("./${slug(source.title)}/index"),
       { ssr: false, loading: () => <AnimationLoading /> }
     ),
-    image: "${lightMedia(source)?.url ?? source.media[0]?.url ?? ""}",
-    darkImage: "${darkMedia(source)?.url ?? source.media[0]?.url ?? ""}",
+    image: "${source.imageUrl ?? ""}",
+    darkImage: "${source.darkImageUrl ?? ""}",
     isPremium: ${source.isPrivate ?? false},
   }`
   );
