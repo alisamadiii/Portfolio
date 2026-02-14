@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
@@ -9,7 +9,11 @@ import { clientWork } from "@workspace/drizzle/schema";
 export const adminClientWorkRouter = createTRPCRouter({
   get: adminProcedure.query(async () => {
     try {
-      const clientWorkList = await db.select().from(clientWork);
+      const clientWorkList = await db
+        .select()
+        .from(clientWork)
+        .limit(4)
+        .orderBy(desc(clientWork.createdAt));
       return clientWorkList;
     } catch (error) {
       throw new TRPCError({
