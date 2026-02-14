@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Serif_Display, Geist, Geist_Mono } from "next/font/google";
 
 import "@workspace/ui/globals.css";
 
@@ -12,16 +12,16 @@ import { TRPCReactProvider } from "@workspace/trpc/client";
 
 import { SuccessPurchaseDialog } from "@/components/success-purchase-dialog";
 
+const fontHeading = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-heading",
+});
+
 const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
 });
-
-// const fontHeading = Momo_Trust_Display({
-//   subsets: ["latin"],
-//   weight: "400",
-//   variable: "--font-heading",
-// });
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
@@ -57,7 +57,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased [--primary:#2b7fff]`}
+        className={`${fontSans.variable} ${fontMono.variable} ${fontHeading.variable} font-sans antialiased [--primary:#2b7fff]`}
       >
         <TRPCReactProvider>
           <Providers>

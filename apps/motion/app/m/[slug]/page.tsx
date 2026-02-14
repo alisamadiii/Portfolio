@@ -154,7 +154,7 @@ export default function ComponentPage() {
                 </KbdGroup>
               </TooltipContent>
             </Tooltip>
-            <Popover open={isToggleSettings} onOpenChange={setIsToggleSettings}>
+            {/* <Popover open={isToggleSettings} onOpenChange={setIsToggleSettings}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
@@ -201,7 +201,7 @@ export default function ComponentPage() {
                   ))}
                 </ButtonGroup>
               </PopoverContent>
-            </Popover>
+            </Popover> */}
           </TooltipProvider>
         </div>
 

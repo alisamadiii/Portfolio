@@ -9,6 +9,7 @@ const nextConfig = {
     "@workspace/storage",
   ],
   cacheComponents: true,
+  strictMode: false,
   compiler: {
     // Remove all console logs
     // eslint-disable-next-line no-undef

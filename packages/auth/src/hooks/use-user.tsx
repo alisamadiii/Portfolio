@@ -4,7 +4,11 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 
 const useCurrentUser = () => {
   const trpc = useTRPC();
-  return useQuery(trpc.user.getCurrentUser.queryOptions());
+  return useQuery(
+    trpc.user.getCurrentUser.queryOptions(undefined, {
+      refetchOnWindowFocus: false,
+    })
+  );
 };
 
 const useUpdateUser = () => {

@@ -16,11 +16,12 @@ import {
   Empty,
   Motion,
   MotionPremium,
-  NextJS,
+  React,
   Shadcn,
   TailwindCSS,
   TypeScript,
 } from "@workspace/ui/icons";
+import { Logo } from "@workspace/ui/icons/logo";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useIsPurchased } from "@/hooks/use-is-purchased";
@@ -29,9 +30,9 @@ import { Pricing } from "@/components/pricing";
 
 const poweredBy = [
   {
-    name: "Next.js",
-    url: "https://nextjs.org/",
-    icon: NextJS,
+    name: "React",
+    url: "https://react.dev/",
+    icon: React,
   },
   {
     name: "Tailwind CSS",
@@ -53,35 +54,40 @@ const poweredBy = [
     url: "https://ui.shadcn.com/",
     icon: Shadcn,
   },
-];
+] as const;
 
 export default function Home() {
   return (
-    <main className="container space-y-12 pt-48">
-      <BgPattern className="absolute inset-0 -z-10 h-full w-full" />
+    <main className="space-y-12">
       {/* Header with text */}
-      <div className="relative flex flex-col items-center gap-4 text-center">
-        <h1 className="text-4xl font-black md:text-6xl">
-          <span className="text-primary">Component & Animation</span> <br />{" "}
+      <div className="relative flex min-h-dvh flex-col items-center justify-center gap-4 px-8 text-center">
+        <div className="from-primary animate-text-intro text-primary-foreground mb-8 flex size-20 items-center justify-center rounded-xl bg-linear-to-tl to-blue-700">
+          <Logo className="size-1/2" />
+        </div>
+        <h1 className="font-heading animate-text-intro text-4xl tracking-wide opacity-0 delay-200 md:text-6xl">
+          <span className="text-primary">Component - Animation</span> <br />{" "}
           Library for Modern Projects
         </h1>
-        <p className="text-muted-foreground mx-auto max-w-2xl font-semibold md:text-2xl">
+        <p className="animate-text-intro text-muted-foreground mx-auto max-w-2xl font-semibold opacity-0 delay-400 md:text-2xl">
           Animated React components for production use. Source code only. No
           assets, demos, or design files included.
         </p>
-      </div>
-
-      <div className="flex flex-col items-center gap-2">
-        <div className="flex items-center gap-4">
-          {poweredBy.map((item) => (
-            <div key={item.name}>
-              <item.icon className="size-9" />
+        <div className="mt-8 flex items-center gap-4">
+          {poweredBy.map((item, index) => (
+            <div
+              key={item.name}
+              className="bg-muted shadow-card animate-text-intro flex size-20 items-center justify-center rounded-xl opacity-0"
+              style={{
+                animationDelay: `${(index + 4) * 100}ms`,
+              }}
+            >
+              <item.icon className="size-12" />
             </div>
           ))}
         </div>
-        <p className="text-muted-foreground text-sm uppercase">Tech Stack</p>
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+      <div className="container grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Object.entries(animations)
           .sort((a) => (a[1].isPremium ? 1 : -1))
           .map(([key, animation]) => (

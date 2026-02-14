@@ -1,4 +1,6 @@
-export const Logo = () => {
+interface SVGProps extends React.SVGProps<SVGSVGElement> {}
+
+export const Logo = (props: SVGProps) => {
   return (
     <svg
       width="100"
@@ -6,6 +8,7 @@ export const Logo = () => {
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      {...props}
     >
       <g clipPath="url(#clip0_3561_212)">
         <path

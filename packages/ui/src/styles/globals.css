@@ -141,6 +141,21 @@
   --animate-popover-in: popover-in .4s forwards;
   --animate-dots-rotate: dotsRotate 10s linear infinite;
   --animate-dots-width: dotsWidth 1.5s ease-in-out infinite;
+  --animate-text-intro: textIntro 2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+
+  @keyframes textIntro {
+    from {
+      opacity: 0;
+      transform: translateY(48px) rotateX(-30deg);
+      filter: blur(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) rotateX(0deg);
+      filter: blur(0px);
+    }
+  }
 
   @keyframes dialog-in {
     from {
@@ -220,6 +235,7 @@
   }
 
   @supports not (overflow-x: clip) {
+
     html,
     body {
       overflow-x: hidden;

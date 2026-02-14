@@ -50,7 +50,7 @@ export const LoginDrawer = ({ children }: { children: React.ReactNode }) => {
   };
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger>{children}</DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent
         overlayClassName="z-100"
         className="rounded-t-5xl! shadow-dialog z-100 mx-auto max-w-xl px-8 pb-8"
