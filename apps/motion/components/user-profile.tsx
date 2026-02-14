@@ -30,7 +30,13 @@ export const UserProfile = ({
   if (!user) {
     return (
       <LoginDrawer>
-        <Button size="lg" className="fixed top-4 left-4 z-100">
+        <Button
+          size="lg"
+          className={cn(
+            "fixed top-4 left-4 z-100",
+            isToggleElements && "hidden"
+          )}
+        >
           Login
         </Button>
       </LoginDrawer>
