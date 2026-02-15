@@ -50,3 +50,17 @@ export const urls = {
       ? "http://localhost:3003"
       : "https://docs.alisamadii.com",
 };
+
+export const logos = {
+  default:
+    "https://imagedelivery.net/19uF4EgtqW8tG7X6wLHBKQ/3a8970cd-3208-425c-f485-3822f6390e00/public",
+  black:
+    "https://imagedelivery.net/19uF4EgtqW8tG7X6wLHBKQ/2958c060-bad2-4695-3121-3b84d337d800/public",
+  blue: "https://imagedelivery.net/19uF4EgtqW8tG7X6wLHBKQ/c06e1b15-0a9b-4386-950c-4182016bd100/public",
+  yellow:
+    "https://imagedelivery.net/19uF4EgtqW8tG7X6wLHBKQ/4bdf9ec4-1820-4f4f-cb7a-b843502b7300/public",
+  purple:
+    "https://imagedelivery.net/19uF4EgtqW8tG7X6wLHBKQ/9dfbc466-d7af-4102-c07b-205591b28600/public",
+  green:
+    "https://imagedelivery.net/19uF4EgtqW8tG7X6wLHBKQ/1938f058-d389-4579-95af-8f40f234e700/public",
+};

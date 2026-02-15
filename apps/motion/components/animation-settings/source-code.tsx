@@ -72,7 +72,7 @@ function ShikiCodeBlock({
 
   return (
     <div className="relative">
-      <div className="sticky top-4 right-4 -mb-4 flex items-center justify-end gap-2">
+      <div className="sticky top-4 right-4 -mb-8 flex items-center justify-end gap-2">
         <Button
           size="sm"
           variant="ghost"
