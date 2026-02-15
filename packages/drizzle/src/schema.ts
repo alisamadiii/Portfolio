@@ -191,6 +191,7 @@ export const source = pgTable("source", {
   darkImageUrl: text("dark_image_url"),
   videoUrl: text("video_url"),
   darkVideoUrl: text("dark_video_url"),
+  from: text("from"),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +9,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
 import { Kbd, KbdGroup } from "@workspace/ui/components/kbd";
 import {
   Tooltip,
@@ -18,10 +19,11 @@ import {
 } from "@workspace/ui/components/tooltip";
 import { useIsMobile } from "@workspace/ui/hooks/use-mobile";
 import {
+  Box2Search,
   Code,
-  QuestionMark,
+  Keyboard2,
   Refresh,
-  SquareCommand,
+  SideProfileSparkle,
 } from "@workspace/ui/icons";
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -93,15 +95,17 @@ export default function ComponentPage() {
         <ComponentView key={isRefreshing} />
       </motion.div>
 
-      <UserProfile isToggleElements={isToggleElements} />
-
       <div
         className={cn(
-          "fixed top-4 right-4 z-100",
+          "fixed top-0 right-0 left-0 z-100 flex items-start justify-between p-4",
           isToggleElements && "hidden"
         )}
       >
-        <div className="relative z-10 flex flex-row-reverse gap-2">
+        <div className="flex items-center gap-2">
+          <UserProfile />
+        </div>
+
+        <div className="relative z-10 flex flex-row-reverse flex-wrap gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -116,10 +120,10 @@ export default function ComponentPage() {
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <LibrariesUsedDialog>
                   <Button size="icon-lg" variant="outline">
-                    <QuestionMark className="size-5.5" />
+                    <Box2Search className="size-5.5" />
                   </Button>
                 </LibrariesUsedDialog>
               </TooltipTrigger>
@@ -141,10 +145,10 @@ export default function ComponentPage() {
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <ShortcutsDialog>
                   <Button size="icon-lg" variant="outline">
-                    <SquareCommand className="size-5.5" />
+                    <Keyboard2 className="size-5.5" />
                   </Button>
                 </ShortcutsDialog>
               </TooltipTrigger>
@@ -154,55 +158,23 @@ export default function ComponentPage() {
                 </KbdGroup>
               </TooltipContent>
             </Tooltip>
-
-            {/* <Popover open={isToggleSettings} onOpenChange={setIsToggleSettings}>
+            {animation.from && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <Button size="icon-lg" variant="outline">
-                      <Settings className="size-5.5" />
-                    </Button>
-                  </PopoverTrigger>
+                  <Link
+                    href={animation.from}
+                    target="_blank"
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "icon-lg",
+                    })}
+                  >
+                    <SideProfileSparkle className="size-5.5" />
+                  </Link>
                 </TooltipTrigger>
-                <TooltipContent>
-                  Use this to configure the animation.
-                </TooltipContent>
+                <TooltipContent>Visit the source</TooltipContent>
               </Tooltip>
-              <PopoverContent>
-                <PopoverHeader>
-                  <PopoverTitle>Settings</PopoverTitle>
-                  <PopoverDescription>
-                    Use this to configure the animation.
-                  </PopoverDescription>
-                </PopoverHeader>
-                <ButtonGroup>
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <Button
-                      key={index}
-                      size="icon-lg"
-                      variant={
-                        index + 1 === containerScale ? "default" : "outline"
-                      }
-                      onClick={() => setContainerScale(index + 1)}
-                    >
-                      <Expand className="size-5.5" />
-                    </Button>
-                  ))}
-                </ButtonGroup>
-                <ButtonGroup>
-                  {[0.5, 1, 1.5, 2].map((s, index) => (
-                    <Button
-                      key={index}
-                      size="icon-lg"
-                      variant={speed === s ? "default" : "outline"}
-                      onClick={() => setSpeed(s)}
-                    >
-                      {s}
-                    </Button>
-                  ))}
-                </ButtonGroup>
-              </PopoverContent>
-            </Popover> */}
+            )}
           </TooltipProvider>
         </div>
 

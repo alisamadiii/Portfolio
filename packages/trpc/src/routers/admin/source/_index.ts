@@ -135,6 +135,7 @@ export const adminSourcesRouter = createTRPCRouter({
         darkImageUrl: z.string().optional(),
         videoUrl: z.string().optional(),
         darkVideoUrl: z.string().optional(),
+        from: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {

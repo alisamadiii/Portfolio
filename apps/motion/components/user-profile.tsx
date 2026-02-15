@@ -16,11 +16,7 @@ import { useIsPurchased } from "@/hooks/use-is-purchased";
 
 import { LoginDrawer } from "./login-drawer";
 
-export const UserProfile = ({
-  isToggleElements,
-}: {
-  isToggleElements?: boolean;
-}) => {
+export const UserProfile = () => {
   const { data: user, isPending } = useCurrentUser();
 
   const { data: isUserPurchased } = useIsPurchased();
@@ -30,15 +26,7 @@ export const UserProfile = ({
   if (!user) {
     return (
       <LoginDrawer>
-        <Button
-          size="lg"
-          className={cn(
-            "fixed top-4 left-4 z-100",
-            isToggleElements && "hidden"
-          )}
-        >
-          Login
-        </Button>
+        <Button size="lg">Login</Button>
       </LoginDrawer>
     );
   }
@@ -49,10 +37,7 @@ export const UserProfile = ({
           ? "http://localhost:3000/settings"
           : "https://www.alisamadii.com/settings"
       }
-      className={cn(
-        "bg-muted fixed top-4 left-4 z-100 rounded-xl border p-3 pr-8",
-        isToggleElements && "hidden"
-      )}
+      className={cn("bg-muted rounded-xl border p-3 pr-8")}
     >
       <div className="flex items-center gap-2">
         <div className="relative flex items-center justify-center">

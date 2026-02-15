@@ -19,6 +19,7 @@ const formSchema = z.object({
   darkImageUrl: z.union([z.literal(""), z.url()]).optional(),
   videoUrl: z.union([z.literal(""), z.url()]).optional(),
   darkVideoUrl: z.union([z.literal(""), z.url()]).optional(),
+  from: z.union([z.literal(""), z.url()]).optional(),
 });
 
 export const UpdateFormSource = () => {
@@ -40,6 +41,7 @@ export const UpdateFormSource = () => {
       darkImageUrl: getSource.data?.darkImageUrl || "",
       videoUrl: getSource.data?.videoUrl || "",
       darkVideoUrl: getSource.data?.darkVideoUrl || "",
+      from: getSource.data?.from || "",
     },
   });
 
@@ -144,6 +146,20 @@ export const UpdateFormSource = () => {
             <Input
               label="Dark Video"
               placeholder="Dark Video"
+              {...field}
+              aria-invalid={fieldState.invalid}
+            />
+          </Field>
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="from"
+        render={({ field, fieldState }) => (
+          <Field>
+            <Input
+              label="From"
+              placeholder="From"
               {...field}
               aria-invalid={fieldState.invalid}
             />

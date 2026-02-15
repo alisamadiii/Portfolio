@@ -93,6 +93,7 @@ getCodes().then(async (codes) => {
     image: "${source.imageUrl ?? ""}",
     darkImage: "${source.darkImageUrl ?? ""}",
     isPremium: ${source.isPrivate ?? false},
+    from: "${source.from ?? ""}",
   }`
   );
 
@@ -112,6 +113,7 @@ export const animations: Record<
     image: string;
     darkImage?: string;
     isPremium?: boolean;
+    from?: string;
   }
 > = {
 ${entries.join(",\n")},

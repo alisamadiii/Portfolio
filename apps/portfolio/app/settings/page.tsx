@@ -34,7 +34,7 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">General</h2>
         <EmailName />
-        <GeneralAvatar />
+        {/* <GeneralAvatar /> */}
       </div>
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">Accounts</h2>
