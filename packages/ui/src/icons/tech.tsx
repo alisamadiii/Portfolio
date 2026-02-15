@@ -380,3 +380,69 @@ export const Drizzle = (props: SVGProps) => (
     />
   </svg>
 );
+
+export const Lucide = (props: SVGProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    id="lucide-logo"
+    {...props}
+  >
+    <path
+      d="M14 12C14 9.79086 12.2091 8 10 8C7.79086 8 6 9.79086 6 12C6 16.4183 9.58172 20 14 20C18.4183 20 22 16.4183 22 12C22 8.446 20.455 5.25285 18 3.05557"
+      stroke="currentColor"
+    />
+    <path
+      d="M10 12C10 14.2091 11.7909 16 14 16C16.2091 16 18 14.2091 18 12C18 7.58172 14.4183 4 10 4C5.58172 4 2 7.58172 2 12C2 15.5841 3.57127 18.8012 6.06253 21"
+      stroke="currentColor"
+      opacity="0.5"
+    />
+  </svg>
+);
+
+export const DateFns = (props: SVGProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="163px"
+    height="136px"
+    viewBox="0 0 163 136"
+    version="1.1"
+    {...props}
+  >
+    <title>date-fns-transparent copy 2</title>
+    <desc>Created with Sketch.</desc>
+    <defs />
+    <g id="Page-1" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+      <g
+        id="Solid-logo"
+        transform="translate(-19.000000, -32.000000)"
+        fill="currentColor"
+      >
+        <g id="White-logo" transform="translate(19.000000, 32.000000)">
+          <path
+            d="M0.4,67.8 C0.4,54.7439347 2.799976,42.4320578 7.6,30.864 C12.400024,19.2959422 19.3119549,9.04804464 28.336,0.12 L46.48,0.12 C27.6639059,18.7440931 18.256,41.3038675 18.256,67.8 C18.256,94.2961325 27.6639059,116.855907 46.48,135.48 L28.336,135.48 C19.3119549,126.551955 12.400024,116.304058 7.6,104.736 C2.799976,93.1679422 0.4,80.8560653 0.4,67.8 L0.4,67.8 Z M162.6,67.8 C162.6,80.8560653 160.200024,93.1679422 155.4,104.736 C150.599976,116.304058 143.688045,126.551955 134.664,135.48 L116.52,135.48 C135.336094,116.855907 144.744,94.2961325 144.744,67.8 C144.744,41.3038675 135.336094,18.7440931 116.52,0.12 L134.664,0.12 C143.688045,9.04804464 150.599976,19.2959422 155.4,30.864 C160.200024,42.4320578 162.6,54.7439347 162.6,67.8 L162.6,67.8 Z"
+            id="Parans"
+          />
+          <g id="Hands" transform="translate(67.000000, 9.000000)">
+            <rect id="Hand" x="0" y="0" width="12" height="69" />
+            <rect
+              id="Hand"
+              transform="translate(32.500000, 40.500000) scale(-1, 1) rotate(-45.000000) translate(-32.500000, -40.500000) "
+              x="27"
+              y="6"
+              width="11"
+              height="69"
+            />
+          </g>
+        </g>
+      </g>
+    </g>
+  </svg>
+);

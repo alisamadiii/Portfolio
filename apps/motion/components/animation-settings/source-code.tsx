@@ -5,14 +5,17 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { codeToHtml } from "shiki";
+import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { BoxShield, Empty, Error, TechIcons } from "@workspace/ui/icons";
+import { BoxShield, Copy, Empty, Error, TechIcons } from "@workspace/ui/icons";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+
+import { updateSourceCode } from "@/lib/utils";
 
 import { LoginDrawer } from "../login-drawer";
 import { PricingDrawer } from "../pricing-drawer";
@@ -49,7 +52,9 @@ function ShikiCodeBlock({
     queryKey: ["shiki", filename, code],
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
-      return codeToHtml(code, {
+      const updatedCode = updateSourceCode(code);
+
+      return codeToHtml(updatedCode, {
         lang: getLangFromFilename(filename),
         theme: "github-dark",
       });
@@ -66,14 +71,29 @@ function ShikiCodeBlock({
   }
 
   return (
-    <div
-      data-code
-      className={cn(
-        "animate-in fade-in-0 overflow-x-auto rounded-lg text-sm [&_code]:text-sm! [&_pre]:m-0! [&_pre]:bg-transparent! [&_pre]:p-4!",
-        className
-      )}
-      dangerouslySetInnerHTML={{ __html: htmlQuery.data ?? "" }}
-    />
+    <div className="relative">
+      <div className="sticky top-4 right-4 -mb-4 flex items-center justify-end gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            navigator.clipboard.writeText(updateSourceCode(code));
+            toast.success("Copied to clipboard");
+          }}
+        >
+          <Copy className="size-4" />
+          Copy
+        </Button>
+      </div>
+      <div
+        data-code
+        className={cn(
+          "animate-in fade-in-0 overflow-x-auto rounded-lg text-sm [&_code]:text-sm! [&_pre]:m-0! [&_pre]:bg-transparent! [&_pre]:p-4!",
+          className
+        )}
+        dangerouslySetInnerHTML={{ __html: htmlQuery.data ?? "" }}
+      />
+    </div>
   );
 }
 
@@ -94,14 +114,28 @@ export const SourceCode = () => {
 
   return (
     <motion.div
-      initial={{ x: 400, scale: 0.8, filter: "blur(4px)", opacity: 0 }}
-      animate={{ x: 0, scale: 1, filter: "blur(0px)", opacity: 1 }}
-      exit={{ x: 400, scale: 0.8, filter: "blur(4px)", opacity: 0 }}
+      initial={{
+        x: 400,
+        scale: 0.8,
+        filter: "blur(4px)",
+        opacity: 0,
+      }}
+      animate={{
+        x: 0,
+        scale: 1,
+        filter: "blur(0px)",
+        opacity: 1,
+      }}
+      exit={{
+        x: 400,
+        scale: 0.8,
+        filter: "blur(4px)",
+        opacity: 0,
+      }}
       className="dark text-foreground pointer-events-none fixed right-0 bottom-0 h-[calc(100dvh-4rem)] w-full p-4 lg:w-[600px]"
       transition={{
         duration: 0.5,
-        type: "spring",
-        bounce: 0.3,
+        ease: [0.19, 1, 0.22, 1],
       }}
     >
       <div className="bg-background shadow-dialog pointer-events-auto flex h-full w-full flex-col overflow-hidden rounded-[3rem] border">

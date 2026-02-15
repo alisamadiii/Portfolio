@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
@@ -10,16 +9,7 @@ import { useTheme } from "next-themes";
 import { useHotkeys } from "react-hotkeys-hook";
 
 import { Button } from "@workspace/ui/components/button";
-import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Kbd, KbdGroup } from "@workspace/ui/components/kbd";
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@workspace/ui/components/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -29,9 +19,8 @@ import {
 import { useIsMobile } from "@workspace/ui/hooks/use-mobile";
 import {
   Code,
-  Expand,
+  QuestionMark,
   Refresh,
-  Settings,
   SquareCommand,
 } from "@workspace/ui/icons";
 import { cn } from "@workspace/ui/lib/utils";
@@ -41,6 +30,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { useSettings } from "@/hooks/settings";
 
 import { SourceCode } from "@/components/animation-settings/source-code";
+import { LibrariesUsedDialog } from "@/components/libraries-used";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
 import { UserProfile } from "@/components/user-profile";
 
@@ -49,7 +39,7 @@ export default function ComponentPage() {
   const [isToggleElements, setIsToggleElements] = useState(false);
   const [isToggleSettings, setIsToggleSettings] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { containerScale, setContainerScale, speed, setSpeed } = useSettings();
+  const { containerScale } = useSettings();
 
   const isMobile = useIsMobile;
 
@@ -127,6 +117,16 @@ export default function ComponentPage() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
+                <LibrariesUsedDialog>
+                  <Button size="icon-lg" variant="outline">
+                    <QuestionMark className="size-5.5" />
+                  </Button>
+                </LibrariesUsedDialog>
+              </TooltipTrigger>
+              <TooltipContent>Libraries Used</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button size="icon-lg" variant="outline" onClick={refresh}>
                   <Refresh
                     key={isRefreshing}
@@ -154,6 +154,7 @@ export default function ComponentPage() {
                 </KbdGroup>
               </TooltipContent>
             </Tooltip>
+
             {/* <Popover open={isToggleSettings} onOpenChange={setIsToggleSettings}>
               <Tooltip>
                 <TooltipTrigger asChild>
