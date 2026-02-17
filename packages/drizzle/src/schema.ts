@@ -80,21 +80,6 @@ export const verification = pgTable("verification", {
   ),
 });
 
-export const files = pgTable("files", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  url: text("url").notNull().unique(),
-  name: text("name").notNull(),
-  isPublic: boolean("is_public").notNull().default(false),
-  size: integer("size").notNull(),
-  width: integer("width").default(0),
-  height: integer("height").default(0),
-  contentType: text("content_type").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
-});
-
 export const products = pgTable("product", {
   id: uuid("id")
     .primaryKey()

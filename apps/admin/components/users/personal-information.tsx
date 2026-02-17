@@ -6,8 +6,6 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { storage } from "@/project.config";
-
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +15,7 @@ import { buttonVariants } from "@workspace/ui/components/button";
 import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
+import { useUpload } from "@workspace/ui/hooks/use-upload";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -29,7 +28,7 @@ const formSchema = z.object({
 export const PersonalInformation = () => {
   const [newAvatar, setNewAvatar] = useState<File | null>(null);
 
-  const { uploadFiles } = storage.useUpload();
+  const { upload } = useUpload();
 
   const { id } = useParams<{ id: string }>();
   const trpc = useTRPC();
@@ -95,21 +94,14 @@ export const PersonalInformation = () => {
                 if (e.target.files?.[0]) {
                   setNewAvatar(e.target.files[0]);
                   try {
-                    const result = await uploadFiles(
-                      [
-                        {
-                          file: e.target.files[0],
-                          name: id,
-                        },
-                      ],
-                      {
-                        path: "public/users",
-                      }
-                    );
+                    const result = await upload(e.target.files[0], {
+                      folder: "users",
+                      key: id,
+                    });
                     if (result) {
                       updateUser.mutate({
                         id,
-                        image: result[0] + `?${Date.now()}`,
+                        image: result?.publicUrl ?? "",
                       });
                     }
                   } catch (error) {
