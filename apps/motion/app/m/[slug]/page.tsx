@@ -33,6 +33,7 @@ import { useSettings } from "@/hooks/settings";
 
 import { SourceCode } from "@/components/animation-settings/source-code";
 import { LibrariesUsedDialog } from "@/components/libraries-used";
+import { ReportBugLink } from "@/components/report-bug-link";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
 import { UserProfile } from "@/components/user-profile";
 
@@ -157,6 +158,12 @@ export default function ComponentPage() {
                   <Kbd>k</Kbd> <span>Keyboard Shortcuts</span>
                 </KbdGroup>
               </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ReportBugLink animationName={animation.name} />
+              </TooltipTrigger>
+              <TooltipContent>Report a bug</TooltipContent>
             </Tooltip>
             {animation.from && (
               <Tooltip>
