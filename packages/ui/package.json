@@ -30,6 +30,7 @@
     "@trpc/server": "^11.7.2",
     "@workspace/auth": "workspace:*",
     "@workspace/trpc": "workspace:*",
+    "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",

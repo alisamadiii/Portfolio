@@ -202,8 +202,8 @@ export const NextJS = (props: SVGProps) => (
         y1="116.5"
         y2="160.5"
       >
-        <stop stopColor="white"></stop>
-        <stop offset="1" stopColor="white" stopOpacity="0"></stop>
+        <stop stopColor="var(--background)"></stop>
+        <stop offset="1" stopColor="var(--background)" stopOpacity="0"></stop>
       </linearGradient>
       <linearGradient
         gradientUnits="userSpaceOnUse"
@@ -213,8 +213,8 @@ export const NextJS = (props: SVGProps) => (
         y1="54"
         y2="106.875"
       >
-        <stop stopColor="white"></stop>
-        <stop offset="1" stopColor="white" stopOpacity="0"></stop>
+        <stop stopColor="var(--background)"></stop>
+        <stop offset="1" stopColor="var(--background)" stopOpacity="0"></stop>
       </linearGradient>
     </defs>
   </svg>
