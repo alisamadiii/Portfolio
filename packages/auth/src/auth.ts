@@ -5,10 +5,12 @@ import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin, emailOTP } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import {
   account,
+  previousCustomers,
   session,
   user,
   verification,
@@ -170,6 +172,9 @@ export const auth = betterAuth({
           },
           onOrderCreated: async ({ data }) => {
             await createOrder(data);
+            await db
+              .delete(previousCustomers)
+              .where(eq(previousCustomers.email, data.customer.email ?? ""));
           },
           onOrderRefunded: async ({ data }) => {
             await updateOrder(data);

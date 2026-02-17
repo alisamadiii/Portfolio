@@ -200,3 +200,14 @@ export const sourceFile = pgTable("source_file", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const previousCustomers = pgTable("previous_customers", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});

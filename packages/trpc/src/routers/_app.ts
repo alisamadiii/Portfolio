@@ -5,6 +5,7 @@ import { adminRouter } from "./admin/_index";
 import { discountsRouter } from "./discounts";
 import { motionRouter } from "./motion/_index";
 import { paymentsRouter } from "./payments";
+import { previousCustomerRouter } from "./previous-customer";
 import { sessionsRouter } from "./sessions";
 import { uploadRouter } from "./upload/_index";
 import { userRouter } from "./user";
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   user: userRouter,
   motion: motionRouter,
   upload: uploadRouter,
+  previousCustomer: previousCustomerRouter,
 });
 
 // export type definition of API

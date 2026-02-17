@@ -10,6 +10,7 @@ import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 
+import { PreviousCustomerBanner } from "@/components/previous-customer-banner";
 import { SuccessPurchaseDialog } from "@/components/success-purchase-dialog";
 
 const fontHeading = DM_Serif_Display({
@@ -62,6 +63,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
+              <PreviousCustomerBanner />
               <SuccessPurchaseDialog />
               {children}
               <Suspense>
