@@ -62,17 +62,23 @@ export default function VerifyEmail({ verificationCode }: VerifyEmailProps) {
                   This email was sent by Dream Website. If you have any
                   questions, please{" "}
                   <Link
-                    href="mailto:support@dreamwebsite.com"
+                    href="mailto:a@alisamadii.com"
                     className="text-black underline"
                   >
                     contact our support team
                   </Link>
                   . View our{" "}
-                  <Link href="/privacy" className="text-black underline">
+                  <Link
+                    href="https://www.alisamadii.com/privacy"
+                    className="text-black underline"
+                  >
                     Privacy Policy
                   </Link>{" "}
                   and{" "}
-                  <Link href="/terms" className="text-black underline">
+                  <Link
+                    href="https://www.alisamadii.com/terms"
+                    className="text-black underline"
+                  >
                     Terms of Service
                   </Link>
                   .

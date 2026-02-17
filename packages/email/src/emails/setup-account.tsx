@@ -61,7 +61,7 @@ export default function SetupAccount({
                   link into your browser:
                 </Text>
 
-                <Text className="break-all rounded border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500">
+                <Text className="rounded border border-gray-200 bg-gray-50 p-3 text-xs break-all text-gray-500">
                   {setupAccountLink}
                 </Text>
               </Section>
@@ -76,17 +76,23 @@ export default function SetupAccount({
                   This email was sent by Dream Website. If you have any
                   questions, please{" "}
                   <Link
-                    href="mailto:support@dreamwebsite.com"
+                    href="mailto:a@alisamadii.com"
                     className="text-black underline"
                   >
                     contact our support team
                   </Link>
                   . View our{" "}
-                  <Link href="/privacy" className="text-black underline">
+                  <Link
+                    href="https://www.alisamadii.com/privacy"
+                    className="text-black underline"
+                  >
                     Privacy Policy
                   </Link>{" "}
                   and{" "}
-                  <Link href="/terms" className="text-black underline">
+                  <Link
+                    href="https://www.alisamadii.com/terms"
+                    className="text-black underline"
+                  >
                     Terms of Service
                   </Link>
                   .

@@ -18,7 +18,7 @@ interface AccountDeletedProps {
 
 export default function AccountDeleted({
   userName = "there",
-  feedbackLink = "https://dreamwebsite.com/feedback",
+  feedbackLink = "https://www.alisamadii.com/feedback",
 }: AccountDeletedProps) {
   return (
     <Html>
@@ -82,10 +82,10 @@ export default function AccountDeleted({
                   If you ever want to come back, we&apos;ll be here with open
                   arms. You can create a new account anytime at{" "}
                   <Link
-                    href="https://dreamwebsite.com/signup"
+                    href="https://www.alisamadii.com/signup"
                     className="text-black underline"
                   >
-                    dreamwebsite.com
+                    alisamadii.com
                   </Link>
                   .
                 </Text>
@@ -98,20 +98,26 @@ export default function AccountDeleted({
                 <Text className="text-base leading-6 text-gray-700">
                   Take care,
                   <br />
-                  The Dream Website Team
+                  The AliSamadii.LLC Team
                 </Text>
               </Section>
 
               <Section className="border-t border-gray-200 p-8">
                 <Text className="text-xs text-gray-500">
-                  This is a confirmation email sent by Dream Website regarding
+                  This is a confirmation email sent by AliSamadii.LLC regarding
                   your account deletion. If you didn&apos;t request this, please
                   contact our support team immediately. View our{" "}
-                  <Link href="/privacy" className="text-black underline">
+                  <Link
+                    href="https://www.alisamadii.com/privacy"
+                    className="text-black underline"
+                  >
                     Privacy Policy
                   </Link>{" "}
                   and{" "}
-                  <Link href="/terms" className="text-black underline">
+                  <Link
+                    href="https://www.alisamadii.com/terms"
+                    className="text-black underline"
+                  >
                     Terms of Service
                   </Link>
                   .
@@ -127,5 +133,5 @@ export default function AccountDeleted({
 
 AccountDeleted.PreviewProps = {
   userName: "John Doe",
-  feedbackLink: "https://dreamwebsite.com/feedback",
+  feedbackLink: "https://www.alisamadii.com/feedback",
 } satisfies AccountDeletedProps;
