@@ -122,4 +122,27 @@ ${entries.join(",\n")},
 
   const registryFilePath = resolve(animationsDir, "registry.tsx");
   await fs.writeFile(registryFilePath, registryContent);
+
+  // Build metadata.ts with name, description, image only (server-safe)
+  const metadataEntries = codes
+    .filter((s) => s.files && s.files.length > 0)
+    .map(
+      (source) =>
+        `  "${slug(source.title)}": {
+    name: "${escapeForTsString(source.title)}",
+    description: "${escapeForTsString(source.description ?? "")}",
+    image: "${source.imageUrl ?? ""}",
+  }`
+    );
+
+  const metadataContent = `export const animationsMetadata: Record<
+  string,
+  { name: string; description: string; image: string }
+> = {
+${metadataEntries.join(",\n")},
+};
+`;
+
+  const metadataFilePath = resolve(animationsDir, "metadata.ts");
+  await fs.writeFile(metadataFilePath, metadataContent);
 });

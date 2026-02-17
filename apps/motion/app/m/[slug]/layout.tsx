@@ -1,22 +1,21 @@
 import { Metadata } from "next";
-import { animations } from "@/animations/registry";
+import { animationsMetadata } from "@/animations/metadata";
 
 type Props = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // read route params
-  const { id } = await params;
+  const { slug } = await params;
 
-  const animation = animations[id as keyof typeof animations];
+  const animation = animationsMetadata[slug as keyof typeof animationsMetadata];
 
-  // fetch data
   return {
-    title: animation.name,
-    description: animation.description,
+    title: animation?.name,
+    description: animation?.description,
     openGraph: {
-      images: [animation.image ?? "", animation.darkImage ?? ""],
+      images: [animation?.image ?? ""],
     },
   };
 }
