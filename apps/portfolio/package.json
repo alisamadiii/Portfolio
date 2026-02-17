@@ -21,7 +21,6 @@
     "@workspace/auth": "workspace:*",
     "@workspace/drizzle": "workspace:*",
     "@workspace/email": "workspace:*",
-    "@workspace/storage": "workspace:*",
     "@workspace/trpc": "workspace:*",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.4.17",

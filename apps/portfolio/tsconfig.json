@@ -9,7 +9,6 @@
       "@workspace/trpc/*": ["../../packages/trpc/src/*"],
       "@workspace/auth/*": ["../../packages/auth/src/*"],
       "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
-      "@workspace/storage/*": ["../../packages/storage/src/*"],
       "@workspace/email/*": ["../../packages/email/src/*"]
     },
     "plugins": [

@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { storage } from "@/project.config";
-
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +15,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Label } from "@workspace/ui/components/label";
+import { useUpload } from "@workspace/ui/hooks/use-upload";
 
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";
 
@@ -26,7 +25,7 @@ export const GeneralAvatar = () => {
   const { data: user } = useCurrentUser();
   const updateUser = useUpdateUser();
 
-  const { uploadFiles } = storage.useUpload();
+  const { upload, isUploading } = useUpload();
 
   return (
     <Card>
@@ -49,20 +48,13 @@ export const GeneralAvatar = () => {
           onClick={async () => {
             if (!avatar || !user?.user.id) return;
 
-            const result = await uploadFiles(
-              [
-                {
-                  file: avatar,
-                  name: user?.user.id,
-                },
-              ],
-              {
-                path: "public/users",
-              }
-            );
+            const result = await upload(avatar, {
+              folder: "users",
+              key: user?.user.id,
+            });
 
             updateUser.mutate(
-              { image: result[0] + `?${Date.now()}` },
+              { image: result?.publicUrl ?? "" },
               {
                 onSuccess: () => {
                   toast.success("Avatar updated successfully");
@@ -73,7 +65,7 @@ export const GeneralAvatar = () => {
               }
             );
           }}
-          disabled={updateUser.isPending || !avatar}
+          disabled={updateUser.isPending || !avatar || isUploading}
         >
           Save
         </Button>
