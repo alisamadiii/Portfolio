@@ -410,15 +410,37 @@ export const Error = (props: Props) => (
 
 export const MediaPlay = (props: Props) => (
   <svg
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <g clipPath="url(#clip0_3622_6)">
+      <path
+        d="M14.6484 6.40095C16.6484 7.55565 16.6484 10.4424 14.6484 11.5971L7.19385 15.901C5.19385 17.0557 2.69385 15.6123 2.69385 13.3029L2.69385 4.69511C2.69385 2.38571 5.19385 0.942337 7.19385 2.09704L14.6484 6.40095Z"
+        fill="currentColor"
+      />
+    </g>
+  </svg>
+);
+
+export const MediaPause = (props: Props) => (
+  <svg
     xmlns="http://www.w3.org/2000/svg"
     width="18"
     height="18"
     viewBox="0 0 18 18"
     {...props}
   >
-    <title>media-play</title>
+    <title>media-stop</title>
     <g fill="currentColor">
-      <path d="M15.1,7.478L5.608,2.222c-.553-.306-1.206-.297-1.749,.023-.538,.317-.859,.877-.859,1.499V14.256c0,.622,.321,1.182,.859,1.499,.279,.164,.586,.247,.895,.247,.293,0,.586-.075,.854-.223l9.491-5.256c.556-.307,.901-.891,.901-1.522s-.345-1.215-.9-1.522Z"></path>
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M2 4.75C2 3.23119 3.23119 2 4.75 2H13.25C14.7688 2 16 3.23119 16 4.75V13.25C16 14.7688 14.7688 16 13.25 16H4.75C3.23119 16 2 14.7688 2 13.25V4.75Z"
+      ></path>
     </g>
   </svg>
 );
@@ -592,6 +614,30 @@ export const Bug = (props: Props) => (
         d="M11.25 5H6.75C5.2334 5 4 6.2334 4 7.75V11C4 13.7568 6.2432 16 9 16C11.7568 16 14 13.7568 14 11V7.75C14 6.2334 12.7666 5 11.25 5Z"
       ></path>
       <path d="M9 16C8.5859 16 8.25 15.6641 8.25 15.25V10.75C8.25 10.3359 8.5859 10 9 10C9.4141 10 9.75 10.3359 9.75 10.75V15.25C9.75 15.6641 9.4141 16 9 16Z"></path>
+    </g>
+  </svg>
+);
+
+export const FullscreenExit = (props: Props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="12"
+    height="12"
+    viewBox="0 0 12 12"
+    {...props}
+  >
+    <title>expand</title>
+    <g
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      stroke="currentColor"
+    >
+      <path d="m1.25,4.25v-1c0-1.105.895-2,2-2h1"></path>
+      <path d="m7.75,1.25h1c1.105,0,2,.895,2,2v1"></path>
+      <path d="m10.75,7.75v1c0,1.105-.895,2-2,2h-1"></path>
+      <path d="m4.25,10.75h-1c-1.105,0-2-.895-2-2v-1"></path>
     </g>
   </svg>
 );

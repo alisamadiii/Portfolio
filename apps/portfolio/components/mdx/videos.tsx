@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import {
@@ -15,7 +17,11 @@ import { Video } from "../video";
 interface VideosProps {
   values:
     | string[]
-    | { id: string; isPhone?: boolean; params?: { time?: string } }[];
+    | {
+        id: string;
+        isPhone?: boolean;
+        params?: { time?: string };
+      }[];
 }
 
 export const Videos = ({ values }: VideosProps) => {
@@ -31,27 +37,15 @@ export const Videos = ({ values }: VideosProps) => {
 
             const url =
               typeof value === "object"
-                ? `https://customer-8ljelsuup97yj117.cloudflarestream.com/${value.id}/downloads/default.mp4${value.params?.time ? `?time=${value.params.time}` : ""}`
+                ? `https://customer-8ljelsuup97yj117.cloudflarestream.com/${value.id}/manifest/video.m3u8`
                 : value;
 
-            const poster = getCloudflareStreamThumbnailUrl(url);
-
-            return (
-              <div
-                key={index}
-                className={cn(
-                  "max-w-full shrink-0 basis-auto overflow-hidden rounded-3xl",
-                  !isPhone && "outline"
-                )}
-              >
-                <Video
-                  src={url}
-                  poster={poster ?? undefined}
-                  className="h-full max-h-100 w-full object-contain md:max-h-200"
-                  wrapperClassName="h-full bg-muted"
-                />
-              </div>
+            const poster = getCloudflareStreamThumbnailUrl(
+              url,
+              typeof value === "object" ? value.params?.time : undefined
             );
+
+            return <Video key={index} src={url} poster={poster ?? undefined} />;
           })}
         </CarouselContent>
       </Carousel>

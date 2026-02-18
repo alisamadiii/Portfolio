@@ -11,12 +11,10 @@ const CLOUDFLARE_STREAM_HOST = "cloudflarestream.com";
  * @returns Thumbnail URL, or null if the URL is not a Cloudflare Stream URL
  */
 export function getCloudflareStreamThumbnailUrl(
-  videoUrl: string
+  videoUrl: string,
+  time?: string
 ): string | null {
   try {
-    const searchParams = new URLSearchParams(videoUrl.split("?")[1]);
-    const time = searchParams.get("time");
-
     const url = new URL(videoUrl);
     if (!url.hostname.includes(CLOUDFLARE_STREAM_HOST)) {
       return null;
