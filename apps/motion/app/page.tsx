@@ -87,7 +87,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="container grid grid-flow-dense grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Object.entries(animations)
           .sort((a) => (a[1].isPremium ? 1 : -1))
           .map(([key, animation]) => (
