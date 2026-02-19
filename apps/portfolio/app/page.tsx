@@ -15,7 +15,7 @@ import {
   TailwindCSS,
   TypeScript,
 } from "@workspace/ui/icons/tech";
-import { company } from "@workspace/ui/lib/company";
+import { company, urls } from "@workspace/ui/lib/company";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
@@ -193,6 +193,12 @@ export default function Home() {
             )}
           </div>
         </div>
+        <Link
+          href={`${urls.portfolio}/how-i-build`}
+          className="text-muted-foreground mt-2 inline-block px-3 text-sm underline"
+        >
+          How I Build
+        </Link>
       </section>
 
       <section>

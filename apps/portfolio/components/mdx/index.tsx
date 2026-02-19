@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import defaultComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
@@ -71,7 +72,7 @@ export const mdxComponents: MDXComponents = {
   ),
   blockquote: ({ ...props }: React.HTMLAttributes<HTMLElement>) => (
     <blockquote
-      className="border-wrapper rounded-md p-[22.4px] text-sm [&_code]:text-xs [&_li]:block [&_li]:text-sm [&_p]:my-0"
+      className="text-muted-foreground border-l-2 p-2 [&_code]:text-xs [&_li]:block [&_li]:text-sm [&_p]:my-0 [&_p]:text-base"
       {...props}
     ></blockquote>
   ),
@@ -102,8 +103,11 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  img: ({ className, alt, ...props }: React.ComponentProps<"img">) => (
-    <img className={cn("my-8 rounded-md", className)} alt={alt} {...props} />
+  img: (props) => (
+    <ImageZoom
+      className="rounded-xl outline-2 outline-offset-2 outline-black/10"
+      {...(props as any)}
+    />
   ),
   // AutoTypeTable: (props) => (
   //   <AutoTypeTable {...props} generator={generator} />

@@ -38,7 +38,7 @@ export interface FooterProps {
 const defaultColumns: FooterColumn[] = [
   {
     heading: "Company and team",
-    links: [{ label: "Experience", href: "#" }],
+    links: [{ label: "How I Build", href: `${urls.portfolio}/how-i-build` }],
   },
   {
     heading: "Websites",

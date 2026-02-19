@@ -58,7 +58,9 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
-              <BgPattern lessVisibleOn={["/settings", "/client/"]} />
+              <BgPattern
+                lessVisibleOn={["/settings", "/client/", "/how-i-build"]}
+              />
               {children}
               <Footer isPortfolio />
             </Suspense>

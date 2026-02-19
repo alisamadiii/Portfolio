@@ -54,12 +54,20 @@ export const Video = ({ className, poster, src }: VideoProps) => {
         isFullscreen && "rounded-none",
         className
       )}
+      aspectRatio="1/1"
+      onClick={() => {
+        if (player.current?.paused) {
+          player.current?.play();
+        } else {
+          player.current?.pause();
+        }
+      }}
     >
       <MediaProvider>
         {/* To read playing state, use useMediaState('playing') or useMediaState('paused') in a child of MediaProvider. */}
         <div
           className={cn(
-            "shadow-dialog bg-background/20 absolute right-2 bottom-2 left-2 z-1 flex translate-y-full flex-wrap items-center gap-2 rounded-xl px-4 py-2 opacity-0 blur-sm backdrop-blur-sm duration-200",
+            "shadow-dialog bg-background/80 absolute right-2 bottom-2 left-2 z-1 flex translate-y-full flex-wrap items-center gap-2 rounded-xl px-4 py-2 opacity-0 blur-sm backdrop-blur-sm duration-200",
             !isPaused
               ? "group-hover:translate-y-0 group-hover:opacity-100 group-hover:blur-none"
               : "translate-y-0 opacity-100 blur-none"

@@ -22,7 +22,7 @@ export default function GlobalError({
             Try again
           </Button>
           <a
-            href="mailto:support@example.com"
+            href="mailto:a@alisamadii.com"
             className={buttonVariants({
               variant: "outline",
               size: "sm",
