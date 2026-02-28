@@ -1,10 +1,11 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
+import { ReactLenis, useLenis } from "lenis/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -70,12 +71,20 @@ export default function ComponentPage() {
     )
   );
 
+  const lenis = useLenis((lenis) => {
+    // called every scroll
+    console.log(lenis);
+  });
+
   if (!animation) {
     return <div>Animation not found</div>;
   }
 
+  const noPadding = slug === "image-shrink-on-scroll";
+
   return (
     <>
+      <ReactLenis root />
       <motion.div
         initial={{ maxWidth: "100%" }}
         animate={{ maxWidth: isOpen && !isMobile ? "80%" : "100%" }}
@@ -85,7 +94,8 @@ export default function ComponentPage() {
           bounce: 0.3,
         }}
         className={cn(
-          "flex min-h-screen w-full origin-top flex-col items-center-safe justify-center-safe px-8 py-24 md:py-8"
+          "flex min-h-screen w-full origin-top flex-col items-center-safe justify-center-safe px-8 py-24 md:py-8",
+          noPadding && "p-0!"
         )}
         style={{
           transform: `scale(${containerScale})`,

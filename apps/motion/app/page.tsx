@@ -26,6 +26,7 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useIsPurchased } from "@/hooks/use-is-purchased";
 
+import { LightShader } from "@/components/light-shader";
 import { Pricing } from "@/components/pricing";
 
 const poweredBy = [
@@ -61,6 +62,7 @@ export default function Home() {
     <main className="space-y-12">
       {/* Header with text */}
       <div className="relative flex min-h-dvh flex-col items-center justify-center gap-4 px-8 text-center">
+        <LightShader />
         <div className="from-primary animate-text-intro text-primary-foreground mb-8 flex size-20 items-center justify-center rounded-xl bg-linear-to-tl to-blue-700">
           <Logo className="size-1/2" />
         </div>
@@ -72,7 +74,7 @@ export default function Home() {
           Animated React components for production use. Source code only. No
           assets, demos, or design files included.
         </p>
-        <div className="mt-8 flex items-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           {poweredBy.map((item, index) => (
             <div
               key={item.name}
