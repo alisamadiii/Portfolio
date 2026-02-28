@@ -80,7 +80,8 @@ export default function ComponentPage() {
     return <div>Animation not found</div>;
   }
 
-  const noPadding = slug === "image-shrink-on-scroll";
+  const noPadding =
+    slug === "image-shrink-on-scroll" || slug === "gap-change-on-scroll";
 
   return (
     <>
