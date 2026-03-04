@@ -2,6 +2,7 @@
 
 import { Calendar, Check, ExternalLink } from "lucide-react";
 import { motion } from "motion/react";
+import { useTheme } from "next-themes";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -16,6 +17,8 @@ const bookingFeatures = [
 ];
 
 export function Booking() {
+  const { resolvedTheme } = useTheme();
+
   return (
     <section id="booking" className="relative py-24 md:py-32">
       <div
@@ -106,7 +109,7 @@ export function Booking() {
           className="mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl"
         >
           <iframe
-            src="https://cal.com/alisamadii?embed=true&theme=dark"
+            src={`https://cal.com/alisamadii?embed=true&theme=${resolvedTheme}`}
             className="h-[600px] w-full border-none"
             title="Book a call"
           />
