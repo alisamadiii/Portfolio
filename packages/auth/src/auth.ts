@@ -7,6 +7,7 @@ import { nextCookies } from "better-auth/next-js";
 import { admin, emailOTP } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
+import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { db } from "@workspace/drizzle/index";
 import {
   account,
@@ -47,14 +48,7 @@ export const auth = betterAuth({
       verification,
     },
   }),
-  trustedOrigins: [
-    // Add your app scheme for deep linking (e.g., "my-expo-app://")
-    "my-expo-app://",
-    // Development mode - Expo's exp:// scheme
-    ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**"] : []),
-    "http://localhost:3002",
-    "https://motion.alisamadii.com",
-  ],
+  trustedOrigins: ALLOWED_ORIGINS,
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url, token }) => {

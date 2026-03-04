@@ -9,6 +9,7 @@ import { previousCustomerRouter } from "./previous-customer";
 import { sessionsRouter } from "./sessions";
 import { uploadRouter } from "./upload/_index";
 import { userRouter } from "./user";
+import { verificationRouter } from "./verification";
 
 export const appRouter = createTRPCRouter({
   discounts: discountsRouter,
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   motion: motionRouter,
   upload: uploadRouter,
   previousCustomer: previousCustomerRouter,
+  verification: verificationRouter,
 });
 
 // export type definition of API

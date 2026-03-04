@@ -1,23 +1,12 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { createTRPCContext } from "@workspace/trpc/init";
+import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { appRouter } from "@workspace/trpc/routers/_app";
 
 // Get allowed origins from environment variables and defaults
 function getAllowedOrigins(): string[] {
-  const origins: string[] = [];
-
-  // Development origins
-  origins.push(
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:3002",
-    "https://admin.alisamadii.com",
-    "https://motion.alisamadii.com"
-  );
+  const origins: string[] = ALLOWED_ORIGINS;
 
   // Vercel preview URLs (if using Vercel)
   if (process.env.VERCEL_URL) {
