@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { BoxShield, Copy, Empty, Error, TechIcons } from "@workspace/ui/icons";
+import { urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -17,7 +19,6 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { updateSourceCode } from "@/lib/utils";
 
-import { LoginDrawer } from "../login-drawer";
 import { PricingDrawer } from "../pricing-drawer";
 
 const EXT_TO_LANG: Record<string, string> = {
@@ -269,15 +270,18 @@ const FileList = ({ animationId }: { animationId: string }) => {
                     <PricingDrawer>
                       <Button size="sm">Purchase Animation</Button>
                     </PricingDrawer>
-                    <LoginDrawer>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className={cn(user && "hidden")}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={cn(user && "hidden")}
+                      asChild
+                    >
+                      <Link
+                        href={`${urls.portfolio}/login?redirectUrl=${window.location.href}`}
                       >
                         Login
-                      </Button>
-                    </LoginDrawer>
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>

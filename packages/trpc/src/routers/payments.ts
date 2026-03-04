@@ -177,7 +177,10 @@ export const paymentsRouter = createTRPCRouter({
           const delimiter = successUrl.includes("?") ? "&" : "?";
           url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
         } else {
-          const base = (process.env.BETTER_AUTH_URL || "").replace(/\/$/, "");
+          const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+            /\/$/,
+            ""
+          );
           url = `${base}/success?checkout_id=${checkoutIdPlaceholder}`;
         }
 

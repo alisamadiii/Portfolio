@@ -96,9 +96,7 @@ export const auth = betterAuth({
     crossSubDomainCookies: {
       enabled: true,
       domain:
-        process.env.NODE_ENV === "production"
-          ? process.env.NEXT_PUBLIC_DOMAIN
-          : "localhost",
+        process.env.NODE_ENV === "production" ? "alisamadii.com" : "localhost",
     },
   },
   session: {
