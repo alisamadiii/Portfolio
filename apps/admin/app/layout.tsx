@@ -8,7 +8,7 @@ import { notFound } from "next/navigation";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
-import { caller } from "@workspace/trpc/server";
+import { createHttpCaller } from "@workspace/trpc/http-caller";
 
 import { Login } from "@/components/login";
 import { NavbarAdmin } from "@/components/navbar-admin";
@@ -31,7 +31,8 @@ export const metadata = {
 async function AdminLayout({ children }: { children: React.ReactNode }) {
   try {
     const headersStore = await headers();
-    const currentUser = await caller.user.getSession({ headers: headersStore });
+    const httpCaller = createHttpCaller(headersStore);
+    const currentUser = await httpCaller.user.getSession.query();
 
     if (currentUser?.role !== "admin") {
       return notFound();
@@ -40,10 +41,11 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
       <>
         <NavbarAdmin />
-        {children}
+        <div className="pb-16">{children}</div>
       </>
     );
   } catch (error) {
+    console.error(error);
     if (
       error instanceof Error &&
       error.message.includes("You must be logged in to access this resource")

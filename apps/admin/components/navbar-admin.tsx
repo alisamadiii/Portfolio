@@ -14,7 +14,6 @@ const links = [
     label: "Subscriptions",
     href: `${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`,
   },
-  { label: "Files", href: "/files" },
   { label: "Code", href: "/code" },
 ];
 

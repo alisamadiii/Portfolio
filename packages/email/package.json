@@ -8,7 +8,7 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "dev": "cd src && email dev"
+    "email:dev": "cd src && email dev"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

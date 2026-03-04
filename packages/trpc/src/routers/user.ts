@@ -28,31 +28,13 @@ export const userRouter = createTRPCRouter({
   }),
   /**
    * Fetches the current user session
+   * Uses the incoming request headers (from next/headers) so it works for both
+   * in-process and HTTP callers (e.g. admin → API); cookies are forwarded by the caller.
    * @returns Promise<User> - The current user from session
    */
-  getSession: authenticatedProcedure
-    .input(
-      z.object({
-        headers: z.instanceof(Headers),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const { headers } = input;
-        const session = await auth.api.getSession({
-          headers,
-        });
-
-        return session?.user;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to fetch user",
-          cause: error,
-        });
-      }
-    }),
+  getSession: authenticatedProcedure.query(async ({ ctx }) => {
+    return ctx.session.user;
+  }),
 
   /**
    * Updates a user's information
