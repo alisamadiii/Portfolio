@@ -1,6 +1,3 @@
-// src/components/navbar.tsx
-"use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
@@ -30,17 +27,17 @@ export function Navbar() {
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "fixed top-0 right-0 left-0 z-50 transition-all duration-500",
+        "fixed top-0 right-0 left-0 z-50 h-16 transition-all duration-500",
         scrolled
           ? "bg-background/80 border-border border-b backdrop-blur-xl"
           : "bg-transparent"
       )}
     >
-      <div className="border-border/50 mx-auto max-w-[1400px] border-x">
-        <div className="flex items-center justify-between px-8 py-5">
+      <div className="border-border/50 mx-auto flex h-full w-full max-w-[1400px] items-center justify-between border-x">
+        <div className="flex w-full items-center justify-between px-8">
           <a href="#" className="font-heading text-xl font-bold tracking-tight">
             ALI
-            <span className="text-accent">.</span>
+            <span className="text-primary">.</span>
             SAMADII
           </a>
 
@@ -53,12 +50,12 @@ export function Navbar() {
                 className="text-muted-foreground hover:text-foreground group relative font-mono text-xs tracking-[0.2em] uppercase transition-colors duration-300"
               >
                 {link.label}
-                <span className="bg-accent absolute -bottom-1 left-0 h-px w-0 transition-all duration-300 group-hover:w-full" />
+                <span className="bg-primary absolute -bottom-1 left-0 h-px w-0 transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
             <a
               href="#contact"
-              className="border-accent text-accent hover:bg-accent hover:text-accent-foreground border px-5 py-2.5 font-mono text-xs tracking-[0.2em] uppercase transition-all duration-300"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground border px-5 py-2.5 font-mono text-xs tracking-[0.2em] uppercase transition-all duration-300"
             >
               Let&apos;s Talk
             </a>
@@ -67,7 +64,7 @@ export function Navbar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setOpen(!open)}
-            className="border-border hover:border-accent/50 flex h-10 w-10 items-center justify-center border transition-colors md:hidden"
+            className="border-border hover:border-primary/50 flex h-10 w-10 items-center justify-center border transition-colors md:hidden"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>

@@ -2,24 +2,24 @@
 
 import { Navbar } from "@/components/navbar";
 import {
+  AboutSection,
+  ContactInfoSection,
+  CTASection,
+  FooterSection,
   HeroSection,
   MarqueeSection,
-  StatsSection,
-  AboutSection,
-  ServicesSection,
-  WorkSection,
   ProcessSection,
+  ServicesSection,
+  StatsSection,
   TestimonialsSection,
-  CTASection,
-  ContactInfoSection,
-  FooterSection,
+  WorkSection,
 } from "@/components/sections";
 
 export default function Home() {
   return (
     <main className="min-h-screen">
       <Navbar />
-      <div className="border-border mx-auto max-w-[1400px] border-x">
+      <div className="mx-auto max-w-[1400px] border-x">
         <HeroSection />
         <MarqueeSection />
         <StatsSection />

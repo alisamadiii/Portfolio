@@ -30,11 +30,11 @@ export function ProjectCard({
       viewport={{ once: true }}
       transition={{ duration: 0.7, delay: index * 0.15 }}
       className={cn(
-        "group border-border relative cursor-pointer overflow-hidden border",
+        "group relative cursor-pointer overflow-hidden border-t border-r",
         className
       )}
     >
-      <div className="via-accent absolute top-0 left-0 z-10 h-px w-full scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover:scale-x-100" />
+      <div className="via-primary absolute top-0 left-0 z-10 h-px w-full scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover:scale-x-100" />
 
       {/* Image area */}
       <div className="bg-card relative aspect-[4/3] overflow-hidden">
@@ -52,10 +52,10 @@ export function ProjectCard({
 
       {/* Info */}
       <div className="bg-background p-6">
-        <p className="text-accent/60 mb-2 font-mono text-xs tracking-[0.15em] uppercase">
+        <p className="text-primary/60 mb-2 font-mono text-xs tracking-[0.15em] uppercase">
           {category}
         </p>
-        <h3 className="font-heading group-hover:text-accent mb-3 text-lg font-semibold transition-colors duration-300">
+        <h3 className="font-heading group-hover:text-primary mb-3 text-lg font-semibold transition-colors duration-300">
           {title}
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -63,7 +63,7 @@ export function ProjectCard({
             <Badge
               key={tag}
               variant="outline"
-              className="border-border text-muted-foreground hover:border-accent/30 hover:text-accent/70 font-mono text-[10px] tracking-wider uppercase transition-colors"
+              className="border-border text-muted-foreground hover:border-primary/30 hover:text-primary/70 font-mono text-[10px] tracking-wider uppercase transition-colors"
             >
               {tag}
             </Badge>

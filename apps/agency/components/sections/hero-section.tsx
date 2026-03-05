@@ -9,7 +9,7 @@ import { SectionLabel } from "@/components/section-label";
 
 export function HeroSection() {
   return (
-    <section className="pt-24">
+    <section className="pt-16">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <GridCell className="flex min-h-[70vh] flex-col justify-center lg:min-h-[85vh]">
           <SectionLabel text="Creative Agency" number="01" />
@@ -54,10 +54,7 @@ export function HeroSection() {
           </motion.div>
         </GridCell>
 
-        <GridCell
-          noPadding
-          className="relative hidden min-h-[85vh] lg:block"
-        >
+        <GridCell noPadding className="relative hidden min-h-[85vh] lg:block">
           <div className="from-accent/5 to-accent/10 absolute inset-0 bg-gradient-to-br via-transparent" />
           <img
             src="/hero.png"

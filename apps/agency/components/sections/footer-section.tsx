@@ -27,8 +27,8 @@ export function FooterSection() {
             ALI<span className="text-primary">.</span>SAMADII
           </a>
           <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-            A creative agency focused on building exceptional digital experiences
-            that drive real results.
+            A creative agency focused on building exceptional digital
+            experiences that drive real results.
           </p>
           <div className="flex gap-3">
             {SOCIAL_ICONS.map((Icon, i) => (
