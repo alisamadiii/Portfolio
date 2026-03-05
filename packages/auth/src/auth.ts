@@ -17,7 +17,7 @@ import {
   verification,
   webhookEvents,
 } from "@workspace/drizzle/schema";
-import { sendResetPassword, sendVerifyEmail } from "@workspace/email";
+import { sendEmail } from "@workspace/email";
 
 import {
   createOrder,
@@ -52,8 +52,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url, token }) => {
-      await sendResetPassword({
-        email: user.email,
+      await sendEmail("resetPassword", user.email, {
         resetPasswordLink: `${url}?token=${token}`,
       });
     },
@@ -127,7 +126,9 @@ export const auth = betterAuth({
         if (type === "sign-in") {
           // Send the OTP for sign in
         } else if (type === "email-verification") {
-          const { error } = await sendVerifyEmail({ email, otp });
+          const { error } = await sendEmail("verifyEmail", email, {
+            verificationCode: otp,
+          });
 
           if (error) {
             throw new APIError(403, { message: error });
