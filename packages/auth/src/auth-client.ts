@@ -19,5 +19,3 @@ export const authClient = createAuthClient({
     polarClient(),
   ],
 });
-
-export const { signIn, signUp, signOut, useSession } = createAuthClient();

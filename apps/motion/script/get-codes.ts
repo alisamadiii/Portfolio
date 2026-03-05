@@ -1,5 +1,3 @@
-// Get all codes from the database
-// Load .env before any other imports so DATABASE_URL is set when drizzle loads
 import fs from "fs/promises";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";

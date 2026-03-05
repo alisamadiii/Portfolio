@@ -9,12 +9,8 @@ import { z } from "zod";
 import { Button } from "@workspace/ui/components/button";
 import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { PageLoading } from "@workspace/ui/custom/page-loading";
 
-import {
-  useSignin,
-  useSignInWithProvider,
-} from "@workspace/auth/hooks/use-functions";
+import { useSignin } from "@workspace/auth/hooks/use-functions";
 
 const formSchema = z.object({
   email: z.email(),
@@ -32,7 +28,6 @@ export function Login() {
   });
 
   const signin = useSignin();
-  const onSignInWithProvider = useSignInWithProvider("google");
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     signin.mutate(values, {
@@ -103,20 +98,6 @@ export function Login() {
       >
         Login
       </Button>
-      <div className="text-muted-foreground my-2 text-center text-sm">Or</div>
-      <Button
-        variant={"outline"}
-        className="w-full max-w-sm"
-        onClick={() => onSignInWithProvider.mutate({ redirectUrl: "/" })}
-        size="lg"
-      >
-        Login with Google
-      </Button>
-
-      <PageLoading
-        active={onSignInWithProvider.isPending}
-        name="Signing in with Google"
-      />
     </div>
   );
 }

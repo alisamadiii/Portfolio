@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { authClient, signIn, signUp } from "@workspace/auth/auth-client";
+import { authClient } from "@workspace/auth/auth-client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 const useSignup = () => {
@@ -18,10 +18,11 @@ const useSignup = () => {
       password: string;
       name: string;
     }) => {
-      const response = await signUp.email({
+      const response = await authClient.signUp.email({
         email: values.email,
         name: values.name,
         password: values.password,
+        metadata: {},
       });
 
       if (response.error) {
@@ -64,7 +65,7 @@ const useSignin = () => {
 
   return useMutation({
     mutationFn: async (values: { email: string; password: string }) => {
-      const response = await signIn.email({
+      const response = await authClient.signIn.email({
         email: values.email,
         password: values.password,
       });
@@ -124,7 +125,7 @@ const useSignin = () => {
 export function useSignInWithProvider(provider: "github" | "google") {
   return useMutation({
     mutationFn: async ({ redirectUrl }: { redirectUrl: string }) => {
-      const { data, error } = await signIn.social({
+      const { data, error } = await authClient.signIn.social({
         provider,
         callbackURL: redirectUrl,
       });
