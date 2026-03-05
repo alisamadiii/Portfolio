@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@workspace/ui/lib/utils";
 
 const links = [
-  { label: "Work", href: "#work" },
+  // { label: "Work", href: "#work" },
   { label: "Services", href: "#services" },
   { label: "About", href: "#about" },
   { label: "Contact", href: "#contact" },
@@ -76,7 +76,7 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="border-border bg-background/95 border-t backdrop-blur-xl md:hidden"
+            className="border-border bg-background/95 fixed top-16 right-0 left-0 border-t backdrop-blur-xl md:hidden"
           >
             {links.map((link) => (
               <a

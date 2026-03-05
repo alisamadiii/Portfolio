@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode, useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import Link from "next/link";
+import { motion, useMotionValue, useSpring } from "motion/react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -38,18 +39,24 @@ export function MagneticButton({
   };
 
   return (
-    <motion.button
-      ref={ref}
-      style={{ x: springX, y: springY }}
-      onMouseMove={handleMouse}
-      onMouseLeave={reset}
-      onClick={onClick}
-      className={cn(
-        "font-heading border-accent bg-accent text-accent-foreground hover:text-accent group relative inline-flex items-center justify-center overflow-hidden border px-8 py-4 text-sm font-semibold tracking-[0.15em] uppercase transition-colors duration-300 hover:bg-transparent",
-        className
-      )}
+    <Link
+      href="https://cal.com/alisamadii"
+      target="_blank"
+      rel="noopener noreferrer"
     >
-      <span className="relative z-10">{children}</span>
-    </motion.button>
+      <motion.button
+        ref={ref}
+        style={{ x: springX, y: springY }}
+        onMouseMove={handleMouse}
+        onMouseLeave={reset}
+        onClick={onClick}
+        className={cn(
+          "font-heading border-primary bg-primary text-primary-foreground group relative inline-flex items-center justify-center overflow-hidden border px-8 py-4 text-sm font-semibold tracking-[0.15em] uppercase transition-colors duration-300",
+          className
+        )}
+      >
+        <span className="relative z-10">{children}</span>
+      </motion.button>
+    </Link>
   );
 }

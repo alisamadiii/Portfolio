@@ -46,24 +46,24 @@ export function HeroSection() {
             className="flex flex-wrap gap-4"
           >
             <MagneticButton>Start a Project</MagneticButton>
-            <a
+            {/* <a
               href="#work"
               className="text-muted-foreground hover:text-foreground border-border hover:border-foreground/20 group inline-flex items-center gap-2 border px-8 py-4 font-mono text-sm tracking-[0.15em] uppercase transition-all duration-300"
             >
               View Work
               <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-            </a>
+            </a> */}
           </motion.div>
         </GridCell>
 
         <GridCell
           noPadding
-          className="relative isolate hidden min-h-[85vh] items-center justify-center lg:flex"
+          className="relative isolate hidden min-h-[85vh] items-center justify-center text-white lg:flex"
         >
           <img
             src="https://cdn.alisamadii.com/marketing/agency-hero.webp"
             alt="Hero"
-            className="absolute inset-0 -z-10 h-full w-full scale-150 object-cover object-right opacity-50 blur-sm"
+            className="absolute inset-0 -z-10 h-full w-full scale-150 object-cover object-right blur-sm dark:opacity-50"
           />
           <Logo className="size-100" />
         </GridCell>

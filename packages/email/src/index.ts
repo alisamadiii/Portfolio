@@ -7,11 +7,17 @@ import ResetPassword from "./emails/reset-password";
 import VerifyEmail from "./emails/verify-email";
 import { renderEmail, renderText } from "./utils";
 
+type TemplateProps = {
+  verifyEmail: { verificationCode: string };
+  resetPassword: { resetPasswordLink: string };
+  accountDeleted: { userName?: string; feedbackLink?: string };
+};
+
 // Template registry — add new emails here, that's it
 type EmailTemplate = {
   subject: string;
   fromLabel: string;
-  component: React.ComponentType<any>;
+  component: React.ComponentType<Record<string, unknown>>;
 };
 
 const templates: Record<string, EmailTemplate> = {
@@ -30,12 +36,6 @@ const templates: Record<string, EmailTemplate> = {
     fromLabel: "Account deleted",
     component: AccountDeleted,
   },
-};
-
-type TemplateProps = {
-  verifyEmail: { verificationCode: string };
-  resetPassword: { resetPasswordLink: string };
-  accountDeleted: { userName?: string; feedbackLink?: string };
 };
 
 let sesClient: SESClient | null = null;
