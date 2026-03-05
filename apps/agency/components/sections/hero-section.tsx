@@ -3,6 +3,8 @@
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
+import { Logo } from "@workspace/ui/icons/logo";
+
 import { GridCell } from "@/components/grid-cell";
 import { MagneticButton } from "@/components/magnetic-button";
 import { SectionLabel } from "@/components/section-label";
@@ -54,13 +56,16 @@ export function HeroSection() {
           </motion.div>
         </GridCell>
 
-        <GridCell noPadding className="relative hidden min-h-[85vh] lg:block">
-          <div className="from-accent/5 to-accent/10 absolute inset-0 bg-gradient-to-br via-transparent" />
+        <GridCell
+          noPadding
+          className="relative isolate hidden min-h-[85vh] items-center justify-center lg:flex"
+        >
           <img
             src="https://cdn.alisamadii.com/marketing/agency-hero.webp"
             alt="Hero"
-            className="h-full w-full object-cover object-right"
+            className="absolute inset-0 -z-10 h-full w-full scale-150 object-cover object-right opacity-50 blur-sm"
           />
+          <Logo className="size-100" />
         </GridCell>
       </div>
     </section>

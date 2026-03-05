@@ -2,23 +2,25 @@
 
 import { Mail, MapPin, Phone } from "lucide-react";
 
+import { company } from "@workspace/ui/lib/company";
+
 import { GridCell } from "@/components/grid-cell";
 
 const CONTACT_ITEMS = [
   {
     icon: Mail,
     label: "Email",
-    value: "hello@alisamadii.com",
+    value: company.email,
   },
   {
     icon: Phone,
     label: "Phone",
-    value: "+1 (555) 123-4567",
+    value: company.phone,
   },
   {
     icon: MapPin,
     label: "Location",
-    value: "San Francisco, CA",
+    value: company.location,
   },
 ];
 

@@ -25,9 +25,9 @@ export default function Home() {
         <StatsSection />
         <AboutSection />
         <ServicesSection />
-        <WorkSection />
+        {/* <WorkSection /> */}
         <ProcessSection />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <CTASection />
         <ContactInfoSection />
         <FooterSection />

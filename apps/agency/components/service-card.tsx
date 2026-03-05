@@ -21,9 +21,10 @@ export function ServiceCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
-      className="group relative overflow-hidden border-t border-r p-8 transition-all duration-500 hover:bg-white/[0.02] md:p-10"
+      className="group relative overflow-hidden border-t border-r p-8 md:p-10"
     >
       <div className="via-primary absolute top-0 left-0 h-px w-full scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover:scale-x-100" />
+      <div className="absolute inset-0 bg-white/[0.02] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
 
       <div className="border-border text-primary/70 group-hover:text-primary group-hover:border-primary/50 group-hover:bg-primary/5 mb-6 flex h-12 w-12 items-center justify-center border transition-all duration-500 [&>svg]:size-5">
         {icon}

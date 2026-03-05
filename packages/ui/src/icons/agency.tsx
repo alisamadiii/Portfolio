@@ -147,7 +147,7 @@ export const Layers = (props: Props) => (
   </svg>
 );
 
-export const Code = (props: Props) => (
+export const Lightning = (props: Props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="18"
@@ -155,7 +155,26 @@ export const Code = (props: Props) => (
     viewBox="0 0 18 18"
     {...props}
   >
-    <title>code-3</title>
+    <title>bolt-lightning</title>
+    <g fill="currentColor">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M5.67585 1.81984C5.8563 1.32701 6.32578 1 6.84901 1H11.019C11.8998 1 12.5011 1.88388 12.1844 2.70181L12.184 2.70281L11.0963 5.5H13.75C14.7808 5.5 15.3669 6.67577 14.7505 7.49942L7.85001 16.7C7.63299 16.9894 7.24039 17.0826 6.91644 16.9217C6.59249 16.7609 6.4295 16.3917 6.52886 16.044L8.25571 10H4.46602C3.59645 10 2.99323 9.13488 3.29298 8.31947"
+      ></path>
+    </g>
+  </svg>
+);
+
+export const TrendingUp = (props: Props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    {...props}
+  >
+    <title>arrow-trend-up</title>
     <g
       fill="none"
       strokeLinecap="round"
@@ -163,9 +182,8 @@ export const Code = (props: Props) => (
       strokeWidth="1.5"
       stroke="currentColor"
     >
-      <path d="M5.25 13.25L1.75 9L5.25 4.75"></path>
-      <path d="M12.75 13.25L16.25 9L12.75 4.75"></path>
-      <path d="M7.75 13.25L10.25 4.75"></path>
+      <path d="M1.75,12.25l3.646-3.646c.195-.195,.512-.195,.707,0l3.293,3.293c.195,.195,.512,.195,.707,0l6.146-6.146"></path>
+      <polyline points="11.25 5.75 16.25 5.75 16.25 10.75"></polyline>
     </g>
   </svg>
 );

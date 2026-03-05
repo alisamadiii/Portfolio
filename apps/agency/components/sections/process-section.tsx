@@ -1,6 +1,6 @@
 "use client";
 
-import { Code, Globe, TrendingUp, Zap } from "lucide-react";
+import { Code, Earth, Lightning, TrendingUp } from "@workspace/ui/icons";
 
 import { GridCell } from "@/components/grid-cell";
 import { SectionLabel } from "@/components/section-label";
@@ -10,7 +10,7 @@ const PROCESS_STEPS = [
     step: "01",
     title: "Discovery",
     desc: "Understanding your goals, audience, and competitive landscape through deep research.",
-    icon: Zap,
+    icon: Lightning,
   },
   {
     step: "02",
@@ -28,7 +28,7 @@ const PROCESS_STEPS = [
     step: "04",
     title: "Launch & Scale",
     desc: "Deploying, monitoring, and iterating to ensure sustained growth and performance.",
-    icon: Globe,
+    icon: Earth,
   },
 ];
 
@@ -36,7 +36,7 @@ export function ProcessSection() {
   return (
     <section>
       <GridCell>
-        <SectionLabel text="How We Work" number="05" />
+        <SectionLabel text="How We Work" number="04" />
         <h2 className="font-heading mb-4 text-4xl font-bold md:text-5xl">
           Our Process
         </h2>
@@ -46,7 +46,7 @@ export function ProcessSection() {
         {PROCESS_STEPS.map((item, i) => (
           <GridCell key={item.step} delay={i * 0.1}>
             <div className="relative">
-              <item.icon className="text-primary/60 mb-6 h-5 w-5" />
+              <item.icon className="text-primary/60 mb-6 size-10" />
               <span className="font-heading absolute top-0 right-0 text-5xl font-bold text-white/[0.03]">
                 {item.step}
               </span>

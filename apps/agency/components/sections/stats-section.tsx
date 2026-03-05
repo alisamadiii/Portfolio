@@ -1,13 +1,13 @@
 "use client";
 
-import { GridCell } from "@/components/grid-cell";
 import { AnimatedCounter } from "@/components/animated-counter";
+import { GridCell } from "@/components/grid-cell";
 
 const STATS = [
-  { value: 150, suffix: "+", label: "Projects Delivered" },
+  { value: 6, suffix: "+", label: "Projects Delivered" },
   { value: 98, suffix: "%", label: "Client Satisfaction" },
-  { value: 12, suffix: "+", label: "Years Experience" },
-  { value: 40, suffix: "+", label: "Team Members" },
+  { value: 5, suffix: "+", label: "Years Experience" },
+  { value: 1, suffix: "", label: "Team Members" },
 ];
 
 export function StatsSection() {

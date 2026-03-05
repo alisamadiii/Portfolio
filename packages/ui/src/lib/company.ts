@@ -5,6 +5,8 @@ export const company = {
   description:
     "SOFTWARE DEVELOPMENT, SAAS PRODUCTS, AND ONLINE TECHNOLOGY SERVICES.",
   email: "a@alisamadii.com",
+  phone: "+1 (971) 382-8969",
+  location: "Portland, OR",
   disclaimer: "All rights reserved.",
   social: [
     { icon: XIcon, href: "https://x.com/alisamadii_", label: "X" },

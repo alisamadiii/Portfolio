@@ -13,7 +13,7 @@ export function CTASection() {
 
           <SectionLabel
             text="Get in Touch"
-            number="07"
+            number="05"
             className="justify-center"
           />
           <h2 className="font-heading relative mb-6 text-5xl font-bold md:text-7xl">
@@ -22,8 +22,8 @@ export function CTASection() {
             Something <span className="text-primary">Amazing</span>
           </h2>
           <p className="text-muted-foreground relative mx-auto mb-10 max-w-lg text-lg">
-            Ready to elevate your digital presence? We&apos;d love to hear
-            about your project and explore how we can help.
+            Ready to elevate your digital presence? We&apos;d love to hear about
+            your project and explore how we can help.
           </p>
           <div className="relative flex flex-wrap justify-center gap-4">
             <MagneticButton>Start a Conversation</MagneticButton>
