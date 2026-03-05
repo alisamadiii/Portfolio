@@ -57,9 +57,9 @@ export function HeroSection() {
         <GridCell noPadding className="relative hidden min-h-[85vh] lg:block">
           <div className="from-accent/5 to-accent/10 absolute inset-0 bg-gradient-to-br via-transparent" />
           <img
-            src="/hero.png"
+            src="https://cdn.alisamadii.com/marketing/agency-hero.webp"
             alt="Hero"
-            className="h-full w-full origin-right object-cover"
+            className="h-full w-full object-cover object-right"
           />
         </GridCell>
       </div>

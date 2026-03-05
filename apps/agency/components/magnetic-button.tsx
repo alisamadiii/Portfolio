@@ -50,10 +50,6 @@ export function MagneticButton({
       )}
     >
       <span className="relative z-10">{children}</span>
-      <div className="bg-accent absolute inset-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0" />
-      <span className="text-accent-foreground absolute inset-0 z-20 flex translate-y-full items-center justify-center transition-transform delay-75 duration-300 ease-out group-hover:translate-y-0">
-        {children}
-      </span>
     </motion.button>
   );
 }

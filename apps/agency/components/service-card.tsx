@@ -1,17 +1,16 @@
 "use client";
 
-import { LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 
 interface ServiceCardProps {
-  icon: LucideIcon;
+  icon: React.ReactNode;
   title: string;
   description: string;
   index: number;
 }
 
 export function ServiceCard({
-  icon: Icon,
+  icon,
   title,
   description,
   index,
@@ -26,8 +25,8 @@ export function ServiceCard({
     >
       <div className="via-primary absolute top-0 left-0 h-px w-full scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover:scale-x-100" />
 
-      <div className="border-border group-hover:border-primary/50 group-hover:bg-primary/5 mb-6 flex h-12 w-12 items-center justify-center border transition-all duration-500">
-        <Icon className="text-primary/70 group-hover:text-primary h-5 w-5 transition-colors duration-500" />
+      <div className="border-border text-primary/70 group-hover:text-primary group-hover:border-primary/50 group-hover:bg-primary/5 mb-6 flex h-12 w-12 items-center justify-center border transition-all duration-500 [&>svg]:size-5">
+        {icon}
       </div>
 
       <h3 className="font-heading group-hover:text-primary mb-3 text-xl font-semibold transition-colors duration-300">

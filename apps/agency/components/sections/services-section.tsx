@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  Chart2,
   Code,
-  Globe,
+  Earth,
   Layers,
   Megaphone,
-  Palette,
-  TrendingUp,
-} from "lucide-react";
+  Paintbrush,
+} from "@workspace/ui/icons";
 
 import { GridCell } from "@/components/grid-cell";
 import { SectionLabel } from "@/components/section-label";
@@ -15,7 +15,7 @@ import { ServiceCard } from "@/components/service-card";
 
 const SERVICES = [
   {
-    icon: Palette,
+    icon: Paintbrush,
     title: "Brand Identity",
     description:
       "Crafting distinctive visual identities that resonate with your audience and set you apart from the competition.",
@@ -27,13 +27,13 @@ const SERVICES = [
       "Building performant, scalable web applications using cutting-edge technologies and modern frameworks.",
   },
   {
-    icon: Globe,
+    icon: Earth,
     title: "UI/UX Design",
     description:
       "Designing intuitive interfaces with user-centered methodologies that drive engagement and conversions.",
   },
   {
-    icon: TrendingUp,
+    icon: Chart2,
     title: "SEO & Analytics",
     description:
       "Data-driven optimization strategies to boost visibility, traffic, and meaningful user engagement.",
@@ -54,13 +54,13 @@ const SERVICES = [
 
 export function ServicesSection() {
   return (
-    <section id="services">
+    <section id="services" className="relative overflow-hidden">
       <GridCell>
         <SectionLabel text="What We Do" number="03" />
         <h2 className="font-heading mb-4 text-4xl font-bold md:text-5xl">
           Our Services
         </h2>
-        <p className="text-muted-foreground mb-12 max-w-lg">
+        <p className="text-muted-foreground max-w-lg">
           Comprehensive digital solutions tailored to elevate your brand and
           accelerate growth.
         </p>
@@ -70,7 +70,7 @@ export function ServicesSection() {
         {SERVICES.map((service, i) => (
           <ServiceCard
             key={service.title}
-            icon={service.icon}
+            icon={<service.icon />}
             title={service.title}
             description={service.description}
             index={i}
