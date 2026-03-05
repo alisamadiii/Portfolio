@@ -1,21 +1,37 @@
-import { Navbar } from "@/components/landing-page/navbar";
-import { Hero } from "@/components/landing-page/hero";
-import { Stats } from "@/components/landing-page/stats";
-import { Services } from "@/components/landing-page/services";
-import { Process } from "@/components/landing-page/process";
-import { Booking } from "@/components/landing-page/booking";
-import { SiteFooter } from "@/components/landing-page/site-footer";
+"use client";
+
+import { Navbar } from "@/components/navbar";
+import {
+  HeroSection,
+  MarqueeSection,
+  StatsSection,
+  AboutSection,
+  ServicesSection,
+  WorkSection,
+  ProcessSection,
+  TestimonialsSection,
+  CTASection,
+  ContactInfoSection,
+  FooterSection,
+} from "@/components/sections";
 
 export default function Home() {
   return (
-    <main className="relative">
+    <main className="min-h-screen">
       <Navbar />
-      <Hero />
-      <Stats />
-      <Services />
-      <Process />
-      <Booking />
-      <SiteFooter />
+      <div className="border-border mx-auto max-w-[1400px] border-x">
+        <HeroSection />
+        <MarqueeSection />
+        <StatsSection />
+        <AboutSection />
+        <ServicesSection />
+        <WorkSection />
+        <ProcessSection />
+        <TestimonialsSection />
+        <CTASection />
+        <ContactInfoSection />
+        <FooterSection />
+      </div>
     </main>
   );
 }
