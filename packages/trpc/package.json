@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@polar-sh/sdk": "^0.41.5",
+    "@polar-sh/sdk": "^0.46.2",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@trpc/client": "^11.7.2",
