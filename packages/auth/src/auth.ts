@@ -24,6 +24,7 @@ import {
   createProduct,
   createSubscription,
   deleteCustomer,
+  deleteProduct,
   revokeSubscriptionOnRefund,
   updateOrder,
   updateProduct,
@@ -161,7 +162,11 @@ export const auth = betterAuth({
             await createProduct(data);
           },
           onProductUpdated: async ({ data }) => {
-            await updateProduct(data);
+            if (data.isArchived) {
+              await deleteProduct(data.id);
+            } else {
+              await updateProduct(data);
+            }
           },
           onOrderCreated: async ({ data }) => {
             await createOrder(data);

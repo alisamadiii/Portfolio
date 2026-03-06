@@ -15,6 +15,7 @@ const links = [
     href: `${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`,
   },
   { label: "Code", href: "/code" },
+  { label: "Agency", href: "/agency" },
 ];
 
 export const NavbarAdmin = () => {

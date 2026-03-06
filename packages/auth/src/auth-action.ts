@@ -61,6 +61,9 @@ export const updateProduct = async (data: Product) => {
     })
     .where(eq(products.id, data.id));
 };
+export const deleteProduct = async (id: string) => {
+  await db.delete(products).where(eq(products.id, id));
+};
 // ----------------------------
 // 📦 Products END
 // ----------------------------
