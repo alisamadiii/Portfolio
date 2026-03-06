@@ -13,25 +13,44 @@ import {
   user,
 } from "@workspace/drizzle/schema";
 
+function getPriceAmount(price: Product["prices"][number]): number {
+  return "priceAmount" in price ? price.priceAmount : 0;
+}
+
+function getPriceCurrency(price: Product["prices"][number]): string {
+  return "priceCurrency" in price ? price.priceCurrency : "usd";
+}
+
 // ----------------------------
 // 📦 Products
 // ----------------------------
+const INTERVAL_VALUES = ["day", "week", "month", "year"] as const;
+
 export const createProduct = async (data: Product) => {
+  const firstPrice = data.prices[0];
   await db.insert(products).values({
     id: data.id,
     name: data.name,
     description: data.description ?? null,
     popular: false,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    priceAmount: data.prices[0]?.priceAmount || 0,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    priceCurrency: data.prices[0]?.priceCurrency || "usd",
-    recurringInterval: data.recurringInterval ?? null,
+    priceAmount: firstPrice ? getPriceAmount(firstPrice) : 0,
+    priceCurrency: firstPrice ? getPriceCurrency(firstPrice) : "usd",
+    recurringInterval:
+      data.recurringInterval &&
+      INTERVAL_VALUES.includes(
+        data.recurringInterval as (typeof INTERVAL_VALUES)[number]
+      )
+        ? (data.recurringInterval as (typeof INTERVAL_VALUES)[number])
+        : null,
     isRecurring: data.isRecurring,
     isArchived: false,
-    trialInterval: data.trialInterval ?? null,
+    trialInterval:
+      data.trialInterval &&
+      INTERVAL_VALUES.includes(
+        data.trialInterval as (typeof INTERVAL_VALUES)[number]
+      )
+        ? (data.trialInterval as (typeof INTERVAL_VALUES)[number])
+        : null,
     trialIntervalCount: data.trialIntervalCount ?? 0,
     metadata: data.metadata ?? {},
     createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
@@ -40,30 +59,37 @@ export const createProduct = async (data: Product) => {
 };
 
 export const updateProduct = async (data: Product) => {
+  const firstPrice = data.prices[0];
   await db
     .update(products)
     .set({
       name: data.name,
       description: data.description ?? null,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      priceAmount: data.prices[0]?.priceAmount || 0,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      priceCurrency: data.prices[0]?.priceCurrency || "usd",
-      recurringInterval: data.recurringInterval ?? null,
+      priceAmount: firstPrice ? getPriceAmount(firstPrice) : 0,
+      priceCurrency: firstPrice ? getPriceCurrency(firstPrice) : "usd",
+      recurringInterval:
+        data.recurringInterval &&
+        INTERVAL_VALUES.includes(
+          data.recurringInterval as (typeof INTERVAL_VALUES)[number]
+        )
+          ? (data.recurringInterval as (typeof INTERVAL_VALUES)[number])
+          : null,
       isRecurring: data.isRecurring,
       isArchived: data.isArchived,
-      trialInterval: data.trialInterval ?? null,
+      trialInterval:
+        data.trialInterval &&
+        INTERVAL_VALUES.includes(
+          data.trialInterval as (typeof INTERVAL_VALUES)[number]
+        )
+          ? (data.trialInterval as (typeof INTERVAL_VALUES)[number])
+          : null,
       trialIntervalCount: data.trialIntervalCount ?? 0,
       metadata: data.metadata ?? {},
       updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
     })
     .where(eq(products.id, data.id));
 };
-export const deleteProduct = async (id: string) => {
-  await db.delete(products).where(eq(products.id, id));
-};
+
 // ----------------------------
 // 📦 Products END
 // ----------------------------

@@ -16,12 +16,12 @@
   "license": "ISC",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
-    "@polar-sh/sdk": "^0.41.5",
-    "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.0"
+    "@polar-sh/sdk": "^0.46.2",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "^0.31.9",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

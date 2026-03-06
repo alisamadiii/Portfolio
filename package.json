@@ -8,8 +8,8 @@
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "turbo:up": "pnpm up --latest -r",
-    "turbo:syncpack:list": "pnpm dlx syncpack list-mismatches",
-    "turbo:syncpack:fix": "pnpm dlx syncpack fix-mismatches",
+    "turbo:syncpack:list": "pnpm exec syncpack lint --dependency-types prod,dev,peer",
+    "turbo:syncpack:fix": "pnpm exec syncpack fix --dependency-types prod,dev,peer",
     "turbo:email:dev": "cd packages/email && pnpm dev",
     "typecheck": "tsc --noEmit",
     "audit": "pnpm audit --audit-level moderate",
@@ -24,23 +24,28 @@
     "android": "expo run:android"
   },
   "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
-    "@types/node": "^25.0.5",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@types/node": "^25.3.5",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.6.3",
+    "turbo": "^2.8.13",
     "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@10.4.1",
   "engines": {
     "node": ">=20"
   },
+  "pnpm": {
+    "overrides": {
+      "@types/minimatch": "npm:@types/minimatch@5.1.2"
+    }
+  },
   "dependencies": {
-    "eslint": "^9.39.1",
-    "react": "^19.2.3",
-    "react-native": "0.81.5",
-    "zod": "^4.1.13"
+    "eslint": "^10.0.2",
+    "react": "^19.2.4",
+    "react-native": "0.84.1",
+    "zod": "^4.3.6"
   }
 }
