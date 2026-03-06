@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { motion } from "motion/react";
 
 import { cn } from "@workspace/ui/lib/utils";
 

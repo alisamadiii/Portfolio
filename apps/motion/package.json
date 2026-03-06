@@ -28,6 +28,7 @@
     "better-auth": "^1.5.4",
     "canvas-confetti": "^1.9.4",
     "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.45.1",
     "fumadocs-core": "16.6.9",
     "fumadocs-mdx": "14.2.9",
     "fumadocs-ui": "16.6.9",
@@ -45,7 +46,9 @@
     "react-use-measure": "^2.1.7",
     "shiki": "^4.0.1",
     "sonner": "^2.0.7",
-    "zod": "^4.3.6"
+    "tsx": "^4.21.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
