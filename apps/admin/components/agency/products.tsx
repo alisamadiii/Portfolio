@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { cn } from "@workspace/ui/lib/utils";
+import { cn, formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -196,7 +196,7 @@ export const AgencyProducts = () => {
             <CardContent className="flex-1 space-y-3">
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-bold tabular-nums">
-                  ${(product.priceAmount / 100).toFixed(2)}
+                  ${formatPrice(product.priceAmount)}
                 </span>
                 {product.recurringInterval && (
                   <span className="text-muted-foreground text-sm">
@@ -205,15 +205,15 @@ export const AgencyProducts = () => {
                 )}
               </div>
 
-              {product.scope && (
+              {product.services && (
                 <div className="flex flex-wrap gap-2">
-                  {JSON.parse(product.scope).map((item: string) => (
+                  {product.services.map((service) => (
                     <Badge
-                      key={item}
+                      key={service.name}
                       variant="outline"
                       className="text-muted-foreground shrink-0 text-[11px]"
                     >
-                      {item}
+                      {service.name}
                     </Badge>
                   ))}
                 </div>

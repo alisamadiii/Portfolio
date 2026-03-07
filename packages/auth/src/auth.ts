@@ -73,6 +73,15 @@ export const auth = betterAuth({
       metadata: {
         type: "json",
       },
+      phone: {
+        type: "string",
+      },
+      company: {
+        type: "string",
+      },
+      address: {
+        type: "string",
+      },
     },
   },
   socialProviders: {

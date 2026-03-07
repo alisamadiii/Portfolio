@@ -32,6 +32,11 @@ export const user = pgTable("user", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   metadata: jsonb("metadata").default({}),
+
+  // New
+  phone: text("phone"),
+  company: text("company"),
+  address: text("address"),
 });
 
 export const session = pgTable("session", {

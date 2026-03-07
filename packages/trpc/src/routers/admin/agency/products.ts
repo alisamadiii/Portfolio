@@ -1,6 +1,9 @@
+import { ProductCreate } from "@polar-sh/sdk/models/components/productcreate.js";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { generateDescription } from "@workspace/ui/lib/agency-utils";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
@@ -10,58 +13,77 @@ import { orders, products, subscriptions } from "@workspace/drizzle/schema";
 export type AgencyMetadata = {
   userId?: string;
   email?: string;
-  scope?: string;
+  services?: string;
 };
 
+export const AgencyServiceSchema = z.object({
+  name: z.string(),
+  price: z.number(),
+});
+
+const createSchema = z.object({
+  name: z.string(),
+  recurringInterval: z.enum(["month", "year"]),
+  email: z.string(),
+  services: z.array(AgencyServiceSchema),
+  userId: z.string(),
+});
+
 export const adminAgencyProductsRouter = createTRPCRouter({
-  create: adminProcedure
-    .input(
-      z.object({
-        name: z.string(),
-        description: z.string().optional(),
-        price: z.number(),
-        recurringInterval: z.enum(["day", "week", "month", "year"]),
-        email: z.string(),
-        scope: z.array(z.string()),
-        userId: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const {
-          name,
-          description,
-          price,
-          recurringInterval,
-          email,
-          scope,
-          userId,
-        } = input;
+  create: adminProcedure.input(createSchema).mutation(async ({ input }) => {
+    try {
+      const { name, recurringInterval, email, services, userId } = input;
 
-        const result = await polarClient.products.create({
-          name,
-          description,
-          prices: [
-            {
-              amountType: "fixed",
-              priceAmount: price * 100,
-            },
-          ],
-          recurringInterval,
-          metadata: { email, scope: JSON.stringify(scope), userId },
-          visibility: "private",
-        });
-
-        return result;
-      } catch (error) {
+      if (!userId || !email || !services) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to create product",
-          cause: error,
+          code: "BAD_REQUEST",
+          message: "User ID, email and scope are required",
         });
       }
-    }),
+
+      // Check if product already exists with the user id in metadata
+      const existingProduct = await db
+        .select()
+        .from(products)
+        .where(sql`${products.metadata}->>'userId' = ${userId}`)
+        .limit(1);
+      if (existingProduct.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Product already exists for this user",
+        });
+      }
+
+      const product: ProductCreate = {
+        name,
+        description: generateDescription(services, recurringInterval),
+        prices: [
+          {
+            amountType: "fixed",
+            priceAmount: services.reduce((sum, s) => sum + s.price, 0),
+          },
+        ],
+        recurringInterval,
+        metadata: {
+          email,
+          services: JSON.stringify(services),
+          userId,
+        },
+        visibility: "private",
+      };
+
+      const result = await polarClient.products.create(product);
+
+      return result;
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error ? error.message : "Failed to create product",
+        cause: error,
+      });
+    }
+  }),
   getAllProducts: adminProcedure.query(async () => {
     try {
       const productsList = await db
@@ -75,8 +97,15 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         const metadata = product.metadata as AgencyMetadata | undefined;
         const userId = metadata?.userId;
         const email = metadata?.email;
-        const scope = metadata?.scope;
-        return { ...product, userId, email, scope };
+        const services = metadata?.services;
+        return {
+          ...product,
+          userId,
+          email,
+          services: services
+            ? (JSON.parse(services) as { name: string; price: number }[])
+            : [],
+        };
       });
     } catch (error) {
       throw new TRPCError({
@@ -86,27 +115,30 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       });
     }
   }),
-  getProductsByUserId: adminProcedure
+  getProductByUserId: adminProcedure
     .input(z.string())
     .query(async ({ input }) => {
       try {
         const productsList = await db
           .select()
           .from(products)
-          .where(sql`${products.metadata}->>'userId' = ${input}`);
+          .where(sql`${products.metadata}->>'userId' = ${input}`)
+          .limit(1)
+          .then((result) => result[0]);
 
-        return productsList.map((product) => {
-          const metadata = product.metadata as AgencyMetadata | undefined;
-          const userId = metadata?.userId;
-          const email = metadata?.email;
-          const scope = metadata?.scope;
-          return {
-            ...product,
-            userId,
-            email,
-            scope: scope ? JSON.parse(scope) : [],
-          };
-        });
+        const metadata = productsList.metadata as AgencyMetadata | undefined;
+        const userId = metadata?.userId;
+        const email = metadata?.email;
+        const services = metadata?.services;
+
+        return {
+          ...productsList,
+          userId,
+          email,
+          services: services
+            ? (JSON.parse(services) as { name: string; price: number }[])
+            : [],
+        };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -168,7 +200,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         const metadata = product.metadata as AgencyMetadata | undefined;
         const userId = metadata?.userId;
         const email = metadata?.email;
-        const scope = metadata?.scope;
+        const services = metadata?.services;
 
         const checkout = await polarClient.checkouts.create({
           products: [input.productId],
@@ -177,7 +209,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
             userId: userId ?? "",
             productId: input.productId,
             email: email ?? "",
-            scope: JSON.stringify(scope),
+            services: JSON.stringify(services),
           },
         });
         return checkout;
