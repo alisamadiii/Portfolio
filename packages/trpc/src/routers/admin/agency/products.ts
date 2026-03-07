@@ -1,11 +1,17 @@
 import { TRPCError } from "@trpc/server";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { orders, products, subscriptions } from "@workspace/drizzle/schema";
+
+export type AgencyMetadata = {
+  userId?: string;
+  email?: string;
+  scope?: string;
+};
 
 export const adminAgencyProductsRouter = createTRPCRouter({
   create: adminProcedure
@@ -15,12 +21,22 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         description: z.string().optional(),
         price: z.number(),
         recurringInterval: z.enum(["day", "week", "month", "year"]),
-        metadata: z.record(z.string(), z.string()),
+        email: z.string(),
+        scope: z.array(z.string()),
+        userId: z.string(),
       })
     )
     .mutation(async ({ input }) => {
       try {
-        const { name, description, price, recurringInterval, metadata } = input;
+        const {
+          name,
+          description,
+          price,
+          recurringInterval,
+          email,
+          scope,
+          userId,
+        } = input;
 
         const result = await polarClient.products.create({
           name,
@@ -32,7 +48,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
             },
           ],
           recurringInterval,
-          metadata,
+          metadata: { email, scope: JSON.stringify(scope), userId },
           visibility: "private",
         });
 
@@ -51,9 +67,17 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       const productsList = await db
         .select()
         .from(products)
+        .where(sql`${products.metadata} ? 'userId'`)
         .orderBy(desc(products.createdAt))
         .limit(20);
-      return productsList;
+
+      return productsList.map((product) => {
+        const metadata = product.metadata as AgencyMetadata | undefined;
+        const userId = metadata?.userId;
+        const email = metadata?.email;
+        const scope = metadata?.scope;
+        return { ...product, userId, email, scope };
+      });
     } catch (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -62,21 +86,52 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       });
     }
   }),
-  getOrdersByProduct: adminProcedure
+  getProductsByUserId: adminProcedure
+    .input(z.string())
+    .query(async ({ input }) => {
+      try {
+        const productsList = await db
+          .select()
+          .from(products)
+          .where(sql`${products.metadata}->>'userId' = ${input}`);
+
+        return productsList.map((product) => {
+          const metadata = product.metadata as AgencyMetadata | undefined;
+          const userId = metadata?.userId;
+          const email = metadata?.email;
+          const scope = metadata?.scope;
+          return {
+            ...product,
+            userId,
+            email,
+            scope: scope ? JSON.parse(scope) : [],
+          };
+        });
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to get products by user id",
+        });
+      }
+    }),
+  getOrdersByUserId: adminProcedure
     .input(z.string())
     .query(async ({ input }) => {
       try {
         const ordersList = await db
           .select()
           .from(orders)
-          .where(eq(orders.productId, input))
+          .where(sql`${orders.metadata}->>'userId' = ${input}`)
           .orderBy(desc(orders.createdAt))
           .limit(20);
 
         const subscriptionsList = await db
           .select()
           .from(subscriptions)
-          .where(eq(subscriptions.productId, input))
+          .where(sql`${subscriptions.metadata}->>'userId' = ${input}`)
           .orderBy(desc(subscriptions.createdAt))
           .limit(20);
 
@@ -99,8 +154,31 @@ export const adminAgencyProductsRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
+        const findProduct = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, input.productId));
+        if (!findProduct) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Product not found",
+          });
+        }
+        const product = findProduct[0];
+        const metadata = product.metadata as AgencyMetadata | undefined;
+        const userId = metadata?.userId;
+        const email = metadata?.email;
+        const scope = metadata?.scope;
+
         const checkout = await polarClient.checkouts.create({
           products: [input.productId],
+          externalCustomerId: userId,
+          metadata: {
+            userId: userId ?? "",
+            productId: input.productId,
+            email: email ?? "",
+            scope: JSON.stringify(scope),
+          },
         });
         return checkout;
       } catch (error) {

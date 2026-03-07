@@ -115,6 +115,7 @@ export const createOrder = async (data: Order) => {
     discountAmount: data.discountAmount,
     createdAt: data.createdAt,
     updatedAt: data.modifiedAt,
+    metadata: data.metadata ?? {},
   });
 };
 export const updateOrder = async (data: Order) => {

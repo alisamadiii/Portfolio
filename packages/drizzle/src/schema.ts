@@ -152,6 +152,7 @@ export const orders = pgTable("order", {
   discountAmount: integer("discount_amount").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
 });
 
 export const webhookEvents = pgTable("webhook_events", {

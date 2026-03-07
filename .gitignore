@@ -47,3 +47,4 @@ apps/**/global.css
 apps/motion/animations
 
 .pnpm-store
+.env*.local
