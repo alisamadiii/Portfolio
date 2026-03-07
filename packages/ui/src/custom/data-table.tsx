@@ -53,14 +53,26 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   const { onRowClick, className, error } = props;
 
   return (
-    <div className={cn("isolate overflow-hidden rounded-xl border", className)}>
+    <div
+      className={cn(
+        "shadow-card isolate overflow-hidden rounded-3xl",
+        className
+      )}
+    >
       <Table>
         <TableHeader>
           {tableConfig.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="border-b-0">
-              {headerGroup.headers.map((header) => {
+            <TableRow key={headerGroup.id} className="bg-muted border-b-0">
+              {headerGroup.headers.map((header, index) => {
                 return (
-                  <TableHead key={header.id} className="px-4">
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      "h-14",
+                      index === 0 && "pl-8",
+                      index === headerGroup.headers.length - 1 && "pr-8"
+                    )}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -100,8 +112,15 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                 )}
                 onClick={() => onRowClick?.(row)}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="px-4">
+                {row.getVisibleCells().map((cell, index) => (
+                  <TableCell
+                    key={cell.id}
+                    className={cn(
+                      "px-4",
+                      index === 0 && "pl-8",
+                      index === row.getVisibleCells().length - 1 && "pr-8"
+                    )}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -115,9 +134,9 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     ? props.columns.length
                     : tableConfig.getAllColumns().length
                 }
-                className="h-24 text-center"
+                className="text-muted-foreground h-24 text-center"
               >
-                {error ? error.message : "No results."}
+                {error ? error.message : "No results"}
               </TableCell>
             </TableRow>
           )}

@@ -9,7 +9,9 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { DataTable } from "@workspace/ui/custom/data-table";
 import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -117,53 +119,123 @@ export default function AgencyProductDetail() {
         )}
       </CardAgency.Card>
 
-      <CardAgency.ClientDetails
-        name={user?.name ?? ""}
-        email={user?.email ?? ""}
-        phone={user?.phone ?? ""}
-        company={user?.company ?? ""}
-        address={user?.address ?? ""}
-        joinedAt={user?.createdAt ? new Date(user.createdAt) : new Date()}
-      />
+      <CardAgency.Card>
+        <CardAgency.Header title="Client details" />
+        <div className="grid gap-5">
+          <CardAgency.DetailRow label="Name" value={user?.name ?? ""} />
+          <CardAgency.DetailRow label="Email" value={user?.email ?? ""} />
+          <CardAgency.DetailRow label="Phone" value={user?.phone ?? ""} />
+          <CardAgency.DetailRow label="Company" value={user?.company ?? ""} />
+          <CardAgency.DetailRow label="Address" value={user?.address ?? ""} />
+          <CardAgency.DetailRow
+            label="Joined"
+            value={format(
+              user?.createdAt ? new Date(user.createdAt) : new Date(),
+              "MMMM d, yyyy"
+            )}
+          />
+        </div>
+      </CardAgency.Card>
 
-      <CardAgency.SubscriptionsDetails
-        subscriptions={
-          data?.subscriptions?.map((subscription) => ({
-            id: subscription.id,
-            status: subscription.status,
-            amount: subscription.amount,
-            email: subscription.email,
-            createdAt: subscription.createdAt
-              ? new Date(subscription.createdAt)
-              : new Date(),
-            // Safely check before parsing dates (currentPeriodEnd might not exist)
-            currentPeriodEnd: subscription.cancelAtPeriodEnd
-              ? new Date(subscription.canceledAt || new Date())
-              : new Date(),
-            cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-            canceledAt: subscription.canceledAt
-              ? new Date(subscription.canceledAt)
-              : null,
-          })) ?? []
-        }
-      />
-
-      <CardAgency.OrdersDetails
-        orders={
-          data?.orders?.map((order) => ({
-            id: order.id,
-            status: order.status,
-            amount: order.totalAmount,
-            email: order.email,
-            createdAt: order.createdAt ? new Date(order.createdAt) : new Date(),
-            currentPeriodEnd: order.createdAt
-              ? new Date(order.createdAt)
-              : new Date(),
-            cancelAtPeriodEnd: false,
-            canceledAt: null,
-          })) ?? []
-        }
-      />
+      <div>
+        <p className="mb-2 px-8 text-lg font-medium">Subscriptions</p>
+        <DataTable
+          columns={[
+            {
+              id: "email",
+              header: "Email",
+              accessorKey: "email",
+            },
+            {
+              id: "status",
+              header: "Status",
+              accessorKey: "status",
+              cell: ({ row }) => (
+                <Badge
+                  variant={
+                    row.original.status === "active" ? "default" : "destructive"
+                  }
+                >
+                  {row.original.status}
+                </Badge>
+              ),
+            },
+            {
+              id: "amount",
+              header: "Amount",
+              accessorKey: "amount",
+              cell: ({ row }) => (
+                <p className="tabular-nums">
+                  ${formatPrice(row.original.amount)}{" "}
+                  {row.original.recurringInterval ? (
+                    <span className="text-muted-foreground text-xs">/mo</span>
+                  ) : (
+                    ""
+                  )}
+                </p>
+              ),
+            },
+            {
+              id: "createdAt",
+              header: "Date",
+              accessorKey: "createdAt",
+              cell: ({ row }) => (
+                <p className="text-xs">
+                  {format(row.original.createdAt ?? new Date(), "MMM d, yyyy")}
+                </p>
+              ),
+            },
+          ]}
+          data={data?.subscriptions ?? []}
+        />
+      </div>
+      <div>
+        <p className="mb-2 px-8 text-lg font-medium">Orders</p>
+        <DataTable
+          columns={[
+            {
+              id: "email",
+              header: "Email",
+              accessorKey: "email",
+            },
+            {
+              id: "status",
+              header: "Status",
+              accessorKey: "status",
+              cell: ({ row }) => (
+                <Badge
+                  variant={
+                    row.original.status === "paid" ? "default" : "destructive"
+                  }
+                >
+                  {row.original.status}
+                </Badge>
+              ),
+            },
+            {
+              id: "amount",
+              header: "Amount",
+              accessorKey: "amount",
+              cell: ({ row }) => (
+                <p className="tabular-nums">
+                  ${formatPrice(row.original.totalAmount)}
+                </p>
+              ),
+            },
+            {
+              id: "createdAt",
+              header: "Date",
+              accessorKey: "createdAt",
+              cell: ({ row }) => (
+                <p className="text-xs">
+                  {format(row.original.createdAt ?? new Date(), "MMM d, yyyy")}
+                </p>
+              ),
+            },
+          ]}
+          data={data?.orders ?? []}
+        />
+      </div>
     </div>
   );
 }
