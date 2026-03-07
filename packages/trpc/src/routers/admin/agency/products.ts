@@ -4,6 +4,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { generateDescription } from "@workspace/ui/lib/agency-utils";
+import { Project } from "@workspace/ui/lib/company";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
@@ -14,6 +15,7 @@ export type AgencyMetadata = {
   userId?: string;
   email?: string;
   services?: string;
+  project?: Project;
 };
 
 export const AgencyServiceSchema = z.object({
@@ -68,6 +70,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           email,
           services: JSON.stringify(services),
           userId,
+          project: "agency",
         },
         visibility: "private",
       };

@@ -5,6 +5,7 @@ import { format } from "date-fns";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { buttonVariants } from "@workspace/ui/components/button";
+import { urls } from "@workspace/ui/lib/company";
 import { design } from "@workspace/ui/lib/design";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -55,9 +56,11 @@ export const BillingInvoices = () => {
               className="bg-primary shadow-dialog aspect-16/8 rounded-xl p-4 text-white"
               style={{
                 backgroundColor:
-                  design.motion.productId === order.productId
+                  order.project === "motion"
                     ? design.motion.color
-                    : undefined,
+                    : order.project === "agency"
+                      ? design.agency.color
+                      : undefined,
               }}
             >
               <div className="relative z-10 flex items-start justify-between gap-4">
@@ -112,9 +115,11 @@ export const BillingInvoices = () => {
               </div>
               <Link
                 href={
-                  design.motion.productId === order.productId
-                    ? "https://motion.alisamadii.com"
-                    : "#"
+                  order.project === "motion"
+                    ? `${urls.motion}`
+                    : order.project === "agency"
+                      ? `${urls.agency}/portal`
+                      : "#"
                 }
                 className={buttonVariants({
                   variant: "outline",

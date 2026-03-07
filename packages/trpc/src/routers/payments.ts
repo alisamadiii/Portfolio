@@ -4,6 +4,8 @@ import { TRPCError } from "@trpc/server";
 import { asc, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
+import { Project } from "@workspace/ui/lib/company";
+
 import {
   adminProcedure,
   authenticatedProcedure,
@@ -340,7 +342,14 @@ export const paymentsRouter = createTRPCRouter({
           .where(or(eq(orders.userId, userId), eq(orders.email, email)))
           .orderBy(desc(orders.createdAt));
 
-        return ordersList;
+        return ordersList.map((order) => {
+          const metadata = order.metadata as { project?: Project } | undefined;
+          const project = metadata?.project;
+          return {
+            ...order,
+            project,
+          };
+        });
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

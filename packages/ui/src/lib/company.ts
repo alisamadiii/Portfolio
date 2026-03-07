@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { Github, Linkedin, XIcon } from "../icons/social";
 
 export const company = {
@@ -52,6 +54,10 @@ export const urls = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:3003"
       : "https://docs.alisamadii.com",
+  agency:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3004"
+      : "https://agency.alisamadii.com",
 };
 
 export const logos = {
@@ -62,3 +68,6 @@ export const logos = {
   purple: "https://cdn.alisamadii.com/company/business-logo-purple.png",
   green: "https://cdn.alisamadii.com/company/business-logo-green.png",
 };
+
+export const PROJECT_ZOD = z.enum(["motion", "agency"]);
+export type Project = z.infer<typeof PROJECT_ZOD>;

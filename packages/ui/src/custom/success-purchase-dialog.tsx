@@ -20,11 +20,9 @@ import { HandCheck } from "@workspace/ui/icons";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-export const SuccessPurchaseDialog = ({
-  project,
-}: {
-  project: "motion" | "agency";
-}) => {
+import { Project } from "../lib/company";
+
+export const SuccessPurchaseDialog = ({ project }: { project: Project }) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const checkoutId = searchParams.get("checkout_id");
