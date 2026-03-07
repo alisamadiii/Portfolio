@@ -41,7 +41,7 @@ export default function AgencyProductDetail() {
     })
   );
 
-  console.log(product);
+  console.log(data);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4 md:p-8">
@@ -54,7 +54,13 @@ export default function AgencyProductDetail() {
       </Button>
 
       <CardAgency.Card>
-        <CardAgency.Header title="Product details" />
+        <CardAgency.Header title="Product details">
+          <Button variant="outline" size="sm" className="gap-1.5" asChild>
+            <Link href={`/agency/create?productId=${product?.id}`}>
+              Edit Product
+            </Link>
+          </Button>
+        </CardAgency.Header>
         <div className="grid gap-5">
           <CardAgency.DetailRow label="Name" value={product?.name || ""} />
           <CardAgency.DetailRow label="Description">
@@ -145,6 +151,18 @@ export default function AgencyProductDetail() {
               id: "email",
               header: "Email",
               accessorKey: "email",
+              cell: ({ row }) => (
+                <div>
+                  <p>{row.original.email}</p>
+                  <p>
+                    {row.original.services.map((service) => (
+                      <Badge key={service.name} variant="outline">
+                        {service.name}
+                      </Badge>
+                    ))}
+                  </p>
+                </div>
+              ),
             },
             {
               id: "status",

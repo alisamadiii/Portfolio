@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { TrashIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { Separator } from "@workspace/ui/components/separator";
+import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -44,56 +45,114 @@ const formSchema = z.object({
       price: z.number(),
     })
   ),
+  prorationBehavior: z.enum(["invoice", "prorate"]),
 });
 
 const INTERVALS = ["month", "year"] as const;
 
 export default function AgencyCreatePage() {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get("productId");
+
+  const trpc = useTRPC();
+  const { isLoading } = useQuery(
+    trpc.admin.agency.products.getProductById.queryOptions(productId ?? "", {
+      enabled: !!productId,
+    })
+  );
+
+  return isLoading ? (
+    <div className="flex h-48 items-center justify-center">
+      <Spinner className="size-8" />
+    </div>
+  ) : (
+    <Content productId={productId} />
+  );
+}
+
+const Content = ({ productId }: { productId?: string | null }) => {
   const router = useRouter();
   const trpc = useTRPC();
   const create = useMutation(
     trpc.admin.agency.products.create.mutationOptions()
   );
+  const update = useMutation(
+    trpc.admin.agency.products.update.mutationOptions()
+  );
+
+  const { data: product } = useQuery(
+    trpc.admin.agency.products.getProductById.queryOptions(productId ?? "", {
+      enabled: !!productId,
+    })
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userId: "",
-      email: "",
-      name: "",
+      prorationBehavior: "prorate",
+      userId: productId ? (product?.userId ?? "") : "",
+      email: productId ? (product?.email ?? "") : "",
+      name: productId ? (product?.name ?? "") : "",
       recurringInterval: "month",
-      services: [
-        {
-          name: "management_&_support",
-          price: 10000,
-        },
-      ],
+      services: productId
+        ? (product?.services ?? [])
+        : [
+            {
+              name: "management_&_support",
+              price: 10000,
+            },
+          ],
     },
   });
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    create.mutate(
-      {
-        name: data.name,
-        email: data.email,
-        recurringInterval: data.recurringInterval,
-        services: data.services,
-        userId: data.userId,
-      },
-      {
-        onSuccess: () => {
-          form.reset();
-          router.push(`/agency/${data.userId}`);
+    if (productId) {
+      update.mutate(
+        {
+          id: productId,
+          name: data.name,
+          email: data.email,
+          recurringInterval: data.recurringInterval,
+          services: data.services,
+          userId: data.userId,
+          prorationBehavior: data.prorationBehavior,
         },
-        onError: (error) => {
-          toast.error(error.message);
+        {
+          onSuccess: () => {
+            toast.success("Product updated successfully");
+          },
+          onError: (error) => {
+            toast.error(error.message);
+          },
+        }
+      );
+    } else {
+      create.mutate(
+        {
+          name: data.name,
+          email: data.email,
+          recurringInterval: data.recurringInterval,
+          services: data.services,
+          userId: data.userId,
         },
-      }
-    );
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push(`/agency/${data.userId}`);
+          },
+          onError: (error) => {
+            toast.error(error.message);
+          },
+        }
+      );
+    }
   };
 
   const userId = form.watch("userId");
   const services = form.watch("services");
+
+  const isUpgrading =
+    services.reduce((sum, s) => sum + s.price, 0) > (product?.priceAmount ?? 0);
 
   return (
     <div className="pt-12 pb-48">
@@ -104,6 +163,7 @@ export default function AgencyCreatePage() {
       <div className="mx-auto max-w-sm">
         <SelectUser
           userId={userId}
+          updateState={!!productId}
           onSelect={(data) => {
             form.setValue("userId", data.id);
             form.setValue("email", data.email);
@@ -210,20 +270,43 @@ export default function AgencyCreatePage() {
 
           <Separator className="my-6" />
 
+          {productId && (
+            <Controller
+              control={form.control}
+              name="prorationBehavior"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={!!fieldState.error}>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full" disabled={!isUpgrading}>
+                      <SelectValue placeholder="Select proration behavior" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="invoice">Immediate Billing</SelectItem>
+                      <SelectItem value="prorate">
+                        Next Billing Cycle
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+          )}
+
           <Button
             type="submit"
             size={"lg"}
-            isLoading={create.isPending}
+            isLoading={productId ? update.isPending : create.isPending}
             disabled={!userId || services.length === 0}
             className="mt-4"
           >
-            Create Product
+            {productId ? "Update Product" : "Create Product"}
           </Button>
         </form>
       </div>
     </div>
   );
-}
+};
 
 const addServiceFormSchema = z.object({
   name: z.string().min(1, "Name is required"),

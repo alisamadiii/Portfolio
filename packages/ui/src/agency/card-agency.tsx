@@ -12,10 +12,17 @@ const Card = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const Header = ({ title }: { title: string }) => {
+const Header = ({
+  title,
+  children,
+}: {
+  title: string;
+  children?: React.ReactNode;
+}) => {
   return (
-    <div>
+    <div className="flex items-center justify-between">
       <h2 className="text-2xl font-bold">{title}</h2>
+      {children}
     </div>
   );
 };

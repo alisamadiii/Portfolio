@@ -23,6 +23,9 @@ const useSignup = () => {
         name: values.name,
         password: values.password,
         metadata: {},
+        phone: "",
+        company: "",
+        address: "",
       });
 
       if (response.error) {
@@ -106,6 +109,9 @@ const useSignin = () => {
               name: response.user.name,
               image: response.user.image,
               metadata: response.user.metadata,
+              phone: response.user.phone,
+              company: response.user.company,
+              address: response.user.address,
             },
           };
 

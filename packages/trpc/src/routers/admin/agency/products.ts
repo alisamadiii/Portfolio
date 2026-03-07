@@ -84,6 +84,85 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       });
     }
   }),
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        recurringInterval: z.enum(["month", "year"]),
+        email: z.string(),
+        services: z.array(AgencyServiceSchema),
+        userId: z.string(),
+        prorationBehavior: z
+          .enum(["invoice", "prorate"])
+          .optional()
+          .default("prorate"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const {
+          id,
+          name,
+          recurringInterval,
+          email,
+          services,
+          userId,
+          prorationBehavior,
+        } = input;
+
+        if (!userId || !email || !services) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "User ID, email and scope are required",
+          });
+        }
+
+        const [subscription] = await db
+          .select()
+          .from(subscriptions)
+          .where(sql`${subscriptions.metadata}->>'userId' = ${userId}`)
+          .limit(1);
+
+        const result = await polarClient.products.update({
+          id,
+          productUpdate: {
+            name,
+            description: generateDescription(services, recurringInterval),
+            prices: [
+              {
+                amountType: "fixed",
+                priceAmount: services.reduce((sum, s) => sum + s.price, 0),
+              },
+            ],
+            metadata: {
+              email,
+              services: JSON.stringify(services),
+              userId,
+            },
+          },
+        });
+
+        if (subscription) {
+          await polarClient.subscriptions.update({
+            id: subscription.id,
+            subscriptionUpdate: {
+              productId: id,
+              prorationBehavior,
+            },
+          });
+        }
+
+        return result;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to create product",
+          cause: error,
+        });
+      }
+    }),
   getAllProducts: adminProcedure.query(async () => {
     try {
       const productsList = await db
@@ -112,6 +191,42 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         code: "INTERNAL_SERVER_ERROR",
         message:
           error instanceof Error ? error.message : "Failed to get products",
+      });
+    }
+  }),
+  getProductById: adminProcedure.input(z.string()).query(async ({ input }) => {
+    try {
+      const product = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, input))
+        .limit(1)
+        .then((result) => result[0]);
+      if (!product) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
+      }
+
+      const metadata = product.metadata as AgencyMetadata | undefined;
+      const userId = metadata?.userId;
+      const email = metadata?.email;
+      const services = metadata?.services;
+
+      return {
+        ...product,
+        userId,
+        email,
+        services: services
+          ? (JSON.parse(services) as { name: string; price: number }[])
+          : [],
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error ? error.message : "Failed to get product",
       });
     }
   }),
@@ -167,14 +282,45 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           .orderBy(desc(subscriptions.createdAt))
           .limit(20);
 
-        return { orders: ordersList, subscriptions: subscriptionsList };
+        return {
+          orders: ordersList.map((order) => {
+            const metadata = order.metadata as AgencyMetadata | undefined;
+            const userId = metadata?.userId;
+            const email = metadata?.email;
+            const services = metadata?.services;
+            return {
+              ...order,
+              userId,
+              email,
+              services: services
+                ? (JSON.parse(services) as { name: string; price: number }[])
+                : [],
+            };
+          }),
+          subscriptions: subscriptionsList.map((subscription) => {
+            const metadata = subscription.metadata as
+              | AgencyMetadata
+              | undefined;
+            const userId = metadata?.userId;
+            const email = metadata?.email;
+            const services = metadata?.services;
+            return {
+              ...subscription,
+              userId,
+              email,
+              services: services
+                ? (JSON.parse(services) as { name: string; price: number }[])
+                : [],
+            };
+          }),
+        };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
             error instanceof Error
               ? error.message
-              : "Failed to get orders by product",
+              : "Failed to get orders by user id",
         });
       }
     }),

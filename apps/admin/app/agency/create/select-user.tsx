@@ -35,6 +35,7 @@ const createUserSchema = z.object({
 export const SelectUser = ({
   userId,
   onSelect,
+  updateState,
 }: {
   userId: string;
   onSelect: ({
@@ -46,6 +47,7 @@ export const SelectUser = ({
     email: string;
     name: string;
   }) => void;
+  updateState?: boolean;
 }) => {
   const [search, setSearch] = useState("");
   const debouncedSearchTerm = useDebounce(search, 300);
@@ -151,7 +153,12 @@ export const SelectUser = ({
       <div className="text-muted-foreground my-2 text-center">or</div>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size={"lg"} className="w-full">
+          <Button
+            variant="outline"
+            size={"lg"}
+            className="w-full"
+            disabled={updateState}
+          >
             Select User
           </Button>
         </PopoverTrigger>
