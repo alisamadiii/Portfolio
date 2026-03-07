@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Confetti from "canvas-confetti";
 
@@ -20,8 +20,11 @@ import { HandCheck } from "@workspace/ui/icons";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-export const SuccessPurchaseDialog = () => {
-  const router = useRouter();
+export const SuccessPurchaseDialog = ({
+  project,
+}: {
+  project: "motion" | "agency";
+}) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const checkoutId = searchParams.get("checkout_id");
@@ -117,20 +120,25 @@ export const SuccessPurchaseDialog = () => {
                 Thank you for your purchase!
               </DialogTitle>
               <DialogDescription className="text-sm">
-                You now have full access to the animation. Start exploring and
-                use the source code in your own projects.
+                {project === "motion"
+                  ? "You now have full access to the animation. Start exploring and use the source code in your own projects."
+                  : project === "agency"
+                    ? "Now this is the part where we start building your project. We will get back to you shortly with a timeline and a quote."
+                    : ""}
               </DialogDescription>
             </DialogHeader>
 
             <DialogFooter className="mt-8 flex flex-col gap-2 sm:flex-col">
-              <Button
-                asChild
-                className="w-full sm:w-auto"
-                onClick={handleClose}
-                size="lg"
-              >
-                <Link href="/">Browse animations</Link>
-              </Button>
+              {project === "motion" && (
+                <Button
+                  asChild
+                  className="w-full sm:w-auto"
+                  onClick={handleClose}
+                  size="lg"
+                >
+                  <Link href="/">Browse animations</Link>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full sm:w-auto"

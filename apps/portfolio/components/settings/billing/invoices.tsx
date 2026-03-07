@@ -52,7 +52,7 @@ export const BillingInvoices = () => {
           return (
             <div
               key={order.id}
-              className="bg-muted shadow-dialog aspect-16/8 rounded-xl p-4 text-white"
+              className="bg-primary shadow-dialog aspect-16/8 rounded-xl p-4 text-white"
               style={{
                 backgroundColor:
                   design.motion.productId === order.productId

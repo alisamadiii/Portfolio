@@ -6,12 +6,12 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 
 import { Footer } from "@workspace/ui/components/footer";
+import { SuccessPurchaseDialog } from "@workspace/ui/custom/success-purchase-dialog";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 
 import { PreviousCustomerBanner } from "@/components/previous-customer-banner";
-import { SuccessPurchaseDialog } from "@/components/success-purchase-dialog";
 
 const fontHeading = DM_Serif_Display({
   subsets: ["latin"],
@@ -64,7 +64,7 @@ export default async function RootLayout({
           <Providers>
             <Suspense>
               <PreviousCustomerBanner />
-              <SuccessPurchaseDialog />
+              <SuccessPurchaseDialog project="motion" />
               {children}
               <Suspense>
                 <Footer hide={["/m/"]} />

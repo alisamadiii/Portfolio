@@ -2,6 +2,7 @@ import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import { createTRPCRouter } from "../init";
 import { adminRouter } from "./admin/_index";
+import { agencyPaymentsRouter } from "./agency/payments";
 import { discountsRouter } from "./discounts";
 import { motionRouter } from "./motion/_index";
 import { paymentsRouter } from "./payments";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   upload: uploadRouter,
   previousCustomer: previousCustomerRouter,
   verification: verificationRouter,
+  agency: agencyPaymentsRouter,
 });
 
 // export type definition of API

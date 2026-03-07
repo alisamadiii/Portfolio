@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { SuccessPurchaseDialog } from "@workspace/ui/custom/success-purchase-dialog";
 import { Providers } from "@workspace/ui/providers";
+
+import { TRPCReactProvider } from "@workspace/trpc/client";
 
 import "@workspace/ui/globals.css";
 import "./globals.css";
@@ -32,7 +35,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <TRPCReactProvider>
+          <Providers>
+            <SuccessPurchaseDialog project="agency" />
+            {children}
+          </Providers>
+        </TRPCReactProvider>
       </body>
     </html>
   );

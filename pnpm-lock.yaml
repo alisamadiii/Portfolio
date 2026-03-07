@@ -157,9 +157,24 @@ importers:
 
   apps/agency:
     dependencies:
+      '@tanstack/react-query':
+        specifier: ^5.90.21
+        version: 5.90.21(react@19.2.4)
+      '@workspace/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@workspace/drizzle':
+        specifier: workspace:*
+        version: link:../../packages/drizzle
+      '@workspace/trpc':
+        specifier: workspace:*
+        version: link:../../packages/trpc
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.4)
@@ -178,6 +193,9 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.2.1
@@ -822,6 +840,9 @@ importers:
       axios:
         specifier: ^1.13.6
         version: 1.13.6
+      canvas-confetti:
+        specifier: ^1.9.4
+        version: 1.9.4
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -895,6 +916,9 @@ importers:
       '@turbo/gen':
         specifier: ^2.8.13
         version: 2.8.13(@types/node@25.3.5)
+      '@types/canvas-confetti':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14

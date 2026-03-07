@@ -1,15 +1,20 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { motion } from "motion/react";
 
 import { Logo } from "@workspace/ui/icons/logo";
+import { urls } from "@workspace/ui/lib/company";
 
 import { GridCell } from "@/components/grid-cell";
 import { MagneticButton } from "@/components/magnetic-button";
 import { SectionLabel } from "@/components/section-label";
 
+import { useCurrentUser } from "../../../../packages/auth/src/hooks/use-user";
+
 export function HeroSection() {
+  const { data: user, isPending } = useCurrentUser();
+
   return (
     <section className="pt-16">
       <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -46,13 +51,20 @@ export function HeroSection() {
             className="flex flex-wrap gap-4"
           >
             <MagneticButton>Start a Project</MagneticButton>
-            {/* <a
-              href="#work"
-              className="text-muted-foreground hover:text-foreground border-border hover:border-foreground/20 group inline-flex items-center gap-2 border px-8 py-4 font-mono text-sm tracking-[0.15em] uppercase transition-all duration-300"
-            >
-              View Work
-              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-            </a> */}
+            {isPending ? (
+              <div className="bg-primary h-10 w-10 animate-pulse rounded-full"></div>
+            ) : (
+              <Link
+                href={
+                  user
+                    ? `/portal`
+                    : `${urls.portfolio}/login?redirectUrl=${window.location.href}/portal`
+                }
+                className="text-muted-foreground hover:text-foreground border-border hover:border-foreground/20 group inline-flex items-center gap-2 border px-8 py-4 font-mono text-sm tracking-[0.15em] uppercase transition-all duration-300"
+              >
+                I am a customer!
+              </Link>
+            )}
           </motion.div>
         </GridCell>
 

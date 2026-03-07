@@ -31,6 +31,7 @@
     "@workspace/auth": "workspace:*",
     "@workspace/trpc": "workspace:*",
     "axios": "^1.13.6",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -59,6 +60,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
     "@turbo/gen": "^2.8.13",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@workspace/eslint-config": "workspace:*",
