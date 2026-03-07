@@ -115,7 +115,7 @@ export const createOrder = async (data: Order) => {
     discountAmount: data.discountAmount,
     createdAt: data.createdAt,
     updatedAt: data.modifiedAt,
-    metadata: data.metadata ?? {},
+    metadata: data.product?.metadata ?? data.metadata ?? {},
   });
 };
 export const updateOrder = async (data: Order) => {
@@ -180,7 +180,7 @@ export const createSubscription = async (data: Subscription) => {
     recurringInterval: data.recurringInterval,
     customerCancellationReason: data.customerCancellationReason,
     customerCancellationComment: data.customerCancellationComment,
-    metadata: data.metadata ?? {},
+    metadata: data.product.metadata ?? data.metadata ?? {},
   });
 };
 export const updateSubscription = async (data: Subscription) => {
@@ -202,7 +202,7 @@ export const updateSubscription = async (data: Subscription) => {
       recurringInterval: data.recurringInterval,
       customerCancellationReason: data.customerCancellationReason,
       customerCancellationComment: data.customerCancellationComment,
-      metadata: data.metadata ?? {},
+      metadata: data.product.metadata ?? data.metadata ?? {},
     })
     .where(eq(subscriptions.id, data.id));
 };

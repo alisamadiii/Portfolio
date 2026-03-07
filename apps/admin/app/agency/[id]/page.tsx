@@ -41,8 +41,6 @@ export default function AgencyProductDetail() {
     })
   );
 
-  console.log(data);
-
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4 md:p-8">
       {/* Back button */}
@@ -154,7 +152,7 @@ export default function AgencyProductDetail() {
               cell: ({ row }) => (
                 <div>
                   <p>{row.original.email}</p>
-                  <p>
+                  <p className="mt-2 flex flex-wrap gap-px">
                     {row.original.services.map((service) => (
                       <Badge key={service.name} variant="outline">
                         {service.name}
@@ -215,6 +213,18 @@ export default function AgencyProductDetail() {
               id: "email",
               header: "Email",
               accessorKey: "email",
+              cell: ({ row }) => (
+                <div>
+                  <p>{row.original.email}</p>
+                  <p className="mt-2 flex flex-wrap gap-px">
+                    {row.original.services.map((service) => (
+                      <Badge key={service.name} variant="outline">
+                        {service.name}
+                      </Badge>
+                    ))}
+                  </p>
+                </div>
+              ),
             },
             {
               id: "status",

@@ -355,7 +355,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
             userId: userId ?? "",
             productId: input.productId,
             email: email ?? "",
-            services: JSON.stringify(services),
+            services: services ?? "",
           },
         });
         return checkout;
