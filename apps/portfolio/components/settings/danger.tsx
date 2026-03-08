@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -22,31 +21,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
 import { Spinner } from "@workspace/ui/components/spinner";
+import { Textarea } from "@workspace/ui/components/textarea";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 export const DangerSettings = () => {
+  const [comment, setComment] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const user = useCurrentUser();
-  const router = useRouter();
-  const [confirm, setConfirm] = useState("");
 
-  const deleteAccount = useMutation(
-    useTRPC().payments.deleteCustomer.mutationOptions({
-      onSuccess: () => {
-        router.push("/");
-        router.refresh();
-
-        // Clear all queries
-        queryClient.clear();
-
-        // Delete all local storage and session storage items
-        localStorage.clear();
-        sessionStorage.clear();
-      },
-    })
+  const trpc = useTRPC();
+  const sentNotification = useMutation(
+    trpc.notification.send.mutationOptions()
+  );
+  const deleteAccountNotification = useQuery(
+    trpc.notification.deleteAccountNotification.queryOptions()
   );
 
   if (user.isPending) {
@@ -112,49 +103,77 @@ export const DangerSettings = () => {
           </ul>
         </CardContent>
         <CardFooter className="justify-end">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">Delete Account</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Account</AlertDialogTitle>
-              </AlertDialogHeader>
-              <p className="text-muted-foreground text-sm">
-                To confirm deletion, type{" "}
-                <span className="text-destructive font-semibold">confirm</span>{" "}
-                in the box below. This is a permanent action and cannot be
-                undone.
-              </p>
-              <Input
-                placeholder="Type confirm to proceed"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                label="Confirm"
-              />
-              <AlertDialogFooter className="grid grid-cols-2 gap-2">
-                <AlertDialogCancel asChild>
-                  <Button variant="outline" disabled={deleteAccount.isPending}>
-                    Cancel
-                  </Button>
-                </AlertDialogCancel>
+          {deleteAccountNotification.data?.status === "PENDING" ? (
+            <Button variant="destructive" className="bg-yellow-500">
+              Under Review...
+            </Button>
+          ) : (
+            <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+              <AlertDialogTrigger asChild>
                 <Button
                   variant="destructive"
-                  disabled={confirm !== "confirm"}
-                  onClick={() =>
-                    deleteAccount.mutate(user.data?.user.id ?? "", {
-                      onError: (error) => {
-                        toast.error(error.message);
-                      },
-                    })
+                  disabled={
+                    sentNotification.isPending ||
+                    deleteAccountNotification.isPending
                   }
-                  isLoading={deleteAccount.isPending}
                 >
-                  Delete Account
+                  Request Account Deletion
                 </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Request Account Deletion</AlertDialogTitle>
+                </AlertDialogHeader>
+                <Textarea
+                  placeholder="Can you please provide a reason for the deletion? (Optional)"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <AlertDialogFooter className="grid grid-cols-2 gap-2">
+                  <AlertDialogCancel asChild>
+                    <Button
+                      variant="outline"
+                      disabled={sentNotification.isPending}
+                    >
+                      Cancel
+                    </Button>
+                  </AlertDialogCancel>
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      sentNotification.mutate(
+                        {
+                          projectType: "GLOBAL",
+                          priority: "URGENT",
+                          type: "ACCOUNT_DELETION_REQUEST",
+                          subject: "Account Deletion Request",
+                          message: comment,
+                        },
+                        {
+                          onSuccess: () => {
+                            setIsOpen(false);
+                            toast.success(
+                              "Account deletion request sent successfully. We will review your request and get back to you as soon as possible through your email address."
+                            );
+                            queryClient.invalidateQueries({
+                              queryKey:
+                                trpc.notification.deleteAccountNotification.queryKey(),
+                            });
+                          },
+                          onError: (error) => {
+                            toast.error(error.message);
+                          },
+                        }
+                      )
+                    }
+                    isLoading={sentNotification.isPending}
+                  >
+                    Request Account Deletion
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </CardFooter>
       </Card>
     </div>

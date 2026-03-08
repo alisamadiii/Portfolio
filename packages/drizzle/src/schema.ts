@@ -221,7 +221,7 @@ export const previousCustomers = pgTable("previous_customers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const projectsTypeValues = ["MOTION", "AGENCY"] as const;
+export const projectsTypeValues = ["MOTION", "AGENCY", "GLOBAL"] as const;
 export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
 
 export const notificationTypeValues = [
@@ -231,6 +231,7 @@ export const notificationTypeValues = [
   "CLIENT_MESSAGE",
   "SYSTEM_ALERT",
   "PAYMENT_UPDATE",
+  "ACCOUNT_DELETION_REQUEST",
 ] as const;
 export const notificationTypeEnum = pgEnum(
   "notification_type",
@@ -286,17 +287,15 @@ export const notifications = pgTable(
     subject: text("subject").notNull(),
     message: text("message").notNull(),
     metadata: jsonb("metadata").$type<NotificationMetadata>().default({}),
-    readAt: timestamp("read_at", { withTimezone: true }),
     seenAt: timestamp("seen_at", { withTimezone: true }),
     status: notificationStatusEnum("status").default("PENDING"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$defaultFn(() => new Date()),
   },
-  (t) => [
-    index("idx_notif_recipient").on(t.recipientId, t.createdAt),
-    index("idx_notif_unread")
-      .on(t.recipientId)
-      .where(sql`read_at IS NULL`),
-  ]
+  (t) => [index("idx_notif_recipient").on(t.recipientId, t.createdAt)]
 );

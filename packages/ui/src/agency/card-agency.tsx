@@ -6,7 +6,7 @@ export const CardAgency = () => {
 
 const Card = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="bg-muted shadow-card flex flex-col gap-6 rounded-4xl p-6">
+    <div className="bg-muted shadow-card flex w-full flex-col gap-6 rounded-4xl p-6">
       {children}
     </div>
   );

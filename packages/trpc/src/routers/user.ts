@@ -47,6 +47,9 @@ export const userRouter = createTRPCRouter({
         .object({
           name: z.string().optional(),
           image: z.string().optional(),
+          phone: z.string().optional(),
+          company: z.string().optional(),
+          address: z.string().optional(),
         })
         .partial()
         .refine(

@@ -44,7 +44,7 @@ export default function AgencyProductDetail() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-4 md:p-8">
+    <div className="mx-auto flex max-w-2xl flex-col items-start gap-6 p-4 md:p-8">
       {/* Back button */}
       <Button variant="ghost" size="sm" className="gap-1.5" asChild>
         <Link href="/agency">
@@ -53,7 +53,9 @@ export default function AgencyProductDetail() {
         </Link>
       </Button>
 
-      <Notifications project="AGENCY" userId={id} />
+      <Button size={"lg"} asChild>
+        <Link href={`/agency/${id}/notifications`}>View Notifications</Link>
+      </Button>
 
       <CardAgency.Card>
         <CardAgency.Header title="Product details">

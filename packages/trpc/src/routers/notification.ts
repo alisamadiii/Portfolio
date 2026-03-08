@@ -150,4 +150,37 @@ export const notificationRouter = createTRPCRouter({
         });
       }
     }),
+
+  deleteAccountNotification: authenticatedProcedure.query(async ({ ctx }) => {
+    try {
+      const deleted = await db
+        .select()
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.actorId, ctx.session.user.id),
+            eq(notifications.type, "ACCOUNT_DELETION_REQUEST")
+          )
+        )
+        .then((data) => data[0]);
+
+      if (!deleted) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No account deletion notification found",
+        });
+      }
+
+      return deleted;
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get account deletion notification",
+        cause: error,
+      });
+    }
+  }),
 });

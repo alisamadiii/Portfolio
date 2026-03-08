@@ -14,6 +14,7 @@ import { BillingInvoices } from "@/components/settings/billing/invoices";
 import { BillingPortal } from "@/components/settings/billing/portal";
 import { DangerSettings } from "@/components/settings/danger";
 import { GeneralAvatar } from "@/components/settings/general/avatar";
+import { Company } from "@/components/settings/general/company";
 import { EmailName } from "@/components/settings/general/email-name";
 
 export default function SettingsPage() {
@@ -34,6 +35,7 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">General</h2>
         <EmailName />
+        <Company />
         <GeneralAvatar />
       </div>
       <div className="space-y-6">

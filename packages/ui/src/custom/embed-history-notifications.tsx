@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
@@ -58,31 +59,48 @@ const EachNotifications = ({
   return (
     <div
       key={notification.id}
-      className="bg-muted flex items-start justify-between gap-4 rounded-xl border p-4"
+      className="bg-muted space-y-4 rounded-xl border p-4"
     >
-      <div>
-        <code className="text-muted-foreground mb-4 inline-block text-xs">
+      <div className="flex items-center justify-between">
+        <code className="text-muted-foreground inline-block text-xs">
           #{notification.id}
         </code>
-        <p className="text-muted-foreground text-sm font-medium uppercase">
+        <Badge
+          className={cn(
+            notification.status === "RESOLVED"
+              ? "bg-green-500 text-white"
+              : notification.status === "SEEN_BY_ADMIN" ||
+                  notification.status === "SEEN"
+                ? "bg-blue-500 text-white"
+                : notification.status === "PENDING"
+                  ? "bg-yellow-500 text-black"
+                  : "bg-red-500 text-white"
+          )}
+        >
+          {notification.status}
+        </Badge>
+      </div>
+      <div>
+        <p className="text-muted-foreground text-xs font-medium uppercase">
           {notification.subject}
         </p>
         <p>{notification.message}</p>
+
+        <div className="text-muted-foreground mt-4 text-xs">
+          <p>
+            Created at: {format(notification.createdAt, "MMMM d, yyyy hh:mm a")}
+          </p>
+          <p>
+            Seen at:{" "}
+            {notification.seenAt
+              ? format(notification.seenAt, "MMMM d, yyyy hh:mm a")
+              : "Not seen"}
+          </p>
+          <p>
+            Updated at: {format(notification.updatedAt, "MMMM d, yyyy hh:mm a")}
+          </p>
+        </div>
       </div>
-      <Badge
-        className={cn(
-          notification.status === "RESOLVED"
-            ? "bg-green-500 text-white"
-            : notification.status === "SEEN_BY_ADMIN" ||
-                notification.status === "SEEN"
-              ? "bg-blue-500 text-white"
-              : notification.status === "PENDING"
-                ? "bg-yellow-500 text-black"
-                : "bg-red-500 text-white"
-        )}
-      >
-        {notification.status}
-      </Badge>
     </div>
   );
 };

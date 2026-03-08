@@ -34,7 +34,12 @@ export const Notifications = ({ project, userId }: NotificationsProps) => {
     notifications.data &&
     notifications.isSuccess &&
     notifications.data.length > 0 && (
-      <div className="space-y-2">
+      <div
+        className="grid w-full gap-4"
+        style={{
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+        }}
+      >
         {notifications.data.map((notification) => (
           <div
             key={notification.id}
