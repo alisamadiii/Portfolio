@@ -13,6 +13,7 @@
     "@aws-sdk/client-s3": "^3.1003.0",
     "@aws-sdk/s3-request-presigner": "^3.1003.0",
     "@polar-sh/sdk": "^0.46.2",
+    "@slack/web-api": "^7.14.1",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@trpc/client": "^11.11.0",

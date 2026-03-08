@@ -5,7 +5,8 @@
     "paths": {
       "@workspace/ui/*": ["./src/*"],
       "@workspace/trpc/*": ["../../packages/trpc/src/*"],
-      "@workspace/auth/*": ["../../packages/auth/src/*"]
+      "@workspace/auth/*": ["../../packages/auth/src/*"],
+      "@workspace/drizzle/*": ["../../packages/drizzle/src/*"]
     }
   },
   "include": [

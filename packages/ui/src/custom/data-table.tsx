@@ -55,7 +55,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   return (
     <div
       className={cn(
-        "shadow-card isolate overflow-hidden rounded-3xl",
+        "shadow-card isolate overflow-hidden rounded-3xl dark:border",
         className
       )}
     >

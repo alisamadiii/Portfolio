@@ -16,6 +16,8 @@ import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { Notifications } from "@/components/notifications";
+
 // ─── Page Component ──────────────────────────────────────────────
 export default function AgencyProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +52,8 @@ export default function AgencyProductDetail() {
           Back to Products
         </Link>
       </Button>
+
+      <Notifications project="AGENCY" userId={id} />
 
       <CardAgency.Card>
         <CardAgency.Header title="Product details">

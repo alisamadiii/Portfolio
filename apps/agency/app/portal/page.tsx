@@ -8,8 +8,19 @@ import { toast } from "sonner";
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@workspace/ui/components/sheet";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { DataTable } from "@workspace/ui/custom/data-table";
+import { EmbedHistoryNotifications } from "@workspace/ui/custom/embed-history-notifications";
+import { EmbedNotifications } from "@workspace/ui/custom/embed-notifications";
+import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { urls } from "@workspace/ui/lib/company";
 import { formatPrice } from "@workspace/ui/lib/utils";
 
@@ -26,18 +37,39 @@ export default function PortalPage() {
   const checkout = useCheckout();
 
   return (
-    <div className="mx-auto max-w-2xl py-20">
+    <div className="mx-auto max-w-3xl px-8 py-20">
       <Button asChild variant="outline" size="sm" className="mb-4 gap-1.5">
         <Link href="/">Back to Home</Link>
       </Button>
-
       <h1 className="mb-12 text-center text-4xl font-bold tracking-tight">
         Customer Portal
       </h1>
-
+      <EmbedNotifications project="AGENCY" />
       <div className="space-y-5">
         <CardAgency.Card>
-          <CardAgency.Header title="Product details" />
+          <CardAgency.Header title="Product details">
+            <div className="flex flex-col items-end gap-2">
+              <RequestDialog>
+                <Button>Contact Support</Button>
+              </RequestDialog>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="text-muted-foreground hover:text-foreground px-2 text-sm">
+                    View History
+                  </button>
+                </SheetTrigger>
+                <SheetContent className="overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Notification History</SheetTitle>
+                    <SheetDescription>
+                      View the history of notifications you have received/sent.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <EmbedHistoryNotifications project="AGENCY" />
+                </SheetContent>
+              </Sheet>
+            </div>
+          </CardAgency.Header>
           {products.isLoading ? (
             <div className="flex items-center justify-center pb-4">
               <Spinner />

@@ -4,9 +4,12 @@ import { SubscriptionRecurringInterval } from "@polar-sh/sdk/models/components/s
 import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
+  index,
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -217,3 +220,83 @@ export const previousCustomers = pgTable("previous_customers", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const projectsTypeValues = ["MOTION", "AGENCY"] as const;
+export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
+
+export const notificationTypeValues = [
+  "SERVICE_CHANGE_REQUEST",
+  "SERVICE_CHANGE_APPROVED",
+  "SERVICE_CHANGE_REJECTED",
+  "CLIENT_MESSAGE",
+  "SYSTEM_ALERT",
+  "PAYMENT_UPDATE",
+] as const;
+export const notificationTypeEnum = pgEnum(
+  "notification_type",
+  notificationTypeValues
+);
+
+export const notificationPriorityValues = [
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "URGENT",
+] as const;
+export const notificationPriorityEnum = pgEnum(
+  "notification_priority",
+  notificationPriorityValues
+);
+
+export const notificationStatusValues = [
+  "PENDING",
+  "SEEN_BY_ADMIN",
+  "SEEN",
+  "RESOLVED",
+] as const;
+export const notificationStatusEnum = pgEnum(
+  "notification_status",
+  notificationStatusValues
+);
+
+export type NotificationMetadata = {
+  serviceId?: string;
+  agencyId?: string;
+  clientId?: string;
+  changeType?: string;
+  previousValue?: string;
+  requestedValue?: string;
+  requestId?: string;
+  [key: string]: unknown;
+};
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: bigint("id", { mode: "number" })
+      .primaryKey()
+      .generatedAlwaysAsIdentity({ startWith: 238531 }),
+    recipientId: text("recipient_id").references(() => user.id, {
+      onDelete: "cascade",
+    }),
+    projectType: projectsTypeEnum("project_type").notNull(),
+    actorId: text("actor_id").references(() => user.id),
+    type: notificationTypeEnum("type"),
+    priority: notificationPriorityEnum("priority").notNull().default("MEDIUM"),
+    subject: text("subject").notNull(),
+    message: text("message").notNull(),
+    metadata: jsonb("metadata").$type<NotificationMetadata>().default({}),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    seenAt: timestamp("seen_at", { withTimezone: true }),
+    status: notificationStatusEnum("status").default("PENDING"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("idx_notif_recipient").on(t.recipientId, t.createdAt),
+    index("idx_notif_unread")
+      .on(t.recipientId)
+      .where(sql`read_at IS NULL`),
+  ]
+);

@@ -30,6 +30,7 @@
     "@trpc/server": "^11.11.0",
     "@workspace/auth": "workspace:*",
     "@workspace/trpc": "workspace:*",
+    "@workspace/drizzle": "workspace:*",
     "axios": "^1.13.6",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",

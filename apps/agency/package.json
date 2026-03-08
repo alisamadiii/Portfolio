@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.90.21",
     "@workspace/auth": "workspace:*",
     "@workspace/drizzle": "workspace:*",
@@ -22,6 +23,7 @@
     "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hook-form": "^7.71.2",
     "sonner": "^2.0.7"
   },
   "devDependencies": {
