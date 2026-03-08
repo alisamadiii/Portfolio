@@ -1,12 +1,12 @@
 import { cookies, headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { count, desc, eq, ilike, or } from "drizzle-orm";
+import { asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { auth, polarClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { user } from "@workspace/drizzle/schema";
+import { notifications, user } from "@workspace/drizzle/schema";
 
 export const adminUsersRouter = createTRPCRouter({
   /**
@@ -45,7 +45,9 @@ export const adminUsersRouter = createTRPCRouter({
       z.object({
         page: z.number().optional(),
         limit: z.number().optional(),
-        sortBy: z.enum(["email", "created", "banned"]).optional(),
+        sortBy: z
+          .enum(["email", "created", "banned", "notifications"])
+          .optional(),
         search: z.string().optional(),
       })
     )
@@ -55,9 +57,39 @@ export const adminUsersRouter = createTRPCRouter({
 
         const offset = (page - 1) * limit;
 
+        const notificationCountSubquery = db
+          .select({
+            actorId: notifications.actorId,
+            count: count(notifications.id).as("notificationCount"),
+          })
+          .from(notifications)
+          .groupBy(notifications.actorId)
+          .as("notification_counts");
+
         const users = await db
-          .select()
+          .select({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            image: user.image,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            role: user.role,
+            banned: user.banned,
+            banReason: user.banReason,
+            banExpires: user.banExpires,
+            metadata: user.metadata,
+            phone: user.phone,
+            company: user.company,
+            address: user.address,
+            notificationCount: sql<number>`COALESCE(${notificationCountSubquery.count}, 0)`,
+          })
           .from(user)
+          .leftJoin(
+            notificationCountSubquery,
+            eq(notificationCountSubquery.actorId, user.id)
+          )
           .limit(limit)
           .offset(offset)
           .orderBy(
@@ -65,7 +97,9 @@ export const adminUsersRouter = createTRPCRouter({
               ? desc(user.email)
               : sortBy === "banned"
                 ? desc(user.banned)
-                : desc(user.createdAt)
+                : sortBy === "notifications"
+                  ? asc(notificationCountSubquery.count)
+                  : desc(user.createdAt)
           )
           .where(
             search

@@ -109,7 +109,7 @@ export async function sendSlackNotification(params: SlackNotificationParams) {
                   text: "📋 View in Dashboard",
                   emoji: true,
                 },
-                url: `${urls.admin}/agency/${userId}/notifications`,
+                url: `${urls.admin}/users/${userId}?tab=notifications`,
                 style: "primary",
                 action_id: "view_agency",
               },

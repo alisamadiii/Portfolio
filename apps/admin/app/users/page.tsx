@@ -38,11 +38,16 @@ type UserFromAPI = RouterOutputs["admin"]["users"]["getAll"][number];
 interface FilterUsers {
   page?: number;
   limit?: number;
-  sortBy?: "email" | "created" | "banned";
+  sortBy?: "email" | "created" | "banned" | "notifications";
   search?: string;
 }
 
-const sortByOptions: FilterUsers["sortBy"][] = ["email", "created", "banned"];
+const sortByOptions: FilterUsers["sortBy"][] = [
+  "email",
+  "created",
+  "banned",
+  "notifications",
+];
 
 const UsersPage = () => {
   const [sortBy, setSortBy] = useQueryState(
@@ -163,7 +168,7 @@ const UsersPage = () => {
           {page * limit - limit + 1}-
           {Math.min(page * limit, usersCount?.[0]?.count ?? 0)} of{" "}
           {usersCount?.[0]?.count ?? 0}{" "}
-          <Separator className="h-5! mx-2" orientation="vertical" /> Results per
+          <Separator className="mx-2 h-5!" orientation="vertical" /> Results per
           page{" "}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

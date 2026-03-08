@@ -14,7 +14,7 @@ export const adminNotificationRouter = createTRPCRouter({
   sentNotifications: adminProcedure
     .input(
       z.object({
-        project: z.enum(projectsTypeValues),
+        project: z.enum(projectsTypeValues).optional(),
         userId: z.string().optional(),
       })
     )
@@ -25,7 +25,9 @@ export const adminNotificationRouter = createTRPCRouter({
           .from(notifications)
           .where(
             and(
-              eq(notifications.projectType, input.project),
+              input.project
+                ? eq(notifications.projectType, input.project)
+                : undefined,
               input.userId ? eq(notifications.actorId, input.userId) : undefined
             )
           )

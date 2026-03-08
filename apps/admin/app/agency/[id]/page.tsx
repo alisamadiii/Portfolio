@@ -16,8 +16,6 @@ import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { Notifications } from "@/components/notifications";
-
 // ─── Page Component ──────────────────────────────────────────────
 export default function AgencyProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -54,7 +52,7 @@ export default function AgencyProductDetail() {
       </Button>
 
       <Button size={"lg"} asChild>
-        <Link href={`/agency/${id}/notifications`}>View Notifications</Link>
+        <Link href={`/users/${id}?tab=notifications`}>View Notifications</Link>
       </Button>
 
       <CardAgency.Card>

@@ -94,6 +94,10 @@ export const columns: ColumnDef<UserFromAPI>[] = [
     ),
   },
   {
+    header: "Notifications",
+    cell: ({ row }) => <div>{row.original.notificationCount}</div>,
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       /* eslint-disable */
