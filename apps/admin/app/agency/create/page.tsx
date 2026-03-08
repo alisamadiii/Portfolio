@@ -17,7 +17,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Field, FieldError } from "@workspace/ui/components/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+} from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import {
   Select,
@@ -28,6 +32,7 @@ import {
 } from "@workspace/ui/components/select";
 import { Separator } from "@workspace/ui/components/separator";
 import { Spinner } from "@workspace/ui/components/spinner";
+import { Switch } from "@workspace/ui/components/switch";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -46,6 +51,7 @@ const formSchema = z.object({
     })
   ),
   prorationBehavior: z.enum(["invoice", "prorate"]),
+  isFree: z.boolean(),
 });
 
 const INTERVALS = ["month", "year"] as const;
@@ -94,14 +100,8 @@ const Content = ({ productId }: { productId?: string | null }) => {
       email: productId ? (product?.email ?? "") : "",
       name: productId ? (product?.name ?? "") : "",
       recurringInterval: "month",
-      services: productId
-        ? (product?.services ?? [])
-        : [
-            {
-              name: "management_&_support",
-              price: 10000,
-            },
-          ],
+      services: productId ? (product?.services ?? []) : [],
+      isFree: productId ? (product?.priceAmount === 0 ? true : false) : false,
     },
   });
 
@@ -134,6 +134,7 @@ const Content = ({ productId }: { productId?: string | null }) => {
           recurringInterval: data.recurringInterval,
           services: data.services,
           userId: data.userId,
+          isFree: data.isFree,
         },
         {
           onSuccess: () => {
@@ -242,7 +243,6 @@ const Content = ({ productId }: { productId?: string | null }) => {
                         services.filter((s) => s.name !== service.name)
                       );
                     }}
-                    disabled={index === 0}
                   >
                     <TrashIcon className="h-4 w-4" />
                   </Button>
@@ -258,6 +258,25 @@ const Content = ({ productId }: { productId?: string | null }) => {
             services={services}
           />
 
+          <Controller
+            control={form.control}
+            name="isFree"
+            render={({ field, fieldState }) => (
+              <Field
+                data-invalid={!!fieldState.error}
+                className="dark shadow-dialog rounded-xl bg-black p-4 text-white"
+              >
+                <FieldContent className="flex flex-row items-center justify-between gap-2">
+                  <div className="text-xl font-black">Free</div>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FieldContent>
+              </Field>
+            )}
+          />
+
           <Separator className="my-6" />
 
           <Confirmation
@@ -266,6 +285,7 @@ const Content = ({ productId }: { productId?: string | null }) => {
             email={form.watch("email")}
             userId={form.watch("userId")}
             services={form.watch("services")}
+            isFree={form.watch("isFree")}
           />
 
           <Separator className="my-6" />
@@ -406,6 +426,19 @@ const AddService = ({
           </Button>
         </form>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onAddService({ name: "management_&_support", price: 100 });
+              setIsOpen(false);
+            }}
+            disabled={services.some(
+              (s) => s.name.toLowerCase() === "management_&_support"
+            )}
+          >
+            Management & Support
+          </Button>
           <Button
             variant="outline"
             size="sm"

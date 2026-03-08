@@ -1,6 +1,7 @@
 import { Badge } from "@workspace/ui/components/badge";
 import { Separator } from "@workspace/ui/components/separator";
 import { generateDescription } from "@workspace/ui/lib/agency-utils";
+import { cn } from "@workspace/ui/lib/utils";
 
 export const Confirmation = ({
   name,
@@ -8,12 +9,14 @@ export const Confirmation = ({
   email,
   userId,
   services,
+  isFree,
 }: {
   name: string;
   recurringInterval: "month" | "year";
   email: string;
   userId: string;
   services: { name: string; price: number }[];
+  isFree: boolean;
 }) => {
   return (
     <div className="bg-muted/50 rounded-xl border p-4">
@@ -70,10 +73,14 @@ export const Confirmation = ({
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Price</dt>
             <dd className="text-3xl font-bold tracking-tighter tabular-nums">
-              $
-              {(
-                services.reduce((acc, service) => acc + service.price, 0) / 100
-              ).toFixed(2)}
+              <span className={cn(isFree ? "line-through" : "")}>
+                $
+                {(
+                  services.reduce((acc, service) => acc + service.price, 0) /
+                  100
+                ).toFixed(2)}
+              </span>{" "}
+              {isFree ? "Free" : ""}
             </dd>
           </div>
         </div>

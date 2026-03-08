@@ -29,12 +29,14 @@ const createSchema = z.object({
   email: z.string(),
   services: z.array(AgencyServiceSchema),
   userId: z.string(),
+  isFree: z.boolean().default(false),
 });
 
 export const adminAgencyProductsRouter = createTRPCRouter({
   create: adminProcedure.input(createSchema).mutation(async ({ input }) => {
     try {
-      const { name, recurringInterval, email, services, userId } = input;
+      const { name, recurringInterval, email, services, userId, isFree } =
+        input;
 
       if (!userId || !email || !services) {
         throw new TRPCError({
@@ -61,7 +63,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         description: generateDescription(services, recurringInterval),
         prices: [
           {
-            amountType: "fixed",
+            amountType: isFree ? "free" : "fixed",
             priceAmount: services.reduce((sum, s) => sum + s.price, 0),
           },
         ],
