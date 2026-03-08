@@ -15,9 +15,11 @@ import {
   TailwindCSS,
   TypeScript,
 } from "@workspace/ui/icons/tech";
-import { company, urls } from "@workspace/ui/lib/company";
+import { company, logos, projectsData, urls } from "@workspace/ui/lib/company";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+import { projectsTypeValues } from "@workspace/drizzle/schema";
 
 import { Divider } from "@/components/divider";
 
@@ -244,21 +246,29 @@ export default function Home() {
           Projects
         </h2>
 
-        <div className="flex flex-col gap-4">
-          {projects.map((project) => (
-            <Link
-              key={project.name}
-              href={project.link}
-              target="_blank"
-              className="group opacity-80 transition hover:opacity-100"
-            >
-              <h3 className="mb-1 font-sans text-xl group-hover:underline">
-                {project.name}
-              </h3>
-              <p className="text-natural-700">{project.description}</p>
-            </Link>
+        <ul className="relative grid grid-cols-2 items-center justify-items-center">
+          <Divider />
+          {projectsData.slice(0, 2).map((project) => (
+            <Project key={project.name} {...project} />
           ))}
-        </div>
+          <Divider />
+          {projectsData.slice(2, 4).map((project) => (
+            <Project key={project.name} {...project} />
+          ))}
+          <Divider />
+          <Divider
+            borderTop
+            className="border-t-none absolute h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute left-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute right-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+        </ul>
       </section>
 
       <section>
@@ -355,5 +365,40 @@ const Skill = ({ skill }: { skill: (typeof skills)[0] }) => {
         </div>
       </li>
     </div>
+  );
+};
+
+const Project = ({
+  name,
+  logo,
+  description,
+  link,
+  soon,
+}: {
+  name: (typeof projects)[number]["name"];
+  logo: string;
+  description: string;
+  link?: string;
+  soon?: boolean;
+}) => {
+  return (
+    <Link
+      href={link ?? ""}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "relative flex w-full flex-1 flex-col items-center justify-center py-4 **:duration-300 md:items-center",
+        "hover:bg-muted/50 duration-200",
+        soon && "cursor-progress opacity-50"
+      )}
+    >
+      <img src={logo} alt={name} className="size-16 rounded-full" />
+      <div className="flex flex-col items-center justify-center p-4">
+        <p className="text-sm font-bold">{name}</p>
+        <p className="text-natural-700 text-muted-foreground max-w-48 text-center text-xs">
+          {description}
+        </p>
+      </div>
+    </Link>
   );
 };

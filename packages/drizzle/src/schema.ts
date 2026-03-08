@@ -221,7 +221,13 @@ export const previousCustomers = pgTable("previous_customers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const projectsTypeValues = ["MOTION", "AGENCY", "GLOBAL"] as const;
+export const projectsTypeValues = [
+  "DOCS",
+  "MOTION",
+  "AGENCY",
+  "TEMPLATE",
+  "GLOBAL",
+] as const;
 export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
 
 export const notificationTypeValues = [

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { projectsTypeValues } from "@workspace/drizzle/schema";
+
 import { Github, Linkedin, XIcon } from "../icons/social";
 
 export const company = {
@@ -24,7 +26,7 @@ export const company = {
   websites: [
     { label: "Docs", href: "https://docs.alisamadii.com" },
     { label: "Motion", href: "https://motion.alisamadii.com" },
-    { label: "Packages", href: "https://packages.alisamadii.com" },
+    { label: "Agency", href: "https://agency.alisamadii.com" },
   ],
   clients: [
     { label: "Crosspost", href: "/client/crosspost" },
@@ -68,6 +70,39 @@ export const logos = {
   purple: "https://cdn.alisamadii.com/company/business-logo-purple.png",
   green: "https://cdn.alisamadii.com/company/business-logo-green.png",
 };
+
+export const projectsData: {
+  name: (typeof projectsTypeValues)[number];
+  logo: string;
+  description: string;
+  soon?: boolean;
+  link?: string;
+}[] = [
+  {
+    name: "MOTION",
+    logo: logos.blue,
+    description: "A production-ready motion library for React",
+    link: urls.motion,
+  },
+  {
+    name: "AGENCY",
+    logo: logos.green,
+    description: "A production-ready agency website for your business",
+    link: urls.agency,
+  },
+  {
+    name: "DOCS",
+    logo: logos.yellow,
+    description: "A website to add useful information",
+    link: urls.docs,
+  },
+  {
+    name: "TEMPLATE",
+    logo: logos.black,
+    description: "A template for starting a new project",
+    soon: true,
+  },
+];
 
 export const PROJECT_ZOD = z.enum(["motion", "agency"]);
 export type Project = z.infer<typeof PROJECT_ZOD>;
