@@ -43,7 +43,6 @@ const formSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   email: z.string(),
   name: z.string().min(1, "Name is required"),
-  recurringInterval: z.enum(["month", "year"]),
   services: z.array(
     z.object({
       name: z.string(),
@@ -52,9 +51,8 @@ const formSchema = z.object({
   ),
   prorationBehavior: z.enum(["invoice", "prorate"]),
   isFree: z.boolean(),
+  oneTimePurchase: z.boolean(),
 });
-
-const INTERVALS = ["month", "year"] as const;
 
 export default function AgencyCreatePage() {
   const searchParams = useSearchParams();
@@ -99,9 +97,13 @@ const Content = ({ productId }: { productId?: string | null }) => {
       userId: productId ? (product?.userId ?? "") : "",
       email: productId ? (product?.email ?? "") : "",
       name: productId ? (product?.name ?? "") : "",
-      recurringInterval: "month",
       services: productId ? (product?.services ?? []) : [],
       isFree: productId ? (product?.priceAmount === 0 ? true : false) : false,
+      oneTimePurchase: productId
+        ? product?.recurringInterval === null
+          ? true
+          : false
+        : false,
     },
   });
 
@@ -112,10 +114,11 @@ const Content = ({ productId }: { productId?: string | null }) => {
           id: productId,
           name: data.name,
           email: data.email,
-          recurringInterval: data.recurringInterval,
           services: data.services,
           userId: data.userId,
+          oneTimePurchase: data.oneTimePurchase,
           prorationBehavior: data.prorationBehavior,
+          isFree: data.isFree,
         },
         {
           onSuccess: () => {
@@ -131,10 +134,10 @@ const Content = ({ productId }: { productId?: string | null }) => {
         {
           name: data.name,
           email: data.email,
-          recurringInterval: data.recurringInterval,
           services: data.services,
           userId: data.userId,
           isFree: data.isFree,
+          oneTimePurchase: data.oneTimePurchase,
         },
         {
           onSuccess: () => {
@@ -198,22 +201,38 @@ const Content = ({ productId }: { productId?: string | null }) => {
 
           <Controller
             control={form.control}
-            name="recurringInterval"
+            name="isFree"
             render={({ field, fieldState }) => (
-              <Field data-invalid={!!fieldState.error}>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-full" disabled>
-                    <SelectValue placeholder="Select interval" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INTERVALS.map((i) => (
-                      <SelectItem key={i} value={i}>
-                        {i.charAt(0).toUpperCase() + i.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError errors={[fieldState.error]} />
+              <Field
+                data-invalid={!!fieldState.error}
+                className="dark shadow-dialog rounded-xl bg-black p-4 text-white"
+              >
+                <FieldContent className="flex flex-row items-center justify-between gap-2">
+                  <div className="text-xl font-black">Free</div>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FieldContent>
+              </Field>
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="oneTimePurchase"
+            render={({ field, fieldState }) => (
+              <Field
+                data-invalid={!!fieldState.error}
+                className="dark shadow-dialog rounded-xl bg-blue-500 p-4 text-white"
+              >
+                <FieldContent className="flex flex-row items-center justify-between gap-2">
+                  <div className="text-xl font-black">One Time Purchase</div>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={!!productId}
+                  />
+                </FieldContent>
               </Field>
             )}
           />
@@ -258,34 +277,15 @@ const Content = ({ productId }: { productId?: string | null }) => {
             services={services}
           />
 
-          <Controller
-            control={form.control}
-            name="isFree"
-            render={({ field, fieldState }) => (
-              <Field
-                data-invalid={!!fieldState.error}
-                className="dark shadow-dialog rounded-xl bg-black p-4 text-white"
-              >
-                <FieldContent className="flex flex-row items-center justify-between gap-2">
-                  <div className="text-xl font-black">Free</div>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FieldContent>
-              </Field>
-            )}
-          />
-
           <Separator className="my-6" />
 
           <Confirmation
             name={form.watch("name")}
-            recurringInterval={form.watch("recurringInterval")}
             email={form.watch("email")}
             userId={form.watch("userId")}
             services={form.watch("services")}
             isFree={form.watch("isFree")}
+            oneTimePurchase={form.watch("oneTimePurchase")}
           />
 
           <Separator className="my-6" />
@@ -297,7 +297,10 @@ const Content = ({ productId }: { productId?: string | null }) => {
               render={({ field, fieldState }) => (
                 <Field data-invalid={!!fieldState.error}>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full" disabled={!isUpgrading}>
+                    <SelectTrigger
+                      className="w-full"
+                      disabled={!isUpgrading || !!productId}
+                    >
                       <SelectValue placeholder="Select proration behavior" />
                     </SelectTrigger>
                     <SelectContent>
@@ -307,6 +310,9 @@ const Content = ({ productId }: { productId?: string | null }) => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-muted-foreground mt-2 px-2 text-xs">
+                    This will be disable if the product is one time purchase
+                  </p>
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}

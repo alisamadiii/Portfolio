@@ -145,7 +145,9 @@ export default function PortalPage() {
                   size="lg"
                   isLoading={checkout.isPending}
                 >
-                  Subscribe
+                  {products.data?.recurringInterval === null
+                    ? "Purchase"
+                    : "Subscribe"}
                 </Button>
               )}
             </div>

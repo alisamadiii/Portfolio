@@ -5,18 +5,18 @@ import { cn } from "@workspace/ui/lib/utils";
 
 export const Confirmation = ({
   name,
-  recurringInterval,
   email,
   userId,
   services,
   isFree,
+  oneTimePurchase,
 }: {
   name: string;
-  recurringInterval: "month" | "year";
   email: string;
   userId: string;
   services: { name: string; price: number }[];
   isFree: boolean;
+  oneTimePurchase: boolean;
 }) => {
   return (
     <div className="bg-muted/50 rounded-xl border p-4">
@@ -31,12 +31,14 @@ export const Confirmation = ({
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">Description</dt>
           <dd className="line-clamp-3 font-medium whitespace-pre-wrap">
-            {generateDescription(services, recurringInterval) || "—"}
+            {generateDescription(services, oneTimePurchase) || "—"}
           </dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">Recurring</dt>
-          <dd className="font-medium capitalize">{recurringInterval || "—"}</dd>
+          <dd className="font-medium capitalize">
+            {oneTimePurchase ? "One Time" : "Monthly"}
+          </dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">Email</dt>

@@ -29,18 +29,17 @@ export const AgencyServiceSchema = z.object({
 
 const createSchema = z.object({
   name: z.string(),
-  recurringInterval: z.enum(["month", "year"]),
   email: z.string(),
   services: z.array(AgencyServiceSchema),
   userId: z.string(),
   isFree: z.boolean().default(false),
+  oneTimePurchase: z.boolean().default(false),
 });
 
 export const adminAgencyProductsRouter = createTRPCRouter({
   create: adminProcedure.input(createSchema).mutation(async ({ input }) => {
     try {
-      const { name, recurringInterval, email, services, userId, isFree } =
-        input;
+      const { name, email, services, userId, isFree, oneTimePurchase } = input;
 
       if (!userId || !email || !services) {
         throw new TRPCError({
@@ -76,14 +75,14 @@ export const adminAgencyProductsRouter = createTRPCRouter({
 
       const product: ProductCreate = {
         name,
-        description: generateDescription(services, recurringInterval),
+        description: generateDescription(services, oneTimePurchase),
         prices: [
           {
             amountType: isFree ? "free" : "fixed",
             priceAmount: services.reduce((sum, s) => sum + s.price, 0),
           },
         ],
-        recurringInterval,
+        recurringInterval: oneTimePurchase ? null : "month",
         metadata,
         visibility: "private",
       };
@@ -105,7 +104,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       z.object({
         id: z.string(),
         name: z.string(),
-        recurringInterval: z.enum(["month", "year"]),
+        oneTimePurchase: z.boolean(),
         email: z.string(),
         services: z.array(AgencyServiceSchema),
         userId: z.string(),
@@ -113,6 +112,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           .enum(["invoice", "prorate"])
           .optional()
           .default("prorate"),
+        isFree: z.boolean(),
       })
     )
     .mutation(async ({ input }) => {
@@ -120,11 +120,12 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         const {
           id,
           name,
-          recurringInterval,
+          oneTimePurchase,
           email,
           services,
           userId,
           prorationBehavior,
+          isFree,
         } = input;
 
         if (!userId || !email || !services) {
@@ -144,18 +145,13 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           id,
           productUpdate: {
             name,
-            description: generateDescription(services, recurringInterval),
+            description: generateDescription(services, oneTimePurchase),
             prices: [
               {
-                amountType: "fixed",
+                amountType: isFree ? "free" : "fixed",
                 priceAmount: services.reduce((sum, s) => sum + s.price, 0),
               },
             ],
-            metadata: {
-              email,
-              services: JSON.stringify(services),
-              userId,
-            },
           },
         });
 

@@ -145,7 +145,7 @@ export default function AgencyProductDetail() {
         </div>
       </CardAgency.Card>
 
-      <div>
+      <div className="w-full">
         <p className="mb-2 px-8 text-lg font-medium">Subscriptions</p>
         <DataTable
           columns={[
@@ -209,7 +209,7 @@ export default function AgencyProductDetail() {
           data={data?.subscriptions ?? []}
         />
       </div>
-      <div>
+      <div className="w-full">
         <p className="mb-2 px-8 text-lg font-medium">Orders</p>
         <DataTable
           columns={[
