@@ -9,6 +9,8 @@ import { TRPCReactProvider } from "@workspace/trpc/client";
 import "@workspace/ui/globals.css";
 import "./globals.css";
 
+import { Suspense } from "react";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -37,8 +39,10 @@ export default function RootLayout({
       >
         <TRPCReactProvider>
           <Providers>
-            <SuccessPurchaseDialog project="agency" />
-            {children}
+            <Suspense>
+              <SuccessPurchaseDialog project="agency" />
+              {children}
+            </Suspense>
           </Providers>
         </TRPCReactProvider>
       </body>
