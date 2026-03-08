@@ -32,7 +32,8 @@ export const Notifications = ({ project, userId }: NotificationsProps) => {
 
   return (
     notifications.data &&
-    notifications.isSuccess && (
+    notifications.isSuccess &&
+    notifications.data.length > 0 && (
       <div className="space-y-2">
         {notifications.data.map((notification) => (
           <div

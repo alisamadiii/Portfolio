@@ -19,7 +19,8 @@ export const EmbedNotifications = ({ project }: EmbedNotificationsProps) => {
 
   return (
     sentNotifications.data &&
-    sentNotifications.isSuccess && (
+    sentNotifications.isSuccess &&
+    sentNotifications.data.length > 0 && (
       <div className="mb-8">
         <p className="mb-2 px-5 text-lg font-medium">Sent Messages</p>
         <div className="space-y-2">
