@@ -64,7 +64,7 @@ export default async function RootLayout({
           <Providers>
             <Suspense>
               <PreviousCustomerBanner />
-              <SuccessPurchaseDialog project="motion" />
+              <SuccessPurchaseDialog project="MOTION" />
               {children}
               <Suspense>
                 <Footer hide={["/m/"]} />

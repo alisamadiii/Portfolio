@@ -28,12 +28,12 @@ import { Spinner } from "@workspace/ui/components/spinner";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
+import { RouterOutputs } from "@workspace/trpc/routers/_app";
 import {
   notificationPriorityValues,
   notificationStatusValues,
   notificationTypeValues,
-  projectsTypeValues,
-  type NotificationMetadata,
+  ProjectType,
 } from "@workspace/drizzle/schema";
 
 // ─── Type helpers ───────────────────────────────────────────────────────────
@@ -43,24 +43,6 @@ type NotificationType = (typeof notificationTypeValues)[number];
 type NotificationPriority = (typeof notificationPriorityValues)[number];
 
 type NotificationStatus = (typeof notificationStatusValues)[number];
-
-type ProjectType = (typeof projectsTypeValues)[number];
-
-interface Notification {
-  id: number;
-  recipientId: string | null;
-  projectType: ProjectType;
-  actorId: string | null;
-  type: NotificationType | null;
-  priority: NotificationPriority;
-  subject: string;
-  message: string;
-  metadata: NotificationMetadata | null;
-  seenAt: string | null;
-  status: NotificationStatus | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 // ─── Config maps ────────────────────────────────────────────────────────────
 
@@ -164,11 +146,13 @@ const STATUS_CONFIG: Record<
 };
 
 const PROJECT_BADGE: Record<ProjectType, string> = {
+  PORTFOLIO: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   MOTION:
     "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   AGENCY: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
-  GLOBAL:
-    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+  DOCS: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  TEMPLATE: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
+  ADMIN: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
 };
 
 // ─── Utility ────────────────────────────────────────────────────────────────
@@ -287,7 +271,7 @@ function NotificationCard({
   notification,
   userId,
 }: {
-  notification: Notification;
+  notification: RouterOutputs["admin"]["notification"]["sentNotifications"][number];
   userId: string;
 }) {
   const statusConfig = notification.status
@@ -314,7 +298,7 @@ function NotificationCard({
           <span
             className={cn(
               "rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
-              PROJECT_BADGE[notification.projectType]
+              PROJECT_BADGE[notification.projectType ?? "PORTFOLIO"]
             )}
           >
             {notification.projectType}
@@ -325,7 +309,6 @@ function NotificationCard({
         </span>
       </div>
 
-      {/* Subject + message */}
       <div className="space-y-1">
         <h3 className="text-sm leading-snug font-semibold">
           {notification.subject}
@@ -334,40 +317,6 @@ function NotificationCard({
           {notification.message}
         </p>
       </div>
-
-      {/* Metadata (if present) */}
-      {notification.metadata &&
-        Object.keys(notification.metadata).length > 0 && (
-          <div className="rounded-lg bg-black/5 px-3 py-2 dark:bg-white/5">
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {notification.metadata.changeType && (
-                <span className="text-muted-foreground text-xs">
-                  Change:{" "}
-                  <span className="text-foreground font-medium">
-                    {notification.metadata.changeType}
-                  </span>
-                </span>
-              )}
-              {notification.metadata.previousValue && (
-                <span className="text-muted-foreground text-xs">
-                  From:{" "}
-                  <span className="text-foreground font-medium">
-                    {notification.metadata.previousValue}
-                  </span>
-                </span>
-              )}
-              {notification.metadata.requestedValue && (
-                <span className="text-muted-foreground text-xs">
-                  To:{" "}
-                  <span className="text-foreground font-medium">
-                    {notification.metadata.requestedValue}
-                  </span>
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
       {/* Bottom row: priority + status select */}
       <div className="flex items-center justify-between gap-2 pt-1">
         <PriorityBadge priority={notification.priority} />
@@ -383,7 +332,11 @@ function NotificationCard({
 
 // ─── Status summary pills ──────────────────────────────────────────────────
 
-function StatusSummary({ notifications }: { notifications: Notification[] }) {
+function StatusSummary({
+  notifications,
+}: {
+  notifications: RouterOutputs["admin"]["notification"]["sentNotifications"];
+}) {
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
     for (const n of notifications) {
@@ -468,7 +421,7 @@ export const NotificationsTab = ({ userId }: NotificationsProps) => {
   return (
     <div className="space-y-6">
       {/* Summary */}
-      <StatusSummary notifications={notifications.data as Notification[]} />
+      <StatusSummary notifications={notifications.data} />
       <div
         className="grid w-full gap-4"
         style={{

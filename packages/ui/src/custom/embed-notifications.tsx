@@ -2,13 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { projectsTypeValues } from "@workspace/drizzle/schema";
+import { ProjectType } from "@workspace/drizzle/schema";
 
 import { Badge } from "../components/badge";
 import { cn } from "../lib/utils";
 
 interface EmbedNotificationsProps {
-  project: (typeof projectsTypeValues)[number];
+  project: ProjectType;
 }
 
 export const EmbedNotifications = ({ project }: EmbedNotificationsProps) => {

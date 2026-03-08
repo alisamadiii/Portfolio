@@ -3,14 +3,14 @@ import { format } from "date-fns";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { projectsTypeValues } from "@workspace/drizzle/schema";
+import { ProjectType } from "@workspace/drizzle/schema";
 
 import { Badge } from "../components/badge";
 import { Spinner } from "../components/spinner";
 import { cn } from "../lib/utils";
 
 interface EmbedHistoryNotificationsProps {
-  project: (typeof projectsTypeValues)[number];
+  project: ProjectType;
 }
 
 export const EmbedHistoryNotifications = ({

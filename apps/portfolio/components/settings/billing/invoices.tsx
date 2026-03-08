@@ -56,9 +56,9 @@ export const BillingInvoices = () => {
               className="bg-primary shadow-dialog aspect-16/8 rounded-xl p-4 text-white"
               style={{
                 backgroundColor:
-                  order.project === "motion"
+                  order.project === "MOTION"
                     ? design.motion.color
-                    : order.project === "agency"
+                    : order.project === "AGENCY"
                       ? design.agency.color
                       : undefined,
               }}
@@ -115,9 +115,9 @@ export const BillingInvoices = () => {
               </div>
               <Link
                 href={
-                  order.project === "motion"
+                  order.project === "MOTION"
                     ? `${urls.motion}`
-                    : order.project === "agency"
+                    : order.project === "AGENCY"
                       ? `${urls.agency}/portal`
                       : "#"
                 }

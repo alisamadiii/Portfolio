@@ -222,11 +222,12 @@ export const previousCustomers = pgTable("previous_customers", {
 });
 
 export const projectsTypeValues = [
+  "PORTFOLIO",
   "DOCS",
   "MOTION",
   "AGENCY",
   "TEMPLATE",
-  "GLOBAL",
+  "ADMIN",
 ] as const;
 export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
 
@@ -266,17 +267,6 @@ export const notificationStatusEnum = pgEnum(
   notificationStatusValues
 );
 
-export type NotificationMetadata = {
-  serviceId?: string;
-  agencyId?: string;
-  clientId?: string;
-  changeType?: string;
-  previousValue?: string;
-  requestedValue?: string;
-  requestId?: string;
-  [key: string]: unknown;
-};
-
 export const notifications = pgTable(
   "notifications",
   {
@@ -286,13 +276,13 @@ export const notifications = pgTable(
     recipientId: text("recipient_id").references(() => user.id, {
       onDelete: "cascade",
     }),
-    projectType: projectsTypeEnum("project_type").notNull(),
+    projectType: projectsTypeEnum("project_type"),
     actorId: text("actor_id").references(() => user.id),
     type: notificationTypeEnum("type"),
     priority: notificationPriorityEnum("priority").notNull().default("MEDIUM"),
     subject: text("subject").notNull(),
     message: text("message").notNull(),
-    metadata: jsonb("metadata").$type<NotificationMetadata>().default({}),
+    metadata: jsonb("metadata").$type<unknown>().default({}),
     seenAt: timestamp("seen_at", { withTimezone: true }),
     status: notificationStatusEnum("status").default("PENDING"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -305,3 +295,8 @@ export const notifications = pgTable(
   },
   (t) => [index("idx_notif_recipient").on(t.recipientId, t.createdAt)]
 );
+
+export type ProjectType = (typeof projectsTypeValues)[number];
+export type NotificationType = (typeof notificationTypeValues)[number];
+export type NotificationPriority = (typeof notificationPriorityValues)[number];
+export type NotificationStatus = (typeof notificationStatusValues)[number];

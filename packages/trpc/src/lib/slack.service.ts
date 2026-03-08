@@ -12,7 +12,7 @@ type SlackNotificationParams = {
   subject: string;
   message: string;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  projectType: string;
+  projectType?: string;
   actorName?: string;
   email?: string;
   userId?: string;

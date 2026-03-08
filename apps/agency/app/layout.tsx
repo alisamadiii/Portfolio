@@ -40,7 +40,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
-              <SuccessPurchaseDialog project="agency" />
+              <SuccessPurchaseDialog project="AGENCY" />
               {children}
             </Suspense>
           </Providers>

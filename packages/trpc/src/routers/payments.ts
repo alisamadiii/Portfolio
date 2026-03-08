@@ -4,8 +4,6 @@ import { TRPCError } from "@trpc/server";
 import { asc, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
-import { Project } from "@workspace/ui/lib/company";
-
 import {
   adminProcedure,
   authenticatedProcedure,
@@ -14,7 +12,12 @@ import {
 } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { orders, products, subscriptions } from "@workspace/drizzle/schema";
+import {
+  orders,
+  products,
+  ProjectType,
+  subscriptions,
+} from "@workspace/drizzle/schema";
 
 export const paymentsRouter = createTRPCRouter({
   getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
@@ -343,7 +346,9 @@ export const paymentsRouter = createTRPCRouter({
           .orderBy(desc(orders.createdAt));
 
         return ordersList.map((order) => {
-          const metadata = order.metadata as { project?: Project } | undefined;
+          const metadata = order.metadata as
+            | { project?: ProjectType }
+            | undefined;
           const project = metadata?.project;
           return {
             ...order,

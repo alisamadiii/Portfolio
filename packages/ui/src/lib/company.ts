@@ -1,6 +1,4 @@
-import { z } from "zod";
-
-import { projectsTypeValues } from "@workspace/drizzle/schema";
+import { ProjectType } from "@workspace/drizzle/schema";
 
 import { Github, Linkedin, XIcon } from "../icons/social";
 
@@ -39,7 +37,7 @@ export const company = {
     "https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png",
 };
 
-export const urls = {
+export const urls: Record<Lowercase<ProjectType>, string> = {
   portfolio:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
@@ -60,6 +58,10 @@ export const urls = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:3004"
       : "https://agency.alisamadii.com",
+  template:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3005"
+      : "https://template.alisamadii.com",
 };
 
 export const logos = {
@@ -72,7 +74,7 @@ export const logos = {
 };
 
 export const projectsData: {
-  name: (typeof projectsTypeValues)[number];
+  name: ProjectType;
   logo: string;
   description: string;
   soon?: boolean;
@@ -103,6 +105,3 @@ export const projectsData: {
     soon: true,
   },
 ];
-
-export const PROJECT_ZOD = z.enum(["motion", "agency"]);
-export type Project = z.infer<typeof PROJECT_ZOD>;

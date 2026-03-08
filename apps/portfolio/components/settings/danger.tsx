@@ -143,7 +143,6 @@ export const DangerSettings = () => {
                     onClick={() =>
                       sentNotification.mutate(
                         {
-                          projectType: "GLOBAL",
                           priority: "URGENT",
                           type: "ACCOUNT_DELETION_REQUEST",
                           subject: "Account Deletion Request",

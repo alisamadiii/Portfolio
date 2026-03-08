@@ -76,7 +76,7 @@ export const notificationRouter = createTRPCRouter({
     .input(
       z.object({
         recipientId: z.string().optional(),
-        projectType: z.enum(projectsTypeValues),
+        projectType: z.enum(projectsTypeValues).optional(),
         type: z.enum(notificationTypeValues).optional(),
         priority: z.enum(notificationPriorityValues),
         subject: z.string(),

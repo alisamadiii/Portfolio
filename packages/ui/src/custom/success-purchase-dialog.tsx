@@ -19,10 +19,13 @@ import { Spinner } from "@workspace/ui/components/spinner";
 import { HandCheck } from "@workspace/ui/icons";
 
 import { useTRPC } from "@workspace/trpc/client";
+import { ProjectType } from "@workspace/drizzle/schema";
 
-import { Project } from "../lib/company";
-
-export const SuccessPurchaseDialog = ({ project }: { project: Project }) => {
+export const SuccessPurchaseDialog = ({
+  project,
+}: {
+  project: ProjectType;
+}) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const checkoutId = searchParams.get("checkout_id");
@@ -118,16 +121,16 @@ export const SuccessPurchaseDialog = ({ project }: { project: Project }) => {
                 Thank you for your purchase!
               </DialogTitle>
               <DialogDescription className="text-sm">
-                {project === "motion"
+                {project === "MOTION"
                   ? "You now have full access to the animation. Start exploring and use the source code in your own projects."
-                  : project === "agency"
+                  : project === "AGENCY"
                     ? "Now this is the part where we start building your project. We will get back to you shortly with a timeline and a quote."
                     : ""}
               </DialogDescription>
             </DialogHeader>
 
             <DialogFooter className="mt-8 flex flex-col gap-2 sm:flex-col">
-              {project === "motion" && (
+              {project === "MOTION" && (
                 <Button
                   asChild
                   className="w-full sm:w-auto"

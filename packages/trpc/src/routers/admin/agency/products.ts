@@ -4,18 +4,22 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { generateDescription } from "@workspace/ui/lib/agency-utils";
-import { Project } from "@workspace/ui/lib/company";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { orders, products, subscriptions } from "@workspace/drizzle/schema";
+import {
+  orders,
+  products,
+  ProjectType,
+  subscriptions,
+} from "@workspace/drizzle/schema";
 
 export type AgencyMetadata = {
   userId?: string;
   email?: string;
   services?: string;
-  project?: Project;
+  project?: ProjectType;
 };
 
 export const AgencyServiceSchema = z.object({
@@ -58,6 +62,18 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         });
       }
 
+      const metadata: {
+        email: string;
+        services: string;
+        userId: string;
+        project: ProjectType;
+      } = {
+        email,
+        services: JSON.stringify(services),
+        userId,
+        project: "AGENCY",
+      };
+
       const product: ProductCreate = {
         name,
         description: generateDescription(services, recurringInterval),
@@ -68,12 +84,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           },
         ],
         recurringInterval,
-        metadata: {
-          email,
-          services: JSON.stringify(services),
-          userId,
-          project: "agency",
-        },
+        metadata,
         visibility: "private",
       };
 
