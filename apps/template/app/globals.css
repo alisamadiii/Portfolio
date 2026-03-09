@@ -1,0 +1,15 @@
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --primary: #00B894;
+  --primary-foreground: oklch(0.98 0 0);
+  --ring: #00B894;
+}
+
+.dark {
+  --primary: #00B894;
+  --primary-foreground: oklch(0.145 0.03 155);
+  --ring: #00B894;
+}
