@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FileUser } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { buttonVariants } from "@workspace/ui/components/button";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
 import {
   BetterAuth,
   Drizzle,
@@ -21,6 +21,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { projectsTypeValues } from "@workspace/drizzle/schema";
 
+import { ClientWork } from "@/components/client-work";
 import { Divider } from "@/components/divider";
 
 import Apps from "../components/apps";
@@ -255,6 +256,40 @@ export default function Home() {
           {projectsData.slice(2, 4).map((project) => (
             <Project key={project.name} {...project} />
           ))}
+          <Divider />
+          <Divider
+            borderTop
+            className="border-t-none absolute h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute left-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute right-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
+          Work Experience
+        </h2>
+
+        <ul className="relative flex flex-col justify-center">
+          <Divider />
+          <ClientWork projectName="Crosspost" />
+          <Divider />
+          <ClientWork projectName="Bless" />
+          <Divider />
+          <ClientWork projectName="B402" />
+          <Divider />
+          <div className="flex justify-center p-8">
+            <Button size={"lg"} variant={"outline"} className="w-full" asChild>
+              <Link href={`/how-i-build`}>How I Build</Link>
+            </Button>
+          </div>
           <Divider />
           <Divider
             borderTop

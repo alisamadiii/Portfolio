@@ -62,7 +62,7 @@ export default async function RootLayout({
                 lessVisibleOn={["/settings", "/client/", "/how-i-build"]}
               />
               {children}
-              <Footer isPortfolio />
+              <Footer />
             </Suspense>
           </Providers>
         </TRPCReactProvider>
