@@ -297,10 +297,7 @@ const Content = ({ productId }: { productId?: string | null }) => {
               render={({ field, fieldState }) => (
                 <Field data-invalid={!!fieldState.error}>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger
-                      className="w-full"
-                      disabled={!isUpgrading || !!productId}
-                    >
+                    <SelectTrigger className="w-full" disabled={!isUpgrading}>
                       <SelectValue placeholder="Select proration behavior" />
                     </SelectTrigger>
                     <SelectContent>

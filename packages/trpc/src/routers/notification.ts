@@ -14,6 +14,39 @@ import { authenticatedProcedure, createTRPCRouter } from "../init";
 import { sendSlackNotification } from "../lib/slack.service";
 
 export const notificationRouter = createTRPCRouter({
+  get: authenticatedProcedure
+    .input(
+      z.object({
+        project: z.enum(projectsTypeValues).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const notificationsList = await db
+          .select()
+          .from(notifications)
+          .where(
+            and(
+              eq(notifications.actorId, ctx.session.user.id),
+              input.project
+                ? eq(notifications.projectType, input.project)
+                : undefined
+            )
+          )
+          .orderBy(desc(notifications.createdAt));
+
+        return notificationsList;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to get notifications",
+          cause: error,
+        });
+      }
+    }),
   history: authenticatedProcedure
     .input(
       z.object({

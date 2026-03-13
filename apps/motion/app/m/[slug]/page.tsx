@@ -85,7 +85,7 @@ export default function ComponentPage() {
 
   return (
     <>
-      <ReactLenis root />
+      {/* <ReactLenis root /> */}
       <motion.div
         initial={{ maxWidth: "100%" }}
         animate={{ maxWidth: isOpen && !isMobile ? "80%" : "100%" }}

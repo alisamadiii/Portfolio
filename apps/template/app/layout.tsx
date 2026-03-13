@@ -11,6 +11,8 @@ import "./globals.css";
 
 import { Suspense } from "react";
 
+import { Footer } from "@workspace/ui/components/footer";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -35,13 +37,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-muted dark:bg-background antialiased [--primary:#6C5CE7]`}
       >
         <TRPCReactProvider>
           <Providers>
             <Suspense>
               <SuccessPurchaseDialog project="AGENCY" />
               {children}
+              <Footer />
             </Suspense>
           </Providers>
         </TRPCReactProvider>

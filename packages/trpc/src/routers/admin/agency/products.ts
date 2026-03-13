@@ -48,18 +48,18 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         });
       }
 
-      // Check if product already exists with the user id in metadata
-      const existingProduct = await db
-        .select()
-        .from(products)
-        .where(sql`${products.metadata}->>'userId' = ${userId}`)
-        .limit(1);
-      if (existingProduct.length > 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Product already exists for this user",
-        });
-      }
+      // // Check if product already exists with the user id in metadata
+      // const existingProduct = await db
+      //   .select()
+      //   .from(products)
+      //   .where(sql`${products.metadata}->>'userId' = ${userId}`)
+      //   .limit(1);
+      // if (existingProduct.length > 0) {
+      //   throw new TRPCError({
+      //     code: "BAD_REQUEST",
+      //     message: "Product already exists for this user",
+      //   });
+      // }
 
       const metadata: {
         email: string;

@@ -1,5 +1,7 @@
+import { OrderStatus } from "@polar-sh/sdk/models/components/orderstatus.js";
+import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { TRPCError } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
@@ -12,33 +14,27 @@ import { AgencyMetadata } from "../admin/agency/products";
 export const agencyPaymentsRouter = createTRPCRouter({
   getProducts: authenticatedProcedure.query(async ({ ctx }) => {
     try {
-      const product = await db
+      const productsList = await db
         .select()
         .from(products)
-        .where(sql`${products.metadata}->>'userId' = ${ctx.session.user.id}`)
-        .limit(1)
-        .then((result) => result[0]);
+        .where(
+          sql`${products.metadata}->>'userId' = ${ctx.session.user.id} and ${products.metadata}->>'project' = 'AGENCY'`
+        );
 
-      if (!product) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Product not found",
-        });
-      }
-
-      const metadata = product.metadata as AgencyMetadata | undefined;
-      const userId = metadata?.userId;
-      const email = metadata?.email;
-      const services = metadata?.services;
-
-      return {
-        ...product,
-        userId,
-        email,
-        services: services
-          ? (JSON.parse(services) as { name: string; price: number }[])
-          : [],
-      };
+      return productsList.map((product) => {
+        const metadata = product.metadata as AgencyMetadata | undefined;
+        const userId = metadata?.userId;
+        const email = metadata?.email;
+        const services = metadata?.services;
+        return {
+          ...product,
+          userId,
+          email,
+          services: services
+            ? (JSON.parse(services) as { name: string; price: number }[])
+            : [],
+        };
+      });
     } catch (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -99,6 +95,57 @@ export const agencyPaymentsRouter = createTRPCRouter({
       });
     }
   }),
+  isActive: authenticatedProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      try {
+        const userId = ctx.session.user.id;
+
+        const [activeOrder] = await db
+          .select({ id: orders.id })
+          .from(orders)
+          .innerJoin(products, eq(orders.productId, input.productId))
+          .where(
+            and(
+              sql`${orders.metadata}->>'userId' = ${userId}`,
+              eq(orders.status, OrderStatus.Paid),
+              sql`${products.metadata}->>'userId' = ${userId}`,
+              sql`${products.metadata}->>'project' = 'AGENCY'`
+            )
+          )
+          .limit(1);
+
+        if (activeOrder) return true;
+
+        const [activeSubscription] = await db
+          .select({ id: subscriptions.id })
+          .from(subscriptions)
+          .innerJoin(products, eq(subscriptions.productId, input.productId))
+          .where(
+            and(
+              sql`${subscriptions.metadata}->>'userId' = ${userId}`,
+              eq(subscriptions.status, SubscriptionStatus.Active),
+              sql`${products.metadata}->>'userId' = ${userId}`,
+              sql`${products.metadata}->>'project' = 'AGENCY'`
+            )
+          )
+          .limit(1);
+
+        return !!activeSubscription;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to check agency status",
+        });
+      }
+    }),
   createCheckout: authenticatedProcedure
     .input(
       z.object({

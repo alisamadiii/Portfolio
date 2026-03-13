@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Lightbulb } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { cn } from "@workspace/ui/lib/utils";
 
 import { Logo } from "../icons/logo";
 import { company, urls } from "../lib/company";
+import { Button } from "./button";
 
 export interface FooterColumn {
   heading: string;
@@ -65,6 +68,8 @@ function Footer({
   disclaimer,
   hide,
 }: FooterProps) {
+  const { theme, setTheme } = useTheme();
+
   const year = "2026";
   const copyrightText = copyright ?? `© ${year} ${companyName}`;
 
@@ -137,6 +142,42 @@ function Footer({
                 </li>
               ))}
             </ul>
+            <h3 className="text-foreground font-semibold">Theme</h3>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                color="currentColor"
+                className="size-4 -rotate-45"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path
+                  d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></path>
+                <path
+                  d="M5 20L19 5"
+                  stroke="currentColor"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                ></path>
+                <path
+                  d="M16 9L22 13.8528M12.4128 12.4059L19.3601 18.3634M8 15.6672L15 21.5"
+                  stroke="currentColor"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                ></path>
+              </svg>
+            </Button>
           </nav>
         </div>
 

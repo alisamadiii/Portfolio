@@ -4,9 +4,20 @@ export const CardAgency = () => {
   return <div>CA</div>;
 };
 
-const Card = ({ children }: { children: React.ReactNode }) => {
+const Card = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
   return (
-    <div className="bg-muted shadow-card flex w-full flex-col gap-6 rounded-4xl p-6">
+    <div
+      className={cn(
+        "bg-muted shadow-card flex w-full flex-col gap-6 rounded-4xl p-6",
+        className
+      )}
+    >
       {children}
     </div>
   );
