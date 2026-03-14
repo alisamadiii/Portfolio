@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
@@ -65,75 +65,83 @@ const EachProduct = ({
         isActive ? "outline-primary bg-primary/10 outline outline-2" : ""
       )}
     >
-      <CardAgency.Header title={`#${index + 1}`} />
+      <div className="flex items-start justify-between">
+        <CardAgency.Header title={`#${index + 1} ${product?.name || ""}`} />
+        <p className="text-5xl font-black tracking-tighter tabular-nums">
+          ${product?.priceAmount ? formatPrice(product.priceAmount) : "N/A"}
+          {product?.recurringInterval && (
+            <span className="text-muted-foreground text-lg font-normal tracking-normal">
+              /{product.recurringInterval}
+            </span>
+          )}
+        </p>
+      </div>
       <div className="grid gap-5">
-        <CardAgency.DetailRow label="Name" value={product?.name || ""} />
-        <CardAgency.DetailRow label="Description">
-          <div
-            className="line-clamp-2 text-sm"
-            dangerouslySetInnerHTML={{
-              __html: product?.description ?? "-",
-            }}
-          />
-        </CardAgency.DetailRow>
+        <div
+          className={cn(
+            "text-muted-foreground text-sm leading-relaxed",
+            "[&_p]:mb-3 [&_p:last-child]:mb-0",
+            "[&_strong]:text-foreground [&_strong]:font-semibold",
+            "[&_ul]:my-2 [&_ul]:ml-1 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-1",
+            "[&_li]:text-muted-foreground [&_li]:marker:text-primary/60",
+            "[&_a]:text-primary [&_a:hover]:text-primary/80 [&_a]:underline [&_a]:underline-offset-2"
+          )}
+        >
+          <ReactMarkdown>{product?.description ?? "-"}</ReactMarkdown>
+        </div>
 
         <CardAgency.DetailRow
           label="Recurring interval"
           value={product?.recurringInterval || ""}
         />
-        <CardAgency.DetailRow
-          label="Created at"
-          value={format(
-            product?.createdAt ? new Date(product.createdAt) : new Date(),
-            "MMMM d, yyyy"
-          )}
-        />
-        <CardAgency.DetailRow label="Services">
-          {product?.services?.map((service) => (
-            <p
-              key={service.name}
-              className="flex shrink-0 items-center justify-between gap-4"
-            >
-              {service.name} <span>${formatPrice(service.price)}</span>
-            </p>
-          ))}
-        </CardAgency.DetailRow>
-        <CardAgency.DetailRow label="Price">
-          <span className="text-3xl font-bold tracking-tighter tabular-nums">
-            ${formatPrice(product?.priceAmount ?? 0)}
-          </span>
-        </CardAgency.DetailRow>
-
-        {isActive ? (
-          <Button variant="outline" size="lg">
-            <span>
-              {product?.recurringInterval === null ? "Purchased" : "Active"}
-            </span>
-          </Button>
-        ) : (
-          <Button
-            onClick={() =>
-              checkout.mutate(
-                {
-                  productId: product?.id ?? "",
-                  successUrl: window.location.href,
-                },
-                {
-                  onSuccess: () => {
-                    toast.success("Subscription created");
-                  },
-                  onError: (error) => {
-                    toast.error(error.message);
-                  },
-                }
-              )
-            }
-            size="lg"
-            isLoading={checkout.isPending}
-          >
-            {product?.recurringInterval === null ? "Purchase" : "Subscribe"}
-          </Button>
+        {product?.services?.length > 0 && (
+          <CardAgency.DetailRow label="Services">
+            {product?.services?.map((service) => (
+              <p
+                key={service.name}
+                className="flex shrink-0 items-center justify-between gap-4"
+              >
+                {service.name} <span>${formatPrice(service.price)}</span>
+              </p>
+            ))}
+          </CardAgency.DetailRow>
         )}
+
+        <div className="sticky bottom-4 w-full">
+          {isActive ? (
+            <Button variant="outline" size="lg" className="w-full">
+              <span>
+                {product?.recurringInterval === null ? "Purchased" : "Active"}
+              </span>
+            </Button>
+          ) : (
+            <Button
+              onClick={() =>
+                checkout.mutate(
+                  {
+                    productId: product?.id ?? "",
+                    successUrl: window.location.href,
+                  },
+                  {
+                    onSuccess: () => {
+                      toast.success("Subscription created");
+                    },
+                    onError: (error) => {
+                      toast.error(error.message);
+                    },
+                  }
+                )
+              }
+              size="lg"
+              className="w-full"
+              isLoading={checkout.isPending}
+            >
+              {product?.recurringInterval === null
+                ? `Purchase $${formatPrice(product.priceAmount)}`
+                : `Subscribe $${formatPrice(product.priceAmount)}`}
+            </Button>
+          )}
+        </div>
       </div>
     </CardAgency.Card>
   );

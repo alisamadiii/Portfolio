@@ -75,6 +75,22 @@ export default function OrdersPage() {
                 </p>
               ),
             },
+            {
+              id: "Is Cancel",
+              header: "Is Cancel",
+              accessorKey: "cancelAtPeriodEnd",
+              cell: ({ row }) => (
+                <Badge
+                  variant={
+                    row.original.cancelAtPeriodEnd ? "destructive" : "default"
+                  }
+                >
+                  {row.original.cancelAtPeriodEnd
+                    ? `Yes (${row.original.cancelAtPeriodEnd ? "Active until next billing date" : "N/A"})`
+                    : "No"}
+                </Badge>
+              ),
+            },
           ]}
           data={orders?.subscriptions ?? []}
         />

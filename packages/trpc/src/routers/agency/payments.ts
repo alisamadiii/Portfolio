@@ -18,7 +18,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
         .select()
         .from(products)
         .where(
-          sql`${products.metadata}->>'userId' = ${ctx.session.user.id} and ${products.metadata}->>'project' = 'AGENCY'`
+          sql`${products.metadata}->>'project' = 'AGENCY' and (${products.metadata}->>'userId' = ${ctx.session.user.id} or ${products.metadata}->>'userId' is null or ${products.metadata}->>'userId' = '')`
         );
 
       return productsList.map((product) => {
@@ -48,13 +48,15 @@ export const agencyPaymentsRouter = createTRPCRouter({
       const ordersList = await db
         .select()
         .from(orders)
-        .where(sql`${orders.metadata}->>'userId' = ${ctx.session.user.id}`);
+        .where(
+          sql`${orders.metadata}->>'project' = 'AGENCY' and (${orders.userId} = ${ctx.session.user.id})`
+        );
 
       const subscriptionsList = await db
         .select()
         .from(subscriptions)
         .where(
-          sql`${subscriptions.metadata}->>'userId' = ${ctx.session.user.id}`
+          sql`${subscriptions.metadata}->>'project' = 'AGENCY' and (${subscriptions.userId} = ${ctx.session.user.id})`
         );
 
       return {
@@ -66,7 +68,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
           return {
             ...order,
             userId,
-            email,
+            email: email ?? order.email,
             services: services
               ? (JSON.parse(services) as { name: string; price: number }[])
               : [],
@@ -80,7 +82,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
           return {
             ...subscription,
             userId,
-            email,
+            email: email ?? subscription.email,
             services: services
               ? (JSON.parse(services) as { name: string; price: number }[])
               : [],
@@ -111,9 +113,8 @@ export const agencyPaymentsRouter = createTRPCRouter({
           .innerJoin(products, eq(orders.productId, input.productId))
           .where(
             and(
-              sql`${orders.metadata}->>'userId' = ${userId}`,
+              sql`${orders.userId} = ${userId}`,
               eq(orders.status, OrderStatus.Paid),
-              sql`${products.metadata}->>'userId' = ${userId}`,
               sql`${products.metadata}->>'project' = 'AGENCY'`
             )
           )
@@ -127,9 +128,8 @@ export const agencyPaymentsRouter = createTRPCRouter({
           .innerJoin(products, eq(subscriptions.productId, input.productId))
           .where(
             and(
-              sql`${subscriptions.metadata}->>'userId' = ${userId}`,
+              sql`${subscriptions.userId} = ${userId}`,
               eq(subscriptions.status, SubscriptionStatus.Active),
-              sql`${products.metadata}->>'userId' = ${userId}`,
               sql`${products.metadata}->>'project' = 'AGENCY'`
             )
           )
