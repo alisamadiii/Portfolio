@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HelpCircle } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -10,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@workspace/ui/components/sidebar";
+import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn } from "@workspace/ui/lib/utils";
 
 export function NavPages({
@@ -44,6 +46,14 @@ export function NavPages({
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
+        <SidebarMenuItem>
+          <RequestDialog>
+            <SidebarMenuButton className={cn("py-4")}>
+              <HelpCircle />
+              <span>Support</span>
+            </SidebarMenuButton>
+          </RequestDialog>
+        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );

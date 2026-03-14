@@ -19,7 +19,6 @@ import { company, logos, projectsData, urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-import { projectsTypeValues } from "@workspace/drizzle/schema";
 
 import { ClientWork } from "@/components/client-work";
 import { Divider } from "@/components/divider";

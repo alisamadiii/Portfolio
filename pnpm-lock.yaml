@@ -798,6 +798,9 @@ importers:
       '@workspace/drizzle':
         specifier: workspace:*
         version: link:../drizzle
+      axios:
+        specifier: ^1.13.6
+        version: 1.13.6
       client-only:
         specifier: ^0.0.1
         version: 0.0.1

@@ -4,9 +4,7 @@ import { SubscriptionRecurringInterval } from "@polar-sh/sdk/models/components/s
 import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
-  index,
   integer,
   jsonb,
   pgEnum,
@@ -221,6 +219,7 @@ export const previousCustomers = pgTable("previous_customers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Don't change the order of the values
 export const projectsTypeValues = [
   "PORTFOLIO",
   "DOCS",
@@ -245,58 +244,5 @@ export const notificationTypeEnum = pgEnum(
   notificationTypeValues
 );
 
-export const notificationPriorityValues = [
-  "LOW",
-  "MEDIUM",
-  "HIGH",
-  "URGENT",
-] as const;
-export const notificationPriorityEnum = pgEnum(
-  "notification_priority",
-  notificationPriorityValues
-);
-
-export const notificationStatusValues = [
-  "PENDING",
-  "SEEN_BY_ADMIN",
-  "SEEN",
-  "RESOLVED",
-] as const;
-export const notificationStatusEnum = pgEnum(
-  "notification_status",
-  notificationStatusValues
-);
-
-export const notifications = pgTable(
-  "notifications",
-  {
-    id: bigint("id", { mode: "number" })
-      .primaryKey()
-      .generatedAlwaysAsIdentity({ startWith: 238531 }),
-    recipientId: text("recipient_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
-    projectType: projectsTypeEnum("project_type"),
-    actorId: text("actor_id").references(() => user.id),
-    type: notificationTypeEnum("type"),
-    priority: notificationPriorityEnum("priority").notNull().default("MEDIUM"),
-    subject: text("subject").notNull(),
-    message: text("message").notNull(),
-    metadata: jsonb("metadata").$type<unknown>().default({}),
-    seenAt: timestamp("seen_at", { withTimezone: true }),
-    status: notificationStatusEnum("status").default("PENDING"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow()
-      .$defaultFn(() => new Date()),
-  },
-  (t) => [index("idx_notif_recipient").on(t.recipientId, t.createdAt)]
-);
-
 export type ProjectType = (typeof projectsTypeValues)[number];
 export type NotificationType = (typeof notificationTypeValues)[number];
-export type NotificationPriority = (typeof notificationPriorityValues)[number];
-export type NotificationStatus = (typeof notificationStatusValues)[number];

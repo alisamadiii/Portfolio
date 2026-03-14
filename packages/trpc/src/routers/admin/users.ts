@@ -6,7 +6,7 @@ import { z } from "zod";
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { auth, polarClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { notifications, user } from "@workspace/drizzle/schema";
+import { user } from "@workspace/drizzle/schema";
 
 export const adminUsersRouter = createTRPCRouter({
   /**
@@ -57,15 +57,6 @@ export const adminUsersRouter = createTRPCRouter({
 
         const offset = (page - 1) * limit;
 
-        const notificationCountSubquery = db
-          .select({
-            actorId: notifications.actorId,
-            count: count(notifications.id).as("notificationCount"),
-          })
-          .from(notifications)
-          .groupBy(notifications.actorId)
-          .as("notification_counts");
-
         const users = await db
           .select({
             id: user.id,
@@ -83,13 +74,8 @@ export const adminUsersRouter = createTRPCRouter({
             phone: user.phone,
             company: user.company,
             address: user.address,
-            notificationCount: sql<number>`COALESCE(${notificationCountSubquery.count}, 0)`,
           })
           .from(user)
-          .leftJoin(
-            notificationCountSubquery,
-            eq(notificationCountSubquery.actorId, user.id)
-          )
           .limit(limit)
           .offset(offset)
           .orderBy(
@@ -97,9 +83,7 @@ export const adminUsersRouter = createTRPCRouter({
               ? desc(user.email)
               : sortBy === "banned"
                 ? desc(user.banned)
-                : sortBy === "notifications"
-                  ? asc(notificationCountSubquery.count)
-                  : desc(user.createdAt)
+                : desc(user.createdAt)
           )
           .where(
             search

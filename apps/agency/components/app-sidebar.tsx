@@ -29,11 +29,6 @@ const pages = [
     url: "/portal/customer",
     icon: UserRound,
   },
-  {
-    title: "Support",
-    url: "/portal/support",
-    icon: HelpCircle,
-  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

@@ -102,6 +102,7 @@ type ErrorWithResponse = {
       error?: { message?: string };
       message?: string;
       detail?: string;
+      err?: string;
     };
   };
   message?: string;
@@ -122,6 +123,7 @@ export const getErrorMessage = (error: unknown): string => {
   return (
     err?.response?.data?.error?.message ||
     err?.response?.data?.message ||
+    err?.response?.data?.err ||
     err?.response?.data?.detail ||
     err?.message ||
     err?.detail ||
