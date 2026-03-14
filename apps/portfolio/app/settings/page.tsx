@@ -66,6 +66,7 @@ export default function SettingsPage() {
               },
             });
           }}
+          size="lg"
         >
           Logout
         </Button>

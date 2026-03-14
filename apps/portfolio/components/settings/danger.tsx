@@ -89,14 +89,6 @@ export const DangerSettings = () => {
                 from your browser
               </p>
             </li>
-
-            <li>
-              <p className="font-medium">Redirect</p>
-              <p className="text-muted-foreground">
-                You will be automatically redirected to the home page and logged
-                out
-              </p>
-            </li>
           </ul>
         </CardContent>
         <CardFooter className="justify-end">
@@ -105,12 +97,13 @@ export const DangerSettings = () => {
               <Button
                 variant="destructive"
                 disabled={sentNotification.isPending}
+                size="lg"
               >
                 Request Account Deletion
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
-              <AlertDialogHeader>
+              <AlertDialogHeader className="mb-4">
                 <AlertDialogTitle>Request Account Deletion</AlertDialogTitle>
               </AlertDialogHeader>
               <Textarea
@@ -123,6 +116,7 @@ export const DangerSettings = () => {
                   <Button
                     variant="outline"
                     disabled={sentNotification.isPending}
+                    size="lg"
                   >
                     Cancel
                   </Button>
@@ -151,6 +145,7 @@ export const DangerSettings = () => {
                     )
                   }
                   isLoading={sentNotification.isPending}
+                  size="lg"
                 >
                   Request Account Deletion
                 </Button>

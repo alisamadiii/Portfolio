@@ -46,6 +46,7 @@ function AlertDialogOverlay({
 
 function AlertDialogContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
@@ -54,11 +55,25 @@ function AlertDialogContent({
         <AlertDialogPrimitive.Content
           data-slot="alert-dialog-content"
           className={cn(
-            "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
+            "bg-background shadow-dialog-body data-[state=closed]:animate-out relative z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-4xl border p-6 backdrop-blur-sm duration-200 outline-none sm:max-w-lg",
+            "data-[state=open]:animate-dialog-in",
+            "data-[state=closed]:zoom-out-95 data-[state=closed]:blur-out-md data-[state=closed]:slide-out-to-bottom-30",
             className
           )}
           {...props}
-        />
+        >
+          <span
+            className="pointer-events-none absolute -inset-px rounded-[inherit] bg-[linear-gradient(to_top_left,var(--primary),transparent,var(--primary))] p-0.5"
+            style={{
+              mask: "linear-gradient(black, black) content-box, linear-gradient(black, black)",
+              WebkitMask:
+                "linear-gradient(black, black) content-box, linear-gradient(black, black)",
+              maskComposite: "exclude",
+              WebkitMaskComposite: "xor",
+            }}
+          ></span>
+          {children}
+        </AlertDialogPrimitive.Content>
       </AlertDialogOverlay>
     </AlertDialogPortal>
   );
@@ -100,7 +115,10 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn("text-lg font-semibold", className)}
+      className={cn(
+        "text-lg leading-none font-bold tracking-tight md:text-2xl lg:text-3xl",
+        className
+      )}
       {...props}
     />
   );
@@ -123,24 +141,14 @@ function AlertDialogAction({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
-  return (
-    <AlertDialogPrimitive.Action
-      className={cn(buttonVariants(), className)}
-      {...props}
-    />
-  );
+  return <AlertDialogPrimitive.Action {...props} />;
 }
 
 function AlertDialogCancel({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
-  return (
-    <AlertDialogPrimitive.Cancel
-      className={cn(buttonVariants({ variant: "outline" }), className)}
-      {...props}
-    />
-  );
+  return <AlertDialogPrimitive.Cancel {...props} />;
 }
 
 export {
