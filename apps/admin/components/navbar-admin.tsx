@@ -16,6 +16,7 @@ const links = [
   },
   { label: "Code", href: "/code" },
   { label: "Agency", href: "/agency" },
+  { label: "Cold Emails", href: "/cold-emails" },
 ];
 
 export const NavbarAdmin = () => {

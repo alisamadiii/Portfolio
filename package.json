@@ -10,7 +10,7 @@
     "turbo:up": "pnpm up --latest -r",
     "turbo:syncpack:list": "pnpm exec syncpack lint --dependency-types prod,dev,peer",
     "turbo:syncpack:fix": "pnpm exec syncpack fix --dependency-types prod,dev,peer",
-    "turbo:email:dev": "cd packages/email && pnpm dev",
+    "turbo:email:dev": "cd packages/email && pnpm email:dev",
     "typecheck": "tsc --noEmit",
     "audit": "pnpm audit --audit-level moderate",
     "audit:fix": "pnpm audit --fix",

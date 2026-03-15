@@ -21,6 +21,7 @@
     "@trpc/tanstack-react-query": "^11.11.0",
     "@workspace/auth": "workspace:*",
     "@workspace/drizzle": "workspace:*",
+    "@workspace/email": "workspace:*",
     "axios": "^1.13.6",
     "client-only": "^0.0.1",
     "date-fns": "^4.1.0",

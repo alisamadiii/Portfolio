@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 
 import AccountDeleted from "./emails/account-deleted";
+import ReachOutToClients from "./emails/reach-out-to-clients";
 import ResetPassword from "./emails/reset-password";
 import VerifyEmail from "./emails/verify-email";
 import { renderEmail, renderText } from "./utils";
@@ -36,7 +37,12 @@ const templates: Record<string, EmailTemplate> = {
     fromLabel: "Account deleted",
     component: AccountDeleted,
   },
-};
+  reachOutToClients: {
+    subject: "Love your brand — one quick thought",
+    fromLabel: "Ali from AliSamadii.LLC",
+    component: ReachOutToClients,
+  },
+} as const;
 
 let sesClient: SESClient | null = null;
 
@@ -77,7 +83,7 @@ export async function sendEmail<T extends keyof typeof templates>(
   try {
     await getSesClient().send(
       new SendEmailCommand({
-        Source: `${fromLabel} <${defaultFrom}>`,
+        Source: `${fromLabel} <${template === "reachOutToClients" ? "agency@alisamadii.com" : defaultFrom}>`,
         Destination: { ToAddresses: toAddresses },
         Message: {
           Subject: { Data: subject, Charset: "UTF-8" },

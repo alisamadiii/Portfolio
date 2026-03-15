@@ -219,6 +219,15 @@ export const previousCustomers = pgTable("previous_customers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const coldEmails = pgTable("cold_emails", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Don't change the order of the values
 export const projectsTypeValues = [
   "PORTFOLIO",
