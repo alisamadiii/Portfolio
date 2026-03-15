@@ -12,16 +12,17 @@ type TemplateProps = {
   verifyEmail: { verificationCode: string };
   resetPassword: { resetPasswordLink: string };
   accountDeleted: { userName?: string; feedbackLink?: string };
+  reachOutToClients: { email: string };
 };
 
 // Template registry — add new emails here, that's it
-type EmailTemplate = {
-  subject: string;
-  fromLabel: string;
-  component: React.ComponentType<Record<string, unknown>>;
-};
-
-const templates: Record<string, EmailTemplate> = {
+const templates: {
+  [K in keyof TemplateProps]: {
+    subject: string;
+    fromLabel: string;
+    component: React.ComponentType<TemplateProps[K]>;
+  };
+} = {
   verifyEmail: {
     subject: "Verify your email",
     fromLabel: "Verify your email",
@@ -38,11 +39,11 @@ const templates: Record<string, EmailTemplate> = {
     component: AccountDeleted,
   },
   reachOutToClients: {
-    subject: "Love your brand — one quick thought",
+    subject: "A quick note about your online presence",
     fromLabel: "Ali from AliSamadii.LLC",
     component: ReachOutToClients,
   },
-} as const;
+};
 
 let sesClient: SESClient | null = null;
 
@@ -72,7 +73,7 @@ const defaultFrom = `noreply@alisamadii.com`;
 export async function sendEmail<T extends keyof typeof templates>(
   template: T,
   to: string | string[],
-  props: TemplateProps[keyof TemplateProps]
+  props: TemplateProps[T]
 ) {
   const { subject, fromLabel, component } = templates[template];
   const toAddresses = Array.isArray(to) ? to : [to];
@@ -83,7 +84,7 @@ export async function sendEmail<T extends keyof typeof templates>(
   try {
     await getSesClient().send(
       new SendEmailCommand({
-        Source: `${fromLabel} <${template === "reachOutToClients" ? "agency@alisamadii.com" : defaultFrom}>`,
+        Source: `${fromLabel} <${template.toLowerCase() === "reachOutToClients" ? "agency@alisamadii.com" : defaultFrom}>`,
         Destination: { ToAddresses: toAddresses },
         Message: {
           Subject: { Data: subject, Charset: "UTF-8" },

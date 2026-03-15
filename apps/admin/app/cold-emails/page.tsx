@@ -50,9 +50,11 @@ export default function ColdEmailsPage() {
           queryClient.invalidateQueries({
             queryKey: trpc.admin.coldEmails.get.queryKey(),
           });
+          setEmail("");
         },
         onError: (error) => {
           toast.error(error.message);
+          setEmail("");
         },
       }
     );

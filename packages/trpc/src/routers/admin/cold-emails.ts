@@ -14,6 +14,7 @@ export const adminColdEmailsRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string(),
+        clientName: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -31,7 +32,9 @@ export const adminColdEmailsRouter = createTRPCRouter({
         }
 
         const { email } = input;
-        await sendEmail("reachOutToClients", email, {});
+        await sendEmail("reachOutToClients", email, {
+          email,
+        });
         await db.insert(coldEmails).values({ email });
       } catch (error) {
         throw new TRPCError({

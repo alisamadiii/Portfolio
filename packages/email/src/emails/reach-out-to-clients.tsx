@@ -12,7 +12,24 @@ import {
   Text,
 } from "@react-email/components";
 
-export default function ReachOutToClients() {
+interface ReachOutToClientsProps {
+  email: string;
+}
+
+const genericNames = ["info", "support", "admin", "contact", "hello", "sales"];
+
+export default function ReachOutToClients({ email }: ReachOutToClientsProps) {
+  const formatName = (email: string) => {
+    return email
+      .split("@")[0]
+      .replace(/[._-]/g, " ")
+      .replace(/\d+/g, "")
+      .trim()
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   return (
     <Html>
       <Head />
@@ -33,8 +50,8 @@ export default function ReachOutToClients() {
 
             <Section className="rounded-lg border border-gray-200 bg-white">
               <Section className="p-8">
-                <Text className="mb-6 text-base leading-6 text-gray-700">
-                  Hi there,
+                <Text className="mb-6 text-base leading-6 text-gray-700 capitalize">
+                  Hi {email},
                 </Text>
 
                 <Text className="mb-5 text-base leading-6 text-gray-700">
@@ -147,3 +164,7 @@ export default function ReachOutToClients() {
     </Html>
   );
 }
+
+ReachOutToClients.PreviewProps = {
+  email: "info@company.com",
+} satisfies ReachOutToClientsProps;
