@@ -5,6 +5,43 @@ import { AgencyServiceSchema } from "@workspace/trpc/routers/admin/agency/produc
 import { company } from "./company";
 import { formatPrice } from "./utils";
 
+// Tiered extra-page pricing (amounts in cents)
+const EXTRA_PAGE_TIERS = [
+  { pages: 5, pricePerPage: 3000 }, // pages 1–5:   $30.00 each
+  { pages: 5, pricePerPage: 4999 }, // pages 6–10:  $49.99 each
+  { pages: 5, pricePerPage: 7000 }, // pages 11–15: $70.00 each
+  { pages: 5, pricePerPage: 9000 }, // pages 16–20: $90.00 each
+  { pages: 5, pricePerPage: 11000 }, // pages 21–25: $110.00 each
+] as const;
+
+export const MAX_EXTRA_PAGES = EXTRA_PAGE_TIERS.reduce(
+  (s, t) => s + t.pages,
+  0
+); // 25
+
+/** Returns the total extra cost in cents for N additional pages. */
+export function calcExtraPagesCost(extraPages: number): number {
+  let remaining = Math.min(extraPages, MAX_EXTRA_PAGES);
+  let total = 0;
+  for (const tier of EXTRA_PAGE_TIERS) {
+    if (remaining <= 0) break;
+    const count = Math.min(remaining, tier.pages);
+    total += count * tier.pricePerPage;
+    remaining -= count;
+  }
+  return total;
+}
+
+/** Returns the price per page (in cents) for the Nth extra page (1-indexed). */
+export function priceForExtraPage(n: number): number {
+  let remaining = n;
+  for (const tier of EXTRA_PAGE_TIERS) {
+    if (remaining <= tier.pages) return tier.pricePerPage;
+    remaining -= tier.pages;
+  }
+  return EXTRA_PAGE_TIERS[EXTRA_PAGE_TIERS.length - 1].pricePerPage;
+}
+
 export const generateDescription = (
   services: z.infer<typeof AgencyServiceSchema>[],
   isOneTime: boolean

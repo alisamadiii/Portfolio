@@ -1,8 +1,10 @@
 import { OrderStatus } from "@polar-sh/sdk/models/components/orderstatus.js";
 import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { TRPCError } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { calcExtraPagesCost } from "@workspace/ui/lib/agency-utils";
 
 import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
@@ -18,8 +20,12 @@ export const agencyPaymentsRouter = createTRPCRouter({
         .select()
         .from(products)
         .where(
-          sql`${products.metadata}->>'project' = 'AGENCY' and (${products.metadata}->>'userId' = ${ctx.session.user.id} or ${products.metadata}->>'userId' is null or ${products.metadata}->>'userId' = '')`
-        );
+          and(
+            sql`${products.metadata}->>'project' = 'AGENCY' and (${products.metadata}->>'userId' = ${ctx.session.user.id} or ${products.metadata}->>'userId' is null or ${products.metadata}->>'userId' = '')`,
+            eq(products.isArchived, false)
+          )
+        )
+        .orderBy(asc(products.priceAmount));
 
       return productsList.map((product) => {
         const metadata = product.metadata as AgencyMetadata | undefined;
@@ -97,6 +103,32 @@ export const agencyPaymentsRouter = createTRPCRouter({
       });
     }
   }),
+  activeSubscription: authenticatedProcedure.query(async ({ ctx }) => {
+    try {
+      const userId = ctx.session.user.id;
+
+      const [active] = await db
+        .select({ productId: subscriptions.productId })
+        .from(subscriptions)
+        .where(
+          and(
+            sql`${subscriptions.userId} = ${userId}`,
+            eq(subscriptions.status, SubscriptionStatus.Active)
+          )
+        )
+        .limit(1);
+
+      return active ?? null;
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to check active subscription",
+      });
+    }
+  }),
   isActive: authenticatedProcedure
     .input(
       z.object({
@@ -165,11 +197,34 @@ export const agencyPaymentsRouter = createTRPCRouter({
           url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
         }
 
+        let priceOverride:
+          | { [k: string]: [{ amountType: "fixed"; priceAmount: number }] }
+          | undefined;
+        if (extraPages > 0) {
+          const [product] = await db
+            .select({ priceAmount: products.priceAmount })
+            .from(products)
+            .where(eq(products.id, productId))
+            .limit(1);
+          if (product) {
+            priceOverride = {
+              [productId]: [
+                {
+                  amountType: "fixed",
+                  priceAmount:
+                    product.priceAmount + calcExtraPagesCost(extraPages),
+                },
+              ],
+            };
+          }
+        }
+
         const checkout = await polarClient.checkouts.create({
           products: [productId],
           externalCustomerId: ctx.session.user.id,
           successUrl: url,
           metadata: extraPages > 0 ? { extraPages } : undefined,
+          prices: priceOverride,
         });
         return checkout;
       } catch (error) {

@@ -17,6 +17,11 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
+import {
+  calcExtraPagesCost,
+  MAX_EXTRA_PAGES,
+  priceForExtraPage,
+} from "@workspace/ui/lib/agency-utils";
 import { cn, formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -25,6 +30,9 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 export default function PortalPage() {
   const trpc = useTRPC();
   const products = useQuery(trpc.agency.getProducts.queryOptions());
+  const { data: activeSubscription } = useQuery(
+    trpc.agency.activeSubscription.queryOptions()
+  );
   const [extraPages, setExtraPages] = useState(0);
 
   return (
@@ -55,12 +63,16 @@ export default function PortalPage() {
             variant="outline"
             size="icon"
             className="h-7 w-7"
-            onClick={() => setExtraPages(extraPages + 1)}
+            onClick={() =>
+              setExtraPages(Math.min(MAX_EXTRA_PAGES, extraPages + 1))
+            }
           >
             <Plus className="h-3 w-3" />
           </Button>
         </div>
-        <span className="text-muted-foreground text-xs">+$20/extra page</span>
+        <span className="text-muted-foreground text-xs">
+          +${formatPrice(priceForExtraPage(extraPages + 1))}/next page
+        </span>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -79,9 +91,73 @@ export default function PortalPage() {
               product={product}
               index={index}
               extraPages={extraPages}
+              isASubscription={!activeSubscription}
             />
           ))
         )}
+      </div>
+      <div className="border-border/50 mt-4 space-y-4 border-t pt-8">
+        <p className="text-muted-foreground/60 text-[11px] leading-relaxed">
+          <span className="text-muted-foreground font-medium">
+            AliSamadii.LLC
+          </span>{" "}
+          is a software development and digital services company based in
+          Portland, OR. All plans are fully managed — we handle your website,
+          hosting, domain, and email end-to-end so you never have to deal with
+          technical infrastructure.
+        </p>
+        <p className="text-muted-foreground/60 text-[11px] leading-relaxed">
+          <span className="text-muted-foreground font-medium">
+            Ownership & IP.
+          </span>{" "}
+          All source code, design assets, and proprietary development work
+          remain the exclusive intellectual property of AliSamadii.LLC.
+          Subscribing gives you a professionally managed web presence — not
+          ownership of the underlying codebase. If you need full source code
+          ownership, contact us to discuss a custom development project.
+        </p>
+        <p className="text-muted-foreground/60 text-[11px] leading-relaxed">
+          <span className="text-muted-foreground font-medium">Billing.</span>{" "}
+          Subscriptions are billed monthly and renew automatically. You can
+          cancel at any time — cancellation takes effect at the end of the
+          current billing period. Extra pages are billed at $30/page/month for
+          pages 4–8, $49.99 for pages 9–13, $70 for pages 14–18, $90 for pages
+          19–23, and $110 for pages 24–28 (max 28 pages). No refunds are issued
+          for partial months.
+        </p>
+        <p className="text-muted-foreground/60 text-[11px] leading-relaxed">
+          <span className="text-muted-foreground font-medium">
+            Service & support.
+          </span>{" "}
+          All maintenance, updates, and minor copy changes are included.
+          Requests are handled on a priority basis depending on your plan. For
+          urgent issues or questions, reach us at{" "}
+          <a
+            href="mailto:agency@alisamadii.com"
+            className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            agency@alisamadii.com
+          </a>
+          .
+        </p>
+        <p className="text-muted-foreground/60 text-[11px] leading-relaxed">
+          <span className="text-muted-foreground font-medium">Privacy.</span> We
+          collect only the information necessary to provide your services —
+          name, email, billing details, and business information you share with
+          us. We do not sell or share your data with third parties. All
+          credentials and access information are stored securely and made
+          available to you upon request.
+        </p>
+        <p className="text-muted-foreground/60 text-[11px]">
+          By subscribing, you agree to these terms. For questions, contact{" "}
+          <a
+            href="mailto:agency@alisamadii.com"
+            className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            agency@alisamadii.com
+          </a>
+          .
+        </p>
       </div>
     </div>
   );
@@ -127,10 +203,12 @@ const EachProduct = ({
   product,
   index,
   extraPages,
+  isASubscription,
 }: {
   product: RouterOutputs["agency"]["getProducts"][number];
   index: number;
   extraPages: number;
+  isASubscription?: boolean;
 }) => {
   const trpc = useTRPC();
   const { data: isActive } = useQuery(
@@ -140,12 +218,15 @@ const EachProduct = ({
 
   const description = product?.description ?? "";
   const { bullets, details } = splitDescription(description);
-  const collapsedContent = bullets || description;
-  const isFullService = product?.priceAmount === 30000;
-  const hasDetails = details.length > 0 && !isFullService;
+  const totalPages = 3 + extraPages;
+  const collapsedContent = (bullets || description).replace(
+    /3 pages included/,
+    `${totalPages} page${totalPages !== 1 ? "s" : ""} included`
+  );
+  const hasDetails = details.length > 0;
 
   const basePrice = product?.priceAmount ?? 0;
-  const totalPrice = basePrice + extraPages * 2000;
+  const totalPrice = basePrice + calcExtraPagesCost(extraPages);
 
   return (
     <CardAgency.Card
@@ -156,7 +237,7 @@ const EachProduct = ({
     >
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-base leading-snug font-bold">
-          {`#${index + 1} ${product?.name || ""}`}
+          {product?.name || ""}
         </h2>
         <div className="shrink-0 text-right">
           <p className="text-3xl font-black tracking-tighter tabular-nums">
@@ -213,43 +294,44 @@ const EachProduct = ({
             ))}
           </CardAgency.DetailRow>
         )}
-
-        <div className="sticky bottom-4 w-full">
-          {isActive ? (
-            <Button variant="outline" size="lg" className="w-full">
-              <span>
-                {product?.recurringInterval === null ? "Purchased" : "Active"}
-              </span>
-            </Button>
-          ) : (
-            <Button
-              onClick={() =>
-                checkout.mutate(
-                  {
-                    productId: product?.id ?? "",
-                    successUrl: window.location.href,
-                    extraPages,
+      </div>
+      <div className="mt-auto w-full">
+        {isActive ? (
+          <Button variant="outline" size="lg" className="w-full" disabled>
+            Subscribed
+          </Button>
+        ) : isASubscription ? (
+          <Button variant="outline" size="lg" className="w-full" asChild>
+            <a href="mailto:agency@alisamadii.com">Contact Support</a>
+          </Button>
+        ) : (
+          <Button
+            onClick={() =>
+              checkout.mutate(
+                {
+                  productId: product?.id ?? "",
+                  successUrl: window.location.href,
+                  extraPages,
+                },
+                {
+                  onSuccess: (data) => {
+                    if (data?.url) window.location.href = data.url;
                   },
-                  {
-                    onSuccess: (data) => {
-                      if (data?.url) window.location.href = data.url;
-                    },
-                    onError: (error) => {
-                      toast.error(error.message);
-                    },
-                  }
-                )
-              }
-              size="lg"
-              className="w-full"
-              isLoading={checkout.isPending}
-            >
-              {product?.recurringInterval === null
-                ? `Purchase $${formatPrice(totalPrice)}`
-                : `Subscribe $${formatPrice(totalPrice)}`}
-            </Button>
-          )}
-        </div>
+                  onError: (error) => {
+                    toast.error(error.message);
+                  },
+                }
+              )
+            }
+            size="lg"
+            className="w-full"
+            isLoading={checkout.isPending}
+          >
+            {product?.recurringInterval === null
+              ? `Purchase $${formatPrice(totalPrice)}`
+              : `Subscribe $${formatPrice(totalPrice)}`}
+          </Button>
+        )}
       </div>
     </CardAgency.Card>
   );
