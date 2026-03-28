@@ -96,7 +96,8 @@ export default function ComponentPage() {
         }}
         className={cn(
           "flex min-h-screen w-full origin-top flex-col items-center-safe justify-center-safe px-8 py-24 md:py-8",
-          noPadding && "p-0!"
+          noPadding && "p-0!",
+          slug === "badge-claiming" && "bg-muted"
         )}
         style={{
           transform: `scale(${containerScale})`,

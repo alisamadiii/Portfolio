@@ -143,6 +143,29 @@
   --animate-dots-width: dotsWidth 1.5s ease-in-out infinite;
   --animate-text-intro: textIntro 2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 
+  --animate-badge-loading: badge-loading 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  --animate-badge-shining: badge-shining 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+
+  @keyframes badge-loading {
+    0% {
+      transform: translateY(40px) scale(1.3) rotateY(0deg) rotateX(180deg) rotate(180deg);
+    }
+
+    100% {
+      transform: translateY(0px) scale(1.3) rotateY(360deg) rotateX(180deg) rotate(180deg);
+    }
+  }
+
+  @keyframes badge-shining {
+    0% {
+      transform: translateX(-100px) skewX(-40deg);
+    }
+
+    100% {
+      transform: translateX(150px) skewX(-40deg);
+    }
+  }
+
   @keyframes textIntro {
     from {
       opacity: 0;
