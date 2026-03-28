@@ -39,19 +39,14 @@ export function TestimonialsSection() {
             <div className="flex h-full flex-col">
               <div className="mb-6 flex gap-1">
                 {Array.from({ length: 5 }).map((_, j) => (
-                  <Star
-                    key={j}
-                    className="fill-accent text-primary h-4 w-4"
-                  />
+                  <Star key={j} className="fill-accent text-primary h-4 w-4" />
                 ))}
               </div>
               <p className="text-foreground/90 mb-8 flex-1 text-base leading-relaxed italic">
                 &ldquo;{t.text}&rdquo;
               </p>
               <div>
-                <p className="font-heading text-sm font-semibold">
-                  {t.name}
-                </p>
+                <p className="font-heading text-sm font-semibold">{t.name}</p>
                 <p className="text-muted-foreground text-xs">{t.role}</p>
               </div>
             </div>

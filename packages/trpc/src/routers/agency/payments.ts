@@ -150,15 +150,26 @@ export const agencyPaymentsRouter = createTRPCRouter({
     .input(
       z.object({
         productId: z.string(),
+        successUrl: z.string().optional(),
+        extraPages: z.number().int().min(0).default(0),
       })
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        console.log(ctx.session.user.id);
-        console.log(input.productId);
+        const { productId, successUrl, extraPages } = input;
+
+        const checkoutIdPlaceholder = "{CHECKOUT_ID}";
+        let url: string | undefined;
+        if (successUrl) {
+          const delimiter = successUrl.includes("?") ? "&" : "?";
+          url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
+        }
+
         const checkout = await polarClient.checkouts.create({
-          products: [input.productId],
+          products: [productId],
           externalCustomerId: ctx.session.user.id,
+          successUrl: url,
+          metadata: extraPages > 0 ? { extraPages } : undefined,
         });
         return checkout;
       } catch (error) {

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@workspace/ui/lib/utils"
+import { cn } from "@workspace/ui/lib/utils";
 
 function Tabs({
   className,
@@ -22,7 +22,7 @@ function Tabs({
       )}
       {...props}
     />
-  )
+  );
 }
 
 const tabsListVariants = cva(
@@ -38,7 +38,7 @@ const tabsListVariants = cva(
       variant: "default",
     },
   }
-)
+);
 
 function TabsList({
   className,
@@ -53,7 +53,7 @@ function TabsList({
       className={cn(tabsListVariants({ variant }), className)}
       {...props}
     />
-  )
+  );
 }
 
 function TabsTrigger({
@@ -72,7 +72,7 @@ function TabsTrigger({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TabsContent({
@@ -85,7 +85,7 @@ function TabsContent({
       className={cn("flex-1 outline-none", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }
+export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants };

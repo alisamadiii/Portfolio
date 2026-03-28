@@ -34,7 +34,11 @@ function buildIssueUrl(animationName: string, includeBody: boolean): string {
 export function ReportBugLink({ animationName }: { animationName: string }) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    window.open(buildIssueUrl(animationName, true), "_blank", "noopener,noreferrer");
+    window.open(
+      buildIssueUrl(animationName, true),
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   return (

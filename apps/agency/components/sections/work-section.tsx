@@ -3,8 +3,8 @@
 import { ArrowUpRight } from "lucide-react";
 
 import { GridCell } from "@/components/grid-cell";
-import { SectionLabel } from "@/components/section-label";
 import { ProjectCard } from "@/components/project-card";
+import { SectionLabel } from "@/components/section-label";
 
 const PROJECTS = [
   {

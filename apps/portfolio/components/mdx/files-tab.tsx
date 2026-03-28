@@ -18,7 +18,7 @@ export const Files: React.FC<FilesProps> = ({ children, id }) => {
 
   return (
     <>
-      <div className="border-wrapper bg-code-figcaption text-muted flex h-[40px] items-center gap-1 rounded-t-md pl-2 pr-3 text-[13px] [&+div_figure]:my-0 [&+div_figure]:rounded-t-none [&+div_figure]:border-t-0">
+      <div className="border-wrapper bg-code-figcaption text-muted flex h-[40px] items-center gap-1 rounded-t-md pr-3 pl-2 text-[13px] [&+div_figure]:my-0 [&+div_figure]:rounded-t-none [&+div_figure]:border-t-0">
         <LayoutGroup id={id}>
           {React.Children.map(children, (child, index) => {
             if (!React.isValidElement(child)) return null;

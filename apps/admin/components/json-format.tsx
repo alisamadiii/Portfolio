@@ -12,7 +12,7 @@ export const FormattedJSON = ({
   return (
     <pre
       className={cn(
-        "bg-muted overflow-x-auto whitespace-pre rounded-lg p-4 font-mono text-sm",
+        "bg-muted overflow-x-auto rounded-lg p-4 font-mono text-sm whitespace-pre",
         className
       )}
     >

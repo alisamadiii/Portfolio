@@ -16,7 +16,7 @@ export default function PortalLayout({
       <AppSidebar />
       <main className="w-full flex-1">
         <PortalHeader />
-        <div className="mx-auto max-w-4xl p-4 py-12">{children}</div>
+        <div className="mx-auto max-w-7xl p-4 py-12">{children}</div>
       </main>
     </SidebarProvider>
   );
