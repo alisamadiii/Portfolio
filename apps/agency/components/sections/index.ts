@@ -6,6 +6,7 @@ export { ServicesSection } from "./services-section";
 export { WorkSection } from "./work-section";
 export { ProcessSection } from "./process-section";
 export { TestimonialsSection } from "./testimonials-section";
+export { PricingSection } from "./pricing-section";
 export { CTASection } from "./cta-section";
 export { ContactInfoSection } from "./contact-info-section";
 export { FooterSection } from "./footer-section";

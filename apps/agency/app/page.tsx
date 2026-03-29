@@ -8,6 +8,7 @@ import {
   FooterSection,
   HeroSection,
   MarqueeSection,
+  PricingSection,
   ProcessSection,
   ServicesSection,
   StatsSection,
@@ -28,6 +29,7 @@ export default function Home() {
         {/* <WorkSection /> */}
         <ProcessSection />
         {/* <TestimonialsSection /> */}
+        <PricingSection />
         <CTASection />
         <ContactInfoSection />
         <FooterSection />

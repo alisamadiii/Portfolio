@@ -2,10 +2,183 @@ import { z } from "zod";
 
 import { AgencyServiceSchema } from "@workspace/trpc/routers/admin/agency/products";
 
-import { company } from "./company";
 import { formatPrice } from "./utils";
 
-// Tiered extra-page pricing (amounts in cents)
+// ─── Service catalog ──────────────────────────────────────────────────────────
+
+export type ServiceCategory = "Core" | "Development" | "Growth" | "Advanced";
+
+export type ServiceDefinition = {
+  id: string;
+  label: string;
+  description: string;
+  defaultPrice: number; // in cents
+  category: ServiceCategory;
+};
+
+export const SERVICE_CATALOG: ServiceDefinition[] = [
+  // Core
+  {
+    id: "payment_card",
+    label: "Virtual Payment Card",
+    description:
+      "Dedicated virtual card used exclusively for billing third-party services on the client's behalf.",
+    defaultPrice: 0,
+    category: "Core",
+  },
+  {
+    id: "hosting",
+    label: "Hosting & Uptime Management",
+    description:
+      "Website hosting provisioning, server configuration, uptime monitoring, and incident response.",
+    defaultPrice: 2900,
+    category: "Core",
+  },
+  {
+    id: "domain",
+    label: "Domain & DNS Management",
+    description:
+      "Domain registration, DNS configuration, SSL certificate, and annual renewal management.",
+    defaultPrice: 1500,
+    category: "Core",
+  },
+  {
+    id: "business_email",
+    label: "Business Email",
+    description:
+      "Professional business email account setup, configuration, and ongoing administration.",
+    defaultPrice: 1500,
+    category: "Core",
+  },
+  {
+    id: "maintenance",
+    label: "Ongoing Maintenance",
+    description:
+      "Regular website updates, dependency patches, content changes, and bug fixes.",
+    defaultPrice: 9900,
+    category: "Core",
+  },
+  {
+    id: "priority_support",
+    label: "Priority Technical Support",
+    description:
+      "Dedicated priority support via agency@alisamadii.com with guaranteed response time.",
+    defaultPrice: 4900,
+    category: "Core",
+  },
+  // Development
+  {
+    id: "website_design",
+    label: "Website Design & Development",
+    description:
+      "Multi-page website design and development based on provided template, fully customized for the client.",
+    defaultPrice: 49900,
+    category: "Development",
+  },
+  {
+    id: "admin_panel",
+    label: "Admin Panel",
+    description:
+      "Custom internal admin panel for basic content management — update text, images, and pages without touching code.",
+    defaultPrice: 19900,
+    category: "Development",
+  },
+  {
+    id: "contact_form",
+    label: "Contact Form & Email Automation",
+    description:
+      "Fully functional contact form with email forwarding, auto-responders, and spam protection.",
+    defaultPrice: 4900,
+    category: "Development",
+  },
+  {
+    id: "blog_cms",
+    label: "Blog / CMS Setup",
+    description:
+      "Blog system or headless CMS integration with a simple editor interface for the client.",
+    defaultPrice: 14900,
+    category: "Development",
+  },
+  {
+    id: "custom_api",
+    label: "Custom API / Third-Party Integration",
+    description:
+      "Integration with external APIs, payment gateways, CRMs, or any third-party services.",
+    defaultPrice: 14900,
+    category: "Development",
+  },
+  // Growth
+  {
+    id: "seo",
+    label: "SEO Setup & Optimization",
+    description:
+      "Technical SEO, metadata, sitemap, structured data, Core Web Vitals optimization, and search console setup.",
+    defaultPrice: 9900,
+    category: "Growth",
+  },
+  {
+    id: "analytics",
+    label: "Analytics Integration",
+    description:
+      "Google Analytics 4 or privacy-first analytics (Plausible) setup with goal tracking and reporting.",
+    defaultPrice: 1900,
+    category: "Growth",
+  },
+  {
+    id: "ecommerce",
+    label: "E-Commerce Integration",
+    description:
+      "Product catalogue, shopping cart, and payment checkout integration (Stripe or Polar).",
+    defaultPrice: 19900,
+    category: "Growth",
+  },
+  {
+    id: "social_media",
+    label: "Social Media Integration",
+    description:
+      "Live social feed embeds, share buttons, Open Graph tags, and social preview optimization.",
+    defaultPrice: 2900,
+    category: "Growth",
+  },
+  // Advanced
+  {
+    id: "performance",
+    label: "Performance Audit & Optimization",
+    description:
+      "Lighthouse audit, image optimization, lazy loading, caching strategy, and bundle size improvements.",
+    defaultPrice: 7400,
+    category: "Advanced",
+  },
+  {
+    id: "mobile_app",
+    label: "Mobile App Development",
+    description:
+      "React Native mobile app development for iOS and Android, sharing the same backend.",
+    defaultPrice: 99900,
+    category: "Advanced",
+  },
+  {
+    id: "ai_integration",
+    label: "AI Feature Integration",
+    description:
+      "Integration of AI features using the Claude API or OpenAI — chatbots, content generation, smart search.",
+    defaultPrice: 19900,
+    category: "Advanced",
+  },
+];
+
+export const SERVICE_CATEGORIES: ServiceCategory[] = [
+  "Core",
+  "Development",
+  "Growth",
+  "Advanced",
+];
+
+/** Resolves a service id to its human-readable label. Falls back to the id itself. */
+const serviceLabel = (id: string): string =>
+  SERVICE_CATALOG.find((s) => s.id === id)?.label ?? id;
+
+// ─── Tiered extra-page pricing (amounts in cents) ─────────────────────────────
 const EXTRA_PAGE_TIERS = [
   { pages: 5, pricePerPage: 3000 }, // pages 1–5:   $30.00 each
   { pages: 5, pricePerPage: 4999 }, // pages 6–10:  $49.99 each
@@ -45,52 +218,10 @@ export function priceForExtraPage(n: number): number {
 export const generateDescription = (
   services: z.infer<typeof AgencyServiceSchema>[],
   isOneTime: boolean
-): string => {
-  const total = services.reduce((sum, s) => sum + s.price, 0);
-
-  const priceSuffix = isOneTime ? "" : `/${isOneTime ? "one-time" : "monthly"}`;
-
-  const serviceLines = services
-    .map((s) => `- ${s.name}: $${formatPrice(s.price)}${priceSuffix}`)
+): string =>
+  services
+    .map(
+      (s) =>
+        `- ${serviceLabel(s.name)}: $${formatPrice(s.price)}${isOneTime ? "" : "/monthly"}`
+    )
     .join("\n");
-
-  const email = `[${company.agencyEmail}](mailto:${company.agencyEmail})`;
-  const phone = `[${company.phone}](tel:${company.phone.replace(/\s/g, "")})`;
-
-  const agreementType = isOneTime
-    ? "a one-time digital services agreement"
-    : "a managed digital services agreement";
-
-  const authorizationText = isOneTime
-    ? "to deliver the following services"
-    : "to provision, configure, and manage the following services on their behalf";
-
-  const totalLine = isOneTime
-    ? `Total: **$${formatPrice(total)}** one-time payment.`
-    : `Total: **$${formatPrice(total)}** billed monthly.`;
-
-  return [
-    `This ${isOneTime ? "purchase" : "subscription"} is ${agreementType} between the client and **AliSamadii.LLC**, a software development and online technology services company based in Portland, OR.`,
-    ``,
-    `By proceeding with this checkout, the client authorizes **AliSamadii.LLC** ${authorizationText}:`,
-    ``,
-    serviceLines,
-    ``,
-    ...(isOneTime
-      ? []
-      : [
-          `Included with all plans:`,
-          `- Dedicated virtual payment card for service billing`,
-          `- Ongoing website updates and maintenance`,
-          `- Business email account setup and administration`,
-          `- Domain registration, DNS configuration, and renewal`,
-          `- Priority technical support via ${email}`,
-          ``,
-        ]),
-    totalLine,
-    ``,
-    `All services are managed end-to-end by **AliSamadii.LLC**. The client is not required to create or maintain any third-party accounts. Service credentials and access will be securely managed and made available upon request.`,
-    ``,
-    `For questions or support, contact ${email} or call ${phone}.`,
-  ].join("\n\n");
-};

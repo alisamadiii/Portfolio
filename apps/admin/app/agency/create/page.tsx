@@ -4,25 +4,15 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { TrashIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@workspace/ui/components/dialog";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-} from "@workspace/ui/components/field";
+import { Checkbox } from "@workspace/ui/components/checkbox";
+import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -32,12 +22,18 @@ import {
 } from "@workspace/ui/components/select";
 import { Separator } from "@workspace/ui/components/separator";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { Switch } from "@workspace/ui/components/switch";
+import {
+  SERVICE_CATALOG,
+  SERVICE_CATEGORIES,
+} from "@workspace/ui/lib/agency-utils";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
 import { Confirmation } from "./confirmation";
 import { SelectUser } from "./select-user";
+
+// ─── Form schema ──────────────────────────────────────────────────────────────
 
 const formSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
@@ -50,9 +46,9 @@ const formSchema = z.object({
     })
   ),
   prorationBehavior: z.enum(["invoice", "prorate"]),
-  isFree: z.boolean(),
-  oneTimePurchase: z.boolean(),
 });
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AgencyCreatePage() {
   const searchParams = useSearchParams();
@@ -73,6 +69,8 @@ export default function AgencyCreatePage() {
     <Content productId={productId} />
   );
 }
+
+// ─── Content ──────────────────────────────────────────────────────────────────
 
 const Content = ({ productId }: { productId?: string | null }) => {
   const router = useRouter();
@@ -98,12 +96,6 @@ const Content = ({ productId }: { productId?: string | null }) => {
       email: productId ? (product?.email ?? "") : "",
       name: productId ? (product?.name ?? "") : "",
       services: productId ? (product?.services ?? []) : [],
-      isFree: productId ? (product?.priceAmount === 0 ? true : false) : false,
-      oneTimePurchase: productId
-        ? product?.recurringInterval === null
-          ? true
-          : false
-        : false,
     },
   });
 
@@ -116,9 +108,9 @@ const Content = ({ productId }: { productId?: string | null }) => {
           email: data.email,
           services: data.services,
           userId: data.userId,
-          oneTimePurchase: data.oneTimePurchase,
+          oneTimePurchase: false,
           prorationBehavior: data.prorationBehavior,
-          isFree: data.isFree,
+          isFree: false,
         },
         {
           onSuccess: () => {
@@ -136,8 +128,8 @@ const Content = ({ productId }: { productId?: string | null }) => {
           email: data.email,
           services: data.services,
           userId: data.userId,
-          isFree: data.isFree,
-          oneTimePurchase: data.oneTimePurchase,
+          isFree: false,
+          oneTimePurchase: false,
         },
         {
           onSuccess: () => {
@@ -199,82 +191,11 @@ const Content = ({ productId }: { productId?: string | null }) => {
             )}
           />
 
-          <Controller
-            control={form.control}
-            name="isFree"
-            render={({ field, fieldState }) => (
-              <Field
-                data-invalid={!!fieldState.error}
-                className="dark shadow-dialog rounded-xl bg-black p-4 text-white"
-              >
-                <FieldContent className="flex flex-row items-center justify-between gap-2">
-                  <div className="text-xl font-black">Free</div>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FieldContent>
-              </Field>
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="oneTimePurchase"
-            render={({ field, fieldState }) => (
-              <Field
-                data-invalid={!!fieldState.error}
-                className="dark shadow-dialog rounded-xl bg-blue-500 p-4 text-white"
-              >
-                <FieldContent className="flex flex-row items-center justify-between gap-2">
-                  <div className="text-xl font-black">One Time Purchase</div>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={!!productId}
-                  />
-                </FieldContent>
-              </Field>
-            )}
-          />
+          <Separator className="my-2" />
 
-          <p className="mt-4 mb-2">
-            Select the services you want to offer to the user.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            {services.map((service, index) => (
-              <div
-                key={service.name}
-                className="bg-muted flex items-center justify-between gap-2 rounded-xl border p-4 pr-2"
-              >
-                <p className="text-sm font-medium">{service.name}</p>
-                <div className="flex items-center">
-                  <p className="text-xl font-bold">
-                    ${(service.price / 100).toFixed(2)}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    onClick={() => {
-                      form.setValue(
-                        "services",
-                        services.filter((s) => s.name !== service.name)
-                      );
-                    }}
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <AddService
-            onAdd={(data) => {
-              form.setValue("services", [...services, data]);
-            }}
+          <ServiceSelector
             services={services}
+            onChange={(updated) => form.setValue("services", updated)}
           />
 
           <Separator className="my-6" />
@@ -284,8 +205,8 @@ const Content = ({ productId }: { productId?: string | null }) => {
             email={form.watch("email")}
             userId={form.watch("userId")}
             services={form.watch("services")}
-            isFree={form.watch("isFree")}
-            oneTimePurchase={form.watch("oneTimePurchase")}
+            isFree={false}
+            oneTimePurchase={false}
           />
 
           <Separator className="my-6" />
@@ -308,7 +229,7 @@ const Content = ({ productId }: { productId?: string | null }) => {
                     </SelectContent>
                   </Select>
                   <p className="text-muted-foreground mt-2 px-2 text-xs">
-                    This will be disable if the product is one time purchase
+                    Disabled if no price increase
                   </p>
                   <FieldError errors={[fieldState.error]} />
                 </Field>
@@ -331,157 +252,130 @@ const Content = ({ productId }: { productId?: string | null }) => {
   );
 };
 
-const addServiceFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  price: z.number().min(0, "Price is required"),
-});
+// ─── Service selector ─────────────────────────────────────────────────────────
 
-const AddService = ({
-  onAdd,
+const ServiceSelector = ({
   services,
+  onChange,
 }: {
-  onAdd: (data: z.infer<typeof addServiceFormSchema>) => void;
-  services: z.infer<typeof addServiceFormSchema>[];
+  services: { name: string; price: number }[];
+  onChange: (services: { name: string; price: number }[]) => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const form = useForm<z.infer<typeof addServiceFormSchema>>({
-    resolver: zodResolver(addServiceFormSchema),
-    defaultValues: {
-      name: "",
-      price: undefined,
-    },
-  });
-
-  const onAddService = (data: z.infer<typeof addServiceFormSchema>) => {
-    if (
-      services.some(
-        (s) =>
-          s.name.toLowerCase() === data.name.toLowerCase().replaceAll(" ", "_")
+  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>(
+    () =>
+      Object.fromEntries(
+        SERVICE_CATALOG.map((s) => {
+          const existing = services.find((srv) => srv.name === s.id);
+          return [s.id, existing?.price ?? s.defaultPrice];
+        })
       )
-    ) {
-      toast.error("Service already exists");
-      return;
+  );
+
+  const isEnabled = (id: string) => services.some((s) => s.name === id);
+
+  const toggle = (id: string, checked: boolean) => {
+    if (checked) {
+      onChange([...services, { name: id, price: priceOverrides[id] ?? 0 }]);
+    } else {
+      onChange(services.filter((s) => s.name !== id));
     }
-
-    onAdd({
-      name: data.name.toLowerCase().replaceAll(" ", "_"),
-      price: data.price * 100,
-    });
-    setIsOpen(false);
-    form.reset();
   };
 
-  const handleSubmit = (data: z.infer<typeof addServiceFormSchema>) => {
-    onAddService(data);
+  const updatePrice = (id: string, dollars: number) => {
+    const cents = Math.round(dollars * 100);
+    setPriceOverrides((prev) => ({ ...prev, [id]: cents }));
+    if (isEnabled(id)) {
+      onChange(
+        services.map((s) => (s.name === id ? { ...s, price: cents } : s))
+      );
+    }
   };
+
+  const total = services.reduce((sum, s) => sum + s.price, 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="lg">Add Service</Button>
-      </DialogTrigger>
-      <DialogContent className="animate-none!">
-        <DialogHeader>
-          <DialogTitle>Add Service</DialogTitle>
-        </DialogHeader>
-        <form className="flex flex-col gap-4">
-          <Controller
-            control={form.control}
-            name="name"
-            render={({ field, fieldState }) => (
-              <Field data-invalid={!!fieldState.error}>
-                <Input
-                  label="Name"
-                  placeholder="Name"
-                  aria-invalid={!!fieldState.error}
-                  {...field}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </Field>
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="price"
-            render={({ field, fieldState }) => (
-              <Field data-invalid={!!fieldState.error}>
-                <Input
-                  label="Price"
-                  type="number"
-                  placeholder="will be in cents automatically"
-                  aria-invalid={!!fieldState.error}
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(Number(e.target.value));
-                  }}
-                />
-                <FieldError errors={[fieldState.error]} />
-              </Field>
-            )}
-          />
-          <Button
-            type="button"
-            onClick={form.handleSubmit(handleSubmit)}
-            size="lg"
-          >
-            Add Service
-          </Button>
-        </form>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onAddService({ name: "management_&_support", price: 100 });
-              setIsOpen(false);
-            }}
-            disabled={services.some(
-              (s) => s.name.toLowerCase() === "management_&_support"
-            )}
-          >
-            Management & Support
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              form.setValue("name", "Buying Domain");
-            }}
-            disabled={services.some(
-              (s) => s.name.toLowerCase() === "buying domain"
-            )}
-          >
-            Buying Domain
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onAddService({ name: "business_email", price: 8.4 });
-              setIsOpen(false);
-            }}
-            disabled={services.some(
-              (s) => s.name.toLowerCase() === "business email"
-            )}
-          >
-            Business Email
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onAddService({ name: "website_template", price: 15 });
-              setIsOpen(false);
-            }}
-            disabled={services.some(
-              (s) => s.name.toLowerCase() === "website template"
-            )}
-          >
-            Website Template
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold tracking-tight">Services</h2>
+        {services.length > 0 && (
+          <p className="text-muted-foreground text-sm">
+            {services.length} selected &mdash;{" "}
+            <span className="text-foreground font-semibold">
+              ${(total / 100).toFixed(2)}
+            </span>
+          </p>
+        )}
+      </div>
+
+      {SERVICE_CATEGORIES.map((category) => {
+        const items = SERVICE_CATALOG.filter((s) => s.category === category);
+        return (
+          <div key={category} className="flex flex-col gap-2">
+            <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
+              {category}
+            </p>
+            {items.map((service) => {
+              const enabled = isEnabled(service.id);
+              const priceDollars = (priceOverrides[service.id] ?? 0) / 100;
+              return (
+                <Label
+                  key={service.id}
+                  className={cn(
+                    "cursor-pointer rounded-xl border p-4 transition-colors",
+                    enabled ? "bg-primary/5 border-primary/30" : "bg-muted/30"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={enabled}
+                      onCheckedChange={(checked) =>
+                        toggle(service.id, !!checked)
+                      }
+                      className="mt-0.5 shrink-0"
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <span className="text-sm leading-none font-medium">
+                        {service.label}
+                      </span>
+                      <p className="text-muted-foreground text-xs leading-relaxed">
+                        {service.description}
+                      </p>
+                      {enabled && (
+                        <div
+                          className="mt-1 flex items-center gap-2"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <span className="text-muted-foreground text-xs">
+                            $
+                          </span>
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={priceDollars}
+                            onChange={(e) =>
+                              updatePrice(service.id, Number(e.target.value))
+                            }
+                            className="h-8 w-28 text-sm"
+                          />
+                          <span className="text-muted-foreground text-xs">
+                            / mo
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {!enabled && (
+                      <span className="text-muted-foreground shrink-0 text-sm font-medium tabular-nums">
+                        ${(service.defaultPrice / 100).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </Label>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
   );
 };

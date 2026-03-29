@@ -21,20 +21,7 @@ git add -A
 
 ---
 
-## Step 2 — TypeScript type-check
-
-Run:
-
-```bash
-pnpm typecheck
-```
-
-- If it **passes**: proceed to Step 5.
-- If it **fails**: read the errors, fix them in the relevant files, re-stage with `git add -A`, and re-run `pnpm typecheck`. Repeat until it passes (maximum 3 attempts). If it still fails after 3 attempts, stop and explain the remaining errors to the user.
-
----
-
-## Step 3 — Commit
+## Step 2 — Commit
 
 ```bash
 git commit -m "$ARGUMENTS"
@@ -44,7 +31,7 @@ If `$ARGUMENTS` is empty, write a concise commit message yourself that summarise
 
 ---
 
-## Step 4 — Push to production
+## Step 3 — Push to production
 
 ```bash
 git push origin main

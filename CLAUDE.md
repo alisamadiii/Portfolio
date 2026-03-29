@@ -6,6 +6,7 @@ Read all context files before starting any task.
 
 ## Context
 
+- [PRD](PRD.md) — full product overview, all apps, revenue model, data model, business goals
 - [Client](context/client.md) — current client profile and module availability
 - [Project](context/project.md) — tech stack, app structure, deployment, module overview
 - [Conventions](context/conventions.md) — file layout, component rules, tRPC pattern, coding standards
