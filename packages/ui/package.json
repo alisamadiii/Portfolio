@@ -24,13 +24,14 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-pdf/renderer": "^4.3.2",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-table": "^8.21.3",
     "@trpc/client": "^11.11.0",
     "@trpc/server": "^11.11.0",
     "@workspace/auth": "workspace:*",
-    "@workspace/trpc": "workspace:*",
     "@workspace/drizzle": "workspace:*",
+    "@workspace/trpc": "workspace:*",
     "axios": "^1.13.6",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
@@ -78,6 +79,7 @@
     "./hooks/*": "./src/hooks/*.ts",
     "./custom/*": "./src/custom/*.tsx",
     "./icons/*": "./src/icons/*.tsx",
-    "./security/*": "./src/security/*.tsx"
+    "./security/*": "./src/security/*.tsx",
+    "./pdfs/*": "./src/pdfs/*.tsx"
   }
 }
