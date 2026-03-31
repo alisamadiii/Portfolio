@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { SuccessPurchaseDialog } from "@workspace/ui/custom/success-purchase-dialog";
+import { design } from "@workspace/ui/lib/design";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
@@ -36,6 +37,11 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={
+          {
+            "--primary": `${design.default.color}`,
+          } as React.CSSProperties
+        }
       >
         <TRPCReactProvider>
           <Providers>

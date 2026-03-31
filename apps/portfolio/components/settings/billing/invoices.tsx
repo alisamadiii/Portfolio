@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -10,6 +11,13 @@ import { design } from "@workspace/ui/lib/design";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+
+// @react-pdf/renderer is browser-only — skip SSR for the whole button
+const InvoiceDownloadButton = dynamic(
+  () =>
+    import("./invoice-download-button").then((m) => m.InvoiceDownloadButton),
+  { ssr: false }
+);
 
 export const BillingInvoices = () => {
   const { data: user } = useCurrentUser();
@@ -128,6 +136,10 @@ export const BillingInvoices = () => {
               >
                 Visit
               </Link>
+              <InvoiceDownloadButton
+                order={order}
+                userName={user?.user.name}
+              />
             </div>
           );
         })}

@@ -44,7 +44,7 @@ export default function SettingsPage() {
       </div>
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">Billing</h2>
-        <BillingPortal />
+        {/* <BillingPortal /> */}
         {/* <BillingSubscriptions /> */}
         <BillingInvoices />
       </div>

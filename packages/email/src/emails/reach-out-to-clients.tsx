@@ -16,8 +16,6 @@ interface ReachOutToClientsProps {
   email: string;
 }
 
-const genericNames = ["info", "support", "admin", "contact", "hello", "sales"];
-
 export default function ReachOutToClients({ email }: ReachOutToClientsProps) {
   const formatName = (email: string) => {
     return email
@@ -34,27 +32,57 @@ export default function ReachOutToClients({ email }: ReachOutToClientsProps) {
     <Html>
       <Head />
       <Tailwind>
-        <Body className="bg-gray-100 font-sans text-gray-800">
+        <Body
+          className="font-sans"
+          style={{ backgroundColor: "#FC8464", margin: 0, padding: 0 }}
+        >
           <Preview>
             Ali from AliSamadii.LLC — a quick note about your online presence
           </Preview>
-          <Container className="mx-auto max-w-2xl px-4 py-10">
-            <Section className="mb-8">
-              <Heading className="m-0 text-xl font-semibold text-gray-900">
-                AliSamadii.LLC
-              </Heading>
-              <Text className="mt-1 text-sm text-gray-500">
-                Web Development & Digital Services · Portland, OR
+          <Container className="mx-auto max-w-xl py-12 px-4">
+            {/* Brand header */}
+            <Section className="mb-6 text-center">
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 100 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g clipPath="url(#clip0_rc)">
+                  <path
+                    d="M70.5869 82.0243H97.8874V100H70.5869V82.0243ZM46.4913 0L34.6717 20.9415H48.0666L29.2434 54.293H58.894L70.5869 33.576V57.6897H13.9329L2.11328 78.6276H15.5081L3.44588 100H33.1L45.1623 78.6276H97.8874V0H46.4913Z"
+                    fill="#ffffff"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_rc">
+                    <rect width="100" height="100" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
+              <Text
+                className="m-0 mt-2 text-xs"
+                style={{ color: "rgba(255,255,255,0.75)" }}
+              >
+                Web Development &amp; Digital Services &middot; Portland, OR
               </Text>
             </Section>
 
-            <Section className="rounded-lg border border-gray-200 bg-white">
-              <Section className="p-8">
-                <Text className="mb-6 text-base leading-6 text-gray-700 capitalize">
+            {/* Card */}
+            <Section
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: "12px",
+                overflow: "hidden",
+              }}
+            >
+              <Section className="px-10 pt-10 pb-6">
+                <Text className="mb-6 text-base leading-6 text-gray-600 capitalize">
                   Hi {email},
                 </Text>
 
-                <Text className="mb-5 text-base leading-6 text-gray-700">
+                <Text className="mb-5 text-base leading-6 text-gray-600">
                   My name is Ali with AliSamadii.LLC, a web development and
                   digital services agency based in Portland, OR. I came across
                   your business and really love what you&apos;re doing —
@@ -62,7 +90,7 @@ export default function ReachOutToClients({ email }: ReachOutToClientsProps) {
                   and your work speaks for itself.
                 </Text>
 
-                <Text className="mb-5 text-base leading-6 text-gray-700">
+                <Text className="mb-5 text-base leading-6 text-gray-600">
                   That said, I noticed there may be some opportunities to take
                   your online presence to the next level — whether that&apos;s
                   refreshing your website design, improving load speed, mobile
@@ -70,92 +98,105 @@ export default function ReachOutToClients({ email }: ReachOutToClientsProps) {
                   better reflect the quality of your brand.
                 </Text>
 
-                <Text className="mb-5 text-base leading-6 text-gray-700">
+                <Text className="mb-5 text-base leading-6 text-gray-600">
                   A strong online presence can make a huge difference in
                   attracting new customers and building trust, and I&apos;d love
                   to help make sure your website matches the great work
                   you&apos;re already doing.
                 </Text>
 
-                <Text className="mb-6 text-base leading-6 text-gray-700">
+                <Text className="mb-6 text-base leading-6 text-gray-600">
                   I specialize in fully managed web solutions where I handle
                   everything from design and development to hosting, domain
                   management, and ongoing updates — so you can focus on what you
                   do best: running your business.
                 </Text>
 
-                <Section className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <Text className="mt-0 mb-0 text-sm font-bold text-gray-600">
+                {/* Highlight box */}
+                <Section
+                  className="mb-6 p-5"
+                  style={{
+                    backgroundColor: "#fff5f2",
+                    borderRadius: "8px",
+                    borderLeft: "4px solid #FC8464",
+                  }}
+                >
+                  <Text className="m-0 text-sm font-semibold text-gray-700">
                     I&apos;d love to offer a free, no-obligation website review
                     and walk you through how we can help elevate your brand
                     online.
                   </Text>
                 </Section>
 
-                <Text className="mb-4 text-base text-gray-700">
+                <Text className="mb-4 text-base text-gray-600">
                   Feel free to reach out anytime:
                 </Text>
 
                 <Section className="mb-6">
-                  <Text className="mt-0 mb-2 text-base text-gray-700">
+                  <Text className="mt-0 mb-2 text-base text-gray-600">
                     <Link
                       href="mailto:agency@alisamadii.com"
-                      className="text-black underline"
+                      style={{ color: "#FC8464" }}
+                      className="no-underline"
                     >
                       agency@alisamadii.com
                     </Link>
                   </Text>
-                  <Text className="m-0 text-base text-gray-700">
+                  <Text className="m-0 text-base text-gray-600">
                     <Link
                       href="tel:+19713828969"
-                      className="text-black underline"
+                      style={{ color: "#FC8464" }}
+                      className="no-underline"
                     >
                       (971) 382-8969
                     </Link>
                   </Text>
                 </Section>
 
-                <Text className="mb-2 text-base text-gray-700">
+                <Text className="mb-2 text-base text-gray-600">
                   Get to know my work:
                 </Text>
                 <Section className="mb-6">
-                  <Text className="mt-0 mb-2 text-base text-gray-700">
+                  <Text className="mt-0 mb-2 text-base text-gray-600">
                     <Link
                       href="https://agency.alisamadii.com"
-                      className="text-black underline"
+                      style={{ color: "#FC8464" }}
+                      className="no-underline"
                     >
                       agency.alisamadii.com
                     </Link>{" "}
-                    — services & how I help businesses
+                    — services &amp; how I help businesses
                   </Text>
-                  <Text className="m-0 text-base text-gray-700">
+                  <Text className="m-0 text-base text-gray-600">
                     <Link
                       href="https://alisamadii.com"
-                      className="text-black underline"
+                      style={{ color: "#FC8464" }}
+                      className="no-underline"
                     >
                       alisamadii.com
                     </Link>{" "}
-                    — my portfolio & projects
+                    — my portfolio &amp; projects
                   </Text>
                 </Section>
 
-                <Hr className="my-6 border-gray-200" />
+                <Hr style={{ borderColor: "#f0f0f0" }} className="my-6" />
 
-                <Text className="mb-1 text-base font-medium text-black">
+                <Text className="mb-1 text-base font-medium text-gray-700">
                   Best,
                 </Text>
-                <Text className="mb-0 text-base font-semibold text-black">
+                <Text className="mb-0 text-base font-semibold" style={{ color: "#111111" }}>
                   Ali Samadii
                 </Text>
-                <Text className="mt-0 text-sm text-gray-600">
+                <Text className="mt-0 text-sm text-gray-500">
                   AliSamadii.LLC
                 </Text>
               </Section>
             </Section>
 
+            {/* Outer footer */}
             <Section className="mt-6 text-center">
-              <Text className="text-xs text-gray-500">
-                Portland, OR · Web design, development & managed hosting
+              <Text className="m-0 text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
+                Portland, OR &middot; Web design, development &amp; managed hosting
               </Text>
             </Section>
           </Container>
