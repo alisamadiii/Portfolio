@@ -1,16 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { CircleCheck } from "lucide-react";
+import { Check, CircleCheck } from "lucide-react";
 
 import type { ProjectType } from "@workspace/drizzle/schema";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
-import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { Switch } from "@workspace/ui/components/switch";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 import { urls } from "@workspace/ui/lib/company";
 import { design } from "@workspace/ui/lib/design";
@@ -45,38 +43,15 @@ function getProjectColor(project: Lowercase<ProjectType> | null): string {
 export function BillingProducts() {
   const trpc = useTRPC();
   const products = useQuery(trpc.payments.getProducts.queryOptions());
-  const [isYearly, setIsYearly] = useState(false);
 
   const filtered = useMemo(
-    () =>
-      products.data
-        ?.filter((p) => !p.isArchived && p.isRecurring)
-        .filter((p) =>
-          isYearly
-            ? p.recurringInterval === "year"
-            : p.recurringInterval === "month"
-        ) ?? [],
-    [products.data, isYearly]
+    () => products.data?.filter((p) => !p.isArchived) ?? [],
+    [products.data]
   );
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-muted-foreground text-sm">Products</h3>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="billing-interval" className="text-xs">
-            Monthly
-          </Label>
-          <Switch
-            id="billing-interval"
-            checked={isYearly}
-            onCheckedChange={setIsYearly}
-          />
-          <Label htmlFor="billing-interval" className="text-xs">
-            Yearly
-          </Label>
-        </div>
-      </div>
+      <h3 className="text-muted-foreground text-sm">Products</h3>
 
       {products.isPending ? (
         <div className="flex items-center justify-center py-12">
@@ -131,13 +106,28 @@ function EachProduct({ product }: { product: Product }) {
   return (
     <div
       className="flex flex-col rounded-xl p-5 text-white shadow-md"
-      style={{ backgroundColor: color }}
+      style={{
+        backgroundColor: color,
+        ...(isCurrentPlan
+          ? { outline: "3px solid #22c55e", outlineOffset: "-3px" }
+          : {}),
+      }}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs tracking-[0.2em] text-white/70 uppercase">
-            {project?.toUpperCase() ?? "Product"}
-          </p>
+          <div className="flex items-center gap-2">
+            {isCurrentPlan && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-green-500">
+                <Check className="size-3 text-white" strokeWidth={3} />
+              </span>
+            )}
+            <p className="text-xs tracking-[0.2em] text-white/70 uppercase">
+              {project?.toUpperCase() ?? "Product"}
+              {isCurrentPlan && (
+                <span className="ml-1 text-green-300">(purchased)</span>
+              )}
+            </p>
+          </div>
           <h4 className="text-lg font-semibold">
             {product.name
               .replace(/month/i, "")
