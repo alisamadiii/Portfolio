@@ -253,5 +253,35 @@ export const notificationTypeEnum = pgEnum(
   notificationTypeValues
 );
 
+export const clientNotificationStatusValues = [
+  "PENDING",
+  "SEEN",
+  "SEEN_BY_ADMIN",
+  "RESOLVED",
+  "REJECTED",
+  "REPLIED",
+] as const;
+export const clientNotificationStatusEnum = pgEnum(
+  "client_notification_status",
+  clientNotificationStatusValues
+);
+
+export const clientNotifications = pgTable("client_notifications", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  email: text("email"),
+  projectType: projectsTypeEnum("project_type").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  priority: text("priority").notNull().default("MEDIUM"),
+  status: clientNotificationStatusEnum("status").notNull().default("PENDING"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  seenAt: timestamp("seen_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export type ProjectType = (typeof projectsTypeValues)[number];
 export type NotificationType = (typeof notificationTypeValues)[number];
+export type ClientNotificationStatus =
+  (typeof clientNotificationStatusValues)[number];

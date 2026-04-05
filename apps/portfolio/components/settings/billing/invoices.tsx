@@ -47,6 +47,11 @@ export const BillingInvoices = () => {
       <h3 className="text-muted-foreground relative z-10 mt-4 text-sm">
         Orders
       </h3>
+      {ordersByUserId.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
+          <p className="text-muted-foreground text-sm">No orders yet</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {ordersByUserId.map((order) => {
           const amount = order.totalAmount / 100;
@@ -137,13 +142,20 @@ export const BillingInvoices = () => {
                 Visit
               </Link>
               <InvoiceDownloadButton
-                order={order}
+                order={{
+                  ...order,
+                  createdAt: order.createdAt ? new Date(order.createdAt) : null,
+                }}
                 userName={user?.user.name}
+                userPhone={user?.user.phone}
+                userCompany={user?.user.company}
+                userAddress={user?.user.address}
               />
             </div>
           );
         })}
       </div>
+      )}
     </div>
   );
 };

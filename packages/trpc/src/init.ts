@@ -1,12 +1,8 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import { auth } from "@workspace/auth/auth";
-import { projectsTypeValues } from "@workspace/drizzle/schema";
-
-import { rateLimit } from "./middleware/rate-limit";
 
 export const createTRPCContext = cache(async () => {});
 
@@ -55,58 +51,3 @@ export const adminProcedure = authenticatedProcedure.use(
   }
 );
 
-/**
- * ================================
- * ClickUp
- * ================================
- */
-const notificationsSchema = z.object({
-  list: z.enum(["notifications"]).default("notifications").optional(),
-  projectType: z.enum(projectsTypeValues),
-});
-const clickUp: {
-  id: string;
-  name: z.infer<typeof notificationsSchema>["list"];
-}[] = [
-  {
-    id: "901414507174",
-    name: "notifications",
-  },
-];
-
-export const notificationsProcedure = baseProcedure
-  .input(notificationsSchema)
-  .use(async ({ next, ctx }) => {
-    await rateLimit(10, 60000); // 10 requests per minute
-    return next({ ctx });
-  })
-  .use(async ({ next, ctx, input }) => {
-    console.log(input.list);
-    let listId = clickUp.find((list) => list.name === input.list)?.id;
-
-    if (!listId) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Invalid list name",
-      });
-    }
-
-    let email;
-
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (session) {
-      email = session.user.email;
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        listId,
-        projectType: input.projectType,
-        email,
-      },
-    });
-  });

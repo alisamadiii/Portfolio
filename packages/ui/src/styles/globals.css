@@ -137,7 +137,7 @@
     0 6px 16px -2px color-mix(in srgb, black calc(0.2 * 100%), transparent);
 
   --animate-rotate: rotate .5s ease-in-out forwards;
-  --animate-dialog-in: dialog-in 1s cubic-bezier(0.785, 0.135, 0.15, 0.86) forwards;
+  --animate-dialog-in: dialog-in .5s cubic-bezier(0.785, 0.135, 0.15, 0.86) forwards;
   --animate-popover-in: popover-in .4s forwards;
   --animate-dots-rotate: dotsRotate 10s linear infinite;
   --animate-dots-width: dotsWidth 1.5s ease-in-out infinite;

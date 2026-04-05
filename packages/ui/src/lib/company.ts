@@ -3,13 +3,15 @@ import { ProjectType } from "@workspace/drizzle/schema";
 import { Github, Linkedin, XIcon } from "../icons/social";
 
 export const company = {
-  name: "AliSamadii.LLC",
+  name: "Ali Samadii LLC",
   description:
     "SOFTWARE DEVELOPMENT, SAAS PRODUCTS, AND ONLINE TECHNOLOGY SERVICES.",
   email: "a@alisamadii.com",
   agencyEmail: "agency@alisamadii.com",
+  ownerName: "Ali Samadi",
   phone: "+1 (971) 382-8969",
   location: "Portland, OR",
+  website: "alisamadii.com",
   disclaimer: "All rights reserved.",
   social: [
     { icon: XIcon, href: "https://x.com/alisamadii_", label: "X" },

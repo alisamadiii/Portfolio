@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -22,25 +23,47 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { HandCheck } from "../icons";
 
+const SUBJECT_KEYWORDS = [
+  "Upgrade My Plan",
+  "Request a New Feature",
+  "Change Subscription",
+  "Bug Report",
+  "Billing & Payments",
+  "Website Redesign",
+  "SEO & Performance",
+];
+
 const formSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
-export const RequestDialog = ({ children }: { children: React.ReactNode }) => {
+export const RequestDialog = ({
+  children,
+  defaultSubject,
+}: {
+  children: React.ReactNode;
+  defaultSubject?: string;
+}) => {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
-        <Content setOpen={setOpen} />
+        <Content setOpen={setOpen} defaultSubject={defaultSubject} />
       </DialogContent>
     </Dialog>
   );
 };
 
-const Content = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
+const Content = ({
+  setOpen,
+  defaultSubject,
+}: {
+  setOpen: (open: boolean) => void;
+  defaultSubject?: string;
+}) => {
   const trpc = useTRPC();
   const sendNotification = useMutation(
     trpc.notification.send.mutationOptions()
@@ -49,7 +72,7 @@ const Content = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      subject: "",
+      subject: defaultSubject ?? "",
       message: "",
     },
   });
@@ -58,8 +81,8 @@ const Content = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
       {
         projectType: "AGENCY",
         priority: "URGENT",
-        name: values.subject,
-        description: values.message,
+        subject: values.subject,
+        message: values.message,
       },
       {
         onError: (error) => {
@@ -85,7 +108,7 @@ const Content = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
           <p className="text-muted-foreground text-sm">
             We will get back to you shortly via email.
           </p>
-          <code className="text-muted-foreground text-sm">
+          <code className="text-muted-foreground mt-4 text-sm select-all">
             #{sendNotification.data?.id}
           </code>
         </div>
@@ -106,6 +129,22 @@ const Content = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
                   aria-invalid={!!form.formState.errors.subject}
                 />
                 <FieldError errors={[form.formState.errors.subject]} />
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {SUBJECT_KEYWORDS.map((keyword) => (
+                    <Badge
+                      key={keyword}
+                      variant="outline"
+                      className="hover:bg-accent cursor-pointer transition-colors"
+                      onClick={() =>
+                        form.setValue("subject", keyword, {
+                          shouldValidate: true,
+                        })
+                      }
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
               </Field>
             )}
           />

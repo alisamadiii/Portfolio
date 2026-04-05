@@ -14,12 +14,10 @@ interface EmbedHistoryNotificationsProps {
 }
 
 export const EmbedHistoryNotifications = ({
-  project,
+  project: _project,
 }: EmbedHistoryNotificationsProps) => {
   const trpc = useTRPC();
-  const historyNotifications = useQuery(
-    trpc.notification.history.queryOptions({ project })
-  );
+  const historyNotifications = useQuery(trpc.notification.history.queryOptions());
 
   return historyNotifications.isPending ? (
     <Spinner />
@@ -28,39 +26,21 @@ export const EmbedHistoryNotifications = ({
   ) : historyNotifications.data.length === 0 ? (
     <p className="text-muted-foreground">No notifications found</p>
   ) : (
-    historyNotifications.data && (
-      <div className="mb-8 space-y-4 px-4">
-        {historyNotifications.data.map((notification) => (
-          <EachNotifications
-            key={notification.id}
-            notification={notification}
-          />
-        ))}
-      </div>
-    )
+    <div className="mb-8 space-y-4 px-4">
+      {historyNotifications.data.map((notification) => (
+        <EachNotification key={notification.id} notification={notification} />
+      ))}
+    </div>
   );
 };
 
-const EachNotifications = ({
+const EachNotification = ({
   notification,
 }: {
-  notification: RouterOutputs["notification"]["sentNotifications"][number];
+  notification: RouterOutputs["notification"]["history"][number];
 }) => {
-  const trpc = useTRPC();
-  useQuery(
-    trpc.notification.seenNotifications.queryOptions(
-      { recipientId: notification.id },
-      {
-        enabled: !!notification.id && notification.status === "RESOLVED",
-      }
-    )
-  );
-
   return (
-    <div
-      key={notification.id}
-      className="bg-muted space-y-4 rounded-xl border p-4"
-    >
+    <div className="bg-muted space-y-4 rounded-xl border p-4">
       <div className="flex items-center justify-between">
         <code className="text-muted-foreground inline-block text-xs">
           #{notification.id}
@@ -69,12 +49,14 @@ const EachNotifications = ({
           className={cn(
             notification.status === "RESOLVED"
               ? "bg-green-500 text-white"
-              : notification.status === "SEEN_BY_ADMIN" ||
-                  notification.status === "SEEN"
-                ? "bg-blue-500 text-white"
-                : notification.status === "PENDING"
-                  ? "bg-yellow-500 text-black"
-                  : "bg-red-500 text-white"
+              : notification.status === "REPLIED"
+                ? "bg-purple-500 text-white"
+                : notification.status === "SEEN_BY_ADMIN" ||
+                    notification.status === "SEEN"
+                  ? "bg-blue-500 text-white"
+                  : notification.status === "PENDING"
+                    ? "bg-yellow-500 text-black"
+                    : "bg-red-500 text-white"
           )}
         >
           {notification.status}
@@ -100,6 +82,16 @@ const EachNotifications = ({
             Updated at: {format(notification.updatedAt, "MMMM d, yyyy hh:mm a")}
           </p>
         </div>
+        {notification.status === "REPLIED" && (
+          <a
+            href={`https://mail.google.com/mail/u/0/#search/${encodeURIComponent(notification.id)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1 rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-600 hover:bg-purple-500/20 transition-colors"
+          >
+            Find reply in inbox
+          </a>
+        )}
       </div>
     </div>
   );

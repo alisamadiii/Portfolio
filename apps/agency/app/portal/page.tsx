@@ -68,7 +68,7 @@ export default function PortalPage() {
                   your business — custom services, pricing, and scope.
                 </p>
               </div>
-              <RequestDialog>
+              <RequestDialog defaultSubject="Request a Custom Product">
                 <p className="text-primary cursor-pointer text-sm font-medium underline underline-offset-4">
                   Request a custom or unique product &rarr;
                 </p>

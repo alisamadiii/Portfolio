@@ -1,16 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { HelpCircle, LayoutDashboard, Package, UserRound } from "lucide-react";
+import { LayoutDashboard, Package, UserRound } from "lucide-react";
 
+import { urls } from "@workspace/ui/lib/company";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarMenu,
   SidebarRail,
 } from "@workspace/ui/components/sidebar";
 
 import { NavPages } from "./nav-pages";
+import { NotificationBell } from "./notification-bell";
 
 // This is sample data.
 const pages = [
@@ -26,7 +29,7 @@ const pages = [
   },
   {
     title: "Customer",
-    url: "/portal/customer",
+    url: `${urls.portfolio}/settings`,
     icon: UserRound,
   },
 ];
@@ -37,7 +40,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavPages pages={pages} />
       </SidebarContent>
-      <SidebarFooter></SidebarFooter>
+      <SidebarFooter>
+        <SidebarMenu>
+          <NotificationBell />
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

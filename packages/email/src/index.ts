@@ -3,6 +3,8 @@ import { createElement } from "react";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 
 import AccountDeleted from "./emails/account-deleted";
+import AgencyNotification from "./emails/agency-notification";
+import ClientMessage from "./emails/client-message";
 import ReachOutToClients from "./emails/reach-out-to-clients";
 import ResetPassword from "./emails/reset-password";
 import VerifyEmail from "./emails/verify-email";
@@ -13,6 +15,22 @@ type TemplateProps = {
   resetPassword: { resetPasswordLink: string };
   accountDeleted: { userName?: string; feedbackLink?: string };
   reachOutToClients: { email: string };
+  agencyNotification: {
+    clientEmail?: string;
+    projectType: string;
+    subject: string;
+    message: string;
+    priority: string;
+    referenceId: string;
+  };
+  clientMessage: {
+    subject: string;
+    message: string;
+    clientEmail?: string;
+    originalSubject?: string;
+    originalMessage?: string;
+    referenceId?: string;
+  };
 };
 
 // Template registry — add new emails here, that's it
@@ -20,28 +38,45 @@ const templates: {
   [K in keyof TemplateProps]: {
     subject: string;
     fromLabel: string;
+    from: string;
     component: React.ComponentType<TemplateProps[K]>;
   };
 } = {
   verifyEmail: {
     subject: "Verify your email",
     fromLabel: "Verify your email",
+    from: "noreply@alisamadii.com",
     component: VerifyEmail,
   },
   resetPassword: {
     subject: "Reset your password",
     fromLabel: "Reset your password",
+    from: "noreply@alisamadii.com",
     component: ResetPassword,
   },
   accountDeleted: {
     subject: "Account deleted",
     fromLabel: "Account deleted",
+    from: "noreply@alisamadii.com",
     component: AccountDeleted,
   },
   reachOutToClients: {
     subject: "A quick note about your online presence",
     fromLabel: "Ali from AliSamadii.LLC",
+    from: "agency@alisamadii.com",
     component: ReachOutToClients,
+  },
+  agencyNotification: {
+    subject: "New Portal Notification",
+    fromLabel: "AliSamadii.LLC Portal",
+    from: "agency@alisamadii.com",
+    component: AgencyNotification,
+  },
+  clientMessage: {
+    subject: "A message from AliSamadii.LLC",
+    fromLabel: "Ali from AliSamadii.LLC",
+    from: "agency@alisamadii.com",
+    component: ClientMessage,
   },
 };
 
@@ -67,15 +102,13 @@ function getSesClient() {
   return sesClient;
 }
 
-const defaultFrom = `noreply@alisamadii.com`;
-
 // One function to rule them all
 export async function sendEmail<T extends keyof typeof templates>(
   template: T,
   to: string | string[],
   props: TemplateProps[T]
 ) {
-  const { subject, fromLabel, component } = templates[template];
+  const { subject, fromLabel, from, component } = templates[template];
   const toAddresses = Array.isArray(to) ? to : [to];
   const element = createElement(component, props);
   const htmlContent = await renderEmail(element);
@@ -84,7 +117,7 @@ export async function sendEmail<T extends keyof typeof templates>(
   try {
     await getSesClient().send(
       new SendEmailCommand({
-        Source: `${fromLabel} <${template.toLowerCase() === "reachOutToClients" ? "agency@alisamadii.com" : defaultFrom}>`,
+        Source: `${fromLabel} <${from}>`,
         Destination: { ToAddresses: toAddresses },
         Message: {
           Subject: { Data: subject, Charset: "UTF-8" },

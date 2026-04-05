@@ -127,8 +127,8 @@ export const DangerSettings = () => {
                     sentNotification.mutate(
                       {
                         priority: "URGENT",
-                        name: "🔴 Account Deletion Request",
-                        description: comment,
+                        subject: "🔴 Account Deletion Request",
+                        message: comment,
                         projectType: "PORTFOLIO",
                       },
                       {

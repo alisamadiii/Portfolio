@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 import { Spinner } from "@workspace/ui/components/spinner";
+import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import { useLogout } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -51,6 +52,14 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">Danger</h2>
         <DangerSettings />
+      </div>
+      <div className="space-y-6">
+        <h2 className="text-3xl font-semibold capitalize">Support</h2>
+        <RequestDialog>
+          <Button size="lg" variant="outline">
+            Contact Support
+          </Button>
+        </RequestDialog>
       </div>
       <div className="space-y-6">
         <h2 className="text-3xl font-semibold capitalize">Logout</h2>

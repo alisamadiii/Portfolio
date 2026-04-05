@@ -4,8 +4,8 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import { format } from "date-fns";
 
 import { company } from "@workspace/ui/lib/company";
-import { InvoicePDF } from "@workspace/ui/pdfs/invoice";
-import type { InvoicePDFProps } from "@workspace/ui/pdfs/invoice";
+import type { InvoiceData } from "@workspace/ui/pdfs/invoice";
+import { InvoiceDocument } from "@workspace/ui/pdfs/invoice";
 
 interface Props {
   order: {
@@ -20,10 +20,21 @@ interface Props {
     project?: string;
   };
   userName?: string;
+  userPhone?: string | null;
+  userCompany?: string | null;
+  userAddress?: string | null;
 }
 
-export function InvoiceDownloadButton({ order, userName }: Props) {
-  const date = order.createdAt ? format(order.createdAt, "MMM d, yyyy") : "—";
+export function InvoiceDownloadButton({
+  order,
+  userName,
+  userPhone,
+  userCompany,
+  userAddress,
+}: Props) {
+  const issueDate = order.createdAt
+    ? format(order.createdAt, "MM/dd/yyyy")
+    : "—";
 
   const amount = order.totalAmount / 100;
   const discount = order.discountAmount / 100;
@@ -32,52 +43,46 @@ export function InvoiceDownloadButton({ order, userName }: Props) {
     ? `${order.project} — ${order.billingReason.replace(/_/g, " ")}`
     : order.billingReason.replace(/_/g, " ");
 
-  const invoiceProps: InvoicePDFProps = {
-    orderNumber: order.invoiceNumber || order.productId.slice(0, 8),
-    date,
-
-    fromName: company.name,
-    fromPhone: company.phone,
-    fromAddress: company.location,
-
-    toName: userName || order.billingName,
-    toPhone: "",
-    toAddress: order.email,
-
-    items: [
-      {
-        description: description.charAt(0).toUpperCase() + description.slice(1),
-        qty: 1,
-        price: amount + discount, // pre-discount price
-      },
-      ...(discount > 0
-        ? [{ description: "Discount applied", qty: 1, price: -discount }]
-        : []),
-    ],
-
-    taxRate: 0,
-
-    paymentInfo: {
-      bankName: "Mercury Bank",
-      accountName: company.name,
-      accountNumber: "****",
+  const items: InvoiceData["items"] = [
+    {
+      description: description.charAt(0).toUpperCase() + description.slice(1),
+      quantity: 1,
+      price: amount + discount,
     },
+    ...(discount > 0
+      ? [{ description: "Discount applied", quantity: 1, price: -discount }]
+      : []),
+  ];
 
-    contact: {
-      phone: company.phone,
+  const invoiceData: InvoiceData = {
+    invoiceNumber: order.invoiceNumber || order.productId.slice(0, 8),
+    issueDate,
+    dueDate: issueDate,
+    from: {
+      company: company.name,
+      name: company.ownerName,
+      city: company.location,
       email: company.email,
-      website: "alisamadii.com",
+      phone: company.phone,
+      website: company.website,
     },
-
-    companyName: "ALISAMADII",
-    slogan: "QUALITY SOFTWARE",
+    to: {
+      name: userName || order.billingName,
+      company: userCompany || "",
+      city: userAddress || "",
+      country: "",
+      email: order.email,
+      phone: userPhone || "",
+    },
+    items,
+    vatRate: 0,
   };
 
-  const fileName = `invoice-${order.invoiceNumber || order.productId.slice(0, 8)}.pdf`;
+  const fileName = `invoice-${invoiceData.invoiceNumber}.pdf`;
 
   return (
     <PDFDownloadLink
-      document={<InvoicePDF {...invoiceProps} />}
+      document={<InvoiceDocument data={invoiceData} />}
       fileName={fileName}
       className="mt-2 flex w-full items-center justify-center rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
     >
