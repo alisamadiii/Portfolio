@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, count, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import z from "zod";
 
 import { getErrorMessage } from "@workspace/ui/lib/utils";
@@ -7,6 +7,7 @@ import { getErrorMessage } from "@workspace/ui/lib/utils";
 import { db } from "@workspace/drizzle/index";
 import {
   clientNotifications,
+  clientNotificationStatusValues,
   projectsTypeValues,
   user,
 } from "@workspace/drizzle/schema";
@@ -17,8 +18,8 @@ import {
   authenticatedProcedure,
   createTRPCRouter,
 } from "../init";
-import { rateLimit } from "../middleware/rate-limit";
 import { notify } from "../lib/notify";
+import { rateLimit } from "../middleware/rate-limit";
 
 export const notificationRouter = createTRPCRouter({
   send: authenticatedProcedure
@@ -33,7 +34,7 @@ export const notificationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         if (ctx.session.user.role !== "admin") {
-          await rateLimit(10, 30000);
+          await rateLimit(10, 1800000);
         }
 
         const [record] = await db
@@ -74,31 +75,23 @@ export const notificationRouter = createTRPCRouter({
       .orderBy(desc(clientNotifications.createdAt));
   }),
 
-  unreadCount: authenticatedProcedure.query(async ({ ctx }) => {
-    const [result] = await db
-      .select({ count: count() })
-      .from(clientNotifications)
-      .where(
-        and(
-          eq(clientNotifications.email, ctx.session.user.email),
-          eq(clientNotifications.status, "PENDING")
-        )
-      );
-
-    return { count: result?.count ?? 0 };
-  }),
-
-  markSeen: authenticatedProcedure.mutation(async ({ ctx }) => {
-    await db
-      .update(clientNotifications)
-      .set({ status: "SEEN", seenAt: new Date(), updatedAt: new Date() })
-      .where(
-        and(
-          eq(clientNotifications.email, ctx.session.user.email),
-          eq(clientNotifications.status, "PENDING")
-        )
-      );
-  }),
+  updateStatus: adminProcedure
+    .input(
+      z.object({
+        notificationId: z.string().uuid(),
+        status: z.enum(clientNotificationStatusValues),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .update(clientNotifications)
+        .set({
+          status: input.status,
+          updatedAt: new Date(),
+          ...(input.status === "SEEN" ? { seenAt: new Date() } : {}),
+        })
+        .where(eq(clientNotifications.id, input.notificationId));
+    }),
 
   getAllNotifications: adminProcedure.query(async () => {
     return db

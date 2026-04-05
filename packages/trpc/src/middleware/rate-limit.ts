@@ -32,9 +32,15 @@ export async function rateLimit(maxRequests = 10, windowMs = 60000) {
   const current = rateLimitCache.get(key) || 0;
 
   if (current >= maxRequests) {
+    const minutes = Math.round(windowMs / 60000);
+    const timeLabel =
+      minutes >= 60
+        ? `${Math.round(minutes / 60)} hour${Math.round(minutes / 60) > 1 ? "s" : ""}`
+        : `${minutes} minute${minutes > 1 ? "s" : ""}`;
+
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
-      message: `Rate limit exceeded. Maximum ${maxRequests} requests per ${windowMs / 1000} seconds.`,
+      message: `You've reached the limit of ${maxRequests} requests. Please try again in ${timeLabel}.`,
     });
   }
 

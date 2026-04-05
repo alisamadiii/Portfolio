@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useDebounce } from "@uidotdev/usehooks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
+import { useDebounce } from "@uidotdev/usehooks";
 import { format } from "date-fns";
 import { Reply, Search } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
@@ -31,6 +31,13 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@workspace/ui/components/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { DataTable } from "@workspace/ui/custom/data-table";
 import { cn } from "@workspace/ui/lib/utils";
@@ -57,8 +64,11 @@ const statusClass: Record<string, string> = {
   REPLIED: "bg-purple-500/15 text-purple-600",
 };
 
+const manualStatuses = ["PENDING", "SEEN", "RESOLVED", "REJECTED"] as const;
+
 export default function NotificationsPage() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [replyTarget, setReplyTarget] = useState<Notification | null>(null);
   const [search, setSearch] = useQueryState(
     "search",
@@ -68,6 +78,10 @@ export default function NotificationsPage() {
 
   const { data: notifications, isPending } = useQuery(
     trpc.notification.getAllNotifications.queryOptions()
+  );
+
+  const updateStatus = useMutation(
+    trpc.notification.updateStatus.mutationOptions()
   );
 
   const filtered = useMemo(() => {
@@ -137,16 +151,51 @@ export default function NotificationsPage() {
     },
     {
       header: "Status",
-      cell: ({ row }) => (
-        <Badge
-          className={cn(
-            "text-xs font-semibold",
-            statusClass[row.original.status] ?? statusClass.PENDING
-          )}
-        >
-          {row.original.status.replace(/_/g, " ")}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const n = row.original;
+        // REPLIED is auto-set by the reply flow — show as read-only badge
+        if (n.status === "REPLIED") {
+          return (
+            <Badge className={cn("text-xs font-semibold", statusClass.REPLIED)}>
+              REPLIED
+            </Badge>
+          );
+        }
+        return (
+          <Select
+            value={n.status}
+            onValueChange={(value) => {
+              updateStatus.mutate(
+                { notificationId: n.id, status: value as typeof n.status },
+                {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries(
+                      trpc.notification.getAllNotifications.queryFilter()
+                    );
+                  },
+                  onError: (err) => toast.error(err.message),
+                }
+              );
+            }}
+          >
+            <SelectTrigger
+              className={cn(
+                "h-7 w-32 text-xs font-semibold",
+                statusClass[n.status]
+              )}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {manualStatuses.map((s) => (
+                <SelectItem key={s} value={s} className="text-xs">
+                  {s.replace(/_/g, " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      },
     },
     {
       header: "Received",
@@ -180,8 +229,8 @@ export default function NotificationsPage() {
     <div className="container py-8">
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-        <InputGroup className="max-w-sm">
-          <InputGroupText position="inline-start">
+        <InputGroup className="max-w-sm px-2.5">
+          <InputGroupText>
             <Search className="size-4" />
           </InputGroupText>
           <InputGroupInput
@@ -192,11 +241,7 @@ export default function NotificationsPage() {
         </InputGroup>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        isLoading={isPending}
-      />
+      <DataTable columns={columns} data={filtered} isLoading={isPending} />
 
       {replyTarget && (
         <ReplyDialog
@@ -217,14 +262,14 @@ function ReplyDialog({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [subject, setSubject] = useState(
-    `Re: ${notification.subject}`
-  );
+  const [subject, setSubject] = useState(`Re: ${notification.subject}`);
   const [message, setMessage] = useState("");
   const [subjectError, setSubjectError] = useState("");
   const [messageError, setMessageError] = useState("");
 
-  const sendToUser = useMutation(trpc.notification.sendToUser.mutationOptions());
+  const sendToUser = useMutation(
+    trpc.notification.sendToUser.mutationOptions()
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,7 +317,9 @@ function ReplyDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Reply to {notification.userName ?? notification.email}</DialogTitle>
+          <DialogTitle>
+            Reply to {notification.userName ?? notification.email}
+          </DialogTitle>
           <DialogDescription>
             The original message will be included in the email.
           </DialogDescription>
@@ -306,7 +353,9 @@ function ReplyDialog({
               label="Subject"
               aria-invalid={!!subjectError}
             />
-            <FieldError errors={[subjectError ? { message: subjectError } : undefined]} />
+            <FieldError
+              errors={[subjectError ? { message: subjectError } : undefined]}
+            />
           </Field>
 
           <Field>
@@ -317,7 +366,9 @@ function ReplyDialog({
               rows={6}
               aria-invalid={!!messageError}
             />
-            <FieldError errors={[messageError ? { message: messageError } : undefined]} />
+            <FieldError
+              errors={[messageError ? { message: messageError } : undefined]}
+            />
           </Field>
 
           <DialogFooter>
