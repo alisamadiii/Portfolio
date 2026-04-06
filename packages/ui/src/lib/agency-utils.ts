@@ -6,7 +6,7 @@ import { formatPrice } from "./utils";
 
 // ─── Service catalog ──────────────────────────────────────────────────────────
 
-export type ServiceCategory = "Core" | "Development" | "Growth" | "Advanced";
+export type ServiceCategory = "Infrastructure" | "Development" | "Growth";
 
 export type ServiceDefinition = {
   id: string;
@@ -17,22 +17,14 @@ export type ServiceDefinition = {
 };
 
 export const SERVICE_CATALOG: ServiceDefinition[] = [
-  // Core
-  {
-    id: "payment_card",
-    label: "Virtual Payment Card",
-    description:
-      "Dedicated virtual card used exclusively for billing third-party services on the client's behalf.",
-    defaultPrice: 0,
-    category: "Core",
-  },
+  // Infrastructure
   {
     id: "hosting",
     label: "Hosting & Uptime Management",
     description:
       "Website hosting provisioning, server configuration, uptime monitoring, and incident response.",
     defaultPrice: 2900,
-    category: "Core",
+    category: "Infrastructure",
   },
   {
     id: "domain",
@@ -40,46 +32,38 @@ export const SERVICE_CATALOG: ServiceDefinition[] = [
     description:
       "Domain registration, DNS configuration, SSL certificate, and annual renewal management.",
     defaultPrice: 1500,
-    category: "Core",
+    category: "Infrastructure",
   },
   {
     id: "business_email",
     label: "Business Email",
     description:
-      "Professional business email account setup, configuration, and ongoing administration.",
+      "Professional business email setup (Google Workspace/custom SMTP), configuration, and ongoing admin.",
     defaultPrice: 1500,
-    category: "Core",
+    category: "Infrastructure",
   },
   {
-    id: "maintenance",
-    label: "Ongoing Maintenance",
+    id: "database",
+    label: "Database Management",
     description:
-      "Regular website updates, dependency patches, content changes, and bug fixes.",
-    defaultPrice: 9900,
-    category: "Core",
-  },
-  {
-    id: "priority_support",
-    label: "Priority Technical Support",
-    description:
-      "Dedicated priority support via agency@alisamadii.com with guaranteed response time.",
-    defaultPrice: 4900,
-    category: "Core",
+      "Neon PostgreSQL provisioning, backups, and monitoring.",
+    defaultPrice: 2900,
+    category: "Infrastructure",
   },
   // Development
   {
     id: "website_design",
     label: "Website Design & Development",
     description:
-      "Multi-page website design and development based on provided template, fully customized for the client.",
-    defaultPrice: 49900,
+      "Template-based multi-page website design and development (5 pages included), fully customized for the client.",
+    defaultPrice: 7600,
     category: "Development",
   },
   {
-    id: "admin_panel",
-    label: "Admin Panel",
+    id: "web_app",
+    label: "Web App Development",
     description:
-      "Custom internal admin panel for basic content management — update text, images, and pages without touching code.",
+      "Custom dashboards, client portals, SaaS tools — authentication, CRUD, third-party integrations.",
     defaultPrice: 19900,
     category: "Development",
   },
@@ -88,23 +72,15 @@ export const SERVICE_CATALOG: ServiceDefinition[] = [
     label: "Contact Form & Email Automation",
     description:
       "Fully functional contact form with email forwarding, auto-responders, and spam protection.",
-    defaultPrice: 4900,
+    defaultPrice: 2900,
     category: "Development",
   },
   {
-    id: "blog_cms",
-    label: "Blog / CMS Setup",
+    id: "maintenance",
+    label: "Ongoing Maintenance",
     description:
-      "Blog system or headless CMS integration with a simple editor interface for the client.",
-    defaultPrice: 14900,
-    category: "Development",
-  },
-  {
-    id: "custom_api",
-    label: "Custom API / Third-Party Integration",
-    description:
-      "Integration with external APIs, payment gateways, CRMs, or any third-party services.",
-    defaultPrice: 14900,
+      "Regular website updates, dependency patches, content changes, and bug fixes.",
+    defaultPrice: 6900,
     category: "Development",
   },
   // Growth
@@ -113,7 +89,7 @@ export const SERVICE_CATALOG: ServiceDefinition[] = [
     label: "SEO Setup & Optimization",
     description:
       "Technical SEO, metadata, sitemap, structured data, Core Web Vitals optimization, and search console setup.",
-    defaultPrice: 9900,
+    defaultPrice: 4900,
     category: "Growth",
   },
   {
@@ -121,57 +97,23 @@ export const SERVICE_CATALOG: ServiceDefinition[] = [
     label: "Analytics Integration",
     description:
       "Google Analytics 4 or privacy-first analytics (Plausible) setup with goal tracking and reporting.",
-    defaultPrice: 1900,
+    defaultPrice: 1500,
     category: "Growth",
   },
   {
-    id: "ecommerce",
-    label: "E-Commerce Integration",
+    id: "priority_support",
+    label: "Priority Technical Support",
     description:
-      "Product catalogue, shopping cart, and payment checkout integration (Stripe or Polar).",
-    defaultPrice: 19900,
+      "Dedicated priority support via email with guaranteed response time.",
+    defaultPrice: 3900,
     category: "Growth",
-  },
-  {
-    id: "social_media",
-    label: "Social Media Integration",
-    description:
-      "Live social feed embeds, share buttons, Open Graph tags, and social preview optimization.",
-    defaultPrice: 2900,
-    category: "Growth",
-  },
-  // Advanced
-  {
-    id: "performance",
-    label: "Performance Audit & Optimization",
-    description:
-      "Lighthouse audit, image optimization, lazy loading, caching strategy, and bundle size improvements.",
-    defaultPrice: 7400,
-    category: "Advanced",
-  },
-  {
-    id: "mobile_app",
-    label: "Mobile App Development",
-    description:
-      "React Native mobile app development for iOS and Android, sharing the same backend.",
-    defaultPrice: 99900,
-    category: "Advanced",
-  },
-  {
-    id: "ai_integration",
-    label: "AI Feature Integration",
-    description:
-      "Integration of AI features using the Claude API or OpenAI — chatbots, content generation, smart search.",
-    defaultPrice: 19900,
-    category: "Advanced",
   },
 ];
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
-  "Core",
+  "Infrastructure",
   "Development",
   "Growth",
-  "Advanced",
 ];
 
 /** Resolves a service id to its human-readable label. Falls back to the id itself. */
@@ -180,17 +122,15 @@ const serviceLabel = (id: string): string =>
 
 // ─── Tiered extra-page pricing (amounts in cents) ─────────────────────────────
 const EXTRA_PAGE_TIERS = [
-  { pages: 5, pricePerPage: 3000 }, // pages 1–5:   $30.00 each
-  { pages: 5, pricePerPage: 4999 }, // pages 6–10:  $49.99 each
-  { pages: 5, pricePerPage: 7000 }, // pages 11–15: $70.00 each
-  { pages: 5, pricePerPage: 9000 }, // pages 16–20: $90.00 each
-  { pages: 5, pricePerPage: 11000 }, // pages 21–25: $110.00 each
+  { pages: 5, pricePerPage: 2500 }, // pages 1–5:   $25.00/mo each
+  { pages: 5, pricePerPage: 4000 }, // pages 6–10:  $40.00/mo each
+  { pages: 5, pricePerPage: 6000 }, // pages 11–15: $60.00/mo each
 ] as const;
 
 export const MAX_EXTRA_PAGES = EXTRA_PAGE_TIERS.reduce(
   (s, t) => s + t.pages,
   0
-); // 25
+); // 15
 
 /** Returns the total extra cost in cents for N additional pages. */
 export function calcExtraPagesCost(extraPages: number): number {
