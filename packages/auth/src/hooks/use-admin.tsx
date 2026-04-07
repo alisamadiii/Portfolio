@@ -14,14 +14,14 @@ const useCreateUser = () => {
       role,
     }: {
       email: string;
-      password: string;
+      password?: string;
       name: string;
       role: "user" | "admin";
     }) => {
       const { data: newUser, error } = await authClient.admin.createUser({
-        email, // required
-        password, // required
-        name, // required
+        email,
+        password,
+        name,
         role,
       });
 

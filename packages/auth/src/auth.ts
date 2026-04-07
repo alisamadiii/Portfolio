@@ -4,7 +4,7 @@ import { Polar } from "@polar-sh/sdk";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, emailOTP } from "better-auth/plugins";
+import { admin, emailOTP, magicLink } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
@@ -129,6 +129,16 @@ export const auth = betterAuth({
   plugins: [
     expo(),
     admin(),
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        const { error } = await sendEmail("magicLink", email, {
+          magicLinkUrl: url,
+        });
+        if (error) {
+          throw new APIError(403, { message: error });
+        }
+      },
+    }),
     emailOTP({
       overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }) {

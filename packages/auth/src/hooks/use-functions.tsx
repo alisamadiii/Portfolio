@@ -279,6 +279,29 @@ const useResendEmailVerification = () => {
  * Clears user session and invalidates related queries
  * @returns UseMutationResult for logout operation
  */
+const useMagicLink = () => {
+  return useMutation({
+    mutationFn: async ({
+      email,
+      callbackURL,
+    }: {
+      email: string;
+      callbackURL: string;
+    }) => {
+      const { data, error } = await authClient.signIn.magicLink({
+        email,
+        callbackURL,
+      });
+
+      if (error) {
+        throw new Error(error.message || error.statusText);
+      }
+
+      return data;
+    },
+  });
+};
+
 const useLogout = () => {
   const trpc = useTRPC();
   const router = useRouter();
@@ -311,6 +334,7 @@ const useLogout = () => {
 export {
   useSignup,
   useSignin,
+  useMagicLink,
   useSendResetEmail,
   useResetPassword,
   useVerifyEmail,

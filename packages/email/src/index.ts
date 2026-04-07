@@ -5,6 +5,7 @@ import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 import AccountDeleted from "./emails/account-deleted";
 import AgencyNotification from "./emails/agency-notification";
 import ClientMessage from "./emails/client-message";
+import MagicLink from "./emails/magic-link";
 import ReachOutToClients from "./emails/reach-out-to-clients";
 import ResetPassword from "./emails/reset-password";
 import VerifyEmail from "./emails/verify-email";
@@ -13,6 +14,7 @@ import { renderEmail, renderText } from "./utils";
 type TemplateProps = {
   verifyEmail: { verificationCode: string };
   resetPassword: { resetPasswordLink: string };
+  magicLink: { magicLinkUrl: string };
   accountDeleted: { userName?: string; feedbackLink?: string };
   reachOutToClients: { email: string };
   agencyNotification: {
@@ -53,6 +55,12 @@ const templates: {
     fromLabel: "Reset your password",
     from: "noreply@alisamadii.com",
     component: ResetPassword,
+  },
+  magicLink: {
+    subject: "Sign in to your account",
+    fromLabel: "Sign in link",
+    from: "noreply@alisamadii.com",
+    component: MagicLink,
   },
   accountDeleted: {
     subject: "Account deleted",

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AnimatePresence, motion } from "motion/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -13,36 +15,50 @@ import { Input } from "@workspace/ui/components/input";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 
 import {
+  useMagicLink,
   useSignin,
   useSignInWithProvider,
 } from "@workspace/auth/hooks/use-functions";
 
-const formSchema = z.object({
+type AuthView = "options" | "magic-link" | "email-password";
+
+const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
 });
 
+const magicLinkSchema = z.object({
+  email: z.email(),
+});
+
+const transition = { duration: 0.2, ease: "easeInOut" as const };
+
 export default function Login() {
   const router = useRouter();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const signin = useSignin();
-  const onSignInWithProvider = useSignInWithProvider("google");
-  const onSignInWithProviderGitHub = useSignInWithProvider("github");
-
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirectUrl");
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const [view, setView] = useState<AuthView>("options");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const magicLinkForm = useForm<z.infer<typeof magicLinkSchema>>({
+    resolver: zodResolver(magicLinkSchema),
+    defaultValues: { email: "" },
+  });
+
+  const signin = useSignin();
+  const magicLink = useMagicLink();
+  const onSignInWithGoogle = useSignInWithProvider("google");
+  const onSignInWithGitHub = useSignInWithProvider("github");
+
+  const handleLogin = (values: z.infer<typeof loginSchema>) => {
     signin.mutate(values, {
       onSuccess: () => {
-        console.log(redirectUrl);
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
@@ -51,9 +67,40 @@ export default function Login() {
         }
       },
       onError: (error) => {
-        form.setError("root", { message: error.message });
+        loginForm.setError("root", { message: error.message });
       },
     });
+  };
+
+  const handleMagicLink = (values: z.infer<typeof magicLinkSchema>) => {
+    magicLink.mutate(
+      {
+        email: values.email,
+        callbackURL: redirectUrl || "/",
+      },
+      {
+        onSuccess: () => setMagicLinkSent(true),
+        onError: (error) => {
+          magicLinkForm.setError("root", { message: error.message });
+        },
+      }
+    );
+  };
+
+  const handleSocialLogin = (provider: "google" | "github") => {
+    const mutation =
+      provider === "google" ? onSignInWithGoogle : onSignInWithGitHub;
+    mutation.mutate(
+      { redirectUrl: redirectUrl || "/" },
+      { onError: (error) => toast.error(error.message) }
+    );
+  };
+
+  const goBack = () => {
+    setView("options");
+    setMagicLinkSent(false);
+    loginForm.reset();
+    magicLinkForm.reset();
   };
 
   return (
@@ -61,104 +108,215 @@ export default function Login() {
       <h1 className="text-3xl font-bold">Welcome Back</h1>
       <p className="text-muted-foreground">Login to get started</p>
 
-      <form
-        onSubmit={form.handleSubmit(handleSubmit)}
-        className="mt-8 flex w-full max-w-sm flex-col gap-4"
-      >
-        <Controller
-          control={form.control}
-          name="email"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                type="email"
-                placeholder="example@email.com"
-                aria-invalid={fieldState.invalid}
-                label="Email"
-              />
-              <FieldError errors={[fieldState.error]} />
-            </Field>
+      <div className="mt-8 w-full max-w-sm">
+        <AnimatePresence mode="wait">
+          {view === "options" && (
+            <motion.div
+              key="options"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={transition}
+              className="flex flex-col gap-3"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => handleSocialLogin("google")}
+                >
+                  Google
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => handleSocialLogin("github")}
+                >
+                  GitHub
+                </Button>
+              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={() => setView("magic-link")}
+              >
+                Magic Link
+              </Button>
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => setView("email-password")}
+              >
+                Email & Password
+              </Button>
+            </motion.div>
           )}
-        />
 
-        <Controller
-          control={form.control}
-          name="password"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                type="password"
-                placeholder="********"
-                aria-invalid={fieldState.invalid}
-                label="Password"
-              />
-              <FieldError errors={[fieldState.error]} />
-            </Field>
+          {view === "magic-link" && (
+            <motion.div
+              key="magic-link"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={transition}
+              className="flex flex-col gap-4"
+            >
+              <button
+                onClick={goBack}
+                className="text-muted-foreground hover:text-foreground -mb-2 flex items-center gap-1 text-sm transition-colors"
+              >
+                ← Back
+              </button>
+
+              <AnimatePresence mode="wait">
+                {!magicLinkSent ? (
+                  <motion.div
+                    key="magic-form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={transition}
+                    className="flex flex-col gap-4"
+                  >
+                    <form
+                      onSubmit={magicLinkForm.handleSubmit(handleMagicLink)}
+                      className="flex flex-col gap-4"
+                    >
+                      <Controller
+                        control={magicLinkForm.control}
+                        name="email"
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <Input
+                              {...field}
+                              type="email"
+                              placeholder="example@email.com"
+                              aria-invalid={fieldState.invalid}
+                              label="Email"
+                            />
+                            <FieldError errors={[fieldState.error]} />
+                          </Field>
+                        )}
+                      />
+                      <FieldError
+                        errors={[magicLinkForm.formState.errors.root]}
+                      />
+                      <button className="sr-only">submit</button>
+                    </form>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      isLoading={magicLink.isPending}
+                      onClick={magicLinkForm.handleSubmit(handleMagicLink)}
+                    >
+                      Send Magic Link
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="magic-sent"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={transition}
+                    className="flex flex-col items-center gap-3 py-4 text-center"
+                  >
+                    <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full text-2xl">
+                      ✉
+                    </div>
+                    <p className="text-lg font-medium">Check your email</p>
+                    <p className="text-muted-foreground text-sm">
+                      We sent a sign-in link to{" "}
+                      <span className="text-foreground font-medium">
+                        {magicLinkForm.getValues("email")}
+                      </span>
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           )}
-        />
 
-        <FieldError errors={[form.formState.errors.root]} />
+          {view === "email-password" && (
+            <motion.div
+              key="email-password"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={transition}
+              className="flex flex-col gap-4"
+            >
+              <button
+                onClick={goBack}
+                className="text-muted-foreground hover:text-foreground -mb-2 flex items-center gap-1 text-sm transition-colors"
+              >
+                ← Back
+              </button>
 
-        <button className="sr-only">submit</button>
-      </form>
-      <div className="mb-2 flex w-full max-w-sm justify-end">
-        <Link href="/reset-password" className="">
-          Forgot Password?
-        </Link>
+              <form
+                onSubmit={loginForm.handleSubmit(handleLogin)}
+                className="flex flex-col gap-4"
+              >
+                <Controller
+                  control={loginForm.control}
+                  name="email"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="example@email.com"
+                        aria-invalid={fieldState.invalid}
+                        label="Email"
+                      />
+                      <FieldError errors={[fieldState.error]} />
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={loginForm.control}
+                  name="password"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="********"
+                        aria-invalid={fieldState.invalid}
+                        label="Password"
+                      />
+                      <FieldError errors={[fieldState.error]} />
+                    </Field>
+                  )}
+                />
+
+                <FieldError errors={[loginForm.formState.errors.root]} />
+                <button className="sr-only">submit</button>
+              </form>
+
+              <div className="flex justify-end">
+                <Link href="/reset-password" className="text-sm">
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <Button
+                size="lg"
+                className="w-full"
+                isLoading={signin.isPending}
+                onClick={loginForm.handleSubmit(handleLogin)}
+              >
+                Login
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      <Button
-        onClick={form.handleSubmit(handleSubmit)}
-        isLoading={signin.isPending}
-        className="w-full max-w-sm"
-        size="lg"
-      >
-        Login
-      </Button>
-      <div className="text-muted-foreground my-2 text-center text-sm">Or</div>
-      <div className="grid w-full max-w-sm grid-cols-2 gap-2">
-        <Button
-          variant={"outline"}
-          className="w-full"
-          onClick={() =>
-            onSignInWithProvider.mutate(
-              {
-                redirectUrl: redirectUrl ? redirectUrl : "/",
-              },
-              {
-                onError: (error) => {
-                  toast.error(error.message);
-                },
-              }
-            )
-          }
-          size="lg"
-        >
-          Google
-        </Button>
-        <Button
-          variant={"outline"}
-          className="w-full"
-          onClick={() =>
-            onSignInWithProviderGitHub.mutate(
-              {
-                redirectUrl: redirectUrl ? redirectUrl : "/",
-              },
-              {
-                onError: (error) => {
-                  toast.error(error.message);
-                },
-              }
-            )
-          }
-          size="lg"
-        >
-          GitHub
-        </Button>
-      </div>
 
-      <p className="mt-3 text-sm">
+      <p className="mt-6 text-sm">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="underline">
           Sign up
@@ -166,11 +324,11 @@ export default function Login() {
       </p>
 
       <PageLoading
-        active={onSignInWithProvider.isPending}
+        active={onSignInWithGoogle.isPending}
         name="Signing in with Google"
       />
       <PageLoading
-        active={onSignInWithProviderGitHub.isPending}
+        active={onSignInWithGitHub.isPending}
         name="Signing in with GitHub"
       />
     </div>
