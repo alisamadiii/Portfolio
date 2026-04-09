@@ -2,13 +2,18 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 
-import { baseProcedure, createTRPCRouter } from "@workspace/trpc/init";
+import {
+  adminProcedure,
+  baseProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
 
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from "../../lib/r2";
 
@@ -22,7 +27,7 @@ const ALLOWED_TYPES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const SIGNED_URL_EXPIRY = 60 * 5; // 5 minutes
 
-export const ALLOWED_FOLDERS = ["users"] as const;
+export const ALLOWED_FOLDERS = ["users", "clients"] as const;
 
 export const uploadRouter = createTRPCRouter({
   getUploadUrl: baseProcedure
@@ -215,6 +220,38 @@ export const uploadRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "An unexpected error occurred while updating file",
+        });
+      }
+    }),
+
+  listFiles: adminProcedure
+    .input(
+      z.object({
+        prefix: z.string().min(1),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const command = new ListObjectsV2Command({
+          Bucket: R2_BUCKET,
+          Prefix: input.prefix,
+        });
+
+        const response = await r2.send(command);
+
+        return (response.Contents ?? [])
+          .filter((obj) => obj.Key)
+          .map((obj) => ({
+            key: obj.Key!,
+            size: obj.Size ?? 0,
+            lastModified: obj.LastModified?.toISOString() ?? null,
+            publicUrl: `${R2_PUBLIC_URL}/${obj.Key}`,
+          }));
+      } catch (err) {
+        console.error("Failed to list files:", err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to list files from storage",
         });
       }
     }),

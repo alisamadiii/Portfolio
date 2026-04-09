@@ -16,6 +16,7 @@ const links = [
   },
   { label: "Code", href: "/code" },
   { label: "Agency", href: "/agency" },
+  { label: "Clients", href: "/clients" },
   { label: "Cold Emails", href: "/cold-emails" },
   { label: "Notifications", href: "/notifications" },
 ];
