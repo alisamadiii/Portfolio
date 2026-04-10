@@ -11,29 +11,33 @@ import { SectionLabel } from "@/components/section-label";
 const PLANS = [
   {
     name: "Starter",
-    price: 300,
+    price: "$149",
+    priceLabel: "/month",
     description: "A fully managed web presence for small businesses.",
     features: [
-      "3-page website (landing page + 2 additional pages)",
-      "Website hosting provisioning and uptime management",
-      "Domain registration, DNS configuration, and renewal",
-      "Business email account setup and administration",
-      "Ongoing website updates and maintenance",
-      "Priority technical support via agency@alisamadii.com",
+      "5-page website build",
+      "Managed hosting",
+      "Domain management",
+      "Contact form with email forwarding",
     ],
     highlighted: false,
   },
   {
-    name: "Pro",
-    price: 650,
-    description: "The full stack — auth, admin, and email infrastructure.",
+    name: "Custom",
+    price: null,
+    priceLabel: "Let's talk",
+    description: "The full stack — everything your business needs, tailored.",
     features: [
       "Everything in Starter",
-      "User authentication system (sign up, login, password reset)",
-      "Admin panel for basic content management",
-      "AWS SES domain integration for transactional email delivery",
-      "Dedicated virtual payment card for service billing",
-      "Monthly performance and uptime report",
+      "User authentication system",
+      "Admin panel & content management",
+      "Database provisioning & management",
+      "Web app development (dashboards, portals, SaaS tools)",
+      "AWS SES email integration & automation",
+      "SEO setup & optimization",
+      "Analytics integration & reporting",
+      "Ongoing maintenance & updates",
+      "Priority technical support",
     ],
     highlighted: true,
   },
@@ -74,10 +78,16 @@ export const PricingSection = () => {
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-4xl font-black tracking-tighter tabular-nums">
-                    ${plan.price}
-                  </p>
-                  <p className="text-muted-foreground text-xs">/month</p>
+                  {plan.price ? (
+                    <>
+                      <p className="text-4xl font-black tracking-tighter tabular-nums">
+                        {plan.price}
+                      </p>
+                      <p className="text-muted-foreground text-xs">{plan.priceLabel}</p>
+                    </>
+                  ) : (
+                    <p className="text-lg font-bold tracking-tight">{plan.priceLabel}</p>
+                  )}
                 </div>
               </div>
 

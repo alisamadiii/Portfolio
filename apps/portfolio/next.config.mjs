@@ -1,4 +1,4 @@
-import { createMDX } from "fumadocs-mdx/next";
+import { withContentCollections } from "@content-collections/next";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -18,9 +18,4 @@ const nextConfig = {
   },
 };
 
-const withMDX = createMDX({
-  // customise the config file path
-  // configPath: "source.config.ts"
-});
-
-export default withMDX(nextConfig);
+export default withContentCollections(nextConfig);

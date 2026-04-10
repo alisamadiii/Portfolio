@@ -87,7 +87,7 @@ export default function Home() {
   const { data: currentUser } = useCurrentUser();
   return (
     <main className="mx-auto w-full max-w-3xl space-y-20 px-8 pt-20">
-      <div className="shadow-dialog dark bg-background text-foreground mb-8 flex items-center justify-between gap-8 rounded-xl p-6 backdrop-blur-sm transition-all dark:border">
+      <div className="shadow-dialog mb-8 flex items-center justify-between gap-8 rounded-xl border bg-zinc-950 p-6 text-zinc-50 backdrop-blur-sm transition-all">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Motion UI</h2>
           <p className="text-muted-foreground text-sm">
@@ -196,7 +196,7 @@ export default function Home() {
           </div>
         </div>
         <Link
-          href={`${urls.portfolio}/how-i-build`}
+          href={`${urls.portfolio}/blog/how-i-build`}
           className="text-muted-foreground mt-2 inline-block px-3 text-sm underline"
         >
           How I Build
@@ -286,7 +286,7 @@ export default function Home() {
           <Divider />
           <div className="flex justify-center p-8">
             <Button size={"lg"} variant={"outline"} className="w-full" asChild>
-              <Link href={`/how-i-build`}>How I Build</Link>
+              <Link href={`/blog/how-i-build`}>How I Build</Link>
             </Button>
           </div>
           <Divider />

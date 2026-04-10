@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "fumadocs-mdx:collections/*": [".source/*"],
+      "content-collections": ["./.content-collections/generated"],
       "@workspace/ui/*": ["../../packages/ui/src/*"],
       "@workspace/trpc/*": ["../../packages/trpc/src/*"],
       "@workspace/auth/*": ["../../packages/auth/src/*"],

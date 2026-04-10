@@ -6,6 +6,7 @@ node_modules
 .pnp.js
 
 .source
+.content-collections
 
 # Local env files
 .env

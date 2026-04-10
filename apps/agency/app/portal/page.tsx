@@ -68,11 +68,21 @@ export default function PortalPage() {
                   your business — custom services, pricing, and scope.
                 </p>
               </div>
-              <RequestDialog defaultSubject="Request a Custom Product">
-                <p className="text-primary cursor-pointer text-sm font-medium underline underline-offset-4">
-                  Request a custom or unique product &rarr;
-                </p>
-              </RequestDialog>
+              <div className="flex flex-col gap-2">
+                <RequestDialog defaultSubject="Request a Custom Product">
+                  <p className="text-primary cursor-pointer text-sm font-medium underline underline-offset-4">
+                    Request a custom or unique product &rarr;
+                  </p>
+                </RequestDialog>
+                <a
+                  href="https://alisamadii.com/blog/services"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4 transition-colors"
+                >
+                  Learn more about our services &rarr;
+                </a>
+              </div>
             </div>
           </CardAgency.Card>
         </div>

@@ -28,8 +28,6 @@
     "better-auth": "^1.5.4",
     "canvas-confetti": "^1.9.4",
     "date-fns": "^4.1.0",
-    "fumadocs-core": "16.6.9",
-    "fumadocs-mdx": "14.2.9",
     "fumadocs-ui": "16.6.9",
     "hls.js": "^1.6.15",
     "lucide-react": "^0.577.0",
@@ -44,6 +42,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@content-collections/core": "^0.14.3",
+    "@content-collections/mdx": "^0.2.2",
+    "@content-collections/next": "^0.2.11",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/mdx": "^2.0.13",
@@ -52,6 +53,7 @@
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^10.0.2",
+    "remark-gfm": "^4.0.1",
     "typescript": "^5.9.3"
   }
 }
