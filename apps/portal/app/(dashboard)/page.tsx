@@ -1,6 +1,6 @@
 "use client";
 
-import { Spinner } from "@workspace/ui/components/spinner";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
@@ -15,8 +15,17 @@ export default function SettingsPage() {
 
   if (user.isPending) {
     return (
-      <div className="flex h-48 min-h-[80dvh] items-center justify-center">
-        <Spinner />
+      <div className="space-y-16">
+        <div className="space-y-6">
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-36 w-full rounded-xl" />
+        </div>
+        <div className="space-y-6">
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-36 w-full rounded-xl" />
+        </div>
       </div>
     );
   }

@@ -8,7 +8,7 @@ import { addMonths, addYears, format, formatDistanceToNow } from "date-fns";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
-import { Spinner } from "@workspace/ui/components/spinner";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import { DataTable } from "@workspace/ui/custom/data-table";
 import { urls } from "@workspace/ui/lib/company";
 import { design } from "@workspace/ui/lib/design";
@@ -135,8 +135,10 @@ export default function BillingPage() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Subscriptions</h2>
         {subsLoading || getProducts.isPending ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner />
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
           </div>
         ) : filteredSubscriptions.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
@@ -313,8 +315,9 @@ export default function BillingPage() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Orders</h2>
         {ordersLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Skeleton className="aspect-16/8 w-full rounded-xl" />
+            <Skeleton className="aspect-16/8 w-full rounded-xl" />
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">

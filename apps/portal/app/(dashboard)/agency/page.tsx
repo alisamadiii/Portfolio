@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Spinner } from "@workspace/ui/components/spinner";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn, formatPrice } from "@workspace/ui/lib/utils";
 
@@ -37,9 +37,10 @@ export default function PortalPage() {
         </h2>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {products.isLoading ? (
-            <div className="col-span-full flex items-center justify-center pb-4">
-              <Spinner />
-            </div>
+            <>
+              <Skeleton className="h-52 w-full rounded-xl" />
+              <Skeleton className="h-52 w-full rounded-xl" />
+            </>
           ) : (
             standardProducts.map((product) => (
               <EachProduct key={product.id} product={product} />
