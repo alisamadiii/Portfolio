@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import type { SubscriptionProrationBehavior } from "@polar-sh/sdk/models/components/subscriptionprorationbehavior.js";
 import { TRPCError } from "@trpc/server";
 import { asc, desc, eq, or } from "drizzle-orm";
@@ -20,23 +19,6 @@ import {
 } from "@workspace/drizzle/schema";
 
 export const paymentsRouter = createTRPCRouter({
-  getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
-    try {
-      const customerState = await polarClient.customers.getStateExternal({
-        externalId: ctx.session.user.id,
-      });
-      return customerState;
-    } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch customer state",
-        cause: error,
-      });
-    }
-  }),
   /**
    * Fetches all products ordered by price amount
    * @returns Promise<Product[]> - Array of products sorted by price
@@ -83,12 +65,6 @@ export const paymentsRouter = createTRPCRouter({
     }
   }),
 
-  /**
-   * Updates an existing product
-   * @param id - The ID of the product to update
-   * @param product - Partial product data to update
-   * @returns The updated product
-   */
   updateProduct: adminProcedure
     .input(
       z.object({
@@ -96,65 +72,23 @@ export const paymentsRouter = createTRPCRouter({
         product: z.object({
           name: z.string().optional(),
           description: z.string().optional(),
-          trialInterval: z.enum(["day", "week", "month", "year"]).optional(),
-          trialIntervalCount: z.number().optional(),
           popular: z.boolean().optional(),
-          slug: z.string().optional(),
-          priceAmount: z.number().optional(),
-          priceCurrency: z.string().optional(),
-          recurringInterval: z
-            .enum(["day", "week", "month", "year"])
-            .optional(),
-          isRecurring: z.boolean().optional(),
           isArchived: z.boolean().optional(),
           metadata: z.any().optional(),
         }),
       })
     )
     .mutation(async ({ input }) => {
-      try {
-        const { id, ...productData } = input;
-        const [updatedProduct] = await db
-          .update(products)
-          .set({
-            ...productData,
-            updatedAt: new Date(),
-          })
-          .where(eq(products.id, id))
-          .returning();
-        return updatedProduct;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to update product",
-          cause: error,
-        });
-      }
-    }),
-
-  /**
-   * Deletes a product by ID
-   * @param id - The ID of the product to delete
-   * @returns The deleted product
-   */
-  deleteProduct: adminProcedure
-    .input(z.string())
-    .mutation(async ({ input }) => {
-      try {
-        const [deletedProduct] = await db
-          .delete(products)
-          .where(eq(products.id, input))
-          .returning();
-        return deletedProduct;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to delete product",
-          cause: error,
-        });
-      }
+      const { id, ...productData } = input;
+      const [updatedProduct] = await db
+        .update(products)
+        .set({
+          ...productData,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, id))
+        .returning();
+      return updatedProduct;
     }),
 
   /**
@@ -286,38 +220,6 @@ export const paymentsRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message:
             error instanceof Error ? error.message : "Failed to switch plan",
-          cause: error,
-        });
-      }
-    }),
-
-  /**
-   * Deletes a customer and clears all cookies
-   * @param userId - The ID of the user/customer to delete
-   * @returns Response from the customer deletion
-   */
-  deleteCustomer: authenticatedProcedure
-    .input(z.string())
-    .mutation(async ({ input }) => {
-      try {
-        const cookieStore = await cookies();
-        await polarClient.customers.deleteExternal({
-          externalId: input,
-        });
-
-        // Delete all cookies
-        cookieStore.getAll().forEach((cookie) => {
-          cookieStore.delete(cookie.name);
-        });
-
-        return true;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to delete customer",
           cause: error,
         });
       }

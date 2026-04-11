@@ -22,11 +22,9 @@ export function useUpload() {
   const trpc = useTRPC();
   const getUploadUrl = useMutation(trpc.upload.getUploadUrl.mutationOptions());
   const deleteFile = useMutation(trpc.upload.delete.mutationOptions());
-  const updateFile = useMutation(trpc.upload.update.mutationOptions());
 
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const resetProgress = useCallback(() => {
     setProgress(null);
@@ -112,87 +110,24 @@ export function useUpload() {
 
   async function remove(key: string): Promise<boolean> {
     try {
-      try {
-        await deleteFile.mutateAsync({ key });
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to delete file";
-        toast.error(message);
-        console.error("Failed to delete file:", err);
-        return false;
-      }
-
+      await deleteFile.mutateAsync({ key });
       toast.success("File deleted successfully");
       return true;
     } catch (err) {
-      console.error("Unexpected delete error:", err);
-      toast.error("An unexpected error occurred during deletion");
+      const message =
+        err instanceof Error ? err.message : "Failed to delete file";
+      toast.error(message);
+      console.error("Failed to delete file:", err);
       return false;
-    }
-  }
-
-  async function replace(
-    oldKey: string,
-    newFile: File
-  ): Promise<UploadResult | null> {
-    setIsUpdating(true);
-    resetProgress();
-
-    try {
-      let data: { signedUrl: string; key: string; publicUrl: string };
-
-      try {
-        data = await updateFile.mutateAsync({
-          oldKey,
-          contentType: newFile.type,
-          size: newFile.size,
-        });
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to get update URL";
-        toast.error(message);
-        console.error("Failed to get update URL:", err);
-        return null;
-      }
-
-      try {
-        await uploadToR2(data.signedUrl, newFile);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          console.error(
-            "Axios replace upload error:",
-            err.response?.status,
-            err.response?.data
-          );
-          toast.error(
-            `Replace upload failed: ${err.response?.statusText || err.message}`
-          );
-        } else {
-          console.error("Replace upload to R2 failed:", err);
-          toast.error("File replace upload failed");
-        }
-        return null;
-      }
-
-      toast.success("File updated successfully");
-      return { key: data.key, publicUrl: data.publicUrl };
-    } catch (err) {
-      console.error("Unexpected replace error:", err);
-      toast.error("An unexpected error occurred during file update");
-      return null;
-    } finally {
-      setIsUpdating(false);
     }
   }
 
   return {
     upload,
     remove,
-    replace,
     progress,
     resetProgress,
     isUploading,
     isDeleting: deleteFile.isPending,
-    isUpdating,
   };
 }

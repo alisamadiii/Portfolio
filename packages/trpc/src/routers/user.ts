@@ -1,18 +1,13 @@
 import { headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
 import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
-import { db } from "@workspace/drizzle/index";
-import { verification } from "@workspace/drizzle/schema";
 
 import {
   authenticatedProcedure,
-  baseProcedure,
   createTRPCRouter,
 } from "../init";
-import { rateLimit } from "../middleware/rate-limit";
 
 export const userRouter = createTRPCRouter({
   /**
@@ -21,10 +16,6 @@ export const userRouter = createTRPCRouter({
    */
   getCurrentUser: authenticatedProcedure.query(async ({ ctx }) => {
     return ctx.session;
-  }),
-  testRateLimit: baseProcedure.mutation(async () => {
-    await rateLimit();
-    return "Rate limit test";
   }),
   /**
    * Fetches the current user session
@@ -106,43 +97,4 @@ export const userRouter = createTRPCRouter({
       }
     }),
 
-  /**
-   * Validates a password reset token
-   * @param token - The reset password token to validate
-   * @returns Promise<Verification> - The verification record if token is valid
-   */
-  validateResetPassword: baseProcedure
-    .input(
-      z.object({
-        token: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const data = await db
-          .select()
-          .from(verification)
-          .where(eq(verification.identifier, `reset-password:${input.token}`))
-          .then((res) => res[0]);
-
-        if (!data) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid token",
-          });
-        }
-
-        return data;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to validate token",
-          cause: error,
-        });
-      }
-    }),
 });

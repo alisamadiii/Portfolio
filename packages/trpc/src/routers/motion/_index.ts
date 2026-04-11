@@ -150,42 +150,4 @@ export const motionRouter = createTRPCRouter({
 
     return findMotionOrder.length > 0 ? true : false;
   }),
-  getCodesScript: baseProcedure.query(async () => {
-    const rows = await db
-      .select({
-        source,
-        file: sourceFile,
-      })
-      .from(source)
-      .leftJoin(sourceFile, eq(sourceFile.sourceId, source.id));
-
-    const filesBySourceId = new Map<
-      string,
-      (typeof sourceFile.$inferSelect)[]
-    >();
-    const sourcesOrder: (typeof source.$inferSelect)[] = [];
-    const seenSourceIds = new Set<string>();
-    const seenFileIds = new Map<string, Set<string>>();
-    const seenMediaIds = new Map<string, Set<string>>();
-
-    for (const row of rows) {
-      const id = row.source.id;
-      if (!seenSourceIds.has(id)) {
-        seenSourceIds.add(id);
-        sourcesOrder.push(row.source);
-        seenFileIds.set(id, new Set());
-        seenMediaIds.set(id, new Set());
-      }
-      if (row.file && !seenFileIds.get(id)!.has(row.file.id)) {
-        seenFileIds.get(id)!.add(row.file.id);
-        if (!filesBySourceId.has(id)) filesBySourceId.set(id, []);
-        filesBySourceId.get(id)!.push(row.file);
-      }
-    }
-
-    return sourcesOrder.map((s) => ({
-      ...s,
-      files: filesBySourceId.get(s.id) ?? [],
-    }));
-  }),
 });

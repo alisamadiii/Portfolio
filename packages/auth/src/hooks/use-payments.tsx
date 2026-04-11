@@ -45,42 +45,6 @@ export const useIsUserHaveAccess = () => {
 };
 
 /**
- * Custom hook for updating an existing product
- * @returns UseMutationResult for updating product operation
- */
-export const useUpdateProduct = () => {
-  const trpc = useTRPC();
-
-  return useMutation(
-    trpc.payments.updateProduct.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.payments.getProducts.queryKey(),
-        });
-      },
-    })
-  );
-};
-
-/**
- * Custom hook for deleting a product
- * @returns UseMutationResult for deleting product operation
- */
-export const useDeleteProduct = () => {
-  const trpc = useTRPC();
-
-  return useMutation(
-    trpc.payments.deleteProduct.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.payments.getProducts.queryKey(),
-        });
-      },
-    })
-  );
-};
-
-/**
  * Custom hook for initiating checkout process
  * @returns UseMutationResult for checkout operation
  */
