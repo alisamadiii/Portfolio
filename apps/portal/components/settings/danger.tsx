@@ -129,7 +129,7 @@ export const DangerSettings = () => {
                         priority: "URGENT",
                         subject: "🔴 Account Deletion Request",
                         message: comment,
-                        projectType: "PORTAL",
+                        projectType: "PORTFOLIO",
                       },
                       {
                         onSuccess: () => {

@@ -34,7 +34,7 @@ export const UserProfile = () => {
   }
 
   return (
-    <Link href={`${urls.portal}/settings`}>
+    <Link href={urls.portal}>
       <div className="relative flex items-center justify-center">
         <Avatar className="size-12 border">
           <AvatarImage src={user?.user.image ?? ""} />

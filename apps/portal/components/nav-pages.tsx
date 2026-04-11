@@ -15,8 +15,10 @@ import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn } from "@workspace/ui/lib/utils";
 
 export function NavPages({
+  label,
   pages,
 }: {
+  label: string;
   pages: {
     title: string;
     url: string;
@@ -27,7 +29,7 @@ export function NavPages({
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Pages</SidebarGroupLabel>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {pages.map((item) => (
           <SidebarMenuItem key={item.title}>
@@ -46,14 +48,6 @@ export function NavPages({
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
-          <RequestDialog>
-            <SidebarMenuButton className={cn("py-4")}>
-              <HelpCircle />
-              <span>Support</span>
-            </SidebarMenuButton>
-          </RequestDialog>
-        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );

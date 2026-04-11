@@ -39,7 +39,7 @@ export const company = {
     "https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png",
 };
 
-export const urls: Record<Lowercase<ProjectType>, string> = {
+export const urls: Record<Lowercase<ProjectType> | "portal", string> = {
   portfolio:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"

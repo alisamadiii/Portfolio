@@ -40,6 +40,14 @@ export const SuccessPurchaseDialog = ({
   const succeeded = checkoutSession.data?.status === "succeeded";
   const open = !!checkoutId;
 
+  // Resolve the actual project from checkout product metadata when rendered in portal
+  const checkoutProduct = checkoutSession.data?.product as
+    | (Record<string, unknown> & { metadata?: Record<string, unknown> })
+    | undefined;
+  const checkoutProject = (checkoutProduct?.metadata?.project as string) ?? null;
+  const resolvedProject =
+    project === "PORTFOLIO" && checkoutProject ? checkoutProject : project;
+
   useEffect(() => {
     if (!open || !succeeded || hasFiredConfetti.current) return;
     hasFiredConfetti.current = true;
@@ -121,16 +129,16 @@ export const SuccessPurchaseDialog = ({
                 Thank you for your purchase!
               </DialogTitle>
               <DialogDescription className="text-sm">
-                {project === "MOTION"
+                {resolvedProject === "MOTION"
                   ? "You now have full access to the animation. Start exploring and use the source code in your own projects."
-                  : project === "AGENCY"
+                  : resolvedProject === "AGENCY"
                     ? "Now this is the part where we start building your project. We will get back to you shortly with a timeline and a quote."
                     : ""}
               </DialogDescription>
             </DialogHeader>
 
             <DialogFooter className="mt-8 flex flex-col gap-2 sm:flex-col">
-              {project === "MOTION" && (
+              {resolvedProject === "MOTION" && (
                 <Button
                   asChild
                   className="w-full sm:w-auto"

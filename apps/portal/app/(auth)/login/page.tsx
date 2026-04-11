@@ -63,7 +63,7 @@ export default function Login() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          window.location.href = urls.portfolio;
+          window.location.href = urls.portal;
         }
       },
       onError: (error) => {
@@ -76,7 +76,7 @@ export default function Login() {
     magicLink.mutate(
       {
         email: values.email,
-        callbackURL: redirectUrl || urls.portfolio,
+        callbackURL: redirectUrl || urls.portal,
       },
       {
         onSuccess: () => setMagicLinkSent(true),
@@ -91,7 +91,7 @@ export default function Login() {
     const mutation =
       provider === "google" ? onSignInWithGoogle : onSignInWithGitHub;
     mutation.mutate(
-      { redirectUrl: redirectUrl || urls.portfolio },
+      { redirectUrl: redirectUrl || urls.portal },
       { onError: (error) => toast.error(error.message) }
     );
   };

@@ -236,7 +236,6 @@ export const projectsTypeValues = [
   "AGENCY",
   "TEMPLATE",
   "ADMIN",
-  "PORTAL",
 ] as const;
 export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
 

@@ -19,10 +19,14 @@ export async function proxy(request: Request) {
 
   // Protected routes: redirect to login if no session cookie
   if (
-    (pathname.startsWith("/settings") || pathname.startsWith("/agency")) &&
+    (pathname === "/" || pathname.startsWith("/agency") || pathname.startsWith("/billing")) &&
     !sessionToken
   ) {
-    return NextResponse.redirect(new URL("/login", nextRequest.url));
+    const loginUrl = new URL("/login", nextRequest.url);
+    if (pathname !== "/") {
+      loginUrl.searchParams.set("redirectUrl", pathname);
+    }
+    return NextResponse.redirect(loginUrl);
   }
 
   // Auth routes: redirect away if session exists and no redirectUrl
@@ -31,11 +35,7 @@ export async function proxy(request: Request) {
     sessionToken &&
     !redirectUrl
   ) {
-    const portfolioUrl =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:3000"
-        : "https://alisamadii.com";
-    return NextResponse.redirect(portfolioUrl);
+    return NextResponse.redirect(new URL("/", nextRequest.url));
   }
 
   return response;

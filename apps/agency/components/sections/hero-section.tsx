@@ -10,11 +10,7 @@ import { GridCell } from "@/components/grid-cell";
 import { MagneticButton } from "@/components/magnetic-button";
 import { SectionLabel } from "@/components/section-label";
 
-import { useCurrentUser } from "../../../../packages/auth/src/hooks/use-user";
-
 export function HeroSection() {
-  const { data: user, isPending } = useCurrentUser();
-
   return (
     <section className="pt-16">
       <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -51,20 +47,12 @@ export function HeroSection() {
             className="flex flex-wrap gap-4"
           >
             <MagneticButton>Start a Project</MagneticButton>
-            {isPending ? (
-              <div className="bg-primary h-10 w-10 animate-pulse rounded-full"></div>
-            ) : (
-              <Link
-                href={
-                  user
-                    ? `${urls.portal}/agency`
-                    : `${urls.portal}/login?redirectUrl=${urls.portal}/agency`
-                }
-                className="text-muted-foreground hover:text-foreground border-border hover:border-foreground/20 group inline-flex items-center gap-2 border px-8 py-4 font-mono text-sm tracking-[0.15em] uppercase transition-all duration-300"
-              >
-                I am a customer!
-              </Link>
-            )}
+            <Link
+              href={`${urls.portal}/agency`}
+              className="text-muted-foreground hover:text-foreground border-border hover:border-foreground/20 group inline-flex items-center gap-2 border px-8 py-4 font-mono text-sm tracking-[0.15em] uppercase transition-all duration-300"
+            >
+              I am a customer!
+            </Link>
           </motion.div>
         </GridCell>
 

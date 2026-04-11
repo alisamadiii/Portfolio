@@ -26,7 +26,7 @@ const nextConfig = {
     return [
       { source: "/login", destination: `${portalUrl}/login`, permanent: true },
       { source: "/signup", destination: `${portalUrl}/signup`, permanent: true },
-      { source: "/settings", destination: `${portalUrl}/settings`, permanent: true },
+      { source: "/settings", destination: `${portalUrl}`, permanent: true },
       { source: "/verify-email", destination: `${portalUrl}/verify-email`, permanent: true },
       { source: "/reset-password", destination: `${portalUrl}/reset-password`, permanent: true },
       { source: "/choose-plan", destination: `${portalUrl}/choose-plan`, permanent: true },

@@ -69,7 +69,7 @@ export default function SignUpPage() {
     magicLink.mutate(
       {
         email: values.email,
-        callbackURL: redirectUrl || urls.portfolio,
+        callbackURL: redirectUrl || urls.portal,
       },
       {
         onSuccess: () => setMagicLinkSent(true),
@@ -84,7 +84,7 @@ export default function SignUpPage() {
     const mutation =
       provider === "google" ? onSignInWithGoogle : onSignInWithGitHub;
     mutation.mutate(
-      { redirectUrl: redirectUrl || urls.portfolio },
+      { redirectUrl: redirectUrl || urls.portal },
       { onError: (error) => toast.error(error.message) }
     );
   };

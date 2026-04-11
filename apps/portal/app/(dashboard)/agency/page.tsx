@@ -35,7 +35,7 @@ export default function PortalPage() {
         <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
           Available Plans
         </h2>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {products.isLoading ? (
             <div className="col-span-full flex items-center justify-center pb-4">
               <Spinner />
@@ -53,7 +53,7 @@ export default function PortalPage() {
         <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
           Your Plan
         </h2>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {customProducts.map((product) => (
             <EachProduct key={product.id} product={product} />
           ))}

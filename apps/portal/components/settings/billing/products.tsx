@@ -200,7 +200,7 @@ function EachProduct({ product }: { product: Product }) {
             onClick={() =>
               checkout.mutate({
                 productId: product.id,
-                successUrl: siteUrl || "/settings",
+                successUrl: siteUrl || "/",
               })
             }
           >

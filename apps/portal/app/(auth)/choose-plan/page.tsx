@@ -13,7 +13,7 @@ export default function ChoosePlanPage() {
       <h1 className="text-3xl font-bold">Choose a plan</h1>
       <p className="text-muted-foreground">Choose a plan to get started</p>
       <Pricing />
-      <Link href={urls.portfolio} className={buttonVariants({ variant: "ghost" })}>
+      <Link href={urls.portal} className={buttonVariants({ variant: "ghost" })}>
         Continue without a plan
       </Link>
     </div>
