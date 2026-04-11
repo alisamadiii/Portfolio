@@ -25,7 +25,7 @@ export const UserProfile = () => {
     return (
       <Button size="lg" asChild>
         <Link
-          href={`${urls.portfolio}/login?redirectUrl=${window.location.href}`}
+          href={`${urls.portal}/login?redirectUrl=${window.location.href}`}
         >
           Login
         </Link>
@@ -34,7 +34,7 @@ export const UserProfile = () => {
   }
 
   return (
-    <Link href={`${urls.portfolio}/settings`}>
+    <Link href={`${urls.portal}/settings`}>
       <div className="relative flex items-center justify-center">
         <Avatar className="size-12 border">
           <AvatarImage src={user?.user.image ?? ""} />

@@ -277,7 +277,7 @@ const FileList = ({ animationId }: { animationId: string }) => {
                       asChild
                     >
                       <Link
-                        href={`${urls.portfolio}/login?redirectUrl=${window.location.href}`}
+                        href={`${urls.portal}/login?redirectUrl=${window.location.href}`}
                       >
                         Login
                       </Link>

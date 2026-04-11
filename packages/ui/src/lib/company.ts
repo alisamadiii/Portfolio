@@ -64,6 +64,10 @@ export const urls: Record<Lowercase<ProjectType>, string> = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:3005"
       : "https://template.alisamadii.com",
+  portal:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3006"
+      : "https://portal.alisamadii.com",
 };
 
 export const logos = {

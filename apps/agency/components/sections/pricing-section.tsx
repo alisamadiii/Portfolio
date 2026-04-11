@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { Button } from "@workspace/ui/components/button";
+import { urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { GridCell } from "@/components/grid-cell";
@@ -110,7 +111,7 @@ export const PricingSection = () => {
                   className="w-full"
                   variant={plan.highlighted ? "default" : "outline"}
                 >
-                  <Link href="/portal">Get started</Link>
+                  <Link href={`${urls.portal}/agency`}>Get started</Link>
                 </Button>
               </div>
             </div>

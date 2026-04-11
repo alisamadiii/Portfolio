@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "motion/react";
 import { Controller, useForm } from "react-hook-form";
@@ -13,19 +13,19 @@ import { Button } from "@workspace/ui/components/button";
 import { Field, FieldError } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
+import { urls } from "@workspace/ui/lib/company";
 
 import {
   useMagicLink,
+  useSignin,
   useSignInWithProvider,
-  useSignup,
 } from "@workspace/auth/hooks/use-functions";
 
 type AuthView = "options" | "magic-link" | "email-password";
 
-const signupSchema = z.object({
+const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
-  name: z.string().min(1),
 });
 
 const magicLinkSchema = z.object({
@@ -34,16 +34,17 @@ const magicLinkSchema = z.object({
 
 const transition = { duration: 0.2, ease: "easeInOut" as const };
 
-export default function SignUpPage() {
+export default function Login() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirectUrl");
 
   const [view, setView] = useState<AuthView>("options");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const signupForm = useForm<z.infer<typeof signupSchema>>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: { email: "", password: "", name: "" },
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
   });
 
   const magicLinkForm = useForm<z.infer<typeof magicLinkSchema>>({
@@ -51,15 +52,22 @@ export default function SignUpPage() {
     defaultValues: { email: "" },
   });
 
-  const signup = useSignup();
+  const signin = useSignin();
   const magicLink = useMagicLink();
   const onSignInWithGoogle = useSignInWithProvider("google");
   const onSignInWithGitHub = useSignInWithProvider("github");
 
-  const handleSubmit = (values: z.infer<typeof signupSchema>) => {
-    signup.mutate(values, {
+  const handleLogin = (values: z.infer<typeof loginSchema>) => {
+    signin.mutate(values, {
+      onSuccess: () => {
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          window.location.href = urls.portfolio;
+        }
+      },
       onError: (error) => {
-        signupForm.setError("root", { message: error.message });
+        loginForm.setError("root", { message: error.message });
       },
     });
   };
@@ -68,7 +76,7 @@ export default function SignUpPage() {
     magicLink.mutate(
       {
         email: values.email,
-        callbackURL: redirectUrl || "/",
+        callbackURL: redirectUrl || urls.portfolio,
       },
       {
         onSuccess: () => setMagicLinkSent(true),
@@ -83,7 +91,7 @@ export default function SignUpPage() {
     const mutation =
       provider === "google" ? onSignInWithGoogle : onSignInWithGitHub;
     mutation.mutate(
-      { redirectUrl: redirectUrl || "/" },
+      { redirectUrl: redirectUrl || urls.portfolio },
       { onError: (error) => toast.error(error.message) }
     );
   };
@@ -91,14 +99,14 @@ export default function SignUpPage() {
   const goBack = () => {
     setView("options");
     setMagicLinkSent(false);
-    signupForm.reset();
+    loginForm.reset();
     magicLinkForm.reset();
   };
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-2">
-      <h1 className="text-3xl font-bold">Welcome</h1>
-      <p className="text-muted-foreground">Create an account to get started</p>
+      <h1 className="text-3xl font-bold">Welcome Back</h1>
+      <p className="text-muted-foreground">Login to get started</p>
 
       <div className="mt-8 w-full max-w-sm">
         <AnimatePresence mode="wait">
@@ -248,27 +256,11 @@ export default function SignUpPage() {
               </button>
 
               <form
-                onSubmit={signupForm.handleSubmit(handleSubmit)}
+                onSubmit={loginForm.handleSubmit(handleLogin)}
                 className="flex flex-col gap-4"
               >
                 <Controller
-                  control={signupForm.control}
-                  name="name"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <Input
-                        {...field}
-                        placeholder="John Doe"
-                        aria-invalid={fieldState.invalid}
-                        label="Name"
-                      />
-                      <FieldError errors={[fieldState.error]} />
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  control={signupForm.control}
+                  control={loginForm.control}
                   name="email"
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
@@ -285,7 +277,7 @@ export default function SignUpPage() {
                 />
 
                 <Controller
-                  control={signupForm.control}
+                  control={loginForm.control}
                   name="password"
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
@@ -301,17 +293,23 @@ export default function SignUpPage() {
                   )}
                 />
 
-                <FieldError errors={[signupForm.formState.errors.root]} />
+                <FieldError errors={[loginForm.formState.errors.root]} />
                 <button className="sr-only">submit</button>
               </form>
+
+              <div className="flex justify-end">
+                <Link href="/reset-password" className="text-sm">
+                  Forgot Password?
+                </Link>
+              </div>
 
               <Button
                 size="lg"
                 className="w-full"
-                isLoading={signup.isPending}
-                onClick={signupForm.handleSubmit(handleSubmit)}
+                isLoading={signin.isPending}
+                onClick={loginForm.handleSubmit(handleLogin)}
               >
-                Create Account
+                Login
               </Button>
             </motion.div>
           )}
@@ -319,22 +317,19 @@ export default function SignUpPage() {
       </div>
 
       <p className="mt-6 text-sm">
-        Already have an account?{" "}
-        <Link
-          href={`/login${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`}
-          className="underline"
-        >
-          Login
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="underline">
+          Sign up
         </Link>
       </p>
 
       <PageLoading
         active={onSignInWithGoogle.isPending}
-        name="Signing up with Google"
+        name="Signing in with Google"
       />
       <PageLoading
         active={onSignInWithGitHub.isPending}
-        name="Signing up with GitHub"
+        name="Signing in with GitHub"
       />
     </div>
   );

@@ -86,7 +86,7 @@ export default function SettingsPage() {
                 </SheetDescription>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto">
-                <EmbedHistoryNotifications project="PORTFOLIO" />
+                <EmbedHistoryNotifications project="PORTAL" />
               </div>
             </SheetContent>
           </Sheet>

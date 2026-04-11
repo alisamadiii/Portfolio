@@ -21,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/signup`,
+      url: `https://portal.alisamadii.com/signup`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,

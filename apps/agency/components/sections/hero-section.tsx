@@ -57,8 +57,8 @@ export function HeroSection() {
               <Link
                 href={
                   user
-                    ? `/portal`
-                    : `${urls.portfolio}/login?redirectUrl=${window.location.href}/portal`
+                    ? `${urls.portal}/agency`
+                    : `${urls.portal}/login?redirectUrl=${urls.portal}/agency`
                 }
                 className="text-muted-foreground hover:text-foreground border-border hover:border-foreground/20 group inline-flex items-center gap-2 border px-8 py-4 font-mono text-sm tracking-[0.15em] uppercase transition-all duration-300"
               >

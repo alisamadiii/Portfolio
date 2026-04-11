@@ -173,7 +173,7 @@ export default function Home() {
             </Link>
             {currentUser?.user?.email && (
               <Link
-                href={`/settings`}
+                href={`${urls.portal}/settings`}
                 className={buttonVariants({ variant: "outline", size: "icon" })}
               >
                 <svg

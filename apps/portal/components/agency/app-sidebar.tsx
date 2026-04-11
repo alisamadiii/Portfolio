@@ -3,7 +3,6 @@
 import * as React from "react";
 import { LayoutDashboard, Package, UserRound } from "lucide-react";
 
-import { urls } from "@workspace/ui/lib/company";
 import {
   Sidebar,
   SidebarContent,
@@ -15,21 +14,20 @@ import {
 import { NavPages } from "./nav-pages";
 import { NotificationBell } from "./notification-bell";
 
-// This is sample data.
 const pages = [
   {
     title: "Portal",
-    url: "/portal",
+    url: "/agency",
     icon: LayoutDashboard,
   },
   {
     title: "Orders",
-    url: "/portal/orders",
+    url: "/agency/orders",
     icon: Package,
   },
   {
     title: "Customer",
-    url: `${urls.portfolio}/settings`,
+    url: "/settings",
     icon: UserRound,
   },
 ];

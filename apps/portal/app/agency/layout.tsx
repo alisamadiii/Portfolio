@@ -1,12 +1,11 @@
 import {
   SidebarProvider,
-  SidebarTrigger,
 } from "@workspace/ui/components/sidebar";
 
-import { AppSidebar } from "@/components/app-sidebar";
-import { PortalHeader } from "@/components/portal/header";
+import { AppSidebar } from "@/components/agency/app-sidebar";
+import { PortalHeader } from "@/components/agency/header";
 
-export default function PortalLayout({
+export default function AgencyPortalLayout({
   children,
 }: {
   children: React.ReactNode;

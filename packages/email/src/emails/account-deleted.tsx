@@ -122,7 +122,7 @@ export default function AccountDeleted({
                   If you ever want to come back, you can create a new account
                   anytime at{" "}
                   <Link
-                    href="https://www.alisamadii.com/signup"
+                    href="https://portal.alisamadii.com/signup"
                     style={{ color: "#FC8464" }}
                     className="no-underline"
                   >

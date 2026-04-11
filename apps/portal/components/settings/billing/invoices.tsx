@@ -131,7 +131,7 @@ export const BillingInvoices = () => {
                   order.project === "MOTION"
                     ? `${urls.motion}`
                     : order.project === "AGENCY"
-                      ? `${urls.agency}/portal`
+                      ? `/agency`
                       : "#"
                 }
                 className={buttonVariants({
