@@ -7,6 +7,7 @@ import {
   AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
+import { AuthDialog } from "@workspace/ui/custom/auth-dialog";
 import { MotionPremium } from "@workspace/ui/icons";
 import { urls } from "@workspace/ui/lib/company";
 
@@ -21,29 +22,30 @@ export const UserProfile = () => {
 
   if (isPending) return null;
 
-  if (!user) {
-    return (
-      <Button size="lg" asChild>
-        <Link
-          href={`${urls.portal}/login?redirectUrl=${window.location.href}`}
-        >
-          Login
-        </Link>
-      </Button>
-    );
-  }
-
   return (
-    <Link href={urls.portal}>
-      <div className="relative flex items-center justify-center">
-        <Avatar className="size-12 border">
-          <AvatarImage src={user?.user.image ?? ""} />
-          <AvatarFallback>{user?.user.name?.charAt(0)}</AvatarFallback>
-        </Avatar>
-        {isUserPurchased && (
-          <MotionPremium className="bg-background absolute -right-0.5 -bottom-0.5 size-5 rounded-full p-0.5 text-yellow-500" />
+    <>
+      {/* AuthDialog always mounts so it can respond to ?auth= param (e.g. verify-email after signup) */}
+      <AuthDialog>
+        {!user ? (
+          <Button size="lg">Login</Button>
+        ) : (
+          <span />
         )}
-      </div>
-    </Link>
+      </AuthDialog>
+
+      {user && (
+        <Link href={urls.portal}>
+          <div className="relative flex items-center justify-center">
+            <Avatar className="size-12 border">
+              <AvatarImage src={user.user.image ?? ""} />
+              <AvatarFallback>{user.user.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            {isUserPurchased && (
+              <MotionPremium className="bg-background absolute -right-0.5 -bottom-0.5 size-5 rounded-full p-0.5 text-yellow-500" />
+            )}
+          </div>
+        </Link>
+      )}
+    </>
   );
 };
