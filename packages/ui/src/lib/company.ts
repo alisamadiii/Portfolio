@@ -94,7 +94,7 @@ export const projectsData: {
   },
   {
     name: "AGENCY",
-    logo: logos.green,
+    logo: logos.default,
     description: "A production-ready agency website for your business",
     link: urls.agency,
   },

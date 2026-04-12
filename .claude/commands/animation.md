@@ -18,6 +18,13 @@ Options:
 
 If the user picks "I have an idea", wait for them to describe it before proceeding.
 
+**Question 3 (only for Component / UI type): "Should the animation auto-play or be triggered by interaction?"**
+Options:
+- **Auto-play** — Loops automatically, great for showcases and passive demos
+- **Click to interact** — User clicks/taps to trigger the animation (best for buttons, toggles, interactive UI)
+
+Skip this question for iOS/Mobile, Website/SaaS, and Canvas/Generative types (they default to auto-play). Also skip if the user already described the interaction model.
+
 If the user already described their idea in the initial message (before the command ran), skip the questions and proceed directly.
 
 ---
@@ -150,6 +157,19 @@ https://cdn.alisamadii.com/company/business-logo-green.png
 
 Do NOT use `import { logos } from "@workspace/ui/lib/company"` — always inline the CDN URL string.
 
+### Sample data — use real products as inspiration
+
+When an animation needs placeholder data (product lists, cards, items), draw from Ali's actual projects instead of generic filler. Use `projectsData` in `packages/ui/src/lib/company.ts` as a reference:
+
+| Name | Logo variant | Description |
+|------|-------------|-------------|
+| Motion | blue | A production-ready motion library for React |
+| Agency | default | A production-ready agency website for your business |
+| Docs | yellow | A website to add useful information |
+| Template | black | A template for starting a new project |
+
+Match each logo variant to its CDN URL above. This keeps demo data on-brand instead of random coffee shops or placeholder names.
+
 ### Component structure
 
 - **Default export**, no props — components are fully self-contained
@@ -177,7 +197,7 @@ export default function AnimationName() {
 ### Animation techniques
 
 - **Spring transitions** are the default: `{ type: "spring", bounce: 0 }` to `{ type: "spring", bounce: 0.4 }`
-- Wrap in **`MotionConfig`** to set global transition defaults
+- Wrap in **`MotionConfig`** to set global transition defaults — once set, do NOT add inline `transition` props on individual elements unless the transition is meaningfully different (e.g., a continuous rotation vs the global spring). Redundant or slightly tweaked transitions defeat the purpose of `MotionConfig`
 - Use **`AnimatePresence mode="popLayout"`** for enter/exit (most common), or `mode="wait"`
 - Use **`layout`** prop on `motion.*` elements for automatic layout animation
 - Use **`layoutId`** for shared element transitions between states
@@ -254,6 +274,24 @@ Use for iOS/mobile-inspired animations. Skip for web-inspired ones.
 - Shadows: `shadow-md`, `shadow-xl`, `shadow-2xl`
 - Images: always set `aspect-*` and `object-cover`
 
+### Comments — minimal
+
+- Keep comments to an absolute minimum — the code should speak for itself
+- Only comment when the logic is genuinely non-obvious (e.g., a math formula for arc positioning)
+- Never add section divider comments like `{/* Header */}`, `{/* Bottom section */}`, `{/* Product info */}`
+- The single-line comment at the top of the file describing the animation is enough
+
+### Preferences — Ali's taste
+
+These aren't hard rules — they're sensibilities. Apply them with judgment based on what the animation needs.
+
+- **Lean toward simplicity** — if the animation doesn't need a header, nav bar, or extra action buttons, leave them out. Focus on the core interaction. Exception: when replicating a full app screen (iOS settings, Telegram reply), the chrome is part of the concept
+- **Flatten DOM when possible** — prefer styling elements directly over wrapping in extra divs. Nesting is fine when it serves layout or accessibility, but every unnecessary wrapper is a sign to simplify
+- **Blur on transitions** — adding `filter: "blur(12px)"` to enter/exit of sliding/swapping elements often makes transitions feel richer. Consider it for slide variants, not just text content
+- **Start with `bounce: 0`** — it's a cleaner default. Only increase bounce when the concept specifically calls for it (playful toggles, spring pulls, elastic effects)
+- **Static over animated when the visual result is the same** — a fixed ring indicator can look identical to an animated `layoutId` ring. Use animated elements only when the movement itself adds to the experience
+- **`<AnimatePresence initial={false}>`** — wrap the root when the animation shouldn't play on mount (common for click-triggered). Not needed for auto-cycling animations that play immediately
+
 ### Reusability — copy-paste friendly
 
 Every animation should be portable. A user should be able to copy the file into their own project and have it work with minimal setup:
@@ -268,13 +306,50 @@ Every animation should be portable. A user should be able to copy the file into 
 - **Brief comment at top** — one line describing what the animation does, e.g.: `// Expandable iOS-style card with spring drag-to-dismiss`
 - **The `<Iphone>` mockup is NOT copy-paste friendly** — it's a project-specific package. When using it, the animation logic inside should still be extractable without the wrapper
 
-### Auto-animation for shareability
+### Animation trigger modes
 
-Since animations are often screen-recorded for X/Twitter:
-- Prefer **auto-cycling** animations (useEffect + setInterval/setTimeout) over click-only
+Not all animations should auto-play. Choose the right trigger mode based on what the animation represents:
+
+#### Auto-cycling (default for showcase/generative)
+
+Best for: canvas/generative art, scroll-driven effects, reveals, transitions, passive visual demos.
+
+Since these are often screen-recorded for X/Twitter:
+- Use `useEffect` + `setInterval`/`setTimeout` to auto-cycle
 - Typical cycle: 2–3.5 seconds per state
 - Add slight delays between states (1–1.5s idle) so viewers can follow
 - Stagger child animations with index-based delays (80–200ms per item)
+
+#### Click-triggered (for interactive UI components)
+
+Best for: buttons, toggles, expandable cards, morphing elements — anything where the user interaction IS the animation.
+
+When the animation represents an interactive element, **the user must click/tap to trigger it**. Do NOT auto-cycle these with `useEffect`. The animation should:
+- Start in an idle/resting state
+- Play through its sequence when clicked
+- Reset to idle after the sequence completes (so it can be triggered again)
+- Use `animate` props driven by state (not `useEffect`) and set `initial={false}` so the component doesn't animate on mount — it should render silently in its resting state and only animate when the user interacts
+
+```tsx
+export default function ClickTriggeredExample() {
+  const [state, setState] = useState<"idle" | "loading" | "success">("idle")
+
+  const handleClick = () => {
+    if (state !== "idle") return // prevent re-trigger mid-animation
+    setState("loading")
+    setTimeout(() => setState("success"), 1500)
+    setTimeout(() => setState("idle"), 3500)
+  }
+
+  return (
+    <motion.button onClick={handleClick}>
+      {/* animate based on state */}
+    </motion.button>
+  )
+}
+```
+
+This still loops well for screen recording — the viewer just sees a click, the animation plays, it resets, and can be clicked again.
 
 ---
 
