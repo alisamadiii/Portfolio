@@ -10,6 +10,7 @@ import { Button } from "../components/button";
 import { logos, urls } from "../lib/company";
 
 import { authClient } from "@workspace/auth/auth-client";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
@@ -32,6 +33,7 @@ export function AuthDialog({
 }: AuthDialogProps) {
   const router = useRouter();
   const trpc = useTRPC();
+  const { data: currentUser } = useCurrentUser();
   const [mounted, setMounted] = useState(false);
   const [signupEmail, setSignupEmail] = useState("");
 
@@ -111,6 +113,14 @@ export function AuthDialog({
     await updateSessionCache();
     close();
   }, [updateSessionCache, close]);
+
+  // Auto-close dialog if user is already authenticated (e.g. after OAuth redirect)
+  // Skip when on verify-email — sign-up creates a session before email is verified
+  useEffect(() => {
+    if (isOpen && view !== "verify-email" && currentUser?.session) {
+      updateSessionCache().then(close);
+    }
+  }, [isOpen, view, currentUser?.session, updateSessionCache, close]);
 
   const forgotPasswordHref = `${urls.portal}/reset-password`;
 
