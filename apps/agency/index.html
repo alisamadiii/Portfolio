@@ -1,17 +1,911 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AliSamadii Agency | Web Development & Digital Solutions</title>
-    <meta name="description" content="Custom websites, admin panels, hosting, and digital solutions to grow your business." />
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ali Samadi — Creative Agency</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            serif: ['Instrument Serif', 'Georgia', 'serif'],
+          },
+          colors: {
+            cream: '#FFFFFF',
+            charcoal: '#1a1a1a',
+            warmgray: '#8a8577',
+            accent: '#FC8464',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    /* Noise overlay */
+    .noise::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(3rem);
+      filter: blur(8px);
+      transition: all 0.9s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    /* Stagger children */
+    .stagger > .reveal:nth-child(1) { transition-delay: 0ms; }
+    .stagger > .reveal:nth-child(2) { transition-delay: 120ms; }
+    .stagger > .reveal:nth-child(3) { transition-delay: 240ms; }
+    .stagger > .reveal:nth-child(4) { transition-delay: 360ms; }
+    .stagger > .reveal:nth-child(5) { transition-delay: 480ms; }
+    .stagger > .reveal:nth-child(6) { transition-delay: 600ms; }
+    .stagger > .reveal:nth-child(7) { transition-delay: 720ms; }
+
+    /* Magnetic button */
+    .mag-btn {
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .mag-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Marquee */
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .marquee-track {
+      animation: marquee 25s linear infinite;
+    }
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    /* Menu overlay */
+    .menu-overlay {
+      clip-path: circle(0% at calc(100% - 3rem) 2.5rem);
+      transition: clip-path 0.7s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .menu-overlay.open {
+      clip-path: circle(150% at calc(100% - 3rem) 2.5rem);
+    }
+
+    /* Image hover */
+    .img-wrap img {
+      transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .img-wrap:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Video intro overlay */
+    .video-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-overlay video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: videoScale 2.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+    }
+    @keyframes videoScale {
+      0% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    .video-skip {
+      position: absolute;
+      bottom: 2rem;
+      right: 2rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.3s;
+      z-index: 2;
+    }
+    .video-skip:hover {
+      color: rgba(255,255,255,0.9);
+    }
+    .shatter-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+    }
+    body.intro-active {
+      overflow: hidden;
+    }
+
+    /* Text scramble cursor blink */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .scramble-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 0.85em;
+      background: #FC8464;
+      margin-left: 4px;
+      vertical-align: baseline;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    /* Pricing card ring glow */
+    .pricing-popular {
+      box-shadow: 0 0 0 1px #FC8464, 0 20px 50px -12px rgba(252, 132, 100, 0.15);
+    }
+
+    /* Process step connector */
+    .process-connector {
+      background: linear-gradient(to bottom, #FC8464 0%, transparent 100%);
+    }
+  </style>
+</head>
+
+<body class="noise intro-active bg-cream text-charcoal font-sans selection:bg-accent/20 selection:text-accent">
+
+  <!-- ==================== VIDEO INTRO ==================== -->
+  <div id="videoOverlay" class="video-overlay">
+    <video id="introVideo" autoplay muted playsinline>
+      <source src="https://cdn.alisamadii.com/marketing/agency-video.mp4" type="video/mp4" />
+    </video>
+    <button id="videoSkip" class="video-skip">Skip</button>
+  </div>
+
+  <!-- ==================== NAV ==================== -->
+  <nav class="fixed top-0 left-0 w-full z-40 px-4 md:px-8 py-5">
+    <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+      <a href="#" class="text-lg font-bold tracking-tight uppercase">Ali.Samadii</a>
+      <div class="hidden md:flex items-center gap-10 text-sm text-warmgray">
+        <a href="#services" class="hover:text-charcoal transition-colors duration-300">Services</a>
+        <a href="#about" class="hover:text-charcoal transition-colors duration-300">About</a>
+        <a href="#pricing" class="hover:text-charcoal transition-colors duration-300">Pricing</a>
+        <a href="#contact" class="hover:text-charcoal transition-colors duration-300">Contact</a>
+        <a href="https://cal.com/alisamadii" target="_blank" class="mag-btn inline-flex items-center gap-2 bg-charcoal text-cream rounded-full px-5 py-2.5 text-sm font-medium hover:bg-accent transition-colors duration-300">
+          Let's Talk
+          <span class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[11px]">&#8599;</span>
+        </a>
+      </div>
+      <!-- Mobile hamburger -->
+      <button id="menuToggle" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 z-50">
+        <span class="block w-6 h-[1.5px] bg-charcoal transition-all duration-300 origin-center" id="line1"></span>
+        <span class="block w-6 h-[1.5px] bg-charcoal transition-all duration-300 origin-center" id="line2"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div id="menuOverlay" class="menu-overlay fixed inset-0 z-30 bg-cream/95 backdrop-blur-2xl flex flex-col items-start justify-center px-8">
+    <div class="stagger space-y-6">
+      <a href="#services" class="reveal block text-5xl font-serif italic text-charcoal" onclick="closeMenu()">Services</a>
+      <a href="#about" class="reveal block text-5xl font-serif italic text-charcoal" onclick="closeMenu()">About</a>
+      <a href="#pricing" class="reveal block text-5xl font-serif italic text-charcoal" onclick="closeMenu()">Pricing</a>
+      <a href="#contact" class="reveal block text-5xl font-serif italic text-accent" onclick="closeMenu()">Contact</a>
+      <a href="https://portal.alisamadii.com/agency" class="reveal block text-lg text-warmgray mt-4" onclick="closeMenu()">I am a customer &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ==================== HERO ==================== -->
+  <section id="hero" class="min-h-[100dvh] flex items-end px-4 md:px-8 pb-16 md:pb-24 pt-32">
+    <div class="max-w-[1400px] mx-auto w-full">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-6 items-center">
+        <!-- Left: Text -->
+        <div class="md:col-span-7 stagger">
+          <div class="reveal">
+            <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-6">01 &mdash; Creative Agency</span>
+          </div>
+          <h1 class="reveal text-[clamp(2.8rem,7.5vw,6.5rem)] font-serif italic leading-[0.9] tracking-tight">
+            We Build Digital<br/>
+            <span class="text-accent" id="scrambleTarget">Experiences</span><span class="scramble-cursor"></span>
+          </h1>
+          <p class="reveal mt-8 text-warmgray text-base md:text-lg leading-relaxed max-w-[52ch]">
+            We are a creative agency specializing in brand identity, web development, and digital strategy that drives results.
+          </p>
+          <div class="reveal mt-10 flex flex-wrap items-center gap-4">
+            <a href="https://cal.com/alisamadii" target="_blank" class="mag-btn inline-flex items-center gap-3 bg-charcoal text-cream rounded-full px-7 py-3.5 text-sm font-medium hover:bg-accent transition-colors duration-300">
+              Start a Project
+              <span class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs">&#8599;</span>
+            </a>
+            <a href="https://portal.alisamadii.com/agency" target="_blank" class="mag-btn text-sm text-warmgray hover:text-charcoal transition-colors duration-300 underline underline-offset-4 decoration-charcoal/20">I am a customer</a>
+          </div>
+        </div>
+        <!-- Right: Hero image -->
+        <div class="md:col-span-5 reveal">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04]">
+            <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[3/4] img-wrap">
+              <img src="https://cdn.alisamadii.com/marketing/hero-agency.webp" alt="Agency work showcase" class="w-full h-full object-cover" loading="eager" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MARQUEE ==================== -->
+  <section class="py-8 border-t border-charcoal/[0.06] overflow-hidden">
+    <div class="flex whitespace-nowrap">
+      <div class="marquee-track flex items-center gap-12 text-6xl md:text-8xl font-serif italic text-charcoal/[0.07]">
+        <span>Design</span><span class="text-accent/30">/</span>
+        <span>Develop</span><span class="text-accent/30">/</span>
+        <span>Deliver</span><span class="text-accent/30">/</span>
+        <span>Brand</span><span class="text-accent/30">/</span>
+        <span>Strategy</span><span class="text-accent/30">/</span>
+        <span>Innovate</span><span class="text-accent/30">/</span>
+        <span>Design</span><span class="text-accent/30">/</span>
+        <span>Develop</span><span class="text-accent/30">/</span>
+        <span>Deliver</span><span class="text-accent/30">/</span>
+        <span>Brand</span><span class="text-accent/30">/</span>
+        <span>Strategy</span><span class="text-accent/30">/</span>
+        <span>Innovate</span><span class="text-accent/30">/</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STATS ==================== -->
+  <section class="px-4 md:px-8 py-16 md:py-24">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 stagger">
+        <div class="reveal text-center">
+          <span class="block text-4xl md:text-5xl font-bold text-charcoal">4+</span>
+          <span class="text-sm text-warmgray mt-2 block">Projects Delivered</span>
+        </div>
+        <div class="reveal text-center">
+          <span class="block text-4xl md:text-5xl font-bold text-charcoal">64%</span>
+          <span class="text-sm text-warmgray mt-2 block">Client Satisfaction</span>
+        </div>
+        <div class="reveal text-center">
+          <span class="block text-4xl md:text-5xl font-bold text-charcoal">3+</span>
+          <span class="text-sm text-warmgray mt-2 block">Years Experience</span>
+        </div>
+        <div class="reveal text-center">
+          <span class="block text-4xl md:text-5xl font-bold text-charcoal">1</span>
+          <span class="text-sm text-warmgray mt-2 block">Team Members</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ABOUT ==================== -->
+  <section id="about" class="px-4 md:px-8 py-24 md:py-40 border-t border-charcoal/[0.06]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="md:max-w-[800px] stagger">
+        <div class="reveal">
+          <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-6">02 &mdash; About Us</span>
+        </div>
+        <h2 class="reveal text-4xl md:text-5xl lg:text-6xl font-serif italic tracking-tight leading-[1.1]">
+          We craft digital products<br/>
+          that people <span class="text-accent">love</span> to use
+        </h2>
+        <p class="reveal mt-8 text-warmgray text-base md:text-lg leading-relaxed max-w-[60ch]">
+          Founded with a passion for pixel-perfect design and clean code, we've spent over a decade helping brands transform their digital presence. Our approach blends creativity with data-driven strategy to deliver experiences that matter.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SERVICES ==================== -->
+  <section id="services" class="px-4 md:px-8 py-24 md:py-40 border-t border-charcoal/[0.06]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="reveal mb-16 md:mb-24">
+        <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-4">03 &mdash; Our Services</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 stagger">
+        <!-- Service 1 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-2xl md:text-3xl font-serif italic group-hover:text-accent transition-colors duration-300">Brand Identity</h3>
+              <p class="text-warmgray text-base leading-relaxed mt-4 max-w-[45ch]">Crafting distinctive visual identities that resonate with your audience and set you apart from the competition.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Service 2 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-2xl md:text-3xl font-serif italic group-hover:text-accent transition-colors duration-300">Web Development</h3>
+              <p class="text-warmgray text-base leading-relaxed mt-4 max-w-[45ch]">Building performant, scalable web applications using cutting-edge technologies and modern frameworks.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Service 3 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-2xl md:text-3xl font-serif italic group-hover:text-accent transition-colors duration-300">UI/UX Design</h3>
+              <p class="text-warmgray text-base leading-relaxed mt-4 max-w-[45ch]">Designing intuitive interfaces with user-centered methodologies that drive engagement and conversions.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Service 4 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-2xl md:text-3xl font-serif italic group-hover:text-accent transition-colors duration-300">SEO & Analytics</h3>
+              <p class="text-warmgray text-base leading-relaxed mt-4 max-w-[45ch]">Data-driven optimization strategies to boost visibility, traffic, and meaningful user engagement.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Service 5 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-2xl md:text-3xl font-serif italic group-hover:text-accent transition-colors duration-300">Digital Marketing</h3>
+              <p class="text-warmgray text-base leading-relaxed mt-4 max-w-[45ch]">Strategic campaigns across channels that amplify your message and deliver measurable results.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Service 6 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-2xl md:text-3xl font-serif italic group-hover:text-accent transition-colors duration-300">Product Strategy</h3>
+              <p class="text-warmgray text-base leading-relaxed mt-4 max-w-[45ch]">End-to-end product thinking — from discovery and validation to launch and iteration cycles.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROCESS ==================== -->
+  <section class="px-4 md:px-8 py-24 md:py-40 border-t border-charcoal/[0.06]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="reveal mb-16 md:mb-24">
+        <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-4">04 &mdash; Our Process</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 stagger">
+        <!-- Step 1 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[4/3] img-wrap">
+              <img src="https://cdn.alisamadii.com/marketing/discovery.png" alt="Discovery phase illustration" class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          </div>
+          <div class="mt-5 px-1">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold mb-4">01</div>
+            <h3 class="text-xl font-semibold mb-2">Discovery</h3>
+            <p class="text-warmgray text-sm leading-relaxed">Understanding your goals, audience, and competitive landscape through deep research.</p>
+          </div>
+        </div>
+        <!-- Step 2 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[4/3] img-wrap">
+              <img src="https://cdn.alisamadii.com/marketing/strategy.png" alt="Strategy phase illustration" class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          </div>
+          <div class="mt-5 px-1">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold mb-4">02</div>
+            <h3 class="text-xl font-semibold mb-2">Strategy</h3>
+            <p class="text-warmgray text-sm leading-relaxed">Defining the roadmap, architecture, and creative direction for maximum impact.</p>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[4/3] img-wrap">
+              <img src="https://cdn.alisamadii.com/marketing/execution.png" alt="Execution phase illustration" class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          </div>
+          <div class="mt-5 px-1">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold mb-4">03</div>
+            <h3 class="text-xl font-semibold mb-2">Execution</h3>
+            <p class="text-warmgray text-sm leading-relaxed">Bringing the vision to life with meticulous design and robust engineering.</p>
+          </div>
+        </div>
+        <!-- Step 4 -->
+        <div class="reveal group">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+            <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[4/3] img-wrap">
+              <img src="https://cdn.alisamadii.com/marketing/launch-scale.png" alt="Launch phase illustration" class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          </div>
+          <div class="mt-5 px-1">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold mb-4">04</div>
+            <h3 class="text-xl font-semibold mb-2">Launch & Scale</h3>
+            <p class="text-warmgray text-sm leading-relaxed">Deploying, monitoring, and iterating to ensure sustained growth and performance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PRICING ==================== -->
+  <section id="pricing" class="px-4 md:px-8 py-24 md:py-40 border-t border-charcoal/[0.06]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="reveal mb-16 md:mb-24">
+        <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-4">05 &mdash; Pricing</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[900px] mx-auto stagger">
+        <!-- Starter -->
+        <div class="reveal">
+          <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="text-xl font-semibold">Starter</h3>
+              <div class="mt-4 flex items-baseline gap-1">
+                <span class="text-4xl md:text-5xl font-bold tracking-tight">$149</span>
+                <span class="text-warmgray text-sm">/mo</span>
+              </div>
+              <ul class="mt-8 space-y-4 text-sm text-warmgray">
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  5-page website build
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Managed hosting
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Domain management
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Contact form with email forwarding
+                </li>
+              </ul>
+              <a href="https://portal.alisamadii.com/agency" target="_blank" class="mag-btn mt-10 w-full inline-flex items-center justify-center gap-2 bg-charcoal/5 text-charcoal rounded-full px-7 py-3.5 text-sm font-medium hover:bg-charcoal hover:text-cream transition-all duration-300">
+                Get started
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom -->
+        <div class="reveal">
+          <div class="rounded-[2rem] p-1.5 pricing-popular bg-accent/[0.03]">
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10 relative">
+              <span class="absolute top-6 right-6 rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-semibold bg-accent/10 text-accent">Most Popular</span>
+              <h3 class="text-xl font-semibold">Custom</h3>
+              <div class="mt-4">
+                <span class="text-4xl md:text-5xl font-bold tracking-tight">Let's talk</span>
+              </div>
+              <ul class="mt-8 space-y-4 text-sm text-warmgray">
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Everything in Starter
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  User authentication system
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Admin panel & content management
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Database provisioning & management
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Web app development
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  AWS SES email integration
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  SEO, analytics, maintenance & priority support
+                </li>
+              </ul>
+              <a href="https://cal.com/alisamadii" target="_blank" class="mag-btn mt-10 w-full inline-flex items-center justify-center gap-2 bg-accent text-white rounded-full px-7 py-3.5 text-sm font-medium hover:bg-charcoal transition-colors duration-300">
+                Get started
+                <span class="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-[11px]">&#8599;</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA / CONTACT ==================== -->
+  <section id="contact" class="px-4 md:px-8 py-24 md:py-40 border-t border-charcoal/[0.06]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-end">
+        <div class="md:col-span-8 stagger">
+          <div class="reveal">
+            <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-6">Get in Touch</span>
+          </div>
+          <h2 class="reveal text-5xl md:text-7xl lg:text-8xl font-serif italic tracking-tight leading-[0.95]">
+            Let's Create<br/>
+            <span class="text-accent">Something Amazing</span>
+          </h2>
+          <p class="reveal mt-6 text-warmgray text-base md:text-lg leading-relaxed max-w-[50ch]">
+            Ready to elevate your digital presence? We'd love to hear about your project and explore how we can help.
+          </p>
+          <div class="reveal mt-10">
+            <a href="https://cal.com/alisamadii" target="_blank" class="mag-btn inline-flex items-center gap-3 bg-charcoal text-cream rounded-full px-8 py-4 text-base font-medium hover:bg-accent transition-colors duration-300">
+              Start a Conversation
+              <span class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm">&#8599;</span>
+            </a>
+          </div>
+        </div>
+        <div class="md:col-span-4 stagger">
+          <!-- Email -->
+          <a href="mailto:a@alisamadii.com" class="reveal group block">
+            <div class="rounded-[1.5rem] p-1 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+              <div class="rounded-[calc(1.5rem-0.25rem)] bg-white p-5 md:p-6 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                </div>
+                <div>
+                  <span class="block text-[10px] uppercase tracking-[0.2em] text-warmgray/60 mb-1">Email</span>
+                  <span class="text-base font-medium text-charcoal group-hover:text-accent transition-colors duration-300">a@alisamadii.com</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- Phone -->
+          <a href="tel:+19713828969" class="reveal group block mt-4">
+            <div class="rounded-[1.5rem] p-1 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+              <div class="rounded-[calc(1.5rem-0.25rem)] bg-white p-5 md:p-6 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+                </div>
+                <div>
+                  <span class="block text-[10px] uppercase tracking-[0.2em] text-warmgray/60 mb-1">Phone</span>
+                  <span class="text-base font-medium text-charcoal group-hover:text-accent transition-colors duration-300">+1 (971) 382-8969</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- Location -->
+          <a href="https://maps.google.com/?q=Portland,+OR" target="_blank" class="reveal group block mt-4">
+            <div class="rounded-[1.5rem] p-1 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:ring-accent/20 group-hover:bg-accent/[0.02]">
+              <div class="rounded-[calc(1.5rem-0.25rem)] bg-white p-5 md:p-6 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                </div>
+                <div>
+                  <span class="block text-[10px] uppercase tracking-[0.2em] text-warmgray/60 mb-1">Location</span>
+                  <span class="text-base font-medium text-charcoal group-hover:text-accent transition-colors duration-300">Portland, OR</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="px-4 md:px-8 py-16 md:py-20 border-t border-charcoal/[0.06]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
+        <!-- Brand -->
+        <div class="md:col-span-4">
+          <span class="text-lg font-bold tracking-tight uppercase">Ali.Samadii</span>
+          <p class="mt-4 text-sm text-warmgray leading-relaxed max-w-[35ch]">
+            A creative agency focused on building exceptional digital experiences that drive real results.
+          </p>
+          <div class="flex gap-5 mt-6 text-sm text-warmgray">
+            <a href="https://x.com/alisamadii_" target="_blank" class="hover:text-charcoal transition-colors duration-300">Twitter</a>
+            <a href="https://github.com/alisamadiii" target="_blank" class="hover:text-charcoal transition-colors duration-300">GitHub</a>
+            <a href="https://www.linkedin.com/in/alireza17/" target="_blank" class="hover:text-charcoal transition-colors duration-300">LinkedIn</a>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="md:col-span-2 md:col-start-6">
+          <h4 class="text-xs uppercase tracking-[0.15em] font-semibold text-charcoal mb-4">Navigation</h4>
+          <ul class="space-y-3 text-sm text-warmgray">
+            <li><a href="#hero" class="hover:text-charcoal transition-colors duration-300">Home</a></li>
+            <li><a href="#services" class="hover:text-charcoal transition-colors duration-300">Services</a></li>
+            <li><a href="#about" class="hover:text-charcoal transition-colors duration-300">About</a></li>
+            <li><a href="#contact" class="hover:text-charcoal transition-colors duration-300">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Services -->
+        <div class="md:col-span-2">
+          <h4 class="text-xs uppercase tracking-[0.15em] font-semibold text-charcoal mb-4">Services</h4>
+          <ul class="space-y-3 text-sm text-warmgray">
+            <li><a href="#services" class="hover:text-charcoal transition-colors duration-300">Web Development</a></li>
+            <li><a href="#services" class="hover:text-charcoal transition-colors duration-300">UI/UX Design</a></li>
+            <li><a href="#services" class="hover:text-charcoal transition-colors duration-300">Brand Identity</a></li>
+            <li><a href="#services" class="hover:text-charcoal transition-colors duration-300">SEO & Analytics</a></li>
+          </ul>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="md:col-span-3 md:col-start-10">
+          <h4 class="text-xs uppercase tracking-[0.15em] font-semibold text-charcoal mb-4">Newsletter</h4>
+          <p class="text-sm text-warmgray leading-relaxed mb-4">Get the latest updates, tips, and insights delivered to your inbox.</p>
+          <form class="flex gap-2" onsubmit="event.preventDefault()">
+            <input type="email" placeholder="your@email.com" class="flex-1 min-w-0 rounded-full px-4 py-2.5 text-sm bg-charcoal/[0.03] ring-1 ring-charcoal/[0.06] focus:ring-accent/40 focus:outline-none transition-all duration-300 placeholder:text-warmgray/50" />
+            <button type="submit" class="mag-btn rounded-full px-4 py-2.5 bg-accent text-white text-sm font-medium hover:bg-charcoal transition-colors duration-300 flex-shrink-0">&#8599;</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="mt-16 pt-8 border-t border-charcoal/[0.06] text-xs text-warmgray/50">
+        &copy; 2026 Ali Samadi Agency. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <script>
+    // Video intro with Formation Breakaway exit
+    const videoOverlay = document.getElementById('videoOverlay');
+    const introVideo = document.getElementById('introVideo');
+    const videoSkip = document.getElementById('videoSkip');
+
+    function formationBreakaway() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      // Capture last frame
+      const capture = document.createElement('canvas');
+      capture.width = w;
+      capture.height = h;
+      capture.getContext('2d').drawImage(introVideo, 0, 0, w, h);
+
+      // Remove video overlay
+      videoOverlay.remove();
+
+      // Create effect canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.className = 'shatter-canvas';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      // Build diagonal strips
+      const stripCount = 10;
+      const stripW = w / stripCount;
+      const tilt = 12 * (Math.PI / 180); // 12 degree tilt
+      const strips = [];
+
+      // Exit directions: alternate between flying off different edges
+      const exits = [
+        { vx: -1.8, vy: -1.2 },  // top-left
+        { vx: 1.5, vy: -1.6 },   // top-right
+        { vx: -2.0, vy: -0.8 },  // left
+        { vx: 2.2, vy: -1.0 },   // right
+        { vx: -1.2, vy: -2.0 },  // top-left steep
+        { vx: 1.8, vy: -1.4 },   // top-right
+        { vx: -2.5, vy: -0.5 },  // hard left
+        { vx: 2.0, vy: -1.8 },   // top-right steep
+        { vx: -1.5, vy: -2.2 },  // top
+        { vx: 2.5, vy: -0.6 },   // hard right
+      ];
+
+      for (let i = 0; i < stripCount; i++) {
+        const delay = i * 0.06; // stagger: each strip launches slightly after the previous
+        const exit = exits[i % exits.length];
+        const speed = 2800 + Math.random() * 800;
+        strips.push({
+          x: i * stripW,
+          y: 0,
+          w: stripW + 2, // +2 to avoid sub-pixel gaps
+          h: h,
+          delay,
+          vx: exit.vx * speed,
+          vy: exit.vy * speed,
+          rotation: 0,
+          targetRotation: (exit.vx > 0 ? 1 : -1) * (8 + Math.random() * 15) * (Math.PI / 180),
+          trailAlpha: 0,
+        });
+      }
+
+      document.body.classList.remove('intro-active');
+      const duration = 900;
+      const start = performance.now();
+
+      function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+
+        ctx.clearRect(0, 0, w, h);
+
+        let allGone = true;
+
+        for (const strip of strips) {
+          // Each strip has its own timeline offset by delay
+          const localT = Math.max(0, (elapsed / duration) - strip.delay) / (1 - strip.delay);
+          const t = Math.min(localT, 1);
+
+          if (t < 1) allGone = false;
+
+          // Ease-in cubic — starts slow, accelerates like a jet taking off
+          const ease = t * t * t;
+
+          const moveX = strip.vx * ease;
+          const moveY = strip.vy * ease;
+          const rot = strip.targetRotation * ease;
+          const opacity = 1 - Math.pow(t, 2);
+
+          if (opacity <= 0.01) continue;
+
+          // Draw contrail first (behind the strip)
+          if (t > 0.05 && t < 0.95) {
+            const trailLen = Math.min(t * 3, 1);
+            const trailOpacity = (1 - t) * 0.3;
+            const cx = strip.x + strip.w / 2 + moveX;
+            const cy = strip.y + h / 2 + moveY;
+            // Trail goes opposite to movement direction
+            const trailEndX = cx - strip.vx * trailLen * 0.15;
+            const trailEndY = cy - strip.vy * trailLen * 0.15;
+
+            const gradient = ctx.createLinearGradient(cx, cy, trailEndX, trailEndY);
+            gradient.addColorStop(0, `rgba(252, 132, 100, ${trailOpacity})`);
+            gradient.addColorStop(0.5, `rgba(255, 255, 255, ${trailOpacity * 0.5})`);
+            gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = strip.w * 0.4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(trailEndX, trailEndY);
+            ctx.stroke();
+          }
+
+          // Draw the strip itself
+          ctx.save();
+          ctx.globalAlpha = opacity;
+          // Translate to strip center, apply rotation, translate back
+          const pivotX = strip.x + strip.w / 2 + moveX;
+          const pivotY = h / 2 + moveY;
+          ctx.translate(pivotX, pivotY);
+          ctx.rotate(rot);
+          ctx.translate(-pivotX, -pivotY);
+          // Clip and draw the strip portion of the captured frame
+          ctx.beginPath();
+          ctx.rect(strip.x + moveX, moveY, strip.w, h);
+          ctx.clip();
+          ctx.drawImage(capture, moveX, moveY, w, h);
+          ctx.restore();
+        }
+
+        if (progress < 1 && !allGone) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.remove();
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function dismissVideo() {
+      formationBreakaway();
+    }
+
+    introVideo.playbackRate = 2;
+    introVideo.addEventListener('ended', () => setTimeout(dismissVideo, 500));
+    videoSkip.addEventListener('click', dismissVideo);
+
+    // Scroll reveal via IntersectionObserver
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Text scramble effect
+    const scrambleEl = document.getElementById('scrambleTarget');
+    const words = ['Experiences', 'Brands', 'Products', 'Platforms', 'Identities'];
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let wordIndex = 0;
+
+    function scrambleTo(newWord) {
+      const oldWord = scrambleEl.textContent;
+      const length = Math.max(oldWord.length, newWord.length);
+      let frame = 0;
+      const totalFrames = 12;
+
+      function update() {
+        let output = '';
+        for (let i = 0; i < length; i++) {
+          if (i < newWord.length) {
+            if (frame >= totalFrames * (i / length)) {
+              output += newWord[i];
+            } else {
+              output += chars[Math.floor(Math.random() * chars.length)];
+            }
+          }
+        }
+        scrambleEl.textContent = output;
+        frame++;
+        if (frame <= totalFrames) {
+          requestAnimationFrame(update);
+        } else {
+          scrambleEl.textContent = newWord;
+        }
+      }
+      update();
+    }
+
+    setInterval(() => {
+      wordIndex = (wordIndex + 1) % words.length;
+      scrambleTo(words[wordIndex]);
+    }, 5000);
+
+    // Mobile menu
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const line1 = document.getElementById('line1');
+    const line2 = document.getElementById('line2');
+    let menuOpen = false;
+
+    function closeMenu() {
+      menuOpen = false;
+      menuOverlay.classList.remove('open');
+      line1.style.transform = '';
+      line2.style.transform = '';
+      document.body.style.overflow = '';
+      menuOverlay.querySelectorAll('.reveal').forEach(el => el.classList.remove('visible'));
+    }
+
+    menuToggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      if (menuOpen) {
+        menuOverlay.classList.add('open');
+        line1.style.transform = 'rotate(45deg) translateY(3px)';
+        line2.style.transform = 'rotate(-45deg) translateY(-3px)';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+          menuOverlay.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+        }, 200);
+      } else {
+        closeMenu();
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+
+</body>
 </html>
