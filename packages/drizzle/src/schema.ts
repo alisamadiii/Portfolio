@@ -281,7 +281,38 @@ export const clientNotifications = pgTable("client_notifications", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const contactSubmissionStatusValues = [
+  "NEW",
+  "READ",
+  "REPLIED",
+  "ARCHIVED",
+] as const;
+export const contactSubmissionStatusEnum = pgEnum(
+  "contact_submission_status",
+  contactSubmissionStatusValues
+);
+
+export const contactSubmissions = pgTable("contact_submissions", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  submitterName: text("submitter_name").notNull(),
+  submitterEmail: text("submitter_email").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  metadata: jsonb("metadata").default({}),
+  sourceUrl: text("source_url"),
+  status: contactSubmissionStatusEnum("status").notNull().default("NEW"),
+  reportedAt: timestamp("reported_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type ProjectType = (typeof projectsTypeValues)[number];
 export type NotificationType = (typeof notificationTypeValues)[number];
 export type ClientNotificationStatus =
   (typeof clientNotificationStatusValues)[number];
+export type ContactSubmissionStatus =
+  (typeof contactSubmissionStatusValues)[number];

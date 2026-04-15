@@ -23,6 +23,26 @@ export const getIp = async () => {
   return null; // or '0.0.0.0', depends
 };
 
+/**
+ * Check if an IP has exceeded the rate limit. Returns true if limited.
+ * Does not throw — suitable for plain API routes.
+ */
+export function isRateLimited(
+  ip: string,
+  maxRequests = 10,
+  windowMs = 60000
+): boolean {
+  const timeWindow = Math.floor(Date.now() / windowMs);
+  const key = `${ip}:${timeWindow}`;
+
+  const current = rateLimitCache.get(key) || 0;
+
+  if (current >= maxRequests) return true;
+
+  rateLimitCache.set(key, current + 1);
+  return false;
+}
+
 export async function rateLimit(maxRequests = 10, windowMs = 60000) {
   const ip = (await getIp()) || "unknown";
 

@@ -5,6 +5,7 @@ import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 import AccountDeleted from "./emails/account-deleted";
 import AgencyNotification from "./emails/agency-notification";
 import ClientMessage from "./emails/client-message";
+import ContactMessage from "./emails/contact-message";
 import MagicLink from "./emails/magic-link";
 import ReachOutToClients from "./emails/reach-out-to-clients";
 import ResetPassword from "./emails/reset-password";
@@ -32,6 +33,14 @@ type TemplateProps = {
     originalSubject?: string;
     originalMessage?: string;
     referenceId?: string;
+  };
+  contactMessage: {
+    name: string;
+    email: string;
+    phone?: string;
+    message: string;
+    siteName?: string;
+    metadata?: Record<string, unknown>;
   };
 };
 
@@ -85,6 +94,12 @@ const templates: {
     fromLabel: "Ali from AliSamadii.LLC",
     from: "agency@alisamadii.com",
     component: ClientMessage,
+  },
+  contactMessage: {
+    subject: "New Contact Message",
+    fromLabel: "AliSamadii.LLC Portal",
+    from: "agency@alisamadii.com",
+    component: ContactMessage,
   },
 };
 
