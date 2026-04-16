@@ -288,7 +288,19 @@ export const paymentsRouter = createTRPCRouter({
           .where(eq(subscriptions.userId, userId))
           .orderBy(desc(subscriptions.createdAt));
 
-        return subscriptionsList;
+        return subscriptionsList.map((sub) => {
+          const raw = (sub.metadata as { services?: string } | null | undefined)
+            ?.services;
+          let services: { name: string; price: number }[] = [];
+          if (raw) {
+            try {
+              services = JSON.parse(raw) as { name: string; price: number }[];
+            } catch {
+              services = [];
+            }
+          }
+          return { ...sub, services };
+        });
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

@@ -6,7 +6,7 @@ import { formatPrice } from "./utils";
 
 // ─── Service catalog ──────────────────────────────────────────────────────────
 
-export type ServiceCategory = "Infrastructure" | "Development" | "Growth";
+export type ServiceCategory = "Package" | "Infrastructure" | "Modules" | "Admin";
 
 export type ServiceDefinition = {
   id: string;
@@ -16,7 +16,20 @@ export type ServiceDefinition = {
   category: ServiceCategory;
 };
 
+export const STARTER_SERVICE_ID = "starter";
+export const STARTER_PRICE = 14900; // $149.00/mo
+
 export const SERVICE_CATALOG: ServiceDefinition[] = [
+  // Package — auto-included, cannot be removed
+  {
+    id: STARTER_SERVICE_ID,
+    label: "Starter Package",
+    description:
+      "5-page website build, managed hosting, domain management, and contact form with email forwarding.",
+    defaultPrice: STARTER_PRICE,
+    category: "Package",
+  },
+
   // Infrastructure
   {
     id: "hosting",
@@ -42,78 +55,113 @@ export const SERVICE_CATALOG: ServiceDefinition[] = [
     defaultPrice: 1500,
     category: "Infrastructure",
   },
+
+  // Modules — enabled via the client project config
   {
-    id: "database",
-    label: "Database Management",
+    id: "blog",
+    label: "Blog",
     description:
-      "Neon PostgreSQL provisioning, backups, and monitoring.",
+      "MDX-powered blog with authoring, tags, and SEO-friendly routing.",
     defaultPrice: 2900,
-    category: "Infrastructure",
-  },
-  // Development
-  {
-    id: "website_design",
-    label: "Website Design & Development",
-    description:
-      "Template-based multi-page website design and development (5 pages included), fully customized for the client.",
-    defaultPrice: 7600,
-    category: "Development",
+    category: "Modules",
   },
   {
-    id: "web_app",
-    label: "Web App Development",
+    id: "contact",
+    label: "Contact",
     description:
-      "Custom dashboards, client portals, SaaS tools — authentication, CRUD, third-party integrations.",
-    defaultPrice: 19900,
-    category: "Development",
-  },
-  {
-    id: "contact_form",
-    label: "Contact Form & Email Automation",
-    description:
-      "Fully functional contact form with email forwarding, auto-responders, and spam protection.",
-    defaultPrice: 2900,
-    category: "Development",
-  },
-  {
-    id: "maintenance",
-    label: "Ongoing Maintenance",
-    description:
-      "Regular website updates, dependency patches, content changes, and bug fixes.",
-    defaultPrice: 6900,
-    category: "Development",
-  },
-  // Growth
-  {
-    id: "seo",
-    label: "SEO Setup & Optimization",
-    description:
-      "Technical SEO, metadata, sitemap, structured data, Core Web Vitals optimization, and search console setup.",
-    defaultPrice: 4900,
-    category: "Growth",
-  },
-  {
-    id: "analytics",
-    label: "Analytics Integration",
-    description:
-      "Google Analytics 4 or privacy-first analytics (Plausible) setup with goal tracking and reporting.",
+      "Contact form wired to the centralized submission API with email forwarding.",
     defaultPrice: 1500,
-    category: "Growth",
+    category: "Modules",
   },
   {
-    id: "priority_support",
-    label: "Priority Technical Support",
+    id: "payments",
+    label: "Payments",
     description:
-      "Dedicated priority support via email with guaranteed response time.",
+      "Polar-powered checkout, subscriptions, and webhook handling.",
     defaultPrice: 3900,
-    category: "Growth",
+    category: "Modules",
+  },
+  {
+    id: "discounts",
+    label: "Discounts",
+    description:
+      "Promo codes, percentage and fixed-amount discounts tied to checkout.",
+    defaultPrice: 1900,
+    category: "Modules",
+  },
+  {
+    id: "upload",
+    label: "Uploads",
+    description:
+      "S3-backed file uploads with presigned URLs and media handling.",
+    defaultPrice: 1900,
+    category: "Modules",
+  },
+  {
+    id: "auth",
+    label: "Authentication",
+    description:
+      "Better Auth with email/password, OAuth, and session management.",
+    defaultPrice: 2900,
+    category: "Modules",
+  },
+  {
+    id: "settings",
+    label: "User Settings",
+    description:
+      "Account settings, profile management, and preferences surface.",
+    defaultPrice: 1500,
+    category: "Modules",
+  },
+  {
+    id: "email",
+    label: "Email",
+    description:
+      "Transactional email delivery with templated React Email components.",
+    defaultPrice: 2900,
+    category: "Modules",
+  },
+
+  // Admin dashboard
+  {
+    id: "admin",
+    label: "Admin Dashboard",
+    description:
+      "Private admin area for the client — authentication, layout, and navigation.",
+    defaultPrice: 4900,
+    category: "Admin",
+  },
+  {
+    id: "admin_users",
+    label: "Admin: Users",
+    description:
+      "User management inside the admin dashboard — list, search, roles.",
+    defaultPrice: 1900,
+    category: "Admin",
+  },
+  {
+    id: "admin_products",
+    label: "Admin: Products",
+    description:
+      "Product management inside the admin dashboard — CRUD and pricing.",
+    defaultPrice: 1900,
+    category: "Admin",
+  },
+  {
+    id: "admin_media",
+    label: "Admin: Media",
+    description:
+      "Media library inside the admin dashboard — uploads, browsing, deletion.",
+    defaultPrice: 1900,
+    category: "Admin",
   },
 ];
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
+  "Package",
   "Infrastructure",
-  "Development",
-  "Growth",
+  "Modules",
+  "Admin",
 ];
 
 /** Resolves a service id to its human-readable label. Falls back to the id itself. */

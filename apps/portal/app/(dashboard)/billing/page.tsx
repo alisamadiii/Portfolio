@@ -204,6 +204,31 @@ export default function BillingPage() {
                 },
               },
               {
+                id: "services",
+                header: "Services",
+                cell: ({ row }) => {
+                  const services = row.original.services;
+                  if (services.length === 0) {
+                    return (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    );
+                  }
+                  return (
+                    <div className="flex max-w-xs flex-wrap gap-1">
+                      {services.map((s) => (
+                        <Badge
+                          key={s.name}
+                          variant="secondary"
+                          className="text-xs font-normal"
+                        >
+                          {s.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  );
+                },
+              },
+              {
                 id: "status",
                 header: "Status",
                 cell: ({ row }) => (

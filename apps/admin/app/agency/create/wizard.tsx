@@ -9,7 +9,11 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
-import { SERVICE_CATALOG } from "@workspace/ui/lib/agency-utils";
+import {
+  SERVICE_CATALOG,
+  STARTER_PRICE,
+  STARTER_SERVICE_ID,
+} from "@workspace/ui/lib/agency-utils";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -17,6 +21,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { StepConfirmation } from "./step-confirmation";
 import { StepProduct } from "./step-product";
 import { StepService } from "./step-service";
+import { StepStarter } from "./step-starter";
 import { StepUser } from "./step-user";
 
 // ─── Form schema ─────────────────────────────────────────────────────────────
@@ -51,21 +56,10 @@ const WIZARD_STEPS: WizardStep[] = [
   { id: "user", title: "Select Client", type: "custom" },
   { id: "product", title: "Product Details", type: "custom" },
 
-  // What are we building?
-  {
-    id: "website_design",
-    title: "Website Design & Development",
-    type: "service",
-    serviceId: "website_design",
-  },
-  {
-    id: "web_app",
-    title: "Web App Development",
-    type: "service",
-    serviceId: "web_app",
-  },
+  // Package — auto-included, cannot be removed
+  { id: "starter", title: "Starter Package", type: "custom" },
 
-  // Infrastructure (always shown)
+  // Infrastructure
   {
     id: "hosting",
     title: "Hosting & Uptime Management",
@@ -85,49 +79,48 @@ const WIZARD_STEPS: WizardStep[] = [
     serviceId: "business_email",
   },
 
-  // Conditional: only if Web App = Yes
+  // Project modules — map 1:1 to the client project config JSON
+  { id: "blog", title: "Blog", type: "service", serviceId: "blog" },
+  { id: "contact", title: "Contact", type: "service", serviceId: "contact" },
+  { id: "payments", title: "Payments", type: "service", serviceId: "payments" },
   {
-    id: "database",
-    title: "Database Management",
+    id: "discounts",
+    title: "Discounts",
     type: "service",
-    serviceId: "database",
-    showIf: (services) => services.some((s) => s.name === "web_app"),
+    serviceId: "discounts",
   },
+  { id: "upload", title: "Uploads", type: "service", serviceId: "upload" },
+  { id: "auth", title: "Authentication", type: "service", serviceId: "auth" },
+  {
+    id: "settings",
+    title: "User Settings",
+    type: "service",
+    serviceId: "settings",
+  },
+  { id: "email", title: "Email", type: "service", serviceId: "email" },
 
-  // Features (always shown)
+  // Admin dashboard — sub-modules only appear when admin is included
+  { id: "admin", title: "Admin Dashboard", type: "service", serviceId: "admin" },
   {
-    id: "contact_form",
-    title: "Contact Form & Email Automation",
+    id: "admin_users",
+    title: "Admin: Users",
     type: "service",
-    serviceId: "contact_form",
-  },
-
-  // Ongoing
-  {
-    id: "maintenance",
-    title: "Ongoing Maintenance",
-    type: "service",
-    serviceId: "maintenance",
+    serviceId: "admin_users",
+    showIf: (services) => services.some((s) => s.name === "admin"),
   },
   {
-    id: "priority_support",
-    title: "Priority Technical Support",
+    id: "admin_products",
+    title: "Admin: Products",
     type: "service",
-    serviceId: "priority_support",
-  },
-
-  // Growth
-  {
-    id: "seo",
-    title: "SEO Setup & Optimization",
-    type: "service",
-    serviceId: "seo",
+    serviceId: "admin_products",
+    showIf: (services) => services.some((s) => s.name === "admin"),
   },
   {
-    id: "analytics",
-    title: "Analytics Integration",
+    id: "admin_media",
+    title: "Admin: Media",
     type: "service",
-    serviceId: "analytics",
+    serviceId: "admin_media",
+    showIf: (services) => services.some((s) => s.name === "admin"),
   },
 
   // Review
@@ -145,6 +138,9 @@ function getStepSummary(
   }
   if (step.id === "product") {
     return formValues.name || null;
+  }
+  if (step.id === "starter") {
+    return `$${(STARTER_PRICE / 100).toFixed(2)}/mo`;
   }
   if (step.id === "confirmation") {
     const total = formValues.services.reduce((sum, s) => sum + s.price, 0);
@@ -192,7 +188,9 @@ export const Wizard = ({ productId, product }: WizardProps) => {
       userId: product?.userId ?? "",
       email: product?.email ?? "",
       name: product?.name ?? "",
-      services: product?.services ?? [],
+      services: product?.services ?? [
+        { name: STARTER_SERVICE_ID, price: STARTER_PRICE },
+      ],
     },
   });
 
@@ -330,6 +328,8 @@ export const Wizard = ({ productId, product }: WizardProps) => {
             onNext={() => completeAndAdvance("product")}
           />
         );
+      case "starter":
+        return <StepStarter onNext={() => completeAndAdvance("starter")} />;
       case "confirmation":
         return (
           <StepConfirmation
