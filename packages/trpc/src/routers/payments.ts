@@ -106,7 +106,7 @@ export const paymentsRouter = createTRPCRouter({
         discountId: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
       // TODO: Re-enable after Stripe migration
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
@@ -195,7 +195,7 @@ export const paymentsRouter = createTRPCRouter({
           .default("prorate"),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input }): Promise<void> => {
       // TODO: Re-enable after Stripe migration
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
@@ -203,40 +203,38 @@ export const paymentsRouter = createTRPCRouter({
           "Plan switching is currently under construction. We're upgrading our payment system — please check back soon.",
       });
 
-      try {
-        const { subscriptionId, toProductId, prorationBehavior } = input;
-
-        // Fetch the current subscription to check its status
-        const subscription = await polarClient.subscriptions.get({
-          id: subscriptionId,
-        });
-
-        // Check if the subscription is in trial period
-        if (subscription.status === "trialing") {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message:
-              "Cannot switch plans while subscription is in trial period. Please wait until your trial ends or cancel and start a new subscription.",
-          });
-        }
-
-        const response = await polarClient.subscriptions.update({
-          id: subscriptionId,
-          subscriptionUpdate: {
-            productId: toProductId,
-            prorationBehavior:
-              prorationBehavior as SubscriptionProrationBehavior,
-          },
-        });
-        return response;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to switch plan",
-          cause: error,
-        });
-      }
+      // try {
+      //   const { subscriptionId, toProductId, prorationBehavior } = input;
+      //
+      //   const subscription = await polarClient.subscriptions.get({
+      //     id: subscriptionId,
+      //   });
+      //
+      //   if (subscription.status === "trialing") {
+      //     throw new TRPCError({
+      //       code: "BAD_REQUEST",
+      //       message:
+      //         "Cannot switch plans while subscription is in trial period. Please wait until your trial ends or cancel and start a new subscription.",
+      //     });
+      //   }
+      //
+      //   const response = await polarClient.subscriptions.update({
+      //     id: subscriptionId,
+      //     subscriptionUpdate: {
+      //       productId: toProductId,
+      //       prorationBehavior:
+      //         prorationBehavior as SubscriptionProrationBehavior,
+      //     },
+      //   });
+      //   return response;
+      // } catch (error) {
+      //   throw new TRPCError({
+      //     code: "INTERNAL_SERVER_ERROR",
+      //     message:
+      //       error instanceof Error ? error.message : "Failed to switch plan",
+      //     cause: error,
+      //   });
+      // }
     }),
 
   /**

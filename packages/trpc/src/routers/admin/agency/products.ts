@@ -342,7 +342,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         productId: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input }): Promise<{ url: string }> => {
       // TODO: Re-enable after Stripe migration
       throw new TRPCError({
         code: "PRECONDITION_FAILED",

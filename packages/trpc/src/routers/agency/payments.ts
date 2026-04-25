@@ -106,7 +106,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
         extraPages: z.number().int().min(0).default(0),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
       // TODO: Re-enable after Stripe migration
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
