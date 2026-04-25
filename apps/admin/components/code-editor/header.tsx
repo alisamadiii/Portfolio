@@ -12,14 +12,14 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 export const CodeEditorHeader = ({
   source,
 }: {
-  source: RouterOutputs["admin"]["sources"]["readById"];
+  source: RouterOutputs["sources"]["readById"];
 }) => {
   const [title, setTitle] = useState(source.title);
   const router = useRouter();
   const trpc = useTRPC();
-  const updateSource = useMutation(trpc.admin.sources.update.mutationOptions());
+  const updateSource = useMutation(trpc.sources.update.mutationOptions());
   const updateSourcePrivate = useMutation(
-    trpc.admin.sources.update.mutationOptions()
+    trpc.sources.update.mutationOptions()
   );
 
   return (
@@ -56,7 +56,7 @@ export const CodeEditorHeader = ({
               {
                 onSuccess: () => {
                   queryClient.setQueryData(
-                    trpc.admin.sources.readById.queryKey(source.id),
+                    trpc.sources.readById.queryKey(source.id),
                     {
                       ...source,
                       isPrivate: !source.isPrivate,

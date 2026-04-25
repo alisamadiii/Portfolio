@@ -63,7 +63,7 @@ export const Password = () => {
   });
 
   const changePassword = useMutation(
-    useTRPC().admin.users.updatePassword.mutationOptions({
+    useTRPC().users.updatePassword.mutationOptions({
       onError: (error) => {
         toast.error(error.message || "Failed to change password");
       },

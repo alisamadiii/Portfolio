@@ -5,7 +5,7 @@ import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { ALLOWED_FOLDERS } from "@workspace/trpc/routers/upload/_index";
+import { ALLOWED_FOLDERS } from "@workspace/trpc/routers/files";
 
 interface UploadProgress {
   loaded: number; // bytes uploaded
@@ -20,8 +20,8 @@ interface UploadResult {
 
 export function useUpload() {
   const trpc = useTRPC();
-  const getUploadUrl = useMutation(trpc.upload.getUploadUrl.mutationOptions());
-  const deleteFile = useMutation(trpc.upload.delete.mutationOptions());
+  const getUploadUrl = useMutation(trpc.files.getUploadUrl.mutationOptions());
+  const deleteFile = useMutation(trpc.files.delete.mutationOptions());
 
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [isUploading, setIsUploading] = useState(false);

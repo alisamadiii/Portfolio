@@ -99,7 +99,7 @@ const CreateCheckoutLink = ({
 }) => {
   const trpc = useTRPC();
   const createCheckout = useMutation(
-    trpc.admin.agency.products.createCheckout.mutationOptions()
+    trpc.products.createCheckout.mutationOptions()
   );
 
   return (
@@ -133,7 +133,7 @@ const CreateCheckoutLink = ({
 export const AgencyProducts = () => {
   const trpc = useTRPC();
   const { data, isLoading } = useQuery(
-    trpc.admin.agency.products.getAllProducts.queryOptions()
+    trpc.products.getAllProducts.queryOptions()
   );
 
   if (isLoading) {

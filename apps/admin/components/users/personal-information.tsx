@@ -33,13 +33,13 @@ export const PersonalInformation = () => {
   const { id } = useParams<{ id: string }>();
   const trpc = useTRPC();
   const { data: user } = useQuery(
-    trpc.admin.users.getById.queryOptions(id, {
+    trpc.users.getById.queryOptions(id, {
       enabled: !!id,
     })
   );
 
   const updateUser = useMutation(
-    useTRPC().admin.users.update.mutationOptions({
+    useTRPC().users.adminUpdate.mutationOptions({
       onError: (error) => {
         toast.error(error.message || "Failed to update user");
       },

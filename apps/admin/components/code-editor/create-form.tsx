@@ -17,7 +17,7 @@ const formSchema = z.object({
 
 export const CreateForm = () => {
   const trpc = useTRPC();
-  const create = useMutation(trpc.admin.sources.create.mutationOptions());
+  const create = useMutation(trpc.sources.create.mutationOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,7 +32,7 @@ export const CreateForm = () => {
       onSuccess: () => {
         form.reset();
         queryClient.invalidateQueries({
-          queryKey: trpc.admin.sources.read.queryKey(),
+          queryKey: trpc.sources.read.queryKey(),
         });
       },
     });

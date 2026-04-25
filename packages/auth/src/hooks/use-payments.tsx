@@ -9,7 +9,7 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
  */
 export const useGetCustomerState = () => {
   const trpc = useTRPC();
-  return useQuery(trpc.payments.getCustomerState.queryOptions());
+  return useQuery(trpc.billing.getCustomerState.queryOptions());
 };
 
 /**
@@ -35,7 +35,7 @@ export const useCheckout = () => {
   const trpc = useTRPC();
 
   return useMutation(
-    trpc.payments.createCheckout.mutationOptions({
+    trpc.billing.createCheckout.mutationOptions({
       onSuccess: (data) => {
         if (!data) {
           throw new Error("Failed to create checkout");
@@ -66,11 +66,11 @@ export const useSwitchPlan = () => {
   const trpc = useTRPC();
 
   return useMutation(
-    trpc.payments.switchPlan.mutationOptions({
+    trpc.billing.switchPlan.mutationOptions({
       onSuccess: async () => {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         queryClient.invalidateQueries({
-          queryKey: ["payments", "getCustomerState"],
+          queryKey: ["billing", "getCustomerState"],
         });
       },
     })
@@ -84,7 +84,7 @@ export const useGeneratePortalLink = () => {
   const trpc = useTRPC();
 
   return useMutation(
-    trpc.payments.createPortalSession.mutationOptions({
+    trpc.billing.createPortalSession.mutationOptions({
       onSuccess: (data) => {
         /* eslint-disable-next-line react-hooks/immutability */
         window.location.href = data.url;

@@ -40,10 +40,10 @@ export const ClientMetadataEditor = ({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const updateMetadata = useMutation(
-    trpc.admin.agency.clients.updateMetadata.mutationOptions({
+    trpc.clients.updateMetadata.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: trpc.admin.agency.clients.getById.queryKey(userId),
+          queryKey: trpc.clients.getById.queryKey(userId),
         });
         toast.success("Custom fields saved");
       },

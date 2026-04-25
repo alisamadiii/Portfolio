@@ -66,8 +66,8 @@ export function AuthDialog({
     if (error || !data) return;
 
     router.refresh();
-    queryClient.setQueryData(trpc.user.getCurrentUser.queryKey(), () => {
-      const cached: RouterOutputs["user"]["getCurrentUser"] = {
+    queryClient.setQueryData(trpc.users.getCurrentUser.queryKey(), () => {
+      const cached: RouterOutputs["users"]["getCurrentUser"] = {
         session: {
           id: data.session.id,
           createdAt: data.session.createdAt.toISOString(),

@@ -17,7 +17,7 @@ import { useIsPurchased } from "@/hooks/use-is-purchased";
 export function Pricing() {
   const trpc = useTRPC();
   const product = useQuery(
-    trpc.payments.getProductByProject.queryOptions("MOTION")
+    trpc.products.getByProject.queryOptions("MOTION")
   );
   const pathname = usePathname();
   const checkout = useCheckout();

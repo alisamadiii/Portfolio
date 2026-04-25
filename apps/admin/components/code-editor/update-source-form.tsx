@@ -28,9 +28,9 @@ export const UpdateFormSource = () => {
 
   const trpc = useTRPC();
   const getSource = useQuery(
-    trpc.admin.sources.readById.queryOptions(sourceId)
+    trpc.sources.readById.queryOptions(sourceId)
   );
-  const updateSource = useMutation(trpc.admin.sources.update.mutationOptions());
+  const updateSource = useMutation(trpc.sources.update.mutationOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

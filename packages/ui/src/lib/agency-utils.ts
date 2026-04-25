@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { AgencyServiceSchema } from "@workspace/trpc/routers/admin/agency/products";
+import { AgencyServiceSchema } from "@workspace/trpc/routers/types/agency";
 
 import { formatPrice } from "./utils";
 

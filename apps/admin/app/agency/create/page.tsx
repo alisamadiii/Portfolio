@@ -15,7 +15,7 @@ export default function AgencyCreatePage() {
 
   const trpc = useTRPC();
   const { data: product, isLoading } = useQuery(
-    trpc.admin.agency.products.getProductById.queryOptions(productId ?? "", {
+    trpc.products.getProductById.queryOptions(productId ?? "", {
       enabled: !!productId,
     })
   );

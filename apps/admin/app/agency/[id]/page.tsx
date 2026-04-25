@@ -23,20 +23,20 @@ export default function AgencyProductDetail() {
   const trpc = useTRPC();
 
   const { data: product } = useQuery(
-    trpc.admin.agency.products.getProductByUserId.queryOptions(id, {
+    trpc.products.getProductByUserId.queryOptions(id, {
       enabled: !!id,
     })
   );
   const { data } = useQuery(
-    trpc.admin.agency.products.getOrdersByUserId.queryOptions(id, {
+    trpc.products.getOrdersByUserId.queryOptions(id, {
       enabled: !!id,
     })
   );
   const createCheckout = useMutation(
-    trpc.admin.agency.products.createCheckout.mutationOptions()
+    trpc.products.createCheckout.mutationOptions()
   );
   const { data: user } = useQuery(
-    trpc.admin.users.getById.queryOptions(id, {
+    trpc.users.getById.queryOptions(id, {
       enabled: !!id,
     })
   );

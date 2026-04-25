@@ -32,7 +32,7 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
   try {
     const headersStore = await headers();
     const httpCaller = createHttpCaller(headersStore);
-    const currentUser = await httpCaller.user.getSession.query();
+    const currentUser = await httpCaller.users.getSession.query();
 
     if (currentUser?.role !== "admin") {
       return notFound();

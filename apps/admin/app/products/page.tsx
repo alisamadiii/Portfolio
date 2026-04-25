@@ -12,7 +12,7 @@ import { paymentColumns } from "@/components/payments/columns";
 export default function AdminPaymentsPage() {
   const trpc = useTRPC();
   const { data, isLoading } = useQuery(
-    trpc.payments.getProducts.queryOptions()
+    trpc.products.getAll.queryOptions()
   );
 
   return (

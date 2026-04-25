@@ -24,7 +24,7 @@ export const BillingInvoices = () => {
 
   const trpc = useTRPC();
   const { data: orders } = useQuery(
-    trpc.payments.getInvoices.queryOptions(
+    trpc.billing.getInvoices.queryOptions(
       {
         userId: user?.user.id || "",
         email: user?.user.email || "",

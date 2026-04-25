@@ -1,13 +1,14 @@
 import { TRPCError } from "@trpc/server";
-import { asc, desc, eq, or, sql } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
+import { calcExtraPagesCost } from "@workspace/ui/lib/agency-utils";
+
 import {
-  adminProcedure,
   authenticatedProcedure,
-  baseProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
+import { stripeClient } from "@workspace/auth/auth";
 import {
   createCheckoutSession,
   createCustomer,
@@ -18,103 +19,13 @@ import {
 import { db } from "@workspace/drizzle/index";
 import {
   invoices,
+  previousCustomers,
   products,
-  projectsTypeValues,
   subscription,
   user,
 } from "@workspace/drizzle/schema";
-import type { ProjectType } from "@workspace/drizzle/schema";
 
-export async function getProductIdByProject(project: ProjectType) {
-  const [product] = await db
-    .select({ id: products.id })
-    .from(products)
-    .where(
-      sql`${products.metadata}->>'project' = ${project} AND ${products.isArchived} = false`
-    )
-    .limit(1);
-  return product?.id ?? null;
-}
-
-export const paymentsRouter = createTRPCRouter({
-  getProducts: baseProcedure.query(async () => {
-    try {
-      const productsList = await db
-        .select()
-        .from(products)
-        .orderBy(asc(products.priceAmount));
-      return productsList;
-    } catch (error: unknown) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to fetch products",
-        cause: error,
-      });
-    }
-  }),
-
-  getProductByProject: baseProcedure
-    .input(z.enum(projectsTypeValues))
-    .query(async ({ input }) => {
-      try {
-        const [product] = await db
-          .select()
-          .from(products)
-          .where(
-            sql`${products.metadata}->>'project' = ${input} AND ${products.isArchived} = false`
-          )
-          .limit(1);
-        if (!product) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: `No product found for project "${input}"`,
-          });
-        }
-        return product;
-      } catch (error: unknown) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to fetch product",
-          cause: error,
-        });
-      }
-    }),
-
-  updateProduct: adminProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        product: z.object({
-          name: z.string().optional(),
-          description: z.string().optional(),
-          popular: z.boolean().optional(),
-          isArchived: z.boolean().optional(),
-          metadata: z.record(z.string(), z.unknown()).optional(),
-        }),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const result = await db
-          .update(products)
-          .set(input.product)
-          .where(eq(products.id, input.id));
-        return result;
-      } catch (error: unknown) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to update product",
-          cause: error,
-        });
-      }
-    }),
-
+export const billingRouter = createTRPCRouter({
   createCheckout: authenticatedProcedure
     .input(
       z.object({
@@ -148,16 +59,111 @@ export const paymentsRouter = createTRPCRouter({
           .where(eq(user.id, ctx.session.user.id));
       }
 
+      // Determine mode based on product's recurring status
+      const [product] = await db
+        .select({ isRecurring: products.isRecurring })
+        .from(products)
+        .where(eq(products.priceId, priceIds[0]))
+        .limit(1);
+
       const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
       return createCheckoutSession({
         customerId,
         priceIds,
-        mode: "subscription",
+        mode: product?.isRecurring ? "subscription" : "payment",
         successUrl:
           successUrl || `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: cancelUrl || `${base}/`,
       });
+    }),
+
+  createAgencyCheckout: authenticatedProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        successUrl: z.string().optional(),
+        extraPages: z.number().int().min(0).default(0),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const { productId, successUrl, extraPages } = input;
+
+        const [product] = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, productId))
+          .limit(1);
+
+        if (!product || !product.priceId) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Product or price not found",
+          });
+        }
+
+        const dbUser = await db
+          .select()
+          .from(user)
+          .where(eq(user.id, ctx.session.user.id))
+          .limit(1)
+          .then((res) => res[0]);
+
+        let customerId = dbUser?.stripeCustomerId;
+
+        if (!customerId) {
+          const result = await createCustomer({
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            metadata: { userId: ctx.session.user.id },
+          });
+          customerId = result.customerId;
+          await db
+            .update(user)
+            .set({ stripeCustomerId: customerId })
+            .where(eq(user.id, ctx.session.user.id));
+        }
+
+        let priceId = product.priceId;
+
+        if (extraPages > 0) {
+          const adjustedAmount =
+            product.priceAmount + calcExtraPagesCost(extraPages);
+          const adHocPrice = await stripeClient.prices.create({
+            product: productId,
+            unit_amount: adjustedAmount,
+            currency: product.priceCurrency,
+            recurring: product.isRecurring ? { interval: "month" } : undefined,
+            metadata: { extraPages: String(extraPages), adHoc: "true" },
+          });
+          priceId = adHocPrice.id;
+        }
+
+        const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /\/$/,
+          ""
+        );
+
+        return createCheckoutSession({
+          customerId,
+          priceIds: [priceId],
+          mode: product.isRecurring ? "subscription" : "payment",
+          successUrl:
+            successUrl ||
+            `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${base}/`,
+        });
+      } catch (error: unknown) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to create checkout",
+        });
+      }
     }),
 
   verifyCheckout: authenticatedProcedure
@@ -303,6 +309,25 @@ export const paymentsRouter = createTRPCRouter({
         });
       }
     }),
-});
 
-export type PaymentsRouter = typeof paymentsRouter;
+  getPreviousCustomer: authenticatedProcedure.query(async ({ ctx }) => {
+    try {
+      const customer = await db
+        .select()
+        .from(previousCustomers)
+        .where(eq(previousCustomers.email, ctx.session.user.email))
+        .limit(1)
+        .then((result) => result[0]);
+      return customer;
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get previous customers",
+        cause: error,
+      });
+    }
+  }),
+});

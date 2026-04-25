@@ -31,7 +31,7 @@ export default function ClientDetailPage() {
   const trpc = useTRPC();
 
   const { data, isLoading } = useQuery(
-    trpc.admin.agency.clients.getById.queryOptions(id, { enabled: !!id })
+    trpc.clients.getById.queryOptions(id, { enabled: !!id })
   );
 
   if (isLoading) {

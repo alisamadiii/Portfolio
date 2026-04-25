@@ -15,7 +15,7 @@ import { UpdateFormSource } from "./update-source-form";
 export const CodeEditorView = ({
   source,
 }: {
-  source: RouterOutputs["admin"]["sources"]["readById"];
+  source: RouterOutputs["sources"]["readById"];
 }) => {
   const { selectedTab, setSelectedTab } = useCodeEditor();
 
@@ -23,7 +23,7 @@ export const CodeEditorView = ({
 
   const trpc = useTRPC();
   const updateFile = useMutation(
-    trpc.admin.sources.file.update.mutationOptions()
+    trpc.sources.file.update.mutationOptions()
   );
 
   return (

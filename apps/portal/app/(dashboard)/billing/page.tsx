@@ -46,20 +46,20 @@ export default function BillingPage() {
   const trpc = useTRPC();
 
   const { data: orders, isPending: ordersLoading } = useQuery(
-    trpc.payments.getInvoices.queryOptions(
+    trpc.billing.getInvoices.queryOptions(
       { userId: user?.user.id || "", email: user?.user.email || "" },
       { enabled: !!user?.user.id || !!user?.user.email }
     )
   );
 
   const { data: subscriptions, isPending: subsLoading } = useQuery(
-    trpc.payments.getSubscriptions.queryOptions(
+    trpc.billing.getSubscriptions.queryOptions(
       { userId: user?.user.id || "" },
       { enabled: !!user?.user.id }
     )
   );
 
-  const getProducts = useQuery(trpc.payments.getProducts.queryOptions());
+  const getProducts = useQuery(trpc.products.getAll.queryOptions());
 
   const userOrders = useMemo(
     () => orders?.filter((o) => o.userId === user?.user.id) || [],
@@ -77,7 +77,7 @@ export default function BillingPage() {
   }, [subscriptions]);
 
   const getNextBillingDate = (
-    sub: RouterOutputs["payments"]["getSubscriptions"][number]
+    sub: RouterOutputs["billing"]["getSubscriptions"][number]
   ) => {
     if (!sub.periodEnd) return null;
     return new Date(sub.periodEnd);

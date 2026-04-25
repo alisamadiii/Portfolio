@@ -60,7 +60,7 @@ export const SelectUser = ({
     isPending,
     error,
   } = useQuery(
-    trpc.admin.users.getAll.queryOptions({
+    trpc.users.getAll.queryOptions({
       search: debouncedSearchTerm,
     })
   );

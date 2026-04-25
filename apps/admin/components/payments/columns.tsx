@@ -16,7 +16,7 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { FormattedJSON } from "@/components/json-format";
 
 export const paymentColumns: ColumnDef<
-  RouterOutputs["payments"]["getProducts"][number]
+  RouterOutputs["products"]["getAll"][number]
 >[] = [
   {
     header: "Product ID",

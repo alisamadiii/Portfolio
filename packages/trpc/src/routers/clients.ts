@@ -1,12 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import { subscription, user } from "@workspace/drizzle/schema";
 
-import type { AgencyMetadata } from "./products";
+import type { AgencyMetadata } from "./types/agency";
 
 function parseServices(metadata: AgencyMetadata | undefined) {
   const raw = metadata?.services;
@@ -18,8 +18,7 @@ function parseServices(metadata: AgencyMetadata | undefined) {
   }
 }
 
-export const adminAgencyClientsRouter = createTRPCRouter({
-  /** All agency subscriptions with client info. */
+export const clientsRouter = createTRPCRouter({
   getAll: adminProcedure.query(async () => {
     try {
       const rows = await db
@@ -33,7 +32,6 @@ export const adminAgencyClientsRouter = createTRPCRouter({
           cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
           periodStart: subscription.periodStart,
           canceledAt: subscription.canceledAt,
-          // Client info from user table
           userId: user.id,
           name: user.name,
           email: user.email,
@@ -69,7 +67,6 @@ export const adminAgencyClientsRouter = createTRPCRouter({
     }
   }),
 
-  /** Full client detail: user record + all agency subscriptions. */
   getById: adminProcedure.input(z.string()).query(async ({ input }) => {
     try {
       const [userRecord] = await db
@@ -104,7 +101,6 @@ export const adminAgencyClientsRouter = createTRPCRouter({
     }
   }),
 
-  /** Replace user.metadata with the provided key-value map. */
   updateMetadata: adminProcedure
     .input(
       z.object({

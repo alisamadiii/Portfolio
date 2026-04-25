@@ -13,7 +13,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 
-import { r2, R2_BUCKET, R2_PUBLIC_URL } from "../../lib/r2";
+import { r2, R2_BUCKET, R2_PUBLIC_URL } from "../lib/r2";
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -27,7 +27,7 @@ const SIGNED_URL_EXPIRY = 60 * 5; // 5 minutes
 
 export const ALLOWED_FOLDERS = ["users", "clients"] as const;
 
-export const uploadRouter = createTRPCRouter({
+export const filesRouter = createTRPCRouter({
   getUploadUrl: baseProcedure
     .input(
       z.object({

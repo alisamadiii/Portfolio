@@ -106,10 +106,10 @@ export const Wizard = ({ productId, product }: WizardProps) => {
   const isEditMode = !!productId;
 
   const create = useMutation(
-    trpc.admin.agency.products.create.mutationOptions()
+    trpc.products.create.mutationOptions()
   );
   const update = useMutation(
-    trpc.admin.agency.products.update.mutationOptions()
+    trpc.products.update.mutationOptions()
   );
 
   const form = useForm<ProductFormValues>({

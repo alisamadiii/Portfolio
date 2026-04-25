@@ -50,12 +50,12 @@ export function ClientMediaGallery({ userId }: { userId: string }) {
 
   const prefix = `clients/${userId}/`;
   const { data: files, isLoading } = useQuery(
-    trpc.upload.listFiles.queryOptions({ prefix })
+    trpc.files.listFiles.queryOptions({ prefix })
   );
 
   const invalidate = () =>
     queryClient.invalidateQueries({
-      queryKey: trpc.upload.listFiles.queryKey({ prefix }),
+      queryKey: trpc.files.listFiles.queryKey({ prefix }),
     });
 
   const handleUpload = async (fileList: FileList) => {

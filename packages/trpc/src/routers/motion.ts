@@ -11,7 +11,7 @@ import {
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { invoices, source, sourceFile } from "@workspace/drizzle/schema";
-import { getProductIdByProject } from "@workspace/trpc/routers/payments";
+import { getProductIdByProject } from "@workspace/trpc/lib/product-helpers";
 
 export const motionRouter = createTRPCRouter({
   getFiles: baseProcedure
@@ -22,7 +22,6 @@ export const motionRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        // Check if the source is private
         const [getSource] = await db
           .select({ isPrivate: source.isPrivate })
           .from(source)
@@ -55,7 +54,6 @@ export const motionRouter = createTRPCRouter({
           });
         }
 
-        // Check if the user is authenticated
         const session = await auth.api.getSession({
           headers: await headers(),
         });
@@ -80,7 +78,6 @@ export const motionRouter = createTRPCRouter({
           );
         }
 
-        // Check if the user has access to the motion product
         const findMotionOrder = await db
           .select()
           .from(invoices)

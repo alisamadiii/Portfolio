@@ -37,7 +37,7 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useUpdateAdminUser } from "@workspace/auth/hooks/use-admin";
 
-type UserFromAPI = RouterOutputs["admin"]["users"]["getAll"][number];
+type UserFromAPI = RouterOutputs["users"]["getAll"][number];
 
 export const columnsLoading: ColumnDef<UserFromAPI>[] = [
   {
@@ -104,7 +104,7 @@ export const columns: ColumnDef<UserFromAPI>[] = [
       const [deleteOpen, setDeleteOpen] = useState(false);
       const updateAdminUser = useUpdateAdminUser();
       const deleteAccount = useMutation(
-        useTRPC().admin.users.delete.mutationOptions({
+        useTRPC().users.delete.mutationOptions({
           onSuccess: () => {
             router.push("/");
 

@@ -50,7 +50,7 @@ const useSignup = () => {
         `/verify-email${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`
       );
       router.refresh();
-      queryClient.setQueryData(trpc.user.getCurrentUser.queryKey(), (old) => {
+      queryClient.setQueryData(trpc.users.getCurrentUser.queryKey(), (old) => {
         return old;
       });
     },
@@ -88,8 +88,8 @@ const useSignin = () => {
     onSuccess: (response) => {
       router.refresh();
       if (response) {
-        queryClient.setQueryData(trpc.user.getCurrentUser.queryKey(), () => {
-          const data: RouterOutputs["user"]["getCurrentUser"] = {
+        queryClient.setQueryData(trpc.users.getCurrentUser.queryKey(), () => {
+          const data: RouterOutputs["users"]["getCurrentUser"] = {
             session: {
               id: response.session.id,
               createdAt: response.session.createdAt.toISOString(),
@@ -230,7 +230,7 @@ const useVerifyEmail = () => {
       return data;
     },
     onSuccess: async () => {
-      queryClient.setQueryData(trpc.user.getCurrentUser.queryKey(), (old) => {
+      queryClient.setQueryData(trpc.users.getCurrentUser.queryKey(), (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -323,7 +323,7 @@ const useLogout = () => {
       allQueries.forEach((query) => {
         const queryKey = query.queryKey;
         // Check if the top-level key is "products"
-        if (!queryKey || queryKey === trpc.payments.getProducts.queryKey())
+        if (!queryKey || queryKey === trpc.products.getAll.queryKey())
           return;
         queryClient.resetQueries({ queryKey });
       });

@@ -34,7 +34,7 @@ const Content = () => {
 
   const trpc = useTRPC();
   const checkoutSession = useQuery({
-    ...trpc.payments.verifyCheckout.queryOptions({ sessionId: sessionId || "" }),
+    ...trpc.billing.verifyCheckout.queryOptions({ sessionId: sessionId || "" }),
     enabled: !!sessionId,
   });
 

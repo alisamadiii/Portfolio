@@ -9,7 +9,7 @@ import { db } from "@workspace/drizzle/index";
 import { coldEmails } from "@workspace/drizzle/schema";
 import { sendEmail } from "@workspace/email/index";
 
-export const adminColdEmailsRouter = createTRPCRouter({
+export const coldEmailsRouter = createTRPCRouter({
   send: adminProcedure
     .input(
       z.object({

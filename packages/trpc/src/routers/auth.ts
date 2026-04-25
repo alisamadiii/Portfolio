@@ -13,12 +13,7 @@ import {
   createTRPCRouter,
 } from "../init";
 
-export const sessionsRouter = createTRPCRouter({
-  /**
-   * Fetches all sessions for a specific user
-   * @param userId - The ID of the user to get sessions for
-   * @returns Promise<Session[]> - Array of user sessions sorted by creation date (newest first)
-   */
+export const authRouter = createTRPCRouter({
   getSessions: baseProcedure.input(z.string()).query(async ({ input }) => {
     try {
       const userId = input;
@@ -28,7 +23,6 @@ export const sessionsRouter = createTRPCRouter({
           body: {
             userId,
           },
-          // This endpoint requires session cookies.
           headers: await headers(),
         })
         .then((res) =>
@@ -47,11 +41,7 @@ export const sessionsRouter = createTRPCRouter({
       });
     }
   }),
-  /**
-   * Revokes/deletes a specific session
-   * @param sessionId - The ID of the session to revoke
-   * @returns Promise<{data?: void, error?: string}>
-   */
+
   revokeSession: authenticatedProcedure
     .input(z.string())
     .mutation(async ({ input }) => {

@@ -16,7 +16,7 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 export default function PortalPage() {
   const trpc = useTRPC();
-  const products = useQuery(trpc.agency.getProducts.queryOptions());
+  const products = useQuery(trpc.products.getAgencyProducts.queryOptions());
 
   const standardProducts = products.data?.filter((p) => !p.userId) ?? [];
   const customProducts = products.data?.filter((p) => !!p.userId) ?? [];
@@ -178,13 +178,13 @@ const mdStyles = cn(
 const EachProduct = ({
   product,
 }: {
-  product: RouterOutputs["agency"]["getProducts"][number];
+  product: RouterOutputs["products"]["getAgencyProducts"][number];
 }) => {
   const trpc = useTRPC();
   const { data: isActive } = useQuery(
-    trpc.agency.isActive.queryOptions({ productId: product.id })
+    trpc.products.isAgencyActive.queryOptions({ productId: product.id })
   );
-  const checkout = useMutation(trpc.agency.createCheckout.mutationOptions());
+  const checkout = useMutation(trpc.billing.createAgencyCheckout.mutationOptions());
 
   return (
     <CardAgency.Card
