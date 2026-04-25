@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -11,7 +11,26 @@ import {
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { invoices, source, sourceFile } from "@workspace/drizzle/schema";
-import { getProductIdByProject } from "@workspace/trpc/lib/product-helpers";
+import type { ProjectType } from "@workspace/drizzle/schema";
+
+async function hasUserPurchasedProject(
+  userId: string,
+  project: ProjectType
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: invoices.id })
+    .from(invoices)
+    .where(
+      and(
+        eq(invoices.userId, userId),
+        eq(invoices.status, "paid"),
+        sql`${invoices.metadata}->>'project' = ${project}`
+      )
+    )
+    .limit(1);
+
+  return !!row;
+}
 
 export const motionRouter = createTRPCRouter({
   getFiles: baseProcedure
@@ -45,74 +64,33 @@ export const motionRouter = createTRPCRouter({
           return files;
         }
 
-        const motionProductId = await getProductIdByProject("MOTION");
-
-        if (!motionProductId) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "No Motion product found",
-          });
-        }
-
         const session = await auth.api.getSession({
           headers: await headers(),
         });
 
-        if (!session) {
-          const files = await db
-            .select()
-            .from(sourceFile)
-            .where(eq(sourceFile.sourceId, input.sourceId));
-
-          return files.map((file) =>
-            isPrivate
-              ? {
-                  ...file,
-                  content: null,
-                  preview:
-                    typeof file.content === "string"
-                      ? file.content.split("\n").slice(0, 16).join("\n")
-                      : null,
-                }
-              : file
-          );
-        }
-
-        const findMotionOrder = await db
-          .select()
-          .from(invoices)
-          .where(
-            and(
-              eq(invoices.userId, session.user.id),
-              eq(invoices.productId, motionProductId),
-              eq(invoices.status, "paid")
-            )
-          );
-
-        if (findMotionOrder.length === 0) {
-          const files = await db
-            .select()
-            .from(sourceFile)
-            .where(eq(sourceFile.sourceId, input.sourceId));
-
-          return files.map((file) =>
-            isPrivate
-              ? {
-                  ...file,
-                  content: null,
-                  preview:
-                    typeof file.content === "string"
-                      ? file.content.split("\n").slice(0, 16).join("\n")
-                      : null,
-                }
-              : file
-          );
-        }
+        const hasPurchased = session
+          ? await hasUserPurchasedProject(session.user.id, "MOTION")
+          : false;
 
         const files = await db
           .select()
           .from(sourceFile)
           .where(eq(sourceFile.sourceId, input.sourceId));
+
+        if (!hasPurchased) {
+          return files.map((file) =>
+            isPrivate
+              ? {
+                  ...file,
+                  content: null,
+                  preview:
+                    typeof file.content === "string"
+                      ? file.content.split("\n").slice(0, 16).join("\n")
+                      : null,
+                }
+              : file
+          );
+        }
 
         return files;
       } catch (error) {
@@ -126,26 +104,6 @@ export const motionRouter = createTRPCRouter({
       }
     }),
   isUserPurchased: authenticatedProcedure.query(async ({ ctx }) => {
-    const motionProductId = await getProductIdByProject("MOTION");
-
-    if (!motionProductId) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "No Motion product found",
-      });
-    }
-
-    const findMotionOrder = await db
-      .select()
-      .from(invoices)
-      .where(
-        and(
-          eq(invoices.userId, ctx.session.user.id),
-          eq(invoices.productId, motionProductId),
-          eq(invoices.status, "paid")
-        )
-      );
-
-    return findMotionOrder.length > 0 ? true : false;
+    return hasUserPurchasedProject(ctx.session.user.id, "MOTION");
   }),
 });
