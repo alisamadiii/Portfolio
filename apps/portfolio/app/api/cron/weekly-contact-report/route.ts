@@ -36,15 +36,15 @@ export async function GET(req: NextRequest) {
   const grouped = new Map<
     string,
     {
-      userName: string;
-      userEmail: string;
+      userName: string | null;
+      userEmail: string | null;
       userMetadata: unknown;
       submissions: (typeof rows)[number]["submission"][];
     }
   >();
 
   for (const row of rows) {
-    const userId = row.submission.userId;
+    const userId = row.submission.userId!;
     if (!grouped.has(userId)) {
       grouped.set(userId, {
         userName: row.userName,
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
   for (const [, client] of grouped) {
     const meta = client.userMetadata as Record<string, unknown> | null;
-    const toEmail = (meta?.contactEmail as string) || client.userEmail;
+    const toEmail = (meta?.contactEmail as string) || client.userEmail || "";
     const siteName = (meta?.siteName as string) || undefined;
 
     for (const submission of client.submissions) {
