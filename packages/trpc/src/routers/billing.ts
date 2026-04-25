@@ -53,59 +53,60 @@ export const billingRouter = createTRPCRouter({
     .mutation(async () => {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
+        message:
+          "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
       });
 
-      const { priceIds, successUrl, cancelUrl } = input;
+      // const { priceIds, successUrl, cancelUrl } = input;
 
-      const dbUser = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, ctx.session.user.id))
-        .limit(1)
-        .then((res) => res[0]);
+      // const dbUser = await db
+      //   .select()
+      //   .from(user)
+      //   .where(eq(user.id, ctx.session.user.id))
+      //   .limit(1)
+      //   .then((res) => res[0]);
 
-      let customerId = dbUser?.stripeCustomerId;
+      // let customerId = dbUser?.stripeCustomerId;
 
-      if (!customerId) {
-        const result = await createCustomer({
-          email: ctx.session.user.email,
-          name: ctx.session.user.name,
-          metadata: { userId: ctx.session.user.id },
-        });
-        customerId = result.customerId;
-        await db
-          .update(user)
-          .set({ stripeCustomerId: customerId })
-          .where(eq(user.id, ctx.session.user.id));
-      }
+      // if (!customerId) {
+      //   const result = await createCustomer({
+      //     email: ctx.session.user.email,
+      //     name: ctx.session.user.name,
+      //     metadata: { userId: ctx.session.user.id },
+      //   });
+      //   customerId = result.customerId;
+      //   await db
+      //     .update(user)
+      //     .set({ stripeCustomerId: customerId })
+      //     .where(eq(user.id, ctx.session.user.id));
+      // }
 
-      // Determine mode based on product's recurring status
-      const [product] = await db
-        .select({ isRecurring: products.isRecurring })
-        .from(products)
-        .where(eq(products.priceId, priceIds[0]))
-        .limit(1);
+      // // Determine mode based on product's recurring status
+      // const [product] = await db
+      //   .select({ isRecurring: products.isRecurring })
+      //   .from(products)
+      //   .where(eq(products.priceId, priceIds[0]))
+      //   .limit(1);
 
-      const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+      // const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
-      const resolvedSuccessUrl = successUrl
-        ? appendSessionId(successUrl)
-        : `${base}/success?session_id={CHECKOUT_SESSION_ID}`;
+      // const resolvedSuccessUrl = successUrl
+      //   ? appendSessionId(successUrl)
+      //   : `${base}/success?session_id={CHECKOUT_SESSION_ID}`;
 
-      function appendSessionId(url: string) {
-        // If the URL already contains a "?" (has query params), append with "&", else with "?"
-        const separator = url.includes("?") ? "&" : "?";
-        return `${url}${separator}session_id={CHECKOUT_SESSION_ID}`;
-      }
+      // function appendSessionId(url: string) {
+      //   // If the URL already contains a "?" (has query params), append with "&", else with "?"
+      //   const separator = url.includes("?") ? "&" : "?";
+      //   return `${url}${separator}session_id={CHECKOUT_SESSION_ID}`;
+      // }
 
-      return createCheckoutSession({
-        customerId,
-        priceIds,
-        mode: product?.isRecurring ? "subscription" : "payment",
-        successUrl: resolvedSuccessUrl,
-        cancelUrl: cancelUrl || successUrl || `${base}/`,
-      });
+      // return createCheckoutSession({
+      //   customerId,
+      //   priceIds,
+      //   mode: product?.isRecurring ? "subscription" : "payment",
+      //   successUrl: resolvedSuccessUrl,
+      //   cancelUrl: cancelUrl || successUrl || `${base}/`,
+      // });
     }),
 
   createAgencyCheckout: authenticatedProcedure
@@ -119,82 +120,83 @@ export const billingRouter = createTRPCRouter({
     .mutation(async () => {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
+        message:
+          "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
       });
 
-      try {
-        const { productId, successUrl, extraPages } = input;
+      // try {
+      //   const { productId, successUrl, extraPages } = input;
 
-        const [product] = await db
-          .select()
-          .from(products)
-          .where(eq(products.id, productId))
-          .limit(1);
+      //   const [product] = await db
+      //     .select()
+      //     .from(products)
+      //     .where(eq(products.id, productId))
+      //     .limit(1);
 
-        if (!product || !product.priceId) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Product or price not found",
-          });
-        }
+      //   if (!product || !product.priceId) {
+      //     throw new TRPCError({
+      //       code: "NOT_FOUND",
+      //       message: "Product or price not found",
+      //     });
+      //   }
 
-        const dbUser = await db
-          .select()
-          .from(user)
-          .where(eq(user.id, ctx.session.user.id))
-          .limit(1)
-          .then((res) => res[0]);
+      //   const dbUser = await db
+      //     .select()
+      //     .from(user)
+      //     .where(eq(user.id, ctx.session.user.id))
+      //     .limit(1)
+      //     .then((res) => res[0]);
 
-        let customerId = dbUser?.stripeCustomerId;
+      //   let customerId = dbUser?.stripeCustomerId;
 
-        if (!customerId) {
-          const result = await createCustomer({
-            email: ctx.session.user.email,
-            name: ctx.session.user.name,
-            metadata: { userId: ctx.session.user.id },
-          });
-          customerId = result.customerId;
-          await db
-            .update(user)
-            .set({ stripeCustomerId: customerId })
-            .where(eq(user.id, ctx.session.user.id));
-        }
+      //   if (!customerId) {
+      //     const result = await createCustomer({
+      //       email: ctx.session.user.email,
+      //       name: ctx.session.user.name,
+      //       metadata: { userId: ctx.session.user.id },
+      //     });
+      //     customerId = result.customerId;
+      //     await db
+      //       .update(user)
+      //       .set({ stripeCustomerId: customerId })
+      //       .where(eq(user.id, ctx.session.user.id));
+      //   }
 
-        let priceId = product.priceId;
+      //   let priceId = product.priceId;
 
-        if (extraPages > 0) {
-          const adjustedAmount =
-            product.priceAmount + calcExtraPagesCost(extraPages);
-          const adHocPrice = await stripeClient.prices.create({
-            product: productId,
-            unit_amount: adjustedAmount,
-            currency: product.priceCurrency,
-            recurring: product.isRecurring ? { interval: "month" } : undefined,
-            metadata: { extraPages: String(extraPages), adHoc: "true" },
-          });
-          priceId = adHocPrice.id;
-        }
+      //   if (extraPages > 0) {
+      //     const adjustedAmount =
+      //       product.priceAmount + calcExtraPagesCost(extraPages);
+      //     const adHocPrice = await stripeClient.prices.create({
+      //       product: productId,
+      //       unit_amount: adjustedAmount,
+      //       currency: product.priceCurrency,
+      //       recurring: product.isRecurring ? { interval: "month" } : undefined,
+      //       metadata: { extraPages: String(extraPages), adHoc: "true" },
+      //     });
+      //     priceId = adHocPrice.id;
+      //   }
 
-        const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+      //   const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
-        return createCheckoutSession({
-          customerId,
-          priceIds: [priceId],
-          mode: product.isRecurring ? "subscription" : "payment",
-          successUrl:
-            successUrl || `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: successUrl || `${base}/`,
-        });
-      } catch (error: unknown) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to create checkout",
-        });
-      }
+      //   return createCheckoutSession({
+      //     customerId,
+      //     priceIds: [priceId],
+      //     mode: product.isRecurring ? "subscription" : "payment",
+      //     successUrl:
+      //       successUrl || `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
+      //     cancelUrl: successUrl || `${base}/`,
+      //   });
+      // } catch (error: unknown) {
+      //   if (error instanceof TRPCError) throw error;
+      //   throw new TRPCError({
+      //     code: "INTERNAL_SERVER_ERROR",
+      //     message:
+      //       error instanceof Error
+      //         ? error.message
+      //         : "Failed to create checkout",
+      //   });
+      // }
     }),
 
   verifyCheckout: authenticatedProcedure
