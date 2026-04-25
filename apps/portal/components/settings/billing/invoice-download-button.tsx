@@ -9,15 +9,14 @@ import { InvoiceDocument } from "@workspace/ui/pdfs/invoice";
 
 interface Props {
   order: {
-    invoiceNumber: string;
+    invoiceNumber: string | null;
     createdAt: Date | null;
-    billingName: string;
+    billingName: string | null;
     email: string;
     totalAmount: number;
     discountAmount: number;
-    productId: string;
-    billingReason: string;
-    project?: string;
+    productId: string | null;
+    billingReason: string | null;
   };
   userName?: string;
   userPhone?: string | null;
@@ -39,9 +38,8 @@ export function InvoiceDownloadButton({
   const amount = order.totalAmount / 100;
   const discount = order.discountAmount / 100;
 
-  const description = order.project
-    ? `${order.project} — ${order.billingReason.replace(/_/g, " ")}`
-    : order.billingReason.replace(/_/g, " ");
+  const reason = order.billingReason?.replace(/_/g, " ") ?? "purchase";
+  const description = reason;
 
   const items: InvoiceData["items"] = [
     {
@@ -55,7 +53,7 @@ export function InvoiceDownloadButton({
   ];
 
   const invoiceData: InvoiceData = {
-    invoiceNumber: order.invoiceNumber || order.productId.slice(0, 8),
+    invoiceNumber: order.invoiceNumber || order.productId?.slice(0, 8) || "—",
     issueDate,
     dueDate: issueDate,
     from: {
@@ -67,7 +65,7 @@ export function InvoiceDownloadButton({
       website: company.website,
     },
     to: {
-      name: userName || order.billingName,
+      name: userName || order.billingName || "",
       company: userCompany || "",
       city: userAddress || "",
       country: "",

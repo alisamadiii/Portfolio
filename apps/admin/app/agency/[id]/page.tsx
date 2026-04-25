@@ -150,21 +150,9 @@ export default function AgencyProductDetail() {
         <DataTable
           columns={[
             {
-              id: "email",
-              header: "Email",
-              accessorKey: "email",
-              cell: ({ row }) => (
-                <div>
-                  <p>{row.original.email}</p>
-                  <p className="mt-2 flex flex-wrap gap-px">
-                    {row.original.services.map((service) => (
-                      <Badge key={service.name} variant="outline">
-                        {service.name}
-                      </Badge>
-                    ))}
-                  </p>
-                </div>
-              ),
+              id: "plan",
+              header: "Plan",
+              accessorKey: "plan",
             },
             {
               id: "status",
@@ -181,14 +169,16 @@ export default function AgencyProductDetail() {
               ),
             },
             {
-              id: "amount",
+              id: "totalAmount",
               header: "Amount",
-              accessorKey: "amount",
+              accessorKey: "totalAmount",
               cell: ({ row }) => (
                 <p className="tabular-nums">
-                  ${formatPrice(row.original.amount)}{" "}
-                  {row.original.recurringInterval ? (
-                    <span className="text-muted-foreground text-xs">/mo</span>
+                  ${formatPrice(row.original.totalAmount)}{" "}
+                  {row.original.billingInterval ? (
+                    <span className="text-muted-foreground text-xs">
+                      /{row.original.billingInterval}
+                    </span>
                   ) : (
                     ""
                   )}
@@ -196,12 +186,14 @@ export default function AgencyProductDetail() {
               ),
             },
             {
-              id: "createdAt",
+              id: "periodStart",
               header: "Date",
-              accessorKey: "createdAt",
+              accessorKey: "periodStart",
               cell: ({ row }) => (
                 <p className="text-xs">
-                  {format(row.original.createdAt ?? new Date(), "MMM d, yyyy")}
+                  {row.original.periodStart
+                    ? format(new Date(row.original.periodStart), "MMM d, yyyy")
+                    : "—"}
                 </p>
               ),
             },

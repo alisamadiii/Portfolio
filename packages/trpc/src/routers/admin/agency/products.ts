@@ -1,4 +1,3 @@
-import { ProductCreate } from "@polar-sh/sdk/models/components/productcreate.js";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -6,13 +5,13 @@ import { z } from "zod";
 import { generateDescription } from "@workspace/ui/lib/agency-utils";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
-import { polarClient } from "@workspace/auth/auth";
+import { stripeClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import {
-  orders,
+  invoices,
   products,
   ProjectType,
-  subscriptions,
+  subscription,
 } from "@workspace/drizzle/schema";
 
 export type AgencyMetadata = {
@@ -48,49 +47,39 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         });
       }
 
-      // // Check if product already exists with the user id in metadata
-      // const existingProduct = await db
-      //   .select()
-      //   .from(products)
-      //   .where(sql`${products.metadata}->>'userId' = ${userId}`)
-      //   .limit(1);
-      // if (existingProduct.length > 0) {
-      //   throw new TRPCError({
-      //     code: "BAD_REQUEST",
-      //     message: "Product already exists for this user",
-      //   });
-      // }
-
-      const metadata: {
-        email: string;
-        services: string;
-        userId: string;
-        project: ProjectType;
-      } = {
+      const metadata: Record<string, string> = {
         email,
         services: JSON.stringify(services),
         userId,
         project: "AGENCY",
       };
 
-      const product: ProductCreate = {
+      const totalAmount = services.reduce((sum, s) => sum + s.price, 0);
+
+      // Step 1: Create Stripe product
+      const product = await stripeClient.products.create({
         name,
         description: generateDescription(services, oneTimePurchase),
-        prices: [
-          {
-            amountType: isFree ? "free" : "fixed",
-            priceAmount: services.reduce((sum, s) => sum + s.price, 0),
-          },
-        ],
-        recurringInterval: oneTimePurchase ? null : "month",
         metadata,
-        visibility: "private",
-      };
+        active: true,
+      });
 
-      const result = await polarClient.products.create(product);
+      // Step 2: Create Stripe price
+      const price = await stripeClient.prices.create({
+        product: product.id,
+        unit_amount: isFree ? 0 : totalAmount,
+        currency: "usd",
+        recurring: oneTimePurchase ? undefined : { interval: "month" },
+      });
 
-      return result;
-    } catch (error) {
+      // Step 3: Set default price on product
+      await stripeClient.products.update(product.id, {
+        default_price: price.id,
+      });
+
+      return { ...product, default_price: price.id };
+    } catch (error: unknown) {
+      if (error instanceof TRPCError) throw error;
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:
@@ -99,6 +88,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       });
     }
   }),
+
   update: adminProcedure
     .input(
       z.object({
@@ -109,9 +99,9 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         services: z.array(AgencyServiceSchema),
         userId: z.string(),
         prorationBehavior: z
-          .enum(["invoice", "prorate"])
+          .enum(["always_invoice", "create_prorations", "none"])
           .optional()
-          .default("prorate"),
+          .default("create_prorations"),
         isFree: z.boolean(),
       })
     )
@@ -135,46 +125,79 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           });
         }
 
-        const [subscription] = await db
-          .select()
-          .from(subscriptions)
-          .where(sql`${subscriptions.metadata}->>'userId' = ${userId}`)
-          .limit(1);
+        const totalAmount = services.reduce((sum, s) => sum + s.price, 0);
+        const metadata: Record<string, string> = {
+          email,
+          services: JSON.stringify(services),
+          userId,
+          project: "AGENCY",
+        };
 
-        const result = await polarClient.products.update({
-          id,
-          productUpdate: {
-            name,
-            description: generateDescription(services, oneTimePurchase),
-            prices: [
-              {
-                amountType: isFree ? "free" : "fixed",
-                priceAmount: services.reduce((sum, s) => sum + s.price, 0),
-              },
-            ],
-          },
+        // Get the current product to find old price
+        const currentProduct = await stripeClient.products.retrieve(id);
+        const oldPriceId =
+          typeof currentProduct.default_price === "string"
+            ? currentProduct.default_price
+            : currentProduct.default_price?.id;
+
+        // Create new price
+        const newPrice = await stripeClient.prices.create({
+          product: id,
+          unit_amount: isFree ? 0 : totalAmount,
+          currency: "usd",
+          recurring: oneTimePurchase ? undefined : { interval: "month" },
         });
 
-        if (subscription) {
-          await polarClient.subscriptions.update({
-            id: subscription.id,
-            subscriptionUpdate: {
-              productId: id,
-              prorationBehavior,
-            },
-          });
+        // Update product with new name, description, metadata, and default price
+        const result = await stripeClient.products.update(id, {
+          name,
+          description: generateDescription(services, oneTimePurchase),
+          metadata,
+          default_price: newPrice.id,
+        });
+
+        // Archive old price
+        if (oldPriceId) {
+          await stripeClient.prices.update(oldPriceId, { active: false });
+        }
+
+        // Update subscription if exists
+        const [sub] = await db
+          .select()
+          .from(subscription)
+          .where(sql`${subscription.plan} IN (
+            SELECT price_id FROM product WHERE id = ${id}
+          ) OR ${subscription.stripeSubscriptionId} IN (
+            SELECT stripe_subscription_id FROM subscription
+            WHERE reference_id = ${userId}
+          )`)
+          .limit(1);
+
+        if (sub?.stripeSubscriptionId) {
+          const stripeSub = await stripeClient.subscriptions.retrieve(
+            sub.stripeSubscriptionId
+          );
+          const itemId = stripeSub.items.data[0]?.id;
+          if (itemId) {
+            await stripeClient.subscriptions.update(sub.stripeSubscriptionId, {
+              items: [{ id: itemId, price: newPrice.id }],
+              proration_behavior: prorationBehavior,
+            });
+          }
         }
 
         return result;
-      } catch (error) {
+      } catch (error: unknown) {
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            error instanceof Error ? error.message : "Failed to create product",
+            error instanceof Error ? error.message : "Failed to update product",
           cause: error,
         });
       }
     }),
+
   getAllProducts: adminProcedure.query(async () => {
     try {
       const productsList = await db
@@ -198,7 +221,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
             : [],
         };
       });
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:
@@ -206,6 +229,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       });
     }
   }),
+
   getProductById: adminProcedure.input(z.string()).query(async ({ input }) => {
     try {
       const product = await db
@@ -234,7 +258,8 @@ export const adminAgencyProductsRouter = createTRPCRouter({
           ? (JSON.parse(services) as { name: string; price: number }[])
           : [],
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof TRPCError) throw error;
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:
@@ -242,6 +267,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       });
     }
   }),
+
   getProductByUserId: adminProcedure
     .input(z.string())
     .query(async ({ input }) => {
@@ -266,7 +292,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
             ? (JSON.parse(services) as { name: string; price: number }[])
             : [],
         };
-      } catch (error) {
+      } catch (error: unknown) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
@@ -276,32 +302,33 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         });
       }
     }),
+
   getOrdersByUserId: adminProcedure
     .input(z.string())
     .query(async ({ input }) => {
       try {
-        const ordersList = await db
+        const invoicesList = await db
           .select()
-          .from(orders)
-          .where(sql`${orders.metadata}->>'userId' = ${input}`)
-          .orderBy(desc(orders.createdAt))
+          .from(invoices)
+          .where(sql`${invoices.metadata}->>'userId' = ${input}`)
+          .orderBy(desc(invoices.createdAt))
           .limit(20);
 
         const subscriptionsList = await db
           .select()
-          .from(subscriptions)
-          .where(sql`${subscriptions.metadata}->>'userId' = ${input}`)
-          .orderBy(desc(subscriptions.createdAt))
+          .from(subscription)
+          .where(eq(subscription.referenceId, input))
+          .orderBy(desc(subscription.periodStart))
           .limit(20);
 
         return {
-          orders: ordersList.map((order) => {
-            const metadata = order.metadata as AgencyMetadata | undefined;
+          orders: invoicesList.map((invoice) => {
+            const metadata = invoice.metadata as AgencyMetadata | undefined;
             const userId = metadata?.userId;
             const email = metadata?.email;
             const services = metadata?.services;
             return {
-              ...order,
+              ...invoice,
               userId,
               email,
               services: services
@@ -309,24 +336,13 @@ export const adminAgencyProductsRouter = createTRPCRouter({
                 : [],
             };
           }),
-          subscriptions: subscriptionsList.map((subscription) => {
-            const metadata = subscription.metadata as
-              | AgencyMetadata
-              | undefined;
-            const userId = metadata?.userId;
-            const email = metadata?.email;
-            const services = metadata?.services;
+          subscriptions: subscriptionsList.map((sub) => {
             return {
-              ...subscription,
-              userId,
-              email,
-              services: services
-                ? (JSON.parse(services) as { name: string; price: number }[])
-                : [],
+              ...sub,
             };
           }),
         };
-      } catch (error) {
+      } catch (error: unknown) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
@@ -336,6 +352,7 @@ export const adminAgencyProductsRouter = createTRPCRouter({
         });
       }
     }),
+
   createCheckout: adminProcedure
     .input(
       z.object({
@@ -343,49 +360,54 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }): Promise<{ url: string }> => {
-      // TODO: Re-enable after Stripe migration
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message:
-          "Checkout is currently under construction. We're upgrading our payment system — please check back soon.",
-      });
+      try {
+        const [product] = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, input.productId));
 
-      // try {
-      //   const findProduct = await db
-      //     .select()
-      //     .from(products)
-      //     .where(eq(products.id, input.productId));
-      //   if (!findProduct) {
-      //     throw new TRPCError({
-      //       code: "NOT_FOUND",
-      //       message: "Product not found",
-      //     });
-      //   }
-      //   const product = findProduct[0];
-      //   const metadata = product.metadata as AgencyMetadata | undefined;
-      //   const userId = metadata?.userId;
-      //   const email = metadata?.email;
-      //   const services = metadata?.services;
+        if (!product) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Product not found",
+          });
+        }
 
-      //   const checkout = await polarClient.checkouts.create({
-      //     products: [input.productId],
-      //     externalCustomerId: userId,
-      //     metadata: {
-      //       userId: userId ?? "",
-      //       productId: input.productId,
-      //       email: email ?? "",
-      //       services: services ?? "",
-      //     },
-      //   });
-      //   return checkout;
-      // } catch (error) {
-      //   throw new TRPCError({
-      //     code: "INTERNAL_SERVER_ERROR",
-      //     message:
-      //       error instanceof Error
-      //         ? error.message
-      //         : "Failed to create checkout",
-      //   });
-      // }
+        const metadata = product.metadata as AgencyMetadata | undefined;
+        const userId = metadata?.userId;
+        const email = metadata?.email;
+
+        if (!product.priceId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Product has no price configured",
+          });
+        }
+
+        const checkout = await stripeClient.checkout.sessions.create({
+          mode: product.isRecurring ? "subscription" : "payment",
+          line_items: [{ price: product.priceId, quantity: 1 }],
+          metadata: {
+            userId: userId ?? "",
+            productId: input.productId,
+            email: email ?? "",
+          },
+        });
+
+        if (!checkout.url) {
+          throw new Error("Failed to create checkout URL");
+        }
+
+        return { url: checkout.url };
+      } catch (error: unknown) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to create checkout",
+        });
+      }
     }),
 });

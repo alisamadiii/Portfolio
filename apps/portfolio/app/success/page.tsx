@@ -30,17 +30,16 @@ export default function SuccessPage() {
 
 const Content = () => {
   const searchParams = useSearchParams();
-  const checkoutId = searchParams.get("checkout_id");
+  const sessionId = searchParams.get("session_id") || searchParams.get("checkout_id");
 
   const trpc = useTRPC();
-  const checkoutSession = useQuery(
-    trpc.payments.getCheckoutSession.queryOptions(checkoutId || "", {
-      enabled: !!checkoutId,
-    })
-  );
+  const checkoutSession = useQuery({
+    ...trpc.payments.verifyCheckout.queryOptions({ sessionId: sessionId || "" }),
+    enabled: !!sessionId,
+  });
 
   useEffect(() => {
-    if (checkoutSession.data?.status === "succeeded") {
+    if (checkoutSession.data?.paymentStatus === "paid") {
       const duration = 15 * 1000;
       const animationEnd = Date.now() + duration;
       const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
@@ -75,9 +74,7 @@ const Content = () => {
     }
   }, [checkoutSession.data?.status]);
 
-  console.log(checkoutId);
-
-  if (!checkoutId) {
+  if (!sessionId) {
     return notFound();
   }
 
@@ -97,7 +94,7 @@ const Content = () => {
     );
   }
 
-  return checkoutSession.data?.status === "succeeded" ? (
+  return checkoutSession.data?.paymentStatus === "paid" ? (
     <div className="flex min-h-svh flex-col items-center justify-center gap-2">
       <SuccessPurchase />
     </div>

@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     "./*": "./src/*.ts",
+    "./payments": "./src/payments/index.ts",
     "./hooks/use-user": "./src/hooks/use-user.tsx",
     "./hooks/use-admin": "./src/hooks/use-admin.tsx",
     "./hooks/use-functions": "./src/hooks/use-functions.tsx"
@@ -22,12 +23,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@better-auth/expo": "^1.5.4",
-    "@polar-sh/better-auth": "^1.8.2",
-    "@polar-sh/sdk": "^0.46.2",
+    "@better-auth/expo": "^1.6.9",
+    "@better-auth/stripe": "^1.6.8",
     "@workspace/drizzle": "workspace:*",
-    "better-auth": "^1.5.4",
+    "better-auth": "^1.6.9",
     "sonner": "^2.0.7",
+    "stripe": "^22.1.0",
     "zod": "^4.3.6"
   },
   "peerDependencies": {

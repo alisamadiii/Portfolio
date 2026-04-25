@@ -78,8 +78,9 @@ export const StepConfirmation = ({
                   <SelectValue placeholder="Select proration behavior" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="invoice">Immediate Billing</SelectItem>
-                  <SelectItem value="prorate">Next Billing Cycle</SelectItem>
+                  <SelectItem value="always_invoice">Immediate Billing</SelectItem>
+                  <SelectItem value="create_prorations">Prorate</SelectItem>
+                  <SelectItem value="none">No Change</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-muted-foreground mt-2 px-2 text-xs">

@@ -42,14 +42,14 @@ export const Subscriptions = () => {
   // Calculate financial metrics
   const totalRevenue =
     subscriptions?.reduce(
-      (acc, subscription) => acc + subscription.amount,
+      (acc, subscription) => acc + subscription.totalAmount,
       0
     ) || 0;
 
   const totalRefunded =
     subscriptions?.reduce((acc, subscription) => {
       if (subscription.canceledAt) {
-        return acc + subscription.amount;
+        return acc + subscription.totalAmount;
       }
       return acc;
     }, 0) || 0;
@@ -71,10 +71,10 @@ export const Subscriptions = () => {
             header: "Can Request Refund",
             cell: ({ row }) => (
               <code className="bg-muted rounded-md p-1 text-xs">
-                {row.original.startedAt
+                {row.original.periodStart
                   ? differenceInDays(
                       new Date(),
-                      new Date(row.original.startedAt)
+                      new Date(row.original.periodStart)
                     ) <= 7
                     ? "true"
                     : "false"
@@ -99,13 +99,15 @@ export const Subscriptions = () => {
             id: "total_amount",
             header: "Amount",
             cell: ({ row }) => (
-              <span>${(row.original.amount / 100).toFixed(2)}</span>
+              <span>${(row.original.totalAmount / 100).toFixed(2)}</span>
             ),
           },
           {
-            id: "recurring_interval",
-            header: "Recurring Interval",
-            cell: ({ row }) => <Badge>{row.original.recurringInterval}</Badge>,
+            id: "billing_interval",
+            header: "Billing Interval",
+            cell: ({ row }) => (
+              <Badge>{row.original.billingInterval ?? "—"}</Badge>
+            ),
           },
           {
             id: "cancelAtPeriodEnd",
@@ -117,14 +119,16 @@ export const Subscriptions = () => {
             ),
           },
           {
-            id: "created_at",
-            header: "Created At",
+            id: "period_start",
+            header: "Period Start",
             cell: ({ row }) => (
               <span>
-                {format(
-                  row.original.createdAt ?? new Date(),
-                  "MM/dd/yyyy hh:mm a"
-                )}
+                {row.original.periodStart
+                  ? format(
+                      new Date(row.original.periodStart),
+                      "MM/dd/yyyy hh:mm a"
+                    )
+                  : "—"}
               </span>
             ),
           },
@@ -139,7 +143,7 @@ export const Subscriptions = () => {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl">
                   <DialogHeader>
-                    <DialogTitle>Order Details</DialogTitle>
+                    <DialogTitle>Subscription Details</DialogTitle>
                   </DialogHeader>
                   <FormattedJSON data={row.original} />
                 </DialogContent>

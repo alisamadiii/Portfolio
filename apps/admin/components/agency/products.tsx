@@ -174,7 +174,7 @@ export const AgencyProducts = () => {
                   </p>
                 )}
                 <p className="text-muted-foreground mt-2 text-xs">
-                  {format(product.createdAt, "MMM d, yyyy")}
+                  {product.createdAt ? format(product.createdAt, "MMM d, yyyy") : "—"}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1">

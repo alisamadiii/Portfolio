@@ -24,7 +24,7 @@ export const BillingInvoices = () => {
 
   const trpc = useTRPC();
   const { data: orders } = useQuery(
-    trpc.payments.getOrders.queryOptions(
+    trpc.payments.getInvoices.queryOptions(
       {
         userId: user?.user.id || "",
         email: user?.user.email || "",
@@ -69,9 +69,9 @@ export const BillingInvoices = () => {
               className="bg-primary shadow-dialog aspect-16/8 rounded-xl p-4 text-white"
               style={{
                 backgroundColor:
-                  order.project === "MOTION"
+                  false
                     ? design.motion.color
-                    : order.project === "AGENCY"
+                    : false
                       ? design.agency.color
                       : undefined,
               }}
@@ -116,7 +116,7 @@ export const BillingInvoices = () => {
                 <div>
                   <p className="text-white/60">Product</p>
                   <code className="text-sm font-semibold text-white">
-                    {order.productId.slice(0, 10) + "..." || "—"}
+                    {order.productId ? order.productId.slice(0, 10) + "..." : "—"}
                   </code>
                 </div>
                 <div>
@@ -128,9 +128,9 @@ export const BillingInvoices = () => {
               </div>
               <Link
                 href={
-                  order.project === "MOTION"
+                  false
                     ? `${urls.motion}`
-                    : order.project === "AGENCY"
+                    : false
                       ? `/agency`
                       : "#"
                 }

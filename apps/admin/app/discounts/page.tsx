@@ -41,38 +41,45 @@ const DiscountsPage = () => {
             },
           },
           {
-            header: "Name",
-            accessorKey: "name",
+            header: "Code",
+            accessorKey: "code",
           },
           {
-            header: "Max Redemptions",
-            accessorKey: "maxRedemptions",
+            header: "Redemptions",
+            accessorKey: "timesRedeemed",
             cell: ({ row }) => {
               return row.original.maxRedemptions ? (
                 <span>
-                  {row.original.redemptionsCount}/{row.original.maxRedemptions}
+                  {row.original.timesRedeemed}/{row.original.maxRedemptions}
                 </span>
               ) : (
-                "-"
+                <span>{row.original.timesRedeemed}</span>
               );
             },
           },
           {
-            header: "Type",
-            accessorKey: "type",
-          },
-          {
-            header: "Created At",
-            accessorKey: "createdAt",
+            header: "Discount",
+            id: "discount",
             cell: ({ row }) => {
-              return (
-                <span>
-                  {row.original.createdAt
-                    ? formatDistanceToNow(row.original.createdAt)
-                    : "-"}
-                </span>
-              );
+              const { coupon } = row.original;
+              if (coupon.percentOff) return <span>{coupon.percentOff}% off</span>;
+              if (coupon.amountOff)
+                return (
+                  <span>
+                    ${(coupon.amountOff / 100).toFixed(2)} off
+                  </span>
+                );
+              return "—";
             },
+          },
+          {
+            header: "Active",
+            accessorKey: "active",
+            cell: ({ row }) => (
+              <Badge variant={row.original.active ? "default" : "secondary"}>
+                {row.original.active ? "Active" : "Inactive"}
+              </Badge>
+            ),
           },
           {
             id: "isExpired",
@@ -80,9 +87,11 @@ const DiscountsPage = () => {
               return (
                 <span
                   data-table-row-expired={
-                    (row.original.endsAt && isPast(row.original.endsAt)) ||
-                    row.original.maxRedemptions ===
-                      row.original.redemptionsCount
+                    (row.original.expiresAt &&
+                      isPast(new Date(row.original.expiresAt * 1000))) ||
+                    (row.original.maxRedemptions !== null &&
+                      row.original.timesRedeemed >=
+                        row.original.maxRedemptions)
                   }
                 ></span>
               );
@@ -134,11 +143,11 @@ const DiscountsPage = () => {
         isLoading={discountsQuery.isPending}
       />
       <Link
-        href={`${process.env.NEXT_PUBLIC_POLAR_URL}/products/discounts`}
+        href="https://dashboard.stripe.com/coupons"
         target="_blank"
         className={buttonVariants({ className: "mt-4" })}
       >
-        Manage Discounts in Polar
+        Manage Discounts in Stripe
         <ExternalLink />
       </Link>
     </Content>

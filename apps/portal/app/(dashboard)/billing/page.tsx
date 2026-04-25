@@ -46,7 +46,7 @@ export default function BillingPage() {
   const trpc = useTRPC();
 
   const { data: orders, isPending: ordersLoading } = useQuery(
-    trpc.payments.getOrders.queryOptions(
+    trpc.payments.getInvoices.queryOptions(
       { userId: user?.user.id || "", email: user?.user.email || "" },
       { enabled: !!user?.user.id || !!user?.user.email }
     )
@@ -67,30 +67,20 @@ export default function BillingPage() {
   );
 
   const filteredOrders = useMemo(
-    () =>
-      filter === "all"
-        ? userOrders
-        : userOrders.filter((o) => o.project === filter),
+    () => (filter === "all" ? userOrders : userOrders),
     [userOrders, filter]
   );
 
   const filteredSubscriptions = useMemo(() => {
     if (!subscriptions) return [];
-    if (filter === "all") return subscriptions;
-    return subscriptions.filter((sub) => {
-      const product = getProducts.data?.find((p) => p.id === sub.productId);
-      const project = (product?.metadata as { project?: string })?.project;
-      return project === filter;
-    });
-  }, [subscriptions, filter, getProducts.data]);
+    return subscriptions;
+  }, [subscriptions]);
 
   const getNextBillingDate = (
     sub: RouterOutputs["payments"]["getSubscriptions"][number]
   ) => {
-    if (!sub.startedAt) return null;
-    const start = new Date(sub.startedAt);
-    if (sub.recurringInterval === "month") return addMonths(start, 1);
-    if (sub.recurringInterval === "year") return addYears(start, 1);
+    if (!sub.periodEnd) return null;
+    return new Date(sub.periodEnd);
     return null;
   };
 
@@ -150,46 +140,13 @@ export default function BillingPage() {
           <DataTable
             columns={[
               {
-                id: "project",
-                header: "Project",
-                cell: ({ row }) => {
-                  const product = getProducts.data?.find(
-                    (p) => p.id === row.original.productId
-                  );
-                  const project = (
-                    product?.metadata as { project?: string }
-                  )?.project;
-                  return (
-                    <Badge
-                      variant="outline"
-                      className="gap-1.5"
-                      style={{
-                        borderColor: getProjectColor(project),
-                        color: getProjectColor(project),
-                      }}
-                    >
-                      <span
-                        className="size-2 rounded-full"
-                        style={{ backgroundColor: getProjectColor(project) }}
-                      />
-                      {project || "Other"}
-                    </Badge>
-                  );
-                },
-              },
-              {
                 id: "plan",
                 header: "Plan",
                 cell: ({ row }) => {
-                  const product = getProducts.data?.find(
-                    (p) => p.id === row.original.productId
-                  );
                   return (
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">
-                        {product?.name
-                          .replace("month", "")
-                          .replace("year", "") || "—"}
+                        {row.original.productName || row.original.plan || "—"}
                       </span>
                       {row.original.status === "trialing" && (
                         <Badge
@@ -199,31 +156,6 @@ export default function BillingPage() {
                           Trial
                         </Badge>
                       )}
-                    </div>
-                  );
-                },
-              },
-              {
-                id: "services",
-                header: "Services",
-                cell: ({ row }) => {
-                  const services = row.original.services;
-                  if (services.length === 0) {
-                    return (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    );
-                  }
-                  return (
-                    <div className="flex max-w-xs flex-wrap gap-1">
-                      {services.map((s) => (
-                        <Badge
-                          key={s.name}
-                          variant="secondary"
-                          className="text-xs font-normal"
-                        >
-                          {s.name}
-                        </Badge>
-                      ))}
                     </div>
                   );
                 },
@@ -253,12 +185,12 @@ export default function BillingPage() {
                   <div className="flex flex-col">
                     <span className="font-medium">
                       {formatCurrency(
-                        row.original.amount,
+                        row.original.totalAmount,
                         row.original.currency
                       )}
                     </span>
                     <span className="text-muted-foreground text-sm">
-                      /{row.original.recurringInterval}
+                      /{row.original.billingInterval ?? "mo"}
                     </span>
                   </div>
                 ),
@@ -364,7 +296,7 @@ export default function BillingPage() {
                 <div
                   key={order.id}
                   className="shadow-dialog rounded-xl p-4 text-white"
-                  style={{ backgroundColor: getProjectColor(order.project) }}
+                  style={{ backgroundColor: getProjectColor(undefined) }}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -380,7 +312,7 @@ export default function BillingPage() {
                         variant="outline"
                         className="border-white/30 text-white"
                       >
-                        {order.project || "Other"}
+                        Invoice
                       </Badge>
                       <Badge
                         variant={
@@ -414,7 +346,7 @@ export default function BillingPage() {
                     <div>
                       <p className="text-white/60">Product</p>
                       <code className="text-sm font-semibold text-white">
-                        {order.productId.slice(0, 10) + "..." || "—"}
+                        {order.productId ? order.productId.slice(0, 10) + "..." : "—"}
                       </code>
                     </div>
                     <div>
@@ -425,13 +357,7 @@ export default function BillingPage() {
                     </div>
                   </div>
                   <Link
-                    href={
-                      order.project === "MOTION"
-                        ? urls.motion
-                        : order.project === "AGENCY"
-                          ? "/agency"
-                          : "#"
-                    }
+                    href="#"
                     className={buttonVariants({
                       variant: "outline",
                       className: "mt-4 w-full text-xs text-black",

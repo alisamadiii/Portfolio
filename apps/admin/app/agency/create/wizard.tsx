@@ -35,7 +35,7 @@ const formSchema = z.object({
       price: z.number(),
     })
   ),
-  prorationBehavior: z.enum(["invoice", "prorate"]),
+  prorationBehavior: z.enum(["always_invoice", "create_prorations", "none"]),
 });
 
 export type ProductFormValues = z.infer<typeof formSchema>;
@@ -115,7 +115,7 @@ export const Wizard = ({ productId, product }: WizardProps) => {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prorationBehavior: "prorate",
+      prorationBehavior: "create_prorations",
       userId: product?.userId ?? "",
       email: product?.email ?? "",
       name: product?.name ?? "",

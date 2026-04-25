@@ -4,7 +4,7 @@ import { asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
-import { auth, polarClient } from "@workspace/auth/auth";
+import { auth, stripeClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { user } from "@workspace/drizzle/schema";
 
@@ -257,17 +257,28 @@ export const adminUsersRouter = createTRPCRouter({
         });
       }
 
-      const cookieStore = await cookies();
-      const response = await polarClient.customers.deleteExternal({
-        externalId: input,
-      });
+      // Look up user's Stripe customer ID and delete from Stripe
+      const dbUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, input))
+        .limit(1)
+        .then((res) => res[0]);
 
-      // Delete all cookies
+      if (dbUser?.stripeCustomerId) {
+        await stripeClient.customers.del(dbUser.stripeCustomerId);
+      }
+
+      // Delete user from database
+      await db.delete(user).where(eq(user.id, input));
+
+      // Clear cookies
+      const cookieStore = await cookies();
       cookieStore.getAll().forEach((cookie) => {
         cookieStore.delete(cookie.name);
       });
 
-      return response;
+      return { success: true };
     } catch (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",

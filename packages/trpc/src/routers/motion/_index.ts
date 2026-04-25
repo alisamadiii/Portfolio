@@ -10,7 +10,7 @@ import {
 } from "@workspace/trpc/init";
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { orders, source, sourceFile } from "@workspace/drizzle/schema";
+import { invoices, source, sourceFile } from "@workspace/drizzle/schema";
 
 export const motionRouter = createTRPCRouter({
   getFiles: baseProcedure
@@ -82,12 +82,12 @@ export const motionRouter = createTRPCRouter({
         // Check if the user has access to the motion product
         const findMotionOrder = await db
           .select()
-          .from(orders)
+          .from(invoices)
           .where(
             and(
-              eq(orders.userId, session.user.id),
-              eq(orders.productId, motionProductId),
-              eq(orders.status, "paid")
+              eq(invoices.userId, session.user.id),
+              eq(invoices.productId, motionProductId),
+              eq(invoices.status, "paid")
             )
           );
 
@@ -139,12 +139,12 @@ export const motionRouter = createTRPCRouter({
 
     const findMotionOrder = await db
       .select()
-      .from(orders)
+      .from(invoices)
       .where(
         and(
-          eq(orders.userId, ctx.session.user.id),
-          eq(orders.productId, motionProductId),
-          eq(orders.status, "paid")
+          eq(invoices.userId, ctx.session.user.id),
+          eq(invoices.productId, motionProductId),
+          eq(invoices.status, "paid")
         )
       );
 

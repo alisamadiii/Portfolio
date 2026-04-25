@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
-import { subscriptions, user } from "@workspace/drizzle/schema";
+import { subscription, user } from "@workspace/drizzle/schema";
 
 import type { AgencyMetadata } from "./products";
 
@@ -24,17 +24,15 @@ export const adminAgencyClientsRouter = createTRPCRouter({
     try {
       const rows = await db
         .select({
-          id: subscriptions.id,
-          status: subscriptions.status,
-          amount: subscriptions.amount,
-          currency: subscriptions.currency,
-          recurringInterval: subscriptions.recurringInterval,
-          metadata: subscriptions.metadata,
-          productId: subscriptions.productId,
-          cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
-          startedAt: subscriptions.startedAt,
-          canceledAt: subscriptions.canceledAt,
-          createdAt: subscriptions.createdAt,
+          id: subscription.id,
+          status: subscription.status,
+          totalAmount: subscription.totalAmount,
+          currency: subscription.currency,
+          billingInterval: subscription.billingInterval,
+          plan: subscription.plan,
+          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+          periodStart: subscription.periodStart,
+          canceledAt: subscription.canceledAt,
           // Client info from user table
           userId: user.id,
           name: user.name,
@@ -42,10 +40,9 @@ export const adminAgencyClientsRouter = createTRPCRouter({
           image: user.image,
           company: user.company,
         })
-        .from(subscriptions)
-        .leftJoin(user, eq(subscriptions.userId, user.id))
-        .where(sql`${subscriptions.metadata}->>'project' = 'AGENCY'`)
-        .orderBy(desc(subscriptions.createdAt));
+        .from(subscription)
+        .leftJoin(user, eq(subscription.referenceId, user.id))
+        .orderBy(desc(subscription.periodStart));
 
       return rows.map((row) => ({
         id: row.id,
@@ -55,17 +52,15 @@ export const adminAgencyClientsRouter = createTRPCRouter({
         image: row.image ?? null,
         company: row.company ?? null,
         status: row.status,
-        amount: row.amount,
+        totalAmount: row.totalAmount,
         currency: row.currency,
-        recurringInterval: row.recurringInterval,
-        productId: row.productId,
+        billingInterval: row.billingInterval,
+        plan: row.plan,
         cancelAtPeriodEnd: row.cancelAtPeriodEnd,
-        startedAt: row.startedAt,
+        periodStart: row.periodStart,
         canceledAt: row.canceledAt,
-        services: parseServices(row.metadata as AgencyMetadata | undefined),
-        createdAt: row.createdAt,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:
@@ -89,29 +84,15 @@ export const adminAgencyClientsRouter = createTRPCRouter({
 
       const subs = await db
         .select()
-        .from(subscriptions)
-        .where(
-          and(
-            eq(subscriptions.userId, input),
-            sql`${subscriptions.metadata}->>'project' = 'AGENCY'`
-          )
-        )
-        .orderBy(desc(subscriptions.createdAt));
-
-      const parsedSubs = subs.map((sub) => {
-        const meta = sub.metadata as AgencyMetadata | undefined;
-        return {
-          ...sub,
-          services: parseServices(meta),
-          project: meta?.project,
-        };
-      });
+        .from(subscription)
+        .where(eq(subscription.referenceId, input))
+        .orderBy(desc(subscription.periodStart));
 
       return {
         user: userRecord,
-        subscriptions: parsedSubs,
+        subscriptions: subs,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof TRPCError) throw error;
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -147,7 +128,7 @@ export const adminAgencyClientsRouter = createTRPCRouter({
         }
 
         return updated;
-      } catch (error) {
+      } catch (error: unknown) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

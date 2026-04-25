@@ -28,25 +28,19 @@ export const SuccessPurchaseDialog = ({
 }) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const checkoutId = searchParams.get("checkout_id");
+  const sessionId = searchParams.get("session_id") || searchParams.get("checkout_id");
   const hasFiredConfetti = useRef(false);
 
   const trpc = useTRPC();
   const checkoutSession = useQuery({
-    ...trpc.payments.getCheckoutSession.queryOptions(checkoutId ?? ""),
-    enabled: !!checkoutId,
+    ...trpc.payments.verifyCheckout.queryOptions({ sessionId: sessionId ?? "" }),
+    enabled: !!sessionId,
   });
 
-  const succeeded = checkoutSession.data?.status === "succeeded";
-  const open = !!checkoutId;
+  const succeeded = checkoutSession.data?.paymentStatus === "paid";
+  const open = !!sessionId;
 
-  // Resolve the actual project from checkout product metadata when rendered in portal
-  const checkoutProduct = checkoutSession.data?.product as
-    | (Record<string, unknown> & { metadata?: Record<string, unknown> })
-    | undefined;
-  const checkoutProject = (checkoutProduct?.metadata?.project as string) ?? null;
-  const resolvedProject =
-    project === "PORTFOLIO" && checkoutProject ? checkoutProject : project;
+  const resolvedProject = project;
 
   useEffect(() => {
     if (!open || !succeeded || hasFiredConfetti.current) return;

@@ -205,7 +205,7 @@ const EachPlan = ({
           onClick={() =>
             switchPlan.mutate({
               subscriptionId: currentSubscriptionId ?? "",
-              toProductId: plan.id,
+              newPriceId: plan.priceId ?? "",
             })
           }
         >
@@ -217,12 +217,10 @@ const EachPlan = ({
           size="lg"
           className="mt-auto w-full"
           onClick={() =>
-            checkout.mutate({ productId: plan.id, successUrl: "/portfolio" })
+            checkout.mutate({ priceIds: [plan.priceId ?? ""], successUrl: "/portfolio" })
           }
         >
-          {plan.trialIntervalCount && plan.trialIntervalCount > 0
-            ? `Start your free ${plan.trialIntervalCount} ${plan.trialInterval}${plan.trialIntervalCount > 1 ? "s" : ""} trial`
-            : "Get Started"}
+          Get Started
         </Button>
       )}
       {currentUser && (

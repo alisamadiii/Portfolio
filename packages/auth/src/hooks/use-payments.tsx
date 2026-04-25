@@ -3,51 +3,32 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
-import { authClient } from "@workspace/auth/auth-client";
 
 /**
- * Custom hook for fetching customer state and subscription information
- * @returns UseQueryResult<CustomerState> - Query result containing customer state data
+ * Fetch current user's subscription state from local DB
  */
 export const useGetCustomerState = () => {
-  return useQuery({
-    queryKey: ["customer-state"],
-    queryFn: async () => {
-      const product = await authClient.customer.state();
-
-      if (product.error) {
-        throw new Error(product.error.message || product.error.statusText);
-      }
-
-      return product;
-    },
-  });
+  const trpc = useTRPC();
+  return useQuery(trpc.payments.getCustomerState.queryOptions());
 };
 
 /**
- * Custom hook for checking if user has access based on subscription status
- * @returns Object containing access status, current product ID, subscription ID, and query state
+ * Check if user has active subscription access
  */
 export const useIsUserHaveAccess = () => {
   const customerStateQuery = useGetCustomerState();
 
   return {
-    isUserHaveAccess:
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.status ===
-        "active" ||
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.status ===
-        "trialing",
-    currentProductId:
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.productId,
+    isUserHaveAccess: customerStateQuery.data?.isUserHaveAccess ?? false,
+    currentProductId: customerStateQuery.data?.currentPlan ?? undefined,
     currentSubscriptionId:
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.id,
+      customerStateQuery.data?.currentSubscriptionId ?? undefined,
     ...customerStateQuery,
   };
 };
 
 /**
- * Custom hook for initiating checkout process
- * @returns UseMutationResult for checkout operation
+ * Initiate Stripe checkout
  */
 export const useCheckout = () => {
   const router = useRouter();
@@ -63,7 +44,7 @@ export const useCheckout = () => {
         /* eslint-disable-next-line react-hooks/immutability */
         window.location.href = data.url;
       },
-      onError: (error, variables) => {
+      onError: (error) => {
         if (error.data?.code === "UNAUTHORIZED") {
           router.push(
             process.env.NODE_ENV === "development"
@@ -79,8 +60,7 @@ export const useCheckout = () => {
 };
 
 /**
- * Custom hook for switching subscription plan
- * @returns UseMutationResult for switching plan operation
+ * Switch subscription plan
  */
 export const useSwitchPlan = () => {
   const trpc = useTRPC();
@@ -88,28 +68,27 @@ export const useSwitchPlan = () => {
   return useMutation(
     trpc.payments.switchPlan.mutationOptions({
       onSuccess: async () => {
-        // Wait for 3 seconds to simulate the switch plan process
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        queryClient.invalidateQueries({ queryKey: ["customer-state"] });
+        queryClient.invalidateQueries({
+          queryKey: ["payments", "getCustomerState"],
+        });
       },
     })
   );
 };
 
 /**
- * Custom hook for generating customer portal link
- * @returns UseMutationResult for generating portal link operation
+ * Generate Stripe billing portal link
  */
 export const useGeneratePortalLink = () => {
-  return useMutation({
-    mutationFn: async () => {
-      const { data, error } = await authClient.customer.portal();
+  const trpc = useTRPC();
 
-      if (error) {
-        throw new Error(error.message || error.statusText);
-      }
-
-      return data;
-    },
-  });
+  return useMutation(
+    trpc.payments.createPortalSession.mutationOptions({
+      onSuccess: (data) => {
+        /* eslint-disable-next-line react-hooks/immutability */
+        window.location.href = data.url;
+      },
+    })
+  );
 };

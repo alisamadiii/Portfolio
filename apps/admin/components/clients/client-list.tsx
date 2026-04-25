@@ -90,32 +90,18 @@ export const ClientList = () => {
           <CardContent className="flex-1 space-y-3">
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-bold tabular-nums">
-                ${formatPrice(client.amount)}
+                ${formatPrice(client.totalAmount)}
               </span>
-              {client.recurringInterval && (
+              {client.billingInterval && (
                 <span className="text-muted-foreground text-sm">
-                  /{client.recurringInterval}
+                  /{client.billingInterval}
                 </span>
               )}
             </div>
 
-            {client.services.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {client.services.map((service) => (
-                  <Badge
-                    key={service.name}
-                    variant="outline"
-                    className="text-muted-foreground text-[11px]"
-                  >
-                    {service.name}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {client.createdAt && (
+            {client.periodStart && (
               <p className="text-muted-foreground text-xs">
-                Since {format(new Date(client.createdAt), "MMM d, yyyy")}
+                Since {format(new Date(client.periodStart), "MMM d, yyyy")}
               </p>
             )}
           </CardContent>

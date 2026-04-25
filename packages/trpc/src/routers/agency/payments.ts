@@ -1,15 +1,25 @@
-import { OrderStatus } from "@polar-sh/sdk/models/components/orderstatus.js";
-import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { calcExtraPagesCost } from "@workspace/ui/lib/agency-utils";
 
-import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
-import { polarClient } from "@workspace/auth/auth";
+import {
+  authenticatedProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
+import { stripeClient } from "@workspace/auth/auth";
+import {
+  createCheckoutSession,
+  createCustomer,
+} from "@workspace/auth/payments";
 import { db } from "@workspace/drizzle/index";
-import { orders, products, subscriptions } from "@workspace/drizzle/schema";
+import {
+  invoices,
+  products,
+  subscription,
+  user,
+} from "@workspace/drizzle/schema";
 
 import { AgencyMetadata } from "../admin/agency/products";
 
@@ -41,7 +51,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
             : [],
         };
       });
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:
@@ -49,6 +59,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
       });
     }
   }),
+
   isActive: authenticatedProcedure
     .input(
       z.object({
@@ -59,36 +70,36 @@ export const agencyPaymentsRouter = createTRPCRouter({
       try {
         const userId = ctx.session.user.id;
 
-        const [activeOrder] = await db
-          .select({ id: orders.id })
-          .from(orders)
-          .innerJoin(products, eq(orders.productId, input.productId))
+        // Check for paid invoice
+        const [activeInvoice] = await db
+          .select({ id: invoices.id })
+          .from(invoices)
+          .innerJoin(products, eq(invoices.productId, input.productId))
           .where(
             and(
-              sql`${orders.userId} = ${userId}`,
-              eq(orders.status, OrderStatus.Paid),
+              sql`${invoices.userId} = ${userId}`,
+              eq(invoices.status, "paid"),
               sql`${products.metadata}->>'project' = 'AGENCY'`
             )
           )
           .limit(1);
 
-        if (activeOrder) return true;
+        if (activeInvoice) return true;
 
-        const [activeSubscription] = await db
-          .select({ id: subscriptions.id })
-          .from(subscriptions)
-          .innerJoin(products, eq(subscriptions.productId, input.productId))
+        // Check for active subscription
+        const [activeSub] = await db
+          .select({ id: subscription.id })
+          .from(subscription)
           .where(
             and(
-              sql`${subscriptions.userId} = ${userId}`,
-              eq(subscriptions.status, SubscriptionStatus.Active),
-              sql`${products.metadata}->>'project' = 'AGENCY'`
+              eq(subscription.referenceId, userId),
+              eq(subscription.status, "active")
             )
           )
           .limit(1);
 
-        return !!activeSubscription;
-      } catch (error) {
+        return !!activeSub;
+      } catch (error: unknown) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
@@ -98,6 +109,7 @@ export const agencyPaymentsRouter = createTRPCRouter({
         });
       }
     }),
+
   createCheckout: authenticatedProcedure
     .input(
       z.object({
@@ -106,62 +118,86 @@ export const agencyPaymentsRouter = createTRPCRouter({
         extraPages: z.number().int().min(0).default(0),
       })
     )
-    .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
-      // TODO: Re-enable after Stripe migration
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message:
-          "Checkout is currently under construction. We're upgrading our payment system — please check back soon.",
-      });
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const { productId, successUrl, extraPages } = input;
 
-      // try {
-      //   const { productId, successUrl, extraPages } = input;
+        // Look up product to get priceId
+        const [product] = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, productId))
+          .limit(1);
 
-      //   const checkoutIdPlaceholder = "{CHECKOUT_ID}";
-      //   let url: string | undefined;
-      //   if (successUrl) {
-      //     const delimiter = successUrl.includes("?") ? "&" : "?";
-      //     url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
-      //   }
+        if (!product || !product.priceId) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Product or price not found",
+          });
+        }
 
-      //   let priceOverride:
-      //     | { [k: string]: [{ amountType: "fixed"; priceAmount: number }] }
-      //     | undefined;
-      //   if (extraPages > 0) {
-      //     const [product] = await db
-      //       .select({ priceAmount: products.priceAmount })
-      //       .from(products)
-      //       .where(eq(products.id, productId))
-      //       .limit(1);
-      //     if (product) {
-      //       priceOverride = {
-      //         [productId]: [
-      //           {
-      //             amountType: "fixed",
-      //             priceAmount:
-      //               product.priceAmount + calcExtraPagesCost(extraPages),
-      //           },
-      //         ],
-      //       };
-      //     }
-      //   }
+        // Ensure user has a Stripe customer
+        const dbUser = await db
+          .select()
+          .from(user)
+          .where(eq(user.id, ctx.session.user.id))
+          .limit(1)
+          .then((res) => res[0]);
 
-      //   const checkout = await polarClient.checkouts.create({
-      //     products: [productId],
-      //     externalCustomerId: ctx.session.user.id,
-      //     successUrl: url,
-      //     metadata: extraPages > 0 ? { extraPages } : undefined,
-      //     prices: priceOverride,
-      //   });
-      //   return checkout;
-      // } catch (error) {
-      //   throw new TRPCError({
-      //     code: "INTERNAL_SERVER_ERROR",
-      //     message:
-      //       error instanceof Error
-      //         ? error.message
-      //         : "Failed to create checkout",
-      //   });
-      // }
+        let customerId = dbUser?.stripeCustomerId;
+
+        if (!customerId) {
+          const result = await createCustomer({
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            metadata: { userId: ctx.session.user.id },
+          });
+          customerId = result.customerId;
+          await db
+            .update(user)
+            .set({ stripeCustomerId: customerId })
+            .where(eq(user.id, ctx.session.user.id));
+        }
+
+        let priceId = product.priceId;
+
+        // For extra pages, create an ad-hoc price with adjusted amount
+        if (extraPages > 0) {
+          const adjustedAmount =
+            product.priceAmount + calcExtraPagesCost(extraPages);
+          const adHocPrice = await stripeClient.prices.create({
+            product: productId,
+            unit_amount: adjustedAmount,
+            currency: product.priceCurrency,
+            recurring: product.isRecurring ? { interval: "month" } : undefined,
+            metadata: { extraPages: String(extraPages), adHoc: "true" },
+          });
+          priceId = adHocPrice.id;
+        }
+
+        const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /\/$/,
+          ""
+        );
+
+        return createCheckoutSession({
+          customerId,
+          priceIds: [priceId],
+          mode: product.isRecurring ? "subscription" : "payment",
+          successUrl:
+            successUrl ||
+            `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${base}/`,
+        });
+      } catch (error: unknown) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to create checkout",
+        });
+      }
     }),
 });

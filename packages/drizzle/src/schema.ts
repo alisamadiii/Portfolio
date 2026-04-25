@@ -1,7 +1,3 @@
-import { OrderBillingReason } from "@polar-sh/sdk/models/components/orderbillingreason.js";
-import { OrderStatus } from "@polar-sh/sdk/models/components/orderstatus.js";
-import { SubscriptionRecurringInterval } from "@polar-sh/sdk/models/components/subscriptionrecurringinterval.js";
-import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -13,6 +9,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import type Stripe from "stripe";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -33,6 +30,7 @@ export const user = pgTable("user", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   metadata: jsonb("metadata").default({}),
+  stripeCustomerId: text("stripe_customer_id"),
 
   // New
   phone: text("phone"),
@@ -86,18 +84,14 @@ export const verification = pgTable("verification", {
   ),
 });
 
+// Local mirror of Stripe products — synced via webhooks
 export const products = pgTable("product", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
+  id: text("id").primaryKey(), // Stripe product ID (prod_xxx)
   name: text("name").notNull(),
   description: text("description"),
-  trialInterval: text("trial_interval", {
-    enum: ["day", "week", "month", "year"],
-  }),
-  trialIntervalCount: integer("trial_interval_count").default(0),
   popular: boolean("popular").notNull().default(false),
-  priceAmount: integer("price_amount").notNull(),
+  priceId: text("price_id"), // Stripe price ID (price_xxx)
+  priceAmount: integer("price_amount").notNull().default(0),
   priceCurrency: text("price_currency").notNull().default("usd"),
   recurringInterval: text("recurring_interval", {
     enum: ["day", "week", "month", "year"],
@@ -105,57 +99,72 @@ export const products = pgTable("product", {
   isRecurring: boolean("is_recurring").notNull().default(true),
   isArchived: boolean("is_archived").notNull().default(false),
   metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const subscriptions = pgTable("subscription", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: text("user_id").notNull(),
-  email: text("email").notNull(),
-  amount: integer("amount").notNull(),
-  currency: text("currency").notNull().default("usd"),
-  productId: text("product_id").notNull(),
+// Better Auth Stripe plugin manages this table automatically.
+// Defined here so tRPC routers and admin queries can reference it.
+export const subscription = pgTable("subscription", {
+  id: text("id").primaryKey(),
+  plan: text("plan").notNull(),
+  referenceId: text("reference_id").notNull(),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   status: text("status", {
-    enum: Object.values(SubscriptionStatus) as [SubscriptionStatus],
-  }).notNull(),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+    enum: [
+      "active",
+      "canceled",
+      "incomplete",
+      "incomplete_expired",
+      "past_due",
+      "paused",
+      "trialing",
+      "unpaid",
+    ] as const satisfies readonly Stripe.Subscription.Status[],
+  })
+    .notNull()
+    .default("incomplete"),
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  cancelAt: timestamp("cancel_at"),
+  canceledAt: timestamp("canceled_at"),
+  endedAt: timestamp("ended_at"),
   trialStart: timestamp("trial_start"),
   trialEnd: timestamp("trial_end"),
-  startedAt: timestamp("started_at"),
-  canceledAt: timestamp("canceled_at"),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
-  recurringInterval: text("recurring_interval", {
-    enum: Object.values(SubscriptionRecurringInterval) as [
-      SubscriptionRecurringInterval,
-    ],
-  }),
-  customerCancellationReason: text("customer_cancellation_reason"),
-  customerCancellationComment: text("customer_cancellation_comment"),
-  metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
+  seats: integer("seats"),
+  totalAmount: integer("total_amount").notNull().default(0),
+  currency: text("currency").notNull().default("usd"),
+  itemCount: integer("item_count").notNull().default(1),
+  billingInterval: text("billing_interval"),
+  stripeScheduleId: text("stripe_schedule_id"),
 });
 
-export const orders = pgTable("order", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
+// Local mirror of Stripe invoices — synced via webhooks
+export const invoices = pgTable("invoice", {
+  id: text("id").primaryKey(), // Stripe invoice ID (in_xxx)
   userId: text("user_id").notNull(),
   email: text("email").notNull(),
-  productId: text("product_id").notNull(),
-  billingName: text("billing_name").notNull(),
-  subscriptionId: text("subscription_id").notNull(),
-  billingReason: text("billing_reason", {
-    enum: Object.values(OrderBillingReason) as [OrderBillingReason],
-  }).notNull(),
-  totalAmount: integer("total_amount").notNull(),
-  invoiceNumber: text("invoice_number").notNull(),
+  productId: text("product_id"),
+  subscriptionId: text("subscription_id"),
+  billingName: text("billing_name"),
+  billingReason: text("billing_reason"),
+  totalAmount: integer("total_amount").notNull().default(0),
+  invoiceNumber: text("invoice_number"),
   status: text("status", {
-    enum: Object.values(OrderStatus) as [OrderStatus],
+    enum: [
+      "draft",
+      "open",
+      "paid",
+      "uncollectible",
+      "void",
+    ] as const satisfies readonly Stripe.Invoice.Status[],
   }).notNull(),
   discountAmount: integer("discount_amount").notNull().default(0),
+  currency: text("currency").notNull().default("usd"),
+  hostedInvoiceUrl: text("hosted_invoice_url"),
+  pdfUrl: text("pdf_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
