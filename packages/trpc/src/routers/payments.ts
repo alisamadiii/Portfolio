@@ -107,39 +107,46 @@ export const paymentsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      try {
-        const { productId, successUrl, discountId } = input;
+      // TODO: Re-enable after Stripe migration
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "Checkout is currently under construction. We're upgrading our payment system — please check back soon.",
+      });
 
-        const checkoutIdPlaceholder = "{CHECKOUT_ID}";
-        let url: string;
-        if (successUrl) {
-          const delimiter = successUrl.includes("?") ? "&" : "?";
-          url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
-        } else {
-          const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-            /\/$/,
-            ""
-          );
-          url = `${base}/success?checkout_id=${checkoutIdPlaceholder}`;
-        }
+      // try {
+      //   const { productId, successUrl, discountId } = input;
 
-        const response = await polarClient.checkouts.create({
-          products: [productId],
-          externalCustomerId: ctx.session.user.id,
-          successUrl: url,
-          discountId: discountId ?? undefined,
-        });
-        return response;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to create checkout",
-          cause: error,
-        });
-      }
+      //   const checkoutIdPlaceholder = "{CHECKOUT_ID}";
+      //   let url: string;
+      //   if (successUrl) {
+      //     const delimiter = successUrl.includes("?") ? "&" : "?";
+      //     url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
+      //   } else {
+      //     const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+      //       /\/$/,
+      //       ""
+      //     );
+      //     url = `${base}/success?checkout_id=${checkoutIdPlaceholder}`;
+      //   }
+
+      //   const response = await polarClient.checkouts.create({
+      //     products: [productId],
+      //     externalCustomerId: ctx.session.user.id,
+      //     successUrl: url,
+      //     discountId: discountId ?? undefined,
+      //   });
+      //   return response;
+      // } catch (error) {
+      //   throw new TRPCError({
+      //     code: "INTERNAL_SERVER_ERROR",
+      //     message:
+      //       error instanceof Error
+      //         ? error.message
+      //         : "Failed to create checkout",
+      //     cause: error,
+      //   });
+      // }
     }),
 
   /**
@@ -189,6 +196,13 @@ export const paymentsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
+      // TODO: Re-enable after Stripe migration
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "Plan switching is currently under construction. We're upgrading our payment system — please check back soon.",
+      });
+
       try {
         const { subscriptionId, toProductId, prorationBehavior } = input;
 

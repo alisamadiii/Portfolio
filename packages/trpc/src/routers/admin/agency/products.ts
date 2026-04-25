@@ -343,42 +343,49 @@ export const adminAgencyProductsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      try {
-        const findProduct = await db
-          .select()
-          .from(products)
-          .where(eq(products.id, input.productId));
-        if (!findProduct) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Product not found",
-          });
-        }
-        const product = findProduct[0];
-        const metadata = product.metadata as AgencyMetadata | undefined;
-        const userId = metadata?.userId;
-        const email = metadata?.email;
-        const services = metadata?.services;
+      // TODO: Re-enable after Stripe migration
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "Checkout is currently under construction. We're upgrading our payment system — please check back soon.",
+      });
 
-        const checkout = await polarClient.checkouts.create({
-          products: [input.productId],
-          externalCustomerId: userId,
-          metadata: {
-            userId: userId ?? "",
-            productId: input.productId,
-            email: email ?? "",
-            services: services ?? "",
-          },
-        });
-        return checkout;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to create checkout",
-        });
-      }
+      // try {
+      //   const findProduct = await db
+      //     .select()
+      //     .from(products)
+      //     .where(eq(products.id, input.productId));
+      //   if (!findProduct) {
+      //     throw new TRPCError({
+      //       code: "NOT_FOUND",
+      //       message: "Product not found",
+      //     });
+      //   }
+      //   const product = findProduct[0];
+      //   const metadata = product.metadata as AgencyMetadata | undefined;
+      //   const userId = metadata?.userId;
+      //   const email = metadata?.email;
+      //   const services = metadata?.services;
+
+      //   const checkout = await polarClient.checkouts.create({
+      //     products: [input.productId],
+      //     externalCustomerId: userId,
+      //     metadata: {
+      //       userId: userId ?? "",
+      //       productId: input.productId,
+      //       email: email ?? "",
+      //       services: services ?? "",
+      //     },
+      //   });
+      //   return checkout;
+      // } catch (error) {
+      //   throw new TRPCError({
+      //     code: "INTERNAL_SERVER_ERROR",
+      //     message:
+      //       error instanceof Error
+      //         ? error.message
+      //         : "Failed to create checkout",
+      //   });
+      // }
     }),
 });

@@ -107,54 +107,61 @@ export const agencyPaymentsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      try {
-        const { productId, successUrl, extraPages } = input;
+      // TODO: Re-enable after Stripe migration
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "Checkout is currently under construction. We're upgrading our payment system — please check back soon.",
+      });
 
-        const checkoutIdPlaceholder = "{CHECKOUT_ID}";
-        let url: string | undefined;
-        if (successUrl) {
-          const delimiter = successUrl.includes("?") ? "&" : "?";
-          url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
-        }
+      // try {
+      //   const { productId, successUrl, extraPages } = input;
 
-        let priceOverride:
-          | { [k: string]: [{ amountType: "fixed"; priceAmount: number }] }
-          | undefined;
-        if (extraPages > 0) {
-          const [product] = await db
-            .select({ priceAmount: products.priceAmount })
-            .from(products)
-            .where(eq(products.id, productId))
-            .limit(1);
-          if (product) {
-            priceOverride = {
-              [productId]: [
-                {
-                  amountType: "fixed",
-                  priceAmount:
-                    product.priceAmount + calcExtraPagesCost(extraPages),
-                },
-              ],
-            };
-          }
-        }
+      //   const checkoutIdPlaceholder = "{CHECKOUT_ID}";
+      //   let url: string | undefined;
+      //   if (successUrl) {
+      //     const delimiter = successUrl.includes("?") ? "&" : "?";
+      //     url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
+      //   }
 
-        const checkout = await polarClient.checkouts.create({
-          products: [productId],
-          externalCustomerId: ctx.session.user.id,
-          successUrl: url,
-          metadata: extraPages > 0 ? { extraPages } : undefined,
-          prices: priceOverride,
-        });
-        return checkout;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to create checkout",
-        });
-      }
+      //   let priceOverride:
+      //     | { [k: string]: [{ amountType: "fixed"; priceAmount: number }] }
+      //     | undefined;
+      //   if (extraPages > 0) {
+      //     const [product] = await db
+      //       .select({ priceAmount: products.priceAmount })
+      //       .from(products)
+      //       .where(eq(products.id, productId))
+      //       .limit(1);
+      //     if (product) {
+      //       priceOverride = {
+      //         [productId]: [
+      //           {
+      //             amountType: "fixed",
+      //             priceAmount:
+      //               product.priceAmount + calcExtraPagesCost(extraPages),
+      //           },
+      //         ],
+      //       };
+      //     }
+      //   }
+
+      //   const checkout = await polarClient.checkouts.create({
+      //     products: [productId],
+      //     externalCustomerId: ctx.session.user.id,
+      //     successUrl: url,
+      //     metadata: extraPages > 0 ? { extraPages } : undefined,
+      //     prices: priceOverride,
+      //   });
+      //   return checkout;
+      // } catch (error) {
+      //   throw new TRPCError({
+      //     code: "INTERNAL_SERVER_ERROR",
+      //     message:
+      //       error instanceof Error
+      //         ? error.message
+      //         : "Failed to create checkout",
+      //   });
+      // }
     }),
 });
