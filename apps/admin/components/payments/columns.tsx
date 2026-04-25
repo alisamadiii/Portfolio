@@ -11,13 +11,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
+import { design } from "@workspace/ui/lib/design";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { FormattedJSON } from "@/components/json-format";
 
+function getProjectColor(metadata: unknown): string | undefined {
+  const project = (metadata as { project?: string })?.project;
+  if (project === "MOTION") return design.motion.color;
+  if (project === "AGENCY") return design.agency.color;
+  return undefined;
+}
+
 export const paymentColumns: ColumnDef<
   RouterOutputs["products"]["getAll"][number]
 >[] = [
+  {
+    id: "project",
+    header: "",
+    cell: ({ row }) => {
+      const color = getProjectColor(row.original.metadata);
+      return (
+        <span
+          className="block size-3 rounded-full"
+          style={{ backgroundColor: color ?? design.default.color }}
+        />
+      );
+    },
+    size: 40,
+  },
   {
     header: "Product ID",
     accessorKey: "productId",

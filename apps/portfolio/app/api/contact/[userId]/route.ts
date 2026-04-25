@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { getIp, isRateLimited } from "@workspace/trpc/middleware/rate-limit";
 import { db } from "@workspace/drizzle/index";
-import { contactSubmissions, user } from "@workspace/drizzle/schema";
+import { apiTokens, contactSubmissions } from "@workspace/drizzle/schema";
 import { sendEmail } from "@workspace/email";
 
 const corsHeaders = {
@@ -35,18 +35,48 @@ export async function POST(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // 1. Auth
+    // 1. Auth — validate token
     const apiKey = req.headers.get("x-api-key");
 
-    if (!apiKey || apiKey !== process.env.CLIENT_API_SECRET) {
+    console.log({ apiKey });
+
+    if (!apiKey) {
       return NextResponse.json(
-        {
-          error:
-            "Authentication failed. Please check your API key and try again.",
-        },
+        { error: "Authentication failed. Please provide an API key." },
         { status: 401, headers: corsHeaders }
       );
     }
+
+    const [tokenRecord] = await db
+      .select()
+      .from(apiTokens)
+      .where(eq(apiTokens.token, apiKey))
+      .limit(1);
+
+    console.log(tokenRecord);
+
+    if (!tokenRecord) {
+      return NextResponse.json(
+        { error: "Authentication failed. Invalid API key." },
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
+    if (tokenRecord.expiresAt && tokenRecord.expiresAt < new Date()) {
+      return NextResponse.json(
+        { error: "API key has expired. Please contact support." },
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
+    if (!tokenRecord.scopes.includes("contact")) {
+      return NextResponse.json(
+        { error: "API key does not have permission for this endpoint." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
+
+    // Usage count incremented after successful email send (below)
 
     // 2. Parse body
     let body: z.infer<typeof bodySchema>;
@@ -67,6 +97,7 @@ export async function POST(
           { status: 400, headers: corsHeaders }
         );
       }
+      console.log("[contact-api] body parse error:", err);
       return NextResponse.json(
         {
           error:
@@ -89,33 +120,14 @@ export async function POST(
       );
     }
 
-    // 4. Verify user exists
-    const { userId } = await params;
-    const [client] = await db
-      .select({
-        id: user.id,
-        email: user.email,
-        metadata: user.metadata,
-      })
-      .from(user)
-      .where(eq(user.id, userId))
-      .limit(1);
+    // 4. Insert contact submission
+    const toEmail = tokenRecord.clientEmail;
+    const clientUserId = tokenRecord.clientUserId;
 
-    if (!client) {
-      return NextResponse.json(
-        {
-          error:
-            "We couldn't find the recipient for this message. Please contact support.",
-        },
-        { status: 404, headers: corsHeaders }
-      );
-    }
-
-    // 5. Insert
     const [submission] = await db
       .insert(contactSubmissions)
       .values({
-        userId,
+        userId: clientUserId ?? null,
         submitterName: body.name,
         submitterEmail: body.email,
         subject: body.subject,
@@ -125,36 +137,30 @@ export async function POST(
       })
       .returning({ id: contactSubmissions.id });
 
-    // 6. Send email to client
-    let meta: Record<string, unknown> | null = null;
-    const rawMeta = client.metadata;
-    if (rawMeta && typeof rawMeta === "object") {
-      meta = rawMeta as Record<string, unknown>;
-    } else if (typeof rawMeta === "string") {
-      try {
-        // Handle unquoted keys from DB (e.g. {contactEmail: "..."} → {"contactEmail": "..."})
-        const fixed = rawMeta.replace(/(\{|,)\s*(\w+)\s*:/g, '$1"$2":');
-        meta = JSON.parse(fixed);
-      } catch {
-        meta = null;
-      }
-    }
-    const toEmail = (meta?.contactEmail as string) || client.email;
-    const siteName = (meta?.siteName as string) || undefined;
+    // 5. Send email to client
     const subMeta = body.metadata as Record<string, unknown> | undefined;
 
-    console.log("[contact-api] rawMeta:", typeof rawMeta, rawMeta);
-    console.log("[contact-api] parsed meta:", meta);
-    console.log("[contact-api] sending to:", toEmail);
-
-    sendEmail("contactMessage", toEmail, {
+    const { error: emailError } = await sendEmail("contactMessage", toEmail, {
       name: body.name,
       email: body.email,
       phone: (subMeta?.phone as string) || undefined,
       message: body.message,
-      siteName,
       metadata: subMeta,
-    }).catch(() => {});
+    });
+
+    if (emailError) {
+      console.error("[contact-api] email failed:", emailError);
+      return NextResponse.json(
+        { error: "Failed to send email notification. Please try again later." },
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
+    // Increment usage count
+    db.update(apiTokens)
+      .set({ usageCount: sql`${apiTokens.usageCount} + 1` })
+      .where(eq(apiTokens.id, tokenRecord.id))
+      .then(() => {});
 
     return NextResponse.json(
       {

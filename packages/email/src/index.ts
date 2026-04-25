@@ -47,8 +47,8 @@ type TemplateProps = {
 // Template registry — add new emails here, that's it
 const templates: {
   [K in keyof TemplateProps]: {
-    subject: string;
-    fromLabel: string;
+    subject: string | ((props: TemplateProps[K]) => string);
+    fromLabel: string | ((props: TemplateProps[K]) => string);
     from: string;
     component: React.ComponentType<TemplateProps[K]>;
   };
@@ -96,8 +96,11 @@ const templates: {
     component: ClientMessage,
   },
   contactMessage: {
-    subject: "New Contact Message",
-    fromLabel: "AliSamadii.LLC Portal",
+    subject: (props) => `${props.name} - AliSamadii LLC`,
+    fromLabel: (props) =>
+      props.siteName
+        ? `${props.siteName} Contact Form`
+        : "Contact Form Notification",
     from: "agency@alisamadii.com",
     component: ContactMessage,
   },
@@ -131,7 +134,9 @@ export async function sendEmail<T extends keyof typeof templates>(
   to: string | string[],
   props: TemplateProps[T]
 ) {
-  const { subject, fromLabel, from, component } = templates[template];
+  const { subject: subjectOrFn, fromLabel: fromLabelOrFn, from, component } = templates[template];
+  const subject = typeof subjectOrFn === "function" ? subjectOrFn(props) : subjectOrFn;
+  const fromLabel = typeof fromLabelOrFn === "function" ? fromLabelOrFn(props) : fromLabelOrFn;
   const toAddresses = Array.isArray(to) ? to : [to];
   const element = createElement(component, props);
   const htmlContent = await renderEmail(element);

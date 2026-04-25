@@ -304,9 +304,7 @@ export const contactSubmissions = pgTable("contact_submissions", {
   id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id"),
   submitterName: text("submitter_name").notNull(),
   submitterEmail: text("submitter_email").notNull(),
   subject: text("subject").notNull(),
@@ -316,6 +314,25 @@ export const contactSubmissions = pgTable("contact_submissions", {
   status: contactSubmissionStatusEnum("status").notNull().default("NEW"),
   reportedAt: timestamp("reported_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── API Tokens ──────────────────────────────────────────────────
+
+export const tokenScopeEnum = pgEnum("token_scope", ["contact"]);
+
+export const apiTokens = pgTable("api_tokens", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  token: text("token").notNull().unique(),
+  description: text("description").notNull(),
+  clientEmail: text("client_email").notNull(),
+  clientUserId: text("client_user_id"),
+  scopes: tokenScopeEnum("scopes").array().notNull(),
+  usageCount: integer("usage_count").notNull().default(0),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export type ProjectType = (typeof projectsTypeValues)[number];

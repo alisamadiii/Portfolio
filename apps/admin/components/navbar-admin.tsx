@@ -17,6 +17,7 @@ const links = [
   { label: "Clients", href: "/clients" },
   { label: "Cold Emails", href: "/cold-emails" },
   { label: "Notifications", href: "/notifications" },
+  { label: "API Tokens", href: "/tokens" },
 ];
 
 export const NavbarAdmin = () => {

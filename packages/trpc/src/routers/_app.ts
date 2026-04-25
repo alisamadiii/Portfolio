@@ -10,6 +10,7 @@ import { motionRouter } from "./motion";
 import { notificationRouter } from "./notification";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
+import { tokensRouter } from "./tokens";
 import { usersRouter } from "./users";
 
 export const appRouter = createTRPCRouter({
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   clients: clientsRouter,
   sources: sourcesRouter,
   coldEmails: coldEmailsRouter,
+  tokens: tokensRouter,
 });
 
 // export type definition of API
