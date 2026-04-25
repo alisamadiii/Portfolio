@@ -6,18 +6,6 @@ import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import { subscription, user } from "@workspace/drizzle/schema";
 
-import type { AgencyMetadata } from "./types/agency";
-
-function parseServices(metadata: AgencyMetadata | undefined) {
-  const raw = metadata?.services;
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as { name: string; price: number }[];
-  } catch {
-    return [];
-  }
-}
-
 export const clientsRouter = createTRPCRouter({
   getAll: adminProcedure.query(async () => {
     try {

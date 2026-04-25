@@ -2,8 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
-import { calcExtraPagesCost } from "@workspace/ui/lib/agency-utils";
-
 import {
   authenticatedProcedure,
   createTRPCRouter,
@@ -24,6 +22,27 @@ import {
   subscription,
   user,
 } from "@workspace/drizzle/schema";
+
+// ─── Extra-page pricing (amounts in cents) ──────────────────────
+const EXTRA_PAGE_TIERS = [
+  { pages: 5, pricePerPage: 2500 }, // pages 1–5:   $25/mo each
+  { pages: 5, pricePerPage: 4000 }, // pages 6–10:  $40/mo each
+  { pages: 5, pricePerPage: 6000 }, // pages 11–15: $60/mo each
+] as const;
+
+const MAX_EXTRA_PAGES = EXTRA_PAGE_TIERS.reduce((s, t) => s + t.pages, 0);
+
+function calcExtraPagesCost(extraPages: number): number {
+  let remaining = Math.min(extraPages, MAX_EXTRA_PAGES);
+  let total = 0;
+  for (const tier of EXTRA_PAGE_TIERS) {
+    if (remaining <= 0) break;
+    const count = Math.min(remaining, tier.pages);
+    total += count * tier.pricePerPage;
+    remaining -= count;
+  }
+  return total;
+}
 
 export const billingRouter = createTRPCRouter({
   createCheckout: authenticatedProcedure

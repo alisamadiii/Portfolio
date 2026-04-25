@@ -14,7 +14,6 @@ const links = [
     href: `${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`,
   },
   { label: "Code", href: "/code" },
-  { label: "Agency", href: "/agency" },
   { label: "Clients", href: "/clients" },
   { label: "Cold Emails", href: "/cold-emails" },
   { label: "Notifications", href: "/notifications" },
