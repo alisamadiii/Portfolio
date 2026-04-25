@@ -50,7 +50,7 @@ export const billingRouter = createTRPCRouter({
         cancelUrl: z.string().optional(),
       })
     )
-    .mutation(async () => {
+    .mutation(async (): Promise<{ url?: string }> => {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message:
@@ -117,7 +117,7 @@ export const billingRouter = createTRPCRouter({
         extraPages: z.number().int().min(0).default(0),
       })
     )
-    .mutation(async () => {
+    .mutation(async (): Promise<{ url?: string }> => {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message:

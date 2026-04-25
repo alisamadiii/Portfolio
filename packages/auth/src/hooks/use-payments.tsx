@@ -42,7 +42,7 @@ export const useCheckout = () => {
         }
 
         /* eslint-disable-next-line react-hooks/immutability */
-        window.location.href = data.url;
+        window.location.href = data.url || "";
       },
       onError: (error) => {
         if (error.data?.code === "UNAUTHORIZED") {
