@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 import { authClient } from "@workspace/auth/auth-client";
@@ -71,6 +72,7 @@ export const useCheckout = () => {
           );
           return;
         }
+        toast.error(error.message);
       },
     })
   );
