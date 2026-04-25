@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import z from "zod";
 
 import {
-  SERVICE_CATALOG,
   STARTER_PRICE,
   STARTER_SERVICE_ID,
 } from "@workspace/ui/lib/agency-utils";
@@ -20,7 +19,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { StepConfirmation } from "./step-confirmation";
 import { StepProduct } from "./step-product";
-import { StepService } from "./step-service";
+import { StepServices } from "./step-services";
 import { StepStarter } from "./step-starter";
 import { StepUser } from "./step-user";
 
@@ -52,78 +51,10 @@ type WizardStep = {
 };
 
 const WIZARD_STEPS: WizardStep[] = [
-  // Client & Product
   { id: "user", title: "Select Client", type: "custom" },
   { id: "product", title: "Product Details", type: "custom" },
-
-  // Package — auto-included, cannot be removed
   { id: "starter", title: "Starter Package", type: "custom" },
-
-  // Infrastructure
-  {
-    id: "hosting",
-    title: "Hosting & Uptime Management",
-    type: "service",
-    serviceId: "hosting",
-  },
-  {
-    id: "domain",
-    title: "Domain & DNS Management",
-    type: "service",
-    serviceId: "domain",
-  },
-  {
-    id: "business_email",
-    title: "Business Email",
-    type: "service",
-    serviceId: "business_email",
-  },
-
-  // Project modules — map 1:1 to the client project config JSON
-  { id: "blog", title: "Blog", type: "service", serviceId: "blog" },
-  { id: "contact", title: "Contact", type: "service", serviceId: "contact" },
-  { id: "payments", title: "Payments", type: "service", serviceId: "payments" },
-  {
-    id: "discounts",
-    title: "Discounts",
-    type: "service",
-    serviceId: "discounts",
-  },
-  { id: "upload", title: "Uploads", type: "service", serviceId: "upload" },
-  { id: "auth", title: "Authentication", type: "service", serviceId: "auth" },
-  {
-    id: "settings",
-    title: "User Settings",
-    type: "service",
-    serviceId: "settings",
-  },
-  { id: "email", title: "Email", type: "service", serviceId: "email" },
-
-  // Admin dashboard — sub-modules only appear when admin is included
-  { id: "admin", title: "Admin Dashboard", type: "service", serviceId: "admin" },
-  {
-    id: "admin_users",
-    title: "Admin: Users",
-    type: "service",
-    serviceId: "admin_users",
-    showIf: (services) => services.some((s) => s.name === "admin"),
-  },
-  {
-    id: "admin_products",
-    title: "Admin: Products",
-    type: "service",
-    serviceId: "admin_products",
-    showIf: (services) => services.some((s) => s.name === "admin"),
-  },
-  {
-    id: "admin_media",
-    title: "Admin: Media",
-    type: "service",
-    serviceId: "admin_media",
-    showIf: (services) => services.some((s) => s.name === "admin"),
-  },
-
-  // Review
+  { id: "services", title: "Services", type: "custom" },
   { id: "confirmation", title: "Review & Create", type: "custom" },
 ];
 
@@ -142,16 +73,16 @@ function getStepSummary(
   if (step.id === "starter") {
     return `$${(STARTER_PRICE / 100).toFixed(2)}/mo`;
   }
+  if (step.id === "services") {
+    const nonStarter = formValues.services.filter(
+      (s) => s.name !== "starter"
+    );
+    if (nonStarter.length === 0) return "No extras";
+    return `${nonStarter.length} service${nonStarter.length > 1 ? "s" : ""}`;
+  }
   if (step.id === "confirmation") {
     const total = formValues.services.reduce((sum, s) => sum + s.price, 0);
     return total > 0 ? `$${(total / 100).toFixed(2)}/mo total` : null;
-  }
-  if (step.type === "service" && step.serviceId) {
-    const service = formValues.services.find((s) => s.name === step.serviceId);
-    if (service) {
-      return `$${(service.price / 100).toFixed(2)}/mo`;
-    }
-    return "Skipped";
   }
   return null;
 }
@@ -277,34 +208,6 @@ export const Wizard = ({ productId, product }: WizardProps) => {
 
   const formValues = form.getValues();
 
-  // ── Service step helpers ─────────────────────────────────────────────────
-
-  const isServiceIncluded = (serviceId: string) =>
-    services.some((s) => s.name === serviceId);
-
-  const getServicePrice = (serviceId: string) =>
-    services.find((s) => s.name === serviceId)?.price ?? 0;
-
-  const toggleService = (serviceId: string, included: boolean) => {
-    if (included) {
-      if (!isServiceIncluded(serviceId)) {
-        form.setValue("services", [...services, { name: serviceId, price: 0 }]);
-      }
-    } else {
-      form.setValue(
-        "services",
-        services.filter((s) => s.name !== serviceId)
-      );
-    }
-  };
-
-  const updateServicePrice = (serviceId: string, cents: number) => {
-    form.setValue(
-      "services",
-      services.map((s) => (s.name === serviceId ? { ...s, price: cents } : s))
-    );
-  };
-
   // ── Render step content ──────────────────────────────────────────────────
 
   const renderStepContent = (step: WizardStep) => {
@@ -330,6 +233,13 @@ export const Wizard = ({ productId, product }: WizardProps) => {
         );
       case "starter":
         return <StepStarter onNext={() => completeAndAdvance("starter")} />;
+      case "services":
+        return (
+          <StepServices
+            form={form}
+            onNext={() => completeAndAdvance("services")}
+          />
+        );
       case "confirmation":
         return (
           <StepConfirmation
@@ -340,28 +250,8 @@ export const Wizard = ({ productId, product }: WizardProps) => {
             onSubmit={handleSubmit}
           />
         );
-      default: {
-        if (step.type === "service" && step.serviceId) {
-          const catalogEntry = SERVICE_CATALOG.find(
-            (s) => s.id === step.serviceId
-          );
-          if (!catalogEntry) return null;
-
-          return (
-            <StepService
-              service={catalogEntry}
-              isIncluded={isServiceIncluded(step.serviceId)}
-              price={getServicePrice(step.serviceId)}
-              onToggle={(included) => toggleService(step.serviceId!, included)}
-              onPriceChange={(cents) =>
-                updateServicePrice(step.serviceId!, cents)
-              }
-              onNext={() => completeAndAdvance(step.id)}
-            />
-          );
-        }
+      default:
         return null;
-      }
     }
   };
 

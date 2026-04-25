@@ -122,6 +122,15 @@ export const SERVICE_CATALOG: ServiceDefinition[] = [
     category: "Modules",
   },
 
+  {
+    id: "cron",
+    label: "Cron Jobs",
+    description:
+      "Vercel-powered scheduled tasks with job registry and config-driven validation.",
+    defaultPrice: 2900,
+    category: "Modules",
+  },
+
   // Admin dashboard
   {
     id: "admin",
