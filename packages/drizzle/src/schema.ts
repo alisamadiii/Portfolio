@@ -161,7 +161,6 @@ export const invoices = pgTable("invoice", {
       "void",
     ] as const satisfies readonly Stripe.Invoice.Status[],
   }).notNull(),
-  discountAmount: integer("discount_amount").notNull().default(0),
   currency: text("currency").notNull().default("usd"),
   hostedInvoiceUrl: text("hosted_invoice_url"),
   pdfUrl: text("pdf_url"),

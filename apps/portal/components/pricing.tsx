@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CircleCheck } from "lucide-react";
 
@@ -71,73 +71,7 @@ const EachPlan = ({
   const { data: currentUser } = useCurrentUser();
   const { currentProductId, currentSubscriptionId } = useIsUserHaveAccess();
 
-  // Calculate discounted price
-  const { finalPrice, originalPrice, hasDiscount } = useMemo(() => {
-    const original = plan.priceAmount;
-
-    const discount = {
-      type: "percentage",
-      basisPoints: 0,
-    };
-
-    if (discount) {
-      // Check if discount applies to this specific plan
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const discountProducts = (discount as any).products || [];
-      const appliesToPlan =
-        discountProducts.length === 0 || // No products means applies to all plans
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        discountProducts.some((p: any) => p.id === plan.id); // Check if current plan is in the list
-
-      if (!appliesToPlan) {
-        // Discount doesn't apply to this plan
-        return {
-          finalPrice: original,
-          originalPrice: original,
-          hasDiscount: false,
-        };
-      }
-
-      const discountType = discount.type;
-
-      if (discountType === "percentage") {
-        // For percentage discounts, Polar uses basisPoints (100 basis points = 1%)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const basisPoints = (discount as any).basisPoints || 0;
-        const percentage = basisPoints / 100; // Convert to percentage
-
-        if (percentage > 0) {
-          // Calculate discounted amount and round to two decimals
-          const discountedRaw = original * (1 - percentage / 100);
-          const discounted = Math.max(0, Math.round(discountedRaw * 100) / 100);
-          return {
-            finalPrice: discounted,
-            originalPrice: original,
-            hasDiscount: true,
-          };
-        }
-      } else if (discountType === "fixed") {
-        // For fixed discounts, use discountAmount field
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const discountAmount = (discount as any).amount || 0;
-
-        if (discountAmount > 0) {
-          const discounted = Math.max(0, original - discountAmount);
-          return {
-            finalPrice: discounted,
-            originalPrice: original,
-            hasDiscount: true,
-          };
-        }
-      }
-    }
-
-    return {
-      finalPrice: original,
-      originalPrice: original,
-      hasDiscount: false,
-    };
-  }, [plan.priceAmount, plan.id]);
+  const price = plan.priceAmount;
 
   return (
     <div
@@ -155,19 +89,8 @@ const EachPlan = ({
         {plan.name.replace("month", "").replace("year", "")}
       </h3>
       <div className="mt-2">
-        {hasDiscount && originalPrice !== finalPrice && (
-          <p className="text-muted-foreground text-lg">
-            <span className="line-through">${originalPrice / 100}</span>
-            {plan.isRecurring && (
-              <span className="text-muted-foreground text-xs line-through">
-                {" "}
-                / {plan.recurringInterval}
-              </span>
-            )}
-          </p>
-        )}
         <p className="text-4xl font-bold">
-          ${finalPrice / 100}{" "}
+          ${price / 100}{" "}
           {plan.isRecurring && (
             <span className="text-muted-foreground text-sm">
               / {plan.recurringInterval}

@@ -9,7 +9,6 @@ const links = [
   { label: "Overview", href: "/" },
   { label: "Users", href: "/users" },
   { label: "Products", href: "/products" },
-  { label: "Discounts", href: "/discounts" },
   {
     label: "Subscriptions",
     href: `${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`,

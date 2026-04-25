@@ -5,7 +5,6 @@ import {
   ExternalLink,
   Receipt,
   RefreshCw,
-  TicketPercent,
   ToggleLeft,
   UserPlus,
   Webhook,
@@ -41,7 +40,7 @@ const paymentFeatures = [
     icon: Receipt,
     title: "Order Tracking",
     description:
-      "Discount amounts, invoice numbers, and billing reasons on every order.",
+      "Invoice numbers, billing reasons, and hosted invoice URLs on every invoice.",
   },
   {
     icon: ExternalLink,
@@ -61,15 +60,10 @@ const paymentFeatures = [
       "Pricing component with interval toggle — drop it on any page.",
   },
   {
-    icon: TicketPercent,
-    title: "Discount Codes",
-    description: "Verify and apply Polar discount codes at checkout.",
-  },
-  {
     icon: UserPlus,
     title: "Auto Customer Creation",
     description:
-      "Polar customer created automatically on signup — zero manual setup.",
+      "Stripe customer created automatically on signup — zero manual setup.",
   },
 ];
 
@@ -89,8 +83,8 @@ export function PaymentsSection() {
             Monetize from Day One
           </h2>
           <p className="text-muted-foreground mt-4 text-lg">
-            Polar integration gives you checkout, subscriptions, billing portal,
-            discount codes, and webhooks — out of the box.
+            Stripe integration gives you checkout, subscriptions, billing portal,
+            and webhooks — out of the box.
           </p>
         </div>
 

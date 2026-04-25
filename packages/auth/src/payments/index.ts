@@ -4,7 +4,6 @@ export {
   createPortalSession,
   deleteCustomer,
   getSubscriptionDetails,
-  listPromotionCodes,
   retrieveCheckoutSession,
   switchPlan,
 } from "./client";
@@ -15,7 +14,6 @@ export type {
   CreateCustomerOutput,
   CreatePortalSessionInput,
   CreatePortalSessionOutput,
-  PromotionCode,
   RetrieveCheckoutOutput,
   SubscriptionDetails,
   SubscriptionItem,

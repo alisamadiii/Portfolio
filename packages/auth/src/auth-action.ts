@@ -187,7 +187,6 @@ export const createInvoice = async (invoice: Stripe.Invoice) => {
       totalAmount: invoice.amount_paid ?? 0,
       invoiceNumber: invoice.number ?? null,
       status: invoice.status ?? "draft",
-      discountAmount: invoice.total_discount_amounts?.[0]?.amount ?? 0,
       currency: invoice.currency ?? "usd",
       hostedInvoiceUrl: invoice.hosted_invoice_url ?? null,
       pdfUrl: invoice.invoice_pdf ?? null,

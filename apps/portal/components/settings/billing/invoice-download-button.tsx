@@ -14,7 +14,6 @@ interface Props {
     billingName: string | null;
     email: string;
     totalAmount: number;
-    discountAmount: number;
     productId: string | null;
     billingReason: string | null;
   };
@@ -36,7 +35,6 @@ export function InvoiceDownloadButton({
     : "—";
 
   const amount = order.totalAmount / 100;
-  const discount = order.discountAmount / 100;
 
   const reason = order.billingReason?.replace(/_/g, " ") ?? "purchase";
   const description = reason;
@@ -45,11 +43,8 @@ export function InvoiceDownloadButton({
     {
       description: description.charAt(0).toUpperCase() + description.slice(1),
       quantity: 1,
-      price: amount + discount,
+      price: amount,
     },
-    ...(discount > 0
-      ? [{ description: "Discount applied", quantity: 1, price: -discount }]
-      : []),
   ];
 
   const invoiceData: InvoiceData = {

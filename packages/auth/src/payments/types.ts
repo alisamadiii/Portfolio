@@ -67,18 +67,3 @@ export type SwitchPlanOutput = {
   subscriptionId: string;
   status: string;
 };
-
-export type PromotionCode = {
-  id: string;
-  code: string;
-  active: boolean;
-  expiresAt: number | null;
-  timesRedeemed: number;
-  maxRedemptions: number | null;
-  coupon: {
-    id: string;
-    percentOff: number | null;
-    amountOff: number | null;
-    currency: string | null;
-  };
-};

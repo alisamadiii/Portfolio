@@ -62,26 +62,6 @@ export const formatBytes = (bytes: number, decimals = 2) => {
 // };
 
 /**
- * Calculates the discounted price based on discount type and amount
- * @param originalPrice - The original price in cents
- * @param discountAmount - The discount amount (in cents for fixed, percentage for percentage)
- * @param discountType - The type of discount ('fixed' or 'percentage')
- * @returns The discounted price in cents
- */
-export const calculateDiscountedPrice = (
-  originalPrice: number,
-  discountAmount: number,
-  discountType: "fixed" | "percentage"
-): number => {
-  if (discountType === "fixed") {
-    return Math.max(0, originalPrice - discountAmount);
-  } else if (discountType === "percentage") {
-    return Math.max(0, originalPrice * (1 - discountAmount / 100));
-  }
-  return originalPrice;
-};
-
-/**
  * Formats price for display (converts cents to dollars)
  * @param priceInCents - Price in cents
  * @returns Formatted price string

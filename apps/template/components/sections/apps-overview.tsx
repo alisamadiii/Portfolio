@@ -41,12 +41,11 @@ const apps = [
     color: "text-rose-500",
     bg: "bg-rose-500/10",
     description:
-      "Manage users, payments, and discounts — connected to Dashboard API.",
+      "Manage users and payments — connected to Dashboard API.",
     features: [
       "Role-based access (admin role required)",
       "User search, sort, paginate, edit, delete",
-      "Products, orders, and subscriptions overview",
-      "Discount code management via Polar",
+      "Products, invoices, and subscriptions overview",
       "Cookie-forwarded HTTP calls — no duplicate backend",
     ],
   },

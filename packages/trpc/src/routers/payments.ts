@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { asc, desc, eq, or } from "drizzle-orm";
+import { asc, desc, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -19,9 +19,22 @@ import { db } from "@workspace/drizzle/index";
 import {
   invoices,
   products,
+  projectsTypeValues,
   subscription,
   user,
 } from "@workspace/drizzle/schema";
+import type { ProjectType } from "@workspace/drizzle/schema";
+
+export async function getProductIdByProject(project: ProjectType) {
+  const [product] = await db
+    .select({ id: products.id })
+    .from(products)
+    .where(
+      sql`${products.metadata}->>'project' = ${project} AND ${products.isArchived} = false`
+    )
+    .limit(1);
+  return product?.id ?? null;
+}
 
 export const paymentsRouter = createTRPCRouter({
   getProducts: baseProcedure.query(async () => {
@@ -41,31 +54,34 @@ export const paymentsRouter = createTRPCRouter({
     }
   }),
 
-  getProductById: baseProcedure.input(z.string()).query(async ({ input }) => {
-    try {
-      const product = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, input))
-        .limit(1)
-        .then((result) => result[0]);
-      if (!product) {
+  getProductByProject: baseProcedure
+    .input(z.enum(projectsTypeValues))
+    .query(async ({ input }) => {
+      try {
+        const [product] = await db
+          .select()
+          .from(products)
+          .where(
+            sql`${products.metadata}->>'project' = ${input} AND ${products.isArchived} = false`
+          )
+          .limit(1);
+        if (!product) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `No product found for project "${input}"`,
+          });
+        }
+        return product;
+      } catch (error: unknown) {
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Product not found",
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to fetch product",
+          cause: error,
         });
       }
-      return product;
-    } catch (error: unknown) {
-      if (error instanceof TRPCError) throw error;
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to fetch product",
-        cause: error,
-      });
-    }
-  }),
+    }),
 
   updateProduct: adminProcedure
     .input(

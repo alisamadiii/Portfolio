@@ -11,6 +11,7 @@ import {
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { invoices, source, sourceFile } from "@workspace/drizzle/schema";
+import { getProductIdByProject } from "@workspace/trpc/routers/payments";
 
 export const motionRouter = createTRPCRouter({
   getFiles: baseProcedure
@@ -45,12 +46,12 @@ export const motionRouter = createTRPCRouter({
           return files;
         }
 
-        const motionProductId = process.env.NEXT_PUBLIC_MOTION_PRODUCT;
+        const motionProductId = await getProductIdByProject("MOTION");
 
         if (!motionProductId) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Motion product ID is not set",
+            message: "No Motion product found",
           });
         }
 
@@ -128,12 +129,12 @@ export const motionRouter = createTRPCRouter({
       }
     }),
   isUserPurchased: authenticatedProcedure.query(async ({ ctx }) => {
-    const motionProductId = process.env.NEXT_PUBLIC_MOTION_PRODUCT;
+    const motionProductId = await getProductIdByProject("MOTION");
 
     if (!motionProductId) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Motion product ID is not set",
+        message: "No Motion product found",
       });
     }
 

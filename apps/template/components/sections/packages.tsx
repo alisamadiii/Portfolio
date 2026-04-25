@@ -55,7 +55,7 @@ const packages = [
       "8 pre-configured tables: user, session, account, verification, products, subscriptions, orders, webhook_events",
       "Products with trial support (configurable interval & count)",
       "Subscriptions with cancellation tracking",
-      "Orders with discount amounts and invoice numbers",
+      "Invoices with billing details and hosted URLs",
       "User metadata (JSONB), ban system, role field",
       "One command to generate, migrate, or push schema",
     ],
@@ -69,7 +69,7 @@ const packages = [
     bg: "bg-violet-500/10",
     features: [
       "End-to-end type-safe API with tRPC",
-      "6 routers, 30+ procedures across user, sessions, verification, discounts, payments, admin, upload",
+      "6 routers, 30+ procedures across user, sessions, verification, payments, admin, upload",
       "Built-in rate limiting (LRU cache, 10 req/min per IP)",
       "Admin procedures with role enforcement",
       "File upload with presigned URLs (R2/S3), 10MB max",

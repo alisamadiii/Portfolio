@@ -7,7 +7,6 @@ import type {
   CreateCustomerOutput,
   CreatePortalSessionInput,
   CreatePortalSessionOutput,
-  PromotionCode,
   RetrieveCheckoutOutput,
   SubscriptionDetails,
   SwitchPlanInput,
@@ -134,35 +133,3 @@ export async function switchPlan(
   return { subscriptionId: updated.id, status: updated.status };
 }
 
-export async function listPromotionCodes(options?: {
-  code?: string;
-  active?: boolean;
-  limit?: number;
-}): Promise<PromotionCode[]> {
-  const result = await stripeClient.promotionCodes.list({
-    ...options,
-    expand: ["data.coupon"],
-  });
-
-  return result.data.map((pc) => {
-    const coupon =
-      typeof pc.promotion.coupon === "object" && pc.promotion.coupon
-        ? pc.promotion.coupon
-        : null;
-
-    return {
-      id: pc.id,
-      code: pc.code,
-      active: pc.active,
-      expiresAt: pc.expires_at,
-      timesRedeemed: pc.times_redeemed,
-      maxRedemptions: pc.max_redemptions,
-      coupon: {
-        id: coupon?.id ?? "",
-        percentOff: coupon?.percent_off ?? null,
-        amountOff: coupon?.amount_off ?? null,
-        currency: coupon?.currency ?? null,
-      },
-    };
-  });
-}
