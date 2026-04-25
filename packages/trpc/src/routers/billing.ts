@@ -2,10 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
-import {
-  authenticatedProcedure,
-  createTRPCRouter,
-} from "@workspace/trpc/init";
+import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { stripeClient } from "@workspace/auth/auth";
 import {
   createCheckoutSession,
@@ -53,7 +50,12 @@ export const billingRouter = createTRPCRouter({
         cancelUrl: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async () => {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
+      });
+
       const { priceIds, successUrl, cancelUrl } = input;
 
       const dbUser = await db
@@ -87,13 +89,22 @@ export const billingRouter = createTRPCRouter({
 
       const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
+      const resolvedSuccessUrl = successUrl
+        ? appendSessionId(successUrl)
+        : `${base}/success?session_id={CHECKOUT_SESSION_ID}`;
+
+      function appendSessionId(url: string) {
+        // If the URL already contains a "?" (has query params), append with "&", else with "?"
+        const separator = url.includes("?") ? "&" : "?";
+        return `${url}${separator}session_id={CHECKOUT_SESSION_ID}`;
+      }
+
       return createCheckoutSession({
         customerId,
         priceIds,
         mode: product?.isRecurring ? "subscription" : "payment",
-        successUrl:
-          successUrl || `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: cancelUrl || `${base}/`,
+        successUrl: resolvedSuccessUrl,
+        cancelUrl: cancelUrl || successUrl || `${base}/`,
       });
     }),
 
@@ -105,7 +116,12 @@ export const billingRouter = createTRPCRouter({
         extraPages: z.number().int().min(0).default(0),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async () => {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
+      });
+
       try {
         const { productId, successUrl, extraPages } = input;
 
@@ -159,19 +175,15 @@ export const billingRouter = createTRPCRouter({
           priceId = adHocPrice.id;
         }
 
-        const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-          /\/$/,
-          ""
-        );
+        const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
         return createCheckoutSession({
           customerId,
           priceIds: [priceId],
           mode: product.isRecurring ? "subscription" : "payment",
           successUrl:
-            successUrl ||
-            `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${base}/`,
+            successUrl || `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: successUrl || `${base}/`,
         });
       } catch (error: unknown) {
         if (error instanceof TRPCError) throw error;

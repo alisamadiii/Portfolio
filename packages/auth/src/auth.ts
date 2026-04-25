@@ -26,6 +26,7 @@ import {
   deleteProduct,
   deleteSubscription,
   handleChargeRefunded,
+  handleCheckoutCompleted,
   updateInvoice,
   updateProduct,
   updateSubscription,
@@ -214,6 +215,12 @@ export const auth = betterAuth({
           } else {
             await deleteSubscription(sub);
           }
+        }
+
+        // One-time payment completed
+        if (event.type === "checkout.session.completed") {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await handleCheckoutCompleted(session);
         }
 
         // Sync refunds

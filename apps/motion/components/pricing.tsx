@@ -59,6 +59,7 @@ export function Pricing() {
                 checkout.mutate({
                   priceIds: [product.data?.priceId || ""],
                   successUrl: urls.motion + pathname,
+                  cancelUrl: urls.motion + pathname,
                 })
               }
             >

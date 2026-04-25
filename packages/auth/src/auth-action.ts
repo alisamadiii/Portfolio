@@ -207,9 +207,90 @@ export const updateInvoice = async (invoice: Stripe.Invoice) => {
       billingName: invoice.customer_name ?? null,
       hostedInvoiceUrl: invoice.hosted_invoice_url ?? null,
       pdfUrl: invoice.invoice_pdf ?? null,
+      metadata: (invoice.metadata as Record<string, unknown>) ?? {},
       updatedAt: new Date(),
     })
     .where(eq(invoices.id, invoice.id));
+};
+
+// ----------------------------
+// 🛍️ One-time Checkout (no invoice created by Stripe)
+// ----------------------------
+
+export const handleCheckoutCompleted = async (
+  session: Stripe.Checkout.Session
+) => {
+  if (session.payment_status !== "paid") return;
+  // Only handle one-time payments — subscriptions already create invoices
+  if (session.mode === "subscription") return;
+
+  const customerId =
+    typeof session.customer === "string"
+      ? session.customer
+      : session.customer?.id;
+
+  const dbUser = customerId
+    ? await db
+        .select()
+        .from(user)
+        .where(eq(user.stripeCustomerId, customerId))
+        .limit(1)
+        .then((res) => res[0])
+    : null;
+
+  // Expand line items to get the product/price info
+  const lineItems = await stripeClient.checkout.sessions.listLineItems(
+    session.id,
+    { limit: 1 }
+  );
+  const firstItem = lineItems.data[0];
+  const priceId = firstItem?.price?.id ?? null;
+
+  // Look up product by price ID to get the product ID
+  const productId = firstItem?.price?.product
+    ? typeof firstItem.price.product === "string"
+      ? firstItem.price.product
+      : firstItem.price.product.id
+    : null;
+
+  // Get product metadata to store on the invoice
+  let productMetadata: Record<string, unknown> = {};
+  if (productId) {
+    const [dbProduct] = await db
+      .select({ metadata: products.metadata })
+      .from(products)
+      .where(eq(products.id, productId))
+      .limit(1);
+    if (dbProduct?.metadata && typeof dbProduct.metadata === "object") {
+      productMetadata = dbProduct.metadata as Record<string, unknown>;
+    }
+  }
+
+  await db
+    .insert(invoices)
+    .values({
+      id: session.id, // Use session ID as invoice ID for one-time payments
+      userId: dbUser?.id ?? "",
+      email:
+        session.customer_details?.email ?? dbUser?.email ?? "",
+      productId: productId,
+      subscriptionId: null,
+      billingName: session.customer_details?.name ?? null,
+      billingReason: "one_time_purchase",
+      totalAmount: session.amount_total ?? 0,
+      invoiceNumber: null,
+      status: "paid",
+      currency: session.currency ?? "usd",
+      hostedInvoiceUrl: null,
+      pdfUrl: null,
+      createdAt: new Date(session.created * 1000),
+      updatedAt: new Date(),
+      metadata: {
+        ...productMetadata,
+        ...(session.metadata as Record<string, unknown> ?? {}),
+      },
+    })
+    .onConflictDoNothing();
 };
 
 // ----------------------------
