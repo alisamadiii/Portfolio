@@ -173,7 +173,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          err || "Something went wrong on our end. Please try again later.",
+          err instanceof Error
+            ? err.message
+            : "Something went wrong on our end. Please try again later.",
       },
       { status: 500, headers: corsHeaders }
     );
