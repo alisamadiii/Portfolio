@@ -30,10 +30,7 @@ export function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
-) {
+export async function POST(req: NextRequest) {
   try {
     // 1. Auth — validate token
     const apiKey = req.headers.get("x-api-key");
@@ -175,7 +172,8 @@ export async function POST(
     console.error("[contact-api]", err);
     return NextResponse.json(
       {
-        error: "Something went wrong on our end. Please try again later.",
+        error:
+          err || "Something went wrong on our end. Please try again later.",
       },
       { status: 500, headers: corsHeaders }
     );
