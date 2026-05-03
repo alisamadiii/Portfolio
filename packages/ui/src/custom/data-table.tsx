@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   ColumnDef,
   flexRender,
@@ -27,6 +28,8 @@ type DataTableProps<TData, TValue> = {
   isLoading?: boolean | number;
   error?: TRPCClientErrorBase<DefaultErrorShape> | null;
   className?: string;
+  expandedRows?: Set<string>;
+  renderExpandedRow?: (row: Row<TData>) => React.ReactNode;
 } & (
   | {
       table: TableType<TData>;
@@ -50,7 +53,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
           getCoreRowModel: getCoreRowModel(),
         });
 
-  const { onRowClick, className, error } = props;
+  const { onRowClick, className, error, expandedRows, renderExpandedRow } =
+    props;
 
   return (
     <div
@@ -101,30 +105,44 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
             ))
           ) : tableConfig.getRowModel().rows?.length ? (
             tableConfig.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className={cn(
-                  "h-16",
-                  onRowClick
-                    ? "hover:bg-muted/50 cursor-pointer transition-colors"
-                    : ""
+              <React.Fragment key={row.id}>
+                <TableRow
+                  data-state={row.getIsSelected() && "selected"}
+                  className={cn(
+                    "h-16",
+                    onRowClick
+                      ? "hover:bg-muted/50 cursor-pointer transition-colors"
+                      : ""
+                  )}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {row.getVisibleCells().map((cell, index) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        "px-4",
+                        index === 0 && "pl-8",
+                        index === row.getVisibleCells().length - 1 && "pr-8"
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {expandedRows?.has(row.id) && renderExpandedRow && (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={row.getVisibleCells().length}
+                      className="bg-muted/30 px-8 py-4"
+                    >
+                      {renderExpandedRow(row)}
+                    </TableCell>
+                  </TableRow>
                 )}
-                onClick={() => onRowClick?.(row)}
-              >
-                {row.getVisibleCells().map((cell, index) => (
-                  <TableCell
-                    key={cell.id}
-                    className={cn(
-                      "px-4",
-                      index === 0 && "pl-8",
-                      index === row.getVisibleCells().length - 1 && "pr-8"
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
+              </React.Fragment>
             ))
           ) : (
             <TableRow>

@@ -108,20 +108,53 @@ function buildSubscriptionValues(sub: Stripe.Subscription, userId: string) {
   };
 }
 
-async function findUserByCustomerId(customerId: string) {
-  return db
+async function findUserByCustomerIdOrEmail(customerId: string) {
+  // Direct match by stripeCustomerId
+  const byId = await db
     .select()
     .from(user)
     .where(eq(user.stripeCustomerId, customerId))
     .limit(1)
     .then((res) => res[0]);
+
+  if (byId) return byId;
+
+  // Fallback: fetch customer email from Stripe, match by email.
+  // Handles Payment Link subscriptions where Stripe creates a new customer ID.
+  try {
+    const customer = await stripeClient.customers.retrieve(customerId);
+    if (customer.deleted || !customer.email) return undefined;
+
+    const byEmail = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, customer.email))
+      .limit(1)
+      .then((res) => res[0]);
+
+    if (byEmail && !byEmail.stripeCustomerId) {
+      await db
+        .update(user)
+        .set({ stripeCustomerId: customerId })
+        .where(eq(user.id, byEmail.id));
+    }
+
+    return byEmail;
+  } catch {
+    return undefined;
+  }
 }
 
 export const createSubscription = async (sub: Stripe.Subscription) => {
   const customerId =
     typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-  const dbUser = await findUserByCustomerId(customerId);
-  if (!dbUser) return;
+  const dbUser = await findUserByCustomerIdOrEmail(customerId);
+  if (!dbUser) {
+    console.warn(
+      `[stripe] No user found for customer ${customerId} — subscription ${sub.id} skipped`
+    );
+    return;
+  }
 
   await db
     .insert(subscription)
@@ -132,8 +165,13 @@ export const createSubscription = async (sub: Stripe.Subscription) => {
 export const updateSubscription = async (sub: Stripe.Subscription) => {
   const customerId =
     typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-  const dbUser = await findUserByCustomerId(customerId);
-  if (!dbUser) return;
+  const dbUser = await findUserByCustomerIdOrEmail(customerId);
+  if (!dbUser) {
+    console.warn(
+      `[stripe] No user found for customer ${customerId} — subscription ${sub.id} update skipped`
+    );
+    return;
+  }
 
   await db
     .update(subscription)
@@ -169,7 +207,7 @@ export const completeCheckout = async (
       : session.customer?.id;
   if (!customerId) return;
 
-  const dbUser = await findUserByCustomerId(customerId);
+  const dbUser = await findUserByCustomerIdOrEmail(customerId);
 
   // Expand line items to get product/price info
   const lineItems = await stripeClient.checkout.sessions.listLineItems(

@@ -4,21 +4,28 @@ import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { ExternalLink } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  CreditCard,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { DataTable } from "@workspace/ui/custom/data-table";
-import {
-  design,
-  getProjectColor,
-  projectDesign,
-} from "@workspace/ui/lib/design";
+import { getProjectColor, projectDesign } from "@workspace/ui/lib/design";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+import {
+  useGeneratePortalLink,
+  useSubscriptionDetails,
+} from "@workspace/auth/hooks/use-payments";
 
 const InvoiceDownloadButton = dynamic(
   () =>
@@ -28,7 +35,14 @@ const InvoiceDownloadButton = dynamic(
   { ssr: false }
 );
 
+// ─── Types ──────────────────────────────────────────────────────
+
 type ProjectFilter = "all" | "MOTION" | "AGENCY";
+type Order = RouterOutputs["billing"]["listOrders"][number];
+type Subscription = RouterOutputs["billing"]["getSubscriptions"][number];
+type OrderMeta = { project?: string; name?: string } | null;
+
+// ─── Helpers ────────────────────────────────────────────────────
 
 const filters: { label: string; value: ProjectFilter; color?: string }[] = [
   { label: "All", value: "all" },
@@ -36,15 +50,22 @@ const filters: { label: string; value: ProjectFilter; color?: string }[] = [
   { label: "Agency", value: "AGENCY", color: projectDesign.AGENCY.color },
 ];
 
-type Order = RouterOutputs["billing"]["listOrders"][number];
+const STATUS_COLORS: Record<Subscription["status"], string> = {
+  active: "bg-emerald-500",
+  trialing: "bg-blue-500",
+  past_due: "bg-amber-500",
+  canceled: "bg-red-500",
+  unpaid: "bg-orange-500",
+  incomplete: "bg-yellow-500",
+  incomplete_expired: "bg-gray-400",
+  paused: "bg-violet-500",
+};
 
 const formatCurrency = (amount: number, currency: string = "usd") =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(amount / 100);
-
-type OrderMeta = { project?: string; name?: string } | null;
 
 function getOrderMeta(order: Order): OrderMeta {
   return order.metadata as OrderMeta;
@@ -63,10 +84,177 @@ function getOrderProductName(order: Order): string {
   return "Purchase";
 }
 
+// ─── StatusDot ──────────────────────────────────────────────────
+
+function StatusDot({
+  status,
+  isCanceling,
+}: {
+  status: Subscription["status"];
+  isCanceling?: boolean;
+}) {
+  const color =
+    isCanceling && status === "active"
+      ? "bg-amber-500"
+      : (STATUS_COLORS[status] ?? "bg-gray-400");
+
+  return (
+    <span
+      className={cn("inline-block size-2.5 shrink-0 rounded-full", color)}
+    />
+  );
+}
+
+// ─── Subscription Details Panel ─────────────────────────────────
+
+function SubscriptionDetailsPanel({
+  subscriptionId,
+  sub,
+}: {
+  subscriptionId: string;
+  sub: Subscription;
+}) {
+  const { data, isLoading, error } = useSubscriptionDetails(subscriptionId);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
+        <div>
+          <p className="text-muted-foreground text-xs">Status</p>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <StatusDot
+              status={sub.status}
+              isCanceling={!!(sub.cancelAtPeriodEnd || sub.cancelAt)}
+            />
+            <span className="capitalize">
+              {sub.cancelAtPeriodEnd || sub.cancelAt ? "canceling" : sub.status}
+            </span>
+          </div>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-xs">Auto-Renewal</p>
+          <Badge
+            variant={
+              sub.cancelAtPeriodEnd || sub.cancelAt ? "destructive" : "default"
+            }
+            className="mt-0.5"
+          >
+            {sub.cancelAtPeriodEnd || sub.cancelAt ? "Off" : "On"}
+          </Badge>
+        </div>
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-xs">Subscription ID</p>
+          <span className="text-muted-foreground block truncate font-mono text-xs">
+            {sub.stripeSubscriptionId ?? "—"}
+          </span>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-xs">Billing Interval</p>
+          <span className="capitalize">{sub.billingInterval ?? "—"}</span>
+        </div>
+        {sub.cancelAt && (
+          <div>
+            <p className="text-muted-foreground text-xs">Cancels At</p>
+            <span>{format(new Date(sub.cancelAt), "MMM d, yyyy")}</span>
+          </div>
+        )}
+        {sub.canceledAt && (
+          <div>
+            <p className="text-muted-foreground text-xs">Canceled At</p>
+            <span>{format(new Date(sub.canceledAt), "MMM d, yyyy")}</span>
+          </div>
+        )}
+        {sub.trialEnd && (
+          <div>
+            <p className="text-muted-foreground text-xs">Trial Ends</p>
+            <span>{format(new Date(sub.trialEnd), "MMM d, yyyy")}</span>
+          </div>
+        )}
+      </div>
+
+      {isLoading && (
+        <div className="text-muted-foreground flex items-center gap-2 py-2 text-sm">
+          <Loader2 className="size-4 animate-spin" />
+          Loading items...
+        </div>
+      )}
+
+      {error && !data && (
+        <p className="text-muted-foreground text-sm">
+          Could not load subscription items.
+        </p>
+      )}
+
+      {data?.scheduledChange && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950">
+          <p className="font-medium text-amber-800 dark:text-amber-200">
+            Scheduled plan change
+          </p>
+          <p className="text-amber-700 dark:text-amber-300">
+            Switching to{" "}
+            <span className="font-medium">
+              {data.scheduledChange.newProductName ?? "new plan"}
+            </span>{" "}
+            on{" "}
+            {format(
+              new Date(data.scheduledChange.effectiveDate * 1000),
+              "MMM d, yyyy"
+            )}
+          </p>
+        </div>
+      )}
+
+      {data && data.items.length > 0 && (
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-muted-foreground border-b text-left">
+                <th className="px-3 py-2 font-medium">Product</th>
+                <th className="px-3 py-2 font-medium">Price</th>
+                <th className="px-3 py-2 font-medium">Interval</th>
+                <th className="px-3 py-2 font-medium">Qty</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((item) => (
+                <tr key={item.id} className="border-b last:border-b-0">
+                  <td className="px-3 py-2">
+                    {item.productName ?? (
+                      <span className="text-muted-foreground font-mono text-xs">
+                        {item.productId?.slice(0, 16)}...
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    ${(item.unitAmount / 100).toFixed(2)}{" "}
+                    <span className="text-muted-foreground uppercase">
+                      {item.currency}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    {item.interval
+                      ? `Every ${item.intervalCount && item.intervalCount > 1 ? `${item.intervalCount} ` : ""}${item.interval}`
+                      : "One-time"}
+                  </td>
+                  <td className="px-3 py-2">{item.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Page ───────────────────────────────────────────────────────
+
 export default function BillingPage() {
   const [filter, setFilter] = useState<ProjectFilter>("all");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const { data: user } = useCurrentUser();
   const trpc = useTRPC();
+  const generatePortalLink = useGeneratePortalLink();
 
   const { data: orders, isPending: ordersLoading } = useQuery(
     trpc.billing.listOrders.queryOptions(
@@ -95,11 +283,13 @@ export default function BillingPage() {
     return subscriptions;
   }, [subscriptions]);
 
-  const getNextBillingDate = (
-    sub: RouterOutputs["billing"]["getSubscriptions"][number]
-  ) => {
-    if (!sub.periodEnd) return null;
-    return new Date(sub.periodEnd);
+  const toggleRow = (rowId: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId);
+      else next.add(rowId);
+      return next;
+    });
   };
 
   return (
@@ -135,7 +325,23 @@ export default function BillingPage() {
 
       {/* Subscriptions */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Subscriptions</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold">Subscriptions</h2>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={generatePortalLink.isPending}
+            onClick={() =>
+              generatePortalLink.mutate({ returnUrl: "/billing" })
+            }
+          >
+            {generatePortalLink.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <CreditCard className="size-4" />
+            )}
+          </Button>
+        </div>
         {subsLoading || getProducts.isPending ? (
           <div className="space-y-3">
             <Skeleton className="h-10 w-full rounded-lg" />
@@ -155,71 +361,57 @@ export default function BillingPage() {
                 id: "plan",
                 header: "Plan",
                 cell: ({ row }) => {
+                  const isCanceling = !!(
+                    row.original.cancelAtPeriodEnd || row.original.cancelAt
+                  );
                   return (
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">
+                    <div className="flex items-center gap-2.5">
+                      <StatusDot
+                        status={row.original.status}
+                        isCanceling={isCanceling}
+                      />
+                      <span className="max-w-[140px] truncate font-medium">
                         {row.original.productName || row.original.plan || "—"}
                       </span>
-                      {row.original.status === "trialing" && (
-                        <Badge
-                          variant="secondary"
-                          className="mt-1 w-fit text-xs"
-                        >
-                          Trial
-                        </Badge>
-                      )}
                     </div>
                   );
                 },
               },
               {
-                id: "status",
-                header: "Status",
-                cell: ({ row }) => (
-                  <Badge
-                    variant={
-                      row.original.status === "active" ||
-                      row.original.status === "trialing"
-                        ? "default"
-                        : row.original.status === "canceled"
-                          ? "destructive"
-                          : "secondary"
-                    }
-                  >
-                    {row.original.status}
-                  </Badge>
-                ),
-              },
-              {
-                id: "amount",
-                header: "Amount",
-                cell: ({ row }) => (
-                  <div className="flex flex-col">
-                    <span className="font-medium">
-                      {formatCurrency(
-                        row.original.totalAmount,
-                        row.original.currency
-                      )}
+                id: "price",
+                header: "Price",
+                cell: ({ row }) => {
+                  if (!row.original.totalAmount)
+                    return (
+                      <span className="text-muted-foreground">—</span>
+                    );
+                  return (
+                    <span className="text-sm">
+                      ${(row.original.totalAmount / 100).toFixed(2)}
+                      <span className="text-muted-foreground ml-1 text-xs uppercase">
+                        {row.original.currency}
+                      </span>
                     </span>
-                    <span className="text-muted-foreground text-sm">
-                      /{row.original.billingInterval ?? "mo"}
-                    </span>
-                  </div>
-                ),
+                  );
+                },
               },
               {
                 id: "next_billing",
                 header: "Next Billing",
                 cell: ({ row }) => {
-                  const next = getNextBillingDate(row.original);
+                  const end = row.original.periodEnd;
                   return (
                     <span className="flex flex-col">
                       <span className="text-sm">
-                        {next ? format(next, "MMM dd, yyyy") : "-"}
+                        {end
+                          ? format(new Date(end), "MMM dd, yyyy")
+                          : "-"}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        {next
-                          ? formatDistanceToNow(next, { addSuffix: true })
+                        {end
+                          ? formatDistanceToNow(new Date(end), {
+                              addSuffix: true,
+                            })
                           : "-"}
                       </span>
                     </span>
@@ -227,55 +419,46 @@ export default function BillingPage() {
                 },
               },
               {
-                id: "auto_renewal",
-                header: "Auto-Renewal",
-                cell: ({ row }) => (
-                  <Badge
-                    variant={
-                      row.original.cancelAtPeriodEnd
-                        ? "destructive"
-                        : "default"
-                    }
-                  >
-                    {row.original.cancelAtPeriodEnd ? "Off" : "On"}
-                  </Badge>
-                ),
-              },
-              {
-                id: "cancelled",
-                header: "Cancelled",
+                id: "actions",
+                header: "",
                 cell: ({ row }) => {
-                  const isCancelled =
-                    row.original.status === "canceled" ||
-                    row.original.cancelAtPeriodEnd;
+                  const isExpanded = expandedRows.has(row.id);
+                  if (!row.original.stripeSubscriptionId) return null;
                   return (
-                    <div className="flex flex-col gap-1">
-                      <Badge
-                        variant={isCancelled ? "destructive" : "outline"}
-                        className={
-                          !isCancelled
-                            ? "border-green-500/30 text-green-600"
-                            : ""
-                        }
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRow(row.id);
+                        }}
                       >
-                        {row.original.status === "canceled"
-                          ? "Cancelled"
-                          : row.original.cancelAtPeriodEnd
-                            ? "Cancelling"
-                            : "Active"}
-                      </Badge>
-                      {row.original.cancelAtPeriodEnd &&
-                        row.original.status !== "canceled" && (
-                          <span className="text-muted-foreground text-[11px]">
-                            Ends at next billing
-                          </span>
+                        {isExpanded ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
                         )}
+                        More Info
+                      </Button>
                     </div>
                   );
                 },
               },
             ]}
             data={filteredSubscriptions}
+            expandedRows={expandedRows}
+            renderExpandedRow={(row) => {
+              const sub = row.original;
+              if (!sub.stripeSubscriptionId) return null;
+              return (
+                <SubscriptionDetailsPanel
+                  subscriptionId={sub.stripeSubscriptionId}
+                  sub={sub}
+                />
+              );
+            }}
           />
         )}
       </div>
