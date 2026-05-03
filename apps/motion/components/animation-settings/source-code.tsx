@@ -105,7 +105,7 @@ export const SourceCode = () => {
 
   const trpc = useTRPC();
   const fileQuery = useQuery(
-    trpc.motion.getFiles.queryOptions(
+    trpc.sources.getFiles.queryOptions(
       { sourceId: animation.id },
       {
         enabled: !!animation.id,
@@ -171,7 +171,7 @@ const FileList = ({ animationId }: { animationId: string }) => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const trpc = useTRPC();
   const fileQuery = useQuery(
-    trpc.motion.getFiles.queryOptions(
+    trpc.sources.getFiles.queryOptions(
       { sourceId: animationId },
       {
         enabled: !!animationId,

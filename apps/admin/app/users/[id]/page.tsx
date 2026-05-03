@@ -34,7 +34,7 @@ export default function EachOrganization() {
 
   const trpc = useTRPC();
   const { data: user, isPending } = useQuery(
-    trpc.users.getById.queryOptions(id, {
+    trpc.users.get.queryOptions(id, {
       enabled: !!id,
     })
   );

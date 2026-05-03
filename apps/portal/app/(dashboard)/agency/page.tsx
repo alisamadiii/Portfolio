@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
@@ -13,13 +15,49 @@ import { cn, formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+
+type Product = RouterOutputs["products"]["list"][number];
+type ProductStatus = "subscribed" | "purchased" | null;
 
 export default function PortalPage() {
   const trpc = useTRPC();
-  const products = useQuery(trpc.products.getAgencyProducts.queryOptions());
+  const { data: user } = useCurrentUser();
+  const products = useQuery(trpc.products.list.queryOptions());
+  const customerState = useQuery(
+    trpc.billing.getCustomerState.queryOptions(undefined, {
+      enabled: !!user,
+    })
+  );
 
-  const standardProducts = products.data?.filter((p) => !p.userId) ?? [];
-  const customProducts = products.data?.filter((p) => !!p.userId) ?? [];
+  const allProducts = (products.data ?? []).filter((p) => !p.isArchived);
+  const standardProducts = allProducts.filter(
+    (p) => !(p.metadata as { userId?: string })?.userId
+  );
+  const customProducts = allProducts.filter(
+    (p) => !!(p.metadata as { userId?: string })?.userId
+  );
+
+  const getProductStatus = useMemo(() => {
+    const subs = customerState.data?.subscriptions ?? [];
+    const paidOrders = customerState.data?.paidOrders ?? [];
+
+    return (product: Product): ProductStatus => {
+      // Check active/trialing subscription by priceId
+      const activeSub = subs.find(
+        (s) =>
+          (s.status === "active" || s.status === "trialing") &&
+          s.plan === product.priceId
+      );
+      if (activeSub) return "subscribed";
+
+      // Check paid order by productId
+      const paidOrder = paidOrders.find((o) => o.productId === product.id);
+      if (paidOrder) return "purchased";
+
+      return null;
+    };
+  }, [customerState.data]);
 
   return (
     <div className="space-y-8">
@@ -43,7 +81,11 @@ export default function PortalPage() {
             </>
           ) : (
             standardProducts.map((product) => (
-              <EachProduct key={product.id} product={product} />
+              <EachProduct
+                key={product.id}
+                product={product}
+                status={getProductStatus(product)}
+              />
             ))
           )}
         </div>
@@ -56,7 +98,11 @@ export default function PortalPage() {
         </h2>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {customProducts.map((product) => (
-            <EachProduct key={product.id} product={product} />
+            <EachProduct
+              key={product.id}
+              product={product}
+              status={getProductStatus(product)}
+            />
           ))}
           <CardAgency.Card className="gap-4 p-5">
             <div className="flex flex-1 flex-col justify-between gap-6">
@@ -177,13 +223,18 @@ const mdStyles = cn(
 
 const EachProduct = ({
   product,
+  status,
 }: {
-  product: RouterOutputs["products"]["getAgencyProducts"][number];
+  product: Product;
+  status: ProductStatus;
 }) => {
   const trpc = useTRPC();
-  const { data: isActive } = useQuery(
-    trpc.products.isAgencyActive.queryOptions({ productId: product.id })
-  );
+  const metadata = product.metadata as {
+    userId?: string;
+    project?: string;
+  } | null;
+  const isCustom = !!metadata?.userId;
+  const isActive = status !== null;
   const checkout = useMutation(trpc.billing.createCheckout.mutationOptions());
 
   return (
@@ -200,17 +251,29 @@ const EachProduct = ({
           <h2 className="text-base leading-snug font-bold">
             {product.name ?? ""}
           </h2>
-          {product.userId && (
-            <Badge
-              variant="secondary"
-              className={cn(
-                "w-fit",
-                isActive && "border-green-500/30 bg-green-500/10 text-green-600"
-              )}
-            >
-              Made especially for you
-            </Badge>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {isActive && (
+              <Badge
+                variant="secondary"
+                className="w-fit gap-1 border-green-500/30 bg-green-500/10 text-green-600"
+              >
+                <Check className="size-3" />
+                {status === "subscribed" ? "Subscribed" : "Purchased"}
+              </Badge>
+            )}
+            {isCustom && (
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "w-fit",
+                  isActive &&
+                    "border-green-500/30 bg-green-500/10 text-green-600"
+                )}
+              >
+                Made especially for you
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="shrink-0 text-right">
           <p className="text-3xl font-black tracking-tighter tabular-nums">
@@ -233,7 +296,7 @@ const EachProduct = ({
       <div className="mt-auto w-full">
         {isActive ? (
           <Button variant="outline" size="lg" className="mt-8 w-full" disabled>
-            Subscribed
+            {status === "subscribed" ? "Subscribed" : "Purchased"}
           </Button>
         ) : (
           <Button

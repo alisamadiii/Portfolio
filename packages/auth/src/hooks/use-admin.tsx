@@ -33,7 +33,7 @@ const useCreateUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.users.getAll.pathKey(),
+        queryKey: trpc.users.list.pathKey(),
       });
     },
   });
@@ -45,7 +45,7 @@ const useUpdateAdminUser = () => {
     trpc.users.adminUpdate.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: trpc.users.getAll.pathKey(),
+          queryKey: trpc.users.list.pathKey(),
         });
       },
     })

@@ -76,7 +76,7 @@ export const filesRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  listFiles: adminProcedure
+  list: adminProcedure
     .input(
       z.object({
         prefix: z.string().min(1),

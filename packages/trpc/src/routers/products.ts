@@ -3,7 +3,6 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
-  adminProcedure,
   authenticatedProcedure,
   baseProcedure,
   createTRPCRouter,
@@ -31,7 +30,7 @@ export type AgencyMetadata = {
 export const productsRouter = createTRPCRouter({
   // ─── Public ────────────────────────────────────────────────────
 
-  getAll: baseProcedure.query(async () => {
+  list: baseProcedure.query(async () => {
     try {
       const productsList = await db
         .select()
@@ -79,7 +78,7 @@ export const productsRouter = createTRPCRouter({
 
   // ─── Authenticated ─────────────────────────────────────────────
 
-  getAgencyProducts: authenticatedProcedure.query(async ({ ctx }) => {
+  listAgency: authenticatedProcedure.query(async ({ ctx }) => {
     try {
       const productsList = await db
         .select()
@@ -163,37 +162,21 @@ export const productsRouter = createTRPCRouter({
       }
     }),
 
-  // ─── Admin ─────────────────────────────────────────────────────
+  isPurchased: authenticatedProcedure
+    .input(z.object({ project: z.enum(projectsTypeValues) }))
+    .query(async ({ input, ctx }) => {
+      const [row] = await db
+        .select({ id: orders.id })
+        .from(orders)
+        .where(
+          and(
+            eq(orders.userId, ctx.session.user.id),
+            eq(orders.status, "paid"),
+            sql`${orders.metadata}->>'project' = ${input.project}`
+          )
+        )
+        .limit(1);
 
-  updateProduct: adminProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        product: z.object({
-          name: z.string().optional(),
-          description: z.string().optional(),
-          popular: z.boolean().optional(),
-          isArchived: z.boolean().optional(),
-          metadata: z.record(z.string(), z.unknown()).optional(),
-        }),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const result = await db
-          .update(products)
-          .set(input.product)
-          .where(eq(products.id, input.id));
-        return result;
-      } catch (error: unknown) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to update product",
-          cause: error,
-        });
-      }
+      return !!row;
     }),
 });

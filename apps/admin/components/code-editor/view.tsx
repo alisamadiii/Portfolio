@@ -15,7 +15,7 @@ import { UpdateFormSource } from "./update-source-form";
 export const CodeEditorView = ({
   source,
 }: {
-  source: RouterOutputs["sources"]["readById"];
+  source: RouterOutputs["sources"]["get"];
 }) => {
   const { selectedTab, setSelectedTab } = useCodeEditor();
 

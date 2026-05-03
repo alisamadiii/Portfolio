@@ -37,7 +37,7 @@ export default function ColdEmailsPage() {
     trpc.coldEmails.send.mutationOptions()
   );
   const { data: coldEmails } = useQuery(
-    trpc.coldEmails.get.queryOptions()
+    trpc.coldEmails.list.queryOptions()
   );
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -48,7 +48,7 @@ export default function ColdEmailsPage() {
         onSuccess: () => {
           toast.success("Cold email sent successfully");
           queryClient.invalidateQueries({
-            queryKey: trpc.coldEmails.get.queryKey(),
+            queryKey: trpc.coldEmails.list.queryKey(),
           });
           setEmail("");
         },

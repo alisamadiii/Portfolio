@@ -93,7 +93,7 @@ export const notificationRouter = createTRPCRouter({
         .where(eq(clientNotifications.id, input.notificationId));
     }),
 
-  getAllNotifications: adminProcedure.query(async () => {
+  list: adminProcedure.query(async () => {
     return db
       .select({
         id: clientNotifications.id,

@@ -12,7 +12,7 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 export const CodeEditorHeader = ({
   source,
 }: {
-  source: RouterOutputs["sources"]["readById"];
+  source: RouterOutputs["sources"]["get"];
 }) => {
   const [title, setTitle] = useState(source.title);
   const router = useRouter();
@@ -56,7 +56,7 @@ export const CodeEditorHeader = ({
               {
                 onSuccess: () => {
                   queryClient.setQueryData(
-                    trpc.sources.readById.queryKey(source.id),
+                    trpc.sources.get.queryKey(source.id),
                     {
                       ...source,
                       isPrivate: !source.isPrivate,

@@ -8,7 +8,6 @@ import {
   createCheckoutSession,
   createCustomer,
   createPortalSession,
-  deleteCustomer,
   getSubscriptionDetails,
   retrieveCheckoutSession,
   switchPlan,
@@ -286,20 +285,29 @@ export const billingRouter = createTRPCRouter({
 
         invoiceOrders = stripeInvoices.data.map((inv) => {
           const firstLine = inv.lines?.data?.[0];
-          const description = firstLine
-            ? (firstLine as { description?: string }).description
+          const description = firstLine?.description ?? null;
+          const linePrice = firstLine
+            ? (firstLine as unknown as { price?: { product?: { name?: string } } })
+                .price
             : null;
+          const productName =
+            description ??
+            (typeof linePrice?.product === "object" &&
+            linePrice.product !== null
+              ? linePrice.product.name
+              : null) ??
+            null;
 
           return {
             id: inv.id,
             amount: inv.amount_paid,
             currency: inv.currency,
             status: inv.status ?? "paid",
-            productName: description ?? null,
+            productName,
             billingReason: inv.billing_reason ?? "subscription",
             refundedAmount: 0,
             receiptUrl: inv.hosted_invoice_url ?? null,
-            metadata: {},
+            metadata: inv.metadata ?? {},
             createdAt: new Date(inv.created * 1000),
             type: "subscription" as const,
           };
@@ -310,27 +318,6 @@ export const billingRouter = createTRPCRouter({
       return [...dbOrders, ...invoiceOrders].sort(
         (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
       );
-    }),
-
-  deleteCustomer: authenticatedProcedure
-    .input(z.string())
-    .mutation(async ({ input }) => {
-      const dbUser = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input))
-        .limit(1)
-        .then((res) => res[0]);
-
-      if (dbUser?.stripeCustomerId) {
-        await deleteCustomer(dbUser.stripeCustomerId);
-      }
-
-      if (dbUser?.email) {
-        await db.delete(user).where(eq(user.email, dbUser.email));
-      }
-
-      return true;
     }),
 
   getSubscriptions: authenticatedProcedure

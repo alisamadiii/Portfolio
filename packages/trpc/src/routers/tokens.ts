@@ -9,7 +9,7 @@ import { db } from "@workspace/drizzle/index";
 import { apiTokens } from "@workspace/drizzle/schema";
 
 export const tokensRouter = createTRPCRouter({
-  getAll: adminProcedure.query(async () => {
+  list: adminProcedure.query(async () => {
     return db.select().from(apiTokens).orderBy(desc(apiTokens.createdAt));
   }),
 

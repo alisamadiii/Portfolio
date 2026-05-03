@@ -24,7 +24,7 @@ function getProjectColor(metadata: unknown): string | undefined {
 }
 
 export const paymentColumns: ColumnDef<
-  RouterOutputs["products"]["getAll"][number]
+  RouterOutputs["products"]["list"][number]
 >[] = [
   {
     id: "project",

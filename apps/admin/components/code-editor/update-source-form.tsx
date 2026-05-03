@@ -28,7 +28,7 @@ export const UpdateFormSource = () => {
 
   const trpc = useTRPC();
   const getSource = useQuery(
-    trpc.sources.readById.queryOptions(sourceId)
+    trpc.sources.get.queryOptions(sourceId)
   );
   const updateSource = useMutation(trpc.sources.update.mutationOptions());
 

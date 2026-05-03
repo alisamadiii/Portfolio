@@ -28,7 +28,7 @@ import { useTRPC } from "@workspace/trpc/client";
 export const ClientList = () => {
   const trpc = useTRPC();
   const { data, isLoading } = useQuery(
-    trpc.clients.getAll.queryOptions()
+    trpc.users.getClients.queryOptions()
   );
 
   if (isLoading) {

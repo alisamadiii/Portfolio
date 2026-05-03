@@ -31,7 +31,7 @@ export const LibrariesUsedDialog = ({
 
   const trpc = useTRPC();
   const filesQuery = useQuery(
-    trpc.motion.getFiles.queryOptions(
+    trpc.sources.getFiles.queryOptions(
       { sourceId: animation.id },
       { enabled: !!animation.id }
     )

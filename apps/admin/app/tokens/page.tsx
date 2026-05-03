@@ -35,13 +35,13 @@ export default function TokensPage() {
   const availableScopes = ["contact"] as const;
 
   const trpc = useTRPC();
-  const { data: tokens } = useQuery(trpc.tokens.getAll.queryOptions());
+  const { data: tokens } = useQuery(trpc.tokens.list.queryOptions());
   const createToken = useMutation(trpc.tokens.create.mutationOptions());
   const deleteToken = useMutation(trpc.tokens.delete.mutationOptions());
   const resetUsage = useMutation(trpc.tokens.resetUsageCount.mutationOptions());
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.tokens.getAll.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.tokens.list.queryKey() });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -24,7 +24,7 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 export function Pricing() {
   const trpc = useTRPC();
-  const products = useQuery(trpc.products.getAll.queryOptions());
+  const products = useQuery(trpc.products.list.queryOptions());
   const [isYearly, setIsYearly] = useState(false);
 
   return (
@@ -64,7 +64,7 @@ export function Pricing() {
 const EachPlan = ({
   plan,
 }: {
-  plan: RouterOutputs["products"]["getAll"][number];
+  plan: RouterOutputs["products"]["list"][number];
 }) => {
   const checkout = useCheckout();
   const switchPlan = useSwitchPlan();

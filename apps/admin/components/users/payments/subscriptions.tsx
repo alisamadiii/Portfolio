@@ -23,7 +23,7 @@ export const Subscriptions = () => {
 
   const trpc = useTRPC();
   const { data: user } = useQuery(
-    trpc.users.getById.queryOptions(id, {
+    trpc.users.get.queryOptions(id, {
       enabled: !!id,
     })
   );

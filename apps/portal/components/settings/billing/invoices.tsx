@@ -1,44 +1,55 @@
-import { useMemo } from "react";
+"use client";
+
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { buttonVariants } from "@workspace/ui/components/button";
-import { urls } from "@workspace/ui/lib/company";
-import { design } from "@workspace/ui/lib/design";
+import { Button } from "@workspace/ui/components/button";
+import { DataTable } from "@workspace/ui/custom/data-table";
+import { getProjectColor } from "@workspace/ui/lib/design";
 
 import { useTRPC } from "@workspace/trpc/client";
+import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-// @react-pdf/renderer is browser-only — skip SSR for the whole button
 const InvoiceDownloadButton = dynamic(
   () =>
     import("./invoice-download-button").then((m) => m.InvoiceDownloadButton),
   { ssr: false }
 );
 
+type Order = RouterOutputs["billing"]["listOrders"][number];
+
+type OrderMeta = { project?: string; name?: string } | null;
+
+function getOrderMeta(order: Order): OrderMeta {
+  return order.metadata as OrderMeta;
+}
+
+function getOrderProject(order: Order): string | undefined {
+  return getOrderMeta(order)?.project ?? undefined;
+}
+
+function getOrderProductName(order: Order): string {
+  if (order.productName) return order.productName;
+  const meta = getOrderMeta(order);
+  if (meta?.name) return meta.name;
+  if (meta?.project) return meta.project;
+  if (order.billingReason === "subscription") return "Subscription";
+  return "Purchase";
+}
+
 export const BillingInvoices = () => {
   const { data: user } = useCurrentUser();
 
   const trpc = useTRPC();
-  const { data: orders } = useQuery(
+  const { data: orders, isLoading } = useQuery(
     trpc.billing.listOrders.queryOptions(
-      {
-        userId: user?.user.id || "",
-      },
-      {
-        enabled: !!user?.user.id,
-        refetchOnWindowFocus: true,
-      }
+      { userId: user?.user.id || "" },
+      { enabled: !!user?.user.id, refetchOnWindowFocus: true }
     )
-  );
-
-  // Memoize filtered data to prevent unnecessary re-renders
-  const ordersByUserId = useMemo(
-    () => orders || [],
-    [orders, user?.user]
   );
 
   return (
@@ -46,115 +57,105 @@ export const BillingInvoices = () => {
       <h3 className="text-muted-foreground relative z-10 mt-4 text-sm">
         Orders
       </h3>
-      {ordersByUserId.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-          <p className="text-muted-foreground text-sm">No orders yet</p>
-        </div>
-      ) : (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {ordersByUserId.map((order) => {
-          const amount = order.amount / 100;
-          const isRefund = amount < 0;
-          const createdAtLabel = order.createdAt
-            ? format(order.createdAt, "MMM d, yyyy")
-            : "Date pending";
-          const timeLabel = order.createdAt
-            ? format(order.createdAt, "hh:mm a")
-            : "Time pending";
-
-          return (
-            <div
-              key={order.id}
-              className="bg-primary shadow-dialog aspect-16/8 rounded-xl p-4 text-white"
-              style={{
-                backgroundColor:
-                  false
-                    ? design.motion.color
-                    : false
-                      ? design.agency.color
-                      : undefined,
-              }}
-            >
-              <div className="relative z-10 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs tracking-[0.2em] text-white/70 uppercase">
-                    Invoice
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {order.id}
-                  </p>
+      <DataTable
+        columns={[
+          {
+            id: "product",
+            header: "Product",
+            cell: ({ row }) => {
+              const project = getOrderProject(row.original);
+              const color = getProjectColor(project);
+              return (
+                <div className="flex items-center gap-3">
+                  <span
+                    className="size-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-sm font-medium">
+                    {getOrderProductName(row.original)}
+                  </span>
                 </div>
-                <Badge
-                  variant={
-                    order.amount < 0
-                      ? "secondary"
-                      : order.status === "paid"
-                        ? "default"
-                        : "destructive"
-                  }
+              );
+            },
+          },
+          {
+            header: "Amount",
+            accessorKey: "amount",
+            cell: ({ row }) => {
+              const amount = row.original.amount / 100;
+              return <span>${amount.toFixed(2)}</span>;
+            },
+          },
+          {
+            header: "Date",
+            accessorKey: "createdAt",
+            cell: ({ row }) =>
+              row.original.createdAt
+                ? format(row.original.createdAt, "MMM d, yyyy")
+                : "—",
+          },
+          {
+            header: "Status",
+            accessorKey: "status",
+            cell: ({ row }) => {
+              const { status, amount } = row.original;
+              const isRefund = amount < 0;
+              const label = isRefund
+                ? "refunded"
+                : status === "partially_refunded"
+                  ? "partial refund"
+                  : status;
+              const variant = isRefund
+                ? "secondary"
+                : status === "paid"
+                  ? "default"
+                  : status === "refunded"
+                    ? "secondary"
+                    : status === "partially_refunded"
+                      ? "outline"
+                      : status === "void"
+                        ? "destructive"
+                        : "secondary";
+              return <Badge variant={variant}>{label}</Badge>;
+            },
+          },
+          {
+            id: "receipt",
+            cell: ({ row }) =>
+              row.original.receiptUrl ? (
+                <a
+                  href={row.original.receiptUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {order.amount < 0 ? "refunded" : order.status}
-                </Badge>
-              </div>
-              <div className="relative z-10 mt-4 grid grid-cols-2 gap-3 text-xs text-white/80">
-                <div>
-                  <p className="text-white/60">Amount</p>
-                  <code className="text-sm font-semibold text-white">
-                    {isRefund
-                      ? `-$${Math.abs(amount).toFixed(2)}`
-                      : `$${amount.toFixed(2)}`}
-                  </code>
-                </div>
-                <div>
-                  <p className="text-white/60">Date</p>
-                  <p className="text-sm font-semibold text-white">
-                    {createdAtLabel}
-                  </p>
-                  <p className="text-[11px] text-white/60">{timeLabel}</p>
-                </div>
-                <div>
-                  <p className="text-white/60">Product</p>
-                  <code className="text-sm font-semibold text-white">
-                    {order.productName || "—"}
-                  </code>
-                </div>
-                <div>
-                  <p className="text-white/60">Status note</p>
-                  <p className="text-sm font-semibold text-white">
-                    {isRefund ? "Refund processed" : "Purchase confirmed"}
-                  </p>
-                </div>
-              </div>
-              <Link
-                href={
-                  false
-                    ? `${urls.motion}`
-                    : false
-                      ? `/agency`
-                      : "#"
-                }
-                className={buttonVariants({
-                  variant: "outline",
-                  className: "mt-4 w-full text-xs text-black",
-                })}
-              >
-                Visit
-              </Link>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <ExternalLink className="size-3" />
+                    Receipt
+                  </Button>
+                </a>
+              ) : null,
+          },
+          {
+            id: "invoice",
+            cell: ({ row }) => (
               <InvoiceDownloadButton
                 order={{
-                  ...order,
-                  createdAt: order.createdAt ? new Date(order.createdAt) : null,
+                  ...row.original,
+                  createdAt: row.original.createdAt
+                    ? new Date(row.original.createdAt)
+                    : null,
                 }}
                 userName={user?.user.name}
                 userPhone={user?.user.phone}
                 userCompany={user?.user.company}
                 userAddress={user?.user.address}
               />
-            </div>
-          );
-        })}
-      </div>
-      )}
+            ),
+          },
+        ]}
+        data={orders ?? []}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

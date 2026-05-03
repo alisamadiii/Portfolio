@@ -18,7 +18,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 interface SourceInfoCardProps {
-  source: RouterOutputs["sources"]["readById"];
+  source: RouterOutputs["sources"]["get"];
   sourceId: string;
 }
 
@@ -33,7 +33,7 @@ export function SourceInfoCard({ source, sourceId }: SourceInfoCardProps) {
     trpc.sources.update.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: trpc.sources.readById.queryKey(sourceId),
+          queryKey: trpc.sources.get.queryKey(sourceId),
         });
       },
     })

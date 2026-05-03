@@ -44,7 +44,7 @@ export const coldEmailsRouter = createTRPCRouter({
         });
       }
     }),
-  get: adminProcedure.query(async () => {
+  list: adminProcedure.query(async () => {
     try {
       const coldEmailsResult = await db
         .select()

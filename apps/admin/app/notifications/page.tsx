@@ -46,7 +46,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 type Notification =
-  RouterOutputs["notification"]["getAllNotifications"][number];
+  RouterOutputs["notification"]["list"][number];
 
 const priorityClass: Record<string, string> = {
   URGENT: "bg-red-500/15 text-red-600",
@@ -77,7 +77,7 @@ export default function NotificationsPage() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: notifications, isPending } = useQuery(
-    trpc.notification.getAllNotifications.queryOptions()
+    trpc.notification.list.queryOptions()
   );
 
   const updateStatus = useMutation(
@@ -170,7 +170,7 @@ export default function NotificationsPage() {
                 {
                   onSuccess: () => {
                     queryClient.invalidateQueries(
-                      trpc.notification.getAllNotifications.queryFilter()
+                      trpc.notification.list.queryFilter()
                     );
                   },
                   onError: (err) => toast.error(err.message),
@@ -302,7 +302,7 @@ function ReplyDialog({
         onSuccess: () => {
           toast.success(`Reply sent to ${notification.email}`);
           queryClient.invalidateQueries(
-            trpc.notification.getAllNotifications.queryFilter()
+            trpc.notification.list.queryFilter()
           );
           onClose();
         },

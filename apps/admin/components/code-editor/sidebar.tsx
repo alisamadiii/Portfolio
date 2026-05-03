@@ -33,7 +33,7 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 export const Sidebar = ({
   source,
 }: {
-  source: RouterOutputs["sources"]["readById"];
+  source: RouterOutputs["sources"]["get"];
 }) => {
   const {
     fileExpanded,
@@ -68,7 +68,7 @@ export const Sidebar = ({
 
   const invalidate = () => {
     queryClient.invalidateQueries({
-      queryKey: trpc.sources.readById.queryKey(source.id),
+      queryKey: trpc.sources.get.queryKey(source.id),
     });
   };
 
@@ -186,9 +186,9 @@ function FileList({
   source,
   children,
 }: {
-  source: RouterOutputs["sources"]["readById"];
+  source: RouterOutputs["sources"]["get"];
   children: (
-    sortedFiles: RouterOutputs["sources"]["readById"]["files"],
+    sortedFiles: RouterOutputs["sources"]["get"]["files"],
     dragHandlers: (index: number) => {
       draggable: boolean;
       onDragStart: (e: React.DragEvent) => void;
@@ -207,7 +207,7 @@ function FileList({
       onMutate: async (updates) => {
         // Optimistically update the cache
         queryClient.setQueryData(
-          trpc.sources.readById.queryKey(source.id),
+          trpc.sources.get.queryKey(source.id),
           (old) => {
             if (!old) return old;
             return {
@@ -224,7 +224,7 @@ function FileList({
         toast.error(error.message || "Failed to reorder files");
         // Refetch to restore correct order on error
         queryClient.invalidateQueries({
-          queryKey: trpc.sources.readById.queryKey(source.id),
+          queryKey: trpc.sources.get.queryKey(source.id),
         });
       },
     })
@@ -286,7 +286,7 @@ function FileItem({
   dragHandlers,
   isReordering,
 }: {
-  file: RouterOutputs["sources"]["readById"]["files"][number];
+  file: RouterOutputs["sources"]["get"]["files"][number];
   isActive: boolean;
   onClick: () => void;
   onDelete: () => void;

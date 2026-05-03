@@ -33,7 +33,7 @@ import { CreateUser } from "@/components/users/create-user";
 
 import { columns } from "./columns";
 
-type UserFromAPI = RouterOutputs["users"]["getAll"][number];
+type UserFromAPI = RouterOutputs["users"]["list"][number];
 
 interface FilterUsers {
   page?: number;
@@ -75,7 +75,7 @@ const UsersPage = () => {
     isPending,
     error,
   } = useQuery(
-    trpc.users.getAll.queryOptions({
+    trpc.users.list.queryOptions({
       page,
       limit,
       sortBy: sortBy as FilterUsers["sortBy"],
@@ -83,7 +83,7 @@ const UsersPage = () => {
     })
   );
   const { data: usersCount } = useQuery(
-    trpc.users.getCount.queryOptions()
+    trpc.users.count.queryOptions()
   );
 
   useEffect(() => {

@@ -2,17 +2,19 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { addMonths, addYears, format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
+import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { DataTable } from "@workspace/ui/custom/data-table";
-import { urls } from "@workspace/ui/lib/company";
-import { design } from "@workspace/ui/lib/design";
-import { cn } from "@workspace/ui/lib/utils";
+import {
+  design,
+  getProjectColor,
+  projectDesign,
+} from "@workspace/ui/lib/design";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
@@ -30,14 +32,35 @@ type ProjectFilter = "all" | "MOTION" | "AGENCY";
 
 const filters: { label: string; value: ProjectFilter; color?: string }[] = [
   { label: "All", value: "all" },
-  { label: "Motion", value: "MOTION", color: design.motion.color },
-  { label: "Agency", value: "AGENCY", color: design.agency.color },
+  { label: "Motion", value: "MOTION", color: projectDesign.MOTION.color },
+  { label: "Agency", value: "AGENCY", color: projectDesign.AGENCY.color },
 ];
 
-function getProjectColor(project?: string | null) {
-  if (project === "MOTION") return design.motion.color;
-  if (project === "AGENCY") return design.agency.color;
-  return design.default.color;
+type Order = RouterOutputs["billing"]["listOrders"][number];
+
+const formatCurrency = (amount: number, currency: string = "usd") =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
+
+type OrderMeta = { project?: string; name?: string } | null;
+
+function getOrderMeta(order: Order): OrderMeta {
+  return order.metadata as OrderMeta;
+}
+
+function getOrderProject(order: Order): string | undefined {
+  return getOrderMeta(order)?.project ?? undefined;
+}
+
+function getOrderProductName(order: Order): string {
+  if (order.productName) return order.productName;
+  const meta = getOrderMeta(order);
+  if (meta?.name) return meta.name;
+  if (meta?.project) return meta.project;
+  if (order.billingReason === "subscription") return "Subscription";
+  return "Purchase";
 }
 
 export default function BillingPage() {
@@ -59,17 +82,13 @@ export default function BillingPage() {
     )
   );
 
-  const getProducts = useQuery(trpc.products.getAll.queryOptions());
+  const getProducts = useQuery(trpc.products.list.queryOptions());
 
-  const userOrders = useMemo(
-    () => orders || [],
-    [orders]
-  );
-
-  const filteredOrders = useMemo(
-    () => (filter === "all" ? userOrders : userOrders),
-    [userOrders, filter]
-  );
+  const filteredOrders = useMemo(() => {
+    const all = orders || [];
+    if (filter === "all") return all;
+    return all.filter((o) => getOrderProject(o) === filter);
+  }, [orders, filter]);
 
   const filteredSubscriptions = useMemo(() => {
     if (!subscriptions) return [];
@@ -81,14 +100,7 @@ export default function BillingPage() {
   ) => {
     if (!sub.periodEnd) return null;
     return new Date(sub.periodEnd);
-    return null;
   };
-
-  const formatCurrency = (amount: number, currency: string = "usd") =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency.toUpperCase(),
-    }).format(amount / 100);
 
   return (
     <div className="space-y-10">
@@ -272,104 +284,107 @@ export default function BillingPage() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Orders</h2>
         {ordersLoading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Skeleton className="aspect-16/8 w-full rounded-xl" />
-            <Skeleton className="aspect-16/8 w-full rounded-xl" />
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
             <p className="text-muted-foreground text-sm">No orders found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {filteredOrders.map((order) => {
-              const amount = order.amount / 100;
-              const isRefund = amount < 0;
-              const createdAtLabel = order.createdAt
-                ? format(order.createdAt, "MMM d, yyyy")
-                : "Date pending";
-              const timeLabel = order.createdAt
-                ? format(order.createdAt, "hh:mm a")
-                : "Time pending";
-
-              return (
-                <div
-                  key={order.id}
-                  className="shadow-dialog rounded-xl p-4 text-white"
-                  style={{ backgroundColor: getProjectColor(undefined) }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs tracking-[0.2em] text-white/70 uppercase">
-                        Invoice
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {order.id}
-                      </p>
+          <DataTable
+            columns={[
+              {
+                id: "product",
+                header: "Product",
+                cell: ({ row }) => {
+                  const project = getOrderProject(row.original);
+                  const color = getProjectColor(project);
+                  return (
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="size-3 shrink-0 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-sm font-medium">
+                        {getOrderProductName(row.original)}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="border-white/30 text-white"
-                      >
-                        Invoice
-                      </Badge>
-                      <Badge
-                        variant={
-                          order.amount < 0
-                            ? "secondary"
-                            : order.status === "paid"
-                              ? "default"
-                              : "destructive"
-                        }
-                      >
-                        {order.amount < 0 ? "refunded" : order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-white/80">
-                    <div>
-                      <p className="text-white/60">Amount</p>
-                      <code className="text-sm font-semibold text-white">
-                        {isRefund
-                          ? `-$${Math.abs(amount).toFixed(2)}`
-                          : `$${amount.toFixed(2)}`}
-                      </code>
-                    </div>
-                    <div>
-                      <p className="text-white/60">Date</p>
-                      <p className="text-sm font-semibold text-white">
-                        {createdAtLabel}
-                      </p>
-                      <p className="text-[11px] text-white/60">{timeLabel}</p>
-                    </div>
-                    <div>
-                      <p className="text-white/60">Product</p>
-                      <code className="text-sm font-semibold text-white">
-                        {order.productName || "—"}
-                      </code>
-                    </div>
-                    <div>
-                      <p className="text-white/60">Status note</p>
-                      <p className="text-sm font-semibold text-white">
-                        {isRefund ? "Refund processed" : "Purchase confirmed"}
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href="#"
-                    className={buttonVariants({
-                      variant: "outline",
-                      className: "mt-4 w-full text-xs text-black",
-                    })}
-                  >
-                    Visit
-                  </Link>
+                  );
+                },
+              },
+              {
+                id: "amount",
+                header: "Amount",
+                cell: ({ row }) => {
+                  const amount = row.original.amount / 100;
+                  const isRefund = amount < 0;
+                  return (
+                    <span className={isRefund ? "text-destructive" : ""}>
+                      {isRefund
+                        ? `-${formatCurrency(Math.abs(row.original.amount), row.original.currency)}`
+                        : formatCurrency(
+                            row.original.amount,
+                            row.original.currency
+                          )}
+                    </span>
+                  );
+                },
+              },
+              {
+                id: "date",
+                header: "Date",
+                cell: ({ row }) =>
+                  row.original.createdAt
+                    ? format(row.original.createdAt, "MMM d, yyyy")
+                    : "—",
+              },
+              {
+                id: "status",
+                header: "Status",
+                cell: ({ row }) => {
+                  const { status, amount } = row.original;
+                  const isRefund = amount < 0;
+                  const label = isRefund ? "refunded" : status;
+                  const variant = isRefund
+                    ? "secondary"
+                    : status === "paid"
+                      ? "default"
+                      : status === "refunded" ||
+                          status === "partially_refunded"
+                        ? "secondary"
+                        : status === "void"
+                          ? "destructive"
+                          : "secondary";
+                  return <Badge variant={variant}>{label}</Badge>;
+                },
+              },
+              {
+                id: "receipt",
+                cell: ({ row }) =>
+                  row.original.receiptUrl ? (
+                    <a
+                      href={row.original.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" size="sm" className="gap-1.5">
+                        <ExternalLink className="size-3" />
+                        Receipt
+                      </Button>
+                    </a>
+                  ) : null,
+              },
+              {
+                id: "invoice",
+                cell: ({ row }) => (
                   <InvoiceDownloadButton
                     order={{
-                      ...order,
-                      createdAt: order.createdAt
-                        ? new Date(order.createdAt)
+                      ...row.original,
+                      createdAt: row.original.createdAt
+                        ? new Date(row.original.createdAt)
                         : null,
                     }}
                     userName={user?.user.name}
@@ -377,10 +392,11 @@ export default function BillingPage() {
                     userCompany={user?.user.company}
                     userAddress={user?.user.address}
                   />
-                </div>
-              );
-            })}
-          </div>
+                ),
+              },
+            ]}
+            data={filteredOrders}
+          />
         )}
       </div>
     </div>

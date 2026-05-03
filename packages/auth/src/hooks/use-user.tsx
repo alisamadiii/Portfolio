@@ -5,7 +5,7 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 const useCurrentUser = () => {
   const trpc = useTRPC();
   return useQuery(
-    trpc.users.getCurrentUser.queryOptions(undefined, {
+    trpc.users.getCurrent.queryOptions(undefined, {
       refetchOnWindowFocus: false,
     })
   );
@@ -14,9 +14,9 @@ const useCurrentUser = () => {
 const useUpdateUser = () => {
   const trpc = useTRPC();
   return useMutation(
-    trpc.users.updateUser.mutationOptions({
+    trpc.users.update.mutationOptions({
       onSuccess: (_, variables) => {
-        queryClient.setQueryData(trpc.users.getCurrentUser.queryKey(), (old) => {
+        queryClient.setQueryData(trpc.users.getCurrent.queryKey(), (old) => {
           if (!old) return old;
           return {
             ...old,

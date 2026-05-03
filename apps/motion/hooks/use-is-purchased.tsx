@@ -4,7 +4,9 @@ import { useTRPC } from "@workspace/trpc/client";
 
 export const useIsPurchased = () => {
   const trpc = useTRPC();
-  const queryResult = useQuery(trpc.motion.isUserPurchased.queryOptions());
+  const queryResult = useQuery(
+    trpc.products.isPurchased.queryOptions({ project: "MOTION" })
+  );
 
   return {
     ...queryResult,

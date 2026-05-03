@@ -37,7 +37,7 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useUpdateAdminUser } from "@workspace/auth/hooks/use-admin";
 
-type UserFromAPI = RouterOutputs["users"]["getAll"][number];
+type UserFromAPI = RouterOutputs["users"]["list"][number];
 
 export const columnsLoading: ColumnDef<UserFromAPI>[] = [
   {

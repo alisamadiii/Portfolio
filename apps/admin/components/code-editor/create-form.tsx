@@ -32,7 +32,7 @@ export const CreateForm = () => {
       onSuccess: () => {
         form.reset();
         queryClient.invalidateQueries({
-          queryKey: trpc.sources.read.queryKey(),
+          queryKey: trpc.sources.list.queryKey(),
         });
       },
     });
