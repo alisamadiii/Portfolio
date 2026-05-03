@@ -4,14 +4,12 @@ import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin, emailOTP, magicLink } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { db } from "@workspace/drizzle/index";
 import {
   account,
-  previousCustomers,
   session,
   user,
   verification,
@@ -20,14 +18,14 @@ import {
 import { sendEmail } from "@workspace/email";
 
 import {
-  createInvoice,
+  completeCheckout,
+  confirmAsyncPayment,
   createProduct,
   createSubscription,
   deleteProduct,
   deleteSubscription,
-  handleChargeRefunded,
-  handleCheckoutCompleted,
-  updateInvoice,
+  failAsyncPayment,
+  processRefund,
   updateProduct,
   updateSubscription,
 } from "./auth-action";
@@ -181,24 +179,18 @@ export const auth = betterAuth({
           }
         }
 
-        // Sync invoices
-        if (event.type === "invoice.paid" || event.type === "invoice.created") {
-          const invoice = event.data.object as Stripe.Invoice;
-          await createInvoice(invoice);
-
-          // Clean up previous customers on paid invoice
-          if (event.type === "invoice.paid" && invoice.customer_email) {
-            await db
-              .delete(previousCustomers)
-              .where(eq(previousCustomers.email, invoice.customer_email));
-          }
+        // Orders — one-time purchase lifecycle
+        if (event.type === "checkout.session.completed") {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await completeCheckout(session);
         }
-        if (
-          event.type === "invoice.updated" ||
-          event.type === "invoice.payment_failed"
-        ) {
-          const invoice = event.data.object as Stripe.Invoice;
-          await updateInvoice(invoice);
+        if (event.type === "checkout.session.async_payment_succeeded") {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await confirmAsyncPayment(session);
+        }
+        if (event.type === "checkout.session.async_payment_failed") {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await failAsyncPayment(session);
         }
 
         // Sync subscriptions
@@ -217,16 +209,10 @@ export const auth = betterAuth({
           }
         }
 
-        // One-time payment completed
-        if (event.type === "checkout.session.completed") {
-          const session = event.data.object as Stripe.Checkout.Session;
-          await handleCheckoutCompleted(session);
-        }
-
-        // Sync refunds
+        // Refunds → update order status
         if (event.type === "charge.refunded") {
           const charge = event.data.object as Stripe.Charge;
-          await handleChargeRefunded(charge);
+          await processRefund(charge);
         }
       },
     }),

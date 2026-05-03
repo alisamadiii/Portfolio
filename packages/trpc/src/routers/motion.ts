@@ -10,7 +10,7 @@ import {
 } from "@workspace/trpc/init";
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { invoices, source, sourceFile } from "@workspace/drizzle/schema";
+import { orders, source, sourceFile } from "@workspace/drizzle/schema";
 import type { ProjectType } from "@workspace/drizzle/schema";
 
 async function hasUserPurchasedProject(
@@ -18,13 +18,13 @@ async function hasUserPurchasedProject(
   project: ProjectType
 ): Promise<boolean> {
   const [row] = await db
-    .select({ id: invoices.id })
-    .from(invoices)
+    .select({ id: orders.id })
+    .from(orders)
     .where(
       and(
-        eq(invoices.userId, userId),
-        eq(invoices.status, "paid"),
-        sql`${invoices.metadata}->>'project' = ${project}`
+        eq(orders.userId, userId),
+        eq(orders.status, "paid"),
+        sql`${orders.metadata}->>'project' = ${project}`
       )
     )
     .limit(1);

@@ -10,7 +10,7 @@ import {
 } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import {
-  invoices,
+  orders,
   products,
   projectsTypeValues,
   subscription,
@@ -125,20 +125,20 @@ export const productsRouter = createTRPCRouter({
       try {
         const userId = ctx.session.user.id;
 
-        const [activeInvoice] = await db
-          .select({ id: invoices.id })
-          .from(invoices)
-          .innerJoin(products, eq(invoices.productId, input.productId))
+        const [activeOrder] = await db
+          .select({ id: orders.id })
+          .from(orders)
+          .innerJoin(products, eq(orders.productId, input.productId))
           .where(
             and(
-              sql`${invoices.userId} = ${userId}`,
-              eq(invoices.status, "paid"),
+              sql`${orders.userId} = ${userId}`,
+              eq(orders.status, "paid"),
               sql`${products.metadata}->>'project' = 'AGENCY'`
             )
           )
           .limit(1);
 
-        if (activeInvoice) return true;
+        if (activeOrder) return true;
 
         const [activeSub] = await db
           .select({ id: subscription.id })

@@ -184,7 +184,7 @@ const EachProduct = ({
   const { data: isActive } = useQuery(
     trpc.products.isAgencyActive.queryOptions({ productId: product.id })
   );
-  const checkout = useMutation(trpc.billing.createAgencyCheckout.mutationOptions());
+  const checkout = useMutation(trpc.billing.createCheckout.mutationOptions());
 
   return (
     <CardAgency.Card
@@ -240,9 +240,9 @@ const EachProduct = ({
             onClick={() =>
               checkout.mutate(
                 {
-                  productId: product.id ?? "",
+                  priceIds: [product.priceId ?? ""],
                   successUrl: window.location.href,
-                  extraPages: 0,
+                  cancelUrl: window.location.href,
                 },
                 {
                   onSuccess: (data) => {

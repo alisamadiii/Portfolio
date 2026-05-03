@@ -7,6 +7,7 @@ import type {
   CreateCustomerOutput,
   CreatePortalSessionInput,
   CreatePortalSessionOutput,
+  PromotionCode,
   RetrieveCheckoutOutput,
   SubscriptionDetails,
   SwitchPlanInput,
@@ -37,6 +38,15 @@ export async function createCheckoutSession(
     line_items: input.priceIds.map((id) => ({ price: id, quantity: 1 })),
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
+    metadata: input.metadata,
+    ...(input.mode === "payment" && {
+      payment_intent_data: {
+        metadata: {
+          type: "one_time_purchase",
+          price_ids: input.priceIds.join(","),
+        },
+      },
+    }),
   });
 
   if (!session.url) {
@@ -73,9 +83,46 @@ export async function getSubscriptionDetails(
   const stripeSub = await stripeClient.subscriptions.retrieve(
     subscriptionId,
     {
-      expand: ["items.data.price.product"],
+      expand: ["items.data.price.product", "schedule"],
     }
   );
+
+  // Check for a scheduled plan change
+  let scheduledChange: SubscriptionDetails["scheduledChange"] = null;
+  const schedule =
+    typeof stripeSub.schedule === "object" && stripeSub.schedule
+      ? stripeSub.schedule
+      : null;
+
+  if (
+    schedule &&
+    (schedule.status === "active" || schedule.status === "not_started") &&
+    schedule.phases.length > 1
+  ) {
+    const nextPhase = schedule.phases[schedule.phases.length - 1];
+    const nextItem = nextPhase.items[0];
+    if (nextItem) {
+      const nextPriceId =
+        typeof nextItem.price === "string" ? nextItem.price : nextItem.price.id;
+      const currentPriceId = stripeSub.items.data[0]?.price.id;
+
+      if (nextPriceId !== currentPriceId) {
+        const nextPrice = await stripeClient.prices.retrieve(nextPriceId, {
+          expand: ["product"],
+        });
+        const nextProduct =
+          typeof nextPrice.product === "object" && "name" in nextPrice.product
+            ? nextPrice.product
+            : null;
+
+        scheduledChange = {
+          newPriceId: nextPriceId,
+          newProductName: nextProduct?.name ?? null,
+          effectiveDate: nextPhase.start_date,
+        };
+      }
+    }
+  }
 
   return {
     id: stripeSub.id,
@@ -107,6 +154,7 @@ export async function getSubscriptionDetails(
         quantity: item.quantity ?? 1,
       };
     }),
+    scheduledChange,
   };
 }
 
@@ -122,14 +170,108 @@ export async function switchPlan(
     throw new Error("No subscription item found");
   }
 
-  const updated = await stripeClient.subscriptions.update(
-    input.subscriptionId,
-    {
-      items: [{ id: itemId, price: input.newPriceId }],
-      proration_behavior: "create_prorations",
-    }
+  if (input.immediate !== false) {
+    // Upgrade: apply immediately with proration
+    const updated = await stripeClient.subscriptions.update(
+      input.subscriptionId,
+      {
+        items: [{ id: itemId, price: input.newPriceId }],
+        proration_behavior: "always_invoice",
+      }
+    );
+    return { subscriptionId: updated.id, status: updated.status };
+  }
+
+  // Downgrade: schedule the new price at the end of the current period
+  const schedules = await stripeClient.subscriptionSchedules.list({
+    customer:
+      typeof stripeSub.customer === "string"
+        ? stripeSub.customer
+        : stripeSub.customer.id,
+  });
+  const existing = schedules.data.find(
+    (s) =>
+      s.subscription ===
+        (typeof stripeSub.id === "string" ? stripeSub.id : null) &&
+      (s.status === "active" || s.status === "not_started")
   );
 
-  return { subscriptionId: updated.id, status: updated.status };
+  if (existing) {
+    // Update existing schedule's upcoming phase
+    const lastPhase = existing.phases[existing.phases.length - 1];
+    await stripeClient.subscriptionSchedules.update(existing.id, {
+      phases: [
+        ...existing.phases.slice(0, -1).map((p) => ({
+          items: p.items.map((i) => ({
+            price: typeof i.price === "string" ? i.price : i.price.id,
+            quantity: i.quantity ?? 1,
+          })),
+          start_date: p.start_date,
+          end_date: p.end_date ?? undefined,
+        })),
+        {
+          items: [{ price: input.newPriceId, quantity: 1 }],
+          start_date: lastPhase.end_date ?? undefined,
+        },
+      ],
+    });
+  } else {
+    // Create a new schedule from the existing subscription
+    const schedule = await stripeClient.subscriptionSchedules.create({
+      from_subscription: input.subscriptionId,
+    });
+
+    const currentPhase = schedule.phases[0];
+    await stripeClient.subscriptionSchedules.update(schedule.id, {
+      phases: [
+        {
+          items: currentPhase.items.map((i) => ({
+            price: typeof i.price === "string" ? i.price : i.price.id,
+            quantity: i.quantity ?? 1,
+          })),
+          start_date: currentPhase.start_date,
+          end_date: currentPhase.end_date ?? undefined,
+        },
+        {
+          items: [{ price: input.newPriceId, quantity: 1 }],
+          start_date: currentPhase.end_date ?? undefined,
+        },
+      ],
+    });
+  }
+
+  return { subscriptionId: stripeSub.id, status: stripeSub.status };
 }
 
+export async function listPromotionCodes(options?: {
+  code?: string;
+  active?: boolean;
+  limit?: number;
+}): Promise<PromotionCode[]> {
+  const result = await stripeClient.promotionCodes.list({
+    ...options,
+    expand: ["data.coupon"],
+  });
+
+  return result.data.map((pc) => {
+    const coupon =
+      typeof pc.promotion.coupon === "object" && pc.promotion.coupon
+        ? pc.promotion.coupon
+        : null;
+
+    return {
+      id: pc.id,
+      code: pc.code,
+      active: pc.active,
+      expiresAt: pc.expires_at,
+      timesRedeemed: pc.times_redeemed,
+      maxRedemptions: pc.max_redemptions,
+      coupon: {
+        id: coupon?.id ?? "",
+        percentOff: coupon?.percent_off ?? null,
+        amountOff: coupon?.amount_off ?? null,
+        currency: coupon?.currency ?? null,
+      },
+    };
+  });
+}

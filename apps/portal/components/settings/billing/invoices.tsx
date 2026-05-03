@@ -24,13 +24,12 @@ export const BillingInvoices = () => {
 
   const trpc = useTRPC();
   const { data: orders } = useQuery(
-    trpc.billing.getInvoices.queryOptions(
+    trpc.billing.listOrders.queryOptions(
       {
         userId: user?.user.id || "",
-        email: user?.user.email || "",
       },
       {
-        enabled: !!user?.user.id || !!user?.user.email,
+        enabled: !!user?.user.id,
         refetchOnWindowFocus: true,
       }
     )
@@ -38,7 +37,7 @@ export const BillingInvoices = () => {
 
   // Memoize filtered data to prevent unnecessary re-renders
   const ordersByUserId = useMemo(
-    () => orders?.filter((order) => order.userId === user?.user.id) || [],
+    () => orders || [],
     [orders, user?.user]
   );
 
@@ -54,7 +53,7 @@ export const BillingInvoices = () => {
       ) : (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {ordersByUserId.map((order) => {
-          const amount = order.totalAmount / 100;
+          const amount = order.amount / 100;
           const isRefund = amount < 0;
           const createdAtLabel = order.createdAt
             ? format(order.createdAt, "MMM d, yyyy")
@@ -82,19 +81,19 @@ export const BillingInvoices = () => {
                     Invoice
                   </p>
                   <p className="text-sm font-semibold">
-                    {order.invoiceNumber || "Pending"}
+                    {order.id}
                   </p>
                 </div>
                 <Badge
                   variant={
-                    order.totalAmount < 0
+                    order.amount < 0
                       ? "secondary"
                       : order.status === "paid"
                         ? "default"
                         : "destructive"
                   }
                 >
-                  {order.totalAmount < 0 ? "refunded" : order.status}
+                  {order.amount < 0 ? "refunded" : order.status}
                 </Badge>
               </div>
               <div className="relative z-10 mt-4 grid grid-cols-2 gap-3 text-xs text-white/80">
@@ -116,7 +115,7 @@ export const BillingInvoices = () => {
                 <div>
                   <p className="text-white/60">Product</p>
                   <code className="text-sm font-semibold text-white">
-                    {order.productId ? order.productId.slice(0, 10) + "..." : "—"}
+                    {order.productName || "—"}
                   </code>
                 </div>
                 <div>

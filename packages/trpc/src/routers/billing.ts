@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { desc, eq, or } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
@@ -8,40 +8,52 @@ import {
   createCheckoutSession,
   createCustomer,
   createPortalSession,
+  deleteCustomer,
+  getSubscriptionDetails,
   retrieveCheckoutSession,
   switchPlan,
 } from "@workspace/auth/payments";
 import { db } from "@workspace/drizzle/index";
 import {
-  invoices,
+  orders,
   previousCustomers,
   products,
   subscription,
   user,
 } from "@workspace/drizzle/schema";
 
-// ─── Extra-page pricing (amounts in cents) ──────────────────────
-const EXTRA_PAGE_TIERS = [
-  { pages: 5, pricePerPage: 2500 }, // pages 1–5:   $25/mo each
-  { pages: 5, pricePerPage: 4000 }, // pages 6–10:  $40/mo each
-  { pages: 5, pricePerPage: 6000 }, // pages 11–15: $60/mo each
-] as const;
-
-const MAX_EXTRA_PAGES = EXTRA_PAGE_TIERS.reduce((s, t) => s + t.pages, 0);
-
-function calcExtraPagesCost(extraPages: number): number {
-  let remaining = Math.min(extraPages, MAX_EXTRA_PAGES);
-  let total = 0;
-  for (const tier of EXTRA_PAGE_TIERS) {
-    if (remaining <= 0) break;
-    const count = Math.min(remaining, tier.pages);
-    total += count * tier.pricePerPage;
-    remaining -= count;
-  }
-  return total;
-}
-
 export const billingRouter = createTRPCRouter({
+  getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
+    const [subs, paidOrders] = await Promise.all([
+      db
+        .select()
+        .from(subscription)
+        .where(eq(subscription.referenceId, ctx.session.user.id)),
+      db
+        .select()
+        .from(orders)
+        .where(eq(orders.userId, ctx.session.user.id))
+        .then((rows) =>
+          rows.filter(
+            (o) => o.status === "paid" || o.status === "partially_refunded"
+          )
+        ),
+    ]);
+
+    const activeSub = subs.find(
+      (s) => s.status === "active" || s.status === "trialing"
+    );
+
+    return {
+      subscriptions: subs,
+      activeSubscription: activeSub ?? null,
+      paidOrders,
+      isUserHaveAccess: !!activeSub || paidOrders.length > 0,
+      currentPlan: activeSub?.plan ?? null,
+      currentSubscriptionId: activeSub?.id ?? null,
+    };
+  }),
+
   createCheckout: authenticatedProcedure
     .input(
       z.object({
@@ -50,153 +62,62 @@ export const billingRouter = createTRPCRouter({
         cancelUrl: z.string().optional(),
       })
     )
-    .mutation(async (): Promise<{ url?: string }> => {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message:
-          "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
+    .mutation(async ({ input, ctx }) => {
+      const { priceIds, successUrl, cancelUrl } = input;
+
+      const dbUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, ctx.session.user.id))
+        .limit(1)
+        .then((res) => res[0]);
+
+      let customerId = dbUser?.stripeCustomerId;
+
+      if (!customerId) {
+        const result = await createCustomer({
+          email: ctx.session.user.email,
+          name: ctx.session.user.name,
+          metadata: { userId: ctx.session.user.id },
+        });
+        customerId = result.customerId;
+        await db
+          .update(user)
+          .set({ stripeCustomerId: customerId })
+          .where(eq(user.id, ctx.session.user.id));
+      }
+
+      // Determine mode and grab product metadata for the checkout session
+      const [product] = await db
+        .select({
+          isRecurring: products.isRecurring,
+          metadata: products.metadata,
+        })
+        .from(products)
+        .where(eq(products.priceId, priceIds[0]))
+        .limit(1);
+
+      const productMeta =
+        product?.metadata && typeof product.metadata === "object"
+          ? Object.fromEntries(
+              Object.entries(product.metadata as Record<string, unknown>).map(
+                ([k, v]) => [k, String(v)]
+              )
+            )
+          : undefined;
+
+      const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+
+      return createCheckoutSession({
+        customerId,
+        priceIds,
+        mode: product?.isRecurring ? "subscription" : "payment",
+        metadata: productMeta,
+        successUrl: successUrl
+          ? `${successUrl}${successUrl.includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`
+          : `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: cancelUrl || `${base}/`,
       });
-
-      // const { priceIds, successUrl, cancelUrl } = input;
-
-      // const dbUser = await db
-      //   .select()
-      //   .from(user)
-      //   .where(eq(user.id, ctx.session.user.id))
-      //   .limit(1)
-      //   .then((res) => res[0]);
-
-      // let customerId = dbUser?.stripeCustomerId;
-
-      // if (!customerId) {
-      //   const result = await createCustomer({
-      //     email: ctx.session.user.email,
-      //     name: ctx.session.user.name,
-      //     metadata: { userId: ctx.session.user.id },
-      //   });
-      //   customerId = result.customerId;
-      //   await db
-      //     .update(user)
-      //     .set({ stripeCustomerId: customerId })
-      //     .where(eq(user.id, ctx.session.user.id));
-      // }
-
-      // // Determine mode based on product's recurring status
-      // const [product] = await db
-      //   .select({ isRecurring: products.isRecurring })
-      //   .from(products)
-      //   .where(eq(products.priceId, priceIds[0]))
-      //   .limit(1);
-
-      // const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-
-      // const resolvedSuccessUrl = successUrl
-      //   ? appendSessionId(successUrl)
-      //   : `${base}/success?session_id={CHECKOUT_SESSION_ID}`;
-
-      // function appendSessionId(url: string) {
-      //   // If the URL already contains a "?" (has query params), append with "&", else with "?"
-      //   const separator = url.includes("?") ? "&" : "?";
-      //   return `${url}${separator}session_id={CHECKOUT_SESSION_ID}`;
-      // }
-
-      // return createCheckoutSession({
-      //   customerId,
-      //   priceIds,
-      //   mode: product?.isRecurring ? "subscription" : "payment",
-      //   successUrl: resolvedSuccessUrl,
-      //   cancelUrl: cancelUrl || successUrl || `${base}/`,
-      // });
-    }),
-
-  createAgencyCheckout: authenticatedProcedure
-    .input(
-      z.object({
-        productId: z.string(),
-        successUrl: z.string().optional(),
-        extraPages: z.number().int().min(0).default(0),
-      })
-    )
-    .mutation(async (): Promise<{ url?: string }> => {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message:
-          "Checkout is temporarily unavailable while we upgrade our payment system. Please check back soon.",
-      });
-
-      // try {
-      //   const { productId, successUrl, extraPages } = input;
-
-      //   const [product] = await db
-      //     .select()
-      //     .from(products)
-      //     .where(eq(products.id, productId))
-      //     .limit(1);
-
-      //   if (!product || !product.priceId) {
-      //     throw new TRPCError({
-      //       code: "NOT_FOUND",
-      //       message: "Product or price not found",
-      //     });
-      //   }
-
-      //   const dbUser = await db
-      //     .select()
-      //     .from(user)
-      //     .where(eq(user.id, ctx.session.user.id))
-      //     .limit(1)
-      //     .then((res) => res[0]);
-
-      //   let customerId = dbUser?.stripeCustomerId;
-
-      //   if (!customerId) {
-      //     const result = await createCustomer({
-      //       email: ctx.session.user.email,
-      //       name: ctx.session.user.name,
-      //       metadata: { userId: ctx.session.user.id },
-      //     });
-      //     customerId = result.customerId;
-      //     await db
-      //       .update(user)
-      //       .set({ stripeCustomerId: customerId })
-      //       .where(eq(user.id, ctx.session.user.id));
-      //   }
-
-      //   let priceId = product.priceId;
-
-      //   if (extraPages > 0) {
-      //     const adjustedAmount =
-      //       product.priceAmount + calcExtraPagesCost(extraPages);
-      //     const adHocPrice = await stripeClient.prices.create({
-      //       product: productId,
-      //       unit_amount: adjustedAmount,
-      //       currency: product.priceCurrency,
-      //       recurring: product.isRecurring ? { interval: "month" } : undefined,
-      //       metadata: { extraPages: String(extraPages), adHoc: "true" },
-      //     });
-      //     priceId = adHocPrice.id;
-      //   }
-
-      //   const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-
-      //   return createCheckoutSession({
-      //     customerId,
-      //     priceIds: [priceId],
-      //     mode: product.isRecurring ? "subscription" : "payment",
-      //     successUrl:
-      //       successUrl || `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
-      //     cancelUrl: successUrl || `${base}/`,
-      //   });
-      // } catch (error: unknown) {
-      //   if (error instanceof TRPCError) throw error;
-      //   throw new TRPCError({
-      //     code: "INTERNAL_SERVER_ERROR",
-      //     message:
-      //       error instanceof Error
-      //         ? error.message
-      //         : "Failed to create checkout",
-      //   });
-      // }
     }),
 
   verifyCheckout: authenticatedProcedure
@@ -217,6 +138,7 @@ export const billingRouter = createTRPCRouter({
       z.object({
         subscriptionId: z.string(),
         newPriceId: z.string(),
+        immediate: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -234,37 +156,49 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      if (sub.status === "canceled") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Cannot switch a canceled subscription. Please subscribe to a new plan.",
+        });
+      }
+
       try {
         return await switchPlan({
           subscriptionId: input.subscriptionId,
           newPriceId: input.newPriceId,
+          immediate: input.immediate,
         });
-      } catch {
+      } catch (err) {
+        console.error(err);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to switch plan",
+          message:
+            err instanceof Error ? err.message : "Failed to switch plan",
         });
       }
     }),
 
-  getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
-    const subs = await db
-      .select()
-      .from(subscription)
-      .where(eq(subscription.referenceId, ctx.session.user.id));
+  getSubscriptionDetails: authenticatedProcedure
+    .input(z.object({ subscriptionId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const sub = await db
+        .select()
+        .from(subscription)
+        .where(eq(subscription.stripeSubscriptionId, input.subscriptionId))
+        .limit(1)
+        .then((r) => r[0]);
 
-    const activeSub = subs.find(
-      (s) => s.status === "active" || s.status === "trialing"
-    );
+      if (!sub || sub.referenceId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Subscription not found",
+        });
+      }
 
-    return {
-      subscriptions: subs,
-      activeSubscription: activeSub ?? null,
-      isUserHaveAccess: !!activeSub,
-      currentPlan: activeSub?.plan ?? null,
-      currentSubscriptionId: activeSub?.id ?? null,
-    };
-  }),
+      return getSubscriptionDetails(input.subscriptionId);
+    }),
 
   createPortalSession: authenticatedProcedure
     .input(z.object({ returnUrl: z.string().optional() }))
@@ -293,20 +227,110 @@ export const billingRouter = createTRPCRouter({
       });
     }),
 
-  getInvoices: authenticatedProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        email: z.string(),
-      })
-    )
+  listOrders: authenticatedProcedure
+    .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
-      const { userId, email } = input;
-      return db
+      const dbUser = await db
         .select()
-        .from(invoices)
-        .where(or(eq(invoices.userId, userId), eq(invoices.email, email)))
-        .orderBy(desc(invoices.createdAt));
+        .from(user)
+        .where(eq(user.id, input.userId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      // Get one-time purchase orders from DB
+      const dbRows = await db
+        .select({
+          order: orders,
+          productName: products.name,
+        })
+        .from(orders)
+        .leftJoin(products, eq(products.id, orders.productId))
+        .where(eq(orders.userId, input.userId))
+        .orderBy(desc(orders.createdAt));
+
+      const dbOrders = dbRows.map((r) => ({
+        id: r.order.id,
+        amount: r.order.amount,
+        currency: r.order.currency,
+        status: r.order.status,
+        productName: r.productName,
+        billingReason: r.order.billingReason,
+        refundedAmount: r.order.refundedAmount,
+        receiptUrl: r.order.receiptUrl,
+        metadata: r.order.metadata,
+        createdAt: r.order.createdAt,
+        type: "one_time" as const,
+      }));
+
+      // Get subscription invoices from Stripe SDK
+      let invoiceOrders: Array<{
+        id: string;
+        amount: number;
+        currency: string;
+        status: string;
+        productName: string | null;
+        billingReason: string;
+        refundedAmount: number;
+        receiptUrl: string | null;
+        metadata: unknown;
+        createdAt: Date | null;
+        type: string;
+      }> = [];
+
+      if (dbUser?.stripeCustomerId) {
+        const stripeInvoices = await stripeClient.invoices.list({
+          customer: dbUser.stripeCustomerId,
+          limit: 100,
+          status: "paid",
+        });
+
+        invoiceOrders = stripeInvoices.data.map((inv) => {
+          const firstLine = inv.lines?.data?.[0];
+          const description = firstLine
+            ? (firstLine as { description?: string }).description
+            : null;
+
+          return {
+            id: inv.id,
+            amount: inv.amount_paid,
+            currency: inv.currency,
+            status: inv.status ?? "paid",
+            productName: description ?? null,
+            billingReason: inv.billing_reason ?? "subscription",
+            refundedAmount: 0,
+            receiptUrl: inv.hosted_invoice_url ?? null,
+            metadata: {},
+            createdAt: new Date(inv.created * 1000),
+            type: "subscription" as const,
+          };
+        });
+      }
+
+      // Merge and sort by date descending
+      return [...dbOrders, ...invoiceOrders].sort(
+        (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
+      );
+    }),
+
+  deleteCustomer: authenticatedProcedure
+    .input(z.string())
+    .mutation(async ({ input }) => {
+      const dbUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, input))
+        .limit(1)
+        .then((res) => res[0]);
+
+      if (dbUser?.stripeCustomerId) {
+        await deleteCustomer(dbUser.stripeCustomerId);
+      }
+
+      if (dbUser?.email) {
+        await db.delete(user).where(eq(user.email, dbUser.email));
+      }
+
+      return true;
     }),
 
   getSubscriptions: authenticatedProcedure
@@ -316,51 +340,29 @@ export const billingRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
-      try {
-        const subs = await db
-          .select({
-            subscription: subscription,
-            productName: products.name,
-          })
-          .from(subscription)
-          .leftJoin(products, eq(products.priceId, subscription.plan))
-          .where(eq(subscription.referenceId, input.userId))
-          .orderBy(desc(subscription.periodStart));
+      const subs = await db
+        .select({
+          subscription: subscription,
+          productName: products.name,
+        })
+        .from(subscription)
+        .leftJoin(products, eq(products.priceId, subscription.plan))
+        .where(eq(subscription.referenceId, input.userId))
+        .orderBy(desc(subscription.periodStart));
 
-        return subs.map((s) => ({
-          ...s.subscription,
-          productName: s.productName,
-        }));
-      } catch (error: unknown) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to fetch subscriptions",
-          cause: error,
-        });
-      }
+      return subs.map((s) => ({
+        ...s.subscription,
+        productName: s.productName,
+      }));
     }),
 
   getPreviousCustomer: authenticatedProcedure.query(async ({ ctx }) => {
-    try {
-      const customer = await db
-        .select()
-        .from(previousCustomers)
-        .where(eq(previousCustomers.email, ctx.session.user.email))
-        .limit(1)
-        .then((result) => result[0]);
-      return customer;
-    } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to get previous customers",
-        cause: error,
-      });
-    }
+    const customer = await db
+      .select()
+      .from(previousCustomers)
+      .where(eq(previousCustomers.email, ctx.session.user.email))
+      .limit(1)
+      .then((result) => result[0]);
+    return customer;
   }),
 });

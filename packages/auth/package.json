@@ -6,9 +6,12 @@
   "exports": {
     "./*": "./src/*.ts",
     "./payments": "./src/payments/index.ts",
+    "./plans": "./src/plans.ts",
     "./hooks/use-user": "./src/hooks/use-user.tsx",
     "./hooks/use-admin": "./src/hooks/use-admin.tsx",
-    "./hooks/use-functions": "./src/hooks/use-functions.tsx"
+    "./hooks/use-functions": "./src/hooks/use-functions.tsx",
+    "./hooks/use-payments": "./src/hooks/use-payments.tsx",
+    "./hooks/use-access": "./src/hooks/use-access.tsx"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

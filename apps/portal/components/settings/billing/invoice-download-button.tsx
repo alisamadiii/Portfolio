@@ -9,12 +9,10 @@ import { InvoiceDocument } from "@workspace/ui/pdfs/invoice";
 
 interface Props {
   order: {
-    invoiceNumber: string | null;
+    id: string;
     createdAt: Date | null;
-    billingName: string | null;
-    email: string;
-    totalAmount: number;
-    productId: string | null;
+    amount: number;
+    productName: string | null;
     billingReason: string | null;
   };
   userName?: string;
@@ -34,7 +32,7 @@ export function InvoiceDownloadButton({
     ? format(order.createdAt, "MM/dd/yyyy")
     : "—";
 
-  const amount = order.totalAmount / 100;
+  const amount = order.amount / 100;
 
   const reason = order.billingReason?.replace(/_/g, " ") ?? "purchase";
   const description = reason;
@@ -48,7 +46,7 @@ export function InvoiceDownloadButton({
   ];
 
   const invoiceData: InvoiceData = {
-    invoiceNumber: order.invoiceNumber || order.productId?.slice(0, 8) || "—",
+    invoiceNumber: order.id.slice(0, 12),
     issueDate,
     dueDate: issueDate,
     from: {
@@ -60,11 +58,11 @@ export function InvoiceDownloadButton({
       website: company.website,
     },
     to: {
-      name: userName || order.billingName || "",
+      name: userName || "",
       company: userCompany || "",
       city: userAddress || "",
       country: "",
-      email: order.email,
+      email: "",
       phone: userPhone || "",
     },
     items,

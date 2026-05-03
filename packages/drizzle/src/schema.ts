@@ -139,34 +139,33 @@ export const subscription = pgTable("subscription", {
   itemCount: integer("item_count").notNull().default(1),
   billingInterval: text("billing_interval"),
   stripeScheduleId: text("stripe_schedule_id"),
+  metadata: jsonb("metadata").$type<unknown>().default({}),
 });
 
-// Local mirror of Stripe invoices — synced via webhooks
-export const invoices = pgTable("invoice", {
-  id: text("id").primaryKey(), // Stripe invoice ID (in_xxx)
-  userId: text("user_id").notNull(),
-  email: text("email").notNull(),
+
+// One-time purchase records — synced via checkout webhooks
+export const orders = pgTable("orders", {
+  id: text("id").primaryKey(), // PaymentIntent ID (pi_xxx)
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  stripeCustomerId: text("stripe_customer_id").notNull(),
   productId: text("product_id"),
-  subscriptionId: text("subscription_id"),
-  billingName: text("billing_name"),
-  billingReason: text("billing_reason"),
-  totalAmount: integer("total_amount").notNull().default(0),
-  invoiceNumber: text("invoice_number"),
-  status: text("status", {
-    enum: [
-      "draft",
-      "open",
-      "paid",
-      "uncollectible",
-      "void",
-    ] as const satisfies readonly Stripe.Invoice.Status[],
-  }).notNull(),
+  priceId: text("price_id"),
+  amount: integer("amount").notNull().default(0),
   currency: text("currency").notNull().default("usd"),
-  hostedInvoiceUrl: text("hosted_invoice_url"),
-  pdfUrl: text("pdf_url"),
+  status: text("status", {
+    enum: ["pending", "paid", "refunded", "partially_refunded", "void"],
+  })
+    .notNull()
+    .default("pending"),
+  refundedAmount: integer("refunded_amount").notNull().default(0),
+  billingReason: text("billing_reason").default("purchase"),
+  stripeSessionId: text("stripe_session_id"),
+  receiptUrl: text("receipt_url"),
+  metadata: jsonb("metadata").$type<unknown>().default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
 });
 
 export const webhookEvents = pgTable("webhook_events", {

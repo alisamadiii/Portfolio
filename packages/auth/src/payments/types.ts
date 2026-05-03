@@ -14,6 +14,7 @@ export type CreateCheckoutInput = {
   mode: "subscription" | "payment";
   successUrl: string;
   cancelUrl: string;
+  metadata?: Record<string, string>;
 };
 
 export type CreateCheckoutOutput = {
@@ -47,6 +48,12 @@ export type SubscriptionItem = {
   quantity: number;
 };
 
+export type ScheduledPlanChange = {
+  newPriceId: string;
+  newProductName: string | null;
+  effectiveDate: number;
+};
+
 export type SubscriptionDetails = {
   id: string;
   status: string;
@@ -56,14 +63,31 @@ export type SubscriptionDetails = {
   currentPeriodStart: number | null;
   currentPeriodEnd: number | null;
   items: SubscriptionItem[];
+  scheduledChange: ScheduledPlanChange | null;
 };
 
 export type SwitchPlanInput = {
   subscriptionId: string;
   newPriceId: string;
+  immediate?: boolean;
 };
 
 export type SwitchPlanOutput = {
   subscriptionId: string;
   status: string;
+};
+
+export type PromotionCode = {
+  id: string;
+  code: string;
+  active: boolean;
+  expiresAt: number | null;
+  timesRedeemed: number;
+  maxRedemptions: number | null;
+  coupon: {
+    id: string;
+    percentOff: number | null;
+    amountOff: number | null;
+    currency: string | null;
+  };
 };

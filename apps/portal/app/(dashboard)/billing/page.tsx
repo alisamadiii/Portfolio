@@ -46,9 +46,9 @@ export default function BillingPage() {
   const trpc = useTRPC();
 
   const { data: orders, isPending: ordersLoading } = useQuery(
-    trpc.billing.getInvoices.queryOptions(
-      { userId: user?.user.id || "", email: user?.user.email || "" },
-      { enabled: !!user?.user.id || !!user?.user.email }
+    trpc.billing.listOrders.queryOptions(
+      { userId: user?.user.id || "" },
+      { enabled: !!user?.user.id }
     )
   );
 
@@ -62,8 +62,8 @@ export default function BillingPage() {
   const getProducts = useQuery(trpc.products.getAll.queryOptions());
 
   const userOrders = useMemo(
-    () => orders?.filter((o) => o.userId === user?.user.id) || [],
-    [orders, user?.user]
+    () => orders || [],
+    [orders]
   );
 
   const filteredOrders = useMemo(
@@ -283,7 +283,7 @@ export default function BillingPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {filteredOrders.map((order) => {
-              const amount = order.totalAmount / 100;
+              const amount = order.amount / 100;
               const isRefund = amount < 0;
               const createdAtLabel = order.createdAt
                 ? format(order.createdAt, "MMM d, yyyy")
@@ -304,7 +304,7 @@ export default function BillingPage() {
                         Invoice
                       </p>
                       <p className="text-sm font-semibold">
-                        {order.invoiceNumber || "Pending"}
+                        {order.id}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -316,14 +316,14 @@ export default function BillingPage() {
                       </Badge>
                       <Badge
                         variant={
-                          order.totalAmount < 0
+                          order.amount < 0
                             ? "secondary"
                             : order.status === "paid"
                               ? "default"
                               : "destructive"
                         }
                       >
-                        {order.totalAmount < 0 ? "refunded" : order.status}
+                        {order.amount < 0 ? "refunded" : order.status}
                       </Badge>
                     </div>
                   </div>
@@ -346,7 +346,7 @@ export default function BillingPage() {
                     <div>
                       <p className="text-white/60">Product</p>
                       <code className="text-sm font-semibold text-white">
-                        {order.productId ? order.productId.slice(0, 10) + "..." : "—"}
+                        {order.productName || "—"}
                       </code>
                     </div>
                     <div>
