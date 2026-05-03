@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Code } from "lucide-react";
+import { ArrowLeft, Code, Loader2 } from "lucide-react";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
@@ -14,6 +14,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
+import { useSubscriptionDetails } from "@workspace/auth/hooks/use-payments";
 
 import { ClientMediaGallery } from "@/components/clients/client-media-gallery";
 import { ClientMetadataEditor } from "@/components/clients/client-metadata-editor";
@@ -25,7 +26,90 @@ const formatDate = (date: Date | string | null | undefined) => {
   return format(new Date(date), "MMM d, yyyy 'at' h:mm a");
 };
 
-// ─── Page ────────────────��──────────────────────��──────────────────
+function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
+  const { data, isLoading, error } = useSubscriptionDetails(subscriptionId);
+
+  if (isLoading) {
+    return (
+      <div className="text-muted-foreground flex items-center gap-2 py-2 text-sm">
+        <Loader2 className="size-4 animate-spin" />
+        Loading plan items...
+      </div>
+    );
+  }
+
+  if (error && !data) return null;
+
+  return (
+    <>
+      {data?.scheduledChange && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950">
+          <p className="font-medium text-amber-800 dark:text-amber-200">
+            Scheduled plan change
+          </p>
+          <p className="text-amber-700 dark:text-amber-300">
+            Switching to{" "}
+            <span className="font-medium">
+              {data.scheduledChange.newProductName ?? "new plan"}
+            </span>{" "}
+            on{" "}
+            {format(
+              new Date(data.scheduledChange.effectiveDate * 1000),
+              "MMM d, yyyy"
+            )}
+          </p>
+        </div>
+      )}
+
+      {data && data.items.length > 0 && (
+        <div className="space-y-2 border-t pt-4">
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+            Plan Items (Live from Stripe)
+          </p>
+          <div className="rounded-md border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-muted-foreground border-b text-left">
+                  <th className="px-3 py-2 font-medium">Product</th>
+                  <th className="px-3 py-2 font-medium">Price</th>
+                  <th className="px-3 py-2 font-medium">Interval</th>
+                  <th className="px-3 py-2 font-medium">Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((item) => (
+                  <tr key={item.id} className="border-b last:border-b-0">
+                    <td className="px-3 py-2">
+                      {item.productName ?? (
+                        <span className="text-muted-foreground font-mono text-xs">
+                          {item.productId?.slice(0, 16)}...
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      ${(item.unitAmount / 100).toFixed(2)}{" "}
+                      <span className="text-muted-foreground uppercase">
+                        {item.currency}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      {item.interval
+                        ? `Every ${item.intervalCount && item.intervalCount > 1 ? `${item.intervalCount} ` : ""}${item.interval}`
+                        : "One-time"}
+                    </td>
+                    <td className="px-3 py-2">{item.quantity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Page ───────────────────────────────────────────────────────
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const trpc = useTRPC();
@@ -141,9 +225,11 @@ export default function ClientDetailPage() {
                 {sub.stripeSubscriptionId ?? "—"}
               </span>
             </CardAgency.DetailRow>
-
           </div>
 
+          {sub.stripeSubscriptionId && (
+            <LivePlanItems subscriptionId={sub.stripeSubscriptionId} />
+          )}
         </CardAgency.Card>
       ))}
 

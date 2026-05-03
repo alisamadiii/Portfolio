@@ -344,7 +344,9 @@ export const usersRouter = createTRPCRouter({
           plan: subscription.plan,
           cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
           periodStart: subscription.periodStart,
+          periodEnd: subscription.periodEnd,
           canceledAt: subscription.canceledAt,
+          stripeSubscriptionId: subscription.stripeSubscriptionId,
           userId: user.id,
           name: user.name,
           email: user.email,
@@ -369,7 +371,9 @@ export const usersRouter = createTRPCRouter({
         plan: row.plan,
         cancelAtPeriodEnd: row.cancelAtPeriodEnd,
         periodStart: row.periodStart,
+        periodEnd: row.periodEnd,
         canceledAt: row.canceledAt,
+        stripeSubscriptionId: row.stripeSubscriptionId,
       }));
     } catch (error: unknown) {
       throw new TRPCError({
