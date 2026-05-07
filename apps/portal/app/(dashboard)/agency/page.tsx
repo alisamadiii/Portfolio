@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, ShoppingCart, Trash2, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
@@ -14,6 +15,14 @@ import {
 } from "@workspace/ui/components/accordion";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn, formatPrice } from "@workspace/ui/lib/utils";
@@ -25,6 +34,15 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 type Product = RouterOutputs["products"]["list"][number];
 type ProductStatus = "subscribed" | "purchased" | null;
 
+type CartItem = {
+  id: string;
+  name: string;
+  priceId: string;
+  priceAmount: number;
+  isRecurring: boolean;
+  recurringInterval: string | null;
+};
+
 export default function PortalPage() {
   const trpc = useTRPC();
   const { data: user } = useCurrentUser();
@@ -34,6 +52,55 @@ export default function PortalPage() {
       enabled: !!user,
     })
   );
+
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const cartTotal = cart.reduce((sum, item) => sum + item.priceAmount, 0);
+  const cartPriceIds = cart.map((item) => item.priceId);
+
+  const isInCart = useCallback(
+    (productId: string) => cart.some((item) => item.id === productId),
+    [cart]
+  );
+
+  const addToCart = useCallback(
+    (product: Product) => {
+      if (!product.priceId) return;
+      if (cart.some((item) => item.id === product.id)) {
+        toast.info("Already in cart");
+        return;
+      }
+      setCart((prev) => [
+        ...prev,
+        {
+          id: product.id,
+          name: product.name ?? "",
+          priceId: product.priceId!,
+          priceAmount: product.priceAmount ?? 0,
+          isRecurring: product.isRecurring,
+          recurringInterval: product.recurringInterval,
+        },
+      ]);
+      toast.success(`${product.name} added to cart`);
+    },
+    [cart]
+  );
+
+  const removeFromCart = useCallback((productId: string) => {
+    setCart((prev) => {
+      const next = prev.filter((item) => item.id !== productId);
+      if (next.length === 0) setCartOpen(false);
+      return next;
+    });
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+    setCartOpen(false);
+  }, []);
+
+  const checkout = useMutation(trpc.billing.createCheckout.mutationOptions());
 
   const allProducts = (products.data ?? []).filter((p) => !p.isArchived);
 
@@ -52,14 +119,20 @@ export default function PortalPage() {
   const getProductStatus = useMemo(() => {
     const subscribedPriceIds = customerState.data?.subscribedPriceIds ?? [];
     const paidOrders = customerState.data?.paidOrders ?? [];
+    const paidInvoicePriceIds = customerState.data?.paidInvoicePriceIds ?? [];
 
     return (product: Product): ProductStatus => {
       if (product.priceId && subscribedPriceIds.includes(product.priceId)) {
         return "subscribed";
       }
 
-      const paidOrder = paidOrders.find((o) => o.productId === product.id);
-      if (paidOrder) return "purchased";
+      const hasPaidOrder = paidOrders.some(
+        (o) => o.productId === product.id || o.priceId === product.priceId
+      );
+      const hasPaidInvoice =
+        product.priceId && paidInvoicePriceIds.includes(product.priceId);
+
+      if (hasPaidOrder || hasPaidInvoice) return "purchased";
 
       return null;
     };
@@ -125,6 +198,9 @@ export default function PortalPage() {
                           key={product.id}
                           product={product}
                           status={getProductStatus(product)}
+                          inCart={isInCart(product.id)}
+                          onAddToCart={addToCart}
+                          onRemoveFromCart={removeFromCart}
                         />
                       ))}
                     </div>
@@ -244,6 +320,113 @@ export default function PortalPage() {
           .
         </p>
       </div>
+
+      {/* Floating cart button */}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="fixed bottom-6 right-6 z-40"
+          >
+            <Button
+              size="lg"
+              onClick={() => setCartOpen(true)}
+              className="gap-2 rounded-full shadow-lg"
+            >
+              <ShoppingCart className="size-4" />
+              Cart ({cart.length})
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart sheet */}
+      <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+        <SheetContent side="right" className="flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Your Cart</SheetTitle>
+            <SheetDescription>
+              {cart.length === 0
+                ? "No items yet"
+                : `${cart.length} ${cart.length === 1 ? "item" : "items"}`}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 space-y-3 overflow-y-auto py-4">
+            {cart.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-lg border p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{item.name}</p>
+                  <p className="text-muted-foreground text-xs">
+                    ${formatPrice(item.priceAmount)}
+                    {item.recurringInterval && `/${item.recurringInterval}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-muted-foreground hover:text-destructive shrink-0 transition-colors"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            ))}
+
+            {cart.length === 0 && (
+              <p className="text-muted-foreground py-8 text-center text-sm">
+                Your cart is empty
+              </p>
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <SheetFooter className="border-t pt-4">
+              <div className="w-full space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Total</span>
+                  <span className="text-lg font-bold tabular-nums">
+                    ${formatPrice(cartTotal)}
+                  </span>
+                </div>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  isLoading={checkout.isPending}
+                  onClick={() =>
+                    checkout.mutate(
+                      {
+                        priceIds: cartPriceIds,
+                        successUrl: window.location.href,
+                        cancelUrl: window.location.href,
+                      },
+                      {
+                        onSuccess: (data) => {
+                          if (data?.url) window.location.href = data.url;
+                        },
+                        onError: (error) => {
+                          toast.error(error.message);
+                        },
+                      }
+                    )
+                  }
+                >
+                  Checkout ({cart.length} {cart.length === 1 ? "item" : "items"})
+                </Button>
+                <button
+                  onClick={clearCart}
+                  className="text-muted-foreground hover:text-foreground w-full text-center text-xs underline underline-offset-2 transition-colors"
+                >
+                  Clear cart
+                </button>
+              </div>
+            </SheetFooter>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -251,9 +434,15 @@ export default function PortalPage() {
 const EachProduct = ({
   product,
   status,
+  inCart,
+  onAddToCart,
+  onRemoveFromCart,
 }: {
   product: Product;
   status: ProductStatus;
+  inCart: boolean;
+  onAddToCart: (product: Product) => void;
+  onRemoveFromCart: (productId: string) => void;
 }) => {
   const trpc = useTRPC();
   const metadata = product.metadata as {
@@ -270,7 +459,9 @@ const EachProduct = ({
         "gap-4 p-5",
         isActive
           ? "border-green-500/40 bg-green-500/5 outline outline-2 outline-green-500/40"
-          : ""
+          : inCart
+            ? "border-primary/40 bg-primary/5 outline outline-2 outline-primary/40"
+            : ""
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -286,6 +477,12 @@ const EachProduct = ({
               >
                 <Check className="size-3" />
                 {status === "subscribed" ? "Subscribed" : "Purchased"}
+              </Badge>
+            )}
+            {inCart && (
+              <Badge variant="secondary" className="w-fit gap-1">
+                <ShoppingCart className="size-3" />
+                In cart
               </Badge>
             )}
             {isCustom && (
@@ -326,32 +523,56 @@ const EachProduct = ({
             {status === "subscribed" ? "Subscribed" : "Purchased"}
           </Button>
         ) : (
-          <Button
-            onClick={() =>
-              checkout.mutate(
-                {
-                  priceIds: [product.priceId ?? ""],
-                  successUrl: window.location.href,
-                  cancelUrl: window.location.href,
-                },
-                {
-                  onSuccess: (data) => {
-                    if (data?.url) window.location.href = data.url;
+          <div className="mt-8 flex w-full gap-2">
+            <Button
+              variant={inCart ? "secondary" : "outline"}
+              size="lg"
+              className="flex-1"
+              onClick={() =>
+                inCart
+                  ? onRemoveFromCart(product.id)
+                  : onAddToCart(product)
+              }
+            >
+              {inCart ? (
+                <>
+                  <X className="mr-1 size-4" />
+                  Remove
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="mr-1 size-4" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={() =>
+                checkout.mutate(
+                  {
+                    priceIds: [product.priceId ?? ""],
+                    successUrl: window.location.href,
+                    cancelUrl: window.location.href,
                   },
-                  onError: (error) => {
-                    toast.error(error.message);
-                  },
-                }
-              )
-            }
-            size="lg"
-            className="mt-8 w-full"
-            isLoading={checkout.isPending}
-          >
-            {product.recurringInterval === null
-              ? `Purchase $${formatPrice(product.priceAmount ?? 0)}`
-              : `Subscribe $${formatPrice(product.priceAmount ?? 0)}`}
-          </Button>
+                  {
+                    onSuccess: (data) => {
+                      if (data?.url) window.location.href = data.url;
+                    },
+                    onError: (error) => {
+                      toast.error(error.message);
+                    },
+                  }
+                )
+              }
+              size="lg"
+              className="flex-1"
+              isLoading={checkout.isPending}
+            >
+              {product.recurringInterval === null
+                ? `Buy $${formatPrice(product.priceAmount ?? 0)}`
+                : `Subscribe $${formatPrice(product.priceAmount ?? 0)}`}
+            </Button>
+          </div>
         )}
       </div>
     </CardAgency.Card>

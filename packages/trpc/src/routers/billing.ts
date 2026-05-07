@@ -1,9 +1,13 @@
-import { TRPCError } from "@trpc/server";
-import { desc, eq } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
+import { TRPCError } from "@trpc/server";
+import { desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
+import {
+  adminProcedure,
+  authenticatedProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
 import { stripeClient } from "@workspace/auth/auth";
 import {
   createCheckoutSession,
@@ -35,7 +39,7 @@ async function getSubscribedPriceIds(
 
 export const billingRouter = createTRPCRouter({
   getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
-    const [subs, paidOrders] = await Promise.all([
+    const [subs, paidOrders, dbUser] = await Promise.all([
       db
         .select()
         .from(subscription)
@@ -49,6 +53,12 @@ export const billingRouter = createTRPCRouter({
             (o) => o.status === "paid" || o.status === "partially_refunded"
           )
         ),
+      db
+        .select({ stripeCustomerId: user.stripeCustomerId })
+        .from(user)
+        .where(eq(user.id, ctx.session.user.id))
+        .limit(1)
+        .then((r) => r[0]),
     ]);
 
     const activeSub = subs.find(
@@ -59,6 +69,26 @@ export const billingRouter = createTRPCRouter({
       ? await getSubscribedPriceIds(activeSub.stripeSubscriptionId)
       : [];
 
+    // Collect all price IDs the customer has paid for via Stripe invoices
+    // (catches one-time items from subscription checkouts that may not have DB orders)
+    let paidInvoicePriceIds: string[] = [];
+    if (dbUser?.stripeCustomerId) {
+      const invoices = await stripeClient.invoices.list({
+        customer: dbUser.stripeCustomerId,
+        status: "paid",
+        limit: 100,
+      });
+      paidInvoicePriceIds = invoices.data.flatMap((inv) =>
+        (inv.lines?.data ?? [])
+          .filter((line) => line.parent?.type === "invoice_item_details")
+          .map((line) => {
+            const price = line.pricing?.price_details?.price;
+            return typeof price === "string" ? price : price?.id;
+          })
+          .filter((id): id is string => !!id)
+      );
+    }
+
     return {
       subscriptions: subs,
       activeSubscription: activeSub ?? null,
@@ -67,6 +97,7 @@ export const billingRouter = createTRPCRouter({
       currentPlan: activeSub?.plan ?? null,
       currentSubscriptionId: activeSub?.id ?? null,
       subscribedPriceIds,
+      paidInvoicePriceIds,
     };
   }),
 
@@ -80,6 +111,23 @@ export const billingRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const { priceIds, successUrl, cancelUrl } = input;
+
+      // Block checkout if user already has an active subscription
+      const existingSub = await db
+        .select({ status: subscription.status })
+        .from(subscription)
+        .where(eq(subscription.referenceId, ctx.session.user.id))
+        .then((subs) =>
+          subs.find((s) => s.status === "active" || s.status === "trialing")
+        );
+
+      if (existingSub) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "You already have an active subscription. Please manage it from your billing portal.",
+        });
+      }
 
       const dbUser = await db
         .select()
@@ -104,21 +152,25 @@ export const billingRouter = createTRPCRouter({
       }
 
       // Determine mode and grab product metadata for the checkout session
-      const [product] = await db
+      const matchedProducts = await db
         .select({
           isRecurring: products.isRecurring,
           metadata: products.metadata,
         })
         .from(products)
-        .where(eq(products.priceId, priceIds[0]))
-        .limit(1);
+        .where(inArray(products.priceId, priceIds));
 
+      // Use "subscription" mode if any product is recurring (Stripe allows
+      // one-time prices inside a subscription checkout)
+      const hasRecurring = matchedProducts.some((p) => p.isRecurring);
+
+      const firstProduct = matchedProducts[0];
       const productMeta =
-        product?.metadata && typeof product.metadata === "object"
+        firstProduct?.metadata && typeof firstProduct.metadata === "object"
           ? Object.fromEntries(
-              Object.entries(product.metadata as Record<string, unknown>).map(
-                ([k, v]) => [k, String(v)]
-              )
+              Object.entries(
+                firstProduct.metadata as Record<string, unknown>
+              ).map(([k, v]) => [k, String(v)])
             )
           : undefined;
 
@@ -127,7 +179,7 @@ export const billingRouter = createTRPCRouter({
       return createCheckoutSession({
         customerId,
         priceIds,
-        mode: product?.isRecurring ? "subscription" : "payment",
+        mode: hasRecurring ? "subscription" : "payment",
         metadata: productMeta,
         successUrl: successUrl
           ? `${successUrl}${successUrl.includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`
@@ -190,8 +242,7 @@ export const billingRouter = createTRPCRouter({
         console.error(err);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            err instanceof Error ? err.message : "Failed to switch plan",
+          message: err instanceof Error ? err.message : "Failed to switch plan",
         });
       }
     }),
@@ -304,8 +355,11 @@ export const billingRouter = createTRPCRouter({
           const firstLine = inv.lines?.data?.[0];
           const description = firstLine?.description ?? null;
           const linePrice = firstLine
-            ? (firstLine as unknown as { price?: { product?: { name?: string } } })
-                .price
+            ? (
+                firstLine as unknown as {
+                  price?: { product?: { name?: string } };
+                }
+              ).price
             : null;
           const productName =
             description ??
@@ -369,4 +423,114 @@ export const billingRouter = createTRPCRouter({
       .then((result) => result[0]);
     return customer;
   }),
+
+  // ── Admin endpoints (no ownership check) ─────────────────────
+
+  adminGetSubscriptionDetails: adminProcedure
+    .input(z.object({ subscriptionId: z.string() }))
+    .query(async ({ input }) => {
+      return getSubscriptionDetails(input.subscriptionId);
+    }),
+
+  adminListOrders: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input }) => {
+      const dbUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, input.userId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      const dbRows = await db
+        .select({
+          order: orders,
+          productName: products.name,
+        })
+        .from(orders)
+        .leftJoin(products, eq(products.id, orders.productId))
+        .where(eq(orders.userId, input.userId))
+        .orderBy(desc(orders.createdAt));
+
+      const dbOrders = dbRows.map((r) => ({
+        id: r.order.id,
+        amount: r.order.amount,
+        currency: r.order.currency,
+        status: r.order.status,
+        productName: r.productName,
+        productId: r.order.productId,
+        priceId: r.order.priceId,
+        billingReason: r.order.billingReason,
+        refundedAmount: r.order.refundedAmount,
+        receiptUrl: r.order.receiptUrl,
+        metadata: r.order.metadata,
+        createdAt: r.order.createdAt,
+        type: "one_time" as const,
+      }));
+
+      let invoiceOrders: Array<{
+        id: string;
+        amount: number;
+        currency: string;
+        status: string;
+        productName: string | null;
+        productId: string | null;
+        priceId: string | null;
+        billingReason: string;
+        refundedAmount: number;
+        receiptUrl: string | null;
+        metadata: unknown;
+        createdAt: Date | null;
+        type: string;
+      }> = [];
+
+      if (dbUser?.stripeCustomerId) {
+        const stripeInvoices = await stripeClient.invoices.list({
+          customer: dbUser.stripeCustomerId,
+          limit: 100,
+          status: "paid",
+        });
+
+        invoiceOrders = stripeInvoices.data.map((inv) => {
+          const firstLine = inv.lines?.data?.[0];
+          const description = firstLine?.description ?? null;
+          const pricing = firstLine?.pricing?.price_details;
+          const priceId =
+            pricing?.price
+              ? typeof pricing.price === "string"
+                ? pricing.price
+                : pricing.price.id
+              : null;
+          const productId = pricing?.product ?? null;
+          const productName = description ?? null;
+
+          return {
+            id: inv.id,
+            amount: inv.amount_paid,
+            currency: inv.currency,
+            status: inv.status ?? "paid",
+            productName,
+            productId,
+            priceId,
+            billingReason: inv.billing_reason ?? "subscription",
+            refundedAmount: 0,
+            receiptUrl: null,
+            metadata: inv.metadata ?? {},
+            createdAt: new Date(inv.created * 1000),
+            type: "subscription" as const,
+          };
+        });
+      }
+
+      const existingIds = new Set(dbOrders.map((o) => o.id));
+      const merged = [
+        ...dbOrders,
+        ...invoiceOrders.filter((o) => !existingIds.has(o.id)),
+      ].sort(
+        (a, b) =>
+          (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
+      );
+
+      return merged;
+    }),
 });

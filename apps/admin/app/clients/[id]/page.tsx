@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Code, Loader2 } from "lucide-react";
+import { ArrowLeft, Code, ExternalLink, Loader2, Receipt } from "lucide-react";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
@@ -14,7 +14,6 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { useSubscriptionDetails } from "@workspace/auth/hooks/use-payments";
 
 import { ClientMediaGallery } from "@/components/clients/client-media-gallery";
 import { ClientMetadataEditor } from "@/components/clients/client-metadata-editor";
@@ -27,7 +26,13 @@ const formatDate = (date: Date | string | null | undefined) => {
 };
 
 function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
-  const { data, isLoading, error } = useSubscriptionDetails(subscriptionId);
+  const trpc = useTRPC();
+  const { data, isLoading, error } = useQuery(
+    trpc.billing.adminGetSubscriptionDetails.queryOptions(
+      { subscriptionId },
+      { enabled: !!subscriptionId }
+    )
+  );
 
   if (isLoading) {
     return (
@@ -106,6 +111,108 @@ function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
         </div>
       )}
     </>
+  );
+}
+
+function ClientOrders({ userId }: { userId: string }) {
+  const trpc = useTRPC();
+  const { data: orders, isLoading } = useQuery(
+    trpc.billing.adminListOrders.queryOptions(
+      { userId },
+      { enabled: !!userId }
+    )
+  );
+
+  if (isLoading) {
+    return (
+      <CardAgency.Card>
+        <CardAgency.Header title="Orders & Purchases" />
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Loader2 className="size-4 animate-spin" />
+          Loading orders...
+        </div>
+      </CardAgency.Card>
+    );
+  }
+
+  if (!orders || orders.length === 0) {
+    return (
+      <CardAgency.Card>
+        <CardAgency.Header title="Orders & Purchases" />
+        <p className="text-muted-foreground text-sm">No orders found.</p>
+      </CardAgency.Card>
+    );
+  }
+
+  return (
+    <CardAgency.Card>
+      <CardAgency.Header title="Orders & Purchases">
+        <Badge variant="secondary">{orders.length}</Badge>
+      </CardAgency.Header>
+      <div className="rounded-md border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-muted-foreground border-b text-left">
+              <th className="px-3 py-2 font-medium">Product</th>
+              <th className="px-3 py-2 font-medium">Amount</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Type</th>
+              <th className="px-3 py-2 font-medium">Date</th>
+              <th className="px-3 py-2 font-medium" />
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.id} className="border-b last:border-b-0">
+                <td className="px-3 py-2">
+                  {order.productName ?? (
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {order.id.slice(0, 16)}...
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 font-medium tabular-nums">
+                  ${(order.amount / 100).toFixed(2)}{" "}
+                  <span className="text-muted-foreground uppercase">
+                    {order.currency}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <Badge
+                    variant={
+                      order.status === "paid" ? "default" : "destructive"
+                    }
+                    className="text-[10px]"
+                  >
+                    {order.status}
+                  </Badge>
+                </td>
+                <td className="text-muted-foreground px-3 py-2 text-xs">
+                  {order.type === "one_time" ? "One-time" : "Subscription"}
+                </td>
+                <td className="text-muted-foreground px-3 py-2 text-xs">
+                  {order.createdAt
+                    ? format(new Date(order.createdAt), "MMM d, yyyy")
+                    : "—"}
+                </td>
+                <td className="px-3 py-2">
+                  {order.receiptUrl && (
+                    <a
+                      href={order.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardAgency.Card>
   );
 }
 
@@ -232,6 +339,9 @@ export default function ClientDetailPage() {
           )}
         </CardAgency.Card>
       ))}
+
+      {/* ── Orders & Purchases ─────────────────────────────────── */}
+      <ClientOrders userId={id} />
 
       {/* ── Client Info ───────────────────────────────────────────── */}
       <CardAgency.Card>

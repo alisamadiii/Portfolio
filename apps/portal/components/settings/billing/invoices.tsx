@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ExternalLink } from "lucide-react";
@@ -13,12 +12,6 @@ import { getProjectColor } from "@workspace/ui/lib/design";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-
-const InvoiceDownloadButton = dynamic(
-  () =>
-    import("./invoice-download-button").then((m) => m.InvoiceDownloadButton),
-  { ssr: false }
-);
 
 type Order = RouterOutputs["billing"]["listOrders"][number];
 
@@ -134,23 +127,6 @@ export const BillingInvoices = () => {
                   </Button>
                 </a>
               ) : null,
-          },
-          {
-            id: "invoice",
-            cell: ({ row }) => (
-              <InvoiceDownloadButton
-                order={{
-                  ...row.original,
-                  createdAt: row.original.createdAt
-                    ? new Date(row.original.createdAt)
-                    : null,
-                }}
-                userName={user?.user.name}
-                userPhone={user?.user.phone}
-                userCompany={user?.user.company}
-                userAddress={user?.user.address}
-              />
-            ),
           },
         ]}
         data={orders ?? []}

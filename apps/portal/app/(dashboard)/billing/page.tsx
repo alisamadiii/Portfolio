@@ -21,11 +21,11 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import {
   useGeneratePortalLink,
   useSubscriptionDetails,
 } from "@workspace/auth/hooks/use-payments";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 const InvoiceDownloadButton = dynamic(
   () =>
@@ -313,8 +313,7 @@ export default function BillingPage() {
               <span
                 className="size-2.5 rounded-full"
                 style={{
-                  backgroundColor:
-                    filter === f.value ? "#ffffff" : f.color,
+                  backgroundColor: filter === f.value ? "#ffffff" : f.color,
                 }}
               />
             )}
@@ -331,9 +330,7 @@ export default function BillingPage() {
             variant="outline"
             size="icon"
             disabled={generatePortalLink.isPending}
-            onClick={() =>
-              generatePortalLink.mutate({ returnUrl: "/billing" })
-            }
+            onClick={() => generatePortalLink.mutate({ returnUrl: "/billing" })}
           >
             {generatePortalLink.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -382,9 +379,7 @@ export default function BillingPage() {
                 header: "Price",
                 cell: ({ row }) => {
                   if (!row.original.totalAmount)
-                    return (
-                      <span className="text-muted-foreground">—</span>
-                    );
+                    return <span className="text-muted-foreground">—</span>;
                   return (
                     <span className="text-sm">
                       ${(row.original.totalAmount / 100).toFixed(2)}
@@ -403,9 +398,7 @@ export default function BillingPage() {
                   return (
                     <span className="flex flex-col">
                       <span className="text-sm">
-                        {end
-                          ? format(new Date(end), "MMM dd, yyyy")
-                          : "-"}
+                        {end ? format(new Date(end), "MMM dd, yyyy") : "-"}
                       </span>
                       <span className="text-muted-foreground text-xs">
                         {end
@@ -535,8 +528,7 @@ export default function BillingPage() {
                     ? "secondary"
                     : status === "paid"
                       ? "default"
-                      : status === "refunded" ||
-                          status === "partially_refunded"
+                      : status === "refunded" || status === "partially_refunded"
                         ? "secondary"
                         : status === "void"
                           ? "destructive"
@@ -559,23 +551,6 @@ export default function BillingPage() {
                       </Button>
                     </a>
                   ) : null,
-              },
-              {
-                id: "invoice",
-                cell: ({ row }) => (
-                  <InvoiceDownloadButton
-                    order={{
-                      ...row.original,
-                      createdAt: row.original.createdAt
-                        ? new Date(row.original.createdAt)
-                        : null,
-                    }}
-                    userName={user?.user.name}
-                    userPhone={user?.user.phone}
-                    userCompany={user?.user.company}
-                    userAddress={user?.user.address}
-                  />
-                ),
               },
             ]}
             data={filteredOrders}

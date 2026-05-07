@@ -31,7 +31,6 @@ import { cn, formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { useSubscriptionDetails } from "@workspace/auth/hooks/use-payments";
 
 type Client = RouterOutputs["users"]["getClients"][number];
 
@@ -71,7 +70,13 @@ function SubscriptionDetails({
   subscriptionId: string;
   client: Client;
 }) {
-  const { data, isLoading, error } = useSubscriptionDetails(subscriptionId);
+  const trpc = useTRPC();
+  const { data, isLoading, error } = useQuery(
+    trpc.billing.adminGetSubscriptionDetails.queryOptions(
+      { subscriptionId },
+      { enabled: !!subscriptionId }
+    )
+  );
 
   return (
     <div className="space-y-3 border-t pt-3">
