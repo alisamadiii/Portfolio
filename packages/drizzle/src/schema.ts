@@ -142,7 +142,6 @@ export const subscription = pgTable("subscription", {
   metadata: jsonb("metadata").$type<unknown>().default({}),
 });
 
-
 // One-time purchase records — synced via checkout webhooks
 export const orders = pgTable("orders", {
   id: text("id").primaryKey(), // PaymentIntent ID (pi_xxx)
@@ -334,9 +333,78 @@ export const apiTokens = pgTable("api_tokens", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// ─── Agent Projects ─────────────────────────────────────────────
+
+export const agentProjectStatusValues = [
+  "active",
+  "paused",
+  "archived",
+] as const;
+export const agentProjectStatusEnum = pgEnum(
+  "agent_project_status",
+  agentProjectStatusValues
+);
+
+export const agentProjects = pgTable("agent_projects", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  repoOwner: text("repo_owner").notNull(),
+  repoName: text("repo_name").notNull(),
+  productionUrl: text("production_url"),
+  previewUrl: text("preview_url"),
+  previewBranch: text("preview_branch").notNull().default("preview"),
+  productionBranch: text("production_branch").notNull().default("main"),
+  vercelProjectId: text("vercel_project_id"),
+  allowedPaths: jsonb("allowed_paths").$type<string[]>().notNull().default([]),
+  framework: text("framework"),
+  packageManager: text("package_manager").notNull().default("pnpm"),
+  status: agentProjectStatusEnum("status").notNull().default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const agentConversations = pgTable("agent_conversations", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => agentProjects.id, { onDelete: "cascade" }),
+  title: text("title"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const agentMessageRoleValues = ["user", "assistant"] as const;
+export const agentMessageRoleEnum = pgEnum(
+  "agent_message_role",
+  agentMessageRoleValues
+);
+
+export const agentMessages = pgTable("agent_messages", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  conversationId: uuid("conversation_id")
+    .notNull()
+    .references(() => agentConversations.id, { onDelete: "cascade" }),
+  role: agentMessageRoleEnum("role").notNull(),
+  content: text("content").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── Type Exports ───────────────────────────────────────────────
+
 export type ProjectType = (typeof projectsTypeValues)[number];
 export type NotificationType = (typeof notificationTypeValues)[number];
 export type ClientNotificationStatus =
   (typeof clientNotificationStatusValues)[number];
 export type ContactSubmissionStatus =
   (typeof contactSubmissionStatusValues)[number];
+export type AgentProjectStatus = (typeof agentProjectStatusValues)[number];

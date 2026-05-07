@@ -1,6 +1,7 @@
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import { createTRPCRouter } from "../init";
+import { agentProjectsRouter } from "./agent-projects";
 import { authRouter } from "./auth";
 import { billingRouter } from "./billing";
 import { coldEmailsRouter } from "./cold-emails";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   sources: sourcesRouter,
   coldEmails: coldEmailsRouter,
   tokens: tokensRouter,
+  agentProjects: agentProjectsRouter,
 });
 
 // export type definition of API

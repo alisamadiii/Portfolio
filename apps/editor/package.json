@@ -1,0 +1,38 @@
+{
+  "name": "editor",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3007",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@tanstack/react-query": "^5.90.21",
+    "@webcontainer/api": "^1.5.1",
+    "@workspace/auth": "workspace:*",
+    "@workspace/trpc": "workspace:*",
+    "@workspace/ui": "workspace:*",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "lucide-react": "^0.510.0",
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-resizable-panels": "^4",
+    "sonner": "^2.0.7",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3"
+  }
+}
