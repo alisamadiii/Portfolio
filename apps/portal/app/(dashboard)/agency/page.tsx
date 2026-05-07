@@ -2,11 +2,16 @@
 
 import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { Check, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@workspace/ui/components/accordion";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
@@ -31,27 +36,28 @@ export default function PortalPage() {
   );
 
   const allProducts = (products.data ?? []).filter((p) => !p.isArchived);
-  const standardProducts = allProducts.filter(
-    (p) => !(p.metadata as { userId?: string })?.userId
-  );
-  const customProducts = allProducts.filter(
-    (p) => !!(p.metadata as { userId?: string })?.userId
-  );
+
+  const productsByProject = useMemo(() => {
+    const groups = new Map<string, Product[]>();
+    allProducts.forEach((p) => {
+      const meta = p.metadata as { project?: string; userId?: string };
+      const key = meta?.project ?? "General";
+      const list = groups.get(key) ?? [];
+      list.push(p);
+      groups.set(key, list);
+    });
+    return groups;
+  }, [allProducts]);
 
   const getProductStatus = useMemo(() => {
-    const subs = customerState.data?.subscriptions ?? [];
+    const subscribedPriceIds = customerState.data?.subscribedPriceIds ?? [];
     const paidOrders = customerState.data?.paidOrders ?? [];
 
     return (product: Product): ProductStatus => {
-      // Check active/trialing subscription by priceId
-      const activeSub = subs.find(
-        (s) =>
-          (s.status === "active" || s.status === "trialing") &&
-          s.plan === product.priceId
-      );
-      if (activeSub) return "subscribed";
+      if (product.priceId && subscribedPriceIds.includes(product.priceId)) {
+        return "subscribed";
+      }
 
-      // Check paid order by productId
       const paidOrder = paidOrders.find((o) => o.productId === product.id);
       if (paidOrder) return "purchased";
 
@@ -68,71 +74,101 @@ export default function PortalPage() {
         </RequestDialog>
       </div>
 
-      {/* Standard plans */}
-      <div className="space-y-3">
-        <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-          Available Plans
-        </h2>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {products.isLoading ? (
-            <>
-              <Skeleton className="h-52 w-full rounded-xl" />
-              <Skeleton className="h-52 w-full rounded-xl" />
-            </>
-          ) : (
-            standardProducts.map((product) => (
-              <EachProduct
-                key={product.id}
-                product={product}
-                status={getProductStatus(product)}
-              />
-            ))
-          )}
+      {products.isLoading ? (
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-14 w-full rounded-md" />
+          <Skeleton className="h-14 w-full rounded-md" />
         </div>
-      </div>
+      ) : (
+        <div className="border-border overflow-hidden rounded-lg border">
+          {/* Table header */}
+          <div className="bg-muted/50 grid grid-cols-[40px_1fr_80px] items-center border-b px-4 py-3">
+            <span />
+            <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
+              Project
+            </span>
+            <span className="text-muted-foreground text-right text-xs font-semibold tracking-widest uppercase">
+              Products
+            </span>
+          </div>
 
-      {/* Your Plan — custom products + request card */}
+          <Accordion
+            type="multiple"
+            defaultValue={
+              productsByProject.size > 0
+                ? [Array.from(productsByProject.keys())[0]]
+                : []
+            }
+          >
+            {Array.from(productsByProject.entries()).map(
+              ([project, projectProducts], idx) => (
+                <AccordionItem
+                  key={project}
+                  value={project}
+                  className={cn(
+                    "border-none",
+                    idx < productsByProject.size - 1 && "border-border border-b"
+                  )}
+                >
+                  <AccordionTrigger className="grid grid-cols-[40px_1fr_80px] items-center px-4 py-3 hover:no-underline [&[data-state=open]_[data-arrow]]:rotate-90 [&>svg:last-child]:hidden">
+                    <ChevronRight data-arrow="" className="text-muted-foreground size-4 transition-transform duration-200" />
+                    <span className="text-sm font-medium">{project}</span>
+                    <span className="text-muted-foreground text-right text-sm tabular-nums">
+                      {projectProducts.length}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="bg-muted/30 px-4">
+                    <div className="grid grid-cols-1 gap-4 py-4 lg:grid-cols-2">
+                      {projectProducts.map((product) => (
+                        <EachProduct
+                          key={product.id}
+                          product={product}
+                          status={getProductStatus(product)}
+                        />
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )
+            )}
+          </Accordion>
+        </div>
+      )}
+
+      {/* Custom product request */}
       <div className="space-y-3">
         <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-          Your Plan
+          Custom Product
         </h2>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {customProducts.map((product) => (
-            <EachProduct
-              key={product.id}
-              product={product}
-              status={getProductStatus(product)}
-            />
-          ))}
-          <CardAgency.Card className="gap-4 p-5">
-            <div className="flex flex-1 flex-col justify-between gap-6">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-base leading-snug font-bold">
-                  Custom Product
-                </h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Need something specific? Request a unique plan tailored to
-                  your business — custom services, pricing, and scope.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <RequestDialog defaultSubject="Request a Custom Product">
-                  <p className="text-primary cursor-pointer text-sm font-medium underline underline-offset-4">
-                    Request a custom or unique product &rarr;
-                  </p>
-                </RequestDialog>
-                <a
-                  href="https://alisamadii.com/blog/services"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4 transition-colors"
-                >
-                  Learn more about our services &rarr;
-                </a>
-              </div>
+        <CardAgency.Card className="gap-4 p-5">
+          <div className="flex flex-1 flex-col justify-between gap-6">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-base leading-snug font-bold">
+                Custom Product
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Need something specific? Request a unique plan tailored to your
+                business — custom services, pricing, and scope.
+              </p>
             </div>
-          </CardAgency.Card>
-        </div>
+            <div className="flex flex-col gap-2">
+              <RequestDialog defaultSubject="Request a Custom Product">
+                <p className="text-primary cursor-pointer text-sm font-medium underline underline-offset-4">
+                  Request a custom or unique product &rarr;
+                </p>
+              </RequestDialog>
+              <a
+                href="https://alisamadii.com/blog/services"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4 transition-colors"
+              >
+                Learn more about our services &rarr;
+              </a>
+            </div>
+          </div>
+        </CardAgency.Card>
       </div>
 
       <div className="border-border/50 mt-4 space-y-4 border-t pt-8">
@@ -211,15 +247,6 @@ export default function PortalPage() {
     </div>
   );
 }
-
-const mdStyles = cn(
-  "text-muted-foreground text-sm leading-relaxed",
-  "[&_p]:mb-3 [&_p:last-child]:mb-0",
-  "[&_strong]:text-foreground [&_strong]:font-semibold",
-  "[&_ul]:my-2 [&_ul]:ml-1 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-1",
-  "[&_li]:text-muted-foreground [&_li]:marker:text-primary",
-  "[&_a]:text-primary [&_a:hover]:text-primary/80 [&_a]:underline [&_a]:underline-offset-2"
-);
 
 const EachProduct = ({
   product,

@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
 
 import { authenticatedProcedure, createTRPCRouter } from "@workspace/trpc/init";
@@ -20,6 +21,17 @@ import {
   subscription,
   user,
 } from "@workspace/drizzle/schema";
+
+async function getSubscribedPriceIds(
+  stripeSubscriptionId: string
+): Promise<string[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`subscription-items-${stripeSubscriptionId}`);
+
+  const details = await getSubscriptionDetails(stripeSubscriptionId);
+  return details.items.map((i) => i.priceId);
+}
 
 export const billingRouter = createTRPCRouter({
   getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
@@ -43,6 +55,10 @@ export const billingRouter = createTRPCRouter({
       (s) => s.status === "active" || s.status === "trialing"
     );
 
+    const subscribedPriceIds = activeSub?.stripeSubscriptionId
+      ? await getSubscribedPriceIds(activeSub.stripeSubscriptionId)
+      : [];
+
     return {
       subscriptions: subs,
       activeSubscription: activeSub ?? null,
@@ -50,6 +66,7 @@ export const billingRouter = createTRPCRouter({
       isUserHaveAccess: !!activeSub || paidOrders.length > 0,
       currentPlan: activeSub?.plan ?? null,
       currentSubscriptionId: activeSub?.id ?? null,
+      subscribedPriceIds,
     };
   }),
 
