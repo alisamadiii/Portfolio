@@ -42,7 +42,6 @@ const STATUS_COLORS: Record<Client["status"], string> = {
   unpaid: "bg-orange-500",
   incomplete: "bg-yellow-500",
   incomplete_expired: "bg-gray-400",
-  paused: "bg-violet-500",
 };
 
 function StatusDot({
@@ -72,7 +71,7 @@ function SubscriptionDetails({
 }) {
   const trpc = useTRPC();
   const { data, isLoading, error } = useQuery(
-    trpc.billing.adminGetSubscriptionDetails.queryOptions(
+    trpc.payments.adminGetSubscriptionDetails.queryOptions(
       { subscriptionId },
       { enabled: !!subscriptionId }
     )
@@ -95,15 +94,15 @@ function SubscriptionDetails({
           </Badge>
         </div>
         <div>
-          <p className="text-muted-foreground">Next Billing</p>
+          <p className="text-muted-foreground">Started At</p>
           <p className="font-medium">
-            {client.periodEnd
-              ? format(new Date(client.periodEnd), "MMM d, yyyy")
+            {client.startedAt
+              ? format(new Date(client.startedAt), "MMM d, yyyy")
               : "—"}
           </p>
-          {client.periodEnd && (
+          {client.startedAt && (
             <p className="text-muted-foreground text-[10px]">
-              {formatDistanceToNow(new Date(client.periodEnd), {
+              {formatDistanceToNow(new Date(client.startedAt), {
                 addSuffix: true,
               })}
             </p>
@@ -138,37 +137,19 @@ function SubscriptionDetails({
         </p>
       )}
 
-      {data?.scheduledChange && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs dark:border-amber-800 dark:bg-amber-950">
-          <p className="font-medium text-amber-800 dark:text-amber-200">
-            Switching to{" "}
-            {data.scheduledChange.newProductName ?? "new plan"} on{" "}
-            {format(
-              new Date(data.scheduledChange.effectiveDate * 1000),
-              "MMM d, yyyy"
-            )}
-          </p>
-        </div>
-      )}
-
-      {data && data.items.length > 0 && (
+      {data?.product && (
         <div className="space-y-1.5">
           <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">
-            Plan Items
+            Plan Details
           </p>
-          {data.items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-muted flex items-center justify-between rounded-lg px-3 py-2 text-xs"
-            >
-              <span className="font-medium">
-                {item.productName ?? item.productId?.slice(0, 16)}
-              </span>
-              <span className="text-muted-foreground">
-                ${(item.unitAmount / 100).toFixed(2)}/{item.interval ?? "once"}
-              </span>
-            </div>
-          ))}
+          <div className="bg-muted flex items-center justify-between rounded-lg px-3 py-2 text-xs">
+            <span className="font-medium">
+              {data.product.name}
+            </span>
+            <span className="text-muted-foreground">
+              ${(data.amount / 100).toFixed(2)}/{data.recurringInterval ?? "once"}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -212,7 +193,7 @@ export const ClientList = () => {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {data.map((client) => {
         const isExpanded =
-          !!client.stripeSubscriptionId && expanded.has(client.id);
+          !!client.id && expanded.has(client.id);
         const isCanceling = !!(
           client.cancelAtPeriodEnd || client.canceledAt
         );
@@ -264,25 +245,25 @@ export const ClientList = () => {
             <CardContent className="flex-1 space-y-3">
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold tabular-nums">
-                  ${formatPrice(client.totalAmount)}
+                  ${formatPrice(client.amount)}
                 </span>
-                {client.billingInterval && (
+                {client.recurringInterval && (
                   <span className="text-muted-foreground text-sm">
-                    /{client.billingInterval}
+                    /{client.recurringInterval}
                   </span>
                 )}
               </div>
 
-              {client.periodStart && (
+              {client.startedAt && (
                 <p className="text-muted-foreground text-xs">
                   Since{" "}
-                  {format(new Date(client.periodStart), "MMM d, yyyy")}
+                  {format(new Date(client.startedAt), "MMM d, yyyy")}
                 </p>
               )}
 
-              {isExpanded && client.stripeSubscriptionId && (
+              {isExpanded && client.id && (
                 <SubscriptionDetails
-                  subscriptionId={client.stripeSubscriptionId}
+                  subscriptionId={client.id}
                   client={client}
                 />
               )}
@@ -295,7 +276,7 @@ export const ClientList = () => {
                   <ArrowRight className="size-3" />
                 </Link>
               </Button>
-              {client.stripeSubscriptionId && (
+              {client.id && (
                 <Button
                   variant="ghost"
                   size="sm"

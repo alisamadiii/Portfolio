@@ -3,129 +3,113 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
+import { authClient } from "@workspace/auth/auth-client";
 
 /**
- * Fetch current user's subscription state from local DB
+ * Custom hook for fetching customer state and subscription information
+ * @returns UseQueryResult<CustomerState> - Query result containing customer state data
  */
 export const useGetCustomerState = () => {
-  const trpc = useTRPC();
-  return useQuery(trpc.billing.getCustomerState.queryOptions());
+  return useQuery({
+    queryKey: ["customer-state"],
+    queryFn: async () => {
+      const product = await authClient.customer.state();
+
+      if (product.error) {
+        throw new Error(product.error.message || product.error.statusText);
+      }
+
+      return product;
+    },
+  });
 };
 
 /**
- * Check if user has active subscription access
+ * Custom hook for checking if user has access based on subscription status
+ * @returns Object containing access status, current product ID, subscription ID, and query state
  */
 export const useIsUserHaveAccess = () => {
   const customerStateQuery = useGetCustomerState();
 
   return {
-    isUserHaveAccess: customerStateQuery.data?.isUserHaveAccess ?? false,
-    currentProductId: customerStateQuery.data?.currentPlan ?? undefined,
+    isUserHaveAccess:
+      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.status ===
+        "active" ||
+      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.status ===
+        "trialing",
+    currentProductId:
+      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.productId,
     currentSubscriptionId:
-      customerStateQuery.data?.currentSubscriptionId ?? undefined,
+      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.id,
     ...customerStateQuery,
   };
 };
 
 /**
- * Initiate Stripe checkout
+ * Custom hook for initiating checkout process
+ * @returns UseMutationResult for checkout operation
  */
 export const useCheckout = () => {
   const router = useRouter();
   const trpc = useTRPC();
 
-  const mutation = useMutation(
-    trpc.billing.createCheckout.mutationOptions({
+  return useMutation(
+    trpc.payments.createCheckout.mutationOptions({
       onSuccess: (data) => {
-        if (!data?.url) {
+        if (!data) {
           throw new Error("Failed to create checkout");
         }
+
         /* eslint-disable-next-line react-hooks/immutability */
         window.location.href = data.url;
       },
       onError: (error, variables) => {
         if (error.data?.code === "UNAUTHORIZED") {
           router.push(
-            `/signup?callbackUrl=/checkout&priceIds=${variables.priceIds.join(",")}`
+            process.env.NODE_ENV === "development"
+              ? `http://localhost:3000/signup?redirectUrl=${window.location.href}`
+              : `https://www.alisamadii.com/signup?redirectUrl=${window.location.href}`
           );
           return;
         }
-        toast.error(
-          error.message || "Failed to create checkout. Please try again."
-        );
+        toast.error(error.message);
       },
     })
   );
-
-  return {
-    ...mutation,
-    mutate: (
-      input: { priceIds: string[]; successUrl?: string; cancelUrl?: string },
-      options?: Parameters<typeof mutation.mutate>[1]
-    ) => {
-      mutation.mutate(
-        {
-          ...input,
-          cancelUrl: input.cancelUrl ?? window.location.href,
-        },
-        options
-      );
-    },
-  };
 };
 
 /**
- * Switch subscription plan
+ * Custom hook for switching subscription plan
+ * @returns UseMutationResult for switching plan operation
  */
 export const useSwitchPlan = () => {
   const trpc = useTRPC();
 
   return useMutation(
-    trpc.billing.switchPlan.mutationOptions({
-      onSuccess: (_data, variables) => {
-        toast.success(
-          variables.immediate !== false
-            ? "Plan upgraded successfully"
-            : "Downgrade scheduled for end of billing period"
-        );
-        setTimeout(() => {
-          queryClient.invalidateQueries({
-            queryKey: trpc.billing.getCustomerState.queryKey(),
-          });
-        }, 2000);
-      },
-      onError: () => {
-        toast.error("Failed to switch plan");
+    trpc.payments.switchPlan.mutationOptions({
+      onSuccess: async () => {
+        // Wait for 3 seconds to simulate the switch plan process
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        queryClient.invalidateQueries({ queryKey: ["customer-state"] });
       },
     })
   );
 };
 
 /**
- * Fetches full subscription details live from Stripe (all items, status, etc.)
- */
-export const useSubscriptionDetails = (subscriptionId: string | null) => {
-  const trpc = useTRPC();
-  return useQuery({
-    ...trpc.billing.getSubscriptionDetails.queryOptions({
-      subscriptionId: subscriptionId ?? "",
-    }),
-    enabled: !!subscriptionId,
-  });
-};
-
-/**
- * Generate Stripe billing portal link
+ * Custom hook for generating customer portal link
+ * @returns UseMutationResult for generating portal link operation
  */
 export const useGeneratePortalLink = () => {
-  const trpc = useTRPC();
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await authClient.customer.portal();
 
-  return useMutation(
-    trpc.billing.createPortalSession.mutationOptions({
-      onSuccess: (data) => {
-        /* eslint-disable-next-line react-hooks/immutability */
-        window.location.href = data.url;
-      },
-    })
-  );
+      if (error) {
+        throw new Error(error.message || error.statusText);
+      }
+
+      return data;
+    },
+  });
 };

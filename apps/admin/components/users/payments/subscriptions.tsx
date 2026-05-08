@@ -29,7 +29,7 @@ export const Subscriptions = () => {
   );
 
   const { data: subscriptions, isPending } = useQuery(
-    trpc.billing.getSubscriptions.queryOptions(
+    trpc.payments.getSubscriptions.queryOptions(
       {
         userId: user?.id || "",
       },
@@ -42,14 +42,14 @@ export const Subscriptions = () => {
   // Calculate financial metrics
   const totalRevenue =
     subscriptions?.reduce(
-      (acc, subscription) => acc + subscription.totalAmount,
+      (acc, subscription) => acc + subscription.amount,
       0
     ) || 0;
 
   const totalRefunded =
     subscriptions?.reduce((acc, subscription) => {
       if (subscription.canceledAt) {
-        return acc + subscription.totalAmount;
+        return acc + subscription.amount;
       }
       return acc;
     }, 0) || 0;
@@ -71,10 +71,10 @@ export const Subscriptions = () => {
             header: "Can Request Refund",
             cell: ({ row }) => (
               <code className="bg-muted rounded-md p-1 text-xs">
-                {row.original.periodStart
+                {row.original.startedAt
                   ? differenceInDays(
                       new Date(),
-                      new Date(row.original.periodStart)
+                      new Date(row.original.startedAt)
                     ) <= 7
                     ? "true"
                     : "false"
@@ -99,14 +99,14 @@ export const Subscriptions = () => {
             id: "total_amount",
             header: "Amount",
             cell: ({ row }) => (
-              <span>${(row.original.totalAmount / 100).toFixed(2)}</span>
+              <span>${(row.original.amount / 100).toFixed(2)}</span>
             ),
           },
           {
-            id: "billing_interval",
-            header: "Billing Interval",
+            id: "recurring_interval",
+            header: "Recurring Interval",
             cell: ({ row }) => (
-              <Badge>{row.original.billingInterval ?? "—"}</Badge>
+              <Badge>{row.original.recurringInterval ?? "—"}</Badge>
             ),
           },
           {
@@ -119,13 +119,13 @@ export const Subscriptions = () => {
             ),
           },
           {
-            id: "period_start",
-            header: "Period Start",
+            id: "started_at",
+            header: "Started At",
             cell: ({ row }) => (
               <span>
-                {row.original.periodStart
+                {row.original.startedAt
                   ? format(
-                      new Date(row.original.periodStart),
+                      new Date(row.original.startedAt),
                       "MM/dd/yyyy hh:mm a"
                     )
                   : "—"}

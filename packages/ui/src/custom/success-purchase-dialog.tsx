@@ -33,11 +33,11 @@ export const SuccessPurchaseDialog = ({
 
   const trpc = useTRPC();
   const checkoutSession = useQuery({
-    ...trpc.billing.verifyCheckout.queryOptions({ sessionId: sessionId ?? "" }),
+    ...trpc.payments.verifyCheckout.queryOptions({ sessionId: sessionId ?? "" }),
     enabled: !!sessionId,
   });
 
-  const succeeded = checkoutSession.data?.paymentStatus === "paid";
+  const succeeded = checkoutSession.data?.status === "succeeded";
   const open = !!sessionId;
 
   const resolvedProject = project;

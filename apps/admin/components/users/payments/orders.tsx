@@ -29,7 +29,7 @@ export const Orders = () => {
   );
 
   const { data: orders, isPending } = useQuery(
-    trpc.billing.listOrders.queryOptions(
+    trpc.payments.listOrders.queryOptions(
       {
         userId: user?.id || "",
       },
@@ -42,12 +42,12 @@ export const Orders = () => {
 
   // Calculate financial metrics
   const totalRevenue =
-    orders?.reduce((acc, order) => acc + order.amount, 0) || 0;
+    orders?.reduce((acc, order) => acc + order.totalAmount, 0) || 0;
 
   const totalRefunded =
     orders?.reduce((acc, order) => {
       if (order.status === "void" || order.status === "uncollectible") {
-        return acc + order.amount;
+        return acc + order.totalAmount;
       }
       return acc;
     }, 0) || 0;
@@ -102,7 +102,7 @@ export const Orders = () => {
             id: "total_amount",
             header: "Amount",
             cell: ({ row }) => (
-              <span>${(row.original.amount / 100).toFixed(2)}</span>
+              <span>${(row.original.totalAmount / 100).toFixed(2)}</span>
             ),
           },
           {

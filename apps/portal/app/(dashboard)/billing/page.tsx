@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronRight,
   CreditCard,
-  ExternalLink,
   Loader2,
 } from "lucide-react";
 
@@ -21,10 +20,7 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
-import {
-  useGeneratePortalLink,
-  useSubscriptionDetails,
-} from "@workspace/auth/hooks/use-payments";
+import { useGeneratePortalLink } from "@workspace/auth/hooks/use-payments";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 const InvoiceDownloadButton = dynamic(
@@ -38,8 +34,8 @@ const InvoiceDownloadButton = dynamic(
 // ─── Types ──────────────────────────────────────────────────────
 
 type ProjectFilter = "all" | "MOTION" | "AGENCY";
-type Order = RouterOutputs["billing"]["listOrders"][number];
-type Subscription = RouterOutputs["billing"]["getSubscriptions"][number];
+type Order = RouterOutputs["payments"]["listOrders"][number];
+type Subscription = RouterOutputs["payments"]["getSubscriptions"][number];
 type OrderMeta = { project?: string; name?: string } | null;
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -58,7 +54,6 @@ const STATUS_COLORS: Record<Subscription["status"], string> = {
   unpaid: "bg-orange-500",
   incomplete: "bg-yellow-500",
   incomplete_expired: "bg-gray-400",
-  paused: "bg-violet-500",
 };
 
 const formatCurrency = (amount: number, currency: string = "usd") =>
@@ -108,14 +103,11 @@ function StatusDot({
 // ─── Subscription Details Panel ─────────────────────────────────
 
 function SubscriptionDetailsPanel({
-  subscriptionId,
   sub,
 }: {
   subscriptionId: string;
   sub: Subscription;
 }) {
-  const { data, isLoading, error } = useSubscriptionDetails(subscriptionId);
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
@@ -124,10 +116,10 @@ function SubscriptionDetailsPanel({
           <div className="mt-0.5 flex items-center gap-1.5">
             <StatusDot
               status={sub.status}
-              isCanceling={!!(sub.cancelAtPeriodEnd || sub.cancelAt)}
+              isCanceling={!!(sub.cancelAtPeriodEnd || sub.canceledAt)}
             />
             <span className="capitalize">
-              {sub.cancelAtPeriodEnd || sub.cancelAt ? "canceling" : sub.status}
+              {sub.cancelAtPeriodEnd || sub.canceledAt ? "canceling" : sub.status}
             </span>
           </div>
         </div>
@@ -135,29 +127,23 @@ function SubscriptionDetailsPanel({
           <p className="text-muted-foreground text-xs">Auto-Renewal</p>
           <Badge
             variant={
-              sub.cancelAtPeriodEnd || sub.cancelAt ? "destructive" : "default"
+              sub.cancelAtPeriodEnd || sub.canceledAt ? "destructive" : "default"
             }
             className="mt-0.5"
           >
-            {sub.cancelAtPeriodEnd || sub.cancelAt ? "Off" : "On"}
+            {sub.cancelAtPeriodEnd || sub.canceledAt ? "Off" : "On"}
           </Badge>
         </div>
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs">Subscription ID</p>
           <span className="text-muted-foreground block truncate font-mono text-xs">
-            {sub.stripeSubscriptionId ?? "—"}
+            {sub.id ?? "—"}
           </span>
         </div>
         <div>
           <p className="text-muted-foreground text-xs">Billing Interval</p>
-          <span className="capitalize">{sub.billingInterval ?? "—"}</span>
+          <span className="capitalize">{sub.recurringInterval ?? "—"}</span>
         </div>
-        {sub.cancelAt && (
-          <div>
-            <p className="text-muted-foreground text-xs">Cancels At</p>
-            <span>{format(new Date(sub.cancelAt), "MMM d, yyyy")}</span>
-          </div>
-        )}
         {sub.canceledAt && (
           <div>
             <p className="text-muted-foreground text-xs">Canceled At</p>
@@ -171,78 +157,6 @@ function SubscriptionDetailsPanel({
           </div>
         )}
       </div>
-
-      {isLoading && (
-        <div className="text-muted-foreground flex items-center gap-2 py-2 text-sm">
-          <Loader2 className="size-4 animate-spin" />
-          Loading items...
-        </div>
-      )}
-
-      {error && !data && (
-        <p className="text-muted-foreground text-sm">
-          Could not load subscription items.
-        </p>
-      )}
-
-      {data?.scheduledChange && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950">
-          <p className="font-medium text-amber-800 dark:text-amber-200">
-            Scheduled plan change
-          </p>
-          <p className="text-amber-700 dark:text-amber-300">
-            Switching to{" "}
-            <span className="font-medium">
-              {data.scheduledChange.newProductName ?? "new plan"}
-            </span>{" "}
-            on{" "}
-            {format(
-              new Date(data.scheduledChange.effectiveDate * 1000),
-              "MMM d, yyyy"
-            )}
-          </p>
-        </div>
-      )}
-
-      {data && data.items.length > 0 && (
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-muted-foreground border-b text-left">
-                <th className="px-3 py-2 font-medium">Product</th>
-                <th className="px-3 py-2 font-medium">Price</th>
-                <th className="px-3 py-2 font-medium">Interval</th>
-                <th className="px-3 py-2 font-medium">Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((item) => (
-                <tr key={item.id} className="border-b last:border-b-0">
-                  <td className="px-3 py-2">
-                    {item.productName ?? (
-                      <span className="text-muted-foreground font-mono text-xs">
-                        {item.productId?.slice(0, 16)}...
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2">
-                    ${(item.unitAmount / 100).toFixed(2)}{" "}
-                    <span className="text-muted-foreground uppercase">
-                      {item.currency}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    {item.interval
-                      ? `Every ${item.intervalCount && item.intervalCount > 1 ? `${item.intervalCount} ` : ""}${item.interval}`
-                      : "One-time"}
-                  </td>
-                  <td className="px-3 py-2">{item.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 }
@@ -257,14 +171,14 @@ export default function BillingPage() {
   const generatePortalLink = useGeneratePortalLink();
 
   const { data: orders, isPending: ordersLoading } = useQuery(
-    trpc.billing.listOrders.queryOptions(
+    trpc.payments.listOrders.queryOptions(
       { userId: user?.user.id || "" },
       { enabled: !!user?.user.id }
     )
   );
 
   const { data: subscriptions, isPending: subsLoading } = useQuery(
-    trpc.billing.getSubscriptions.queryOptions(
+    trpc.payments.getSubscriptions.queryOptions(
       { userId: user?.user.id || "" },
       { enabled: !!user?.user.id }
     )
@@ -330,7 +244,7 @@ export default function BillingPage() {
             variant="outline"
             size="icon"
             disabled={generatePortalLink.isPending}
-            onClick={() => generatePortalLink.mutate({ returnUrl: "/billing" })}
+            onClick={() => generatePortalLink.mutate()}
           >
             {generatePortalLink.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -359,7 +273,7 @@ export default function BillingPage() {
                 header: "Plan",
                 cell: ({ row }) => {
                   const isCanceling = !!(
-                    row.original.cancelAtPeriodEnd || row.original.cancelAt
+                    row.original.cancelAtPeriodEnd || row.original.canceledAt
                   );
                   return (
                     <div className="flex items-center gap-2.5">
@@ -368,7 +282,7 @@ export default function BillingPage() {
                         isCanceling={isCanceling}
                       />
                       <span className="max-w-[140px] truncate font-medium">
-                        {row.original.productName || row.original.plan || "—"}
+                        {row.original.productName || row.original.productId || "—"}
                       </span>
                     </div>
                   );
@@ -378,13 +292,13 @@ export default function BillingPage() {
                 id: "price",
                 header: "Price",
                 cell: ({ row }) => {
-                  if (!row.original.totalAmount)
+                  if (!row.original.amount)
                     return <span className="text-muted-foreground">—</span>;
                   return (
                     <span className="text-sm">
-                      ${(row.original.totalAmount / 100).toFixed(2)}
+                      ${(row.original.amount / 100).toFixed(2)}
                       <span className="text-muted-foreground ml-1 text-xs uppercase">
-                        {row.original.currency}
+                        {"usd"}
                       </span>
                     </span>
                   );
@@ -394,7 +308,7 @@ export default function BillingPage() {
                 id: "next_billing",
                 header: "Next Billing",
                 cell: ({ row }) => {
-                  const end = row.original.periodEnd;
+                  const end = row.original.startedAt;
                   return (
                     <span className="flex flex-col">
                       <span className="text-sm">
@@ -416,7 +330,7 @@ export default function BillingPage() {
                 header: "",
                 cell: ({ row }) => {
                   const isExpanded = expandedRows.has(row.id);
-                  if (!row.original.stripeSubscriptionId) return null;
+                  if (!row.original.id) return null;
                   return (
                     <div className="flex justify-end">
                       <Button
@@ -444,10 +358,10 @@ export default function BillingPage() {
             expandedRows={expandedRows}
             renderExpandedRow={(row) => {
               const sub = row.original;
-              if (!sub.stripeSubscriptionId) return null;
+              if (!sub.id) return null;
               return (
                 <SubscriptionDetailsPanel
-                  subscriptionId={sub.stripeSubscriptionId}
+                  subscriptionId={sub.id}
                   sub={sub}
                 />
               );
@@ -495,15 +409,15 @@ export default function BillingPage() {
                 id: "amount",
                 header: "Amount",
                 cell: ({ row }) => {
-                  const amount = row.original.amount / 100;
+                  const amount = row.original.totalAmount / 100;
                   const isRefund = amount < 0;
                   return (
                     <span className={isRefund ? "text-destructive" : ""}>
                       {isRefund
-                        ? `-${formatCurrency(Math.abs(row.original.amount), row.original.currency)}`
+                        ? `-${formatCurrency(Math.abs(row.original.totalAmount), "usd")}`
                         : formatCurrency(
-                            row.original.amount,
-                            row.original.currency
+                            row.original.totalAmount,
+                            "usd"
                           )}
                     </span>
                   );
@@ -521,8 +435,8 @@ export default function BillingPage() {
                 id: "status",
                 header: "Status",
                 cell: ({ row }) => {
-                  const { status, amount } = row.original;
-                  const isRefund = amount < 0;
+                  const { status, totalAmount } = row.original;
+                  const isRefund = totalAmount < 0;
                   const label = isRefund ? "refunded" : status;
                   const variant = isRefund
                     ? "secondary"
@@ -535,22 +449,6 @@ export default function BillingPage() {
                           : "secondary";
                   return <Badge variant={variant}>{label}</Badge>;
                 },
-              },
-              {
-                id: "receipt",
-                cell: ({ row }) =>
-                  row.original.receiptUrl ? (
-                    <a
-                      href={row.original.receiptUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        <ExternalLink className="size-3" />
-                        Receipt
-                      </Button>
-                    </a>
-                  ) : null,
               },
             ]}
             data={filteredOrders}

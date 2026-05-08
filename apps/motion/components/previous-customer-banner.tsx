@@ -7,7 +7,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 export const PreviousCustomerBanner = () => {
   const trpc = useTRPC();
-  const customer = useQuery(trpc.billing.getPreviousCustomer.queryOptions());
+  const customer = useQuery(trpc.payments.getPreviousCustomer.queryOptions());
 
   if (!customer.data) return null;
 

@@ -128,7 +128,7 @@ const EachPlan = ({
           onClick={() =>
             switchPlan.mutate({
               subscriptionId: currentSubscriptionId ?? "",
-              newPriceId: plan.priceId ?? "",
+              toProductId: plan.id ?? "",
             })
           }
         >
@@ -140,7 +140,7 @@ const EachPlan = ({
           size="lg"
           className="mt-auto w-full"
           onClick={() =>
-            checkout.mutate({ priceIds: [plan.priceId ?? ""], successUrl: "/portfolio" })
+            checkout.mutate({ productId: plan.id ?? "", successUrl: "/portfolio" })
           }
         >
           Get Started

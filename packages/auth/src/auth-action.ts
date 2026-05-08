@@ -1,330 +1,211 @@
+import { Customer } from "@polar-sh/sdk/models/components/customer.js";
+import { Order } from "@polar-sh/sdk/models/components/order.js";
+import type { Product } from "@polar-sh/sdk/models/components/product.js";
+import { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import { eq } from "drizzle-orm";
-import type Stripe from "stripe";
 
+import { polarClient } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
   products,
-  subscription,
+  subscriptions,
   user,
 } from "@workspace/drizzle/schema";
 
-import { stripeClient } from "./auth";
+function getPriceAmount(price: Product["prices"][number]): number {
+  return "priceAmount" in price ? price.priceAmount : 0;
+}
+
+function getPriceCurrency(price: Product["prices"][number]): string {
+  return "priceCurrency" in price ? price.priceCurrency : "usd";
+}
 
 // ----------------------------
 // 📦 Products
 // ----------------------------
+const INTERVAL_VALUES = ["day", "week", "month", "year"] as const;
 
-async function resolvePrice(
-  defaultPrice: string | Stripe.Price | null | undefined
-): Promise<Stripe.Price | null> {
-  if (!defaultPrice) return null;
-  if (typeof defaultPrice === "object") return defaultPrice;
-  return stripeClient.prices.retrieve(defaultPrice);
-}
-
-export const createProduct = async (product: Stripe.Product) => {
-  const price = await resolvePrice(product.default_price);
-  await db
-    .insert(products)
-    .values({
-      id: product.id,
-      name: product.name,
-      description: product.description ?? null,
-      popular: false,
-      priceId: price?.id ?? null,
-      priceAmount: price?.unit_amount ?? 0,
-      priceCurrency: price?.currency ?? "usd",
-      recurringInterval: price?.recurring?.interval ?? null,
-      isRecurring: !!price?.recurring,
-      isArchived: !product.active,
-      metadata: product.metadata ?? {},
-      createdAt: new Date(product.created * 1000),
-      updatedAt: new Date(product.updated * 1000),
-    })
-    .onConflictDoNothing();
+export const createProduct = async (data: Product) => {
+  const firstPrice = data.prices[0];
+  await db.insert(products).values({
+    id: data.id,
+    name: data.name,
+    description: data.description ?? null,
+    popular: false,
+    priceAmount: firstPrice ? getPriceAmount(firstPrice) : 0,
+    priceCurrency: firstPrice ? getPriceCurrency(firstPrice) : "usd",
+    recurringInterval:
+      data.recurringInterval &&
+      INTERVAL_VALUES.includes(
+        data.recurringInterval as (typeof INTERVAL_VALUES)[number]
+      )
+        ? (data.recurringInterval as (typeof INTERVAL_VALUES)[number])
+        : null,
+    isRecurring: data.isRecurring,
+    isArchived: false,
+    trialInterval:
+      data.trialInterval &&
+      INTERVAL_VALUES.includes(
+        data.trialInterval as (typeof INTERVAL_VALUES)[number]
+      )
+        ? (data.trialInterval as (typeof INTERVAL_VALUES)[number])
+        : null,
+    trialIntervalCount: data.trialIntervalCount ?? 0,
+    metadata: data.metadata ?? {},
+    createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+    updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
+  });
 };
 
-export const updateProduct = async (product: Stripe.Product) => {
-  const price = await resolvePrice(product.default_price);
+export const updateProduct = async (data: Product) => {
+  const firstPrice = data.prices[0];
   await db
     .update(products)
     .set({
-      name: product.name,
-      description: product.description ?? null,
-      priceId: price?.id ?? null,
-      priceAmount: price?.unit_amount ?? 0,
-      priceCurrency: price?.currency ?? "usd",
-      recurringInterval: price?.recurring?.interval ?? null,
-      isRecurring: !!price?.recurring,
-      isArchived: !product.active,
-      metadata: product.metadata ?? {},
-      updatedAt: new Date(product.updated * 1000),
+      name: data.name,
+      description: data.description ?? null,
+      priceAmount: firstPrice ? getPriceAmount(firstPrice) : 0,
+      priceCurrency: firstPrice ? getPriceCurrency(firstPrice) : "usd",
+      recurringInterval:
+        data.recurringInterval &&
+        INTERVAL_VALUES.includes(
+          data.recurringInterval as (typeof INTERVAL_VALUES)[number]
+        )
+          ? (data.recurringInterval as (typeof INTERVAL_VALUES)[number])
+          : null,
+      isRecurring: data.isRecurring,
+      isArchived: data.isArchived,
+      trialInterval:
+        data.trialInterval &&
+        INTERVAL_VALUES.includes(
+          data.trialInterval as (typeof INTERVAL_VALUES)[number]
+        )
+          ? (data.trialInterval as (typeof INTERVAL_VALUES)[number])
+          : null,
+      trialIntervalCount: data.trialIntervalCount ?? 0,
+      metadata: data.metadata ?? {},
+      updatedAt: data.modifiedAt ? new Date(data.modifiedAt) : new Date(),
     })
-    .where(eq(products.id, product.id));
-};
-
-export const deleteProduct = async (product: Stripe.Product) => {
-  await db.delete(products).where(eq(products.id, product.id));
+    .where(eq(products.id, data.id));
 };
 
 // ----------------------------
-// 🔄 Subscriptions
+// 📦 Products END
 // ----------------------------
 
-function buildSubscriptionValues(sub: Stripe.Subscription, userId: string) {
-  const customerId =
-    typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-  const firstItem = sub.items.data[0];
-
-  const totalAmount = sub.items.data.reduce(
-    (sum, item) => sum + (item.price.unit_amount ?? 0) * (item.quantity ?? 1),
-    0
-  );
-  const currency = firstItem?.price?.currency ?? "usd";
-
-  return {
-    plan: firstItem?.price?.lookup_key ?? firstItem?.price?.id ?? "unknown",
-    referenceId: userId,
-    stripeCustomerId: customerId,
-    stripeSubscriptionId: sub.id,
-    status: sub.status,
-    periodStart: firstItem
-      ? new Date(firstItem.current_period_start * 1000)
-      : null,
-    periodEnd: firstItem ? new Date(firstItem.current_period_end * 1000) : null,
-    cancelAtPeriodEnd: sub.cancel_at_period_end,
-    cancelAt: sub.cancel_at ? new Date(sub.cancel_at * 1000) : null,
-    canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
-    endedAt: sub.ended_at ? new Date(sub.ended_at * 1000) : null,
-    trialStart: sub.trial_start ? new Date(sub.trial_start * 1000) : null,
-    trialEnd: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
-    seats: firstItem?.quantity ?? null,
-    totalAmount,
-    currency,
-    itemCount: sub.items.data.length,
-    billingInterval: firstItem?.price?.recurring?.interval ?? null,
-    metadata: sub.metadata ?? {},
-  };
-}
-
-async function findUserByCustomerIdOrEmail(customerId: string) {
-  // Direct match by stripeCustomerId
-  const byId = await db
-    .select()
-    .from(user)
-    .where(eq(user.stripeCustomerId, customerId))
-    .limit(1)
-    .then((res) => res[0]);
-
-  if (byId) return byId;
-
-  // Fallback: fetch customer email from Stripe, match by email.
-  // Handles Payment Link subscriptions where Stripe creates a new customer ID.
-  try {
-    const customer = await stripeClient.customers.retrieve(customerId);
-    if (customer.deleted || !customer.email) return undefined;
-
-    const byEmail = await db
-      .select()
-      .from(user)
-      .where(eq(user.email, customer.email))
-      .limit(1)
-      .then((res) => res[0]);
-
-    if (byEmail && !byEmail.stripeCustomerId) {
-      await db
-        .update(user)
-        .set({ stripeCustomerId: customerId })
-        .where(eq(user.id, byEmail.id));
-    }
-
-    return byEmail;
-  } catch {
-    return undefined;
-  }
-}
-
-export const createSubscription = async (sub: Stripe.Subscription) => {
-  const customerId =
-    typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-  const dbUser = await findUserByCustomerIdOrEmail(customerId);
-  if (!dbUser) {
-    console.warn(
-      `[stripe] No user found for customer ${customerId} — subscription ${sub.id} skipped`
-    );
-    return;
-  }
-
-  await db
-    .insert(subscription)
-    .values({ id: sub.id, ...buildSubscriptionValues(sub, dbUser.id) })
-    .onConflictDoNothing();
-};
-
-export const updateSubscription = async (sub: Stripe.Subscription) => {
-  const customerId =
-    typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-  const dbUser = await findUserByCustomerIdOrEmail(customerId);
-  if (!dbUser) {
-    console.warn(
-      `[stripe] No user found for customer ${customerId} — subscription ${sub.id} update skipped`
-    );
-    return;
-  }
-
-  await db
-    .update(subscription)
-    .set(buildSubscriptionValues(sub, dbUser.id))
-    .where(eq(subscription.stripeSubscriptionId, sub.id));
-};
-
-export const deleteSubscription = async (sub: Stripe.Subscription) => {
-  await db
-    .delete(subscription)
-    .where(eq(subscription.stripeSubscriptionId, sub.id));
-};
-
 // ----------------------------
-// 🛒 One-time Checkout → Orders
+// 🛒 Orders
 // ----------------------------
+export const createOrder = async (data: Order) => {
+  if (!data.customer.externalId)
+    throw new Error("Customer external ID is required");
 
-export const completeCheckout = async (
-  session: Stripe.Checkout.Session
-) => {
-  // Only handle one-time payments — subscriptions already handled separately
-  if (session.mode === "subscription") return;
-
-  const paymentIntentId =
-    typeof session.payment_intent === "string"
-      ? session.payment_intent
-      : session.payment_intent?.id;
-  if (!paymentIntentId) return;
-
-  const customerId =
-    typeof session.customer === "string"
-      ? session.customer
-      : session.customer?.id;
-  if (!customerId) return;
-
-  const dbUser = await findUserByCustomerIdOrEmail(customerId);
-
-  // Expand line items to get product/price info
-  const lineItems = await stripeClient.checkout.sessions.listLineItems(
-    session.id,
-    { limit: 1 }
-  );
-  const firstItem = lineItems.data[0];
-  const priceId = firstItem?.price?.id ?? null;
-  const productId = firstItem?.price?.product
-    ? typeof firstItem.price.product === "string"
-      ? firstItem.price.product
-      : firstItem.price.product.id
-    : null;
-
-  // Get receipt URL from the payment intent's latest charge
-  let receiptUrl: string | null = null;
-  try {
-    const pi = await stripeClient.paymentIntents.retrieve(paymentIntentId);
-    const chargeId =
-      typeof pi.latest_charge === "string"
-        ? pi.latest_charge
-        : pi.latest_charge?.id;
-    if (chargeId) {
-      const charge = await stripeClient.charges.retrieve(chargeId);
-      receiptUrl = charge.receipt_url ?? null;
-    }
-  } catch {
-    // Receipt URL is non-critical
-  }
-
-  await db
-    .insert(orders)
-    .values({
-      id: paymentIntentId,
-      userId: dbUser?.id ?? "",
-      stripeCustomerId: customerId,
-      productId,
-      priceId,
-      amount: session.amount_total ?? 0,
-      currency: session.currency ?? "usd",
-      status: session.payment_status === "paid" ? "paid" : "pending",
-      stripeSessionId: session.id,
-      receiptUrl,
-      metadata: {
-        ...(session.metadata as Record<string, unknown> ?? {}),
-      },
-      createdAt: new Date(session.created * 1000),
-    })
-    .onConflictDoNothing();
+  await db.insert(orders).values({
+    id: data.id,
+    subscriptionId: data.subscriptionId ?? "",
+    email: data.customer.email ?? "",
+    userId: data.customer.externalId,
+    billingReason: data.billingReason,
+    productId: data.productId ?? "",
+    billingName: data.billingName ?? "",
+    totalAmount: data.totalAmount,
+    invoiceNumber: data.invoiceNumber,
+    status: data.status,
+    discountAmount: data.discountAmount,
+    createdAt: data.createdAt,
+    updatedAt: data.modifiedAt,
+    metadata: data.product?.metadata ?? data.metadata ?? {},
+  });
 };
-
-export const confirmAsyncPayment = async (
-  session: Stripe.Checkout.Session
-) => {
-  const paymentIntentId =
-    typeof session.payment_intent === "string"
-      ? session.payment_intent
-      : session.payment_intent?.id;
-  if (!paymentIntentId) return;
-
-  await db
-    .update(orders)
-    .set({ status: "paid", updatedAt: new Date() })
-    .where(eq(orders.id, paymentIntentId));
-};
-
-export const failAsyncPayment = async (
-  session: Stripe.Checkout.Session
-) => {
-  const paymentIntentId =
-    typeof session.payment_intent === "string"
-      ? session.payment_intent
-      : session.payment_intent?.id;
-  if (!paymentIntentId) return;
-
-  await db
-    .update(orders)
-    .set({ status: "void", updatedAt: new Date() })
-    .where(eq(orders.id, paymentIntentId));
-};
-
-// ----------------------------
-// 💸 Refunds → Orders
-// ----------------------------
-
-export const processRefund = async (charge: Stripe.Charge) => {
-  const paymentIntentId =
-    typeof charge.payment_intent === "string"
-      ? charge.payment_intent
-      : charge.payment_intent?.id;
-  if (!paymentIntentId) return;
-
-  const order = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.id, paymentIntentId))
-    .limit(1)
-    .then((r) => r[0]);
-  if (!order) return;
-
-  const isFullRefund = charge.amount_refunded >= order.amount;
-
+export const updateOrder = async (data: Order) => {
   await db
     .update(orders)
     .set({
-      status: isFullRefund ? "refunded" : "partially_refunded",
-      refundedAmount: charge.amount_refunded,
-      updatedAt: new Date(),
+      subscriptionId: data.subscriptionId ?? "",
+      email: data.customer.email,
+      userId: data.customer.externalId ?? undefined,
+      productId: data.productId ?? "",
+      billingName: data.billingName ?? undefined,
+      totalAmount: data.totalAmount,
+      invoiceNumber: data.invoiceNumber,
+      status: data.status,
+      discountAmount: data.discountAmount,
+      updatedAt: data.modifiedAt,
     })
-    .where(eq(orders.id, paymentIntentId));
+    .where(eq(orders.id, data.id));
 };
+export const revokeSubscriptionOnRefund = async (subscriptionId: string) => {
+  if (!subscriptionId) throw new Error("Subscription ID is required");
+
+  await polarClient.subscriptions.revoke({
+    id: subscriptionId,
+  });
+};
+// ----------------------------
+// 🛒 Orders END
+// ----------------------------
 
 // ----------------------------
 // 👤 Customers
 // ----------------------------
+export const deleteCustomer = async (data: Customer) => {
+  if (!data.email) throw new Error("Customer email is required");
 
-export const deleteCustomer = async (email: string) => {
-  if (!email) throw new Error("Customer email is required");
-  await db.delete(user).where(eq(user.email, email));
+  await db.delete(user).where(eq(user.email, data.email));
 };
+// ----------------------------
+// 👤 Customers END
+// ----------------------------
+
+// ----------------------------
+// 📅 Subscriptions
+// ----------------------------
+export const createSubscription = async (data: Subscription) => {
+  await db.insert(subscriptions).values({
+    id: data.id,
+    status: data.status,
+    email: data.customer.email ?? "",
+    userId: data.customer.externalId ?? "",
+    productId: data.productId,
+    amount: data.amount,
+    currency: data.currency,
+    createdAt: data.createdAt,
+    updatedAt: data.modifiedAt,
+    trialStart: data.trialStart,
+    trialEnd: data.trialEnd,
+    startedAt: data.startedAt,
+    canceledAt: data.canceledAt,
+    cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+    recurringInterval: data.recurringInterval,
+    customerCancellationReason: data.customerCancellationReason,
+    customerCancellationComment: data.customerCancellationComment,
+    metadata: data.product.metadata ?? data.metadata ?? {},
+  });
+};
+export const updateSubscription = async (data: Subscription) => {
+  await db
+    .update(subscriptions)
+    .set({
+      status: data.status,
+      email: data.customer.email ?? "",
+      userId: data.customer.externalId ?? "",
+      productId: data.productId,
+      amount: data.amount,
+      currency: data.currency,
+      updatedAt: data.modifiedAt,
+      trialStart: data.trialStart,
+      trialEnd: data.trialEnd,
+      startedAt: data.startedAt,
+      canceledAt: data.canceledAt,
+      cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      recurringInterval: data.recurringInterval,
+      customerCancellationReason: data.customerCancellationReason,
+      customerCancellationComment: data.customerCancellationComment,
+      metadata: data.product.metadata ?? data.metadata ?? {},
+    })
+    .where(eq(subscriptions.id, data.id));
+};
+// ----------------------------
+// 📅 Subscriptions END
+// ----------------------------

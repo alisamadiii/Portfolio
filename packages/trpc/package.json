@@ -26,8 +26,8 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "lru-cache": "^11.2.6",
+    "@polar-sh/sdk": "^0.46.2",
     "server-only": "^0.0.1",
-    "stripe": "^22.1.0",
     "zod": "^4.3.6"
   },
   "peerDependencies": {

@@ -2,10 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ExternalLink } from "lucide-react";
-
 import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
 import { DataTable } from "@workspace/ui/custom/data-table";
 import { getProjectColor } from "@workspace/ui/lib/design";
 
@@ -13,7 +10,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-type Order = RouterOutputs["billing"]["listOrders"][number];
+type Order = RouterOutputs["payments"]["listOrders"][number];
 
 type OrderMeta = { project?: string; name?: string } | null;
 
@@ -39,7 +36,7 @@ export const BillingInvoices = () => {
 
   const trpc = useTRPC();
   const { data: orders, isLoading } = useQuery(
-    trpc.billing.listOrders.queryOptions(
+    trpc.payments.listOrders.queryOptions(
       { userId: user?.user.id || "" },
       { enabled: !!user?.user.id, refetchOnWindowFocus: true }
     )
@@ -73,9 +70,9 @@ export const BillingInvoices = () => {
           },
           {
             header: "Amount",
-            accessorKey: "amount",
+            accessorKey: "totalAmount",
             cell: ({ row }) => {
-              const amount = row.original.amount / 100;
+              const amount = row.original.totalAmount / 100;
               return <span>${amount.toFixed(2)}</span>;
             },
           },
@@ -91,8 +88,8 @@ export const BillingInvoices = () => {
             header: "Status",
             accessorKey: "status",
             cell: ({ row }) => {
-              const { status, amount } = row.original;
-              const isRefund = amount < 0;
+              const { status, totalAmount } = row.original;
+              const isRefund = totalAmount < 0;
               const label = isRefund
                 ? "refunded"
                 : status === "partially_refunded"
@@ -111,22 +108,6 @@ export const BillingInvoices = () => {
                         : "secondary";
               return <Badge variant={variant}>{label}</Badge>;
             },
-          },
-          {
-            id: "receipt",
-            cell: ({ row }) =>
-              row.original.receiptUrl ? (
-                <a
-                  href={row.original.receiptUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <ExternalLink className="size-3" />
-                    Receipt
-                  </Button>
-                </a>
-              ) : null,
           },
         ]}
         data={orders ?? []}

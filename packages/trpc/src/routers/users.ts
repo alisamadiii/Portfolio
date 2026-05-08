@@ -3,9 +3,9 @@ import { TRPCError } from "@trpc/server";
 import { asc, count, desc, eq, ilike, or } from "drizzle-orm";
 import z from "zod";
 
-import { auth, stripeClient } from "@workspace/auth/auth";
+import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { subscription, user } from "@workspace/drizzle/schema";
+import { subscriptions, user } from "@workspace/drizzle/schema";
 
 import {
   adminProcedure,
@@ -308,10 +308,6 @@ export const usersRouter = createTRPCRouter({
         .limit(1)
         .then((res) => res[0]);
 
-      if (dbUser?.stripeCustomerId) {
-        await stripeClient.customers.del(dbUser.stripeCustomerId);
-      }
-
       await db.delete(user).where(eq(user.id, input));
 
       const cookieStore = await cookies();
@@ -336,26 +332,24 @@ export const usersRouter = createTRPCRouter({
     try {
       const rows = await db
         .select({
-          id: subscription.id,
-          status: subscription.status,
-          totalAmount: subscription.totalAmount,
-          currency: subscription.currency,
-          billingInterval: subscription.billingInterval,
-          plan: subscription.plan,
-          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-          periodStart: subscription.periodStart,
-          periodEnd: subscription.periodEnd,
-          canceledAt: subscription.canceledAt,
-          stripeSubscriptionId: subscription.stripeSubscriptionId,
+          id: subscriptions.id,
+          status: subscriptions.status,
+          amount: subscriptions.amount,
+          currency: subscriptions.currency,
+          recurringInterval: subscriptions.recurringInterval,
+          productId: subscriptions.productId,
+          cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+          startedAt: subscriptions.startedAt,
+          canceledAt: subscriptions.canceledAt,
           userId: user.id,
           name: user.name,
           email: user.email,
           image: user.image,
           company: user.company,
         })
-        .from(subscription)
-        .leftJoin(user, eq(subscription.referenceId, user.id))
-        .orderBy(desc(subscription.periodStart));
+        .from(subscriptions)
+        .leftJoin(user, eq(subscriptions.userId, user.id))
+        .orderBy(desc(subscriptions.createdAt));
 
       return rows.map((row) => ({
         id: row.id,
@@ -365,15 +359,13 @@ export const usersRouter = createTRPCRouter({
         image: row.image ?? null,
         company: row.company ?? null,
         status: row.status,
-        totalAmount: row.totalAmount,
+        amount: row.amount,
         currency: row.currency,
-        billingInterval: row.billingInterval,
-        plan: row.plan,
+        recurringInterval: row.recurringInterval,
+        productId: row.productId,
         cancelAtPeriodEnd: row.cancelAtPeriodEnd,
-        periodStart: row.periodStart,
-        periodEnd: row.periodEnd,
+        startedAt: row.startedAt,
         canceledAt: row.canceledAt,
-        stripeSubscriptionId: row.stripeSubscriptionId,
       }));
     } catch (error: unknown) {
       throw new TRPCError({
@@ -398,9 +390,9 @@ export const usersRouter = createTRPCRouter({
 
       const subs = await db
         .select()
-        .from(subscription)
-        .where(eq(subscription.referenceId, input))
-        .orderBy(desc(subscription.periodStart));
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, input))
+        .orderBy(desc(subscriptions.createdAt));
 
       return {
         user: userRecord,

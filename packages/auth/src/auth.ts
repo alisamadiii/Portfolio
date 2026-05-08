@@ -1,15 +1,17 @@
 import { expo } from "@better-auth/expo";
-import { stripe } from "@better-auth/stripe";
+import { polar, portal, usage, webhooks } from "@polar-sh/better-auth";
+import { Polar } from "@polar-sh/sdk";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin, emailOTP, magicLink } from "better-auth/plugins";
-import Stripe from "stripe";
+import { eq } from "drizzle-orm";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { db } from "@workspace/drizzle/index";
 import {
   account,
+  previousCustomers,
   session,
   user,
   verification,
@@ -18,19 +20,23 @@ import {
 import { sendEmail } from "@workspace/email";
 
 import {
-  completeCheckout,
-  confirmAsyncPayment,
+  createOrder,
   createProduct,
   createSubscription,
-  deleteProduct,
-  deleteSubscription,
-  failAsyncPayment,
-  processRefund,
+  deleteCustomer,
+  revokeSubscriptionOnRefund,
+  updateOrder,
   updateProduct,
   updateSubscription,
 } from "./auth-action";
 
-export const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const polarClient = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN!,
+  // Use 'sandbox' if you're using the Polar Sandbox environment
+  // Remember that access tokens, products, etc. are completely separated between environments.
+  // Access tokens obtained in Production are for instance not usable in the Sandbox environment.
+  server: process.env.POLAR_SERVER as "sandbox" | "production",
+});
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -151,70 +157,52 @@ export const auth = betterAuth({
         }
       },
     }),
-    stripe({
-      stripeClient,
-      stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+    polar({
+      client: polarClient,
       createCustomerOnSignUp: true,
-      onEvent: async (event) => {
-        // Audit trail
-        await db.insert(webhookEvents).values({
-          timestamp: new Date(event.created * 1000),
-          type: event.type,
-          payload: event.data,
-        });
+      use: [
+        portal(),
+        usage(),
+        webhooks({
+          secret: process.env.POLAR_WEBHOOK_SECRET!,
+          onPayload: async (payload) => {
+            await db.insert(webhookEvents).values({
+              timestamp: payload.timestamp,
+              type: payload.type,
+              payload: payload.data,
+            });
 
-        // Sync products
-        if (
-          event.type === "product.created" ||
-          event.type === "product.updated" ||
-          event.type === "product.deleted"
-        ) {
-          const product = event.data.object as Stripe.Product;
-          if (event.type === "product.created") {
-            await createProduct(product);
-          } else if (event.type === "product.updated") {
-            await updateProduct(product);
-          } else {
-            await deleteProduct(product);
-          }
-        }
-
-        // Orders — one-time purchase lifecycle
-        if (event.type === "checkout.session.completed") {
-          const session = event.data.object as Stripe.Checkout.Session;
-          await completeCheckout(session);
-        }
-        if (event.type === "checkout.session.async_payment_succeeded") {
-          const session = event.data.object as Stripe.Checkout.Session;
-          await confirmAsyncPayment(session);
-        }
-        if (event.type === "checkout.session.async_payment_failed") {
-          const session = event.data.object as Stripe.Checkout.Session;
-          await failAsyncPayment(session);
-        }
-
-        // Sync subscriptions
-        if (
-          event.type === "customer.subscription.created" ||
-          event.type === "customer.subscription.updated" ||
-          event.type === "customer.subscription.deleted"
-        ) {
-          const sub = event.data.object as Stripe.Subscription;
-          if (event.type === "customer.subscription.created") {
-            await createSubscription(sub);
-          } else if (event.type === "customer.subscription.updated") {
-            await updateSubscription(sub);
-          } else {
-            await deleteSubscription(sub);
-          }
-        }
-
-        // Refunds → update order status
-        if (event.type === "charge.refunded") {
-          const charge = event.data.object as Stripe.Charge;
-          await processRefund(charge);
-        }
-      },
+            if (payload.type === "order.updated") {
+              await updateOrder(payload.data);
+            }
+          },
+          onProductCreated: async ({ data }) => {
+            await createProduct(data);
+          },
+          onProductUpdated: async ({ data }) => {
+            await updateProduct(data);
+          },
+          onOrderCreated: async ({ data }) => {
+            await createOrder(data);
+            await db
+              .delete(previousCustomers)
+              .where(eq(previousCustomers.email, data.customer.email ?? ""));
+          },
+          onOrderRefunded: async ({ data }) => {
+            await updateOrder(data);
+            await revokeSubscriptionOnRefund(data.subscriptionId ?? "");
+          },
+          onCustomerDeleted: async ({ data }) => {
+            await deleteCustomer(data);
+          },
+          onSubscriptionCreated: async ({ data }) => {
+            await createSubscription(data);
+          },
+          onSubscriptionUpdated: async ({ data }) => {
+            await updateSubscription(data);
+          },
+        }),
+      ],
     }),
     nextCookies(),
   ],

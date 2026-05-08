@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Code, ExternalLink, Loader2, Receipt } from "lucide-react";
+import { ArrowLeft, Code, Loader2, Receipt } from "lucide-react";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
@@ -28,7 +28,7 @@ const formatDate = (date: Date | string | null | undefined) => {
 function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
   const trpc = useTRPC();
   const { data, isLoading, error } = useQuery(
-    trpc.billing.adminGetSubscriptionDetails.queryOptions(
+    trpc.payments.adminGetSubscriptionDetails.queryOptions(
       { subscriptionId },
       { enabled: !!subscriptionId }
     )
@@ -47,64 +47,37 @@ function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
 
   return (
     <>
-      {data?.scheduledChange && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950">
-          <p className="font-medium text-amber-800 dark:text-amber-200">
-            Scheduled plan change
-          </p>
-          <p className="text-amber-700 dark:text-amber-300">
-            Switching to{" "}
-            <span className="font-medium">
-              {data.scheduledChange.newProductName ?? "new plan"}
-            </span>{" "}
-            on{" "}
-            {format(
-              new Date(data.scheduledChange.effectiveDate * 1000),
-              "MMM d, yyyy"
-            )}
-          </p>
-        </div>
-      )}
-
-      {data && data.items.length > 0 && (
+      {data?.product && (
         <div className="space-y-2 border-t pt-4">
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
-            Plan Items (Live from Stripe)
+            Plan Details (Live from Polar)
           </p>
           <div className="rounded-md border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-left">
                   <th className="px-3 py-2 font-medium">Product</th>
-                  <th className="px-3 py-2 font-medium">Price</th>
+                  <th className="px-3 py-2 font-medium">Amount</th>
                   <th className="px-3 py-2 font-medium">Interval</th>
-                  <th className="px-3 py-2 font-medium">Qty</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {data.items.map((item) => (
-                  <tr key={item.id} className="border-b last:border-b-0">
-                    <td className="px-3 py-2">
-                      {item.productName ?? (
-                        <span className="text-muted-foreground font-mono text-xs">
-                          {item.productId?.slice(0, 16)}...
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2">
-                      ${(item.unitAmount / 100).toFixed(2)}{" "}
-                      <span className="text-muted-foreground uppercase">
-                        {item.currency}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      {item.interval
-                        ? `Every ${item.intervalCount && item.intervalCount > 1 ? `${item.intervalCount} ` : ""}${item.interval}`
-                        : "One-time"}
-                    </td>
-                    <td className="px-3 py-2">{item.quantity}</td>
-                  </tr>
-                ))}
+                <tr className="border-b last:border-b-0">
+                  <td className="px-3 py-2">
+                    {data.product.name}
+                  </td>
+                  <td className="px-3 py-2">
+                    ${(data.amount / 100).toFixed(2)}{" "}
+                    <span className="text-muted-foreground uppercase">
+                      {data.currency}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 capitalize">
+                    {data.recurringInterval ?? "One-time"}
+                  </td>
+                  <td className="px-3 py-2 capitalize">{data.status}</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -117,7 +90,7 @@ function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
 function ClientOrders({ userId }: { userId: string }) {
   const trpc = useTRPC();
   const { data: orders, isLoading } = useQuery(
-    trpc.billing.adminListOrders.queryOptions(
+    trpc.payments.adminListOrders.queryOptions(
       { userId },
       { enabled: !!userId }
     )
@@ -158,7 +131,6 @@ function ClientOrders({ userId }: { userId: string }) {
               <th className="px-3 py-2 font-medium">Status</th>
               <th className="px-3 py-2 font-medium">Type</th>
               <th className="px-3 py-2 font-medium">Date</th>
-              <th className="px-3 py-2 font-medium" />
             </tr>
           </thead>
           <tbody>
@@ -172,15 +144,12 @@ function ClientOrders({ userId }: { userId: string }) {
                   )}
                 </td>
                 <td className="px-3 py-2 font-medium tabular-nums">
-                  ${(order.amount / 100).toFixed(2)}{" "}
-                  <span className="text-muted-foreground uppercase">
-                    {order.currency}
-                  </span>
+                  ${(order.totalAmount / 100).toFixed(2)}
                 </td>
                 <td className="px-3 py-2">
                   <Badge
                     variant={
-                      order.status === "paid" ? "default" : "destructive"
+                      order.status === "paid" || order.status === "refunded" ? "default" : "destructive"
                     }
                     className="text-[10px]"
                   >
@@ -188,24 +157,12 @@ function ClientOrders({ userId }: { userId: string }) {
                   </Badge>
                 </td>
                 <td className="text-muted-foreground px-3 py-2 text-xs">
-                  {order.type === "one_time" ? "One-time" : "Subscription"}
+                  {order.billingReason}
                 </td>
                 <td className="text-muted-foreground px-3 py-2 text-xs">
                   {order.createdAt
                     ? format(new Date(order.createdAt), "MMM d, yyyy")
                     : "—"}
-                </td>
-                <td className="px-3 py-2">
-                  {order.receiptUrl && (
-                    <a
-                      href={order.receiptUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <ExternalLink className="size-3.5" />
-                    </a>
-                  )}
                 </td>
               </tr>
             ))}
@@ -279,25 +236,25 @@ export default function ClientDetailPage() {
             <CardAgency.DetailRow label="Subscription ID">
               <span className="font-mono text-xs">{sub.id}</span>
             </CardAgency.DetailRow>
-            <CardAgency.DetailRow label="Plan">
-              <span className="font-mono text-xs">{sub.plan}</span>
+            <CardAgency.DetailRow label="Product">
+              <span className="font-mono text-xs">{sub.productId}</span>
             </CardAgency.DetailRow>
             <CardAgency.DetailRow label="User ID">
-              <span className="font-mono text-xs">{sub.referenceId}</span>
+              <span className="font-mono text-xs">{sub.userId}</span>
             </CardAgency.DetailRow>
 
             {/* ── Billing ── */}
             <CardAgency.DetailRow label="Amount">
               <span className="text-xl font-bold tabular-nums">
-                ${formatPrice(sub.totalAmount)}{" "}
+                ${formatPrice(sub.amount)}{" "}
                 <span className="text-muted-foreground text-sm font-normal">
                   {sub.currency?.toUpperCase()}
                 </span>
               </span>
             </CardAgency.DetailRow>
             <CardAgency.DetailRow
-              label="Billing Interval"
-              value={sub.billingInterval ?? "One-time"}
+              label="Recurring Interval"
+              value={sub.recurringInterval ?? "One-time"}
             />
             <CardAgency.DetailRow
               label="Cancel at Period End"
@@ -306,12 +263,8 @@ export default function ClientDetailPage() {
 
             {/* ── Dates ── */}
             <CardAgency.DetailRow
-              label="Period Start"
-              value={formatDate(sub.periodStart)}
-            />
-            <CardAgency.DetailRow
-              label="Period End"
-              value={formatDate(sub.periodEnd)}
+              label="Started At"
+              value={formatDate(sub.startedAt)}
             />
             <CardAgency.DetailRow
               label="Trial Start"
@@ -326,16 +279,10 @@ export default function ClientDetailPage() {
               value={formatDate(sub.canceledAt)}
             />
 
-            {/* ── Stripe ── */}
-            <CardAgency.DetailRow label="Stripe Subscription ID">
-              <span className="font-mono text-xs">
-                {sub.stripeSubscriptionId ?? "—"}
-              </span>
-            </CardAgency.DetailRow>
           </div>
 
-          {sub.stripeSubscriptionId && (
-            <LivePlanItems subscriptionId={sub.stripeSubscriptionId} />
+          {sub.id && (
+            <LivePlanItems subscriptionId={sub.id} />
           )}
         </CardAgency.Card>
       ))}

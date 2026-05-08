@@ -37,7 +37,6 @@ type ProductStatus = "subscribed" | "purchased" | null;
 type CartItem = {
   id: string;
   name: string;
-  priceId: string;
   priceAmount: number;
   isRecurring: boolean;
   recurringInterval: string | null;
@@ -48,7 +47,7 @@ export default function PortalPage() {
   const { data: user } = useCurrentUser();
   const products = useQuery(trpc.products.list.queryOptions());
   const customerState = useQuery(
-    trpc.billing.getCustomerState.queryOptions(undefined, {
+    trpc.payments.getCustomerState.queryOptions(undefined, {
       enabled: !!user,
     })
   );
@@ -57,7 +56,6 @@ export default function PortalPage() {
   const [cartOpen, setCartOpen] = useState(false);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.priceAmount, 0);
-  const cartPriceIds = cart.map((item) => item.priceId);
 
   const isInCart = useCallback(
     (productId: string) => cart.some((item) => item.id === productId),
@@ -66,7 +64,6 @@ export default function PortalPage() {
 
   const addToCart = useCallback(
     (product: Product) => {
-      if (!product.priceId) return;
       if (cart.some((item) => item.id === product.id)) {
         toast.info("Already in cart");
         return;
@@ -76,7 +73,6 @@ export default function PortalPage() {
         {
           id: product.id,
           name: product.name ?? "",
-          priceId: product.priceId!,
           priceAmount: product.priceAmount ?? 0,
           isRecurring: product.isRecurring,
           recurringInterval: product.recurringInterval,
@@ -100,7 +96,7 @@ export default function PortalPage() {
     setCartOpen(false);
   }, []);
 
-  const checkout = useMutation(trpc.billing.createCheckout.mutationOptions());
+  const checkout = useMutation(trpc.payments.createCheckout.mutationOptions());
 
   const allProducts = (products.data ?? []).filter((p) => !p.isArchived);
 
@@ -117,22 +113,19 @@ export default function PortalPage() {
   }, [allProducts]);
 
   const getProductStatus = useMemo(() => {
-    const subscribedPriceIds = customerState.data?.subscribedPriceIds ?? [];
+    const subscribedProductIds = customerState.data?.subscribedProductIds ?? [];
     const paidOrders = customerState.data?.paidOrders ?? [];
-    const paidInvoicePriceIds = customerState.data?.paidInvoicePriceIds ?? [];
 
     return (product: Product): ProductStatus => {
-      if (product.priceId && subscribedPriceIds.includes(product.priceId)) {
+      if (subscribedProductIds.includes(product.id)) {
         return "subscribed";
       }
 
       const hasPaidOrder = paidOrders.some(
-        (o) => o.productId === product.id || o.priceId === product.priceId
+        (o) => o.productId === product.id
       );
-      const hasPaidInvoice =
-        product.priceId && paidInvoicePriceIds.includes(product.priceId);
 
-      if (hasPaidOrder || hasPaidInvoice) return "purchased";
+      if (hasPaidOrder) return "purchased";
 
       return null;
     };
@@ -399,9 +392,8 @@ export default function PortalPage() {
                   onClick={() =>
                     checkout.mutate(
                       {
-                        priceIds: cartPriceIds,
+                        productId: cart[0]?.id ?? "",
                         successUrl: window.location.href,
-                        cancelUrl: window.location.href,
                       },
                       {
                         onSuccess: (data) => {
@@ -451,7 +443,7 @@ const EachProduct = ({
   } | null;
   const isCustom = !!metadata?.userId;
   const isActive = status !== null;
-  const checkout = useMutation(trpc.billing.createCheckout.mutationOptions());
+  const checkout = useMutation(trpc.payments.createCheckout.mutationOptions());
 
   return (
     <CardAgency.Card
@@ -550,9 +542,8 @@ const EachProduct = ({
               onClick={() =>
                 checkout.mutate(
                   {
-                    priceIds: [product.priceId ?? ""],
+                    productId: product.id,
                     successUrl: window.location.href,
-                    cancelUrl: window.location.href,
                   },
                   {
                     onSuccess: (data) => {

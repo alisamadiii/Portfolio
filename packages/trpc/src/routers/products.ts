@@ -12,7 +12,7 @@ import {
   orders,
   products,
   projectsTypeValues,
-  subscription,
+  subscriptions,
 } from "@workspace/drizzle/schema";
 import type { ProjectType } from "@workspace/drizzle/schema";
 
@@ -140,12 +140,12 @@ export const productsRouter = createTRPCRouter({
         if (activeOrder) return true;
 
         const [activeSub] = await db
-          .select({ id: subscription.id })
-          .from(subscription)
+          .select({ id: subscriptions.id })
+          .from(subscriptions)
           .where(
             and(
-              eq(subscription.referenceId, userId),
-              eq(subscription.status, "active")
+              eq(subscriptions.userId, userId),
+              eq(subscriptions.status, "active")
             )
           )
           .limit(1);

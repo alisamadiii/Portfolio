@@ -1,3 +1,7 @@
+import { OrderBillingReason } from "@polar-sh/sdk/models/components/orderbillingreason.js";
+import { OrderStatus } from "@polar-sh/sdk/models/components/orderstatus.js";
+import { SubscriptionRecurringInterval } from "@polar-sh/sdk/models/components/subscriptionrecurringinterval.js";
+import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -9,7 +13,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import type Stripe from "stripe";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -30,7 +33,6 @@ export const user = pgTable("user", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   metadata: jsonb("metadata").default({}),
-  stripeCustomerId: text("stripe_customer_id"),
 
   // New
   phone: text("phone"),
@@ -84,14 +86,18 @@ export const verification = pgTable("verification", {
   ),
 });
 
-// Local mirror of Stripe products — synced via webhooks
 export const products = pgTable("product", {
-  id: text("id").primaryKey(), // Stripe product ID (prod_xxx)
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
+  trialInterval: text("trial_interval", {
+    enum: ["day", "week", "month", "year"],
+  }),
+  trialIntervalCount: integer("trial_interval_count").default(0),
   popular: boolean("popular").notNull().default(false),
-  priceId: text("price_id"), // Stripe price ID (price_xxx)
-  priceAmount: integer("price_amount").notNull().default(0),
+  priceAmount: integer("price_amount").notNull(),
   priceCurrency: text("price_currency").notNull().default("usd"),
   recurringInterval: text("recurring_interval", {
     enum: ["day", "week", "month", "year"],
@@ -99,73 +105,60 @@ export const products = pgTable("product", {
   isRecurring: boolean("is_recurring").notNull().default(true),
   isArchived: boolean("is_archived").notNull().default(false),
   metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
-// Better Auth Stripe plugin manages this table automatically.
-// Defined here so tRPC routers and admin queries can reference it.
-export const subscription = pgTable("subscription", {
-  id: text("id").primaryKey(),
-  plan: text("plan").notNull(),
-  referenceId: text("reference_id").notNull(),
-  stripeCustomerId: text("stripe_customer_id"),
-  stripeSubscriptionId: text("stripe_subscription_id"),
+export const subscriptions = pgTable("subscription", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  email: text("email").notNull(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("usd"),
+  productId: text("product_id").notNull(),
   status: text("status", {
-    enum: [
-      "active",
-      "canceled",
-      "incomplete",
-      "incomplete_expired",
-      "past_due",
-      "paused",
-      "trialing",
-      "unpaid",
-    ] as const satisfies readonly Stripe.Subscription.Status[],
-  })
-    .notNull()
-    .default("incomplete"),
-  periodStart: timestamp("period_start"),
-  periodEnd: timestamp("period_end"),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-  cancelAt: timestamp("cancel_at"),
-  canceledAt: timestamp("canceled_at"),
-  endedAt: timestamp("ended_at"),
+    enum: Object.values(SubscriptionStatus) as [SubscriptionStatus],
+  }).notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
   trialStart: timestamp("trial_start"),
   trialEnd: timestamp("trial_end"),
-  seats: integer("seats"),
-  totalAmount: integer("total_amount").notNull().default(0),
-  currency: text("currency").notNull().default("usd"),
-  itemCount: integer("item_count").notNull().default(1),
-  billingInterval: text("billing_interval"),
-  stripeScheduleId: text("stripe_schedule_id"),
-  metadata: jsonb("metadata").$type<unknown>().default({}),
+  startedAt: timestamp("started_at"),
+  canceledAt: timestamp("canceled_at"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  recurringInterval: text("recurring_interval", {
+    enum: Object.values(SubscriptionRecurringInterval) as [
+      SubscriptionRecurringInterval,
+    ],
+  }),
+  customerCancellationReason: text("customer_cancellation_reason"),
+  customerCancellationComment: text("customer_cancellation_comment"),
+  metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
 });
 
-
-// One-time purchase records — synced via checkout webhooks
-export const orders = pgTable("orders", {
-  id: text("id").primaryKey(), // PaymentIntent ID (pi_xxx)
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  stripeCustomerId: text("stripe_customer_id").notNull(),
-  productId: text("product_id"),
-  priceId: text("price_id"),
-  amount: integer("amount").notNull().default(0),
-  currency: text("currency").notNull().default("usd"),
+export const orders = pgTable("order", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  email: text("email").notNull(),
+  productId: text("product_id").notNull(),
+  billingName: text("billing_name").notNull(),
+  subscriptionId: text("subscription_id").notNull(),
+  billingReason: text("billing_reason", {
+    enum: Object.values(OrderBillingReason) as [OrderBillingReason],
+  }).notNull(),
+  totalAmount: integer("total_amount").notNull(),
+  invoiceNumber: text("invoice_number").notNull(),
   status: text("status", {
-    enum: ["pending", "paid", "refunded", "partially_refunded", "void"],
-  })
-    .notNull()
-    .default("pending"),
-  refundedAmount: integer("refunded_amount").notNull().default(0),
-  billingReason: text("billing_reason").default("purchase"),
-  stripeSessionId: text("stripe_session_id"),
-  receiptUrl: text("receipt_url"),
-  metadata: jsonb("metadata").$type<unknown>().default({}),
+    enum: Object.values(OrderStatus) as [OrderStatus],
+  }).notNull(),
+  discountAmount: integer("discount_amount").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
 });
 
 export const webhookEvents = pgTable("webhook_events", {

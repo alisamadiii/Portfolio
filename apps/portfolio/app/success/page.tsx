@@ -34,12 +34,12 @@ const Content = () => {
 
   const trpc = useTRPC();
   const checkoutSession = useQuery({
-    ...trpc.billing.verifyCheckout.queryOptions({ sessionId: sessionId || "" }),
+    ...trpc.payments.verifyCheckout.queryOptions({ sessionId: sessionId || "" }),
     enabled: !!sessionId,
   });
 
   useEffect(() => {
-    if (checkoutSession.data?.paymentStatus === "paid") {
+    if (checkoutSession.data?.status === "succeeded") {
       const duration = 15 * 1000;
       const animationEnd = Date.now() + duration;
       const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
@@ -94,7 +94,7 @@ const Content = () => {
     );
   }
 
-  return checkoutSession.data?.paymentStatus === "paid" ? (
+  return checkoutSession.data?.status === "succeeded" ? (
     <div className="flex min-h-svh flex-col items-center justify-center gap-2">
       <SuccessPurchase />
     </div>

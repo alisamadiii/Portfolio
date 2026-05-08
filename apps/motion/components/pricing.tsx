@@ -57,9 +57,8 @@ export function Pricing() {
               className="w-full"
               onClick={() =>
                 checkout.mutate({
-                  priceIds: [product.data?.priceId || ""],
+                  productId: product.data?.id || "",
                   successUrl: urls.motion + pathname,
-                  cancelUrl: urls.motion + pathname,
                 })
               }
             >
