@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import {
+  ArrowRight,
   ChevronDown,
   ChevronRight,
   CreditCard,
@@ -119,7 +121,9 @@ function SubscriptionDetailsPanel({
               isCanceling={!!(sub.cancelAtPeriodEnd || sub.canceledAt)}
             />
             <span className="capitalize">
-              {sub.cancelAtPeriodEnd || sub.canceledAt ? "canceling" : sub.status}
+              {sub.cancelAtPeriodEnd || sub.canceledAt
+                ? "canceling"
+                : sub.status}
             </span>
           </div>
         </div>
@@ -127,7 +131,9 @@ function SubscriptionDetailsPanel({
           <p className="text-muted-foreground text-xs">Auto-Renewal</p>
           <Badge
             variant={
-              sub.cancelAtPeriodEnd || sub.canceledAt ? "destructive" : "default"
+              sub.cancelAtPeriodEnd || sub.canceledAt
+                ? "destructive"
+                : "default"
             }
             className="mt-0.5"
           >
@@ -282,7 +288,9 @@ export default function BillingPage() {
                         isCanceling={isCanceling}
                       />
                       <span className="max-w-[140px] truncate font-medium">
-                        {row.original.productName || row.original.productId || "—"}
+                        {row.original.productName ||
+                          row.original.productId ||
+                          "—"}
                       </span>
                     </div>
                   );
@@ -360,13 +368,24 @@ export default function BillingPage() {
               const sub = row.original;
               if (!sub.id) return null;
               return (
-                <SubscriptionDetailsPanel
-                  subscriptionId={sub.id}
-                  sub={sub}
-                />
+                <SubscriptionDetailsPanel subscriptionId={sub.id} sub={sub} />
               );
             }}
           />
+        )}
+        {user?.user.stripeCustomerId && (
+          <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+            <p className="text-muted-foreground text-sm">
+              You have an agency account. View your Stripe-managed subscriptions
+              and invoices on the Agency page.
+            </p>
+            <Button variant="ghost" size="sm" className="shrink-0 gap-1.5" asChild>
+              <Link href="/agency">
+                Agency
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -415,10 +434,7 @@ export default function BillingPage() {
                     <span className={isRefund ? "text-destructive" : ""}>
                       {isRefund
                         ? `-${formatCurrency(Math.abs(row.original.totalAmount), "usd")}`
-                        : formatCurrency(
-                            row.original.totalAmount,
-                            "usd"
-                          )}
+                        : formatCurrency(row.original.totalAmount, "usd")}
                     </span>
                   );
                 },
@@ -486,7 +502,10 @@ export default function BillingPage() {
                 header: "Price",
                 cell: ({ row }) => (
                   <span className="text-sm">
-                    {formatCurrency(row.original.priceAmount, row.original.priceCurrency)}
+                    {formatCurrency(
+                      row.original.priceAmount,
+                      row.original.priceCurrency
+                    )}
                   </span>
                 ),
               },

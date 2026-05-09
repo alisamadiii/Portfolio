@@ -21,23 +21,13 @@ import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
+import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 // ─── Types ──────────────────────────────────────────────────────
 
-type StripeSubscription = {
-  id: string;
-  status: string;
-  productName: string | null;
-  amount: number;
-  currency: string;
-  interval: string | null;
-  currentPeriodEnd: number;
-  cancelAtPeriodEnd: boolean;
-  canceledAt: number | null;
-  trialEnd: number | null;
-  created: number;
-};
+type StripeSubscription =
+  RouterOutputs["payments"]["getStripeSubscriptions"][number];
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -51,7 +41,10 @@ const STATUS_COLORS: Record<string, string> = {
   incomplete_expired: "bg-gray-400",
 };
 
-const INVOICE_STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
+const INVOICE_STATUS_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive"
+> = {
   paid: "default",
   open: "secondary",
   void: "destructive",
@@ -136,9 +129,7 @@ function SubscriptionDetailsPanel({ sub }: { sub: StripeSubscription }) {
         {sub.trialEnd && (
           <div>
             <p className="text-muted-foreground text-xs">Trial Ends</p>
-            <span>
-              {format(new Date(sub.trialEnd * 1000), "MMM d, yyyy")}
-            </span>
+            <span>{format(new Date(sub.trialEnd * 1000), "MMM d, yyyy")}</span>
           </div>
         )}
       </div>
@@ -153,15 +144,23 @@ export default function AgencyPage() {
   const { data: currentUser } = useCurrentUser();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  const { data: subsData, isPending: subsLoading } = useQuery(
+  const {
+    data: subsData,
+    isFetching: subsLoading,
+    error: subsError,
+  } = useQuery(
     trpc.payments.getStripeSubscriptions.queryOptions(undefined, {
-      enabled: !!currentUser,
+      enabled: !!currentUser?.user.stripeCustomerId,
     })
   );
 
-  const { data: invoicesData, isPending: invoicesLoading } = useQuery(
+  const {
+    data: invoicesData,
+    isFetching: invoicesLoading,
+    error: invoicesError,
+  } = useQuery(
     trpc.payments.getStripeInvoices.queryOptions(undefined, {
-      enabled: !!currentUser,
+      enabled: !!currentUser?.user.stripeCustomerId,
     })
   );
 
@@ -178,10 +177,47 @@ export default function AgencyPage() {
     });
   };
 
-  const hasCustomer = subsData?.hasCustomer ?? false;
+  // Still loading — show nothing until we know
+  if (subsLoading || invoicesLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Agency</h1>
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-14 w-full rounded-lg" />
+          <Skeleton className="h-14 w-full rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (subsError || invoicesError) {
+    const error = subsError ?? invoicesError!;
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Agency</h1>
+        </div>
+        <div className="border-destructive/50 bg-destructive/5 flex flex-col items-center justify-center rounded-xl border py-12 text-center">
+          <div className="max-w-sm space-y-3">
+            <h2 className="text-lg font-semibold">Something went wrong</h2>
+            <p className="text-muted-foreground text-sm">{error.message}</p>
+            {"data" in error && error.data && (
+              <p className="text-destructive font-mono text-xs">
+                {(error.data as { code?: string }).code ?? "UNKNOWN_ERROR"}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // No Stripe customer — show contact UI
-  if (!subsLoading && !invoicesLoading && !hasCustomer) {
+  if (!currentUser?.user.stripeCustomerId) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
@@ -244,7 +280,7 @@ export default function AgencyPage() {
             <Skeleton className="h-14 w-full rounded-lg" />
             <Skeleton className="h-14 w-full rounded-lg" />
           </div>
-        ) : (subsData?.subscriptions.length ?? 0) === 0 ? (
+        ) : (subsData?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
             <p className="text-muted-foreground text-sm">
               No subscriptions found
@@ -339,7 +375,7 @@ export default function AgencyPage() {
                 },
               },
             ]}
-            data={subsData?.subscriptions ?? []}
+            data={subsData ?? []}
             expandedRows={expandedRows}
             renderExpandedRow={(row) => (
               <SubscriptionDetailsPanel sub={row.original} />
@@ -357,7 +393,7 @@ export default function AgencyPage() {
             <Skeleton className="h-14 w-full rounded-lg" />
             <Skeleton className="h-14 w-full rounded-lg" />
           </div>
-        ) : (invoicesData?.invoices.length ?? 0) === 0 ? (
+        ) : (invoicesData?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
             <p className="text-muted-foreground text-sm">No invoices found</p>
           </div>
@@ -391,7 +427,9 @@ export default function AgencyPage() {
                 cell: ({ row }) => {
                   const status = row.original.status ?? "draft";
                   return (
-                    <Badge variant={INVOICE_STATUS_VARIANT[status] ?? "secondary"}>
+                    <Badge
+                      variant={INVOICE_STATUS_VARIANT[status] ?? "secondary"}
+                    >
                       {status}
                     </Badge>
                   );
@@ -437,7 +475,7 @@ export default function AgencyPage() {
                 },
               },
             ]}
-            data={invoicesData?.invoices ?? []}
+            data={invoicesData ?? []}
           />
         )}
       </div>
@@ -460,16 +498,16 @@ function LegalFooter() {
         infrastructure.
       </p>
       <p className="text-muted-foreground text-[11px] leading-relaxed">
-        <span className="font-bold">Please note.</span> This is a fully
-        managed service subscription. The source code, underlying codebase,
-        and all proprietary development assets remain the exclusive
-        intellectual property of AliSamadii.LLC. This subscription does not
-        include ownership, transfer, or distribution of source code. The
-        client is subscribing to a continuous, professionally managed web
-        presence — not a one-time deliverable. Our team handles all technical
-        aspects so you can focus entirely on running your business without
-        worrying about hosting, code, or infrastructure. If you are interested
-        in a custom-built website with full source code ownership, please{" "}
+        <span className="font-bold">Please note.</span> This is a fully managed
+        service subscription. The source code, underlying codebase, and all
+        proprietary development assets remain the exclusive intellectual
+        property of AliSamadii.LLC. This subscription does not include
+        ownership, transfer, or distribution of source code. The client is
+        subscribing to a continuous, professionally managed web presence — not a
+        one-time deliverable. Our team handles all technical aspects so you can
+        focus entirely on running your business without worrying about hosting,
+        code, or infrastructure. If you are interested in a custom-built website
+        with full source code ownership, please{" "}
         <a
           href="mailto:agency@alisamadii.com"
           className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
@@ -483,8 +521,8 @@ function LegalFooter() {
         design assets, and proprietary development work remain the exclusive
         intellectual property of AliSamadii.LLC. Subscribing gives you a
         professionally managed web presence — not ownership of the underlying
-        codebase. If you need full source code ownership, contact us to
-        discuss a custom development project.
+        codebase. If you need full source code ownership, contact us to discuss
+        a custom development project.
       </p>
       <p className="text-muted-foreground text-[11px] leading-relaxed">
         <span className="font-bold">Billing.</span> Subscriptions are billed
@@ -494,9 +532,9 @@ function LegalFooter() {
       </p>
       <p className="text-muted-foreground text-[11px] leading-relaxed">
         <span className="font-bold">Service & support.</span> All maintenance,
-        updates, and minor copy changes are included. Requests are handled on
-        a priority basis depending on your plan. For urgent issues or
-        questions, reach us at{" "}
+        updates, and minor copy changes are included. Requests are handled on a
+        priority basis depending on your plan. For urgent issues or questions,
+        reach us at{" "}
         <a
           href="mailto:agency@alisamadii.com"
           className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
@@ -510,8 +548,7 @@ function LegalFooter() {
         information necessary to provide your services — name, email, billing
         details, and business information you share with us. We do not sell or
         share your data with third parties. All credentials and access
-        information are stored securely and made available to you upon
-        request.
+        information are stored securely and made available to you upon request.
       </p>
       <p className="text-muted-foreground text-[11px]">
         By subscribing, you agree to these terms. For questions, contact{" "}

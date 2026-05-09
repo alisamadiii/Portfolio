@@ -39,6 +39,7 @@ interface FilterUsers {
   page?: number;
   limit?: number;
   sortBy?: "email" | "created" | "banned" | "notifications";
+  filterBy?: "all" | "admin" | "hasStripeCustomer";
   search?: string;
 }
 
@@ -49,10 +50,20 @@ const sortByOptions: FilterUsers["sortBy"][] = [
   "notifications",
 ];
 
+const filterByOptions: { label: string; value: FilterUsers["filterBy"] }[] = [
+  { label: "All Users", value: "all" },
+  { label: "Admins", value: "admin" },
+  { label: "Has Stripe ID", value: "hasStripeCustomer" },
+];
+
 const UsersPage = () => {
   const [sortBy, setSortBy] = useQueryState(
     "sortBy",
     parseAsString.withDefault("created")
+  );
+  const [filterBy, setFilterBy] = useQueryState(
+    "filterBy",
+    parseAsString.withDefault("all")
   );
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -79,11 +90,14 @@ const UsersPage = () => {
       page,
       limit,
       sortBy: sortBy as FilterUsers["sortBy"],
+      filterBy: filterBy as FilterUsers["filterBy"],
       search,
     })
   );
   const { data: usersCount } = useQuery(
-    trpc.users.count.queryOptions()
+    trpc.users.count.queryOptions({
+      filterBy: filterBy as FilterUsers["filterBy"],
+    })
   );
 
   useEffect(() => {
@@ -146,6 +160,33 @@ const UsersPage = () => {
                 data-checked={sortBy === item}
               >
                 <span className="capitalize">{item?.replace("_", " ")}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="font-medium">
+              Filter:{" "}
+              <span className="capitalize">
+                {filterByOptions.find((f) => f.value === filterBy)?.label ??
+                  "All Users"}
+              </span>{" "}
+              <ChevronDown data-arrow />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-40" align="start">
+            {filterByOptions.map((item) => (
+              <DropdownMenuItem
+                key={item.value}
+                onClick={() => {
+                  setFilterBy(item.value as string);
+                  setPage(1);
+                }}
+                className="cursor-pointer text-sm font-medium"
+                data-checked={filterBy === item.value}
+              >
+                {item.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

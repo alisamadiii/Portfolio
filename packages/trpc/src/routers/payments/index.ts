@@ -10,7 +10,6 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
-import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
@@ -18,8 +17,9 @@ import {
   products,
   ProjectType,
   subscriptions,
-  user,
 } from "@workspace/drizzle/schema";
+
+import { stripeRouter } from "./stripe";
 
 export const paymentsRouter = createTRPCRouter({
   getProducts: baseProcedure.query(async () => {
@@ -293,7 +293,6 @@ export const paymentsRouter = createTRPCRouter({
       }
     }),
 
-  // Alias for frontend compatibility
   listOrders: authenticatedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
@@ -364,107 +363,10 @@ export const paymentsRouter = createTRPCRouter({
     return customer;
   }),
 
-  // ── Stripe endpoints (read-only) ────────────────────────────────
+  // Stripe routes (flat-merged)
+  ...stripeRouter._def.procedures,
 
-  getStripeSubscriptions: authenticatedProcedure.query(async ({ ctx }) => {
-    const [row] = await db
-      .select({ stripeCustomerId: user.stripeCustomerId })
-      .from(user)
-      .where(eq(user.id, ctx.session.user.id))
-      .limit(1);
-
-    if (!row?.stripeCustomerId) {
-      return { hasCustomer: false as const, subscriptions: [] };
-    }
-
-    const subs = await stripe.subscriptions.list({
-      customer: row.stripeCustomerId,
-      expand: ["data.items.data.price.product"],
-    });
-
-    const mapped = subs.data.map((sub) => {
-      const item = sub.items.data[0];
-      const product = item?.price?.product;
-      const productName =
-        typeof product === "object" && product && "name" in product
-          ? product.name
-          : null;
-
-      return {
-        id: sub.id,
-        status: sub.status,
-        productName,
-        amount: item?.price?.unit_amount ?? 0,
-        currency: sub.currency,
-        interval: item?.price?.recurring?.interval ?? null,
-        currentPeriodEnd: item?.current_period_end ?? sub.created,
-        cancelAtPeriodEnd: sub.cancel_at_period_end,
-        canceledAt: sub.canceled_at,
-        trialEnd: sub.trial_end,
-        created: sub.created,
-      };
-    });
-
-    return { hasCustomer: true as const, subscriptions: mapped };
-  }),
-
-  getStripeInvoices: authenticatedProcedure.query(async ({ ctx }) => {
-    const [row] = await db
-      .select({ stripeCustomerId: user.stripeCustomerId })
-      .from(user)
-      .where(eq(user.id, ctx.session.user.id))
-      .limit(1);
-
-    if (!row?.stripeCustomerId) {
-      return { hasCustomer: false as const, invoices: [] };
-    }
-
-    const invoices = await stripe.invoices.list({
-      customer: row.stripeCustomerId,
-      limit: 50,
-    });
-
-    const mapped = invoices.data.map((inv) => ({
-      id: inv.id,
-      number: inv.number,
-      status: inv.status,
-      amountPaid: inv.amount_paid,
-      amountDue: inv.amount_due,
-      currency: inv.currency,
-      created: inv.created,
-      hostedInvoiceUrl: inv.hosted_invoice_url,
-      invoicePdf: inv.invoice_pdf,
-    }));
-
-    return { hasCustomer: true as const, invoices: mapped };
-  }),
-
-  createStripePortalSession: authenticatedProcedure
-    .input(z.object({ returnUrl: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const [row] = await db
-        .select({ stripeCustomerId: user.stripeCustomerId })
-        .from(user)
-        .where(eq(user.id, ctx.session.user.id))
-        .limit(1);
-
-      if (!row?.stripeCustomerId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No Stripe customer ID found",
-        });
-      }
-
-      const session = await stripe.billingPortal.sessions.create({
-        customer: row.stripeCustomerId,
-        return_url: input.returnUrl,
-      });
-
-      return { url: session.url };
-    }),
-
-  // ── Admin endpoints ─────────────────────────────────────────────
-
+  // Admin endpoints
   adminListOrders: adminProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {

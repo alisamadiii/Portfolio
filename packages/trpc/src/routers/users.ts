@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { asc, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, isNotNull, or } from "drizzle-orm";
 import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
@@ -114,13 +114,36 @@ export const usersRouter = createTRPCRouter({
           .enum(["email", "created", "banned", "notifications"])
           .optional(),
         search: z.string().optional(),
+        filterBy: z
+          .enum(["all", "admin", "hasStripeCustomer"])
+          .optional(),
       })
     )
     .query(async ({ input }) => {
       try {
-        const { page = 1, limit = 10, sortBy, search } = input;
+        const { page = 1, limit = 10, sortBy, search, filterBy } = input;
 
         const offset = (page - 1) * limit;
+
+        const conditions = [];
+
+        if (search) {
+          conditions.push(
+            or(
+              ilike(user.email, `%${search}%`),
+              ilike(user.name, `%${search}%`)
+            )
+          );
+        }
+
+        if (filterBy === "admin") {
+          conditions.push(eq(user.role, "admin"));
+        } else if (filterBy === "hasStripeCustomer") {
+          conditions.push(isNotNull(user.stripeCustomerId));
+        }
+
+        const where =
+          conditions.length > 0 ? and(...conditions) : undefined;
 
         const users = await db
           .select({
@@ -150,14 +173,7 @@ export const usersRouter = createTRPCRouter({
                 ? desc(user.banned)
                 : desc(user.createdAt)
           )
-          .where(
-            search
-              ? or(
-                  ilike(user.email, `%${search}%`),
-                  ilike(user.name, `%${search}%`)
-                )
-              : undefined
-          );
+          .where(where);
 
         return users;
       } catch (error) {
@@ -170,21 +186,43 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  count: adminProcedure.query(async () => {
-    try {
-      const countResult = await db.select({ count: count() }).from(user);
-      return countResult;
-    } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch users count",
-        cause: error,
-      });
-    }
-  }),
+  count: adminProcedure
+    .input(
+      z
+        .object({
+          filterBy: z
+            .enum(["all", "admin", "hasStripeCustomer"])
+            .optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      try {
+        const filterBy = input?.filterBy;
+
+        const where =
+          filterBy === "admin"
+            ? eq(user.role, "admin")
+            : filterBy === "hasStripeCustomer"
+              ? isNotNull(user.stripeCustomerId)
+              : undefined;
+
+        const countResult = await db
+          .select({ count: count() })
+          .from(user)
+          .where(where);
+        return countResult;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch users count",
+          cause: error,
+        });
+      }
+    }),
 
   adminUpdate: adminProcedure
     .input(
