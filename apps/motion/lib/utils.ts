@@ -52,6 +52,14 @@ function getPackageName(specifier: string): string | null {
  * Skips @workspace/ packages and any name in PACKAGES_TO_IGNORE.
  * e.g. "motion/react" → "motion", "react" → "react".
  */
+/**
+ * Generates an npm install command string from a list of package names.
+ */
+export function generateInstallCommand(packages: { name: string }[]): string {
+  if (packages.length === 0) return "";
+  return `npm install ${packages.map((p) => p.name).join(" ")}`;
+}
+
 export const getPackagesFromCode = (
   code: string,
   ignore: string[] = PACKAGES_TO_IGNORE

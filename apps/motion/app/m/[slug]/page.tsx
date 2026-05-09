@@ -1,11 +1,12 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { animations } from "@/animations/registry";
 import { useQuery } from "@tanstack/react-query";
 import { ReactLenis, useLenis } from "lenis/react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -36,7 +37,10 @@ import { SourceCode } from "@/components/animation-settings/source-code";
 import { LibrariesUsedDialog } from "@/components/libraries-used";
 import { ReportBugLink } from "@/components/report-bug-link";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
+import { UseWithAI } from "@/components/use-with-ai";
 import { UserProfile } from "@/components/user-profile";
+
+const animationKeys = Object.keys(animations);
 
 export default function ComponentPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +55,23 @@ export default function ComponentPage() {
   const refresh = () => setIsRefreshing((prev) => prev + 1);
 
   const { slug } = useParams();
+  const router = useRouter();
   const animation = animations[slug as keyof typeof animations];
+
+  // Prev/next navigation
+  const { prevSlug, nextSlug, prevName, nextName } = useMemo(() => {
+    const idx = animationKeys.indexOf(slug as string);
+    const prev = idx > 0 ? idx - 1 : animationKeys.length - 1;
+    const next = idx < animationKeys.length - 1 ? idx + 1 : 0;
+    return {
+      prevSlug: animationKeys[prev],
+      nextSlug: animationKeys[next],
+      prevName:
+        animations[animationKeys[prev] as keyof typeof animations]?.name,
+      nextName:
+        animations[animationKeys[next] as keyof typeof animations]?.name,
+    };
+  }, [slug]);
 
   useHotkeys("r", () => refresh(), [refresh]);
   useHotkeys("v", () => setIsOpen(!isOpen), [isOpen]);
@@ -62,6 +82,8 @@ export default function ComponentPage() {
     isToggleSettings,
   ]);
   useHotkeys("d", () => setTheme(theme === "dark" ? "light" : "dark"), [theme]);
+  useHotkeys("[", () => router.push(`/m/${prevSlug}`), [prevSlug]);
+  useHotkeys("]", () => router.push(`/m/${nextSlug}`), [nextSlug]);
 
   const trpc = useTRPC();
   useQuery(
@@ -132,6 +154,16 @@ export default function ComponentPage() {
                 </KbdGroup>
               </TooltipContent>
             </Tooltip>
+            {/* <Tooltip>
+              <TooltipTrigger>
+                <UseWithAI>
+                  <Button size="icon-lg" variant="outline">
+                    <Sparkles className="size-5.5" />
+                  </Button>
+                </UseWithAI>
+              </TooltipTrigger>
+              <TooltipContent>Use with AI</TooltipContent>
+            </Tooltip> */}
             <Tooltip>
               <TooltipTrigger>
                 <LibrariesUsedDialog>
@@ -198,6 +230,34 @@ export default function ComponentPage() {
         </div>
 
         <AnimatePresence>{isOpen && <SourceCode />}</AnimatePresence>
+      </div>
+
+      {/* Prev/Next navigation */}
+      <div
+        className={cn(
+          "bg-background/80 fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border px-1 py-1 backdrop-blur-xl",
+          isToggleElements && "hidden"
+        )}
+      >
+        <Link
+          href={`/m/${prevSlug}`}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+        >
+          <ChevronLeft className="size-3.5" />
+          <span className="hidden max-w-[100px] truncate sm:inline">
+            {prevName}
+          </span>
+        </Link>
+        <div className="bg-border h-4 w-px" />
+        <Link
+          href={`/m/${nextSlug}`}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+        >
+          <span className="hidden max-w-[100px] truncate sm:inline">
+            {nextName}
+          </span>
+          <ChevronRight className="size-3.5" />
+        </Link>
       </div>
     </>
   );
