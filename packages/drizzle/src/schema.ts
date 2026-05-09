@@ -38,6 +38,7 @@ export const user = pgTable("user", {
   phone: text("phone"),
   company: text("company"),
   address: text("address"),
+  stripeCustomerId: text("stripe_customer_id"),
 });
 
 export const session = pgTable("session", {

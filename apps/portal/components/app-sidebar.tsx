@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
+  Building2,
   CreditCard,
   HelpCircle,
-  LayoutDashboard,
   LogOut,
   Settings,
 } from "lucide-react";
@@ -55,9 +55,9 @@ const accountPages = [
 
 const agencyPages = [
   {
-    title: "Subscription",
+    title: "Agency",
     url: "/agency",
-    icon: LayoutDashboard,
+    icon: Building2,
   },
 ];
 

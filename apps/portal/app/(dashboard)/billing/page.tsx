@@ -455,6 +455,64 @@ export default function BillingPage() {
           />
         )}
       </div>
+
+      {/* Products */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Products</h2>
+        {getProducts.isPending ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+          </div>
+        ) : (getProducts.data?.filter((p) => !p.isArchived).length ?? 0) ===
+          0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
+            <p className="text-muted-foreground text-sm">No products found</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={[
+              {
+                id: "name",
+                header: "Product",
+                cell: ({ row }) => (
+                  <span className="text-sm font-medium">
+                    {row.original.name}
+                  </span>
+                ),
+              },
+              {
+                id: "price",
+                header: "Price",
+                cell: ({ row }) => (
+                  <span className="text-sm">
+                    {formatCurrency(row.original.priceAmount, row.original.priceCurrency)}
+                  </span>
+                ),
+              },
+              {
+                id: "type",
+                header: "Type",
+                cell: ({ row }) => (
+                  <Badge variant="secondary">
+                    {row.original.isRecurring ? "Recurring" : "One-time"}
+                  </Badge>
+                ),
+              },
+              {
+                id: "interval",
+                header: "Interval",
+                cell: ({ row }) => (
+                  <span className="text-sm capitalize">
+                    {row.original.recurringInterval ?? "—"}
+                  </span>
+                ),
+              },
+            ]}
+            data={getProducts.data?.filter((p) => !p.isArchived) ?? []}
+          />
+        )}
+      </div>
     </div>
   );
 }

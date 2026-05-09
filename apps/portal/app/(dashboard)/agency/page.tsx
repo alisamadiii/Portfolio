@@ -1,571 +1,528 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, ChevronRight, ShoppingCart, Trash2, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { format, formatDistanceToNow } from "date-fns";
+import {
+  ChevronDown,
+  ChevronRight,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { CardAgency } from "@workspace/ui/agency/card-agency";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@workspace/ui/components/accordion";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { DataTable } from "@workspace/ui/custom/data-table";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
-import { cn, formatPrice } from "@workspace/ui/lib/utils";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-type Product = RouterOutputs["products"]["list"][number];
-type ProductStatus = "subscribed" | "purchased" | null;
+// ─── Types ──────────────────────────────────────────────────────
 
-type CartItem = {
+type StripeSubscription = {
   id: string;
-  name: string;
-  priceAmount: number;
-  isRecurring: boolean;
-  recurringInterval: string | null;
+  status: string;
+  productName: string | null;
+  amount: number;
+  currency: string;
+  interval: string | null;
+  currentPeriodEnd: number;
+  cancelAtPeriodEnd: boolean;
+  canceledAt: number | null;
+  trialEnd: number | null;
+  created: number;
 };
 
-export default function PortalPage() {
-  const trpc = useTRPC();
-  const { data: user } = useCurrentUser();
-  const products = useQuery(trpc.products.list.queryOptions());
-  const customerState = useQuery(
-    trpc.payments.getCustomerState.queryOptions(undefined, {
-      enabled: !!user,
-    })
-  );
+// ─── Helpers ────────────────────────────────────────────────────
 
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [cartOpen, setCartOpen] = useState(false);
+const STATUS_COLORS: Record<string, string> = {
+  active: "bg-emerald-500",
+  trialing: "bg-blue-500",
+  past_due: "bg-amber-500",
+  canceled: "bg-red-500",
+  unpaid: "bg-orange-500",
+  incomplete: "bg-yellow-500",
+  incomplete_expired: "bg-gray-400",
+};
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.priceAmount, 0);
+const INVOICE_STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
+  paid: "default",
+  open: "secondary",
+  void: "destructive",
+  uncollectible: "destructive",
+  draft: "secondary",
+};
 
-  const isInCart = useCallback(
-    (productId: string) => cart.some((item) => item.id === productId),
-    [cart]
-  );
+const formatCurrency = (amount: number, currency: string = "usd") =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
 
-  const addToCart = useCallback(
-    (product: Product) => {
-      if (cart.some((item) => item.id === product.id)) {
-        toast.info("Already in cart");
-        return;
-      }
-      setCart((prev) => [
-        ...prev,
-        {
-          id: product.id,
-          name: product.name ?? "",
-          priceAmount: product.priceAmount ?? 0,
-          isRecurring: product.isRecurring,
-          recurringInterval: product.recurringInterval,
-        },
-      ]);
-      toast.success(`${product.name} added to cart`);
-    },
-    [cart]
-  );
+// ─── StatusDot ──────────────────────────────────────────────────
 
-  const removeFromCart = useCallback((productId: string) => {
-    setCart((prev) => {
-      const next = prev.filter((item) => item.id !== productId);
-      if (next.length === 0) setCartOpen(false);
-      return next;
-    });
-  }, []);
-
-  const clearCart = useCallback(() => {
-    setCart([]);
-    setCartOpen(false);
-  }, []);
-
-  const checkout = useMutation(trpc.payments.createCheckout.mutationOptions());
-
-  const allProducts = (products.data ?? []).filter((p) => !p.isArchived);
-
-  const productsByProject = useMemo(() => {
-    const groups = new Map<string, Product[]>();
-    allProducts.forEach((p) => {
-      const meta = p.metadata as { project?: string; userId?: string };
-      const key = meta?.project ?? "General";
-      const list = groups.get(key) ?? [];
-      list.push(p);
-      groups.set(key, list);
-    });
-    return groups;
-  }, [allProducts]);
-
-  const getProductStatus = useMemo(() => {
-    const subscribedProductIds = customerState.data?.subscribedProductIds ?? [];
-    const paidOrders = customerState.data?.paidOrders ?? [];
-
-    return (product: Product): ProductStatus => {
-      if (subscribedProductIds.includes(product.id)) {
-        return "subscribed";
-      }
-
-      const hasPaidOrder = paidOrders.some(
-        (o) => o.productId === product.id
-      );
-
-      if (hasPaidOrder) return "purchased";
-
-      return null;
-    };
-  }, [customerState.data]);
+function StatusDot({
+  status,
+  isCanceling,
+}: {
+  status: string;
+  isCanceling?: boolean;
+}) {
+  const color =
+    isCanceling && status === "active"
+      ? "bg-amber-500"
+      : (STATUS_COLORS[status] ?? "bg-gray-400");
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Product details</h1>
-        <RequestDialog>
-          <Button>Contact Support</Button>
-        </RequestDialog>
-      </div>
+    <span
+      className={cn("inline-block size-2.5 shrink-0 rounded-full", color)}
+    />
+  );
+}
 
-      {products.isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-14 w-full rounded-md" />
-          <Skeleton className="h-14 w-full rounded-md" />
-        </div>
-      ) : (
-        <div className="border-border overflow-hidden rounded-lg border">
-          {/* Table header */}
-          <div className="bg-muted/50 grid grid-cols-[40px_1fr_80px] items-center border-b px-4 py-3">
-            <span />
-            <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-              Project
-            </span>
-            <span className="text-muted-foreground text-right text-xs font-semibold tracking-widest uppercase">
-              Products
+// ─── Subscription Details Panel ─────────────────────────────────
+
+function SubscriptionDetailsPanel({ sub }: { sub: StripeSubscription }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
+        <div>
+          <p className="text-muted-foreground text-xs">Status</p>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <StatusDot
+              status={sub.status}
+              isCanceling={sub.cancelAtPeriodEnd || !!sub.canceledAt}
+            />
+            <span className="capitalize">
+              {sub.cancelAtPeriodEnd || sub.canceledAt
+                ? "canceling"
+                : sub.status}
             </span>
           </div>
-
-          <Accordion
-            type="multiple"
-            defaultValue={
-              productsByProject.size > 0
-                ? [Array.from(productsByProject.keys())[0]]
-                : []
-            }
-          >
-            {Array.from(productsByProject.entries()).map(
-              ([project, projectProducts], idx) => (
-                <AccordionItem
-                  key={project}
-                  value={project}
-                  className={cn(
-                    "border-none",
-                    idx < productsByProject.size - 1 && "border-border border-b"
-                  )}
-                >
-                  <AccordionTrigger className="grid grid-cols-[40px_1fr_80px] items-center px-4 py-3 hover:no-underline [&[data-state=open]_[data-arrow]]:rotate-90 [&>svg:last-child]:hidden">
-                    <ChevronRight data-arrow="" className="text-muted-foreground size-4 transition-transform duration-200" />
-                    <span className="text-sm font-medium">{project}</span>
-                    <span className="text-muted-foreground text-right text-sm tabular-nums">
-                      {projectProducts.length}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="bg-muted/30 px-4">
-                    <div className="grid grid-cols-1 gap-4 py-4 lg:grid-cols-2">
-                      {projectProducts.map((product) => (
-                        <EachProduct
-                          key={product.id}
-                          product={product}
-                          status={getProductStatus(product)}
-                          inCart={isInCart(product.id)}
-                          onAddToCart={addToCart}
-                          onRemoveFromCart={removeFromCart}
-                        />
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )
-            )}
-          </Accordion>
         </div>
-      )}
-
-      {/* Custom product request */}
-      <div className="space-y-3">
-        <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-          Custom Product
-        </h2>
-        <CardAgency.Card className="gap-4 p-5">
-          <div className="flex flex-1 flex-col justify-between gap-6">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-base leading-snug font-bold">
-                Custom Product
-              </h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Need something specific? Request a unique plan tailored to your
-                business — custom services, pricing, and scope.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <RequestDialog defaultSubject="Request a Custom Product">
-                <p className="text-primary cursor-pointer text-sm font-medium underline underline-offset-4">
-                  Request a custom or unique product &rarr;
-                </p>
-              </RequestDialog>
-              <a
-                href="https://alisamadii.com/blog/services"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4 transition-colors"
-              >
-                Learn more about our services &rarr;
-              </a>
-            </div>
+        <div>
+          <p className="text-muted-foreground text-xs">Auto-Renewal</p>
+          <Badge
+            variant={sub.cancelAtPeriodEnd ? "destructive" : "default"}
+            className="mt-0.5"
+          >
+            {sub.cancelAtPeriodEnd ? "Off" : "On"}
+          </Badge>
+        </div>
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-xs">Subscription ID</p>
+          <span className="text-muted-foreground block truncate font-mono text-xs">
+            {sub.id}
+          </span>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-xs">Billing Interval</p>
+          <span className="capitalize">{sub.interval ?? "—"}</span>
+        </div>
+        {sub.canceledAt && (
+          <div>
+            <p className="text-muted-foreground text-xs">Canceled At</p>
+            <span>
+              {format(new Date(sub.canceledAt * 1000), "MMM d, yyyy")}
+            </span>
           </div>
-        </CardAgency.Card>
-      </div>
-
-      <div className="border-border/50 mt-4 space-y-4 border-t pt-8">
-        <p className="text-muted-foreground text-[11px] leading-relaxed">
-          <span className="font-bold">AliSamadii.LLC</span> is a software
-          development and digital services company based in Portland, OR. All
-          plans are fully managed — we handle your website, hosting, domain, and
-          email end-to-end so you never have to deal with technical
-          infrastructure.
-        </p>
-        <p className="text-muted-foreground text-[11px] leading-relaxed">
-          <span className="font-bold">Please note.</span> This is a fully
-          managed service subscription. The source code, underlying codebase,
-          and all proprietary development assets remain the exclusive
-          intellectual property of AliSamadii.LLC. This subscription does not
-          include ownership, transfer, or distribution of source code. The
-          client is subscribing to a continuous, professionally managed web
-          presence — not a one-time deliverable. Our team handles all technical
-          aspects so you can focus entirely on running your business without
-          worrying about hosting, code, or infrastructure. If you are interested
-          in a custom-built website with full source code ownership, please{" "}
-          <a
-            href="mailto:agency@alisamadii.com"
-            className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-          >
-            reach out
-          </a>{" "}
-          to discuss a separate development project tailored to your needs.
-        </p>
-        <p className="text-muted-foreground text-[11px] leading-relaxed">
-          <span className="font-bold">Ownership & IP.</span> All source code,
-          design assets, and proprietary development work remain the exclusive
-          intellectual property of AliSamadii.LLC. Subscribing gives you a
-          professionally managed web presence — not ownership of the underlying
-          codebase. If you need full source code ownership, contact us to
-          discuss a custom development project.
-        </p>
-        <p className="text-muted-foreground text-[11px] leading-relaxed">
-          <span className="font-bold">Billing.</span> Subscriptions are billed
-          monthly and renew automatically. You can cancel at any time —
-          cancellation takes effect at the end of the current billing period. No
-          refunds are issued for partial months.
-        </p>
-        <p className="text-muted-foreground text-[11px] leading-relaxed">
-          <span className="font-bold">Service & support.</span> All maintenance,
-          updates, and minor copy changes are included. Requests are handled on
-          a priority basis depending on your plan. For urgent issues or
-          questions, reach us at{" "}
-          <a
-            href="mailto:agency@alisamadii.com"
-            className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-          >
-            agency@alisamadii.com
-          </a>
-          .
-        </p>
-        <p className="text-muted-foreground text-[11px] leading-relaxed">
-          <span className="font-bold">Privacy.</span> We collect only the
-          information necessary to provide your services — name, email, billing
-          details, and business information you share with us. We do not sell or
-          share your data with third parties. All credentials and access
-          information are stored securely and made available to you upon
-          request.
-        </p>
-        <p className="text-muted-foreground text-[11px]">
-          By subscribing, you agree to these terms. For questions, contact{" "}
-          <a
-            href="mailto:agency@alisamadii.com"
-            className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-          >
-            agency@alisamadii.com
-          </a>
-          .
-        </p>
-      </div>
-
-      {/* Floating cart button */}
-      <AnimatePresence>
-        {cart.length > 0 && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-40"
-          >
-            <Button
-              size="lg"
-              onClick={() => setCartOpen(true)}
-              className="gap-2 rounded-full shadow-lg"
-            >
-              <ShoppingCart className="size-4" />
-              Cart ({cart.length})
-            </Button>
-          </motion.div>
         )}
-      </AnimatePresence>
-
-      {/* Cart sheet */}
-      <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-        <SheetContent side="right" className="flex flex-col">
-          <SheetHeader>
-            <SheetTitle>Your Cart</SheetTitle>
-            <SheetDescription>
-              {cart.length === 0
-                ? "No items yet"
-                : `${cart.length} ${cart.length === 1 ? "item" : "items"}`}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 space-y-3 overflow-y-auto py-4">
-            {cart.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 rounded-lg border p-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{item.name}</p>
-                  <p className="text-muted-foreground text-xs">
-                    ${formatPrice(item.priceAmount)}
-                    {item.recurringInterval && `/${item.recurringInterval}`}
-                  </p>
-                </div>
-                <button
-                  onClick={() => removeFromCart(item.id)}
-                  className="text-muted-foreground hover:text-destructive shrink-0 transition-colors"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-            ))}
-
-            {cart.length === 0 && (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                Your cart is empty
-              </p>
-            )}
+        {sub.trialEnd && (
+          <div>
+            <p className="text-muted-foreground text-xs">Trial Ends</p>
+            <span>
+              {format(new Date(sub.trialEnd * 1000), "MMM d, yyyy")}
+            </span>
           </div>
-
-          {cart.length > 0 && (
-            <SheetFooter className="border-t pt-4">
-              <div className="w-full space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Total</span>
-                  <span className="text-lg font-bold tabular-nums">
-                    ${formatPrice(cartTotal)}
-                  </span>
-                </div>
-                <Button
-                  className="w-full"
-                  size="lg"
-                  isLoading={checkout.isPending}
-                  onClick={() =>
-                    checkout.mutate(
-                      {
-                        productId: cart[0]?.id ?? "",
-                        successUrl: window.location.href,
-                      },
-                      {
-                        onSuccess: (data) => {
-                          if (data?.url) window.location.href = data.url;
-                        },
-                        onError: (error) => {
-                          toast.error(error.message);
-                        },
-                      }
-                    )
-                  }
-                >
-                  Checkout ({cart.length} {cart.length === 1 ? "item" : "items"})
-                </Button>
-                <button
-                  onClick={clearCart}
-                  className="text-muted-foreground hover:text-foreground w-full text-center text-xs underline underline-offset-2 transition-colors"
-                >
-                  Clear cart
-                </button>
-              </div>
-            </SheetFooter>
-          )}
-        </SheetContent>
-      </Sheet>
+        )}
+      </div>
     </div>
   );
 }
 
-const EachProduct = ({
-  product,
-  status,
-  inCart,
-  onAddToCart,
-  onRemoveFromCart,
-}: {
-  product: Product;
-  status: ProductStatus;
-  inCart: boolean;
-  onAddToCart: (product: Product) => void;
-  onRemoveFromCart: (productId: string) => void;
-}) => {
+// ─── Page ───────────────────────────────────────────────────────
+
+export default function AgencyPage() {
   const trpc = useTRPC();
-  const metadata = product.metadata as {
-    userId?: string;
-    project?: string;
-  } | null;
-  const isCustom = !!metadata?.userId;
-  const isActive = status !== null;
-  const checkout = useMutation(trpc.payments.createCheckout.mutationOptions());
+  const { data: currentUser } = useCurrentUser();
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const { data: subsData, isPending: subsLoading } = useQuery(
+    trpc.payments.getStripeSubscriptions.queryOptions(undefined, {
+      enabled: !!currentUser,
+    })
+  );
+
+  const { data: invoicesData, isPending: invoicesLoading } = useQuery(
+    trpc.payments.getStripeInvoices.queryOptions(undefined, {
+      enabled: !!currentUser,
+    })
+  );
+
+  const portalMutation = useMutation(
+    trpc.payments.createStripePortalSession.mutationOptions()
+  );
+
+  const toggleRow = (rowId: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId);
+      else next.add(rowId);
+      return next;
+    });
+  };
+
+  const hasCustomer = subsData?.hasCustomer ?? false;
+
+  // No Stripe customer — show contact UI
+  if (!subsLoading && !invoicesLoading && !hasCustomer) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Agency</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
+          <div className="max-w-sm space-y-4">
+            <h2 className="text-lg font-semibold">No account found</h2>
+            <p className="text-muted-foreground text-sm">
+              You don&apos;t have an active agency account yet. Contact us to
+              get set up with a subscription plan.
+            </p>
+            <RequestDialog>
+              <Button size="lg">Contact Support</Button>
+            </RequestDialog>
+          </div>
+        </div>
+        <LegalFooter />
+      </div>
+    );
+  }
 
   return (
-    <CardAgency.Card
-      className={cn(
-        "gap-4 p-5",
-        isActive
-          ? "border-green-500/40 bg-green-500/5 outline outline-2 outline-green-500/40"
-          : inCart
-            ? "border-primary/40 bg-primary/5 outline outline-2 outline-primary/40"
-            : ""
-      )}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-base leading-snug font-bold">
-            {product.name ?? ""}
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            {isActive && (
-              <Badge
-                variant="secondary"
-                className="w-fit gap-1 border-green-500/30 bg-green-500/10 text-green-600"
-              >
-                <Check className="size-3" />
-                {status === "subscribed" ? "Subscribed" : "Purchased"}
-              </Badge>
-            )}
-            {inCart && (
-              <Badge variant="secondary" className="w-fit gap-1">
-                <ShoppingCart className="size-3" />
-                In cart
-              </Badge>
-            )}
-            {isCustom && (
-              <Badge
-                variant="secondary"
-                className={cn(
-                  "w-fit",
-                  isActive &&
-                    "border-green-500/30 bg-green-500/10 text-green-600"
-                )}
-              >
-                Made especially for you
-              </Badge>
-            )}
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-3xl font-black tracking-tighter tabular-nums">
-            ${product.priceAmount ? formatPrice(product.priceAmount) : "N/A"}
-            {product.recurringInterval && (
-              <span className="text-muted-foreground text-sm font-normal tracking-normal">
-                /{product.recurringInterval}
-              </span>
-            )}
-          </p>
-        </div>
+    <div className="space-y-10">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Agency</h1>
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={portalMutation.isPending}
+          onClick={() =>
+            portalMutation.mutate(
+              { returnUrl: window.location.href },
+              {
+                onSuccess: (data) => {
+                  if (data.url) window.open(data.url, "_blank");
+                },
+                onError: (error) => {
+                  toast.error(error.message);
+                },
+              }
+            )
+          }
+        >
+          {portalMutation.isPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <CreditCard className="size-4" />
+          )}
+        </Button>
       </div>
 
-      {product.description && (
-        <div className="text-muted-foreground text-sm whitespace-pre-line">
-          {product.description}
-        </div>
-      )}
-
-      <div className="mt-auto w-full">
-        {isActive ? (
-          <Button variant="outline" size="lg" className="mt-8 w-full" disabled>
-            {status === "subscribed" ? "Subscribed" : "Purchased"}
-          </Button>
-        ) : (
-          <div className="mt-8 flex w-full gap-2">
-            <Button
-              variant={inCart ? "secondary" : "outline"}
-              size="lg"
-              className="flex-1"
-              onClick={() =>
-                inCart
-                  ? onRemoveFromCart(product.id)
-                  : onAddToCart(product)
-              }
-            >
-              {inCart ? (
-                <>
-                  <X className="mr-1 size-4" />
-                  Remove
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="mr-1 size-4" />
-                  Add to Cart
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={() =>
-                checkout.mutate(
-                  {
-                    productId: product.id,
-                    successUrl: window.location.href,
-                  },
-                  {
-                    onSuccess: (data) => {
-                      if (data?.url) window.location.href = data.url;
-                    },
-                    onError: (error) => {
-                      toast.error(error.message);
-                    },
-                  }
-                )
-              }
-              size="lg"
-              className="flex-1"
-              isLoading={checkout.isPending}
-            >
-              {product.recurringInterval === null
-                ? `Buy $${formatPrice(product.priceAmount ?? 0)}`
-                : `Subscribe $${formatPrice(product.priceAmount ?? 0)}`}
-            </Button>
+      {/* Subscriptions */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Subscriptions</h2>
+        {subsLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
           </div>
+        ) : (subsData?.subscriptions.length ?? 0) === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
+            <p className="text-muted-foreground text-sm">
+              No subscriptions found
+            </p>
+          </div>
+        ) : (
+          <DataTable
+            columns={[
+              {
+                id: "plan",
+                header: "Plan",
+                cell: ({ row }) => {
+                  const isCanceling =
+                    row.original.cancelAtPeriodEnd || !!row.original.canceledAt;
+                  return (
+                    <div className="flex items-center gap-2.5">
+                      <StatusDot
+                        status={row.original.status}
+                        isCanceling={isCanceling}
+                      />
+                      <span className="max-w-[140px] truncate font-medium">
+                        {row.original.productName || "—"}
+                      </span>
+                    </div>
+                  );
+                },
+              },
+              {
+                id: "price",
+                header: "Price",
+                cell: ({ row }) => (
+                  <span className="text-sm">
+                    {formatCurrency(row.original.amount, row.original.currency)}
+                    <span className="text-muted-foreground ml-1 text-xs uppercase">
+                      {row.original.currency}
+                    </span>
+                  </span>
+                ),
+              },
+              {
+                id: "interval",
+                header: "Interval",
+                cell: ({ row }) => (
+                  <span className="capitalize">
+                    {row.original.interval ?? "—"}
+                  </span>
+                ),
+              },
+              {
+                id: "period_end",
+                header: "Next Billing",
+                cell: ({ row }) => {
+                  const end = row.original.currentPeriodEnd;
+                  const date = new Date(end * 1000);
+                  return (
+                    <span className="flex flex-col">
+                      <span className="text-sm">
+                        {format(date, "MMM dd, yyyy")}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {formatDistanceToNow(date, { addSuffix: true })}
+                      </span>
+                    </span>
+                  );
+                },
+              },
+              {
+                id: "actions",
+                header: "",
+                cell: ({ row }) => {
+                  const isExpanded = expandedRows.has(row.id);
+                  return (
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRow(row.id);
+                        }}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
+                        )}
+                        More Info
+                      </Button>
+                    </div>
+                  );
+                },
+              },
+            ]}
+            data={subsData?.subscriptions ?? []}
+            expandedRows={expandedRows}
+            renderExpandedRow={(row) => (
+              <SubscriptionDetailsPanel sub={row.original} />
+            )}
+          />
         )}
       </div>
-    </CardAgency.Card>
+
+      {/* Invoices */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Invoices</h2>
+        {invoicesLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+          </div>
+        ) : (invoicesData?.invoices.length ?? 0) === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
+            <p className="text-muted-foreground text-sm">No invoices found</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={[
+              {
+                id: "number",
+                header: "Invoice",
+                cell: ({ row }) => (
+                  <span className="font-mono text-sm">
+                    {row.original.number || "—"}
+                  </span>
+                ),
+              },
+              {
+                id: "amount",
+                header: "Amount",
+                cell: ({ row }) => (
+                  <span className="text-sm">
+                    {formatCurrency(
+                      row.original.amountPaid,
+                      row.original.currency
+                    )}
+                  </span>
+                ),
+              },
+              {
+                id: "status",
+                header: "Status",
+                cell: ({ row }) => {
+                  const status = row.original.status ?? "draft";
+                  return (
+                    <Badge variant={INVOICE_STATUS_VARIANT[status] ?? "secondary"}>
+                      {status}
+                    </Badge>
+                  );
+                },
+              },
+              {
+                id: "date",
+                header: "Date",
+                cell: ({ row }) =>
+                  format(new Date(row.original.created * 1000), "MMM d, yyyy"),
+              },
+              {
+                id: "actions",
+                header: "",
+                cell: ({ row }) => {
+                  const { hostedInvoiceUrl, invoicePdf } = row.original;
+                  return (
+                    <div className="flex justify-end gap-1">
+                      {hostedInvoiceUrl && (
+                        <Button variant="ghost" size="sm" asChild>
+                          <a
+                            href={hostedInvoiceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="size-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {invoicePdf && (
+                        <Button variant="ghost" size="sm" asChild>
+                          <a
+                            href={invoicePdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <FileText className="size-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  );
+                },
+              },
+            ]}
+            data={invoicesData?.invoices ?? []}
+          />
+        )}
+      </div>
+
+      <LegalFooter />
+    </div>
   );
-};
+}
+
+// ─── Legal Footer ───────────────────────────────────────────────
+
+function LegalFooter() {
+  return (
+    <div className="border-border/50 mt-4 space-y-4 border-t pt-8">
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        <span className="font-bold">AliSamadii.LLC</span> is a software
+        development and digital services company based in Portland, OR. All
+        plans are fully managed — we handle your website, hosting, domain, and
+        email end-to-end so you never have to deal with technical
+        infrastructure.
+      </p>
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        <span className="font-bold">Please note.</span> This is a fully
+        managed service subscription. The source code, underlying codebase,
+        and all proprietary development assets remain the exclusive
+        intellectual property of AliSamadii.LLC. This subscription does not
+        include ownership, transfer, or distribution of source code. The
+        client is subscribing to a continuous, professionally managed web
+        presence — not a one-time deliverable. Our team handles all technical
+        aspects so you can focus entirely on running your business without
+        worrying about hosting, code, or infrastructure. If you are interested
+        in a custom-built website with full source code ownership, please{" "}
+        <a
+          href="mailto:agency@alisamadii.com"
+          className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+        >
+          reach out
+        </a>{" "}
+        to discuss a separate development project tailored to your needs.
+      </p>
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        <span className="font-bold">Ownership & IP.</span> All source code,
+        design assets, and proprietary development work remain the exclusive
+        intellectual property of AliSamadii.LLC. Subscribing gives you a
+        professionally managed web presence — not ownership of the underlying
+        codebase. If you need full source code ownership, contact us to
+        discuss a custom development project.
+      </p>
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        <span className="font-bold">Billing.</span> Subscriptions are billed
+        monthly and renew automatically. You can cancel at any time —
+        cancellation takes effect at the end of the current billing period. No
+        refunds are issued for partial months.
+      </p>
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        <span className="font-bold">Service & support.</span> All maintenance,
+        updates, and minor copy changes are included. Requests are handled on
+        a priority basis depending on your plan. For urgent issues or
+        questions, reach us at{" "}
+        <a
+          href="mailto:agency@alisamadii.com"
+          className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+        >
+          agency@alisamadii.com
+        </a>
+        .
+      </p>
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        <span className="font-bold">Privacy.</span> We collect only the
+        information necessary to provide your services — name, email, billing
+        details, and business information you share with us. We do not sell or
+        share your data with third parties. All credentials and access
+        information are stored securely and made available to you upon
+        request.
+      </p>
+      <p className="text-muted-foreground text-[11px]">
+        By subscribing, you agree to these terms. For questions, contact{" "}
+        <a
+          href="mailto:agency@alisamadii.com"
+          className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+        >
+          agency@alisamadii.com
+        </a>
+        .
+      </p>
+    </div>
+  );
+}

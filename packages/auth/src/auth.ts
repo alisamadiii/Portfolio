@@ -82,6 +82,9 @@ export const auth = betterAuth({
       address: {
         type: "string",
       },
+      stripeCustomerId: {
+        type: "string",
+      },
     },
   },
   socialProviders: {
