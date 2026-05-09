@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -69,6 +73,7 @@ export const Profile = () => {
           <Devices />
         </CardContent>
       </Card>
+      <StripeCustomerId userId={id} value={user?.stripeCustomerId ?? null} />
       <MetadataEditor
         userId={id}
         initialMetadata={userMetadata}
@@ -77,3 +82,59 @@ export const Profile = () => {
     </div>
   );
 };
+
+function StripeCustomerId({
+  userId,
+  value,
+}: {
+  userId: string;
+  value: string | null;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [draft, setDraft] = useState(value ?? "");
+
+  const update = useMutation(
+    trpc.users.adminUpdate.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.users.get.queryKey(userId),
+        });
+        toast.success("Stripe Customer ID updated");
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    })
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Stripe Customer ID</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-3">
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="cus_..."
+            className="font-mono"
+          />
+          <Button
+            disabled={update.isPending || draft === (value ?? "")}
+            isLoading={update.isPending}
+            onClick={() =>
+              update.mutate({
+                id: userId,
+                stripeCustomerId: draft || null,
+              })
+            }
+          >
+            Save
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

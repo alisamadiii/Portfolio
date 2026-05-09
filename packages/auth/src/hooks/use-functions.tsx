@@ -323,8 +323,7 @@ const useLogout = () => {
       allQueries.forEach((query) => {
         const queryKey = query.queryKey;
         // Check if the top-level key is "products"
-        if (!queryKey || queryKey === trpc.products.list.queryKey())
-          return;
+        if (!queryKey || queryKey === trpc.products.list.queryKey()) return;
         queryClient.resetQueries({ queryKey });
       });
     },

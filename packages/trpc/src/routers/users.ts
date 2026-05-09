@@ -197,6 +197,7 @@ export const usersRouter = createTRPCRouter({
           banReason: z.string().optional(),
           role: z.enum(["user", "admin"]).optional(),
           emailVerified: z.boolean().optional(),
+          stripeCustomerId: z.string().nullable().optional(),
         })
         .refine(
           (data) => {

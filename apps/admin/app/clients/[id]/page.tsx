@@ -1,15 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Code, Loader2, Receipt } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Code,
+  Loader2,
+  Pencil,
+  Receipt,
+  X,
+} from "lucide-react";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { formatPrice } from "@workspace/ui/lib/utils";
 
@@ -49,7 +58,7 @@ function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
     <>
       {data?.product && (
         <div className="space-y-2 border-t pt-4">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+          <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Plan Details (Live from Polar)
           </p>
           <div className="rounded-md border">
@@ -64,9 +73,7 @@ function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
               </thead>
               <tbody>
                 <tr className="border-b last:border-b-0">
-                  <td className="px-3 py-2">
-                    {data.product.name}
-                  </td>
+                  <td className="px-3 py-2">{data.product.name}</td>
                   <td className="px-3 py-2">
                     ${(data.amount / 100).toFixed(2)}{" "}
                     <span className="text-muted-foreground uppercase">
@@ -149,7 +156,9 @@ function ClientOrders({ userId }: { userId: string }) {
                 <td className="px-3 py-2">
                   <Badge
                     variant={
-                      order.status === "paid" || order.status === "refunded" ? "default" : "destructive"
+                      order.status === "paid" || order.status === "refunded"
+                        ? "default"
+                        : "destructive"
                     }
                     className="text-[10px]"
                   >
@@ -170,6 +179,103 @@ function ClientOrders({ userId }: { userId: string }) {
         </table>
       </div>
     </CardAgency.Card>
+  );
+}
+
+// ─── Stripe Customer ID ─────────────────────────────────────────
+
+function StripeCustomerIdField({
+  userId,
+  value,
+}: {
+  userId: string;
+  value: string | null;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+
+  const update = useMutation(
+    trpc.users.adminUpdate.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.users.getClientDetail.queryOptions(userId).queryKey,
+        });
+        setEditing(false);
+      },
+    })
+  );
+
+  if (editing) {
+    return (
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground text-xs font-medium">
+            Stripe Customer ID
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="cus_..."
+              className="h-8 font-mono text-sm"
+              autoFocus
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0"
+              disabled={update.isPending}
+              onClick={() =>
+                update.mutate({
+                  id: userId,
+                  stripeCustomerId: draft || null,
+                })
+              }
+            >
+              {update.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Check className="size-3.5" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0"
+              onClick={() => {
+                setDraft(value ?? "");
+                setEditing(false);
+              }}
+            >
+              <X className="size-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-muted-foreground text-xs font-medium">
+          Stripe Customer ID
+        </p>
+        <div className="mt-0.5 flex items-center gap-2">
+          <p className="truncate font-mono text-sm">
+            {value || <span className="text-muted-foreground">Not set</span>}
+          </p>
+          <button
+            onClick={() => setEditing(true)}
+            className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+          >
+            <Pencil className="size-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -278,12 +384,9 @@ export default function ClientDetailPage() {
               label="Canceled At"
               value={formatDate(sub.canceledAt)}
             />
-
           </div>
 
-          {sub.id && (
-            <LivePlanItems subscriptionId={sub.id} />
-          )}
+          {sub.id && <LivePlanItems subscriptionId={sub.id} />}
         </CardAgency.Card>
       ))}
 
@@ -303,6 +406,10 @@ export default function ClientDetailPage() {
           <CardAgency.DetailRow label="Phone" value={user.phone ?? ""} />
           <CardAgency.DetailRow label="Company" value={user.company ?? ""} />
           <CardAgency.DetailRow label="Address" value={user.address ?? ""} />
+          <StripeCustomerIdField
+            userId={id}
+            value={user.stripeCustomerId ?? null}
+          />
           <CardAgency.DetailRow
             label="Joined"
             value={format(new Date(user.createdAt), "MMMM d, yyyy")}
