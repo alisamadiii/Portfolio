@@ -41,6 +41,14 @@ export const user = pgTable("user", {
   stripeCustomerId: text("stripe_customer_id"),
 });
 
+export const userSignals = pgTable("user_signals", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  needsRefresh: boolean("needs_refresh").notNull().default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),

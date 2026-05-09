@@ -5,7 +5,7 @@ import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { subscriptions, user } from "@workspace/drizzle/schema";
+import { subscriptions, user, userSignals } from "@workspace/drizzle/schema";
 
 import {
   adminProcedure,
@@ -22,6 +22,23 @@ export const usersRouter = createTRPCRouter({
 
   getSession: authenticatedProcedure.query(async ({ ctx }) => {
     return ctx.session.user;
+  }),
+
+  checkRefresh: authenticatedProcedure.query(async ({ ctx }) => {
+    const [row] = await db
+      .select({ needsRefresh: userSignals.needsRefresh })
+      .from(userSignals)
+      .where(eq(userSignals.userId, ctx.session.user.id))
+      .limit(1);
+    return { needsRefresh: row?.needsRefresh ?? false };
+  }),
+
+  clearRefresh: authenticatedProcedure.mutation(async ({ ctx }) => {
+    await db
+      .update(userSignals)
+      .set({ needsRefresh: false, updatedAt: new Date() })
+      .where(eq(userSignals.userId, ctx.session.user.id));
+    return { success: true };
   }),
 
   update: authenticatedProcedure
@@ -263,6 +280,15 @@ export const usersRouter = createTRPCRouter({
           .where(eq(user.id, id))
           .returning()
           .then((result) => result[0]);
+
+        // Signal user's session to refresh
+        await db
+          .insert(userSignals)
+          .values({ userId: id, needsRefresh: true, updatedAt: new Date() })
+          .onConflictDoUpdate({
+            target: userSignals.userId,
+            set: { needsRefresh: true, updatedAt: new Date() },
+          });
 
         return updatedUser;
       } catch (error) {

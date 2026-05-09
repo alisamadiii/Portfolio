@@ -9,6 +9,7 @@ import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
+import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
 import { Login } from "@/components/login";
 import { NavbarAdmin } from "@/components/navbar-admin";
@@ -69,9 +70,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       >
         <TRPCReactProvider>
           <Providers>
-            <Suspense>
-              <AdminLayout>{children}</AdminLayout>
-            </Suspense>
+            <SessionRefreshProvider>
+              <Suspense>
+                <AdminLayout>{children}</AdminLayout>
+              </Suspense>
+            </SessionRefreshProvider>
           </Providers>
         </TRPCReactProvider>
       </body>

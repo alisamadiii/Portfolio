@@ -379,7 +379,12 @@ export default function BillingPage() {
               You have an agency account. View your Stripe-managed subscriptions
               and invoices on the Agency page.
             </p>
-            <Button variant="ghost" size="sm" className="shrink-0 gap-1.5" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              asChild
+            >
               <Link href="/agency">
                 Agency
                 <ArrowRight className="size-3.5" />
