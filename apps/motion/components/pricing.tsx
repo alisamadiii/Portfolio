@@ -2,11 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { Check } from "lucide-react";
+import { motion } from "motion/react";
+import { useTheme } from "next-themes";
 
-import { Button } from "@workspace/ui/components/button";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
-import { CircleHalfDashedCheck, CreditCards } from "@workspace/ui/icons";
 import { urls } from "@workspace/ui/lib/company";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCheckout } from "@workspace/auth/hooks/use-payments";
@@ -16,82 +18,140 @@ import { useIsPurchased } from "@/hooks/use-is-purchased";
 
 export function Pricing() {
   const trpc = useTRPC();
-  const product = useQuery(
-    trpc.products.getByProject.queryOptions("MOTION")
-  );
+  const product = useQuery(trpc.products.getByProject.queryOptions("MOTION"));
   const pathname = usePathname();
   const checkout = useCheckout();
   const { data: currentUser } = useCurrentUser();
   const { isPurchased } = useIsPurchased();
+  const { resolvedTheme } = useTheme();
 
-  const isCurrentPlan = isPurchased;
+  const invertedTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const price = product.data?.priceAmount ? product.data.priceAmount / 100 : 0;
 
   return (
-    <div className="container mx-auto flex flex-col items-center px-4 py-16">
-      <div className="bg-muted shadow-card relative flex w-full max-w-2xl flex-col rounded-3xl p-8">
-        <CreditCards className="size-20" />
+    <section
+      className={cn(
+        "bg-background relative mx-4 overflow-hidden rounded-[48px] px-4 py-24 md:mx-8",
+        invertedTheme
+      )}
+    >
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="bg-primary/15 absolute -top-1/4 -right-1/4 h-[500px] w-[500px] rounded-full blur-[120px]" />
+        <div className="bg-primary/10 absolute -bottom-1/4 -left-1/4 h-[400px] w-[400px] rounded-full blur-[120px]" />
+      </div>
 
-        {/* Plan Name */}
-        <h3 className="mt-4 text-xl font-semibold">Motion</h3>
+      {/* Section header */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-64px" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative z-10 mb-12 text-center"
+      >
+        <p className="text-muted-foreground text-sm font-medium tracking-widest uppercase">
+          Pricing
+        </p>
+        <h2 className="text-foreground mt-3 text-2xl font-semibold md:text-3xl">
+          One purchase. Lifetime access
+          <br className="hidden md:block" /> to every animation.
+        </h2>
+        <p className="text-muted-foreground mx-auto mt-3 max-w-md text-sm">
+          No subscriptions. No recurring fees. Pay once and get access to the
+          full library — every component, every update, forever.
+        </p>
+      </motion.div>
 
-        {/* Price Section */}
-        <div className="mt-4">
-          <p className="text-5xl font-bold tracking-tight">
-            ${product.data?.priceAmount ? product.data.priceAmount / 100 : 0}
+      {/* Card with animated gradient border */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-64px" }}
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+        className="border-border relative z-10 mx-auto w-full max-w-lg rounded-4xl border p-px"
+        style={{
+          background:
+            "conic-gradient(from var(--border-angle, 0deg) at 50% 50%, transparent 40%, var(--primary) 50%, var(--primary) 55%, transparent 70%)",
+          animation: "border-rotate 4s linear infinite",
+        }}
+      >
+        <div className="bg-card relative overflow-hidden rounded-[30px] p-8 md:p-10">
+          {/* Price */}
+          <div className="flex items-baseline gap-1">
+            <span className="text-muted-foreground text-2xl font-medium">
+              $
+            </span>
+            <span className="font-display text-foreground text-5xl font-semibold tracking-tight">
+              {price}
+            </span>
+          </div>
+          <p className="text-muted-foreground mt-1.5 text-xs font-medium tracking-wide uppercase">
+            One-time payment
           </p>
-          <p className="text-muted-foreground mt-1 text-sm">one-time payment</p>
-        </div>
 
-        {/* CTA Button */}
-        <div className="mt-6">
-          {isCurrentPlan ? (
-            <Button
-              className="bg-muted text-muted-foreground hover:bg-muted/80 w-full rounded-xl py-6 text-base font-medium"
-              disabled
-            >
-              Current plan
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={() =>
-                checkout.mutate({
-                  productId: product.data?.id || "",
-                  successUrl: urls.motion + pathname,
-                })
-              }
-            >
-              Upgrade to {product.data?.name}
-            </Button>
+          {/* CTA */}
+          <div className="mt-8">
+            {isPurchased ? (
+              <button
+                disabled
+                className="bg-muted text-muted-foreground w-full rounded-xl py-4 text-sm font-medium"
+              >
+                Lifetime access
+              </button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() =>
+                  checkout.mutate({
+                    productId: product.data?.id || "",
+                    successUrl: urls.motion + pathname,
+                  })
+                }
+                className="bg-primary text-primary-foreground w-full cursor-pointer rounded-xl py-4 text-sm font-semibold transition-colors"
+              >
+                Get Motion
+              </motion.button>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-border my-8 border-t" />
+
+          {/* Features */}
+          <p className="text-foreground mb-4 text-xs font-semibold tracking-wide uppercase">
+            What&apos;s included
+          </p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {features.map((feature) => (
+              <div
+                key={feature}
+                className="text-muted-foreground flex items-center gap-2.5 text-sm"
+              >
+                <Check
+                  className="text-primary size-3.5 shrink-0"
+                  strokeWidth={2.5}
+                />
+                <span>{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Loading overlay */}
+          {currentUser && (
+            <PageLoading
+              active={checkout.isPending}
+              name={checkout.isSuccess ? "Redirecting" : "Creating"}
+            />
           )}
         </div>
+      </motion.div>
 
-        {/* Features Section */}
-        <div className="mt-8">
-          <p className="mb-4 text-sm font-semibold">Motion includes:</p>
-          <ul className="space-y-3">
-            {features.map((feature, index) => (
-              <li
-                key={index}
-                className="text-muted-foreground flex items-start gap-3"
-              >
-                <CircleHalfDashedCheck className="size-5 shrink-0" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Loading State */}
-        {currentUser && (
-          <PageLoading
-            active={checkout.isPending}
-            name={checkout.isSuccess ? "Redirecting" : "Creating"}
-          />
-        )}
-      </div>
-    </div>
+      {/* Footer note */}
+      <p className="text-muted-foreground relative z-10 mt-6 text-center text-xs">
+        No credit card required to browse. Pay once, access forever.
+      </p>
+    </section>
   );
 }
 
@@ -101,5 +161,5 @@ const features = [
   "Lifetime access",
   "No recurring fees",
   "No hidden costs",
-  "No credit card required",
+  "Source code included",
 ];

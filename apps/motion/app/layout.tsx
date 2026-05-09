@@ -1,11 +1,12 @@
-import { DM_Serif_Display, Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter, Outfit } from "next/font/google";
 
 import "@workspace/ui/globals.css";
+import "./global.css";
 
 import { Suspense } from "react";
 import { Metadata } from "next";
 
-import { Footer } from "@workspace/ui/components/footer";
+import { MotionFooter } from "@/components/footer";
 import { SuccessPurchaseDialog } from "@workspace/ui/custom/success-purchase-dialog";
 import { Providers } from "@workspace/ui/providers";
 
@@ -13,14 +14,15 @@ import { TRPCReactProvider } from "@workspace/trpc/client";
 
 import { PreviousCustomerBanner } from "@/components/previous-customer-banner";
 
-const fontHeading = DM_Serif_Display({
+const fontDisplay = Outfit({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-heading",
+  weight: ["400", "500", "600"],
+  variable: "--font-display",
 });
 
-const fontSans = Geist({
+const fontSans = Inter({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
 });
 
@@ -58,7 +60,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} ${fontHeading.variable} font-sans antialiased [--primary:#2b7fff]`}
+        className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} font-sans antialiased`}
       >
         <TRPCReactProvider>
           <Providers>
@@ -67,7 +69,7 @@ export default async function RootLayout({
               <SuccessPurchaseDialog project="MOTION" />
               {children}
               <Suspense>
-                <Footer hide={["/m/"]} />
+                <MotionFooter />
               </Suspense>
             </Suspense>
           </Providers>

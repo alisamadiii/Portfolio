@@ -1,0 +1,36 @@
+@theme inline {
+  --font-display: var(--font-display);
+}
+
+:root {
+  --background: #f9fafb;
+}
+
+.light {
+  --primary: #2b7fff;
+}
+
+.dark {
+  --background: black;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+@keyframes border-rotate {
+  0% {
+    --border-angle: 0deg;
+  }
+
+  100% {
+    --border-angle: 360deg;
+  }
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
