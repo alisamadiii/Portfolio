@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,10 +8,9 @@ import { format } from "date-fns";
 import {
   ArrowLeft,
   Check,
-  Code,
+  ExternalLink,
   Loader2,
   Pencil,
-  Receipt,
   X,
 } from "lucide-react";
 
@@ -24,173 +23,20 @@ import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { ClientContactSubmissions } from "@/components/clients/client-contact-submissions";
+import { ClientScopes } from "@/components/clients/client-scopes";
 import { ClientMediaGallery } from "@/components/clients/client-media-gallery";
 import { ClientMetadataEditor } from "@/components/clients/client-metadata-editor";
-import { ShowJSONDialog } from "@/components/show-json-dialog";
-
-// ─── Helpers ────────────────���─────────────────────────────────────
-const formatDate = (date: Date | string | null | undefined) => {
-  if (!date) return "—";
-  return format(new Date(date), "MMM d, yyyy 'at' h:mm a");
-};
-
-function LivePlanItems({ subscriptionId }: { subscriptionId: string }) {
-  const trpc = useTRPC();
-  const { data, isLoading, error } = useQuery(
-    trpc.payments.adminGetSubscriptionDetails.queryOptions(
-      { subscriptionId },
-      { enabled: !!subscriptionId }
-    )
-  );
-
-  if (isLoading) {
-    return (
-      <div className="text-muted-foreground flex items-center gap-2 py-2 text-sm">
-        <Loader2 className="size-4 animate-spin" />
-        Loading plan items...
-      </div>
-    );
-  }
-
-  if (error && !data) return null;
-
-  return (
-    <>
-      {data?.product && (
-        <div className="space-y-2 border-t pt-4">
-          <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            Plan Details (Live from Polar)
-          </p>
-          <div className="rounded-md border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-left">
-                  <th className="px-3 py-2 font-medium">Product</th>
-                  <th className="px-3 py-2 font-medium">Amount</th>
-                  <th className="px-3 py-2 font-medium">Interval</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b last:border-b-0">
-                  <td className="px-3 py-2">{data.product.name}</td>
-                  <td className="px-3 py-2">
-                    ${(data.amount / 100).toFixed(2)}{" "}
-                    <span className="text-muted-foreground uppercase">
-                      {data.currency}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 capitalize">
-                    {data.recurringInterval ?? "One-time"}
-                  </td>
-                  <td className="px-3 py-2 capitalize">{data.status}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ClientOrders({ userId }: { userId: string }) {
-  const trpc = useTRPC();
-  const { data: orders, isLoading } = useQuery(
-    trpc.payments.adminListOrders.queryOptions(
-      { userId },
-      { enabled: !!userId }
-    )
-  );
-
-  if (isLoading) {
-    return (
-      <CardAgency.Card>
-        <CardAgency.Header title="Orders & Purchases" />
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Loader2 className="size-4 animate-spin" />
-          Loading orders...
-        </div>
-      </CardAgency.Card>
-    );
-  }
-
-  if (!orders || orders.length === 0) {
-    return (
-      <CardAgency.Card>
-        <CardAgency.Header title="Orders & Purchases" />
-        <p className="text-muted-foreground text-sm">No orders found.</p>
-      </CardAgency.Card>
-    );
-  }
-
-  return (
-    <CardAgency.Card>
-      <CardAgency.Header title="Orders & Purchases">
-        <Badge variant="secondary">{orders.length}</Badge>
-      </CardAgency.Header>
-      <div className="rounded-md border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-muted-foreground border-b text-left">
-              <th className="px-3 py-2 font-medium">Product</th>
-              <th className="px-3 py-2 font-medium">Amount</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Type</th>
-              <th className="px-3 py-2 font-medium">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border-b last:border-b-0">
-                <td className="px-3 py-2">
-                  {order.productName ?? (
-                    <span className="text-muted-foreground font-mono text-xs">
-                      {order.id.slice(0, 16)}...
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2 font-medium tabular-nums">
-                  ${(order.totalAmount / 100).toFixed(2)}
-                </td>
-                <td className="px-3 py-2">
-                  <Badge
-                    variant={
-                      order.status === "paid" || order.status === "refunded"
-                        ? "default"
-                        : "destructive"
-                    }
-                    className="text-[10px]"
-                  >
-                    {order.status}
-                  </Badge>
-                </td>
-                <td className="text-muted-foreground px-3 py-2 text-xs">
-                  {order.billingReason}
-                </td>
-                <td className="text-muted-foreground px-3 py-2 text-xs">
-                  {order.createdAt
-                    ? format(new Date(order.createdAt), "MMM d, yyyy")
-                    : "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </CardAgency.Card>
-  );
-}
 
 // ─── Stripe Customer ID ─────────────────────────────────────────
 
-function StripeCustomerIdField({
+const StripeCustomerIdField = ({
   userId,
   value,
 }: {
   userId: string;
   value: string | null;
-}) {
+}) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -199,9 +45,7 @@ function StripeCustomerIdField({
   const update = useMutation(
     trpc.users.adminUpdate.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.users.getClientDetail.queryOptions(userId).queryKey,
-        });
+        queryClient.invalidateQueries();
         setEditing(false);
       },
     })
@@ -277,15 +121,201 @@ function StripeCustomerIdField({
       </div>
     </div>
   );
-}
+};
+
+// ─── Stripe Subscriptions ───────────────────────────────────────
+
+const StripeSubscriptions = ({
+  stripeCustomerId,
+}: {
+  stripeCustomerId: string;
+}) => {
+  const trpc = useTRPC();
+  const { data, isLoading } = useQuery(
+    trpc.payments.adminGetStripeSubscriptions.queryOptions({
+      stripeCustomerId,
+    })
+  );
+
+  if (isLoading) {
+    return (
+      <CardAgency.Card>
+        <CardAgency.Header title="Stripe Subscriptions" />
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Loader2 className="size-4 animate-spin" />
+          Loading subscriptions...
+        </div>
+      </CardAgency.Card>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <CardAgency.Card>
+        <CardAgency.Header title="Stripe Subscriptions" />
+        <p className="text-muted-foreground text-sm">No subscriptions found.</p>
+      </CardAgency.Card>
+    );
+  }
+
+  return (
+    <CardAgency.Card>
+      <CardAgency.Header title="Stripe Subscriptions">
+        <Badge variant="secondary">{data.length}</Badge>
+      </CardAgency.Header>
+      <div className="rounded-md border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-muted-foreground border-b text-left">
+              <th className="px-3 py-2 font-medium">Product</th>
+              <th className="px-3 py-2 font-medium">Amount</th>
+              <th className="px-3 py-2 font-medium">Interval</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((sub) => (
+              <tr key={sub.id} className="border-b last:border-b-0">
+                <td className="px-3 py-2">
+                  {sub.productName ?? (
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {sub.id.slice(0, 16)}...
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 font-medium tabular-nums">
+                  ${formatPrice(sub.amount)}{" "}
+                  <span className="text-muted-foreground uppercase">
+                    {sub.currency}
+                  </span>
+                </td>
+                <td className="px-3 py-2 capitalize">
+                  {sub.interval ?? "One-time"}
+                </td>
+                <td className="px-3 py-2">
+                  <Badge
+                    variant={
+                      sub.status === "active" || sub.status === "trialing"
+                        ? "default"
+                        : "destructive"
+                    }
+                    className="text-[10px]"
+                  >
+                    {sub.cancelAtPeriodEnd && sub.status === "active"
+                      ? "canceling"
+                      : sub.status}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardAgency.Card>
+  );
+};
+
+// ─── Stripe Invoices ────────────────────────────────────────────
+
+const StripeInvoices = ({
+  stripeCustomerId,
+}: {
+  stripeCustomerId: string;
+}) => {
+  const trpc = useTRPC();
+  const { data, isLoading } = useQuery(
+    trpc.payments.adminGetStripeInvoices.queryOptions({ stripeCustomerId })
+  );
+
+  if (isLoading) {
+    return (
+      <CardAgency.Card>
+        <CardAgency.Header title="Invoices" />
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Loader2 className="size-4 animate-spin" />
+          Loading invoices...
+        </div>
+      </CardAgency.Card>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <CardAgency.Card>
+        <CardAgency.Header title="Invoices" />
+        <p className="text-muted-foreground text-sm">No invoices found.</p>
+      </CardAgency.Card>
+    );
+  }
+
+  return (
+    <CardAgency.Card>
+      <CardAgency.Header title="Invoices">
+        <Badge variant="secondary">{data.length}</Badge>
+      </CardAgency.Header>
+      <div className="rounded-md border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-muted-foreground border-b text-left">
+              <th className="px-3 py-2 font-medium">Invoice</th>
+              <th className="px-3 py-2 font-medium">Amount</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Date</th>
+              <th className="px-3 py-2 font-medium">PDF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((inv) => (
+              <tr key={inv.id} className="border-b last:border-b-0">
+                <td className="px-3 py-2 font-mono text-xs">
+                  {inv.number ?? inv.id.slice(0, 16)}
+                </td>
+                <td className="px-3 py-2 font-medium tabular-nums">
+                  ${formatPrice(inv.amountPaid)}{" "}
+                  <span className="text-muted-foreground uppercase">
+                    {inv.currency}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <Badge
+                    variant={inv.status === "paid" ? "default" : "destructive"}
+                    className="text-[10px]"
+                  >
+                    {inv.status}
+                  </Badge>
+                </td>
+                <td className="text-muted-foreground px-3 py-2 text-xs">
+                  {format(new Date(inv.created * 1000), "MMM d, yyyy")}
+                </td>
+                <td className="px-3 py-2">
+                  {inv.invoicePdf && (
+                    <a
+                      href={inv.invoicePdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardAgency.Card>
+  );
+};
 
 // ─── Page ───────────────────────────────────────────────────────
+
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const trpc = useTRPC();
 
   const { data, isLoading } = useQuery(
-    trpc.users.getClientDetail.queryOptions(id, { enabled: !!id })
+    trpc.clients.get.queryOptions(id, { enabled: !!id })
   );
 
   if (isLoading) {
@@ -300,8 +330,7 @@ export default function ClientDetailPage() {
 
   if (!data) return null;
 
-  const { user, subscriptions } = data;
-
+  const { user, client, scopes, contactSubmissions } = data;
   const userMetadata = (user.metadata as Record<string, string> | null) ?? {};
 
   return (
@@ -314,90 +343,13 @@ export default function ClientDetailPage() {
         </Link>
       </Button>
 
-      {/* ── Subscriptions ─────────────────────────────────────────── */}
-      {subscriptions.map((sub) => (
-        <CardAgency.Card key={sub.id}>
-          <CardAgency.Header title="Subscription">
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={sub.status === "active" ? "default" : "destructive"}
-              >
-                {sub.status}
-              </Badge>
-              <ShowJSONDialog data={sub} title="Subscription JSON">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 text-xs"
-                >
-                  <Code className="size-3" />
-                  JSON
-                </Button>
-              </ShowJSONDialog>
-            </div>
-          </CardAgency.Header>
-
-          <div className="grid gap-4">
-            {/* ── Identity ── */}
-            <CardAgency.DetailRow label="Subscription ID">
-              <span className="font-mono text-xs">{sub.id}</span>
-            </CardAgency.DetailRow>
-            <CardAgency.DetailRow label="Product">
-              <span className="font-mono text-xs">{sub.productId}</span>
-            </CardAgency.DetailRow>
-            <CardAgency.DetailRow label="User ID">
-              <span className="font-mono text-xs">{sub.userId}</span>
-            </CardAgency.DetailRow>
-
-            {/* ── Billing ── */}
-            <CardAgency.DetailRow label="Amount">
-              <span className="text-xl font-bold tabular-nums">
-                ${formatPrice(sub.amount)}{" "}
-                <span className="text-muted-foreground text-sm font-normal">
-                  {sub.currency?.toUpperCase()}
-                </span>
-              </span>
-            </CardAgency.DetailRow>
-            <CardAgency.DetailRow
-              label="Recurring Interval"
-              value={sub.recurringInterval ?? "One-time"}
-            />
-            <CardAgency.DetailRow
-              label="Cancel at Period End"
-              value={sub.cancelAtPeriodEnd ? "Yes" : "No"}
-            />
-
-            {/* ── Dates ── */}
-            <CardAgency.DetailRow
-              label="Started At"
-              value={formatDate(sub.startedAt)}
-            />
-            <CardAgency.DetailRow
-              label="Trial Start"
-              value={formatDate(sub.trialStart)}
-            />
-            <CardAgency.DetailRow
-              label="Trial End"
-              value={formatDate(sub.trialEnd)}
-            />
-            <CardAgency.DetailRow
-              label="Canceled At"
-              value={formatDate(sub.canceledAt)}
-            />
-          </div>
-
-          {sub.id && <LivePlanItems subscriptionId={sub.id} />}
-        </CardAgency.Card>
-      ))}
-
-      {/* ── Orders & Purchases ─────────────────────────────────── */}
-      <ClientOrders userId={id} />
-
-      {/* ── Client Info ───────────────────────────────────────────── */}
+      {/* ── Client Info ──────────────────────────────────────────── */}
       <CardAgency.Card>
         <CardAgency.Header title="Client Details">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/users/${id}?tab=notifications`}>Notifications</Link>
+            <Link href={`/users/${user.id}?tab=notifications`}>
+              Notifications
+            </Link>
           </Button>
         </CardAgency.Header>
         <div className="grid gap-5">
@@ -407,7 +359,7 @@ export default function ClientDetailPage() {
           <CardAgency.DetailRow label="Company" value={user.company ?? ""} />
           <CardAgency.DetailRow label="Address" value={user.address ?? ""} />
           <StripeCustomerIdField
-            userId={id}
+            userId={user.id}
             value={user.stripeCustomerId ?? null}
           />
           <CardAgency.DetailRow
@@ -417,11 +369,33 @@ export default function ClientDetailPage() {
         </div>
       </CardAgency.Card>
 
+      {/* ── Stripe Subscriptions ─────────────────────────────────── */}
+      {user.stripeCustomerId && (
+        <StripeSubscriptions stripeCustomerId={user.stripeCustomerId} />
+      )}
+
+      {/* ── Stripe Invoices ──────────────────────────────────────── */}
+      {user.stripeCustomerId && (
+        <StripeInvoices stripeCustomerId={user.stripeCustomerId} />
+      )}
+
+      {/* ── Domains ──────────────────────────────────────────────── */}
+      <ClientScopes
+        clientId={client.id}
+        userEmail={user.email}
+      />
+
+      {/* ── Contact Submissions ──────────────────────────────────── */}
+      <ClientContactSubmissions
+        submissions={contactSubmissions}
+        isLoading={false}
+      />
+
       {/* ── Media & Files ────────────────────────────────────────── */}
-      <ClientMediaGallery userId={id} />
+      <ClientMediaGallery userId={user.id} />
 
       {/* ── Custom Fields ─────────────────────────────────────────── */}
-      <ClientMetadataEditor userId={id} initialMetadata={userMetadata} />
+      <ClientMetadataEditor userId={user.id} clientId={client.id} initialMetadata={userMetadata} />
     </div>
   );
 }

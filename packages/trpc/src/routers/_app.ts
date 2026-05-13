@@ -2,25 +2,27 @@ import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import { createTRPCRouter } from "../init";
 import { authRouter } from "./auth";
+import { clientsRouter } from "./clients";
 import { paymentsRouter } from "./payments";
 import { coldEmailsRouter } from "./cold-emails";
 import { filesRouter } from "./files";
 import { notificationRouter } from "./notification";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
-import { tokensRouter } from "./tokens";
+import { scopesRouter } from "./scopes";
 import { usersRouter } from "./users";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   users: usersRouter,
+  clients: clientsRouter,
   products: productsRouter,
   payments: paymentsRouter,
   notification: notificationRouter,
   files: filesRouter,
   sources: sourcesRouter,
   coldEmails: coldEmailsRouter,
-  tokens: tokensRouter,
+  scopes: scopesRouter,
 });
 
 // export type definition of API

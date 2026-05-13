@@ -1,16 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronRight,
-  Loader2,
-  Users,
-} from "lucide-react";
+import { format } from "date-fns";
+import { ArrowRight, CreditCard, Layers, Mail, Receipt, Users } from "lucide-react";
 
 import {
   Avatar,
@@ -27,154 +20,18 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { cn, formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
-import type { RouterOutputs } from "@workspace/trpc/routers/_app";
-
-type Client = RouterOutputs["users"]["getClients"][number];
-
-const STATUS_COLORS: Record<Client["status"], string> = {
-  active: "bg-emerald-500",
-  trialing: "bg-blue-500",
-  past_due: "bg-amber-500",
-  canceled: "bg-red-500",
-  unpaid: "bg-orange-500",
-  incomplete: "bg-yellow-500",
-  incomplete_expired: "bg-gray-400",
-};
-
-function StatusDot({
-  status,
-  isCanceling,
-}: {
-  status: Client["status"];
-  isCanceling?: boolean;
-}) {
-  const color =
-    isCanceling && status === "active"
-      ? "bg-amber-500"
-      : (STATUS_COLORS[status] ?? "bg-gray-400");
-  return (
-    <span
-      className={cn("inline-block size-2 shrink-0 rounded-full", color)}
-    />
-  );
-}
-
-function SubscriptionDetails({
-  subscriptionId,
-  client,
-}: {
-  subscriptionId: string;
-  client: Client;
-}) {
-  const trpc = useTRPC();
-  const { data, isLoading, error } = useQuery(
-    trpc.payments.adminGetSubscriptionDetails.queryOptions(
-      { subscriptionId },
-      { enabled: !!subscriptionId }
-    )
-  );
-
-  return (
-    <div className="space-y-3 border-t pt-3">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-        <div>
-          <p className="text-muted-foreground">Auto-Renewal</p>
-          <Badge
-            variant={
-              client.cancelAtPeriodEnd || client.canceledAt
-                ? "destructive"
-                : "default"
-            }
-            className="mt-0.5 text-[10px]"
-          >
-            {client.cancelAtPeriodEnd || client.canceledAt ? "Off" : "On"}
-          </Badge>
-        </div>
-        <div>
-          <p className="text-muted-foreground">Started At</p>
-          <p className="font-medium">
-            {client.startedAt
-              ? format(new Date(client.startedAt), "MMM d, yyyy")
-              : "—"}
-          </p>
-          {client.startedAt && (
-            <p className="text-muted-foreground text-[10px]">
-              {formatDistanceToNow(new Date(client.startedAt), {
-                addSuffix: true,
-              })}
-            </p>
-          )}
-        </div>
-        {client.canceledAt && (
-          <div>
-            <p className="text-muted-foreground">Canceled At</p>
-            <p className="font-medium">
-              {format(new Date(client.canceledAt), "MMM d, yyyy")}
-            </p>
-          </div>
-        )}
-        <div className="col-span-2">
-          <p className="text-muted-foreground">Subscription ID</p>
-          <p className="text-muted-foreground truncate font-mono text-[10px]">
-            {subscriptionId}
-          </p>
-        </div>
-      </div>
-
-      {isLoading && (
-        <div className="text-muted-foreground flex items-center gap-2 text-xs">
-          <Loader2 className="size-3 animate-spin" />
-          Loading plan items...
-        </div>
-      )}
-
-      {error && !data && (
-        <p className="text-muted-foreground text-xs">
-          Could not load plan details.
-        </p>
-      )}
-
-      {data?.product && (
-        <div className="space-y-1.5">
-          <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">
-            Plan Details
-          </p>
-          <div className="bg-muted flex items-center justify-between rounded-lg px-3 py-2 text-xs">
-            <span className="font-medium">
-              {data.product.name}
-            </span>
-            <span className="text-muted-foreground">
-              ${(data.amount / 100).toFixed(2)}/{data.recurringInterval ?? "once"}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export const ClientList = () => {
   const trpc = useTRPC();
-  const { data, isLoading } = useQuery(trpc.users.getClients.queryOptions());
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  const toggle = (id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const { data, isLoading } = useQuery(trpc.clients.list.queryOptions());
 
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-52 w-full rounded-xl" />
+          <Skeleton key={i} className="h-44 w-full rounded-xl" />
         ))}
       </div>
     );
@@ -184,117 +41,94 @@ export const ClientList = () => {
     return (
       <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-20">
         <Users className="size-8 opacity-40" />
-        <p className="text-sm">No agency clients found</p>
+        <p className="text-sm">No clients yet</p>
       </div>
     );
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {data.map((client) => {
-        const isExpanded =
-          !!client.id && expanded.has(client.id);
-        const isCanceling = !!(
-          client.cancelAtPeriodEnd || client.canceledAt
-        );
-
-        return (
-          <Card
-            key={client.id}
-            className="flex flex-col transition-shadow hover:shadow-md"
-          >
-            <CardHeader className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="size-10 rounded-lg">
-                  <AvatarImage src={client.image ?? ""} />
-                  <AvatarFallback>
-                    {client.name?.charAt(0) ?? "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <CardTitle className="truncate text-lg">
-                    {client.name}
-                  </CardTitle>
+      {data.map((client) => (
+        <Card
+          key={client.id}
+          className="flex flex-col transition-shadow hover:shadow-md"
+        >
+          <CardHeader className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar className="size-10 rounded-lg">
+                <AvatarImage src={client.image ?? ""} />
+                <AvatarFallback>
+                  {client.name?.charAt(0) ?? "?"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <CardTitle className="truncate text-lg">
+                  {client.name}
+                </CardTitle>
+                <p className="text-muted-foreground truncate text-xs">
+                  {client.email}
+                </p>
+                {client.company && (
                   <p className="text-muted-foreground truncate text-xs">
-                    {client.email}
+                    {client.company}
                   </p>
-                  {client.company && (
-                    <p className="text-muted-foreground truncate text-xs">
-                      {client.company}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <StatusDot status={client.status} isCanceling={isCanceling} />
-                <Badge
-                  variant={
-                    client.status === "active" || client.status === "trialing"
-                      ? "default"
-                      : "destructive"
-                  }
-                  className="shrink-0"
-                >
-                  {isCanceling && client.status === "active"
-                    ? "canceling"
-                    : client.status}
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="flex-1 space-y-3">
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold tabular-nums">
-                  ${formatPrice(client.amount)}
-                </span>
-                {client.recurringInterval && (
-                  <span className="text-muted-foreground text-sm">
-                    /{client.recurringInterval}
-                  </span>
                 )}
               </div>
+            </div>
+          </CardHeader>
 
-              {client.startedAt && (
-                <p className="text-muted-foreground text-xs">
-                  Since{" "}
-                  {format(new Date(client.startedAt), "MMM d, yyyy")}
-                </p>
-              )}
+          <CardContent className="flex-1 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex items-center gap-1.5">
+                <Receipt className="text-muted-foreground size-3.5" />
+                <span className="text-sm font-medium tabular-nums">
+                  {client.subscriptionCount}
+                </span>
+                <span className="text-muted-foreground text-xs">subs</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Layers className="text-muted-foreground size-3.5" />
+                <span className="text-sm font-medium tabular-nums">
+                  {client.scopeCount}
+                </span>
+                <span className="text-muted-foreground text-xs">scopes</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Mail className="text-muted-foreground size-3.5" />
+                <span className="text-sm font-medium tabular-nums">
+                  {client.submissionCount}
+                </span>
+                <span className="text-muted-foreground text-xs">msgs</span>
+              </div>
+            </div>
 
-              {isExpanded && client.id && (
-                <SubscriptionDetails
-                  subscriptionId={client.id}
-                  client={client}
-                />
-              )}
-            </CardContent>
+            {client.stripeCustomerId ? (
+              <div className="flex items-center gap-1.5">
+                <CreditCard className="text-muted-foreground size-3.5" />
+                <span className="text-muted-foreground truncate font-mono text-xs">
+                  {client.stripeCustomerId}
+                </span>
+              </div>
+            ) : (
+              <Badge variant="outline" className="text-[10px]">
+                No Stripe ID
+              </Badge>
+            )}
+            <p className="text-muted-foreground text-xs">
+              Added {format(new Date(client.createdAt), "MMM d, yyyy")}
+            </p>
+          </CardContent>
 
-            <CardFooter className="flex items-center justify-between gap-2 border-t pt-4">
-              <Button size="sm" asChild>
-                <Link href={`/clients/${client.userId}`}>
-                  View Details
-                  <ArrowRight className="size-3" />
-                </Link>
-              </Button>
-              {client.id && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1 text-xs"
-                  onClick={() => toggle(client.id)}
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="size-3.5" />
-                  ) : (
-                    <ChevronRight className="size-3.5" />
-                  )}
-                  Plan Info
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        );
-      })}
+          <CardFooter className="border-t pt-4">
+            <Button size="sm" asChild>
+              <Link href={`/clients/${client.id}`}>
+                View Details
+                <ArrowRight className="size-3" />
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
     </div>
   );
 };

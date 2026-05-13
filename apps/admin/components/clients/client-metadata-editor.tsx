@@ -6,9 +6,11 @@ import { MetadataEditor } from "@/components/metadata-editor";
 
 export const ClientMetadataEditor = ({
   userId,
+  clientId,
   initialMetadata,
 }: {
   userId: string;
+  clientId: string;
   initialMetadata: Record<string, string>;
 }) => {
   const trpc = useTRPC();
@@ -16,7 +18,7 @@ export const ClientMetadataEditor = ({
     <MetadataEditor
       userId={userId}
       initialMetadata={initialMetadata}
-      invalidateQueryKey={trpc.users.getClientDetail.queryKey(userId)}
+      invalidateQueryKey={trpc.clients.get.queryKey(clientId)}
     />
   );
 };

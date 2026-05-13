@@ -5,7 +5,7 @@ import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { subscriptions, user, userSignals } from "@workspace/drizzle/schema";
+import { user, userSignals } from "@workspace/drizzle/schema";
 
 import {
   adminProcedure,
@@ -387,90 +387,6 @@ export const usersRouter = createTRPCRouter({
         message:
           error instanceof Error ? error.message : "Failed to delete customer",
         cause: error,
-      });
-    }
-  }),
-
-  // ─── Clients (Admin) ───────────────────────────────────────────
-
-  getClients: adminProcedure.query(async () => {
-    try {
-      const rows = await db
-        .select({
-          id: subscriptions.id,
-          status: subscriptions.status,
-          amount: subscriptions.amount,
-          currency: subscriptions.currency,
-          recurringInterval: subscriptions.recurringInterval,
-          productId: subscriptions.productId,
-          cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
-          startedAt: subscriptions.startedAt,
-          canceledAt: subscriptions.canceledAt,
-          userId: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          company: user.company,
-        })
-        .from(subscriptions)
-        .leftJoin(user, eq(subscriptions.userId, user.id))
-        .orderBy(desc(subscriptions.createdAt));
-
-      return rows.map((row) => ({
-        id: row.id,
-        userId: row.userId,
-        name: row.name ?? null,
-        email: row.email ?? "",
-        image: row.image ?? null,
-        company: row.company ?? null,
-        status: row.status,
-        amount: row.amount,
-        currency: row.currency,
-        recurringInterval: row.recurringInterval,
-        productId: row.productId,
-        cancelAtPeriodEnd: row.cancelAtPeriodEnd,
-        startedAt: row.startedAt,
-        canceledAt: row.canceledAt,
-      }));
-    } catch (error: unknown) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to fetch clients",
-      });
-    }
-  }),
-
-  getClientDetail: adminProcedure.input(z.string()).query(async ({ input }) => {
-    try {
-      const [userRecord] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input))
-        .limit(1);
-
-      if (!userRecord) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-      }
-
-      const subs = await db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.userId, input))
-        .orderBy(desc(subscriptions.createdAt));
-
-      return {
-        user: userRecord,
-        subscriptions: subs,
-      };
-    } catch (error: unknown) {
-      if (error instanceof TRPCError) throw error;
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch client detail",
       });
     }
   }),

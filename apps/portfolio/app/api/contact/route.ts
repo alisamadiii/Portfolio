@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { getIp, isRateLimited } from "@workspace/trpc/middleware/rate-limit";
 import { db } from "@workspace/drizzle/index";
-import { apiTokens, contactSubmissions } from "@workspace/drizzle/schema";
+import {
+  clients,
+  clientScopes,
+  contactSubmissions,
+  type ScopeMetadataMap,
+} from "@workspace/drizzle/schema";
 import { sendEmail } from "@workspace/email";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, x-api-key",
+  "Access-Control-Allow-Headers": "Content-Type",
 };
 
 // --- Validation ---
@@ -32,48 +37,53 @@ export function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Auth — validate token
-    const apiKey = req.headers.get("x-api-key");
+    // 1. Auth — validate origin domain
+    const origin = req.headers.get("origin") || req.headers.get("referer");
 
-    console.log({ apiKey });
-
-    if (!apiKey) {
+    if (!origin) {
       return NextResponse.json(
-        { error: "Authentication failed. Please provide an API key." },
-        { status: 401, headers: corsHeaders }
-      );
-    }
-
-    const [tokenRecord] = await db
-      .select()
-      .from(apiTokens)
-      .where(eq(apiTokens.token, apiKey))
-      .limit(1);
-
-    console.log(tokenRecord);
-
-    if (!tokenRecord) {
-      return NextResponse.json(
-        { error: "Authentication failed. Invalid API key." },
-        { status: 401, headers: corsHeaders }
-      );
-    }
-
-    if (tokenRecord.expiresAt && tokenRecord.expiresAt < new Date()) {
-      return NextResponse.json(
-        { error: "API key has expired. Please contact support." },
-        { status: 401, headers: corsHeaders }
-      );
-    }
-
-    if (!tokenRecord.scopes.includes("contact")) {
-      return NextResponse.json(
-        { error: "API key does not have permission for this endpoint." },
+        { error: "Could not determine request origin." },
         { status: 403, headers: corsHeaders }
       );
     }
 
-    // Usage count incremented after successful email send (below)
+    let hostname: string;
+    try {
+      hostname = new URL(origin).hostname.replace(/^www\./, "");
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid origin header." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
+
+    const [scopeRecord] = await db
+      .select({
+        scopeId: clientScopes.id,
+        metadata: clientScopes.metadata,
+        userId: clients.userId,
+      })
+      .from(clientScopes)
+      .innerJoin(clients, eq(clientScopes.clientId, clients.id))
+      .where(
+        and(
+          eq(clientScopes.type, "contact"),
+          eq(clientScopes.isActive, true),
+          sql`${clientScopes.metadata}->>'domain' = ${hostname}`
+        )
+      )
+      .limit(1);
+
+    if (!scopeRecord) {
+      return NextResponse.json(
+        { error: "This domain is not authorized to submit contact forms." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
+
+    const meta = scopeRecord.metadata as ScopeMetadataMap["contact"];
+    const toEmail = meta.email;
+    const clientUserId = scopeRecord.userId;
 
     // 2. Parse body
     let body: z.infer<typeof bodySchema>;
@@ -118,13 +128,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Insert contact submission
-    const toEmail = tokenRecord.clientEmail;
-    const clientUserId = tokenRecord.clientUserId;
-
     const [submission] = await db
       .insert(contactSubmissions)
       .values({
-        userId: clientUserId ?? null,
+        userId: clientUserId,
         submitterName: body.name,
         submitterEmail: body.email,
         subject: body.subject,
@@ -154,9 +161,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Increment usage count
-    db.update(apiTokens)
-      .set({ usageCount: sql`${apiTokens.usageCount} + 1` })
-      .where(eq(apiTokens.id, tokenRecord.id))
+    db.update(clientScopes)
+      .set({ usageCount: sql`${clientScopes.usageCount} + 1` })
+      .where(eq(clientScopes.id, scopeRecord.scopeId))
       .then(() => {});
 
     return NextResponse.json(

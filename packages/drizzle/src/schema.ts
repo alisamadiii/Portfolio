@@ -317,21 +317,49 @@ export const contactSubmissions = pgTable("contact_submissions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// ─── API Tokens ──────────────────────────────────────────────────
+// ─── Clients ────────────────────────────────────────────────────
 
-export const tokenScopeEnum = pgEnum("token_scope", ["contact"]);
-
-export const apiTokens = pgTable("api_tokens", {
+export const clients = pgTable("clients", {
   id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  token: text("token").notNull().unique(),
-  description: text("description").notNull(),
-  clientEmail: text("client_email").notNull(),
-  clientUserId: text("client_user_id"),
-  scopes: tokenScopeEnum("scopes").array().notNull(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ─── Client Scopes ──────────────────────────────────────────────
+
+export const scopeTypeValues = ["contact"] as const;
+export const scopeTypeEnum = pgEnum("scope_type", scopeTypeValues);
+export type ScopeType = (typeof scopeTypeValues)[number];
+
+type ContactScopeMetadata = {
+  domain: string;
+  email: string;
+  description?: string;
+};
+
+export type ScopeMetadataMap = {
+  contact: ContactScopeMetadata;
+};
+
+export type ScopeMetadata = ScopeMetadataMap[ScopeType];
+
+export const clientScopes = pgTable("client_scopes", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  type: scopeTypeEnum("type").notNull(),
+  metadata: jsonb("metadata").$type<ScopeMetadata>().notNull(),
+  isActive: boolean("is_active").notNull().default(true),
   usageCount: integer("usage_count").notNull().default(0),
-  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
