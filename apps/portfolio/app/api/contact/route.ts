@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     let hostname: string;
     try {
-      hostname = new URL(origin).hostname.replace(/^www\./, "");
+      hostname = new URL(origin).hostname.toLowerCase().replace(/^www\./, "");
     } catch {
       return NextResponse.json(
         { error: "Invalid origin header." },

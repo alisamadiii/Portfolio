@@ -13,9 +13,22 @@ import {
 
 // ─── Type-Safe Metadata Schemas ─────────────────────────────────
 
+const normalizeDomain = (input: string) => {
+  let d = input.toLowerCase().trim();
+  // Strip protocol
+  d = d.replace(/^(https?:\/\/)/, "");
+  // Strip www.
+  d = d.replace(/^www\./, "");
+  // Strip port
+  d = d.replace(/:\d+$/, "");
+  // Strip trailing slashes
+  d = d.replace(/\/+$/, "");
+  return d;
+};
+
 const contactMetadataSchema = z.object({
-  domain: z.string().min(1),
-  email: z.string().email(),
+  domain: z.string().min(1).transform(normalizeDomain),
+  email: z.email(),
   description: z.string().optional(),
 });
 
@@ -25,7 +38,10 @@ const scopeMetadataSchemas = {
 
 // ─── Helpers ────────────────────────────────────────────────────
 
-const validateMetadata = (type: ScopeType, metadata: unknown): ScopeMetadata => {
+const validateMetadata = (
+  type: ScopeType,
+  metadata: unknown
+): ScopeMetadata => {
   const schema = scopeMetadataSchemas[type];
   const result = schema.safeParse(metadata);
   if (!result.success) {

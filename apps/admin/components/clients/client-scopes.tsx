@@ -262,11 +262,7 @@ const AddScopeDialog = ({
                   clientId,
                   type: "contact",
                   metadata: {
-                    domain: domain
-                      .toLowerCase()
-                      .replace(/^(https?:\/\/)/, "")
-                      .replace(/^www\./, "")
-                      .replace(/\/+$/, ""),
+                    domain,
                     email,
                     ...(description ? { description } : {}),
                   },
@@ -386,11 +382,7 @@ const EditScopeDialog = ({
                 {
                   id: scope.id,
                   metadata: {
-                    domain: domain
-                      .toLowerCase()
-                      .replace(/^(https?:\/\/)/, "")
-                      .replace(/^www\./, "")
-                      .replace(/\/+$/, ""),
+                    domain,
                     email,
                     ...(desc ? { description: desc } : {}),
                   },
