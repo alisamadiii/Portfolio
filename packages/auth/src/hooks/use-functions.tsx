@@ -7,10 +7,7 @@ import { authClient } from "@workspace/auth/auth-client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 const useSignup = () => {
-  const router = useRouter();
   const trpc = useTRPC();
-  const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirectUrl");
 
   return useMutation({
     mutationFn: async (values: {
@@ -46,12 +43,8 @@ const useSignup = () => {
       return response;
     },
     onSuccess: () => {
-      router.push(
-        `/verify-email${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`
-      );
-      router.refresh();
-      queryClient.setQueryData(trpc.users.getCurrent.queryKey(), (old) => {
-        return old;
+      queryClient.invalidateQueries({
+        queryKey: trpc.users.getCurrent.queryKey(),
       });
     },
   });
@@ -208,10 +201,9 @@ const useResetPassword = () => {
  * Custom hook for email verification using OTP
  * @returns UseMutationResult for email verification operation
  */
-const useVerifyEmail = () => {
+const useVerifyEmail = (options?: { onSuccess?: () => void }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirectUrl");
   const { data: user } = useCurrentUser();
 
   const trpc = useTRPC();
@@ -238,13 +230,12 @@ const useVerifyEmail = () => {
         };
       });
 
-      if (redirectUrl) {
+      if (options?.onSuccess) {
+        options.onSuccess();
+      } else {
+        const redirectUrl = searchParams.get("redirectUrl") ?? "/";
         setTimeout(() => {
           router.push(redirectUrl);
-        }, 2000);
-      } else {
-        setTimeout(() => {
-          router.push("/");
         }, 2000);
       }
     },

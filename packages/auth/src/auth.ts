@@ -17,7 +17,10 @@ import {
   verification,
   webhookEvents,
 } from "@workspace/drizzle/schema";
-import { sendEmail } from "@workspace/email";
+import { email as emailService } from "@workspace/email";
+import ResetPassword from "@workspace/email/emails/reset-password";
+import MagicLink from "@workspace/email/emails/magic-link";
+import VerifyEmail from "@workspace/email/emails/verify-email";
 
 import {
   createOrder,
@@ -52,8 +55,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url, token }) => {
-      await sendEmail("resetPassword", user.email, {
-        resetPasswordLink: `${url}?token=${token}`,
+      await emailService.send({
+        to: user.email,
+        subject: "Reset your password",
+        react: ResetPassword({ resetPasswordLink: `${url}?token=${token}` }),
       });
     },
   },
@@ -135,11 +140,13 @@ export const auth = betterAuth({
     admin(),
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        const { error } = await sendEmail("magicLink", email, {
-          magicLinkUrl: url,
+        const { error: sendError } = await emailService.send({
+          to: email,
+          subject: "Sign in to your account",
+          react: MagicLink({ magicLinkUrl: url }),
         });
-        if (error) {
-          throw new APIError(403, { message: error });
+        if (sendError) {
+          throw new APIError(403, { message: sendError });
         }
       },
     }),
@@ -149,12 +156,14 @@ export const auth = betterAuth({
         if (type === "sign-in") {
           // Send the OTP for sign in
         } else if (type === "email-verification") {
-          const { error } = await sendEmail("verifyEmail", email, {
-            verificationCode: otp,
+          const { error: sendError } = await emailService.send({
+            to: email,
+            subject: "Verify your email",
+            react: VerifyEmail({ verificationCode: otp }),
           });
 
-          if (error) {
-            throw new APIError(403, { message: error });
+          if (sendError) {
+            throw new APIError(403, { message: sendError });
           }
         } else {
           // Send the OTP for password reset

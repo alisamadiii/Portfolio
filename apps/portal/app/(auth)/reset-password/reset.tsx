@@ -48,12 +48,12 @@ export function ResetPassword({ token }: ResetPasswordProps) {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-2">
+    <div className="flex flex-col gap-2">
       <h1 className="text-3xl font-bold">Password Reset</h1>
 
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="mt-8 flex w-full max-w-sm flex-col gap-4"
+        className="mt-8 flex w-full flex-col gap-4"
       >
         <Controller
           control={form.control}

@@ -10,7 +10,8 @@ import {
   contactSubmissions,
   type ScopeMetadataMap,
 } from "@workspace/drizzle/schema";
-import { sendEmail } from "@workspace/email";
+import { email } from "@workspace/email";
+import ContactMessage from "@workspace/email/emails/contact-message";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -144,12 +145,17 @@ export async function POST(req: NextRequest) {
     // 5. Send email to client
     const subMeta = body.metadata as Record<string, unknown> | undefined;
 
-    const { error: emailError } = await sendEmail("contactMessage", toEmail, {
-      name: body.name,
-      email: body.email,
-      phone: (subMeta?.phone as string) || undefined,
-      message: body.message,
-      metadata: subMeta,
+    const { error: emailError } = await email.send({
+      from: "agency@alisamadii.com",
+      to: toEmail,
+      subject: `${body.name} - AliSamadii LLC`,
+      react: ContactMessage({
+        name: body.name,
+        email: body.email,
+        phone: (subMeta?.phone as string) || undefined,
+        message: body.message,
+        metadata: subMeta,
+      }),
     });
 
     if (emailError) {

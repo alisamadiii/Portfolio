@@ -3,7 +3,8 @@ import { eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import { contactSubmissions, user } from "@workspace/drizzle/schema";
-import { sendEmail } from "@workspace/email";
+import { email } from "@workspace/email";
+import ContactMessage from "@workspace/email/emails/contact-message";
 
 export async function GET(req: NextRequest) {
   // Verify cron secret (Vercel sends this automatically)
@@ -67,12 +68,17 @@ export async function GET(req: NextRequest) {
     for (const submission of client.submissions) {
       const subMeta = submission.metadata as Record<string, unknown> | null;
 
-      await sendEmail("contactMessage", toEmail, {
-        name: submission.submitterName,
-        email: submission.submitterEmail,
-        phone: (subMeta?.phone as string) || undefined,
-        message: submission.message,
-        siteName,
+      await email.send({
+        from: "agency@alisamadii.com",
+        to: toEmail,
+        subject: `${submission.submitterName} - AliSamadii LLC`,
+        react: ContactMessage({
+          name: submission.submitterName,
+          email: submission.submitterEmail,
+          phone: (subMeta?.phone as string) || undefined,
+          message: submission.message,
+          siteName,
+        }),
       });
 
       submissionIds.push(submission.id);

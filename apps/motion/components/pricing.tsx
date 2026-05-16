@@ -68,14 +68,15 @@ export function Pricing() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-64px" }}
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-        className="border-border relative z-10 mx-auto w-full max-w-lg rounded-4xl border p-px"
+        className="relative z-10 mx-auto w-full max-w-lg overflow-hidden rounded-4xl p-px"
         style={{
           background:
             "conic-gradient(from var(--border-angle, 0deg) at 50% 50%, transparent 40%, var(--primary) 50%, var(--primary) 55%, transparent 70%)",
           animation: "border-rotate 4s linear infinite",
+          willChange: "--border-angle",
         }}
       >
-        <div className="bg-card relative overflow-hidden rounded-[30px] p-8 md:p-10">
+        <div className="bg-card relative overflow-hidden rounded-[calc(var(--radius-4xl)-1px)] p-8 md:p-10">
           {/* Price */}
           <div className="flex items-baseline gap-1">
             <span className="text-muted-foreground text-2xl font-medium">

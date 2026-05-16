@@ -30,11 +30,11 @@ function Content() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-2">
+    <div className="flex flex-col gap-2">
       <h1 className="text-3xl font-bold">Welcome Back</h1>
       <p className="text-muted-foreground">Login to get started</p>
 
-      <div className="mt-8 w-full max-w-sm">
+      <div className="mt-8">
         <SignInForm
           onSuccess={handleSuccess}
           onSignUp={() => {

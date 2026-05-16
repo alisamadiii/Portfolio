@@ -60,6 +60,36 @@ export const filesRouter = createTRPCRouter({
       };
     }),
 
+  getPresignedUrl: adminProcedure
+    .input(
+      z.object({
+        fileName: z.string().min(1),
+        contentType: z.string().refine((v) => ALLOWED_TYPES.includes(v), {
+          message: "File type not allowed",
+        }),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { fileName, contentType } = input;
+      const key = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+      const command = new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: key,
+        ContentType: contentType,
+      });
+
+      const presignedUrl = await getSignedUrl(r2, command, {
+        expiresIn: SIGNED_URL_EXPIRY,
+      });
+
+      return {
+        presignedUrl,
+        key,
+        publicUrl: `${R2_PUBLIC_URL}/${key}`,
+      };
+    }),
+
   delete: baseProcedure
     .input(
       z.object({
@@ -76,29 +106,47 @@ export const filesRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  adminDelete: adminProcedure
+    .input(z.string().min(1))
+    .mutation(async ({ input: key }) => {
+      await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+      return { success: true };
+    }),
+
   list: adminProcedure
     .input(
       z.object({
-        prefix: z.string().min(1),
+        search: z.string().optional(),
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(100).optional(),
       })
     )
     .query(async ({ input }) => {
+      const { search, cursor, limit = 15 } = input;
+
       try {
         const command = new ListObjectsV2Command({
           Bucket: R2_BUCKET,
-          Prefix: input.prefix,
+          MaxKeys: limit,
+          ContinuationToken: cursor,
+          Prefix: search ?? undefined,
         });
 
         const response = await r2.send(command);
 
-        return (response.Contents ?? [])
-          .filter((obj) => obj.Key)
+        const files = (response.Contents ?? [])
+          .filter((obj) => obj.Key && !obj.Key.endsWith("/"))
           .map((obj) => ({
             key: obj.Key!,
             size: obj.Size ?? 0,
             lastModified: obj.LastModified?.toISOString() ?? null,
             publicUrl: `${R2_PUBLIC_URL}/${obj.Key}`,
           }));
+
+        return {
+          files,
+          nextCursor: response.NextContinuationToken ?? null,
+        };
       } catch (err) {
         console.error("Failed to list files:", err);
         throw new TRPCError({

@@ -11,7 +11,8 @@ import {
   projectsTypeValues,
   user,
 } from "@workspace/drizzle/schema";
-import { sendEmail } from "@workspace/email/index";
+import { email } from "@workspace/email/index";
+import ClientMessage from "@workspace/email/emails/client-message";
 
 import {
   adminProcedure,
@@ -146,13 +147,18 @@ export const notificationRouter = createTRPCRouter({
         }
       }
 
-      const result = await sendEmail("clientMessage", input.to, {
-        subject: input.subject,
-        message: input.message,
-        clientEmail,
-        originalSubject,
-        originalMessage,
-        referenceId: input.notificationId,
+      const result = await email.send({
+        from: "agency@alisamadii.com",
+        to: input.to,
+        subject: "A message from AliSamadii.LLC",
+        react: ClientMessage({
+          subject: input.subject,
+          message: input.message,
+          clientEmail,
+          originalSubject,
+          originalMessage,
+          referenceId: input.notificationId,
+        }),
       });
 
       if (result.error) {

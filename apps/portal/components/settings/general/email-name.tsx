@@ -1,5 +1,4 @@
 import React from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -29,6 +28,9 @@ import { Input } from "@workspace/ui/components/input";
 import { useResendEmailVerification } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";
 
+import { VerifyEmailDialog } from "@/components/auth/verify-email-dialog";
+import { useNugsVerifyEmail } from "@/hooks/use-nugs";
+
 const schema = z.object({
   name: z.string().min(1, {
     message: "Name is required",
@@ -42,7 +44,7 @@ export const EmailName = () => {
   const { data: user } = useCurrentUser();
   const updateUser = useUpdateUser();
   const verifyEmail = useResendEmailVerification();
-  const router = useRouter();
+  const { setIsOpen, setEmail } = useNugsVerifyEmail();
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -123,31 +125,35 @@ export const EmailName = () => {
         </form>
 
         {!user?.user.emailVerified && (
-          <Alert variant="destructive" className="mt-6">
-            <AlertTitle>Email not verified</AlertTitle>
-            <AlertDescription>
-              Your email is not verified. Please verify your email.
-            </AlertDescription>
-            <Button
-              variant={"destructive"}
-              className="mt-2 w-48"
-              disabled={verifyEmail.isPending}
-              onClick={() =>
-                verifyEmail.mutate(undefined, {
-                  onSuccess: () => {
-                    router.push("/verify-email");
-                  },
-                  onError: (error) => {
-                    toast.error(
-                      error.message || "Failed to send email verification"
-                    );
-                  },
-                })
-              }
-            >
-              Resend verification email
-            </Button>
-          </Alert>
+          <>
+            <VerifyEmailDialog email={user?.user.email || ""} />
+            <Alert variant="destructive" className="mt-6">
+              <AlertTitle>Email not verified</AlertTitle>
+              <AlertDescription>
+                Your email is not verified. Please verify your email.
+              </AlertDescription>
+              <Button
+                variant={"destructive"}
+                className="mt-2 w-48"
+                disabled={verifyEmail.isPending}
+                onClick={() =>
+                  verifyEmail.mutate(undefined, {
+                    onSuccess: () => {
+                      setIsOpen(true);
+                      setEmail(user?.user.email || "");
+                    },
+                    onError: (error) => {
+                      toast.error(
+                        error.message || "Failed to send email verification"
+                      );
+                    },
+                  })
+                }
+              >
+                Resend verification email
+              </Button>
+            </Alert>
+          </>
         )}
       </CardContent>
       <CardFooter className="justify-end">

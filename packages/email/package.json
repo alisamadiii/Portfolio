@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*.ts"
+    "./*": "./src/*.ts",
+    "./emails/*": "./src/emails/*.tsx"
   },
   "scripts": {
     "email:dev": "cd src && email dev"

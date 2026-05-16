@@ -7,7 +7,8 @@ import { getErrorMessage } from "@workspace/ui/lib/utils";
 import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import { coldEmails } from "@workspace/drizzle/schema";
-import { sendEmail } from "@workspace/email/index";
+import { email } from "@workspace/email/index";
+import ReachOutToClients from "@workspace/email/emails/reach-out-to-clients";
 
 export const coldEmailsRouter = createTRPCRouter({
   send: adminProcedure
@@ -31,11 +32,13 @@ export const coldEmailsRouter = createTRPCRouter({
           });
         }
 
-        const { email } = input;
-        await sendEmail("reachOutToClients", email, {
-          email,
+        await email.send({
+          from: "agency@alisamadii.com",
+          to: input.email,
+          subject: "A quick note about your online presence",
+          react: ReachOutToClients({ email: input.email }),
         });
-        await db.insert(coldEmails).values({ email });
+        await db.insert(coldEmails).values({ email: input.email });
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

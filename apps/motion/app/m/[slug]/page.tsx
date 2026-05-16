@@ -143,7 +143,7 @@ export default function ComponentPage() {
         <div className="relative z-10 flex flex-row-reverse flex-wrap gap-2">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger render={<Button size="icon-lg" onClick={() => setIsOpen(!isOpen)} />}>
+              <TooltipTrigger render={<Button size="icon-lg" variant="outline" onClick={() => setIsOpen(!isOpen)} />}>
                   <Code className="size-5.5" />
               </TooltipTrigger>
               <TooltipContent>

@@ -1,110 +1,7 @@
-// packages/email/index.ts
-import { createElement } from "react";
+import type { ReactElement } from "react";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 
-import AccountDeleted from "./emails/account-deleted";
-import AgencyNotification from "./emails/agency-notification";
-import ClientMessage from "./emails/client-message";
-import ContactMessage from "./emails/contact-message";
-import MagicLink from "./emails/magic-link";
-import ReachOutToClients from "./emails/reach-out-to-clients";
-import ResetPassword from "./emails/reset-password";
-import VerifyEmail from "./emails/verify-email";
 import { renderEmail, renderText } from "./utils";
-
-type TemplateProps = {
-  verifyEmail: { verificationCode: string };
-  resetPassword: { resetPasswordLink: string };
-  magicLink: { magicLinkUrl: string };
-  accountDeleted: { userName?: string; feedbackLink?: string };
-  reachOutToClients: { email: string };
-  agencyNotification: {
-    clientEmail?: string;
-    projectType: string;
-    subject: string;
-    message: string;
-    priority: string;
-    referenceId: string;
-  };
-  clientMessage: {
-    subject: string;
-    message: string;
-    clientEmail?: string;
-    originalSubject?: string;
-    originalMessage?: string;
-    referenceId?: string;
-  };
-  contactMessage: {
-    name: string;
-    email: string;
-    phone?: string;
-    message: string;
-    siteName?: string;
-    metadata?: Record<string, unknown>;
-  };
-};
-
-// Template registry — add new emails here, that's it
-const templates: {
-  [K in keyof TemplateProps]: {
-    subject: string | ((props: TemplateProps[K]) => string);
-    fromLabel: string | ((props: TemplateProps[K]) => string);
-    from: string;
-    component: React.ComponentType<TemplateProps[K]>;
-  };
-} = {
-  verifyEmail: {
-    subject: "Verify your email",
-    fromLabel: "Verify your email",
-    from: "noreply@alisamadii.com",
-    component: VerifyEmail,
-  },
-  resetPassword: {
-    subject: "Reset your password",
-    fromLabel: "Reset your password",
-    from: "noreply@alisamadii.com",
-    component: ResetPassword,
-  },
-  magicLink: {
-    subject: "Sign in to your account",
-    fromLabel: "Sign in link",
-    from: "noreply@alisamadii.com",
-    component: MagicLink,
-  },
-  accountDeleted: {
-    subject: "Account deleted",
-    fromLabel: "Account deleted",
-    from: "noreply@alisamadii.com",
-    component: AccountDeleted,
-  },
-  reachOutToClients: {
-    subject: "A quick note about your online presence",
-    fromLabel: "Ali from AliSamadii.LLC",
-    from: "agency@alisamadii.com",
-    component: ReachOutToClients,
-  },
-  agencyNotification: {
-    subject: "New Portal Notification",
-    fromLabel: "AliSamadii.LLC Portal",
-    from: "agency@alisamadii.com",
-    component: AgencyNotification,
-  },
-  clientMessage: {
-    subject: "A message from AliSamadii.LLC",
-    fromLabel: "Ali from AliSamadii.LLC",
-    from: "agency@alisamadii.com",
-    component: ClientMessage,
-  },
-  contactMessage: {
-    subject: (props) => `${props.name} - AliSamadii LLC`,
-    fromLabel: (props) =>
-      props.siteName
-        ? `${props.siteName} Contact Form`
-        : "Contact Form Notification",
-    from: "agency@alisamadii.com",
-    component: ContactMessage,
-  },
-};
 
 let sesClient: SESClient | null = null;
 
@@ -119,33 +16,29 @@ function getSesClient() {
 
     sesClient = new SESClient({
       region: process.env.AWS_BUCKET_ORIGIN || "us-east-1",
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
+      credentials: { accessKeyId, secretAccessKey },
     });
   }
   return sesClient;
 }
 
-// One function to rule them all
-export async function sendEmail<T extends keyof typeof templates>(
-  template: T,
-  to: string | string[],
-  props: TemplateProps[T]
-) {
-  const { subject: subjectOrFn, fromLabel: fromLabelOrFn, from, component } = templates[template];
-  const subject = typeof subjectOrFn === "function" ? subjectOrFn(props) : subjectOrFn;
-  const fromLabel = typeof fromLabelOrFn === "function" ? fromLabelOrFn(props) : fromLabelOrFn;
+type SendOptions = {
+  from?: string;
+  to: string | string[];
+  subject: string;
+  react: ReactElement;
+};
+
+async function send({ from, to, subject, react }: SendOptions) {
   const toAddresses = Array.isArray(to) ? to : [to];
-  const element = createElement(component, props);
-  const htmlContent = await renderEmail(element);
-  const textContent = await renderText(element);
+  const source = from ?? "noreply@alisamadii.com";
+  const htmlContent = await renderEmail(react);
+  const textContent = await renderText(react);
 
   try {
     await getSesClient().send(
       new SendEmailCommand({
-        Source: `${fromLabel} <${from}>`,
+        Source: source,
         Destination: { ToAddresses: toAddresses },
         Message: {
           Subject: { Data: subject, Charset: "UTF-8" },
@@ -156,11 +49,47 @@ export async function sendEmail<T extends keyof typeof templates>(
         },
       })
     );
-    return { data: true };
+    return { data: true as const };
   } catch (error) {
-    return {
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
-    };
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to send email";
+    console.error("[email] Send failed:", error);
+    return { error: errorMessage };
   }
 }
+
+async function resend({
+  from,
+  to,
+  subject,
+  html,
+}: {
+  from?: string;
+  to: string | string[];
+  subject: string;
+  html: string;
+}) {
+  const toAddresses = Array.isArray(to) ? to : [to];
+  const source = from ?? "noreply@alisamadii.com";
+
+  try {
+    await getSesClient().send(
+      new SendEmailCommand({
+        Source: source,
+        Destination: { ToAddresses: toAddresses },
+        Message: {
+          Subject: { Data: subject, Charset: "UTF-8" },
+          Body: { Html: { Data: html, Charset: "UTF-8" } },
+        },
+      })
+    );
+    return { data: true as const };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to send email";
+    console.error("[email] Resend failed:", error);
+    return { error: errorMessage };
+  }
+}
+
+export const email = { send, resend };
