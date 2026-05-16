@@ -190,9 +190,7 @@ const SuccessPurchase = () => {
           </div>
 
           {/* Simple button */}
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/">Return to Homepage</Link>
-          </Button>
+          <Button variant="outline" className="w-full" render={<Link href="/" />}>Return to Homepage</Button>
         </CardContent>
       </Card>
     </motion.div>

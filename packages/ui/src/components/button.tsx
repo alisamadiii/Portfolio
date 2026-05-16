@@ -1,35 +1,40 @@
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
+"use client";
+
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
 
+import { Spinner } from "@workspace/ui/components/spinner";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { Spinner } from "./spinner";
-
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-95 active:opacity-50",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px active:scale-95 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        xs: "h-6 gap-1 rounded px-2 text-xs has-[>svg]:px-1.5",
-        sm: "h-8 gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-12 text-base px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        default:
+          "h-9 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-10 gap-1.5 rounded-lg px-4 text-base has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 md:px-6",
+        xl: "h-14 gap-1.5 rounded-lg px-4 text-lg has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 md:px-6",
+        icon: "size-8",
+        "icon-xs":
+          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm":
+          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-lg": "size-9",
       },
     },
     defaultVariants: {
@@ -43,52 +48,42 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  asChild = false,
   isLoading,
+  nativeButton,
+  render,
+  asChild,
+  children,
   ...props
-}: React.ComponentProps<"button"> &
+}: ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
     isLoading?: boolean;
+    /** @deprecated Use `render` prop instead */
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : "button";
-
-  if (isLoading !== undefined) {
-    return (
-      <Comp
-        data-slot="button"
-        data-variant={variant}
-        data-size={size}
-        className={cn(buttonVariants({ variant, size, className }))}
-        disabled={props.disabled || isLoading}
-        {...props}
-      >
-        <span
-          className={cn(
-            "transition-opacity duration-200",
-            isLoading && "opacity-0"
-          )}
-        >
-          {props.children}
-        </span>
-        <Spinner
-          className={cn(
-            "pointer-events-none absolute opacity-0 transition-opacity duration-200",
-            isLoading && "opacity-100"
-          )}
-        />
-      </Comp>
-    );
+  // asChild compat: if asChild is true and children is a single React element,
+  // use it as the render prop
+  let resolvedRender = render;
+  let resolvedChildren = children;
+  if (asChild && !render && children) {
+    const child = Array.isArray(children) ? children[0] : children;
+    if (child && typeof child === "object" && "type" in child) {
+      const { children: grandChildren, ...childProps } = child.props ?? {};
+      resolvedRender = { ...child, props: childProps };
+      resolvedChildren = grandChildren;
+    }
   }
 
   return (
-    <Comp
+    <ButtonPrimitive
       data-slot="button"
-      data-variant={variant}
-      data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      nativeButton={nativeButton ?? (resolvedRender ? false : undefined)}
+      render={resolvedRender}
+      disabled={isLoading || props.disabled}
       {...props}
-    />
+    >
+      {isLoading ? <Spinner className="size-4" /> : resolvedChildren}
+    </ButtonPrimitive>
   );
 }
 

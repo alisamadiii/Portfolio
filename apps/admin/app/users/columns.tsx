@@ -127,10 +127,8 @@ export const columns: ColumnDef<UserFromAPI>[] = [
       return (
         <div className="flex justify-end">
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
                 <MoreHorizontal />
-              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"

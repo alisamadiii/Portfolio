@@ -45,7 +45,6 @@ export const LibrariesUsedDialog = ({
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
       <DialogContent
-        overlayClassName="z-200"
         showCloseButton={false}
         className="sm:max-w-xl"
       >
@@ -88,9 +87,7 @@ export const LibrariesUsedDialog = ({
           )}
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button>Close</Button>
-          </DialogClose>
+          <DialogClose render={<Button />}>Close</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

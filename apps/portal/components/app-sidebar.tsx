@@ -92,11 +92,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Sheet>
-                <SheetTrigger asChild>
-                  <SidebarMenuButton className="py-4">
+                <SheetTrigger render={<SidebarMenuButton className="py-4" />}>
                     <Bell />
                     <span>Notification History</span>
-                  </SidebarMenuButton>
                 </SheetTrigger>
                 {unreadCount > 0 && (
                   <SidebarMenuBadge>

@@ -65,13 +65,11 @@ export const CreateClientDialog = () => {
         }
       }}
     >
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+      <DialogTrigger render={<Button size="sm" className="gap-1.5" />}>
           <Plus className="size-4" />
           Create Client
-        </Button>
       </DialogTrigger>
-      <DialogContent className="animate-none!">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Client</DialogTitle>
           <DialogDescription>

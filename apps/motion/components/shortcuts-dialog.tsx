@@ -30,7 +30,7 @@ export const ShortcutsDialog = ({
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
-      <DialogContent overlayClassName="z-200" showCloseButton={false}>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Shortcuts</DialogTitle>
           <DialogDescription>
@@ -57,9 +57,7 @@ export const ShortcutsDialog = ({
           ))}
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button>Close</Button>
-          </DialogClose>
+          <DialogClose render={<Button />}>Close</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

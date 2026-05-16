@@ -55,9 +55,7 @@ export default function CodePage() {
                 </div>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button asChild variant="outline" size="sm" className="w-full">
-                  <Link href={`/code/${source.id}`}>Edit</Link>
-                </Button>
+                <Button variant="outline" size="sm" className="w-full" render={<Link href={`/code/${source.id}`} />}>Edit</Button>
               </CardFooter>
             </Card>
           ))}

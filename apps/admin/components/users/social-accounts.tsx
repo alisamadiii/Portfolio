@@ -55,10 +55,8 @@ export const SocialAccounts = () => {
               </TableCell>
               <TableCell className="flex items-center justify-end text-xs">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
                       <MoreHorizontal size={16} />
-                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-60">
                     <DropdownMenuItem variant="destructive">

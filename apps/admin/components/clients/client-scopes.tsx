@@ -201,13 +201,11 @@ const AddScopeDialog = ({
         if (!v) reset();
       }}
     >
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-1.5">
+      <DialogTrigger render={<Button size="sm" variant="outline" className="gap-1.5" />}>
           <Plus className="size-3.5" />
           Add Scope
-        </Button>
       </DialogTrigger>
-      <DialogContent className="animate-none!">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Scope</DialogTitle>
           <DialogDescription>
@@ -250,9 +248,7 @@ const AddScopeDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button
             disabled={!domain || !email}
             isLoading={createScope.isPending}
@@ -308,8 +304,7 @@ const EditScopeDialog = ({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
+      <DialogTrigger render={<Button variant="ghost" size="icon" className="size-8" />}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -323,9 +318,8 @@ const EditScopeDialog = ({
           >
             <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
           </svg>
-        </Button>
       </DialogTrigger>
-      <DialogContent className="animate-none!">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit scope</DialogTitle>
           <DialogDescription>
@@ -371,9 +365,7 @@ const EditScopeDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button
             disabled={!domain || !email}
             isLoading={updateScope.isPending}
@@ -424,14 +416,12 @@ const DeleteScopeDialog = ({
 
   return (
     <Dialog onOpenChange={() => setConfirmValue("")}>
-      <DialogTrigger asChild>
-        <Button
+      <DialogTrigger render={<Button
           variant="ghost"
           size="icon"
           className="text-destructive hover:text-destructive size-8"
-        >
+        />}>
           <Trash2 className="size-4" />
-        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -457,9 +447,7 @@ const DeleteScopeDialog = ({
           />
         )}
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button
             variant="destructive"
             disabled={!confirmed}

@@ -19,7 +19,7 @@ interface Props {
 export const ShowJSONDialog = ({ data, title, children }: Props) => {
   return (
     <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

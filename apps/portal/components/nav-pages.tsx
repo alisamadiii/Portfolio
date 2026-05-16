@@ -34,17 +34,15 @@ export function NavPages({
         {pages.map((item) => (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
-              asChild
               className={cn(
                 "py-4",
                 pathname === item.url &&
                   "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
               )}
+              render={<Link href={item.url} />}
             >
-              <Link href={item.url}>
                 <item.icon />
                 <span>{item.title}</span>
-              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

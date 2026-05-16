@@ -383,12 +383,10 @@ export default function BillingPage() {
               variant="ghost"
               size="sm"
               className="shrink-0 gap-1.5"
-              asChild
+              render={<Link href="/agency" />}
             >
-              <Link href="/agency">
                 Agency
                 <ArrowRight className="size-3.5" />
-              </Link>
             </Button>
           </div>
         )}

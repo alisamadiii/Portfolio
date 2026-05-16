@@ -390,13 +390,11 @@ const FileList = ({
                           size="sm"
                           variant="ghost"
                           className={cn(user && "hidden")}
-                          asChild
-                        >
-                          <Link
+                          render={<Link
                             href={`${urls.portal}/login?redirectUrl=${window.location.href}`}
-                          >
+                          />}
+                        >
                             Login
-                          </Link>
                         </Button>
                       </div>
                     </div>

@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Field, FieldError } from "@workspace/ui/components/field";
+import { Field, FieldContent, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 
@@ -49,7 +49,7 @@ export const RequestDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger>{children}</DialogTrigger>
       <DialogContent>
         <Content setOpen={setOpen} defaultSubject={defaultSubject} />
       </DialogContent>
@@ -121,14 +121,16 @@ const Content = ({
             control={form.control}
             name="subject"
             render={({ field }) => (
-              <Field>
-                <Input
-                  {...field}
-                  placeholder="Service Change Request"
-                  label="Subject"
-                  aria-invalid={!!form.formState.errors.subject}
-                />
-                <FieldError errors={[form.formState.errors.subject]} />
+              <Field aria-invalid={!!form.formState.errors.subject}>
+                <FieldLabel>Subject</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...field}
+                    placeholder="Service Change Request"
+                    aria-invalid={!!form.formState.errors.subject}
+                  />
+                </FieldContent>
+                <FieldError errors={form.formState.errors.subject ? [form.formState.errors.subject] : undefined} />
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {SUBJECT_KEYWORDS.map((keyword) => (
                     <Badge
@@ -152,13 +154,16 @@ const Content = ({
             control={form.control}
             name="message"
             render={({ field }) => (
-              <Field>
-                <Textarea
-                  {...field}
-                  placeholder="Message"
-                  aria-invalid={!!form.formState.errors.message}
-                />
-                <FieldError errors={[form.formState.errors.message]} />
+              <Field aria-invalid={!!form.formState.errors.message}>
+                <FieldLabel>Message</FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    {...field}
+                    placeholder="Message"
+                    aria-invalid={!!form.formState.errors.message}
+                  />
+                </FieldContent>
+                <FieldError errors={form.formState.errors.message ? [form.formState.errors.message] : undefined} />
               </Field>
             )}
           />

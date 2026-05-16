@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import { Field } from "@workspace/ui/components/field";
+import { Field, FieldContent, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -72,13 +72,15 @@ export const UpdateFormSource = () => {
         control={form.control}
         name="title"
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <Input
-              label="Title"
-              placeholder="Title"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+          <Field aria-invalid={fieldState.invalid}>
+            <FieldLabel>Title</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Title"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -87,12 +89,14 @@ export const UpdateFormSource = () => {
         name="description"
         render={({ field, fieldState }) => (
           <Field>
-            <Input
-              label="Description"
-              placeholder="Description"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+            <FieldLabel>Description</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Description"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -101,12 +105,14 @@ export const UpdateFormSource = () => {
         name="imageUrl"
         render={({ field, fieldState }) => (
           <Field>
-            <Input
-              label="Image"
-              placeholder="Image"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+            <FieldLabel>Image</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Image"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -115,12 +121,14 @@ export const UpdateFormSource = () => {
         name="darkImageUrl"
         render={({ field, fieldState }) => (
           <Field>
-            <Input
-              label="Dark Image"
-              placeholder="Dark Image"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+            <FieldLabel>Dark Image</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Dark Image"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -129,12 +137,14 @@ export const UpdateFormSource = () => {
         name="videoUrl"
         render={({ field, fieldState }) => (
           <Field>
-            <Input
-              label="Video"
-              placeholder="Video"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+            <FieldLabel>Video</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Video"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -143,12 +153,14 @@ export const UpdateFormSource = () => {
         name="darkVideoUrl"
         render={({ field, fieldState }) => (
           <Field>
-            <Input
-              label="Dark Video"
-              placeholder="Dark Video"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+            <FieldLabel>Dark Video</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Dark Video"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -157,12 +169,14 @@ export const UpdateFormSource = () => {
         name="from"
         render={({ field, fieldState }) => (
           <Field>
-            <Input
-              label="From"
-              placeholder="From"
-              {...field}
-              aria-invalid={fieldState.invalid}
-            />
+            <FieldLabel>From</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="From"
+                {...field}
+                aria-invalid={fieldState.invalid}
+              />
+            </FieldContent>
           </Field>
         )}
       />

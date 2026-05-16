@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
-import { Field, FieldError } from "@workspace/ui/components/field";
+import { Field, FieldContent, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import {
   InputGroup,
@@ -346,13 +346,15 @@ function ReplyDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Field>
-            <Input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              label="Subject"
-              aria-invalid={!!subjectError}
-            />
+          <Field aria-invalid={!!subjectError}>
+            <FieldLabel>Subject</FieldLabel>
+            <FieldContent>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                aria-invalid={!!subjectError}
+              />
+            </FieldContent>
             <FieldError
               errors={[subjectError ? { message: subjectError } : undefined]}
             />

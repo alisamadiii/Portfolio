@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "../components/button";
-import { Field, FieldError } from "../components/field";
+import { Field, FieldContent, FieldError, FieldLabel } from "../components/field";
 import { Input } from "../components/input";
 
 import { authClient } from "@workspace/auth/auth-client";
@@ -127,14 +127,17 @@ export function SignUpForm({
           control={form.control}
           name="name"
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                placeholder="John Doe"
-                aria-invalid={fieldState.invalid}
-                label="Name"
-              />
-              <FieldError errors={[fieldState.error]} />
+            <Field aria-invalid={fieldState.invalid}>
+              <FieldLabel>Name</FieldLabel>
+              <FieldContent>
+                <Input
+                  {...field}
+                  placeholder="John Doe"
+                  aria-invalid={fieldState.invalid}
+                  size="lg"
+                />
+              </FieldContent>
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
             </Field>
           )}
         />
@@ -143,15 +146,18 @@ export function SignUpForm({
           control={form.control}
           name="email"
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                type="email"
-                placeholder="example@email.com"
-                aria-invalid={fieldState.invalid}
-                label="Email"
-              />
-              <FieldError errors={[fieldState.error]} />
+            <Field aria-invalid={fieldState.invalid}>
+              <FieldLabel>Email</FieldLabel>
+              <FieldContent>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="example@email.com"
+                  aria-invalid={fieldState.invalid}
+                  size="lg"
+                />
+              </FieldContent>
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
             </Field>
           )}
         />
@@ -160,20 +166,23 @@ export function SignUpForm({
           control={form.control}
           name="password"
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                type="password"
-                placeholder="********"
-                aria-invalid={fieldState.invalid}
-                label="Password"
-              />
-              <FieldError errors={[fieldState.error]} />
+            <Field aria-invalid={fieldState.invalid}>
+              <FieldLabel>Password</FieldLabel>
+              <FieldContent>
+                <Input
+                  {...field}
+                  type="password"
+                  placeholder="********"
+                  aria-invalid={fieldState.invalid}
+                  size="lg"
+                />
+              </FieldContent>
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
             </Field>
           )}
         />
 
-        <FieldError errors={[form.formState.errors.root]} />
+        <FieldError errors={form.formState.errors.root ? [form.formState.errors.root] : undefined} />
 
         <Button
           type="submit"

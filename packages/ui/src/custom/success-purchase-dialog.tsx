@@ -85,9 +85,6 @@ export const SuccessPurchaseDialog = ({
       <DialogContent
         className="sm:max-w-md"
         showCloseButton={!!checkoutSession.data}
-        onPointerDownOutside={(e) => {
-          if (!checkoutSession.data) e.preventDefault();
-        }}
       >
         {checkoutSession.isPending && (
           <div className="flex flex-col items-center gap-4 py-8">
@@ -134,12 +131,12 @@ export const SuccessPurchaseDialog = ({
             <DialogFooter className="mt-8 flex flex-col gap-2 sm:flex-col">
               {resolvedProject === "MOTION" && (
                 <Button
-                  asChild
                   className="w-full sm:w-auto"
                   onClick={handleClose}
                   size="lg"
+                  render={<Link href="/" />}
                 >
-                  <Link href="/">Browse animations</Link>
+                  Browse animations
                 </Button>
               )}
               <Button

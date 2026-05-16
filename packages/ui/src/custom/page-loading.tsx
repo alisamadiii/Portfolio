@@ -1,5 +1,5 @@
-import * as Portal from "@radix-ui/react-portal";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import { createPortal } from "react-dom";
 
 import { Spinner } from "@workspace/ui/components/spinner";
 import { cn } from "@workspace/ui/lib/utils";
@@ -14,20 +14,23 @@ export const PageLoading = ({ name, active, className }: Props) => {
   return (
     <MotionConfig transition={{ duration: 0.1 }}>
       <AnimatePresence>
-        {active && (
-          <Portal.Root
-            className={cn(
-              "fixed inset-0 isolate z-1000 flex h-full w-full max-w-none items-center justify-center",
-              className
-            )}
-          >
-            <motion.div
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 -z-10 bg-black/20 backdrop-blur-[1px]"
-            ></motion.div>
-            <LoadingSpinnerContent name={name} />
-          </Portal.Root>
-        )}
+        {active &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              className={cn(
+                "fixed inset-0 isolate z-1000 flex h-full w-full max-w-none items-center justify-center",
+                className
+              )}
+            >
+              <motion.div
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 -z-10 bg-black/20 backdrop-blur-[1px]"
+              ></motion.div>
+              <LoadingSpinnerContent name={name} />
+            </div>,
+            document.body
+          )}
       </AnimatePresence>
     </MotionConfig>
   );

@@ -122,7 +122,7 @@ export function UseWithAI({ children }: { children: React.ReactNode }) {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverTrigger>{children}</PopoverTrigger>
       <PopoverContent align="end" className="w-52 p-2">
         <p className="text-muted-foreground px-2 pt-1 pb-2 text-xs font-medium">
           Copy prompt &amp; open

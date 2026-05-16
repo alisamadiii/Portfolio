@@ -113,7 +113,6 @@ export const Sidebar = ({
                 <div className="bg-muted mx-1 flex items-center gap-1 rounded p-1">
                   <FileCode className="text-muted-foreground size-4 shrink-0" />
                   <Input
-                    label="Filename"
                     autoFocus
                     value={newFile}
                     onChange={(e) => setNewFile(e.target.value)}
@@ -302,8 +301,7 @@ function FileItem({
 }) {
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
+      <ContextMenuTrigger render={<div
           className={cn(
             "group flex cursor-pointer items-center gap-1 rounded px-1 py-1 text-xs",
             isActive
@@ -313,7 +311,7 @@ function FileItem({
           )}
           onClick={onClick}
           {...dragHandlers}
-        >
+        />}>
           {isReordering ? (
             <Spinner className="size-3 shrink-0" />
           ) : (
@@ -321,7 +319,6 @@ function FileItem({
           )}
           <File className={cn("size-4 shrink-0", "text-muted-foreground")} />
           <span className="flex-1 truncate">{file.filename}</span>
-        </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={onClick}>

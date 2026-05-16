@@ -88,10 +88,8 @@ export const paymentColumns: ColumnDef<
     cell: ({ row }) => {
       return (
         <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="icon" data-sticky-element>
+          <DialogTrigger render={<Button variant="outline" size="icon" data-sticky-element />}>
               <Braces />
-            </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>

@@ -97,10 +97,8 @@ export const Password = () => {
         ●●●●●●●●●●
       </span>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
             <Ellipsis />
-          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
           <DropdownMenuItem onClick={() => setChangePasswordOpen(true)}>
@@ -129,15 +127,17 @@ export const Password = () => {
               control={form.control}
               name="password"
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <Input
-                    {...field}
-                    type="password"
-                    placeholder="Enter new password"
-                    aria-invalid={fieldState.invalid}
-                    label="Password"
-                  />
-                  <FieldError errors={[fieldState.error]} />
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel>Password</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="Enter new password"
+                      aria-invalid={fieldState.invalid}
+                    />
+                  </FieldContent>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
                 </Field>
               )}
             />
@@ -146,15 +146,17 @@ export const Password = () => {
               control={form.control}
               name="confirmPassword"
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <Input
-                    {...field}
-                    type="password"
-                    placeholder="Confirm new password"
-                    aria-invalid={fieldState.invalid}
-                    label="Confirm password"
-                  />
-                  <FieldError errors={[fieldState.error]} />
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel>Confirm password</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="Confirm new password"
+                      aria-invalid={fieldState.invalid}
+                    />
+                  </FieldContent>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
                 </Field>
               )}
             />
@@ -163,7 +165,7 @@ export const Password = () => {
               control={form.control}
               name="revokeAllSessions"
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
+                <Field aria-invalid={fieldState.invalid}>
                   <FieldContent>
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -237,10 +239,8 @@ export const Password = () => {
               </form>
             </Form> */}
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" disabled={changePassword.isPending}>
+            <DialogClose render={<Button variant="outline" disabled={changePassword.isPending} />}>
                 Cancel
-              </Button>
             </DialogClose>
             <Button
               onClick={form.handleSubmit(handleSubmit)}

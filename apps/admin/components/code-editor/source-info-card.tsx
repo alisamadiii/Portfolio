@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Field, FieldContent, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { RouterOutputs } from "@workspace/trpc/routers/_app";
@@ -46,26 +46,28 @@ export function SourceInfoCard({ source, sourceId }: SourceInfoCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              label="Title"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Component name"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Input
-              label="Description"
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description"
-            />
-          </div>
+          <Field>
+            <FieldLabel>Title</FieldLabel>
+            <FieldContent>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Component name"
+              />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>Description</FieldLabel>
+            <FieldContent>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description"
+              />
+            </FieldContent>
+          </Field>
         </div>
         <Button
           size="sm"

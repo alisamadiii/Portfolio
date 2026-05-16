@@ -336,20 +336,16 @@ export default function ClientDetailPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-start gap-6 p-4 md:p-8">
       {/* Back */}
-      <Button variant="ghost" size="sm" className="gap-1.5" asChild>
-        <Link href="/clients">
+      <Button variant="ghost" size="sm" className="gap-1.5" render={<Link href="/clients" />}>
           <ArrowLeft className="size-4" />
           Back to Clients
-        </Link>
       </Button>
 
       {/* ── Client Info ──────────────────────────────────────────── */}
       <CardAgency.Card>
         <CardAgency.Header title="Client Details">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/users/${user.id}?tab=notifications`}>
+          <Button variant="outline" size="sm" render={<Link href={`/users/${user.id}?tab=notifications`} />}>
               Notifications
-            </Link>
           </Button>
         </CardAgency.Header>
         <div className="grid gap-5">

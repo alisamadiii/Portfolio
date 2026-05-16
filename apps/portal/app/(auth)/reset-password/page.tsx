@@ -7,7 +7,12 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import { Field, FieldError } from "@workspace/ui/components/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { useSendResetEmail } from "@workspace/auth/hooks/use-functions";
@@ -69,15 +74,18 @@ function Content() {
           control={form.control}
           name="email"
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                type="email"
-                placeholder="example@email.com"
-                aria-invalid={fieldState.invalid}
-                label="Email"
-              />
-              <FieldError errors={[fieldState.error]} />
+            <Field aria-invalid={fieldState.invalid}>
+              <FieldLabel>Email</FieldLabel>
+              <FieldContent>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="example@email.com"
+                  aria-invalid={fieldState.invalid}
+                  size="lg"
+                />
+              </FieldContent>
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
             </Field>
           )}
         />

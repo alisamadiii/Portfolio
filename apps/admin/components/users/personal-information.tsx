@@ -12,7 +12,7 @@ import {
   AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { buttonVariants } from "@workspace/ui/components/button";
-import { Field, FieldError } from "@workspace/ui/components/field";
+import { Field, FieldContent, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { useUpload } from "@workspace/ui/hooks/use-upload";
@@ -131,14 +131,16 @@ export const PersonalInformation = () => {
           control={form.control}
           name="name"
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                placeholder="John Doe"
-                aria-invalid={fieldState.invalid}
-                label="Name"
-              />
-              <FieldError errors={[fieldState.error]} />
+            <Field aria-invalid={fieldState.invalid}>
+              <FieldLabel>Name</FieldLabel>
+              <FieldContent>
+                <Input
+                  {...field}
+                  placeholder="John Doe"
+                  aria-invalid={fieldState.invalid}
+                />
+              </FieldContent>
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
             </Field>
           )}
         />

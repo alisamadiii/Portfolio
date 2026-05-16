@@ -31,15 +31,9 @@ export const ConfirmDialog = ({
   );
 };
 
-const Trigger = ({
-  children,
-  asChild,
-}: {
-  children: React.ReactNode;
-  asChild?: boolean;
-}) => {
+const Trigger = ({ children }: { children: React.ReactNode }) => {
   return (
-    <AlertDialogTrigger asChild={asChild} onClick={(e) => e.stopPropagation()}>
+    <AlertDialogTrigger onClick={(e) => e.stopPropagation()}>
       {children}
     </AlertDialogTrigger>
   );
@@ -163,7 +157,7 @@ export const ReadyConfirmDialog = ({
         <ConfirmDialog.Footer>
           <ConfirmDialog.Action
             onClick={action.onClick}
-            isLoading={action.isPending}
+            disabled={action.isPending}
           >
             {action.label}
           </ConfirmDialog.Action>

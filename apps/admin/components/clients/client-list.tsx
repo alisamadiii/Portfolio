@@ -120,11 +120,9 @@ export const ClientList = () => {
           </CardContent>
 
           <CardFooter className="border-t pt-4">
-            <Button size="sm" asChild>
-              <Link href={`/clients/${client.id}`}>
+            <Button size="sm" render={<Link href={`/clients/${client.id}`} />}>
                 View Details
                 <ArrowRight className="size-3" />
-              </Link>
             </Button>
           </CardFooter>
         </Card>

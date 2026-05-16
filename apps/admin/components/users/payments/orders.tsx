@@ -126,11 +126,9 @@ export const Orders = () => {
             id: "json-data",
             cell: ({ row }) => (
               <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon">
+                <DialogTrigger render={<Button variant="outline" size="icon" />}>
                     <Braces />
-                  </Button>
-                </DialogTrigger>
+              </DialogTrigger>
                 <DialogContent className="sm:max-w-xl">
                   <DialogHeader>
                     <DialogTitle>Order Details</DialogTitle>

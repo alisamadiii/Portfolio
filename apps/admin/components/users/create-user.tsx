@@ -81,9 +81,7 @@ export const CreateUser = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="ml-auto">Create User</Button>
-      </DialogTrigger>
+      <DialogTrigger render={<Button className="ml-auto" />}>Create User</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create User</DialogTitle>
@@ -96,14 +94,16 @@ export const CreateUser = () => {
             control={form.control}
             name="name"
             render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Input
-                  {...field}
-                  placeholder="John Doe"
-                  aria-invalid={fieldState.invalid}
-                  label="Name"
-                />
-                <FieldError errors={[fieldState.error]} />
+              <Field aria-invalid={fieldState.invalid}>
+                <FieldLabel>Name</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...field}
+                    placeholder="John Doe"
+                    aria-invalid={fieldState.invalid}
+                  />
+                </FieldContent>
+                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
               </Field>
             )}
           />
@@ -112,15 +112,17 @@ export const CreateUser = () => {
             control={form.control}
             name="email"
             render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Input
-                  {...field}
-                  type="email"
-                  placeholder="name@example.com"
-                  aria-invalid={fieldState.invalid}
-                  label="Email"
-                />
-                <FieldError errors={[fieldState.error]} />
+              <Field aria-invalid={fieldState.invalid}>
+                <FieldLabel>Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="name@example.com"
+                    aria-invalid={fieldState.invalid}
+                  />
+                </FieldContent>
+                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
               </Field>
             )}
           />
@@ -129,15 +131,17 @@ export const CreateUser = () => {
             control={form.control}
             name="password"
             render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="********"
-                  aria-invalid={fieldState.invalid}
-                  label="Password"
-                />
-                <FieldError errors={[fieldState.error]} />
+              <Field aria-invalid={fieldState.invalid}>
+                <FieldLabel>Password</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...field}
+                    type="password"
+                    placeholder="********"
+                    aria-invalid={fieldState.invalid}
+                  />
+                </FieldContent>
+                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
               </Field>
             )}
           />
@@ -148,7 +152,7 @@ export const CreateUser = () => {
             control={form.control}
             name="role"
             render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
+              <Field aria-invalid={fieldState.invalid}>
                 <FieldLabel>Role</FieldLabel>
                 <FieldContent>
                   <Select onValueChange={field.onChange} value={field.value}>
@@ -172,10 +176,8 @@ export const CreateUser = () => {
           <FieldError errors={[form.formState.errors.root]} />
         </form>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" onClick={() => form.reset()}>
+          <DialogClose render={<Button variant="outline" onClick={() => form.reset()} />}>
               Cancel
-            </Button>
           </DialogClose>
           <Button
             onClick={form.handleSubmit(handleSubmit)}

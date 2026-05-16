@@ -17,9 +17,11 @@ function InputOTP({
     <OTPInput
       data-slot="input-otp"
       containerClassName={cn(
-        "flex items-center gap-2 has-disabled:opacity-50",
+        "cn-input-otp flex items-center has-disabled:opacity-50",
+        "gap-2",
         containerClassName
       )}
+      spellCheck={false}
       className={cn("disabled:cursor-not-allowed", className)}
       {...props}
     />
@@ -30,7 +32,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-otp-group"
-      className={cn("flex items-center", className)}
+      className={cn("flex items-center", "flex gap-2", className)}
       {...props}
     />
   );
@@ -51,18 +53,19 @@ function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "data-[active=true]:border-ring shadow-card bg-background data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:ring-destructive/20 dark:data-[active=true]:aria-invalid:ring-destructive/40 aria-invalid:border-destructive data-[active=true]:aria-invalid:border-destructive relative flex h-12 w-12 items-center justify-center rounded-xl transition-all data-[active=true]:z-10 data-[active=true]:ring-[3px]",
-        "overflow-hidden text-xl font-bold outline-0",
-        "data-[error=true]:outline-destructive data-[error=true]:animate-shake-error data-[error=true]:outline-2",
-        "data-[success=true]:outline-success-foreground data-[success=true]:outline-2",
+        "border-input aria-invalid:border-destructive data-[active=true]:border-ring data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/60 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40 relative flex size-8 items-center justify-center border-y border-r text-sm transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg data-[active=true]:z-10 data-[active=true]:ring-3",
+        "bg-muted shadow-card relative size-10 rounded-md! border-none",
+        "aria-invalid:ring-destructive/40 aria-invalid:ring-3",
         className
       )}
       {...props}
     >
       {char ? (
-        <span className="animate-in slide-in-from-bottom-50">{char}</span>
+        <span className="motion-opacity-in-0 motion-translate-y-in-[20px] motion-duration-200">
+          {char}
+        </span>
       ) : (
-        <span className="text-muted-foreground opacity-50">0</span>
+        <span className="text-muted-foreground">.</span>
       )}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -75,7 +78,12 @@ function InputOTPSlot({
 
 function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
   return (
-    <div data-slot="input-otp-separator" role="separator" {...props}>
+    <div
+      data-slot="input-otp-separator"
+      className="flex items-center [&_svg:not([class*='size-'])]:size-4"
+      role="separator"
+      {...props}
+    >
       <MinusIcon />
     </div>
   );

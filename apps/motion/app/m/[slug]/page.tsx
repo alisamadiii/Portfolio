@@ -143,10 +143,8 @@ export default function ComponentPage() {
         <div className="relative z-10 flex flex-row-reverse flex-wrap gap-2">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon-lg" onClick={() => setIsOpen(!isOpen)}>
+              <TooltipTrigger render={<Button size="icon-lg" onClick={() => setIsOpen(!isOpen)} />}>
                   <Code className="size-5.5" />
-                </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <KbdGroup>
@@ -175,13 +173,11 @@ export default function ComponentPage() {
               <TooltipContent>Libraries Used</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon-lg" variant="outline" onClick={refresh}>
+              <TooltipTrigger render={<Button size="icon-lg" variant="outline" onClick={refresh} />}>
                   <Refresh
                     key={isRefreshing}
                     className="animate-rotate size-5.5"
                   />
-                </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <KbdGroup>
@@ -204,24 +200,20 @@ export default function ComponentPage() {
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <ReportBugLink animationName={animation.name} />
-              </TooltipTrigger>
+              <TooltipTrigger render={<ReportBugLink animationName={animation.name} />} />
               <TooltipContent>Report a bug</TooltipContent>
             </Tooltip>
             {animation.from && (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
+                <TooltipTrigger render={<Link
                     href={animation.from}
                     target="_blank"
                     className={buttonVariants({
                       variant: "outline",
                       size: "icon-lg",
                     })}
-                  >
+                  />}>
                     <SideProfileSparkle className="size-5.5" />
-                  </Link>
                 </TooltipTrigger>
                 <TooltipContent>Visit the source</TooltipContent>
               </Tooltip>

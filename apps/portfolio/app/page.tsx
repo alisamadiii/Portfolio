@@ -285,9 +285,7 @@ export default function Home() {
           <ClientWork projectName="B402" />
           <Divider />
           <div className="flex justify-center p-8">
-            <Button size={"lg"} variant={"outline"} className="w-full" asChild>
-              <Link href={`/blog/how-i-build`}>How I Build</Link>
-            </Button>
+            <Button size={"lg"} variant={"outline"} className="w-full" render={<Link href={`/blog/how-i-build`} />}>How I Build</Button>
           </div>
           <Divider />
           <Divider

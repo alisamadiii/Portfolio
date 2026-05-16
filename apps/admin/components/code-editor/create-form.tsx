@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import { Field } from "@workspace/ui/components/field";
+import { Field, FieldContent, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
@@ -47,13 +47,15 @@ export const CreateForm = () => {
         control={form.control}
         name="title"
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <Input
-              {...field}
-              aria-invalid={fieldState.invalid}
-              placeholder="Title"
-              label="Title"
-            />
+          <Field aria-invalid={fieldState.invalid}>
+            <FieldLabel>Title</FieldLabel>
+            <FieldContent>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                placeholder="Title"
+              />
+            </FieldContent>
           </Field>
         )}
       />
@@ -61,13 +63,15 @@ export const CreateForm = () => {
         control={form.control}
         name="description"
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <Input
-              {...field}
-              aria-invalid={fieldState.invalid}
-              placeholder="Description"
-              label="Description"
-            />
+          <Field aria-invalid={fieldState.invalid}>
+            <FieldLabel>Description</FieldLabel>
+            <FieldContent>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                placeholder="Description"
+              />
+            </FieldContent>
           </Field>
         )}
       />

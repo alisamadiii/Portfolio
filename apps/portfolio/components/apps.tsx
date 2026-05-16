@@ -27,19 +27,17 @@ export default function Apps() {
   return (
     <div className="grid gap-2 md:grid-cols-3">
       {icons.map((icon, index) => (
-        <TooltipProvider key={index} delayDuration={0}>
+        <TooltipProvider key={index}>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <div
+            <TooltipTrigger render={<div
                 key={index}
                 className={cn(
                   "bg-natural-150 flex flex-col items-center justify-center rounded-lg border p-4",
                   typeof icon.value === "string" &&
                     "text-3xl font-semibold tracking-tighter"
                 )}
-              >
+              />}>
                 {icon.value}
-              </div>
             </TooltipTrigger>
             <TooltipContent>{icon.label}</TooltipContent>
           </Tooltip>

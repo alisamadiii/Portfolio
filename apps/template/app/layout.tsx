@@ -14,12 +14,12 @@ import { Suspense } from "react";
 import { Footer } from "@workspace/ui/components/footer";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-muted dark:bg-background antialiased [--primary:#6C5CE7]`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-muted dark:bg-background antialiased [--primary:#6C5CE7]`}
       >
         <TRPCReactProvider>
           <Providers>

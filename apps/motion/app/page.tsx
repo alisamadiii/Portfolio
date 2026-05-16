@@ -198,9 +198,7 @@ const AnimationCard = ({
       {animation.isPremium && !isPurchased && (
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <MotionPremium className="absolute top-2 right-2 size-8 text-yellow-500" />
-            </TooltipTrigger>
+            <TooltipTrigger render={<MotionPremium className="absolute top-2 right-2 size-8 text-yellow-500" />} />
             <TooltipContent>Only available to premium users</TooltipContent>
           </Tooltip>
         </TooltipProvider>

@@ -93,14 +93,12 @@ export const DangerSettings = () => {
         </CardContent>
         <CardFooter className="justify-end">
           <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-            <AlertDialogTrigger asChild>
-              <Button
+            <AlertDialogTrigger render={<Button
                 variant="destructive"
                 disabled={sentNotification.isPending}
                 size="lg"
-              >
+              />}>
                 Request Account Deletion
-              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader className="mb-4">
@@ -112,14 +110,12 @@ export const DangerSettings = () => {
                 onChange={(e) => setComment(e.target.value)}
               />
               <AlertDialogFooter className="grid grid-cols-2 gap-2">
-                <AlertDialogCancel asChild>
-                  <Button
+                <AlertDialogCancel render={<Button
                     variant="outline"
                     disabled={sentNotification.isPending}
                     size="lg"
-                  >
+                  />}>
                     Cancel
-                  </Button>
                 </AlertDialogCancel>
                 <Button
                   variant="destructive"

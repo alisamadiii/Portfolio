@@ -81,10 +81,8 @@ function EachSessions({
       </TableCell>
       <TableCell className="flex items-center justify-end">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
               <MoreHorizontal />
-            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuItem
