@@ -23,7 +23,6 @@ import { formatPrice } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { ClientContactSubmissions } from "@/components/clients/client-contact-submissions";
 import { ClientScopes } from "@/components/clients/client-scopes";
 import { ClientMediaGallery } from "@/components/clients/client-media-gallery";
 import { ClientMetadataEditor } from "@/components/clients/client-metadata-editor";
@@ -320,78 +319,97 @@ export default function ClientDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4 md:p-8">
+      <div className="mx-auto max-w-[2000px] space-y-6 p-4 md:p-8">
         <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="flex flex-col gap-6">
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+          <div className="flex flex-col gap-6">
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!data) return null;
 
-  const { user, client, scopes, contactSubmissions } = data;
+  const { user } = data;
   const userMetadata = (user.metadata as Record<string, string> | null) ?? {};
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-start gap-6 p-4 md:p-8">
+    <div className="mx-auto max-w-[2000px] space-y-6 p-4 md:p-8">
       {/* Back */}
       <Button variant="ghost" size="sm" className="gap-1.5" render={<Link href="/clients" />}>
           <ArrowLeft className="size-4" />
           Back to Clients
       </Button>
 
-      {/* ── Client Info ──────────────────────────────────────────── */}
-      <CardAgency.Card>
-        <CardAgency.Header title="Client Details">
-          <Button variant="outline" size="sm" render={<Link href={`/users/${user.id}?tab=notifications`} />}>
-              Notifications
-          </Button>
-        </CardAgency.Header>
-        <div className="grid gap-5">
-          <CardAgency.DetailRow label="Name" value={user.name ?? ""} />
-          <CardAgency.DetailRow label="Email" value={user.email ?? ""} />
-          <CardAgency.DetailRow label="Phone" value={user.phone ?? ""} />
-          <CardAgency.DetailRow label="Company" value={user.company ?? ""} />
-          <CardAgency.DetailRow label="Address" value={user.address ?? ""} />
-          <StripeCustomerIdField
-            userId={user.id}
-            value={user.stripeCustomerId ?? null}
-          />
-          <CardAgency.DetailRow
-            label="Joined"
-            value={format(new Date(user.createdAt), "MMMM d, yyyy")}
-          />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* ── Left Column: Identity & Billing ──────────────────── */}
+        <div className="flex flex-col gap-6">
+          {/* ── Client Info ────────────────────────────────────── */}
+          <CardAgency.Card>
+            <CardAgency.Header title="Client Details">
+              <Button variant="outline" size="sm" render={<Link href={`/users/${user.id}?tab=notifications`} />}>
+                  Notifications
+              </Button>
+            </CardAgency.Header>
+            <div className="grid gap-5">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Name</p>
+                <p className="text-2xl font-bold">{user.name || <span className="text-muted-foreground">—</span>}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Email</p>
+                <p className="text-lg font-semibold">{user.email || <span className="text-muted-foreground">—</span>}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Company</p>
+                <p className="text-lg font-semibold">{user.company || <span className="text-muted-foreground">—</span>}</p>
+              </div>
+              <CardAgency.DetailRow label="Phone" value={user.phone ?? ""} />
+              <CardAgency.DetailRow label="Address" value={user.address ?? ""} />
+              <StripeCustomerIdField
+                userId={user.id}
+                value={user.stripeCustomerId ?? null}
+              />
+              <CardAgency.DetailRow
+                label="Joined"
+                value={format(new Date(user.createdAt), "MMMM d, yyyy")}
+              />
+            </div>
+          </CardAgency.Card>
+
+          {/* ── Stripe Subscriptions ───────────────────────────── */}
+          {user.stripeCustomerId && (
+            <StripeSubscriptions stripeCustomerId={user.stripeCustomerId} />
+          )}
+
+          {/* ── Stripe Invoices ────────────────────────────────── */}
+          {user.stripeCustomerId && (
+            <StripeInvoices stripeCustomerId={user.stripeCustomerId} />
+          )}
         </div>
-      </CardAgency.Card>
 
-      {/* ── Stripe Subscriptions ─────────────────────────────────── */}
-      {user.stripeCustomerId && (
-        <StripeSubscriptions stripeCustomerId={user.stripeCustomerId} />
-      )}
+        {/* ── Right Column: Operations ─────────────────────────── */}
+        <div className="flex flex-col gap-6">
+          {/* ── Scopes ─────────────────────────────────────────── */}
+          <ClientScopes
+            userId={user.id}
+            userEmail={user.email}
+          />
 
-      {/* ── Stripe Invoices ──────────────────────────────────────── */}
-      {user.stripeCustomerId && (
-        <StripeInvoices stripeCustomerId={user.stripeCustomerId} />
-      )}
+          {/* ── Media & Files ──────────────────────────────────── */}
+          <ClientMediaGallery userId={user.id} />
 
-      {/* ── Domains ──────────────────────────────────────────────── */}
-      <ClientScopes
-        clientId={client.id}
-        userEmail={user.email}
-      />
-
-      {/* ── Contact Submissions ──────────────────────────────────── */}
-      <ClientContactSubmissions
-        submissions={contactSubmissions}
-        isLoading={false}
-      />
-
-      {/* ── Media & Files ────────────────────────────────────────── */}
-      <ClientMediaGallery userId={user.id} />
-
-      {/* ── Custom Fields ─────────────────────────────────────────── */}
-      <ClientMetadataEditor userId={user.id} clientId={client.id} initialMetadata={userMetadata} />
+          {/* ── Custom Fields ──────────────────────────────────── */}
+          <ClientMetadataEditor userId={user.id} clientId={user.id} initialMetadata={userMetadata} />
+        </div>
+      </div>
     </div>
   );
 }

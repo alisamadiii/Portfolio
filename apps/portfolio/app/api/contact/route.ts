@@ -5,9 +5,9 @@ import { z } from "zod";
 import { getIp, isRateLimited } from "@workspace/trpc/middleware/rate-limit";
 import { db } from "@workspace/drizzle/index";
 import {
-  clients,
+  activityLog,
   clientScopes,
-  contactSubmissions,
+  type ActivityLogInsert,
   type ScopeMetadataMap,
 } from "@workspace/drizzle/schema";
 import { email } from "@workspace/email";
@@ -62,10 +62,9 @@ export async function POST(req: NextRequest) {
       .select({
         scopeId: clientScopes.id,
         metadata: clientScopes.metadata,
-        userId: clients.userId,
+        userId: clientScopes.userId,
       })
       .from(clientScopes)
-      .innerJoin(clients, eq(clientScopes.clientId, clients.id))
       .where(
         and(
           eq(clientScopes.type, "contact"),
@@ -84,7 +83,6 @@ export async function POST(req: NextRequest) {
 
     const meta = scopeRecord.metadata as ScopeMetadataMap["contact"];
     const toEmail = meta.email;
-    const clientUserId = scopeRecord.userId;
 
     // 2. Parse body
     let body: z.infer<typeof bodySchema>;
@@ -128,19 +126,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Insert contact submission
-    const [submission] = await db
-      .insert(contactSubmissions)
+    // 4. Log contact submission as activity
+    const [logEntry] = await db
+      .insert(activityLog)
       .values({
-        userId: clientUserId,
-        submitterName: body.name,
-        submitterEmail: body.email,
-        subject: body.subject,
-        message: body.message,
-        metadata: body.metadata ?? {},
-        sourceUrl: body.sourceUrl,
-      })
-      .returning({ id: contactSubmissions.id });
+        type: "contact",
+        status: "success",
+        userId: scopeRecord.userId,
+        actor: body.email,
+        summary: `Contact form: ${body.name} — ${body.subject}`,
+        metadata: {
+          name: body.name,
+          email: body.email,
+          subject: body.subject,
+          message: body.message,
+          sourceUrl: body.sourceUrl ?? null,
+          ...(body.metadata ? { metadata: body.metadata } : {}),
+        },
+      } satisfies ActivityLogInsert<"contact">)
+      .returning({ id: activityLog.id });
 
     // 5. Send email to client
     const subMeta = body.metadata as Record<string, unknown> | undefined;
@@ -175,7 +179,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        id: submission.id,
+        id: logEntry.id,
         message:
           "Your message has been sent successfully. We'll get back to you soon.",
       },

@@ -39,6 +39,7 @@ export const user = pgTable("user", {
   company: text("company"),
   address: text("address"),
   stripeCustomerId: text("stripe_customer_id"),
+  isClient: boolean("is_client").notNull().default(false),
 });
 
 export const userSignals = pgTable("user_signals", {
@@ -290,47 +291,6 @@ export const clientNotifications = pgTable("client_notifications", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const contactSubmissionStatusValues = [
-  "NEW",
-  "READ",
-  "REPLIED",
-  "ARCHIVED",
-] as const;
-export const contactSubmissionStatusEnum = pgEnum(
-  "contact_submission_status",
-  contactSubmissionStatusValues
-);
-
-export const contactSubmissions = pgTable("contact_submissions", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: text("user_id"),
-  submitterName: text("submitter_name").notNull(),
-  submitterEmail: text("submitter_email").notNull(),
-  subject: text("subject").notNull(),
-  message: text("message").notNull(),
-  metadata: jsonb("metadata").default({}),
-  sourceUrl: text("source_url"),
-  status: contactSubmissionStatusEnum("status").notNull().default("NEW"),
-  reportedAt: timestamp("reported_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-// ─── Clients ────────────────────────────────────────────────────
-
-export const clients = pgTable("clients", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: text("user_id")
-    .notNull()
-    .unique()
-    .references(() => user.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
 // ─── Client Scopes ──────────────────────────────────────────────
 
 export const scopeTypeValues = ["contact"] as const;
@@ -353,9 +313,9 @@ export const clientScopes = pgTable("client_scopes", {
   id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  clientId: uuid("client_id")
+  userId: text("user_id")
     .notNull()
-    .references(() => clients.id, { onDelete: "cascade" }),
+    .references(() => user.id, { onDelete: "cascade" }),
   type: scopeTypeEnum("type").notNull(),
   metadata: jsonb("metadata").$type<ScopeMetadata>().notNull(),
   isActive: boolean("is_active").notNull().default(true),
@@ -364,9 +324,68 @@ export const clientScopes = pgTable("client_scopes", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// ─── Activity Log ───────────────────────────────────────────────
+
+export const activityLogTypeValues = [
+  "email",
+  "data_change",
+  "contact",
+] as const;
+export type ActivityLogType = (typeof activityLogTypeValues)[number];
+
+export type ActivityLogMetadataMap = {
+  email: {
+    to: string;
+    subject: string;
+    attachmentCount?: number;
+    html?: string;
+    retry?: boolean;
+  };
+  data_change: {
+    entity: string;
+    entityId: string;
+    action: "create" | "update" | "delete";
+    changes?: Record<string, { from: unknown; to: unknown }>;
+  };
+  contact: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    sourceUrl?: string | null;
+    metadata?: Record<string, unknown>;
+  };
+};
+
+export type ActivityLogMetadata =
+  ActivityLogMetadataMap[keyof ActivityLogMetadataMap];
+
+export type ActivityLogInsert<T extends ActivityLogType = ActivityLogType> = {
+  type: T;
+  status: "success" | "failed";
+  actor?: string | null;
+  summary?: string | null;
+  metadata: ActivityLogMetadataMap[T];
+  error?: string | null;
+};
+
+export const activityLog = pgTable("activity_log", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  type: text("type", { enum: activityLogTypeValues }).notNull(),
+  status: text("status", { enum: ["success", "failed"] }).notNull(),
+  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+  actor: text("actor"),
+  summary: text("summary"),
+  metadata: jsonb("metadata").$type<ActivityLogMetadata>().notNull(),
+  error: text("error"),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+});
+
 export type ProjectType = (typeof projectsTypeValues)[number];
 export type NotificationType = (typeof notificationTypeValues)[number];
 export type ClientNotificationStatus =
   (typeof clientNotificationStatusValues)[number];
-export type ContactSubmissionStatus =
-  (typeof contactSubmissionStatusValues)[number];

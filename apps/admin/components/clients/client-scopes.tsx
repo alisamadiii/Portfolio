@@ -44,21 +44,21 @@ const getScopeLabel = (scope: Scope): string => {
 // ─── Main Component ─────────────────────────────────────────────
 
 export const ClientScopes = ({
-  clientId,
+  userId,
   userEmail,
 }: {
-  clientId: string;
+  userId: string;
   userEmail: string;
 }) => {
   const trpc = useTRPC();
   const { data: scopes, isLoading } = useQuery(
-    trpc.scopes.listByClient.queryOptions(clientId)
+    trpc.scopes.listByClient.queryOptions(userId)
   );
   const resetUsage = useMutation(trpc.scopes.resetUsageCount.mutationOptions());
 
   const invalidate = () =>
     queryClient.invalidateQueries({
-      queryKey: trpc.scopes.listByClient.queryKey(clientId),
+      queryKey: trpc.scopes.listByClient.queryKey(userId),
     });
 
   if (isLoading) {
@@ -74,7 +74,7 @@ export const ClientScopes = ({
     <CardAgency.Card>
       <CardAgency.Header title="Scopes">
         <AddScopeDialog
-          clientId={clientId}
+          userId={userId}
           userEmail={userEmail}
           onCreated={invalidate}
         />
@@ -170,11 +170,11 @@ export const ClientScopes = ({
 // ─── Add Scope ──────────────────────────────────────────────────
 
 const AddScopeDialog = ({
-  clientId,
+  userId,
   userEmail,
   onCreated,
 }: {
-  clientId: string;
+  userId: string;
   userEmail: string;
   onCreated: () => void;
 }) => {
@@ -255,7 +255,7 @@ const AddScopeDialog = ({
             onClick={() =>
               createScope.mutate(
                 {
-                  clientId,
+                  userId,
                   type: "contact",
                   metadata: {
                     domain,

@@ -6,6 +6,7 @@ import { clientsRouter } from "./clients";
 import { paymentsRouter } from "./payments";
 import { coldEmailsRouter } from "./cold-emails";
 import { filesRouter } from "./files";
+import { logsRouter } from "./logs";
 import { notificationRouter } from "./notification";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   payments: paymentsRouter,
   notification: notificationRouter,
   files: filesRouter,
+  logs: logsRouter,
   sources: sourcesRouter,
   coldEmails: coldEmailsRouter,
   scopes: scopesRouter,

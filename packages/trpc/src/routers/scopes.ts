@@ -60,14 +60,14 @@ export const scopesRouter = createTRPCRouter({
     return db
       .select()
       .from(clientScopes)
-      .where(eq(clientScopes.clientId, input))
+      .where(eq(clientScopes.userId, input))
       .orderBy(desc(clientScopes.createdAt));
   }),
 
   create: adminProcedure
     .input(
       z.object({
-        clientId: z.string().min(1),
+        userId: z.string().min(1),
         type: z.enum(scopeTypeValues),
         metadata: z.record(z.string(), z.unknown()),
       })
@@ -78,7 +78,7 @@ export const scopesRouter = createTRPCRouter({
       const [record] = await db
         .insert(clientScopes)
         .values({
-          clientId: input.clientId,
+          userId: input.userId,
           type: input.type,
           metadata: validated,
         })

@@ -18,6 +18,7 @@ const links = [
   { label: "Clients", href: "/clients" },
   { label: "Cold Emails", href: "/cold-emails" },
   { label: "Notifications", href: "/notifications" },
+  { label: "Logs", href: "/logs" },
 ];
 
 export const NavbarAdmin = () => {
