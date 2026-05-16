@@ -22,8 +22,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Portal | Ali Samadi",
+  metadataBase: new URL("https://portal.alisamadii.com"),
+  title: {
+    default: "Portal | Ali Samadi",
+    template: "%s | Ali Samadi",
+  },
   description: "Account dashboard, settings, and customer portal.",
+  openGraph: {
+    title: "Portal | Ali Samadi",
+    description: "Account dashboard, settings, and customer portal.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Portal | Ali Samadi",
+    description: "Account dashboard, settings, and customer portal.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

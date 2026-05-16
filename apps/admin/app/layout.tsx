@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { Providers } from "@workspace/ui/providers";
 
@@ -24,9 +25,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "Admin",
-  description: "Admin page",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://admin.alisamadii.com"),
+  title: {
+    default: "Admin | Ali Samadi",
+    template: "%s | Admin",
+  },
+  description: "Internal admin dashboard for managing clients, projects, and operations.",
+  openGraph: {
+    title: "Admin | Ali Samadi",
+    description: "Internal admin dashboard for managing clients, projects, and operations.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Admin | Ali Samadi",
+    description: "Internal admin dashboard for managing clients, projects, and operations.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 async function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -32,6 +32,7 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://motion.alisamadii.com"),
   title: {
     default: "Motion - Component & Animation Library",
     template: "%s | Motion",
@@ -49,6 +50,9 @@ export const metadata: Metadata = {
     title: "Motion - Component & Animation Library",
     description:
       "A collection of polished React components with animations, key points, and video demos to enhance your projects.",
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 

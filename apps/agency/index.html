@@ -3,7 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ali Samadi — Creative Agency</title>
+    <title>Ali Samadi — Creative Agency | Web Design & Development</title>
+    <meta name="description" content="Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results." />
+    <meta name="author" content="Ali Samadi" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://cdn.alisamadii.com/company/business-logo.png" />
+    <link rel="apple-touch-icon" href="https://cdn.alisamadii.com/company/business-logo.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ali Samadi — Creative Agency" />
+    <meta property="og:description" content="Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results." />
+    <meta property="og:url" content="https://agency.alisamadii.com" />
+    <meta property="og:image" content="https://cdn.alisamadii.com/company/business-logo.png" />
+    <meta property="og:site_name" content="Ali Samadi Agency" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ali Samadi — Creative Agency" />
+    <meta name="twitter:description" content="Creative agency specializing in brand identity, web development, and digital strategy." />
+    <meta name="twitter:image" content="https://cdn.alisamadii.com/company/business-logo.png" />
+    <meta name="twitter:creator" content="@alisamadii_" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://agency.alisamadii.com" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -126,54 +151,6 @@
         transform: scale(1.05);
       }
 
-      /* Video intro overlay */
-      .video-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 60;
-        background: #1a1a1a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        clip-path: circle(150% at 50% 50%);
-        transition: clip-path 0.8s cubic-bezier(0.32, 0.72, 0, 1);
-      }
-      .video-overlay.exiting {
-        clip-path: circle(0% at 50% 50%);
-      }
-      .video-overlay video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        animation: videoScale 2s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-      }
-      @keyframes videoScale {
-        0% {
-          transform: scale(1.3);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-      .video-skip {
-        position: absolute;
-        bottom: 2rem;
-        right: 2rem;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.75rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: color 0.3s;
-        z-index: 2;
-      }
-      .video-skip:hover {
-        color: rgba(255, 255, 255, 0.9);
-      }
-      body.intro-active {
-        overflow: hidden;
-      }
-
       /* Text scramble cursor blink */
       @keyframes blink {
         0%,
@@ -209,19 +186,8 @@
   </head>
 
   <body
-    class="noise intro-active bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+    class="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
   >
-    <!-- ==================== VIDEO INTRO ==================== -->
-    <div id="videoOverlay" class="video-overlay">
-      <video id="introVideo" autoplay muted playsinline>
-        <source
-          src="https://cdn.alisamadii.com/marketing/agency-video.mp4"
-          type="video/mp4"
-        />
-      </video>
-      <button id="videoSkip" class="video-skip">Skip</button>
-    </div>
-
     <!-- ==================== NAV ==================== -->
     <nav class="fixed top-0 left-0 z-40 w-full px-4 py-5 md:px-8">
       <div class="mx-auto flex max-w-[1400px] items-center justify-between">
@@ -250,8 +216,7 @@
             >Contact</a
           >
           <a
-            href="https://cal.com/alisamadii"
-            target="_blank"
+            href="#contact"
             class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-300"
           >
             Let's Talk
@@ -375,12 +340,13 @@
               <div
                 class="img-wrap aspect-[3/4] overflow-hidden rounded-[calc(2rem-0.375rem)]"
               >
-                <img
-                  src="https://cdn.alisamadii.com/marketing/hero-agency.webp"
-                  alt="Agency work showcase"
+                <video
+                  src="https://cdn.alisamadii.com/media/welcome-video.mp4"
+                  autoplay
+                  muted
+                  playsinline
                   class="h-full w-full object-cover"
-                  loading="eager"
-                />
+                ></video>
               </div>
             </div>
           </div>
@@ -765,239 +731,50 @@
           >
         </div>
 
-        <div
-          class="stagger mx-auto grid max-w-[900px] grid-cols-1 gap-6 md:grid-cols-2"
-        >
-          <!-- Starter -->
-          <div class="reveal">
-            <div
-              class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[2rem] p-1.5 ring-1"
-            >
-              <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
-                <h3 class="text-xl font-semibold">Starter</h3>
-                <div class="mt-4 flex items-baseline gap-1">
-                  <span class="text-4xl font-bold tracking-tight md:text-5xl"
-                    >$149</span
-                  >
-                  <span class="text-warmgray text-sm">/mo</span>
-                </div>
-                <ul class="text-warmgray mt-8 space-y-4 text-sm">
-                  <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    5-page website build
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Managed hosting
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Domain management
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Contact form with email forwarding
-                  </li>
-                </ul>
-                <a
-                  href="https://portal.alisamadii.com/agency"
-                  target="_blank"
-                  class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream mt-10 inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium transition-all duration-300"
-                >
-                  Get started
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Custom -->
+        <div class="stagger mx-auto max-w-[500px]">
           <div class="reveal">
             <div class="pricing-popular bg-accent/[0.03] rounded-[2rem] p-1.5">
-              <div
-                class="relative rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10"
-              >
-                <span
-                  class="bg-accent/10 text-accent absolute top-6 right-6 rounded-full px-3 py-1 text-[10px] font-semibold tracking-[0.15em] uppercase"
-                  >Most Popular</span
-                >
-                <h3 class="text-xl font-semibold">Custom</h3>
-                <div class="mt-4">
-                  <span class="text-4xl font-bold tracking-tight md:text-5xl"
-                    >Let's talk</span
-                  >
-                </div>
+              <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+                <h3 class="font-serif text-3xl italic md:text-4xl">Let's Talk</h3>
+                <p class="text-warmgray mt-3 text-base leading-relaxed">
+                  Every project is unique. Tell us what you need and we'll craft a plan that fits.
+                </p>
                 <ul class="text-warmgray mt-8 space-y-4 text-sm">
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Everything in Starter
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Website design & development
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    User authentication system
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Managed hosting & domain management
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Admin panel & content management
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    User authentication & admin panel
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     Database provisioning & management
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     Web app development
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    AWS SES email integration
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Email integration & contact forms
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      class="text-accent mt-0.5 h-5 w-5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <svg class="text-accent mt-0.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     SEO, analytics, maintenance & priority support
                   </li>
                 </ul>
                 <a
-                  href="https://cal.com/alisamadii"
-                  target="_blank"
+                  href="#contact"
                   class="mag-btn bg-accent hover:bg-charcoal mt-10 inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium text-white transition-colors duration-300"
                 >
-                  Get started
-                  <span
-                    class="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-[11px]"
-                    >&#8599;</span
-                  >
+                  Get in Touch
+                  <span class="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-[11px]">&#8599;</span>
                 </a>
               </div>
             </div>
@@ -1034,8 +811,7 @@
             </p>
             <div class="reveal mt-10">
               <a
-                href="https://cal.com/alisamadii"
-                target="_blank"
+                href="mailto:agency@alisamadii.com"
                 class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-medium transition-colors duration-300"
               >
                 Start a Conversation
@@ -1048,7 +824,7 @@
           </div>
           <div class="stagger md:col-span-4">
             <!-- Email -->
-            <a href="mailto:a@alisamadii.com" class="reveal group block">
+            <a href="mailto:agency@alisamadii.com" class="reveal group block">
               <div
                 class="bg-charcoal/[0.03] ring-charcoal/[0.04] group-hover:ring-accent/20 group-hover:bg-accent/[0.02] rounded-[1.5rem] p-1 ring-1 transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
               >
@@ -1079,7 +855,45 @@
                     >
                     <span
                       class="text-charcoal group-hover:text-accent text-base font-medium transition-colors duration-300"
-                      >a@alisamadii.com</span
+                      >agency@alisamadii.com</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </a>
+            <!-- Schedule -->
+            <a href="https://cal.com/alisamadii" target="_blank" class="reveal group mt-4 block">
+              <div
+                class="bg-charcoal/[0.03] ring-charcoal/[0.04] group-hover:ring-accent/20 group-hover:bg-accent/[0.02] rounded-[1.5rem] p-1 ring-1 transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
+              >
+                <div
+                  class="flex items-center gap-4 rounded-[calc(1.5rem-0.25rem)] bg-white p-5 md:p-6"
+                >
+                  <div
+                    class="bg-accent/10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+                  >
+                    <svg
+                      class="text-accent h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <span
+                      class="text-warmgray/60 mb-1 block text-[10px] tracking-[0.2em] uppercase"
+                      >Schedule</span
+                    >
+                    <span
+                      class="text-charcoal group-hover:text-accent text-base font-medium transition-colors duration-300"
+                      >Book a Meeting</span
                     >
                   </div>
                 </div>
@@ -1288,30 +1102,23 @@
             </ul>
           </div>
 
-          <!-- Newsletter -->
+          <!-- Availability -->
           <div class="md:col-span-3 md:col-start-10">
             <h4
               class="text-charcoal mb-4 text-xs font-semibold tracking-[0.15em] uppercase"
             >
-              Newsletter
+              Availability
             </h4>
             <p class="text-warmgray mb-4 text-sm leading-relaxed">
-              Get the latest updates, tips, and insights delivered to your
-              inbox.
+              Currently accepting new projects. Reach out to discuss your ideas and let's build something great together.
             </p>
-            <form class="flex gap-2" onsubmit="event.preventDefault()">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                class="bg-charcoal/[0.03] ring-charcoal/[0.06] focus:ring-accent/40 placeholder:text-warmgray/50 min-w-0 flex-1 rounded-full px-4 py-2.5 text-sm ring-1 transition-all duration-300 focus:outline-none"
-              />
-              <button
-                type="submit"
-                class="mag-btn bg-accent hover:bg-charcoal flex-shrink-0 rounded-full px-4 py-2.5 text-sm font-medium text-white transition-colors duration-300"
-              >
-                &#8599;
-              </button>
-            </form>
+            <a
+              href="mailto:agency@alisamadii.com"
+              class="mag-btn bg-accent hover:bg-charcoal inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition-colors duration-300"
+            >
+              Get in Touch
+              <span class="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-[11px]">&#8599;</span>
+            </a>
           </div>
         </div>
 
@@ -1326,25 +1133,7 @@
 
     <!-- ==================== SCRIPTS ==================== -->
     <script>
-      // Video intro with Formation Breakaway exit
-      const videoOverlay = document.getElementById("videoOverlay");
-      const introVideo = document.getElementById("introVideo");
-      const videoSkip = document.getElementById("videoSkip");
-
-      function dismissVideo() {
-        videoOverlay.classList.add("exiting");
-        document.body.classList.remove("intro-active");
-        setTimeout(() => {
-          videoOverlay.remove();
-        }, 850);
-        setTimeout(initReveals, 400);
-      }
-
-      introVideo.playbackRate = 2.5;
-      introVideo.addEventListener("ended", dismissVideo);
-      videoSkip.addEventListener("click", dismissVideo);
-
-      // Scroll reveal via IntersectionObserver — deferred until video exits
+      // Scroll reveal via IntersectionObserver
       function initReveals() {
         const observer = new IntersectionObserver(
           (entries) => {
@@ -1361,6 +1150,7 @@
           .querySelectorAll(".reveal")
           .forEach((el) => observer.observe(el));
       }
+      initReveals();
 
       // Text scramble effect
       const scrambleEl = document.getElementById("scrambleTarget");

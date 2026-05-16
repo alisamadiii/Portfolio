@@ -28,6 +28,7 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://alisamadii.com"),
   title: {
     default: "Ali Samadi - Portfolio",
     template: "%s | Ali Samadi",
@@ -42,6 +43,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ali Samadi - Portfolio",
     description: "A collection of my projects and experiences.",
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 
