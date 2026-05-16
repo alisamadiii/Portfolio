@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
       .values({
         type: "contact",
         status: "success",
-        userId: scopeRecord.userId,
+        userId: scopeRecord.userId || undefined,
         actor: body.email,
         summary: `Contact form: ${body.name} — ${body.subject}`,
         metadata: {

@@ -363,6 +363,7 @@ export type ActivityLogMetadata =
 export type ActivityLogInsert<T extends ActivityLogType = ActivityLogType> = {
   type: T;
   status: "success" | "failed";
+  userId?: string | null;
   actor?: string | null;
   summary?: string | null;
   metadata: ActivityLogMetadataMap[T];

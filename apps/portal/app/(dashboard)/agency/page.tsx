@@ -83,7 +83,7 @@ function StatusDot({
 
 function SubscriptionDetailsPanel({ sub }: { sub: StripeSubscription }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 py-3">
       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
         <div>
           <p className="text-muted-foreground text-xs">Status</p>
