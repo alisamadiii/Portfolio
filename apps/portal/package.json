@@ -13,6 +13,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@react-pdf/renderer": "^4.3.2",
     "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-table": "^8.21.3",
     "@workspace/auth": "workspace:*",
     "@workspace/drizzle": "workspace:*",
     "@workspace/trpc": "workspace:*",

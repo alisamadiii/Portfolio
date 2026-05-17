@@ -91,6 +91,10 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
+      isClient: {
+        type: "boolean",
+        required: false,
+      },
     },
   },
   socialProviders: {

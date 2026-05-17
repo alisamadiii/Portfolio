@@ -97,8 +97,13 @@ const Content = ({
       <DialogHeader>
         <DialogTitle>Contact Support</DialogTitle>
         <DialogDescription>
-          We&apos;re here to help! Please fill out the form below to contact our
-          support team.
+          Use this form for general inquiries, billing questions, or account
+          support. For website changes, bug reports, or feature requests, please
+          use the{" "}
+          <a href="/requests" className="underline font-medium">
+            AI Requests
+          </a>{" "}
+          page instead — it&apos;s faster and handled automatically.
         </DialogDescription>
       </DialogHeader>
       {sendNotification.isSuccess ? (

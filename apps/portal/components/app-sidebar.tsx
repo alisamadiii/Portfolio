@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
+  Bot,
   Building2,
   CreditCard,
   HelpCircle,
@@ -59,6 +60,11 @@ const agencyPages = [
     title: "Agency",
     url: "/agency",
     icon: Building2,
+  },
+  {
+    title: "AI Requests",
+    url: "/requests",
+    icon: Bot,
   },
 ];
 
