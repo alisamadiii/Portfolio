@@ -338,7 +338,7 @@ export default function ClientDetailPage() {
   if (!data) return null;
 
   const { user } = data;
-  const userMetadata = (user.metadata as Record<string, string> | null) ?? {};
+  const userMetadata = user.metadata ?? {};
 
   return (
     <div className="mx-auto max-w-[2000px] space-y-6 p-4 md:p-8">

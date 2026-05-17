@@ -1,5 +1,6 @@
 "use client";
 
+import type { UserMetadata } from "@workspace/drizzle/schema";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { MetadataEditor } from "@/components/metadata-editor";
@@ -11,7 +12,7 @@ export const ClientMetadataEditor = ({
 }: {
   userId: string;
   clientId: string;
-  initialMetadata: Record<string, string>;
+  initialMetadata: UserMetadata;
 }) => {
   const trpc = useTRPC();
   return (

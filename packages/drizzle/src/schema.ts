@@ -14,6 +14,22 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+// ─── User Metadata Registry ────────────────────────────
+// Add or remove entries here. UI dropdown auto-updates.
+export const userMetadataKeys = [
+  { key: "domain", label: "Domain" },
+  { key: "timezone", label: "Timezone" },
+  { key: "projectRepo", label: "Project Repo" },
+  { key: "clickupListId", label: "ClickUp List ID" },
+  { key: "figmaUrl", label: "Figma URL" },
+  { key: "techStack", label: "Tech Stack" },
+  { key: "launchDate", label: "Launch Date" },
+  { key: "notes", label: "Notes" },
+] as const;
+
+export type UserMetadataKey = (typeof userMetadataKeys)[number]["key"];
+export type UserMetadata = Partial<Record<UserMetadataKey, string>>;
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -32,7 +48,7 @@ export const user = pgTable("user", {
   banned: boolean("banned"),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
-  metadata: jsonb("metadata").default({}),
+  metadata: jsonb("metadata").$type<UserMetadata>().default({}),
 
   // New
   phone: text("phone"),

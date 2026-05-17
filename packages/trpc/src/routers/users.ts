@@ -5,7 +5,13 @@ import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { user, userSignals } from "@workspace/drizzle/schema";
+import {
+  user,
+  userMetadataKeys,
+  userSignals,
+  type UserMetadata,
+  type UserMetadataKey,
+} from "@workspace/drizzle/schema";
 
 import {
   adminProcedure,
@@ -395,7 +401,15 @@ export const usersRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
-        metadata: z.record(z.string(), z.string()),
+        metadata: z.record(
+          z.enum(
+            userMetadataKeys.map((k) => k.key) as [
+              UserMetadataKey,
+              ...UserMetadataKey[],
+            ]
+          ),
+          z.string()
+        ),
       })
     )
     .mutation(async ({ input }) => {

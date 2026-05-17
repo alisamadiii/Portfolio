@@ -28,8 +28,7 @@ export const Profile = () => {
     trpc.users.get.queryOptions(id, { enabled: !!id })
   );
 
-  const userMetadata =
-    (user?.metadata as Record<string, string> | null) ?? {};
+  const userMetadata = user?.metadata ?? {};
 
   return (
     <div className="space-y-6">

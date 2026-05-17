@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { initTRPC, TRPCError } from "@trpc/server";
 
 import { auth } from "@workspace/auth/auth";
+import type { UserMetadata } from "@workspace/drizzle/schema";
 
 export const createTRPCContext = cache(async () => {});
 
@@ -35,7 +36,18 @@ export const authenticatedProcedure = baseProcedure.use(
       });
     }
 
-    return next({ ctx: { ...ctx, session } });
+    return next({
+      ctx: {
+        ...ctx,
+        session: {
+          ...session,
+          user: {
+            ...session.user,
+            metadata: session.user.metadata as UserMetadata | null,
+          },
+        },
+      },
+    });
   }
 );
 export const adminProcedure = authenticatedProcedure.use(
