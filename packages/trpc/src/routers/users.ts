@@ -408,15 +408,28 @@ export const usersRouter = createTRPCRouter({
               ...UserMetadataKey[],
             ]
           ),
-          z.string()
+          z.string().optional()
         ),
       })
     )
     .mutation(async ({ input }) => {
       try {
+        const [existing] = await db
+          .select({ metadata: user.metadata })
+          .from(user)
+          .where(eq(user.id, input.userId))
+          .limit(1);
+
+        const merged = {
+          ...(existing?.metadata ?? {}),
+          ...Object.fromEntries(
+            Object.entries(input.metadata).filter(([, v]) => v !== undefined)
+          ),
+        };
+
         const [updated] = await db
           .update(user)
-          .set({ metadata: input.metadata })
+          .set({ metadata: merged })
           .where(eq(user.id, input.userId))
           .returning();
 
