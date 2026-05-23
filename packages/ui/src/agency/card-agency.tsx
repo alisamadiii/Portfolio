@@ -14,7 +14,7 @@ const Card = ({
   return (
     <div
       className={cn(
-        "bg-muted shadow-card flex w-full flex-col gap-6 rounded-4xl p-6",
+        "bg-background flex w-full flex-col gap-6 rounded-xl border p-6",
         className
       )}
     >

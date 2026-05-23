@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free Estimate — Ali Samadi | Creative Agency</title>
+    <meta
+      name="description"
+      content="Get an instant project estimate. Select services, customize options, and download your quote — web design, branding, SEO, admin panels, and more."
+    />
+    <meta name="author" content="Ali Samadi" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://cdn.alisamadii.com/company/business-logo.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://cdn.alisamadii.com/company/business-logo.png"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Free Estimate — Ali Samadi" />
+    <meta
+      property="og:description"
+      content="Get an instant project estimate. Select services, customize options, and download your quote — web design, branding, SEO, admin panels, and more."
+    />
+    <meta property="og:url" content="https://agency.alisamadii.com/estimate" />
+    <meta
+      property="og:image"
+      content="https://cdn.alisamadii.com/company/business-logo.png"
+    />
+    <meta property="og:site_name" content="Ali Samadi Agency" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Free Estimate — Ali Samadi" />
+    <meta
+      name="twitter:description"
+      content="Get an instant project estimate. Select services, customize options, and download your quote."
+    />
+    <meta
+      name="twitter:image"
+      content="https://cdn.alisamadii.com/company/business-logo.png"
+    />
+    <meta name="twitter:creator" content="@alisamadii_" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+              serif: ["Instrument Serif", "Georgia", "serif"],
+            },
+            colors: {
+              cream: "#FFFFFF",
+              charcoal: "#1a1a1a",
+              warmgray: "#8a8577",
+              accent: "#FC8464",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      html {
+        scrollbar-gutter: stable;
+      }
+
+      /* Noise overlay */
+      .noise::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        pointer-events: none;
+        opacity: 0.025;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      }
+
+      /* Scroll reveal */
+      .reveal {
+        opacity: 0;
+        transform: translateY(3rem);
+        filter: blur(8px);
+        transition: all 0.9s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+
+      /* Stagger children */
+      .stagger > .reveal:nth-child(1) {
+        transition-delay: 0ms;
+      }
+      .stagger > .reveal:nth-child(2) {
+        transition-delay: 120ms;
+      }
+      .stagger > .reveal:nth-child(3) {
+        transition-delay: 240ms;
+      }
+      .stagger > .reveal:nth-child(4) {
+        transition-delay: 360ms;
+      }
+      .stagger > .reveal:nth-child(5) {
+        transition-delay: 480ms;
+      }
+      .stagger > .reveal:nth-child(6) {
+        transition-delay: 600ms;
+      }
+      .stagger > .reveal:nth-child(7) {
+        transition-delay: 720ms;
+      }
+
+      /* Magnetic button */
+      .mag-btn {
+        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .mag-btn:active {
+        transform: scale(0.97);
+      }
+
+      /* Custom checkbox */
+      .check-box {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        border: 1.5px solid rgba(26, 26, 26, 0.12);
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+      }
+      .check-box.checked {
+        background: #fc8464;
+        border-color: #fc8464;
+        transform: scale(1.05);
+      }
+      .check-box svg {
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .check-box.checked svg {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      /* Service card selected state */
+      .service-card.selected .card-outer {
+        ring-color: rgba(252, 132, 100, 0.3);
+        background: rgba(252, 132, 100, 0.02);
+      }
+
+      /* Sub-options slide */
+      .sub-options {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition:
+          max-height 0.5s cubic-bezier(0.32, 0.72, 0, 1),
+          opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+          margin 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        margin-top: 0;
+      }
+      .sub-options.open {
+        max-height: 400px;
+        opacity: 1;
+        margin-top: 1.5rem;
+      }
+
+      /* Option pill */
+      .option-pill {
+        padding: 0.625rem 1.25rem;
+        border-radius: 9999px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border: 1.5px solid rgba(26, 26, 26, 0.08);
+        background: white;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+        white-space: nowrap;
+      }
+      .option-pill:hover {
+        border-color: rgba(252, 132, 100, 0.3);
+      }
+      .option-pill.active {
+        background: #fc8464;
+        color: white;
+        border-color: #fc8464;
+      }
+
+      /* Sticky bar */
+      .sticky-bar {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        background: rgba(26, 26, 26, 0.92);
+      }
+
+      /* Summary row animation */
+      .summary-row {
+        animation: slideIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-1rem);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* Price counter animation */
+      .price-display {
+        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .price-display.bump {
+        transform: scale(1.08);
+      }
+
+      /* Print styles */
+      @media print {
+        .noise::after {
+          display: none;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .print-only {
+          display: block !important;
+        }
+        .reveal {
+          opacity: 1;
+          transform: none;
+          filter: none;
+        }
+        body {
+          background: white;
+        }
+        #servicesContainer {
+          display: none;
+        }
+        #heroSection {
+          display: none;
+        }
+        nav {
+          display: none;
+        }
+        .sticky-bar {
+          display: none;
+        }
+        #summarySection {
+          border: none;
+          padding-top: 0;
+        }
+        #summarySection .rounded-\[2rem\] {
+          box-shadow: none;
+          ring: none;
+        }
+      }
+
+      .print-only {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body
+    class="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+  >
+    <!-- ==================== NAV ==================== -->
+    <nav class="no-print fixed top-0 right-0 left-0 z-40 px-4 py-5 md:px-8">
+      <div class="mx-auto flex max-w-[1400px] items-center justify-between">
+        <a href="index.html" class="group flex items-center gap-3">
+          <div
+            class="bg-charcoal flex h-10 w-10 items-center justify-center rounded-full"
+          >
+            <span class="text-cream text-sm font-bold">AS</span>
+          </div>
+          <span
+            class="text-warmgray group-hover:text-charcoal text-sm font-medium transition-colors duration-300"
+            >Ali Samadi</span
+          >
+        </a>
+        <a
+          href="index.html"
+          class="mag-btn text-warmgray hover:text-charcoal flex items-center gap-2 text-sm transition-colors duration-300"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+            />
+          </svg>
+          Back to Home
+        </a>
+      </div>
+    </nav>
+
+    <!-- ==================== HERO ==================== -->
+    <section
+      id="heroSection"
+      class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28"
+    >
+      <div class="stagger mx-auto max-w-[1400px]">
+        <div class="reveal">
+          <span
+            class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+            >Free Estimate</span
+          >
+        </div>
+        <h1
+          class="reveal font-serif text-5xl leading-[0.95] tracking-tight italic md:text-7xl lg:text-8xl"
+        >
+          Build Your<br />
+          <span class="text-accent">Project</span>
+        </h1>
+        <p
+          class="reveal text-warmgray mt-6 max-w-[55ch] text-base leading-relaxed md:text-lg"
+        >
+          Select the services you need and get an instant estimate. Toggle
+          features on and off to see how your project shapes up — then download
+          or send the quote when you're ready.
+        </p>
+        <div class="reveal mt-8">
+          <div
+            class="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-5 py-2.5 ring-1 ring-emerald-200/60"
+          >
+            <svg
+              class="h-5 w-5 text-emerald-600 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+              />
+            </svg>
+            <span class="text-sm font-semibold text-emerald-800"
+              >1-Day Delivery</span
+            >
+            <span class="text-xs text-emerald-600/80"
+              >once you approve the estimate</span
+            >
+          </div>
+        </div>
+        <div class="reveal mt-6 max-w-[55ch]">
+          <div class="flex gap-3 rounded-2xl bg-amber-50/80 px-5 py-4 ring-1 ring-amber-200/50">
+            <svg class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+            </svg>
+            <div>
+              <p class="text-sm font-semibold text-amber-900">This is an estimate, not a final quote.</p>
+              <p class="text-xs text-amber-700/80 mt-1 leading-relaxed">Final pricing depends on your content volume, page complexity, number of sections, and specific feature requirements. After you submit, we review your project details and provide an accurate quote tailored to your needs.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SERVICES (rendered by JS) ==================== -->
+    <div id="servicesContainer"></div>
+
+    <!-- ==================== SUMMARY ==================== -->
+    <section
+      id="summarySection"
+      class="border-charcoal/[0.06] border-t px-4 py-24 md:px-8 md:py-40"
+    >
+      <div class="mx-auto max-w-[900px]">
+        <div class="reveal mb-12">
+          <span
+            class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+            >Your Estimate</span
+          >
+          <h2
+            class="mt-2 font-serif text-4xl tracking-tight italic md:text-5xl"
+          >
+            Summary
+          </h2>
+        </div>
+
+        <!-- Print header (hidden on screen) -->
+        <div class="print-only mb-10">
+          <div class="mb-6 flex items-center gap-3">
+            <div
+              class="bg-charcoal flex h-10 w-10 items-center justify-center rounded-full"
+            >
+              <span class="text-sm font-bold text-white">AS</span>
+            </div>
+            <div>
+              <p class="font-semibold">Ali Samadi — Creative Agency</p>
+              <p class="text-warmgray text-sm">agency@alisamadii.com</p>
+            </div>
+          </div>
+          <h2 class="font-serif text-3xl italic">Project Estimate</h2>
+          <p class="text-warmgray mt-1 text-sm" id="printDate"></p>
+        </div>
+
+        <!-- Selected services list -->
+        <div class="reveal">
+          <div
+            class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[2rem] p-1.5 ring-1"
+          >
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <div id="summaryList" class="space-y-0">
+                <p id="summaryEmpty" class="text-warmgray py-4 text-sm">
+                  No services selected yet. Choose services above to build your
+                  estimate.
+                </p>
+              </div>
+
+              <!-- Totals -->
+              <div
+                id="summaryTotals"
+                class="border-charcoal/[0.06] mt-6 hidden border-t pt-6"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="text-lg font-semibold">One-time Total</span>
+                  <span
+                    id="totalOneTime"
+                    class="text-2xl font-bold tracking-tight"
+                    >$0</span
+                  >
+                </div>
+                <div
+                  id="monthlyRow"
+                  class="mt-2 flex hidden items-center justify-between"
+                >
+                  <span class="text-warmgray text-sm">Monthly recurring</span>
+                  <span
+                    id="totalMonthly"
+                    class="text-accent text-base font-semibold"
+                    >$0/mo</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Client info -->
+        <div class="reveal mt-8">
+          <div
+            class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[2rem] p-1.5 ring-1"
+          >
+            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+              <h3 class="mb-6 text-lg font-semibold">Your Information</h3>
+              <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+                    >Name</label
+                  >
+                  <input
+                    id="clientName"
+                    type="text"
+                    placeholder="Your name"
+                    class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+                    >Email</label
+                  >
+                  <input
+                    id="clientEmail"
+                    type="email"
+                    placeholder="you@email.com"
+                    class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div class="mt-5">
+                <label
+                  class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+                  >Project Description</label
+                >
+                <textarea
+                  id="clientDescription"
+                  rows="4"
+                  placeholder="Tell us about your project — goals, timeline, any specifics..."
+                  class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full resize-none rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="reveal no-print mt-8 flex flex-col gap-4 sm:flex-row">
+          <button
+            onclick="downloadPDF()"
+            class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex flex-1 items-center justify-center gap-3 rounded-full px-8 py-4 text-sm font-medium transition-colors duration-300"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+              />
+            </svg>
+            Download PDF
+          </button>
+          <button
+            onclick="sendEstimate()"
+            class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex flex-1 items-center justify-center gap-3 rounded-full px-8 py-4 text-sm font-medium transition-all duration-300"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+              />
+            </svg>
+            Send Estimate
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="no-print border-charcoal/[0.06] border-t px-4 py-12 md:px-8">
+      <div
+        class="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 md:flex-row"
+      >
+        <p class="text-warmgray text-sm">
+          &copy; 2025 Ali Samadi. All rights reserved.
+        </p>
+        <a
+          href="index.html"
+          class="text-warmgray hover:text-charcoal text-sm transition-colors duration-300"
+          >Back to Home</a
+        >
+      </div>
+    </footer>
+
+    <!-- ==================== STICKY BAR ==================== -->
+    <div
+      id="stickyBar"
+      class="no-print sticky-bar fixed right-0 bottom-0 left-0 z-40 translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+    >
+      <div
+        class="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-4 md:px-8"
+      >
+        <div class="flex items-center gap-4">
+          <span id="barCount" class="text-cream/60 text-sm">0 services</span>
+          <span
+            id="barTotal"
+            class="text-cream price-display text-xl font-bold tracking-tight"
+            >$0</span
+          >
+          <span id="barMonthly" class="text-accent hidden text-sm font-medium"
+            >+ $0/mo</span
+          >
+        </div>
+        <a
+          href="#summarySection"
+          class="mag-btn bg-accent hover:text-charcoal inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium text-white transition-colors duration-300 hover:bg-white"
+        >
+          View Summary
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+      // ─── SERVICE CONFIG ──────────────────────────────────────────
+      // To add/remove a service: edit this array. Everything else is automatic.
+      const SERVICES = [
+        {
+          id: "website",
+          title: "Website Design & Development",
+          description:
+            "Custom-designed, responsive website built with modern frameworks. Includes mobile optimization, SEO-ready structure, and performance tuning for blazing-fast load times.",
+          image: "https://cdn.alisamadii.com/marketing/estimate/website.webp",
+          basePrice: 800,
+          type: "one-time",
+          options: {
+            label: "Number of pages",
+            key: "pageCount",
+            defaultValue: "5",
+            choices: [
+              { label: "1 page", value: "1", price: 0 },
+              { label: "3 pages", value: "3", price: 400 },
+              { label: "5 pages", value: "5", price: 800 },
+              { label: "10 pages", value: "10", price: 1800 },
+            ],
+          },
+        },
+        {
+          id: "brand",
+          title: "Brand Identity",
+          description:
+            "Complete visual identity system — logo design, color palette, typography selection, and brand guidelines document. Everything you need for a cohesive brand presence.",
+          image:
+            "https://cdn.alisamadii.com/marketing/estimate/brand-identity-mockup.webp",
+          basePrice: 1500,
+          type: "one-time",
+        },
+        {
+          id: "seo",
+          title: "SEO & Analytics",
+          description:
+            "Data-driven search optimization — keyword strategy, on-page SEO, sitemap generation, Google Analytics integration, and performance monitoring dashboard.",
+          image: "https://cdn.alisamadii.com/marketing/estimate/seo.webp",
+          basePrice: 800,
+          type: "one-time",
+        },
+        {
+          id: "admin",
+          title: "Admin Panel",
+          description:
+            "Full admin dashboard to manage users, database records, media uploads, and site settings. Role-based access control, data tables with search and filtering, and bulk actions included.",
+          image: "https://cdn.alisamadii.com/marketing/estimate/admin.webp",
+          basePrice: 2000,
+          type: "one-time",
+        },
+        {
+          id: "auth",
+          title: "User Authentication",
+          description:
+            "Secure user registration and login system with email verification, password reset, social sign-in (Google, GitHub), and session management.",
+          image:
+            "https://cdn.alisamadii.com/marketing/estimate/user-authentication.webp",
+          basePrice: 499,
+          type: "one-time",
+        },
+        {
+          id: "database",
+          title: "Database & Backend",
+          description:
+            "Production-grade database architecture with API layer — PostgreSQL provisioning, schema design, data migrations, and a type-safe API. One-time setup fee plus monthly hosting based on your scale.",
+          image: "https://cdn.alisamadii.com/marketing/estimate/database.webp",
+          basePrice: 500,
+          type: "one-time",
+          monthlyAddon: true,
+          badge: "Required for User Authentication",
+          options: {
+            label: "Database tier",
+            key: "dbTier",
+            defaultValue: "starter",
+            choices: [
+              { label: "Starter", value: "starter", price: 0, monthly: 29 },
+              { label: "Growth", value: "growth", price: 0, monthly: 59 },
+              { label: "Scale", value: "scale", price: 0, monthly: 99 },
+            ],
+          },
+        },
+        {
+          id: "email",
+          title: "Email Integration",
+          description:
+            "Transactional email system with branded templates — welcome emails, password resets, contact form forwarding, and notification pipelines via AWS SES. Monthly pricing based on your volume.",
+          image:
+            "https://cdn.alisamadii.com/marketing/estimate/email-integration.webp",
+          basePrice: 199,
+          type: "one-time",
+          monthlyAddon: true,
+          badge: "Already have a website package? Your contact form is on us — up to 2,000 emails/month included free. No need to add this service",
+          options: {
+            label: "Email volume",
+            key: "emailVolume",
+            defaultValue: "1k",
+            choices: [
+              { label: "Up to 1k/day", value: "1k", price: 0, monthly: 19 },
+              { label: "Up to 5k/day", value: "5k", price: 0, monthly: 49 },
+              { label: "Up to 10k/day", value: "10k", price: 0, monthly: 89 },
+            ],
+          },
+        },
+        {
+          id: "hosting",
+          title: "Managed Hosting & Maintenance",
+          description:
+            "Worry-free deployment on premium infrastructure — Vercel hosting, domain management, SSL certificates, uptime monitoring, security updates, and priority support.",
+          image: "https://cdn.alisamadii.com/marketing/estimate/hosting.webp",
+          basePrice: 149,
+          type: "monthly",
+        },
+      ];
+
+      // ─── STATE ───────────────────────────────────────────────────
+
+      const STORAGE_KEY = "agency-estimate";
+
+      let state = {
+        services: {},
+        options: {},
+        clientName: "",
+        clientEmail: "",
+        clientDescription: "",
+      };
+
+      // ─── PERSISTENCE ─────────────────────────────────────────────
+
+      const saveState = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      };
+
+      const loadState = () => {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            state = { ...state, ...parsed };
+          }
+        } catch (e) {
+          console.warn("Failed to load saved state", e);
+        }
+      };
+
+      // ─── PRICE CALCULATION ───────────────────────────────────────
+
+      const calcTotals = () => {
+        let oneTime = 0;
+        let monthly = 0;
+
+        SERVICES.forEach((svc) => {
+          if (!state.services[svc.id]) return;
+          const base = svc.basePrice;
+          let optionPrice = 0;
+          let optionMonthly = 0;
+
+          if (svc.options) {
+            const chosen =
+              state.options[svc.id] ||
+              svc.options.defaultValue ||
+              svc.options.choices[0].value;
+            const choice = svc.options.choices.find((c) => c.value === chosen);
+            if (choice) {
+              optionPrice = choice.price;
+              if (choice.monthly) optionMonthly = choice.monthly;
+            }
+          }
+
+          if (svc.type === "monthly") {
+            monthly += base + optionPrice;
+          } else {
+            oneTime += base + optionPrice;
+          }
+          monthly += optionMonthly;
+        });
+
+        return { oneTime, monthly };
+      };
+
+      const formatPrice = (amount) => {
+        return "$" + amount.toLocaleString("en-US");
+      };
+
+      // ─── RENDER SERVICES ─────────────────────────────────────────
+
+      const renderServices = () => {
+        const container = document.getElementById("servicesContainer");
+        container.innerHTML = "";
+
+        SERVICES.forEach((svc, index) => {
+          const isSelected = !!state.services[svc.id];
+          const isEven = index % 2 === 0;
+          const sectionNum = String(index + 1).padStart(2, "0");
+
+          const section = document.createElement("section");
+          section.className = `px-4 md:px-8 py-20 md:py-28 border-t border-charcoal/[0.06] ${isEven ? "" : "bg-charcoal/[0.015]"}`;
+          section.id = `service-${svc.id}`;
+
+          const priceLabel =
+            svc.type === "monthly"
+              ? `${formatPrice(svc.basePrice)}<span class="text-base font-normal text-warmgray">/mo</span>`
+              : formatPrice(svc.basePrice);
+
+          let optionPriceNote = "";
+          if (svc.options && isSelected) {
+            const chosen =
+              state.options[svc.id] ||
+              svc.options.defaultValue ||
+              svc.options.choices[0].value;
+            const choice = svc.options.choices.find((c) => c.value === chosen);
+            if (choice) {
+              if (choice.monthly) {
+                optionPriceNote = ` <span class="text-sm font-normal text-accent">+ ${formatPrice(choice.monthly)}/mo</span>`;
+              } else if (choice.price > 0) {
+                optionPriceNote = ` <span class="text-sm font-normal text-accent">+ ${formatPrice(choice.price)}</span>`;
+              }
+            }
+          }
+
+          const imageOrder = isEven ? "md:order-1" : "md:order-2";
+          const contentOrder = isEven ? "md:order-2" : "md:order-1";
+
+          let optionsHTML = "";
+          if (svc.options) {
+            const currentVal =
+              state.options[svc.id] ||
+              svc.options.defaultValue ||
+              svc.options.choices[0].value;
+            const pills = svc.options.choices
+              .map((choice) => {
+                const isActive = choice.value === currentVal;
+                let priceTag = "";
+                if (choice.monthly) {
+                  priceTag = ` (${formatPrice(choice.monthly)}/mo)`;
+                } else if (choice.price > 0) {
+                  priceTag = ` (+${formatPrice(choice.price)})`;
+                }
+                return `<button
+              class="option-pill ${isActive ? "active" : ""}"
+              data-service="${svc.id}"
+              data-value="${choice.value}"
+              onclick="selectOption('${svc.id}', '${choice.value}')"
+            >${choice.label}${priceTag}</button>`;
+              })
+              .join("");
+
+            optionsHTML = `
+            <div class="sub-options ${isSelected ? "open" : ""}" id="options-${svc.id}">
+              <p class="text-xs uppercase tracking-[0.1em] font-medium text-warmgray mb-3">${svc.options.label}</p>
+              <div class="flex flex-wrap gap-2">${pills}</div>
+            </div>
+          `;
+          }
+
+          section.innerHTML = `
+          <div class="max-w-[1400px] mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+              <!-- Image -->
+              <div class="${imageOrder} reveal">
+                <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] overflow-hidden">
+                  <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[4/3]">
+                    <img src="${svc.image}" alt="${svc.title}" class="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="${contentOrder} stagger">
+                <div class="reveal">
+                  <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-4">${sectionNum} &mdash; Service</span>
+                </div>
+                <h2 class="reveal text-3xl md:text-4xl font-serif italic tracking-tight leading-tight">${svc.title}</h2>
+                <p class="reveal text-warmgray text-base leading-relaxed mt-4 max-w-[50ch]">${svc.description}</p>
+                ${svc.badge ? `<div class="reveal mt-4"><div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 ring-1 ring-emerald-200/60"><svg class="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-xs font-semibold text-emerald-800">${svc.badge}</span></div></div>` : ""}
+
+                <div class="reveal mt-8">
+                  <div class="flex items-center justify-between">
+                    <div class="text-2xl font-bold tracking-tight">${priceLabel}${optionPriceNote}</div>
+                    <button
+                      class="service-toggle flex items-center gap-3 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${isSelected ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}"
+                      onclick="toggleService('${svc.id}')"
+                    >
+                      <div class="check-box ${isSelected ? "checked" : ""}">
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      </div>
+                      ${isSelected ? "Selected" : "Add to Estimate"}
+                    </button>
+                  </div>
+                  ${optionsHTML}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+          container.appendChild(section);
+        });
+
+        // Re-init scroll observer for new elements
+        initObserver();
+      };
+
+      // ─── RENDER SUMMARY ──────────────────────────────────────────
+
+      const renderSummary = () => {
+        const list = document.getElementById("summaryList");
+        const empty = document.getElementById("summaryEmpty");
+        const totalsDiv = document.getElementById("summaryTotals");
+        const totalOneTimeEl = document.getElementById("totalOneTime");
+        const monthlyRowEl = document.getElementById("monthlyRow");
+        const totalMonthlyEl = document.getElementById("totalMonthly");
+
+        const selected = SERVICES.filter((svc) => state.services[svc.id]);
+
+        if (selected.length === 0) {
+          empty.classList.remove("hidden");
+          totalsDiv.classList.add("hidden");
+          list.querySelectorAll(".summary-row").forEach((el) => el.remove());
+          return;
+        }
+
+        empty.classList.add("hidden");
+        totalsDiv.classList.remove("hidden");
+
+        // Clear existing rows
+        list.querySelectorAll(".summary-row").forEach((el) => el.remove());
+
+        selected.forEach((svc) => {
+          let price = svc.basePrice;
+          let detail = "";
+          let optionMonthly = 0;
+
+          if (svc.options) {
+            const chosen =
+              state.options[svc.id] ||
+              svc.options.defaultValue ||
+              svc.options.choices[0].value;
+            const choice = svc.options.choices.find((c) => c.value === chosen);
+            if (choice) {
+              price += choice.price;
+              detail = ` (${choice.label})`;
+              if (choice.monthly) optionMonthly = choice.monthly;
+            }
+          }
+
+          const suffix = svc.type === "monthly" ? "/mo" : "";
+          const monthlyNote = optionMonthly > 0 ? ` <span class="text-accent text-xs font-medium">+ ${formatPrice(optionMonthly)}/mo</span>` : "";
+
+          const row = document.createElement("div");
+          row.className =
+            "summary-row flex items-center justify-between py-3 border-b border-charcoal/[0.04] last:border-0";
+          row.innerHTML = `
+          <div>
+            <span class="text-sm font-medium">${svc.title}</span>
+            <span class="text-xs text-warmgray">${detail}</span>
+          </div>
+          <span class="text-sm font-semibold tabular-nums">${formatPrice(price)}${suffix}${monthlyNote}</span>
+        `;
+          list.appendChild(row);
+        });
+
+        const { oneTime, monthly } = calcTotals();
+        totalOneTimeEl.textContent = formatPrice(oneTime);
+
+        if (monthly > 0) {
+          monthlyRowEl.classList.remove("hidden");
+          monthlyRowEl.classList.add("flex");
+          totalMonthlyEl.textContent = `${formatPrice(monthly)}/mo`;
+        } else {
+          monthlyRowEl.classList.add("hidden");
+          monthlyRowEl.classList.remove("flex");
+        }
+      };
+
+      // ─── RENDER STICKY BAR ───────────────────────────────────────
+
+      const renderStickyBar = () => {
+        const bar = document.getElementById("stickyBar");
+        const countEl = document.getElementById("barCount");
+        const totalEl = document.getElementById("barTotal");
+        const monthlyEl = document.getElementById("barMonthly");
+
+        const selected = SERVICES.filter((svc) => state.services[svc.id]);
+        const { oneTime, monthly } = calcTotals();
+
+        if (selected.length === 0) {
+          bar.style.transform = "translateY(100%)";
+          return;
+        }
+
+        bar.style.transform = "translateY(0)";
+        countEl.textContent = `${selected.length} service${selected.length !== 1 ? "s" : ""}`;
+        totalEl.textContent = formatPrice(oneTime);
+
+        // Price bump animation
+        totalEl.classList.add("bump");
+        setTimeout(() => totalEl.classList.remove("bump"), 300);
+
+        if (monthly > 0) {
+          monthlyEl.classList.remove("hidden");
+          monthlyEl.textContent = `+ ${formatPrice(monthly)}/mo`;
+        } else {
+          monthlyEl.classList.add("hidden");
+        }
+      };
+
+      // ─── ACTIONS ─────────────────────────────────────────────────
+
+      const toggleService = (id) => {
+        state.services[id] = !state.services[id];
+
+        const svc = SERVICES.find((s) => s.id === id);
+
+        // Set default option if service has options and is newly selected
+        if (svc && svc.options && state.services[id] && !state.options[id]) {
+          state.options[id] =
+            svc.options.defaultValue || svc.options.choices[0].value;
+        }
+
+        saveState();
+        renderServices();
+        renderSummary();
+        renderStickyBar();
+      };
+
+      const selectOption = (serviceId, value) => {
+        state.options[serviceId] = value;
+        saveState();
+        renderServices();
+        renderSummary();
+        renderStickyBar();
+      };
+
+      const downloadPDF = () => {
+        document.getElementById("printDate").textContent =
+          new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+        window.print();
+      };
+
+      const sendEstimate = () => {
+        const selected = SERVICES.filter((svc) => state.services[svc.id]);
+        const { oneTime, monthly } = calcTotals();
+        const name = state.clientName || "Not provided";
+        const email = state.clientEmail || "Not provided";
+        const desc = state.clientDescription || "Not provided";
+
+        let body = `Project Estimate\n${"=".repeat(40)}\n\n`;
+        body += `Client: ${name}\nEmail: ${email}\n\nProject Description:\n${desc}\n\n`;
+        body += `Selected Services:\n${"-".repeat(40)}\n`;
+
+        selected.forEach((svc) => {
+          let price = svc.basePrice;
+          let detail = "";
+          let optionMonthly = 0;
+          if (svc.options) {
+            const chosen =
+              state.options[svc.id] ||
+              svc.options.defaultValue ||
+              svc.options.choices[0].value;
+            const choice = svc.options.choices.find((c) => c.value === chosen);
+            if (choice) {
+              price += choice.price;
+              detail = ` (${choice.label})`;
+              if (choice.monthly) optionMonthly = choice.monthly;
+            }
+          }
+          const suffix = svc.type === "monthly" ? "/mo" : "";
+          const monthlyNote = optionMonthly > 0 ? ` + ${formatPrice(optionMonthly)}/mo` : "";
+          body += `• ${svc.title}${detail} — ${formatPrice(price)}${suffix}${monthlyNote}\n`;
+        });
+
+        body += `\n${"=".repeat(40)}\n`;
+        body += `One-time Total: ${formatPrice(oneTime)}\n`;
+        if (monthly > 0) body += `Monthly: ${formatPrice(monthly)}/mo\n`;
+
+        const subject = encodeURIComponent(`Project Estimate — ${name}`);
+        const encodedBody = encodeURIComponent(body);
+        window.location.href = `mailto:agency@alisamadii.com?subject=${subject}&body=${encodedBody}`;
+      };
+
+      // ─── CLIENT INFO PERSISTENCE ─────────────────────────────────
+
+      const initClientFields = () => {
+        const nameEl = document.getElementById("clientName");
+        const emailEl = document.getElementById("clientEmail");
+        const descEl = document.getElementById("clientDescription");
+
+        nameEl.value = state.clientName || "";
+        emailEl.value = state.clientEmail || "";
+        descEl.value = state.clientDescription || "";
+
+        nameEl.addEventListener("input", (e) => {
+          state.clientName = e.target.value;
+          saveState();
+        });
+        emailEl.addEventListener("input", (e) => {
+          state.clientEmail = e.target.value;
+          saveState();
+        });
+        descEl.addEventListener("input", (e) => {
+          state.clientDescription = e.target.value;
+          saveState();
+        });
+      };
+
+      // ─── SCROLL REVEAL OBSERVER ──────────────────────────────────
+
+      let observer = null;
+      let initialRenderDone = false;
+
+      const initObserver = () => {
+        if (observer) observer.disconnect();
+
+        observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: "-60px" }
+        );
+
+        document.querySelectorAll(".reveal:not(.visible)").forEach((el) => {
+          if (initialRenderDone) {
+            // Skip animation on re-renders — show immediately
+            el.classList.add("visible");
+          } else {
+            observer.observe(el);
+          }
+        });
+      };
+
+      // ─── INIT ────────────────────────────────────────────────────
+
+      loadState();
+      renderServices();
+      renderSummary();
+      renderStickyBar();
+      initClientFields();
+      initObserver();
+      initialRenderDone = true;
+    </script>
+  </body>
+</html>

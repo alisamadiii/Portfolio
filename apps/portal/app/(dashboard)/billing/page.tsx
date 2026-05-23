@@ -175,6 +175,11 @@ export default function BillingPage() {
   const { data: user } = useCurrentUser();
   const trpc = useTRPC();
   const generatePortalLink = useGeneratePortalLink();
+  const { data: clientData } = useQuery(
+    trpc.clients.getCurrent.queryOptions(undefined, {
+      enabled: !!user,
+    })
+  );
 
   const { data: orders, isPending: ordersLoading } = useQuery(
     trpc.payments.listOrders.queryOptions(
@@ -373,7 +378,7 @@ export default function BillingPage() {
             }}
           />
         )}
-        {user?.user.stripeCustomerId && (
+        {clientData?.stripeCustomerId && (
           <div className="flex items-center justify-between rounded-lg border px-4 py-3">
             <p className="text-muted-foreground text-sm">
               You have an agency account. View your Stripe-managed subscriptions

@@ -46,7 +46,7 @@ export const CreateClientDialog = () => {
         setOpen(false);
         setSearch("");
         setSelectedUserId(null);
-        router.push(`/clients/${client.id}`);
+        router.push(`/clients/${client.userId}`);
       },
       onError: (error) => toast.error(error.message),
     })

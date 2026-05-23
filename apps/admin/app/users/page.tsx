@@ -39,7 +39,7 @@ interface FilterUsers {
   page?: number;
   limit?: number;
   sortBy?: "email" | "created" | "banned" | "notifications";
-  filterBy?: "all" | "admin" | "hasStripeCustomer";
+  filterBy?: "all" | "admin";
   search?: string;
 }
 
@@ -53,7 +53,6 @@ const sortByOptions: FilterUsers["sortBy"][] = [
 const filterByOptions: { label: string; value: FilterUsers["filterBy"] }[] = [
   { label: "All Users", value: "all" },
   { label: "Admins", value: "admin" },
-  { label: "Has Stripe ID", value: "hasStripeCustomer" },
 ];
 
 const UsersPage = () => {

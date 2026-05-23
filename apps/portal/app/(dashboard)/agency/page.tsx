@@ -144,13 +144,20 @@ export default function AgencyPage() {
   const { data: currentUser } = useCurrentUser();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  const { data: clientData } = useQuery(
+    trpc.clients.getCurrent.queryOptions(undefined, {
+      enabled: !!currentUser,
+    })
+  );
+  const hasStripeId = !!clientData?.stripeCustomerId;
+
   const {
     data: subsData,
     isFetching: subsLoading,
     error: subsError,
   } = useQuery(
     trpc.payments.getStripeSubscriptions.queryOptions(undefined, {
-      enabled: !!currentUser?.user.stripeCustomerId,
+      enabled: hasStripeId,
     })
   );
 
@@ -160,7 +167,7 @@ export default function AgencyPage() {
     error: invoicesError,
   } = useQuery(
     trpc.payments.getStripeInvoices.queryOptions(undefined, {
-      enabled: !!currentUser?.user.stripeCustomerId,
+      enabled: hasStripeId,
     })
   );
 
@@ -217,7 +224,7 @@ export default function AgencyPage() {
   }
 
   // No Stripe customer — show contact UI
-  if (!currentUser?.user.stripeCustomerId) {
+  if (!hasStripeId) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">

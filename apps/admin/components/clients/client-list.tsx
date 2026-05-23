@@ -20,8 +20,15 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
+
+const statusGradient: Record<string, string> = {
+  active: "border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent",
+  paused: "border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent",
+  completed: "border-l-4 border-l-red-500 bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent",
+};
 
 export const ClientList = () => {
   const trpc = useTRPC();
@@ -51,7 +58,10 @@ export const ClientList = () => {
       {data.map((client) => (
         <Card
           key={client.id}
-          className="flex flex-col transition-shadow hover:shadow-md"
+          className={cn(
+            "flex flex-col transition-shadow hover:shadow-md",
+            statusGradient[client.status] ?? ""
+          )}
         >
           <CardHeader className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -113,7 +123,7 @@ export const ClientList = () => {
           </CardContent>
 
           <CardFooter className="border-t pt-4">
-            <Button size="sm" render={<Link href={`/clients/${client.id}`} />}>
+            <Button size="sm" render={<Link href={`/clients/${client.userId}`} />}>
                 View Details
                 <ArrowRight className="size-3" />
             </Button>

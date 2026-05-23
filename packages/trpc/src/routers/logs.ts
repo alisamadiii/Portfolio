@@ -30,16 +30,18 @@ export const logsRouter = createTRPCRouter({
         type: z.enum(activityLogTypeValues).optional(),
         status: z.enum(["success", "failed"]).optional(),
         search: z.string().optional(),
+        userId: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
-      const { page = 1, limit = 20, type, status, search } = input;
+      const { page = 1, limit = 20, type, status, search, userId } = input;
       const offset = (page - 1) * limit;
 
       const conditions = [];
       if (type) conditions.push(eq(activityLog.type, type));
       if (status) conditions.push(eq(activityLog.status, status));
       if (search) conditions.push(ilike(activityLog.summary, `%${search}%`));
+      if (userId) conditions.push(eq(activityLog.userId, userId));
 
       return db
         .select({
@@ -70,6 +72,7 @@ export const logsRouter = createTRPCRouter({
           type: z.enum(activityLogTypeValues).optional(),
           status: z.enum(["success", "failed"]).optional(),
           search: z.string().optional(),
+          userId: z.string().optional(),
         })
         .optional()
     )
@@ -79,6 +82,8 @@ export const logsRouter = createTRPCRouter({
       if (input?.status) conditions.push(eq(activityLog.status, input.status));
       if (input?.search)
         conditions.push(ilike(activityLog.summary, `%${input.search}%`));
+      if (input?.userId)
+        conditions.push(eq(activityLog.userId, input.userId));
 
       return db
         .select({ count: count() })

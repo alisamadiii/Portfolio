@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -7,10 +8,21 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { stripe } from "@workspace/trpc/lib/stripe";
+import { db } from "@workspace/drizzle/index";
+import { agencyClient } from "@workspace/drizzle/schema";
+
+const getClientStripeId = async (userId: string) => {
+  const [record] = await db
+    .select({ stripeCustomerId: agencyClient.stripeCustomerId })
+    .from(agencyClient)
+    .where(eq(agencyClient.userId, userId))
+    .limit(1);
+  return record?.stripeCustomerId ?? null;
+};
 
 export const stripeRouter = createTRPCRouter({
   getStripeSubscriptions: authenticatedProcedure.query(async ({ ctx }) => {
-    const stripeCustomerId = ctx.session.user.stripeCustomerId;
+    const stripeCustomerId = await getClientStripeId(ctx.session.user.id);
 
     if (!stripeCustomerId) return [];
 
@@ -51,7 +63,7 @@ export const stripeRouter = createTRPCRouter({
   }),
 
   getStripeInvoices: authenticatedProcedure.query(async ({ ctx }) => {
-    const stripeCustomerId = ctx.session.user.stripeCustomerId;
+    const stripeCustomerId = await getClientStripeId(ctx.session.user.id);
 
     if (!stripeCustomerId) return [];
 
@@ -76,7 +88,7 @@ export const stripeRouter = createTRPCRouter({
   createStripePortalSession: authenticatedProcedure
     .input(z.object({ returnUrl: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const stripeCustomerId = ctx.session.user.stripeCustomerId;
+      const stripeCustomerId = await getClientStripeId(ctx.session.user.id);
 
       if (!stripeCustomerId) {
         throw new TRPCError({

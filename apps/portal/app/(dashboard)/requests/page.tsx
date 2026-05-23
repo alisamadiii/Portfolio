@@ -55,8 +55,12 @@ export default function RequestsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const user = useCurrentUser();
-  const isClient =
-    (user.data?.user as { isClient?: boolean })?.isClient === true;
+  const clientQuery = useQuery(
+    trpc.clients.getCurrent.queryOptions(undefined, {
+      enabled: !!user.data,
+    })
+  );
+  const isClient = !!clientQuery.data;
   const tasksQuery = useQuery({
     ...trpc.clickup.getTasks.queryOptions(),
     enabled: isClient,
@@ -271,7 +275,7 @@ export default function RequestsPage() {
       ? `${CLICKUP_FORM_URL}?User%20Id%20(Don't%20update)=${encodeURIComponent(user.data.user.id)}&Priority=2&Type=Bug&Status=TO%20DO`
       : CLICKUP_FORM_URL;
 
-  if (user.isPending) {
+  if (user.isPending || clientQuery.isPending) {
     return (
       <div className="flex h-96 items-center justify-center">
         <Spinner />

@@ -14,22 +14,6 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-// ─── User Metadata Registry ────────────────────────────
-// Add or remove entries here. UI dropdown auto-updates.
-export const userMetadataKeys = [
-  { key: "domain", label: "Domain" },
-  { key: "timezone", label: "Timezone" },
-  { key: "projectRepo", label: "Project Repo" },
-  { key: "clickupListId", label: "ClickUp List ID" },
-  { key: "figmaUrl", label: "Figma URL" },
-  { key: "techStack", label: "Tech Stack" },
-  { key: "launchDate", label: "Launch Date" },
-  { key: "notes", label: "Notes" },
-] as const;
-
-export type UserMetadataKey = (typeof userMetadataKeys)[number]["key"];
-export type UserMetadata = Partial<Record<UserMetadataKey, string>>;
-
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -48,14 +32,42 @@ export const user = pgTable("user", {
   banned: boolean("banned"),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
-  metadata: jsonb("metadata").$type<UserMetadata>().default({}),
-
-  // New
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
   phone: text("phone"),
   company: text("company"),
   address: text("address"),
+});
+
+// ─── Agency Client ─────────────────────────────────────
+export const agencyClientStatusValues = [
+  "active",
+  "paused",
+  "completed",
+] as const;
+export type AgencyClientStatus = (typeof agencyClientStatusValues)[number];
+
+export const agencyClient = pgTable("agency_client", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: "cascade" }),
   stripeCustomerId: text("stripe_customer_id"),
-  isClient: boolean("is_client").notNull().default(false),
+  domain: text("domain"),
+  projectRepo: text("project_repo"),
+  clickupListId: text("clickup_list_id"),
+  figmaUrl: text("figma_url"),
+  techStack: text("tech_stack"),
+  launchDate: text("launch_date"),
+  timezone: text("timezone"),
+  notes: text("notes"),
+  status: text("status", { enum: agencyClientStatusValues })
+    .notNull()
+    .default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const userSignals = pgTable("user_signals", {

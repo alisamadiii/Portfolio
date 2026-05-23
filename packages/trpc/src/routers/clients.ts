@@ -2,55 +2,100 @@ import { TRPCError } from "@trpc/server";
 import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, createTRPCRouter } from "@workspace/trpc/init";
+import {
+  adminProcedure,
+  authenticatedProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
-import { clientScopes, user } from "@workspace/drizzle/schema";
+import {
+  agencyClient,
+  agencyClientStatusValues,
+  clientScopes,
+  user,
+} from "@workspace/drizzle/schema";
 
 export const clientsRouter = createTRPCRouter({
+  getCurrent: authenticatedProcedure.query(async ({ ctx }) => {
+    const [record] = await db
+      .select()
+      .from(agencyClient)
+      .where(eq(agencyClient.userId, ctx.session.user.id))
+      .limit(1);
+    return record ?? null;
+  }),
+
   list: adminProcedure.query(async () => {
     const rows = await db
       .select({
-        id: user.id,
-        createdAt: user.createdAt,
-        name: user.name,
-        email: user.email,
-        image: user.image,
-        company: user.company,
-        stripeCustomerId: user.stripeCustomerId,
-        scopeCount: sql<number>`(select count(*) from client_scopes where client_scopes.user_id = "user".id)`.as(
-          "scope_count"
-        ),
-        subscriptionCount: sql<number>`(select count(*) from subscription where subscription.user_id = "user".id)`.as(
-          "subscription_count"
-        ),
+        id: agencyClient.id,
+        userId: agencyClient.userId,
+        stripeCustomerId: agencyClient.stripeCustomerId,
+        domain: agencyClient.domain,
+        status: agencyClient.status,
+        createdAt: agencyClient.createdAt,
+        userName: user.name,
+        userEmail: user.email,
+        userImage: user.image,
+        userCompany: user.company,
+        scopeCount:
+          sql<number>`(select count(*) from client_scopes where client_scopes.user_id = ${agencyClient.userId})`.as(
+            "scope_count"
+          ),
+        subscriptionCount:
+          sql<number>`(select count(*) from subscription where subscription.user_id = ${agencyClient.userId})`.as(
+            "subscription_count"
+          ),
       })
-      .from(user)
-      .where(eq(user.isClient, true))
-      .orderBy(desc(user.createdAt));
+      .from(agencyClient)
+      .innerJoin(user, eq(user.id, agencyClient.userId))
+      .orderBy(desc(agencyClient.createdAt));
 
     return rows.map((row) => ({
       id: row.id,
-      userId: row.id,
+      userId: row.userId,
       createdAt: row.createdAt,
-      name: row.name ?? "",
-      email: row.email ?? "",
-      image: row.image ?? null,
-      company: row.company ?? null,
+      name: row.userName ?? "",
+      email: row.userEmail ?? "",
+      image: row.userImage ?? null,
+      company: row.userCompany ?? null,
       stripeCustomerId: row.stripeCustomerId ?? null,
+      domain: row.domain ?? null,
+      status: row.status,
       scopeCount: Number(row.scopeCount),
       subscriptionCount: Number(row.subscriptionCount),
     }));
   }),
 
   get: adminProcedure.input(z.string()).query(async ({ input }) => {
-    const [userRecord] = await db
+    // Input can be agencyClient.id or userId
+    const [record] = await db
       .select()
-      .from(user)
-      .where(eq(user.id, input))
+      .from(agencyClient)
+      .innerJoin(user, eq(user.id, agencyClient.userId))
+      .where(eq(agencyClient.userId, input))
       .limit(1);
 
-    if (!userRecord || !userRecord.isClient) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
+    if (!record) {
+      // Try by agencyClient.id
+      const [byId] = await db
+        .select()
+        .from(agencyClient)
+        .innerJoin(user, eq(user.id, agencyClient.userId))
+        .where(eq(agencyClient.id, input))
+        .limit(1);
+
+      if (!byId) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
+      }
+
+      const scopes = await db
+        .select()
+        .from(clientScopes)
+        .where(eq(clientScopes.userId, byId.user.id))
+        .orderBy(desc(clientScopes.createdAt));
+
+      return { user: byId.user, client: byId.agency_client, scopes };
     }
 
     const scopes = await db
@@ -59,36 +104,84 @@ export const clientsRouter = createTRPCRouter({
       .where(eq(clientScopes.userId, input))
       .orderBy(desc(clientScopes.createdAt));
 
-    return {
-      user: userRecord,
-      scopes,
-    };
+    return { user: record.user, client: record.agency_client, scopes };
   }),
 
   create: adminProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .mutation(async ({ input }) => {
-      const [updated] = await db
-        .update(user)
-        .set({ isClient: true, updatedAt: new Date() })
+      // Check user exists
+      const [existingUser] = await db
+        .select({ id: user.id })
+        .from(user)
         .where(eq(user.id, input.userId))
+        .limit(1);
+
+      if (!existingUser) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      // Check not already a client
+      const [existing] = await db
+        .select({ id: agencyClient.id })
+        .from(agencyClient)
+        .where(eq(agencyClient.userId, input.userId))
+        .limit(1);
+
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "User is already an agency client",
+        });
+      }
+
+      const [record] = await db
+        .insert(agencyClient)
+        .values({ userId: input.userId })
+        .returning();
+
+      return record;
+    }),
+
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        stripeCustomerId: z.string().nullable().optional(),
+        domain: z.string().nullable().optional(),
+        projectRepo: z.string().nullable().optional(),
+        clickupListId: z.string().nullable().optional(),
+        figmaUrl: z.string().nullable().optional(),
+        techStack: z.string().nullable().optional(),
+        launchDate: z.string().nullable().optional(),
+        timezone: z.string().nullable().optional(),
+        notes: z.string().nullable().optional(),
+        status: z.enum(agencyClientStatusValues).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+
+      const [updated] = await db
+        .update(agencyClient)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(agencyClient.id, id))
         .returning();
 
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
       }
 
       return updated;
     }),
 
   delete: adminProcedure.input(z.string()).mutation(async ({ input }) => {
-    const [updated] = await db
-      .update(user)
-      .set({ isClient: false, updatedAt: new Date() })
-      .where(eq(user.id, input))
+    const [deleted] = await db
+      .delete(agencyClient)
+      .where(eq(agencyClient.id, input))
       .returning();
 
-    if (!updated) {
+    if (!deleted) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
     }
 

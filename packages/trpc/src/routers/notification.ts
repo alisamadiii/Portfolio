@@ -116,6 +116,27 @@ export const notificationRouter = createTRPCRouter({
       .orderBy(desc(clientNotifications.createdAt));
   }),
 
+  listByEmail: adminProcedure
+    .input(z.object({ email: z.string().email() }))
+    .query(async ({ input }) => {
+      return db
+        .select({
+          id: clientNotifications.id,
+          email: clientNotifications.email,
+          projectType: clientNotifications.projectType,
+          subject: clientNotifications.subject,
+          message: clientNotifications.message,
+          priority: clientNotifications.priority,
+          status: clientNotifications.status,
+          createdAt: clientNotifications.createdAt,
+          seenAt: clientNotifications.seenAt,
+          updatedAt: clientNotifications.updatedAt,
+        })
+        .from(clientNotifications)
+        .where(eq(clientNotifications.email, input.email))
+        .orderBy(desc(clientNotifications.createdAt));
+    }),
+
   sendToUser: adminProcedure
     .input(
       z.object({

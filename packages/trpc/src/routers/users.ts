@@ -1,17 +1,11 @@
 import { cookies, headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { and, asc, count, desc, eq, ilike, isNotNull, or } from "drizzle-orm";
+import { and, count, desc, eq, ilike, or } from "drizzle-orm";
 import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import {
-  user,
-  userMetadataKeys,
-  userSignals,
-  type UserMetadata,
-  type UserMetadataKey,
-} from "@workspace/drizzle/schema";
+import { user, userSignals } from "@workspace/drizzle/schema";
 
 import {
   adminProcedure,
@@ -137,9 +131,7 @@ export const usersRouter = createTRPCRouter({
           .enum(["email", "created", "banned", "notifications"])
           .optional(),
         search: z.string().optional(),
-        filterBy: z
-          .enum(["all", "admin", "hasStripeCustomer"])
-          .optional(),
+        filterBy: z.enum(["all", "admin"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -161,8 +153,6 @@ export const usersRouter = createTRPCRouter({
 
         if (filterBy === "admin") {
           conditions.push(eq(user.role, "admin"));
-        } else if (filterBy === "hasStripeCustomer") {
-          conditions.push(isNotNull(user.stripeCustomerId));
         }
 
         const where =
@@ -181,7 +171,6 @@ export const usersRouter = createTRPCRouter({
             banned: user.banned,
             banReason: user.banReason,
             banExpires: user.banExpires,
-            metadata: user.metadata,
             phone: user.phone,
             company: user.company,
             address: user.address,
@@ -213,9 +202,7 @@ export const usersRouter = createTRPCRouter({
     .input(
       z
         .object({
-          filterBy: z
-            .enum(["all", "admin", "hasStripeCustomer"])
-            .optional(),
+          filterBy: z.enum(["all", "admin"]).optional(),
         })
         .optional()
     )
@@ -224,11 +211,7 @@ export const usersRouter = createTRPCRouter({
         const filterBy = input?.filterBy;
 
         const where =
-          filterBy === "admin"
-            ? eq(user.role, "admin")
-            : filterBy === "hasStripeCustomer"
-              ? isNotNull(user.stripeCustomerId)
-              : undefined;
+          filterBy === "admin" ? eq(user.role, "admin") : undefined;
 
         const countResult = await db
           .select({ count: count() })
@@ -258,7 +241,6 @@ export const usersRouter = createTRPCRouter({
           banReason: z.string().optional(),
           role: z.enum(["user", "admin"]).optional(),
           emailVerified: z.boolean().optional(),
-          stripeCustomerId: z.string().nullable().optional(),
         })
         .refine(
           (data) => {
@@ -397,59 +379,4 @@ export const usersRouter = createTRPCRouter({
     }
   }),
 
-  updateMetadata: adminProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        metadata: z.record(
-          z.enum(
-            userMetadataKeys.map((k) => k.key) as [
-              UserMetadataKey,
-              ...UserMetadataKey[],
-            ]
-          ),
-          z.string().optional()
-        ),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const [existing] = await db
-          .select({ metadata: user.metadata })
-          .from(user)
-          .where(eq(user.id, input.userId))
-          .limit(1);
-
-        const merged = {
-          ...(existing?.metadata ?? {}),
-          ...Object.fromEntries(
-            Object.entries(input.metadata).filter(([, v]) => v !== undefined)
-          ),
-        };
-
-        const [updated] = await db
-          .update(user)
-          .set({ metadata: merged })
-          .where(eq(user.id, input.userId))
-          .returning();
-
-        if (!updated) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "User not found",
-          });
-        }
-
-        return updated;
-      } catch (error: unknown) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to update metadata",
-        });
-      }
-    }),
 });
