@@ -168,14 +168,14 @@ const OverviewSection = ({
   const { data: subs, isLoading: subsLoading } = useQuery(
     trpc.payments.adminGetStripeSubscriptions.queryOptions(
       { stripeCustomerId: client.stripeCustomerId! },
-      { enabled: !!client.stripeCustomerId }
+      { enabled: !!client.stripeCustomerId, staleTime: 5 * 60 * 1000 }
     )
   );
 
   const { data: invoices, isLoading: invoicesLoading } = useQuery(
     trpc.payments.adminGetStripeInvoices.queryOptions(
       { stripeCustomerId: client.stripeCustomerId! },
-      { enabled: !!client.stripeCustomerId }
+      { enabled: !!client.stripeCustomerId, staleTime: 5 * 60 * 1000 }
     )
   );
 

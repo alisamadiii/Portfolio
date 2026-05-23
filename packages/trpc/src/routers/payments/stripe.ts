@@ -146,6 +146,42 @@ export const stripeRouter = createTRPCRouter({
       );
     }),
 
+  adminBatchSubscriptionStatus: adminProcedure
+    .input(z.object({ stripeCustomerIds: z.array(z.string().min(1)) }))
+    .query(async ({ input }) => {
+      const result: Record<string, "active" | "canceling" | "none"> = {};
+
+      await Promise.all(
+        input.stripeCustomerIds.map(async (customerId) => {
+          try {
+            const subs = await stripe.subscriptions.list({
+              customer: customerId,
+              limit: 100,
+            });
+
+            const hasActive = subs.data.some(
+              (s) => s.status === "active" && !s.cancel_at_period_end
+            );
+            const hasCanceling = subs.data.some(
+              (s) => s.status === "active" && s.cancel_at_period_end
+            );
+
+            if (hasActive) {
+              result[customerId] = "active";
+            } else if (hasCanceling) {
+              result[customerId] = "canceling";
+            } else {
+              result[customerId] = "none";
+            }
+          } catch {
+            result[customerId] = "none";
+          }
+        })
+      );
+
+      return result;
+    }),
+
   adminGetStripeInvoices: adminProcedure
     .input(z.object({ stripeCustomerId: z.string().min(1) }))
     .query(async ({ input }) => {
