@@ -30,7 +30,7 @@ export const clientsRouter = createTRPCRouter({
       .select({
         id: agencyClient.id,
         userId: agencyClient.userId,
-        stripeCustomerId: agencyClient.stripeCustomerId,
+        isStripe: agencyClient.isStripe,
         domain: agencyClient.domain,
         status: agencyClient.status,
         createdAt: agencyClient.createdAt,
@@ -59,7 +59,7 @@ export const clientsRouter = createTRPCRouter({
       email: row.userEmail ?? "",
       image: row.userImage ?? null,
       company: row.userCompany ?? null,
-      stripeCustomerId: row.stripeCustomerId ?? null,
+      isStripe: row.isStripe,
       domain: row.domain ?? null,
       status: row.status,
       scopeCount: Number(row.scopeCount),
@@ -147,7 +147,7 @@ export const clientsRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        stripeCustomerId: z.string().nullable().optional(),
+        isStripe: z.boolean().optional(),
         domain: z.string().nullable().optional(),
         projectRepo: z.string().nullable().optional(),
         clickupListId: z.string().nullable().optional(),

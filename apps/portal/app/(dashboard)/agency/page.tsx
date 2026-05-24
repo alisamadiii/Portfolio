@@ -28,6 +28,8 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 type StripeSubscription =
   RouterOutputs["payments"]["getStripeSubscriptions"][number];
+type StripeInvoice =
+  RouterOutputs["payments"]["getStripeInvoices"][number];
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -137,19 +139,58 @@ function SubscriptionDetailsPanel({ sub }: { sub: StripeSubscription }) {
   );
 }
 
+// ─── Invoice Details Panel ──────────────────────────────────────
+
+function InvoiceDetailsPanel({ invoice }: { invoice: StripeInvoice }) {
+  return (
+    <div className="space-y-3 px-4 py-3">
+      <p className="text-muted-foreground text-xs font-medium uppercase">
+        Line Items
+      </p>
+      {invoice.lineItems.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No line items</p>
+      ) : (
+        <div className="space-y-2">
+          {invoice.lineItems.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between rounded-lg border px-3 py-2"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">
+                  {item.description ?? "—"}
+                </p>
+                {item.quantity && item.quantity > 1 && (
+                  <p className="text-muted-foreground text-xs">
+                    Qty: {item.quantity}
+                  </p>
+                )}
+              </div>
+              <span className="ml-4 shrink-0 text-sm font-semibold tabular-nums">
+                {formatCurrency(item.amount, item.currency)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Page ───────────────────────────────────────────────────────
 
 export default function AgencyPage() {
   const trpc = useTRPC();
   const { data: currentUser } = useCurrentUser();
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedSubRows, setExpandedSubRows] = useState<Set<string>>(new Set());
+  const [expandedInvRows, setExpandedInvRows] = useState<Set<string>>(new Set());
 
   const { data: clientData } = useQuery(
     trpc.clients.getCurrent.queryOptions(undefined, {
       enabled: !!currentUser,
     })
   );
-  const hasStripeId = !!clientData?.stripeCustomerId;
+  const isStripe = !!clientData?.isStripe;
 
   const {
     data: subsData,
@@ -157,7 +198,7 @@ export default function AgencyPage() {
     error: subsError,
   } = useQuery(
     trpc.payments.getStripeSubscriptions.queryOptions(undefined, {
-      enabled: hasStripeId,
+      enabled: isStripe,
     })
   );
 
@@ -167,7 +208,7 @@ export default function AgencyPage() {
     error: invoicesError,
   } = useQuery(
     trpc.payments.getStripeInvoices.queryOptions(undefined, {
-      enabled: hasStripeId,
+      enabled: isStripe,
     })
   );
 
@@ -175,8 +216,17 @@ export default function AgencyPage() {
     trpc.payments.createStripePortalSession.mutationOptions()
   );
 
-  const toggleRow = (rowId: string) => {
-    setExpandedRows((prev) => {
+  const toggleSubRow = (rowId: string) => {
+    setExpandedSubRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId);
+      else next.add(rowId);
+      return next;
+    });
+  };
+
+  const toggleInvRow = (rowId: string) => {
+    setExpandedInvRows((prev) => {
       const next = new Set(prev);
       if (next.has(rowId)) next.delete(rowId);
       else next.add(rowId);
@@ -223,8 +273,8 @@ export default function AgencyPage() {
     );
   }
 
-  // No Stripe customer — show contact UI
-  if (!hasStripeId) {
+  // No Stripe account — show contact UI
+  if (!isStripe) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
@@ -358,7 +408,7 @@ export default function AgencyPage() {
                 id: "actions",
                 header: "",
                 cell: ({ row }) => {
-                  const isExpanded = expandedRows.has(row.id);
+                  const isExpanded = expandedSubRows.has(row.id);
                   return (
                     <div className="flex justify-end">
                       <Button
@@ -367,7 +417,7 @@ export default function AgencyPage() {
                         className="gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleRow(row.id);
+                          toggleSubRow(row.id);
                         }}
                       >
                         {isExpanded ? (
@@ -383,7 +433,7 @@ export default function AgencyPage() {
               },
             ]}
             data={subsData ?? []}
-            expandedRows={expandedRows}
+            expandedRows={expandedSubRows}
             renderExpandedRow={(row) => (
               <SubscriptionDetailsPanel sub={row.original} />
             )}
@@ -477,8 +527,39 @@ export default function AgencyPage() {
                   );
                 },
               },
+              {
+                id: "expand",
+                header: "",
+                cell: ({ row }) => {
+                  const isExpanded = expandedInvRows.has(row.id);
+                  return (
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleInvRow(row.id);
+                        }}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
+                        )}
+                        More Info
+                      </Button>
+                    </div>
+                  );
+                },
+              },
             ]}
             data={invoicesData ?? []}
+            expandedRows={expandedInvRows}
+            renderExpandedRow={(row) => (
+              <InvoiceDetailsPanel invoice={row.original} />
+            )}
           />
         )}
       </div>

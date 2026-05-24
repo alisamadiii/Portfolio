@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   ArrowLeft,
+  ChevronDown,
+  ChevronRight,
   CreditCard,
   DollarSign,
   ExternalLink,
@@ -160,22 +162,25 @@ const OverviewSection = ({
   client,
   user,
 }: {
-  client: { stripeCustomerId: string | null };
-  user: { id: string };
+  client: { isStripe: boolean };
+  user: { id: string; email: string };
 }) => {
+  const [expandedInvoices, setExpandedInvoices] = useState<Set<string>>(
+    new Set()
+  );
   const trpc = useTRPC();
 
   const { data: subs, isLoading: subsLoading } = useQuery(
     trpc.payments.adminGetStripeSubscriptions.queryOptions(
-      { stripeCustomerId: client.stripeCustomerId! },
-      { enabled: !!client.stripeCustomerId, staleTime: 5 * 60 * 1000 }
+      { email: user.email },
+      { enabled: !!user.email, staleTime: 5 * 60 * 1000 }
     )
   );
 
   const { data: invoices, isLoading: invoicesLoading } = useQuery(
     trpc.payments.adminGetStripeInvoices.queryOptions(
-      { stripeCustomerId: client.stripeCustomerId! },
-      { enabled: !!client.stripeCustomerId, staleTime: 5 * 60 * 1000 }
+      { email: user.email },
+      { enabled: !!user.email, staleTime: 5 * 60 * 1000 }
     )
   );
 
@@ -247,7 +252,7 @@ const OverviewSection = ({
       </div>
 
       {/* Subscriptions */}
-      {client.stripeCustomerId && (
+      {user.email && (
         <CardAgency.Card>
           <CardAgency.Header title="Subscriptions">
             {subs && <Badge variant="secondary">{subs.length}</Badge>}
@@ -312,7 +317,7 @@ const OverviewSection = ({
       )}
 
       {/* Invoices / Transactions */}
-      {client.stripeCustomerId && (
+      {user.email && (
         <CardAgency.Card>
           <CardAgency.Header title="Transactions">
             {invoices && <Badge variant="secondary">{invoices.length}</Badge>}
@@ -337,51 +342,114 @@ const OverviewSection = ({
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Date</th>
                     <th className="px-4 py-3 font-medium">PDF</th>
+                    <th className="px-4 py-3 font-medium" />
                   </tr>
                 </thead>
                 <tbody>
-                  {invoices.map((inv) => (
-                    <tr
-                      key={inv.id}
-                      className="border-b last:border-b-0 transition-colors hover:bg-muted/50"
-                    >
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {inv.number ?? inv.id.slice(0, 16)}
-                      </td>
-                      <td className="px-4 py-3 font-bold tabular-nums">
-                        ${formatPrice(inv.amountPaid)}{" "}
-                        <span className="text-muted-foreground text-xs font-normal uppercase">
-                          {inv.currency}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] capitalize",
-                            invoiceBadge(inv.status ?? "")
-                          )}
-                        >
-                          {inv.status}
-                        </Badge>
-                      </td>
-                      <td className="text-muted-foreground px-4 py-3 text-xs">
-                        {format(new Date(inv.created * 1000), "MMM d, yyyy")}
-                      </td>
-                      <td className="px-4 py-3">
-                        {inv.invoicePdf && (
-                          <a
-                            href={inv.invoicePdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <ExternalLink className="size-3.5" />
-                          </a>
+                  {invoices.map((inv) => {
+                    const isExpanded = expandedInvoices.has(inv.id);
+                    return (
+                      <Fragment key={inv.id}>
+                        <tr className="border-b last:border-b-0 transition-colors hover:bg-muted/50">
+                          <td className="px-4 py-3 font-mono text-xs">
+                            {inv.number ?? inv.id.slice(0, 16)}
+                          </td>
+                          <td className="px-4 py-3 font-bold tabular-nums">
+                            ${formatPrice(inv.amountPaid)}{" "}
+                            <span className="text-muted-foreground text-xs font-normal uppercase">
+                              {inv.currency}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] capitalize",
+                                invoiceBadge(inv.status ?? "")
+                              )}
+                            >
+                              {inv.status}
+                            </Badge>
+                          </td>
+                          <td className="text-muted-foreground px-4 py-3 text-xs">
+                            {format(new Date(inv.created * 1000), "MMM d, yyyy")}
+                          </td>
+                          <td className="px-4 py-3">
+                            {inv.invoicePdf && (
+                              <a
+                                href={inv.invoicePdf}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <ExternalLink className="size-3.5" />
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() =>
+                                setExpandedInvoices((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(inv.id)) next.delete(inv.id);
+                                  else next.add(inv.id);
+                                  return next;
+                                })
+                              }
+                              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="size-3.5" />
+                              ) : (
+                                <ChevronRight className="size-3.5" />
+                              )}
+                              Items
+                            </button>
+                          </td>
+                        </tr>
+                        {isExpanded && (
+                          <tr className="bg-muted/30">
+                            <td colSpan={6} className="px-4 py-3">
+                              <p className="text-muted-foreground mb-2 text-[10px] font-medium uppercase">
+                                Line Items
+                              </p>
+                              {inv.lineItems.length === 0 ? (
+                                <p className="text-muted-foreground text-xs">
+                                  No line items
+                                </p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {inv.lineItems.map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="flex items-center justify-between rounded-lg border bg-background px-3 py-2"
+                                    >
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm">
+                                          {item.description ?? "—"}
+                                        </p>
+                                        {item.quantity && item.quantity > 1 && (
+                                          <p className="text-muted-foreground text-xs">
+                                            Qty: {item.quantity}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <span className="ml-4 shrink-0 text-sm font-semibold tabular-nums">
+                                        ${formatPrice(item.amount)}{" "}
+                                        <span className="text-muted-foreground text-xs font-normal uppercase">
+                                          {item.currency}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                    </tr>
-                  ))}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -389,12 +457,12 @@ const OverviewSection = ({
         </CardAgency.Card>
       )}
 
-      {!client.stripeCustomerId && (
+      {!user.email && (
         <CardAgency.Card className="py-12 text-center">
           <CreditCard className="text-muted-foreground mx-auto mb-3 size-8 opacity-40" />
           <p className="text-muted-foreground text-sm">
-            No Stripe Customer ID linked. Add one in the Project section to view
-            billing data.
+            No email found for this user. Email is required to look up billing
+            data.
           </p>
         </CardAgency.Card>
       )}
@@ -405,7 +473,6 @@ const OverviewSection = ({
 // ─── Project Section ───────────────────────────────────────────
 
 const projectFields = [
-  { key: "stripeCustomerId", label: "Stripe Customer ID", placeholder: "cus_...", mono: true, textarea: false },
   { key: "domain", label: "Domain", placeholder: "example.com", mono: false, textarea: false },
   { key: "projectRepo", label: "Project Repository", placeholder: "https://github.com/...", mono: true, textarea: false },
   { key: "clickupListId", label: "ClickUp List ID", placeholder: "List ID", mono: true, textarea: false },
@@ -421,7 +488,7 @@ const ProjectSection = ({
   onUpdate,
   isPending,
 }: {
-  client: Record<string, unknown> & { id: string; status: string };
+  client: Record<string, unknown> & { id: string; status: string; isStripe: boolean };
   onUpdate: (data: Record<string, unknown>) => void;
   isPending: boolean;
 }) => {
@@ -506,6 +573,27 @@ const ProjectSection = ({
               </Button>
             ))}
           </div>
+        </div>
+      </CardAgency.Card>
+
+      <CardAgency.Card>
+        <CardAgency.Header title="Stripe Billing" />
+        <div className="flex items-center gap-3">
+          <Button
+            variant={client.isStripe ? "default" : "outline"}
+            size="sm"
+            disabled={isPending}
+            onClick={() =>
+              onUpdate({ id: client.id, isStripe: !client.isStripe })
+            }
+          >
+            {client.isStripe ? "Enabled" : "Disabled"}
+          </Button>
+          <span className="text-muted-foreground text-xs">
+            {client.isStripe
+              ? "Client can view Stripe billing in their portal"
+              : "Agency billing page hidden from client"}
+          </span>
         </div>
       </CardAgency.Card>
 
@@ -1003,7 +1091,7 @@ export default function ClientDetailPage() {
           )}
           {activeSection === "project" && (
             <ProjectSection
-              client={client as Record<string, unknown> & { id: string; status: string }}
+              client={client as Record<string, unknown> & { id: string; status: string; isStripe: boolean }}
               onUpdate={(data) => updateClient.mutate(data as Parameters<typeof updateClient.mutate>[0])}
               isPending={updateClient.isPending}
             />

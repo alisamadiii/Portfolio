@@ -378,7 +378,7 @@ export default function BillingPage() {
             }}
           />
         )}
-        {clientData?.stripeCustomerId && (
+        {clientData?.isStripe && (
           <div className="flex items-center justify-between rounded-lg border px-4 py-3">
             <p className="text-muted-foreground text-sm">
               You have an agency account. View your Stripe-managed subscriptions

@@ -7,9 +7,7 @@ const nextConfig: NextConfig = {
     "@workspace/drizzle",
     "@workspace/trpc",
   ],
-  experimental: {
-    useCache: true,
-  },
+  cacheComponents: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },

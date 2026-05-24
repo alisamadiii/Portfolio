@@ -37,19 +37,19 @@ export const ClientList = () => {
   const trpc = useTRPC();
   const { data, isLoading } = useQuery(trpc.clients.list.queryOptions());
 
-  const stripeCustomerIds = useMemo(
+  const emails = useMemo(
     () =>
       data
-        ?.map((c) => c.stripeCustomerId)
-        .filter((id): id is string => !!id) ?? [],
+        ?.map((c) => c.email)
+        .filter((e): e is string => !!e) ?? [],
     [data]
   );
 
   const { data: subStatus } = useQuery(
     trpc.payments.adminBatchSubscriptionStatus.queryOptions(
-      { stripeCustomerIds },
+      { emails },
       {
-        enabled: stripeCustomerIds.length > 0,
+        enabled: emails.length > 0,
         staleTime: 5 * 60 * 1000,
       }
     )
@@ -77,8 +77,8 @@ export const ClientList = () => {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {data.map((client) => {
-        const status = client.stripeCustomerId
-          ? (subStatus?.[client.stripeCustomerId] ?? "none")
+        const status = client.email
+          ? (subStatus?.[client.email] ?? "none")
           : "none";
 
         return (
@@ -131,17 +131,11 @@ export const ClientList = () => {
                 </div>
               </div>
 
-              {client.stripeCustomerId ? (
+              {client.isStripe && (
                 <div className="flex items-center gap-1.5">
                   <CreditCard className="text-muted-foreground size-3.5" />
-                  <span className="text-muted-foreground truncate font-mono text-xs">
-                    {client.stripeCustomerId}
-                  </span>
+                  <span className="text-muted-foreground text-xs">Stripe</span>
                 </div>
-              ) : (
-                <Badge variant="outline" className="text-[10px]">
-                  No Stripe ID
-                </Badge>
               )}
               <p className="text-muted-foreground text-xs">
                 Added {format(new Date(client.createdAt), "MMM d, yyyy")}

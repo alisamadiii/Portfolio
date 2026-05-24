@@ -54,7 +54,7 @@ export const agencyClient = pgTable("agency_client", {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
-  stripeCustomerId: text("stripe_customer_id"),
+  isStripe: boolean("is_stripe").notNull().default(false),
   domain: text("domain"),
   projectRepo: text("project_repo"),
   clickupListId: text("clickup_list_id"),
