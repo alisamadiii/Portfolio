@@ -285,6 +285,94 @@
       .print-only {
         display: none;
       }
+
+      /* Estimate disclaimer dialog */
+      .disclaimer-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        transition: opacity 0.6s ease;
+      }
+      .disclaimer-backdrop.visible {
+        opacity: 1;
+      }
+      .disclaimer-backdrop.hidden {
+        pointer-events: none;
+        display: none;
+      }
+      .disclaimer-dialog {
+        max-width: 480px;
+        width: calc(100% - 2rem);
+        background: white;
+        border-radius: 1.25rem;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 2rem;
+        position: relative;
+        transform: scale(0.96) translateY(10px);
+        transition: transform 0.7s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .disclaimer-backdrop.visible .disclaimer-dialog {
+        transform: scale(1) translateY(0);
+      }
+      .disclaimer-btn {
+        position: relative;
+        width: 100%;
+        height: 48px;
+        margin-top: 1.5rem;
+        border-radius: 9999px;
+        border: none;
+        background: rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        cursor: not-allowed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.4s ease;
+      }
+      .disclaimer-btn.ready {
+        cursor: pointer;
+        background: #FC8464;
+      }
+      .disclaimer-btn.ready:hover {
+        background: #e0734f;
+      }
+      .disclaimer-btn-label {
+        position: relative;
+        z-index: 1;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        opacity: 0.4;
+        transition: opacity 0.3s ease;
+      }
+      .disclaimer-btn.ready .disclaimer-btn-label {
+        opacity: 1;
+        color: white;
+      }
+      .disclaimer-btn-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0;
+        background: rgba(0, 0, 0, 0.06);
+        border-radius: 9999px;
+      }
+      .disclaimer-btn-fill.animate {
+        animation: slide-fill 2s linear forwards;
+      }
+      @keyframes slide-fill {
+        to {
+          width: 100%;
+        }
+      }
     </style>
   </head>
 
@@ -375,17 +463,6 @@
             <span class="text-xs text-emerald-600/80"
               >once you approve the estimate</span
             >
-          </div>
-        </div>
-        <div class="reveal mt-6 max-w-[55ch]">
-          <div class="flex gap-3 rounded-2xl bg-amber-50/80 px-5 py-4 ring-1 ring-amber-200/50">
-            <svg class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-            </svg>
-            <div>
-              <p class="text-sm font-semibold text-amber-900">This is an estimate, not a final quote.</p>
-              <p class="text-xs text-amber-700/80 mt-1 leading-relaxed">Final pricing depends on your content volume, page complexity, number of sections, and specific feature requirements. After you submit, we review your project details and provide an accurate quote tailored to your needs.</p>
-            </div>
           </div>
         </div>
       </div>
@@ -1172,6 +1249,55 @@
       initClientFields();
       initObserver();
       initialRenderDone = true;
+    </script>
+
+    <!-- Disclaimer Dialog -->
+    <div id="disclaimerBackdrop" class="disclaimer-backdrop hidden">
+      <div class="disclaimer-dialog">
+        <h2 style="font-size:1.875rem;font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:#1a1a1a;max-width:20ch">
+          This is an estimate,<br>not a final quote.
+        </h2>
+        <p style="margin-top:1rem;font-size:0.875rem;line-height:1.7;color:#8a8577;max-width:45ch">
+          Final pricing depends on your content volume, page complexity, number of sections, and specific feature requirements. After you submit, we review your project details and provide an accurate quote tailored to your needs.
+        </p>
+        <button id="disclaimerBtn" class="disclaimer-btn">
+          <div id="disclaimerFill" class="disclaimer-btn-fill"></div>
+          <span class="disclaimer-btn-label">I understand</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        if (localStorage.getItem("estimate_disclaimer_seen")) return;
+
+        const backdrop = document.getElementById("disclaimerBackdrop");
+        const btn = document.getElementById("disclaimerBtn");
+        const fill = document.getElementById("disclaimerFill");
+
+        setTimeout(() => {
+          backdrop.classList.remove("hidden");
+          backdrop.offsetHeight;
+          backdrop.classList.add("visible");
+          fill.classList.add("animate");
+
+          // Enable button after fill animation (2s)
+          setTimeout(() => {
+            btn.classList.add("ready");
+          }, 2000);
+        }, 2000);
+
+        function dismiss() {
+          if (!btn.classList.contains("ready")) return;
+          backdrop.classList.remove("visible");
+          setTimeout(() => {
+            backdrop.classList.add("hidden");
+          }, 600);
+          localStorage.setItem("estimate_disclaimer_seen", "true");
+        }
+
+        btn.addEventListener("click", dismiss);
+      })();
     </script>
   </body>
 </html>
