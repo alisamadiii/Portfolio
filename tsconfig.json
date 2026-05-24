@@ -9,6 +9,8 @@
       "@workspace/ui/*": ["./packages/ui/src/*"],
       "@workspace/email/*": ["./packages/email/emails/*"],
       "@workspace/storage/*": ["./packages/storage/*"],
+      "@alisamadiillc/devtools": ["./packages/devtools/src/index.ts"],
+      "@alisamadiillc/devtools/*": ["./packages/devtools/src/*"],
       "@/*": ["apps/portfolio/*"]
     }
   },
