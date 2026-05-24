@@ -4,7 +4,6 @@ import "@workspace/ui/globals.css";
 
 import { Suspense } from "react";
 import { Metadata } from "next";
-
 import { DevTools } from "@alisamadiillc/devtools";
 
 import { BgPattern } from "@workspace/ui/components/bg-pattern";
@@ -64,9 +63,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
-              <BgPattern
-                lessVisibleOn={["/client/", "/blog/how-i-build"]}
-              />
+              <BgPattern lessVisibleOn={["/client/", "/blog/how-i-build"]} />
               {children}
               <Footer />
               <DevTools />

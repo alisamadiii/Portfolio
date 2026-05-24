@@ -1,6 +1,6 @@
 {
   "name": "@alisamadiillc/devtools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Visual feedback devtools for client websites — select elements, edit live, capture screenshots, copy structured feedback",
   "private": false,
   "type": "module",
@@ -16,6 +16,16 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      },
+      "require": {
+        "types": "./dist/client.d.cts",
+        "default": "./dist/client.cjs"
       }
     }
   },
