@@ -2,18 +2,12 @@ import type { ContactInput, ContactResponse } from "./types";
 
 export async function sendContact(
   baseUrl: string,
+  token: string,
   sourceUrl: string | undefined,
   input: ContactInput
 ): Promise<ContactResponse> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (input.origin) {
-    headers["Origin"] = input.origin;
-  }
-
   const body: Record<string, unknown> = {
+    token,
     name: input.name,
     email: input.email,
     subject: input.subject,
@@ -28,9 +22,9 @@ export async function sendContact(
     body.sourceUrl = sourceUrl;
   }
 
-  const response = await fetch(`${baseUrl}/api/contact`, {
+  const response = await fetch(`${baseUrl}/api/v1/contact`, {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 

@@ -63,6 +63,9 @@ export const agencyClient = pgTable("agency_client", {
   launchDate: text("launch_date"),
   timezone: text("timezone"),
   notes: text("notes"),
+  contactEmail: text("contact_email"),
+  apiKey: text("api_key").unique(),
+  apiKeyOrigin: text("api_key_origin"),
   status: text("status", { enum: agencyClientStatusValues })
     .notNull()
     .default("active"),
@@ -316,39 +319,6 @@ export const clientNotifications = pgTable("client_notifications", {
   status: clientNotificationStatusEnum("status").notNull().default("PENDING"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   seenAt: timestamp("seen_at"),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-// ─── Client Scopes ──────────────────────────────────────────────
-
-export const scopeTypeValues = ["contact"] as const;
-export const scopeTypeEnum = pgEnum("scope_type", scopeTypeValues);
-export type ScopeType = (typeof scopeTypeValues)[number];
-
-type ContactScopeMetadata = {
-  domain: string;
-  email: string;
-  description?: string;
-};
-
-export type ScopeMetadataMap = {
-  contact: ContactScopeMetadata;
-};
-
-export type ScopeMetadata = ScopeMetadataMap[ScopeType];
-
-export const clientScopes = pgTable("client_scopes", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  type: scopeTypeEnum("type").notNull(),
-  metadata: jsonb("metadata").$type<ScopeMetadata>().notNull(),
-  isActive: boolean("is_active").notNull().default(true),
-  usageCount: integer("usage_count").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

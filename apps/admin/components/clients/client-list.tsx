@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowRight, CreditCard, Layers, Receipt, Users } from "lucide-react";
+import { ArrowRight, CreditCard, Receipt, Users } from "lucide-react";
 
 import {
   Avatar,
@@ -121,13 +121,6 @@ export const ClientList = () => {
                     {client.subscriptionCount}
                   </span>
                   <span className="text-muted-foreground text-xs">subs</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Layers className="text-muted-foreground size-3.5" />
-                  <span className="text-sm font-medium tabular-nums">
-                    {client.scopeCount}
-                  </span>
-                  <span className="text-muted-foreground text-xs">scopes</span>
                 </div>
               </div>
 

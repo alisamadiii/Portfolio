@@ -1,6 +1,8 @@
 export interface ClientConfig {
-  /** API base URL. Default: "https://www.alisamadii.com" */
+  /** API base URL. Default: "https://api.alisamadii.com" */
   baseUrl?: string;
+  /** Project API key for authentication */
+  token: string;
   /** Client site URL, sent as sourceUrl in requests */
   sourceUrl?: string;
 }
@@ -11,8 +13,6 @@ export interface ContactInput {
   subject: string;
   message: string;
   metadata?: Record<string, unknown>;
-  /** Pass from incoming request headers for CORS origin validation */
-  origin?: string | null;
 }
 
 export interface ContactResponse {

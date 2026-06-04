@@ -15,17 +15,18 @@ import {
   FileText,
   FolderOpen,
   Globe,
-  Layers,
   Loader2,
   Mail,
   Activity,
   Bell,
+  Key,
   Settings,
   TrendingUp,
   Send,
   CheckCircle2,
   Clock,
   AlertCircle,
+  CircleCheck,
   Eye,
 } from "lucide-react";
 
@@ -56,7 +57,7 @@ import { CardAgency } from "@workspace/ui/agency/card-agency";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { ClientScopes } from "@/components/clients/client-scopes";
+import { ClientApiKey } from "@/components/clients/client-api-key";
 import { ClientMediaGallery } from "@/components/clients/client-media-gallery";
 
 // ─── Sidebar Nav ───────────────────────────────────────────────
@@ -66,7 +67,7 @@ const navItems = [
   { key: "project", label: "Project", icon: Settings },
   { key: "notifications", label: "Notifications", icon: Bell },
   { key: "activity", label: "Activity", icon: Activity },
-  { key: "scopes", label: "Scopes", icon: Layers },
+  { key: "api", label: "API", icon: Key },
   { key: "media", label: "Media", icon: FolderOpen },
 ] as const;
 
@@ -474,6 +475,7 @@ const OverviewSection = ({
 
 const projectFields = [
   { key: "domain", label: "Domain", placeholder: "example.com", mono: false, textarea: false },
+  { key: "contactEmail", label: "Contact Email", placeholder: "hello@example.com", mono: false, textarea: false },
   { key: "projectRepo", label: "Project Repository", placeholder: "https://github.com/...", mono: true, textarea: false },
   { key: "clickupListId", label: "ClickUp List ID", placeholder: "List ID", mono: true, textarea: false },
   { key: "figmaUrl", label: "Figma URL", placeholder: "https://figma.com/...", mono: true, textarea: false },
@@ -891,20 +893,26 @@ const ActivitySection = ({ userId }: { userId: string }) => {
       ) : (
         <div className="divide-y">
           {logs.map((log) => {
-            const colors = activityTypeColor[log.type] ?? {
-              bg: "bg-zinc-500/10",
-              text: "text-zinc-500",
-            };
-            const TypeIcon = activityTypeIcon[log.type] ?? Activity;
+            const isFailed = log.status === "failed";
+            const StatusIcon = isFailed ? AlertCircle : CircleCheck;
+            const statusColors = isFailed
+              ? { bg: "bg-red-500/10", text: "text-red-500" }
+              : { bg: "bg-emerald-500/10", text: "text-emerald-500" };
             return (
-              <div key={log.id} className="flex gap-3 py-3">
+              <div
+                key={log.id}
+                className={cn(
+                  "flex gap-3 py-3",
+                  isFailed && "bg-red-50 dark:bg-red-950/20 -mx-4 px-4 rounded-lg"
+                )}
+              >
                 <div
                   className={cn(
                     "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full",
-                    colors.bg
+                    statusColors.bg
                   )}
                 >
-                  <TypeIcon className={cn("size-3.5", colors.text)} />
+                  <StatusIcon className={cn("size-3.5", statusColors.text)} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{log.summary ?? "No summary"}</p>
@@ -916,12 +924,19 @@ const ActivitySection = ({ userId }: { userId: string }) => {
                       })}
                     </span>
                   </div>
+                  {isFailed && log.error && (
+                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                      {log.error}
+                    </p>
+                  )}
                 </div>
                 <Badge
-                  variant={
-                    log.status === "success" ? "default" : "destructive"
-                  }
-                  className="mt-0.5 h-5 self-start text-[10px]"
+                  className={cn(
+                    "mt-0.5 h-5 self-start text-[10px] border-0",
+                    isFailed
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  )}
                 >
                   {log.status}
                 </Badge>
@@ -1102,8 +1117,8 @@ export default function ClientDetailPage() {
           {activeSection === "activity" && (
             <ActivitySection userId={user.id} />
           )}
-          {activeSection === "scopes" && (
-            <ClientScopes userId={user.id} userEmail={user.email} />
+          {activeSection === "api" && (
+            <ClientApiKey clientId={client.id} />
           )}
           {activeSection === "media" && (
             <ClientMediaGallery userId={user.id} />

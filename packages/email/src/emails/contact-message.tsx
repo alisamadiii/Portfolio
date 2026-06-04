@@ -2,45 +2,42 @@ import {
   Body,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
   Link,
   Preview,
+  Section,
   Text,
 } from "@react-email/components";
 
-interface ContactMessageProps {
+interface ContactFormEmailProps {
   name?: string;
   email?: string;
-  phone?: string;
+  subject?: string;
   message?: string;
-  siteName?: string;
-  metadata?: Record<string, unknown>;
+  phone?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  referer?: string;
+  submittedAt?: string;
+  pageUrl?: string;
+  clientName: string;
 }
 
-const left: React.CSSProperties = { textAlign: "left" };
-
-function formatKey(key: string): string {
-  return key
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/[_-]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-export default function ContactMessage({
-  name,
-  email,
+export default function ContactFormEmail({
+  name = "",
+  email = "",
+  subject = "",
+  message = "",
   phone,
-  message,
-  siteName = "your website",
-  metadata,
-}: ContactMessageProps) {
-  const metaEntries = metadata
-    ? Object.entries(metadata).filter(
-        ([, v]) => v !== undefined && v !== null && v !== ""
-      )
-    : [];
+  ipAddress = "Unknown",
+  userAgent = "Unknown",
+  referer,
+  submittedAt = new Date().toISOString(),
+  pageUrl,
+  clientName,
+}: ContactFormEmailProps) {
+  const initial = name.charAt(0).toUpperCase();
 
   return (
     <Html>
@@ -51,205 +48,362 @@ export default function ContactMessage({
           margin: 0,
           padding: 0,
           fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}
       >
-        <Preview>{message?.trim() || `New message from ${name}`}</Preview>
-        <Container
-          style={{
-            maxWidth: "560px",
-            margin: "0 auto",
-            padding: "40px 24px",
-          }}
-        >
-          <div style={{ textAlign: "left" }}>
-            {/* Header */}
+        <Preview>
+          New contact from {name}: {subject}
+        </Preview>
+
+        <Container style={{ maxWidth: "600px", margin: "0 auto" }}>
+          {/* Blue accent bar */}
+          <Section
+            style={{
+              backgroundColor: "#2563eb",
+              height: "4px",
+              width: "100%",
+            }}
+          />
+
+          {/* Header with avatar */}
+          <Section style={{ padding: "32px 32px 0" }}>
+            <table cellPadding={0} cellSpacing={0} style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: "52px", verticalAlign: "top" }}>
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "50%",
+                        backgroundColor: "#2563eb",
+                        color: "#ffffff",
+                        fontSize: "20px",
+                        fontWeight: 700,
+                        lineHeight: "48px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {initial}
+                    </div>
+                  </td>
+                  <td style={{ verticalAlign: "top", paddingLeft: "12px" }}>
+                    <Text
+                      style={{
+                        margin: 0,
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        color: "#111827",
+                      }}
+                    >
+                      {name}
+                    </Text>
+                    <Link
+                      href={`mailto:${email}`}
+                      style={{
+                        fontSize: "14px",
+                        color: "#2563eb",
+                        textDecoration: "none",
+                      }}
+                    >
+                      {email}
+                    </Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          {/* Meta info row */}
+          <Section style={{ padding: "20px 32px 0" }}>
+            <table cellPadding={0} cellSpacing={0} style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td
+                    style={{
+                      fontSize: "13px",
+                      color: "#6b7280",
+                      paddingBottom: "6px",
+                      width: "100px",
+                    }}
+                  >
+                    Date:
+                  </td>
+                  <td
+                    style={{
+                      fontSize: "13px",
+                      color: "#111827",
+                      paddingBottom: "6px",
+                    }}
+                  >
+                    {new Date(submittedAt).toLocaleString("en-US", {
+                      dateStyle: "long",
+                      timeStyle: "short",
+                    })}
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style={{
+                      fontSize: "13px",
+                      color: "#6b7280",
+                      paddingBottom: "6px",
+                    }}
+                  >
+                    Source:
+                  </td>
+                  <td
+                    style={{
+                      fontSize: "13px",
+                      color: "#111827",
+                      paddingBottom: "6px",
+                    }}
+                  >
+                    {clientName} — Contact Form
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style={{
+                      fontSize: "13px",
+                      color: "#6b7280",
+                      paddingBottom: "6px",
+                    }}
+                  >
+                    Device:
+                  </td>
+                  <td
+                    style={{
+                      fontSize: "13px",
+                      color: "#111827",
+                      paddingBottom: "6px",
+                    }}
+                  >
+                    {userAgent}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontSize: "13px", color: "#6b7280" }}>
+                    IP Address:
+                  </td>
+                  <td style={{ fontSize: "13px", color: "#111827" }}>
+                    {ipAddress}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          <Hr
+            style={{
+              borderColor: "#e5e7eb",
+              margin: "24px 32px",
+            }}
+          />
+
+          {/* Form fields */}
+          <Section style={{ padding: "0 32px" }}>
+            {/* Subject */}
             <Text
               style={{
-                ...left,
-                margin: 0,
-                fontSize: "11px",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
+                fontSize: "12px",
                 color: "#6b7280",
-              }}
-            >
-              New Contact Message
-            </Text>
-            <Heading
-              style={{
-                ...left,
-                marginTop: "8px",
-                marginBottom: 0,
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "#111111",
-              }}
-            >
-              {name} reached out via {siteName}
-            </Heading>
-
-            <Hr style={{ borderColor: "#e5e5e5", margin: "24px 0" }} />
-
-            {/* Sender */}
-            <Text
-              style={{
-                ...left,
                 margin: "0 0 4px",
-                fontSize: "11px",
-                fontWeight: 500,
                 textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: "#6b7280",
+                letterSpacing: "0.05em",
               }}
             >
-              From
+              Subject
             </Text>
             <Text
               style={{
-                ...left,
-                margin: 0,
-                fontSize: "14px",
+                fontSize: "16px",
                 fontWeight: 600,
-                color: "#111111",
+                color: "#111827",
+                margin: "0 0 24px",
               }}
             >
-              {name}
+              {subject}
             </Text>
-            <Link
-              href={`mailto:${email}`}
-              style={{
-                ...left,
-                fontSize: "14px",
-                color: "#555555",
-                textDecoration: "none",
-              }}
-            >
-              {email}
-            </Link>
-            {phone && (
-              <Text
-                style={{
-                  ...left,
-                  margin: "2px 0 0",
-                  fontSize: "14px",
-                  color: "#6b7280",
-                }}
-              >
-                {phone}
-              </Text>
-            )}
 
-            <Hr style={{ borderColor: "#e5e5e5", margin: "24px 0" }} />
+            {phone && (
+              <>
+                <Text
+                  style={{
+                    fontSize: "12px",
+                    color: "#6b7280",
+                    margin: "0 0 4px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Phone
+                </Text>
+                <Text
+                  style={{
+                    fontSize: "14px",
+                    color: "#111827",
+                    margin: "0 0 24px",
+                  }}
+                >
+                  {phone}
+                </Text>
+              </>
+            )}
 
             {/* Message */}
             <Text
               style={{
-                ...left,
-                margin: "0 0 4px",
-                fontSize: "11px",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
+                fontSize: "12px",
                 color: "#6b7280",
+                margin: "0 0 4px",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
               }}
             >
               Message
             </Text>
-            <Text
+            <Section
               style={{
-                ...left,
-                margin: 0,
-                fontSize: "16px",
-                lineHeight: "26px",
-                fontWeight: 600,
-                color: "#111111",
+                backgroundColor: "#f8fafc",
+                borderRadius: "8px",
+                border: "1px solid #e2e8f0",
+                padding: "16px",
+                marginBottom: "24px",
               }}
             >
-              {message?.trim()}
-            </Text>
+              <Text
+                style={{
+                  fontSize: "14px",
+                  lineHeight: "22px",
+                  color: "#1e293b",
+                  margin: 0,
+                }}
+              >
+                {message}
+              </Text>
+            </Section>
+          </Section>
 
-            {/* Additional details */}
-            {metaEntries.length > 0 && (
-              <>
-                <Hr style={{ borderColor: "#e5e5e5", margin: "24px 0" }} />
-                <Text
-                  style={{
-                    ...left,
-                    margin: "0 0 8px",
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: "#6b7280",
-                  }}
-                >
-                  Additional Details
-                </Text>
-                {metaEntries.map(([key, value]) => (
-                  <Text
-                    key={key}
-                    style={{
-                      ...left,
-                      margin: "0 0 4px",
-                      fontSize: "14px",
-                      lineHeight: "20px",
-                      color: "#333333",
-                    }}
-                  >
-                    <span style={{ color: "#888888" }}>{formatKey(key)}:</span>{" "}
-                    {String(value)}
-                  </Text>
-                ))}
-              </>
-            )}
+          <Hr
+            style={{
+              borderColor: "#e5e7eb",
+              margin: "0 32px 24px",
+            }}
+          />
 
-            <Hr style={{ borderColor: "#e5e5e5", margin: "24px 0" }} />
-
-            {/* Reply CTA */}
+          {/* Action buttons */}
+          <Section style={{ padding: "0 32px 32px" }}>
             <Link
-              href={`mailto:${email}?subject=${encodeURIComponent(`Re: Your message to ${siteName}`)}&body=${encodeURIComponent(`\n\n---\nOn your original message:\n\n${message}`)}`}
+              href={`mailto:${email}?subject=Re: ${subject}`}
               style={{
-                ...left,
+                display: "block",
+                backgroundColor: "#2563eb",
+                color: "#ffffff",
+                borderRadius: "8px",
+                padding: "14px 0",
+                textAlign: "center",
                 fontSize: "14px",
-                fontWeight: 500,
-                color: "#111111",
+                fontWeight: 600,
                 textDecoration: "none",
+                width: "100%",
               }}
             >
-              Reply to {name} →
+              Reply to {name.split(" ")[0]}
             </Link>
+            {phone && (
+              <Link
+                href={`tel:${phone.replace(/\s/g, "")}`}
+                style={{
+                  display: "block",
+                  backgroundColor: "#ffffff",
+                  color: "#2563eb",
+                  borderRadius: "8px",
+                  border: "1px solid #2563eb",
+                  padding: "14px 0",
+                  textAlign: "center",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  width: "100%",
+                  marginTop: "8px",
+                }}
+              >
+                Call {phone}
+              </Link>
+            )}
+          </Section>
 
-            {/* Footer */}
+          {/* Footer metadata */}
+          {(referer || pageUrl) && (
+            <Section
+              style={{
+                padding: "16px 32px",
+                borderTop: "1px solid #f3f4f6",
+              }}
+            >
+              <table
+                cellPadding={0}
+                cellSpacing={0}
+                style={{ width: "100%", fontSize: "11px", color: "#9ca3af" }}
+              >
+                <tbody>
+                  {referer && (
+                    <tr>
+                      <td style={{ padding: "2px 0", width: "60px" }}>
+                        Referer
+                      </td>
+                      <td style={{ padding: "2px 0" }}>{referer}</td>
+                    </tr>
+                  )}
+                  {pageUrl && (
+                    <tr>
+                      <td style={{ padding: "2px 0", width: "60px" }}>Page</td>
+                      <td style={{ padding: "2px 0" }}>{pageUrl}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </Section>
+          )}
+
+          {/* Powered by footer */}
+          <Section style={{ padding: "24px 32px 32px", textAlign: "center" }}>
             <Text
               style={{
-                ...left,
-                margin: "48px 0 0",
-                fontSize: "12px",
+                margin: 0,
+                fontSize: "11px",
                 color: "#9ca3af",
               }}
             >
-              Delivered by AliSamadii.LLC · This message was sent via the
-              contact form on {siteName}
+              Powered by{" "}
+              <Link
+                href="https://alisamadii.com"
+                style={{ color: "#9ca3af", textDecoration: "underline" }}
+              >
+                AliSamadii LLC
+              </Link>
             </Text>
-          </div>
+          </Section>
         </Container>
       </Body>
     </Html>
   );
 }
 
-ContactMessage.PreviewProps = {
+ContactFormEmail.templateName = "contact-form" as const;
+
+ContactFormEmail.PreviewProps = {
   name: "John Doe",
   email: "john@example.com",
-  phone: "+1 (555) 123-4567",
+  subject: "Partnership Inquiry",
   message:
-    "Hi there! I'm interested in learning more about your services. Could we schedule a call this week?",
-  siteName: "Acme Corp",
-  metadata: {
-    company: "Acme Corporation",
-    projectBudget: "$5,000 - $10,000",
-    preferredContactTime: "Afternoons, PST",
-  },
-} satisfies ContactMessageProps;
+    "Hi there,\n\nI'm interested in discussing a potential partnership. We've been following your work and think there's a great opportunity to collaborate.\n\nLooking forward to hearing from you.\n\nBest regards,\nJohn",
+  phone: "+1 (555) 123-4567",
+  ipAddress: "203.0.113.42",
+  userAgent: "Chrome (macOS)",
+  referer: "https://google.com",
+  submittedAt: "2026-05-31T14:30:00.000Z",
+  pageUrl: "https://alisamadii.com/contact",
+  clientName: "Ali Samadi",
+} satisfies ContactFormEmailProps;

@@ -49,3 +49,4 @@ apps/motion/animations
 
 .pnpm-store
 .env*.local
+.dev.vars

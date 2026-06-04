@@ -11,7 +11,6 @@ import { db } from "@workspace/drizzle/index";
 import {
   agencyClient,
   agencyClientStatusValues,
-  clientScopes,
   user,
 } from "@workspace/drizzle/schema";
 
@@ -38,10 +37,6 @@ export const clientsRouter = createTRPCRouter({
         userEmail: user.email,
         userImage: user.image,
         userCompany: user.company,
-        scopeCount:
-          sql<number>`(select count(*) from client_scopes where client_scopes.user_id = ${agencyClient.userId})`.as(
-            "scope_count"
-          ),
         subscriptionCount:
           sql<number>`(select count(*) from subscription where subscription.user_id = ${agencyClient.userId})`.as(
             "subscription_count"
@@ -62,7 +57,6 @@ export const clientsRouter = createTRPCRouter({
       isStripe: row.isStripe,
       domain: row.domain ?? null,
       status: row.status,
-      scopeCount: Number(row.scopeCount),
       subscriptionCount: Number(row.subscriptionCount),
     }));
   }),
@@ -89,22 +83,10 @@ export const clientsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
       }
 
-      const scopes = await db
-        .select()
-        .from(clientScopes)
-        .where(eq(clientScopes.userId, byId.user.id))
-        .orderBy(desc(clientScopes.createdAt));
-
-      return { user: byId.user, client: byId.agency_client, scopes };
+      return { user: byId.user, client: byId.agency_client };
     }
 
-    const scopes = await db
-      .select()
-      .from(clientScopes)
-      .where(eq(clientScopes.userId, input))
-      .orderBy(desc(clientScopes.createdAt));
-
-    return { user: record.user, client: record.agency_client, scopes };
+    return { user: record.user, client: record.agency_client };
   }),
 
   create: adminProcedure
@@ -156,6 +138,8 @@ export const clientsRouter = createTRPCRouter({
         launchDate: z.string().nullable().optional(),
         timezone: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
+        contactEmail: z.string().email().nullable().optional(),
+        apiKeyOrigin: z.string().nullable().optional(),
         status: z.enum(agencyClientStatusValues).optional(),
       })
     )
@@ -173,6 +157,40 @@ export const clientsRouter = createTRPCRouter({
       }
 
       return updated;
+    }),
+
+  generateApiKey: adminProcedure
+    .input(z.string())
+    .mutation(async ({ input: clientId }) => {
+      const key = `ak_${crypto.randomUUID().replace(/-/g, "")}`;
+
+      const [updated] = await db
+        .update(agencyClient)
+        .set({ apiKey: key, updatedAt: new Date() })
+        .where(eq(agencyClient.id, clientId))
+        .returning({ apiKey: agencyClient.apiKey });
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
+      }
+
+      return { apiKey: updated.apiKey };
+    }),
+
+  revokeApiKey: adminProcedure
+    .input(z.string())
+    .mutation(async ({ input: clientId }) => {
+      const [updated] = await db
+        .update(agencyClient)
+        .set({ apiKey: null, updatedAt: new Date() })
+        .where(eq(agencyClient.id, clientId))
+        .returning();
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Client not found" });
+      }
+
+      return { success: true };
     }),
 
   delete: adminProcedure.input(z.string()).mutation(async ({ input }) => {

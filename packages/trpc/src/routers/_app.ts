@@ -11,7 +11,6 @@ import { logsRouter } from "./logs";
 import { notificationRouter } from "./notification";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
-import { scopesRouter } from "./scopes";
 import { usersRouter } from "./users";
 
 export const appRouter = createTRPCRouter({
@@ -25,7 +24,6 @@ export const appRouter = createTRPCRouter({
   logs: logsRouter,
   sources: sourcesRouter,
   coldEmails: coldEmailsRouter,
-  scopes: scopesRouter,
   clickup: clickupRouter,
 });
 
