@@ -35,8 +35,7 @@ export const company = {
     { label: "B402", href: "https://www.b402.ai" },
   ],
   resume: "https://personal-work-ali.s3.us-west-2.amazonaws.com/alisamadi.pdf",
-  myImage:
-    "https://alisamadii-llc.s3.us-west-2.amazonaws.com/public/my-image.png",
+  myImage: "https://cdn.alisamadii.com/1780454258377-my-image.png",
 };
 
 export const urls: Record<Lowercase<ProjectType> | "portal", string> = {

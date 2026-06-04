@@ -159,7 +159,7 @@ export default function Home() {
             >
               Let&apos;s collaborate
             </a>
-            <Link
+            {/* <Link
               href={company.resume}
               download
               target="_blank"
@@ -170,7 +170,7 @@ export default function Home() {
             >
               <FileUser size={18} />
               Download CV
-            </Link>
+            </Link> */}
           </div>
         </div>
         <Link
@@ -263,7 +263,14 @@ export default function Home() {
           <ClientWork projectName="B402" />
           <Divider />
           <div className="flex justify-center p-8">
-            <Button size={"lg"} variant={"outline"} className="w-full" render={<Link href={`/blog/how-i-build`} />}>How I Build</Button>
+            <Button
+              size={"lg"}
+              variant={"outline"}
+              className="w-full"
+              render={<Link href={`/blog/how-i-build`} />}
+            >
+              How I Build
+            </Button>
           </div>
           <Divider />
           <Divider
@@ -319,10 +326,10 @@ export default function Home() {
       </section> */}
 
       {currentUser?.user?.email && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-2">
           <Link
             href={urls.portal}
-            className="flex items-center gap-2 rounded-full border bg-zinc-950 py-2.5 pl-4 pr-3 text-zinc-50 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+            className="flex items-center gap-2 rounded-full border bg-zinc-950 py-2.5 pr-3 pl-4 text-zinc-50 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
           >
             <span className="text-sm font-medium">My Portal</span>
             <Settings size={18} />
