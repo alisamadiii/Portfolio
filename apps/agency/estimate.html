@@ -266,6 +266,9 @@
         #heroSection {
           display: none;
         }
+        #packageSelection {
+          display: none;
+        }
         nav {
           display: none;
         }
@@ -373,6 +376,32 @@
           width: 100%;
         }
       }
+
+      /* Package cards */
+      .package-card {
+        transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+      }
+      .package-card:hover {
+        transform: translateY(-2px);
+      }
+      .package-card.selected {
+        background: rgba(252, 132, 100, 0.03);
+      }
+      .package-card.selected .card-ring {
+        --tw-ring-color: rgba(252, 132, 100, 0.3);
+      }
+
+      /* Services container visibility */
+      #servicesContainer {
+        transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      #servicesContainer.pkg-hidden {
+        opacity: 0;
+        pointer-events: none;
+        height: 0;
+        overflow: hidden;
+      }
     </style>
   </head>
 
@@ -436,9 +465,9 @@
         <p
           class="reveal text-warmgray mt-6 max-w-[55ch] text-base leading-relaxed md:text-lg"
         >
-          Select the services you need and get an instant estimate. Toggle
-          features on and off to see how your project shapes up — then download
-          or send the quote when you're ready.
+          Choose a managed monthly plan or build a custom scope from our
+          full service menu. Get an instant estimate, then download or send
+          the quote when you're ready.
         </p>
         <div class="reveal mt-8">
           <div
@@ -468,8 +497,332 @@
       </div>
     </section>
 
+    <!-- ==================== PACKAGE SELECTION ==================== -->
+    <section
+      id="packageSelection"
+      class="border-charcoal/[0.06] border-t px-4 py-20 md:px-8 md:py-28"
+    >
+      <div class="mx-auto max-w-[1400px]">
+        <div class="stagger mb-12">
+          <div class="reveal">
+            <span
+              class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+              >Choose Your Path</span
+            >
+          </div>
+          <h2
+            class="reveal mt-2 font-serif text-4xl tracking-tight italic md:text-5xl"
+          >
+            How Would You Like<br />to
+            <span class="text-accent">Get Started</span>?
+          </h2>
+          <p
+            class="reveal text-warmgray mt-4 max-w-[55ch] text-base leading-relaxed"
+          >
+            Pick the package that fits your needs. Go with a managed monthly
+            plan, or build a custom scope from our full service menu.
+          </p>
+        </div>
+
+        <div class="stagger grid grid-cols-1 gap-6 md:grid-cols-2">
+          <!-- Starter Card -->
+          <div class="reveal">
+            <div
+              id="starterCard"
+              class="package-card rounded-[2rem] p-1.5 ring-1 ring-charcoal/[0.04] bg-charcoal/[0.03] card-ring"
+              onclick="selectPackage('starter')"
+            >
+              <div
+                class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10"
+              >
+                <div class="mb-6 flex items-center gap-3">
+                  <span
+                    class="bg-accent inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase text-white"
+                    >Recommended</span
+                  >
+                </div>
+                <h3 class="font-serif text-2xl italic">Starter</h3>
+                <div class="mt-3">
+                  <span class="text-3xl font-bold tracking-tight">$284</span>
+                  <span class="text-warmgray text-base font-normal">/mo</span>
+                </div>
+                <p
+                  class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
+                >
+                  Everything you need for a professional landing page — design,
+                  development, contact forms, and hosting included.
+                </p>
+                <ul class="text-warmgray mt-6 space-y-3 text-sm">
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Custom page design & development
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Up to 10 pages
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Contact page & forms
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    SEO & analytics setup
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Contact form forwarding
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Managed hosting & maintenance
+                  </li>
+                </ul>
+                <div class="mt-8">
+                  <button
+                    id="starterBtn"
+                    class="mag-btn inline-flex w-full items-center justify-center gap-3 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
+                  >
+                    <div class="check-box">
+                      <svg
+                        class="h-4 w-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="3"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    Select Starter
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Card -->
+          <div class="reveal">
+            <div
+              id="customCard"
+              class="package-card rounded-[2rem] p-1.5 ring-1 ring-charcoal/[0.04] bg-charcoal/[0.03] card-ring opacity-60 pointer-events-none"
+            >
+              <div
+                class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10"
+              >
+                <div class="mb-6 flex items-center gap-3">
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase text-amber-700 ring-1 ring-amber-200/60"
+                  >
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                    Coming Soon
+                  </span>
+                </div>
+                <h3 class="font-serif text-2xl italic">Custom</h3>
+                <div class="mt-3">
+                  <span class="text-3xl font-bold tracking-tight"
+                    >From $149</span
+                  >
+                  <span class="text-warmgray ml-1 text-xs"
+                    >one-time + monthly options</span
+                  >
+                </div>
+                <p
+                  class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
+                >
+                  Build your own scope — pick exactly the services you need for
+                  a fully tailored project.
+                </p>
+                <ul class="text-warmgray mt-6 space-y-3 text-sm">
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Full service menu
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Per-service pricing
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Admin panel, auth & database available
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    One-time and recurring options
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Complete flexibility
+                  </li>
+                </ul>
+                <div class="mt-8">
+                  <button
+                    id="customBtn"
+                    class="mag-btn inline-flex w-full items-center justify-center gap-3 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
+                  >
+                    <div class="check-box">
+                      <svg
+                        class="h-4 w-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="3"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    Select Custom
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ==================== SERVICES (rendered by JS) ==================== -->
-    <div id="servicesContainer"></div>
+    <div id="servicesContainer" class="pkg-hidden"></div>
 
     <!-- ==================== SUMMARY ==================== -->
     <section
@@ -504,6 +857,7 @@
           </div>
           <h2 class="font-serif text-3xl italic">Project Estimate</h2>
           <p class="text-warmgray mt-1 text-sm" id="printDate"></p>
+              <p class="text-warmgray mt-0.5 text-sm" id="printPackageType"></p>
         </div>
 
         <!-- Selected services list -->
@@ -820,6 +1174,7 @@
       const STORAGE_KEY = "agency-estimate";
 
       let state = {
+        packageType: null,
         services: {},
         options: {},
         clientName: "",
@@ -882,6 +1237,63 @@
 
       const formatPrice = (amount) => {
         return "$" + amount.toLocaleString("en-US");
+      };
+
+      // ─── PACKAGE SELECTION ────────────────────────────────────────
+
+      const selectPackage = (type) => {
+        state.packageType = state.packageType === type ? null : type;
+        saveState();
+        renderPackageCards();
+        renderServicesVisibility();
+        renderSummary();
+        renderStickyBar();
+
+        if (state.packageType === "starter") {
+          setTimeout(() => {
+            document
+              .getElementById("summarySection")
+              .scrollIntoView({ behavior: "smooth" });
+          }, 100);
+        }
+      };
+
+      const renderPackageCards = () => {
+        const starterCard = document.getElementById("starterCard");
+        const customCard = document.getElementById("customCard");
+        const starterBtn = document.getElementById("starterBtn");
+        const customBtn = document.getElementById("customBtn");
+
+        const isStarter = state.packageType === "starter";
+        const isCustom = state.packageType === "custom";
+
+        starterCard.classList.toggle("selected", isStarter);
+        customCard.classList.toggle("selected", isCustom);
+
+        starterBtn.className = `mag-btn inline-flex w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${isStarter ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}`;
+        starterBtn.querySelector(".check-box").classList.toggle(
+          "checked",
+          isStarter,
+        );
+        starterBtn.childNodes[starterBtn.childNodes.length - 1].textContent =
+          isStarter ? " Selected" : " Select Starter";
+
+        customBtn.className = `mag-btn inline-flex w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${isCustom ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}`;
+        customBtn.querySelector(".check-box").classList.toggle(
+          "checked",
+          isCustom,
+        );
+        customBtn.childNodes[customBtn.childNodes.length - 1].textContent =
+          isCustom ? " Selected" : " Select Custom";
+      };
+
+      const renderServicesVisibility = () => {
+        const container = document.getElementById("servicesContainer");
+        if (state.packageType === "custom") {
+          container.classList.remove("pkg-hidden");
+        } else {
+          container.classList.add("pkg-hidden");
+        }
       };
 
       // ─── RENDER SERVICES ─────────────────────────────────────────
@@ -1013,20 +1425,57 @@
         const monthlyRowEl = document.getElementById("monthlyRow");
         const totalMonthlyEl = document.getElementById("totalMonthly");
 
+        // Clear existing rows
+        list.querySelectorAll(".summary-row").forEach((el) => el.remove());
+
+        // No package selected
+        if (!state.packageType) {
+          empty.textContent =
+            "Choose a package above to get started with your estimate.";
+          empty.classList.remove("hidden");
+          totalsDiv.classList.add("hidden");
+          return;
+        }
+
+        // Starter package
+        if (state.packageType === "starter") {
+          empty.classList.add("hidden");
+          totalsDiv.classList.remove("hidden");
+
+          const row = document.createElement("div");
+          row.className =
+            "summary-row flex items-center justify-between py-3 border-b border-charcoal/[0.04] last:border-0";
+          row.innerHTML = `
+          <div>
+            <span class="text-sm font-medium">Starter — Managed Landing Page</span>
+            <span class="text-xs text-warmgray block mt-0.5">Design, development, up to 10 pages, hosting & contact form forwarding</span>
+          </div>
+          <span class="text-sm font-semibold tabular-nums">$284/mo</span>
+        `;
+          list.appendChild(row);
+
+          // Show monthly total only
+          totalOneTimeEl.parentElement.classList.add("hidden");
+          monthlyRowEl.classList.remove("hidden");
+          monthlyRowEl.classList.add("flex");
+          totalMonthlyEl.textContent = "$284/mo";
+          return;
+        }
+
+        // Custom package
+        totalOneTimeEl.parentElement.classList.remove("hidden");
         const selected = SERVICES.filter((svc) => state.services[svc.id]);
 
         if (selected.length === 0) {
+          empty.textContent =
+            "No services selected yet. Choose services above to build your estimate.";
           empty.classList.remove("hidden");
           totalsDiv.classList.add("hidden");
-          list.querySelectorAll(".summary-row").forEach((el) => el.remove());
           return;
         }
 
         empty.classList.add("hidden");
         totalsDiv.classList.remove("hidden");
-
-        // Clear existing rows
-        list.querySelectorAll(".summary-row").forEach((el) => el.remove());
 
         selected.forEach((svc) => {
           let price = svc.basePrice;
@@ -1082,6 +1531,19 @@
         const countEl = document.getElementById("barCount");
         const totalEl = document.getElementById("barTotal");
         const monthlyEl = document.getElementById("barMonthly");
+
+        if (!state.packageType) {
+          bar.style.transform = "translateY(100%)";
+          return;
+        }
+
+        if (state.packageType === "starter") {
+          bar.style.transform = "translateY(0)";
+          countEl.textContent = "Starter Package";
+          totalEl.textContent = "$284/mo";
+          monthlyEl.classList.add("hidden");
+          return;
+        }
 
         const selected = SERVICES.filter((svc) => state.services[svc.id]);
         const { oneTime, monthly } = calcTotals();
@@ -1141,44 +1603,61 @@
             month: "long",
             day: "numeric",
           });
+        document.getElementById("printPackageType").textContent =
+          state.packageType === "starter"
+            ? "Package: Starter"
+            : "Package: Custom";
         window.print();
       };
 
       const sendEstimate = () => {
-        const selected = SERVICES.filter((svc) => state.services[svc.id]);
-        const { oneTime, monthly } = calcTotals();
         const name = state.clientName || "Not provided";
         const email = state.clientEmail || "Not provided";
         const desc = state.clientDescription || "Not provided";
 
         let body = `Project Estimate\n${"=".repeat(40)}\n\n`;
         body += `Client: ${name}\nEmail: ${email}\n\nProject Description:\n${desc}\n\n`;
-        body += `Selected Services:\n${"-".repeat(40)}\n`;
 
-        selected.forEach((svc) => {
-          let price = svc.basePrice;
-          let detail = "";
-          let optionMonthly = 0;
-          if (svc.options) {
-            const chosen =
-              state.options[svc.id] ||
-              svc.options.defaultValue ||
-              svc.options.choices[0].value;
-            const choice = svc.options.choices.find((c) => c.value === chosen);
-            if (choice) {
-              price += choice.price;
-              detail = ` (${choice.label})`;
-              if (choice.monthly) optionMonthly = choice.monthly;
+        if (state.packageType === "starter") {
+          body += `Package: Starter — Managed Landing Page\n`;
+          body += `Monthly: $284/mo\n`;
+          body += `\nIncludes: Custom design & development, up to 10 pages, contact form forwarding, SEO & analytics, managed hosting\n`;
+        } else {
+          const selected = SERVICES.filter((svc) => state.services[svc.id]);
+          const { oneTime, monthly } = calcTotals();
+
+          body += `Selected Services:\n${"-".repeat(40)}\n`;
+
+          selected.forEach((svc) => {
+            let price = svc.basePrice;
+            let detail = "";
+            let optionMonthly = 0;
+            if (svc.options) {
+              const chosen =
+                state.options[svc.id] ||
+                svc.options.defaultValue ||
+                svc.options.choices[0].value;
+              const choice = svc.options.choices.find(
+                (c) => c.value === chosen,
+              );
+              if (choice) {
+                price += choice.price;
+                detail = ` (${choice.label})`;
+                if (choice.monthly) optionMonthly = choice.monthly;
+              }
             }
-          }
-          const suffix = svc.type === "monthly" ? "/mo" : "";
-          const monthlyNote = optionMonthly > 0 ? ` + ${formatPrice(optionMonthly)}/mo` : "";
-          body += `• ${svc.title}${detail} — ${formatPrice(price)}${suffix}${monthlyNote}\n`;
-        });
+            const suffix = svc.type === "monthly" ? "/mo" : "";
+            const monthlyNote =
+              optionMonthly > 0
+                ? ` + ${formatPrice(optionMonthly)}/mo`
+                : "";
+            body += `• ${svc.title}${detail} — ${formatPrice(price)}${suffix}${monthlyNote}\n`;
+          });
 
-        body += `\n${"=".repeat(40)}\n`;
-        body += `One-time Total: ${formatPrice(oneTime)}\n`;
-        if (monthly > 0) body += `Monthly: ${formatPrice(monthly)}/mo\n`;
+          body += `\n${"=".repeat(40)}\n`;
+          body += `One-time Total: ${formatPrice(oneTime)}\n`;
+          if (monthly > 0) body += `Monthly: ${formatPrice(monthly)}/mo\n`;
+        }
 
         const subject = encodeURIComponent(`Project Estimate — ${name}`);
         const encodedBody = encodeURIComponent(body);
@@ -1243,7 +1722,9 @@
       // ─── INIT ────────────────────────────────────────────────────
 
       loadState();
+      renderPackageCards();
       renderServices();
+      renderServicesVisibility();
       renderSummary();
       renderStickyBar();
       initClientFields();

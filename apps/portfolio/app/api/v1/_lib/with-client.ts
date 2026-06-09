@@ -13,7 +13,7 @@ import {
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 export type Client = {
@@ -57,9 +57,12 @@ export function withClient(handler: HandlerFn) {
         throw new ApiError("Please send valid JSON.", 400);
       }
 
-      const token = body.token as string | undefined;
+      const authHeader = req.headers.get("authorization");
+      const token = authHeader?.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
       if (!token) {
-        throw new ApiError("Token is required.", 400);
+        throw new ApiError("Authorization header with Bearer token is required.", 401);
       }
 
       // Auth

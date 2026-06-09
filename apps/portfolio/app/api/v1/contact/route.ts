@@ -12,7 +12,6 @@ import {
 } from "../_lib/with-client";
 
 const bodySchema = z.object({
-  token: z.string().min(1),
   name: z.string().min(1).max(200),
   email: z.email().max(320),
   subject: z.string().min(1).max(500),
