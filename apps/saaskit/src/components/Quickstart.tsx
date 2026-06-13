@@ -7,7 +7,7 @@ export function Quickstart() {
       n: 1,
       title: 'Initialize',
       body: <>Scaffold the template locally — full-stack or monorepo, your pick.</>,
-      cmd: 'npx create-saaskit-app@latest',
+      cmd: 'npx create-saaskit@latest',
     },
     {
       n: 2,

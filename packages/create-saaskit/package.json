@@ -1,0 +1,19 @@
+{
+  "name": "create-saaskit",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Scaffold a production-ready SaaS from the SaaSKit template.",
+  "keywords": ["saaskit", "saas", "starter", "template", "nextjs", "boilerplate"],
+  "homepage": "https://saaskit.alisamadii.com",
+  "bin": {
+    "create-saaskit": "index.js"
+  },
+  "files": ["index.js"],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "UNLICENSED"
+}

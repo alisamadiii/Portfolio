@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 
 export const MONO = "'Geist Mono', monospace"
-export const CMD = 'npx create-saaskit-app@latest'
+export const CMD = 'npx create-saaskit@latest'
 export const MOBILE_BP = 880
 export const MID_BP = 1180
 export const HERO_VIDEO =

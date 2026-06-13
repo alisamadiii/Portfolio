@@ -78,7 +78,7 @@ export default function Docs() {
           <Section id="quickstart" title="Quickstart">
             <P>Scaffold the template, add your keys, and run it. Three commands:</P>
             <CodeBlock title="terminal">
-{'$ '}<span style={{ color: W }}>npx create-saaskit-app@latest</span>{'\n'}
+{'$ '}<span style={{ color: W }}>npx create-saaskit@latest</span>{'\n'}
 {'$ '}<span style={{ color: W }}>cp .env.example .env.local</span>{'   '}<span style={{ color: G }}># add your keys</span>{'\n'}
 {'$ '}<span style={{ color: W }}>npm run dev</span>{'\n'}
 <span style={{ color: G }}>  ready on http://localhost:3000</span>
