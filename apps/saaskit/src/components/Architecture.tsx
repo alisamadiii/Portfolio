@@ -48,7 +48,7 @@ export function Architecture() {
 
   return (
     <section
-      id="docs"
+      id="architecture"
       style={{
         background: '#0A0A0A',
         color: '#FAFAFA',

@@ -3,6 +3,9 @@ body {
   margin: 0;
   padding: 0;
   background: #0a0a0a;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 html {
   scroll-behavior: smooth;
@@ -188,4 +191,14 @@ html {
 }
 .foot-lnk:hover {
   color: #fafafa !important;
+}
+.lnk-dark:hover {
+  color: #0a0a0a !important;
+}
+
+/* Docs table-of-contents: hide the sticky rail on narrow screens */
+@media (max-width: 860px) {
+  .docs-toc {
+    display: none !important;
+  }
 }

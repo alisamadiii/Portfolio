@@ -1,24 +1,44 @@
-import type { CSSProperties } from 'react'
-import { MONO, noop } from '../lib/constants'
+import { useState, type CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
+import { MONO } from '../lib/constants'
+import { useScrolled, useViewport } from '../lib/hooks'
 
-export function Navbar({
-  isMobile,
-  scrolled,
-  menuOpen,
-  setMenuOpen,
-}: {
-  isMobile: boolean
-  scrolled: boolean
-  menuOpen: boolean
-  setMenuOpen: (v: boolean) => void
-}) {
-  const active = scrolled || menuOpen
+const NAV_LINKS: { href: string; label: string; route?: boolean }[] = [
+  { href: '/#features', label: 'Features' },
+  { href: '/#templates', label: 'Templates' },
+  { href: '/#pricing', label: 'Pricing' },
+  { href: '/docs', label: 'Docs', route: true },
+  { href: '/#faq', label: 'FAQ' },
+]
+
+/**
+ * Self-contained top nav, used on the landing page and every content page.
+ * `solid` forces the opaque state (content pages sit on a white background).
+ */
+export function Navbar({ solid = false }: { solid?: boolean }) {
+  const { isMobile } = useViewport()
+  const scrolled = useScrolled()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const active = solid || scrolled || menuOpen
+
   const navLink: CSSProperties = {
     color: '#A1A1AA',
     textDecoration: 'none',
     fontSize: 14,
     transition: 'color 0.2s',
   }
+
+  const renderLink = (l: (typeof NAV_LINKS)[number], style: CSSProperties, onClick?: () => void) =>
+    l.route ? (
+      <Link key={l.href} to={l.href} className="lnk" style={style} onClick={onClick}>
+        {l.label}
+      </Link>
+    ) : (
+      <a key={l.href} href={l.href} className="lnk" style={style} onClick={onClick}>
+        {l.label}
+      </a>
+    )
+
   return (
     <>
       <nav
@@ -47,39 +67,24 @@ export function Navbar({
             gap: 24,
           }}
         >
-          <a
-            href="#top"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              textDecoration: 'none',
-              color: '#FAFAFA',
-            }}
+          <Link
+            to="/"
+            style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#FAFAFA' }}
           >
-            <span
-              style={{ width: 14, height: 14, background: '#FAFAFA', flex: 'none', display: 'inline-block' }}
-            />
-            <span
-              style={{ fontFamily: MONO, fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em' }}
-            >
-              saaskit
-            </span>
-          </a>
+            <span style={{ width: 14, height: 14, background: '#FAFAFA', flex: 'none', display: 'inline-block' }} />
+            <span style={{ fontFamily: MONO, fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em' }}>saaskit</span>
+          </Link>
 
           {!isMobile && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-                <a href="#features" className="lnk" style={navLink}>Features</a>
-                <a href="#templates" className="lnk" style={navLink}>Templates</a>
-                <a href="#pricing" className="lnk" style={navLink}>Pricing</a>
-                <a href="#docs" className="lnk" style={navLink}>Docs</a>
-                <a href="#faq" className="lnk" style={navLink}>FAQ</a>
+                {NAV_LINKS.map((l) => renderLink(l, navLink))}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <a
-                  href="#"
-                  onClick={noop}
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noreferrer"
                   className="star-badge"
                   style={{
                     display: 'inline-flex',
@@ -99,7 +104,7 @@ export function Navbar({
                   ★ 4.2k
                 </a>
                 <a
-                  href="#pricing"
+                  href="/#pricing"
                   className="btn-white"
                   style={{
                     display: 'inline-flex',
@@ -161,30 +166,21 @@ export function Navbar({
             gap: 2,
           }}
         >
-          {[
-            ['#features', 'Features'],
-            ['#templates', 'Templates'],
-            ['#pricing', 'Pricing'],
-            ['#docs', 'Docs'],
-            ['#faq', 'FAQ'],
-          ].map(([href, label], i, arr) => (
-            <a
-              key={href}
-              href={href}
-              onClick={() => setMenuOpen(false)}
-              style={{
+          {NAV_LINKS.map((l, i) =>
+            renderLink(
+              l,
+              {
                 color: '#FAFAFA',
                 textDecoration: 'none',
                 fontSize: 16,
                 padding: '13px 4px',
-                borderBottom: i < arr.length - 1 ? '1px solid #18181B' : 'none',
-              }}
-            >
-              {label}
-            </a>
-          ))}
+                borderBottom: i < NAV_LINKS.length - 1 ? '1px solid #18181B' : 'none',
+              },
+              () => setMenuOpen(false),
+            ),
+          )}
           <a
-            href="#pricing"
+            href="/#pricing"
             onClick={() => setMenuOpen(false)}
             style={{
               marginTop: 14,

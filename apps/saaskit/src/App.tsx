@@ -1,54 +1,35 @@
-import { useState } from 'react'
-import { useViewport, useScrolled, useReveals } from './lib/hooks'
-import { Navbar } from './components/Navbar'
-import { Hero } from './components/Hero'
-import { Features } from './components/Features'
-import { Templates } from './components/Templates'
-import { Architecture } from './components/Architecture'
-import { Quickstart } from './components/Quickstart'
-import { DeepDive } from './components/DeepDive'
-import { Pricing } from './components/Pricing'
-import { Faq } from './components/Faq'
-import { FinalCta } from './components/FinalCta'
-import { Footer } from './components/Footer'
-import { CheckoutResult } from './components/CheckoutResult'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import Landing from './pages/Landing'
+import Changelog from './pages/Changelog'
+import Docs from './pages/Docs'
+import License from './pages/License'
+import Terms from './pages/Terms'
+
+/** Scroll to top on route change, but honour in-page #hash anchors. */
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (hash) {
+      document.getElementById(hash.slice(1))?.scrollIntoView()
+      return
+    }
+    window.scrollTo(0, 0)
+  }, [pathname, hash])
+  return null
+}
 
 export default function App() {
-  const { isMobile, isMid } = useViewport()
-  const scrolled = useScrolled()
-  const [menuOpen, setMenuOpen] = useState(false)
-  useReveals()
-
-  // Navbar only renders the menu while isMobile, so no desktop-resize reset needed.
-  const cols = isMobile
-    ? '1fr'
-    : isMid
-      ? 'repeat(2, minmax(0, 1fr))'
-      : 'repeat(4, minmax(0, 1fr))'
-  const span2 = isMobile ? 'auto' : 'span 2'
-
   return (
-    <div
-      style={{
-        background: '#0A0A0A',
-        color: '#FAFAFA',
-        fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif",
-        WebkitFontSmoothing: 'antialiased',
-        overflowX: 'clip',
-      }}
-    >
-      <Navbar isMobile={isMobile} scrolled={scrolled} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-      <Hero />
-      <Features span2={span2} cols={cols} />
-      <Templates />
-      <Architecture />
-      <Quickstart />
-      <DeepDive />
-      <Pricing />
-      <Faq />
-      <FinalCta />
-      <Footer />
-      <CheckoutResult />
-    </div>
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/changelog" element={<Changelog />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/license" element={<License />} />
+        <Route path="/terms" element={<Terms />} />
+      </Routes>
+    </>
   )
 }

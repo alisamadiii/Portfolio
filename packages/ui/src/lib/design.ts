@@ -10,12 +10,14 @@ export const projectDesign: Record<
   AGENCY: { color: "#00B894", label: "Agency" },
   TEMPLATE: { color: "#9B59B6", label: "Template" },
   ADMIN: { color: "#95A5A6", label: "Admin" },
+  SAASKIT: { color: "#9B59B6", label: "SaaSKit" },
 };
 
 export function getProjectColor(project?: string | null): string {
   if (!project) return projectDesign.PORTFOLIO.color;
   return (
-    projectDesign[project as ProjectType]?.color ?? projectDesign.PORTFOLIO.color
+    projectDesign[project as ProjectType]?.color ??
+    projectDesign.PORTFOLIO.color
   );
 }
 
