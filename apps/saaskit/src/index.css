@@ -1,0 +1,158 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a;
+}
+html {
+  scroll-behavior: smooth;
+}
+* {
+  box-sizing: border-box;
+}
+::selection {
+  background: #fafafa;
+  color: #0a0a0a;
+}
+
+/* ---------- keyframes (from design) ---------- */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes kfTravel {
+  0% {
+    left: 10px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 16px);
+    opacity: 0;
+  }
+}
+@keyframes kfPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes kfGrow {
+  from {
+    transform: scaleY(0.45);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes kfFill {
+  0% {
+    width: 0%;
+  }
+  55% {
+    width: 100%;
+  }
+  80% {
+    width: 100%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0.35;
+  }
+}
+@keyframes kfFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ---------- scroll reveal ---------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-reveal][data-on="1"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- hover states (override inline base styles) ---------- */
+.lnk:hover {
+  color: #fafafa !important;
+}
+.star-badge:hover {
+  color: #fafafa !important;
+  border-color: #3f3f46 !important;
+}
+.btn-white:hover {
+  background: #ffffff !important;
+  transform: translateY(-1px);
+}
+.btn-ghost-dark:hover {
+  border-color: #3f3f46 !important;
+  background: #111113 !important;
+}
+.copy-btn:hover {
+  color: #fafafa !important;
+}
+.logo-item:hover {
+  color: #fafafa !important;
+}
+.bento-card:hover {
+  border-color: #a1a1aa !important;
+}
+.tmpl-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+}
+.btn-solid-light:hover {
+  background: #ffffff !important;
+}
+.btn-ghost-light:hover {
+  border-color: #fafafa !important;
+  background: #111113 !important;
+}
+.price-card:hover {
+  border-color: #a1a1aa !important;
+  transform: translateY(-3px);
+}
+.price-card-hl:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.25);
+}
+.btn-outline-invert:hover {
+  background: #0a0a0a !important;
+  color: #fafafa !important;
+}
+.foot-lnk:hover {
+  color: #fafafa !important;
+}

@@ -18,8 +18,8 @@ import {
   webhookEvents,
 } from "@workspace/drizzle/schema";
 import { email as emailService } from "@workspace/email";
-import ResetPassword from "@workspace/email/emails/reset-password";
 import MagicLink from "@workspace/email/emails/magic-link";
+import ResetPassword from "@workspace/email/emails/reset-password";
 import VerifyEmail from "@workspace/email/emails/verify-email";
 
 import {
@@ -201,9 +201,9 @@ export const auth = betterAuth({
             await updateOrder(data);
             await revokeSubscriptionOnRefund(data.subscriptionId ?? "");
           },
-          onCustomerDeleted: async ({ data }) => {
-            await deleteCustomer(data);
-          },
+          // onCustomerDeleted: async ({ data }) => {
+          //   await deleteCustomer(data);
+          // },
           onSubscriptionCreated: async ({ data }) => {
             await createSubscription(data);
           },
