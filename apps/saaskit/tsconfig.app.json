@@ -10,15 +10,22 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    /* Resolve shared workspace packages to their source (no exports map).
+       Importing the shared tRPC AppRouter type pulls this server source into
+       the program, so the app-only lint flags (noUnusedLocals etc.) are off —
+       ESLint still enforces them on this app's own code. */
+    "paths": {
+      "@workspace/trpc/*": ["../../packages/trpc/src/*"],
+      "@workspace/auth/*": ["../../packages/auth/src/*"],
+      "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
+      "@workspace/email/*": ["../../packages/email/src/*"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"]
+    },
+
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"]

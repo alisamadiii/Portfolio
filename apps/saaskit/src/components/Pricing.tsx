@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
 import { MONO, noop } from '../lib/constants'
 import { container, eyebrow, h2Style } from '../lib/styles'
-import { fetchSaaskitPlans, productsQueryKey } from '../lib/products'
+import { productFeatures, useSaaskitPlans } from '../lib/products'
+import { useCheckout } from '../lib/checkout'
 
 type Tier = {
   label: string
@@ -10,6 +10,8 @@ type Tier = {
   highlight: boolean
   features: string[]
   cta: string
+  /** Polar product id — only present for tiers loaded from the database. */
+  productId?: string
 }
 
 // Shown while the DB request is in flight or if no SAASKIT products are
@@ -68,18 +70,17 @@ function formatPrice(cents: number): string {
 }
 
 export function Pricing() {
-  const { data } = useQuery({
-    queryKey: productsQueryKey,
-    queryFn: ({ signal }) => fetchSaaskitPlans(signal),
-  })
+  const { data } = useSaaskitPlans()
+  const checkout = useCheckout()
 
   const tiers: Tier[] =
     data && data.length > 0
       ? data.map((p) => {
           const label = p.name.toUpperCase()
+          const dbFeatures = productFeatures(p)
           const features =
-            p.metadata?.features && p.metadata.features.length > 0
-              ? p.metadata.features
+            dbFeatures && dbFeatures.length > 0
+              ? dbFeatures
               : (DEFAULT_FEATURES[label] ?? [])
           return {
             label,
@@ -90,6 +91,7 @@ export function Pricing() {
             highlight: p.popular,
             features,
             cta: `Get ${p.name}`,
+            productId: p.id,
           }
         })
       : FALLBACK_TIERS
@@ -124,6 +126,14 @@ export function Pricing() {
         >
           {tiers.map((t) => {
             const hl = t.highlight
+            const isPending = checkout.isPending && checkout.variables?.productId === t.productId
+            const handleCheckout = (e: React.MouseEvent) => {
+              if (!t.productId) return noop(e)
+              e.preventDefault()
+              if (!checkout.isPending) {
+                checkout.mutate({ productId: t.productId, successUrl: window.location.href })
+              }
+            }
             return (
               <div
                 key={t.label}
@@ -183,7 +193,7 @@ export function Pricing() {
                 </div>
                 <a
                   href="#"
-                  onClick={noop}
+                  onClick={handleCheckout}
                   className={hl ? 'btn-solid-light' : 'btn-outline-invert'}
                   style={{
                     display: 'inline-flex',
@@ -199,9 +209,11 @@ export function Pricing() {
                     borderRadius: 6,
                     minHeight: 44,
                     transition: hl ? 'background 0.2s' : 'background 0.2s, color 0.2s',
+                    opacity: checkout.isPending && !isPending ? 0.6 : 1,
+                    pointerEvents: checkout.isPending ? 'none' : 'auto',
                   }}
                 >
-                  {t.cta}
+                  {isPending ? 'Redirecting…' : t.cta}
                 </a>
               </div>
             )

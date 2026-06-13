@@ -84,6 +84,39 @@ html {
     transform: translateY(-5px);
   }
 }
+@keyframes kfSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes kfResultFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes kfResultIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kfResultPop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 
 /* ---------- scroll reveal ---------- */
 [data-reveal] {

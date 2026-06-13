@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useViewport, useScrolled, useReveals } from './lib/hooks'
 import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
@@ -11,6 +11,7 @@ import { Pricing } from './components/Pricing'
 import { Faq } from './components/Faq'
 import { FinalCta } from './components/FinalCta'
 import { Footer } from './components/Footer'
+import { CheckoutResult } from './components/CheckoutResult'
 
 export default function App() {
   const { isMobile, isMid } = useViewport()
@@ -18,10 +19,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   useReveals()
 
-  useEffect(() => {
-    if (!isMobile && menuOpen) setMenuOpen(false)
-  }, [isMobile, menuOpen])
-
+  // Navbar only renders the menu while isMobile, so no desktop-resize reset needed.
   const cols = isMobile
     ? '1fr'
     : isMid
@@ -50,6 +48,7 @@ export default function App() {
       <Faq />
       <FinalCta />
       <Footer />
+      <CheckoutResult />
     </div>
   )
 }

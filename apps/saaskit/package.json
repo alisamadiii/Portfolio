@@ -11,6 +11,10 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query-devtools": "^5.91.3",
+    "@trpc/client": "^11.11.0",
+    "@trpc/tanstack-react-query": "^11.11.0",
+    "@workspace/trpc": "workspace:*",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

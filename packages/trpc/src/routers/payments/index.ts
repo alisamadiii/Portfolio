@@ -162,6 +162,30 @@ export const paymentsRouter = createTRPCRouter({
       }
     }),
 
+  // Mints the buyer's Polar customer portal URL (manage billing, connect the
+  // GitHub benefit). Same source as the Better Auth `customer/portal` route,
+  // exposed over tRPC so non-Next clients use the one shared router too.
+  customerPortal: authenticatedProcedure
+    .input(z.object({ returnUrl: z.string().optional() }).optional())
+    .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
+      try {
+        const session = await polarClient.customerSessions.create({
+          externalCustomerId: ctx.session.user.id,
+          returnUrl: input?.returnUrl,
+        });
+        return { url: session.customerPortalUrl };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to open customer portal",
+          cause: error,
+        });
+      }
+    }),
+
   switchPlan: authenticatedProcedure
     .input(
       z.object({
