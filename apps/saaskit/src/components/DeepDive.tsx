@@ -66,17 +66,18 @@ export function DeepDive() {
         eyebrowText="POLAR · WEBHOOKS · PORTAL"
         title="Payments that just work."
         body="Checkout, webhooks, and the billing portal are pre-tested and typed. A subscription event lands, your database updates, your UI reflects it — without you writing the glue."
-        fileLabel="app/api/webhooks/polar/route.ts"
+        fileLabel="services/auth/auth.ts — Polar plugin"
         code={
           <>
-            <span style={{ color: W }}>export const</span> POST = Webhooks({'{'}{'\n'}
-            {'  '}webhookSecret: env.POLAR_WEBHOOK_SECRET,{'\n'}
-            {'  '}onSubscriptionActive: <span style={{ color: W }}>async</span> ({'{ data }'}) =&gt; {'{'}{'\n'}
-            {'    '}<span style={{ color: W }}>await</span> db.update(users){'\n'}
-            {'      '}.set({'{ plan: '}<span style={{ color: S }}>"pro"</span>{' }'}){'\n'}
-            {'      '}.where(eq(users.id, data.customer.externalId));{'\n'}
-            {'  },'}{'\n'}
-            {'});'}
+            <span style={{ color: W }}>polar</span>({'{'}{'\n'}
+            {'  '}use: [{'\n'}
+            {'    '}webhooks({'{'}{'\n'}
+            {'      '}secret: env.POLAR_WEBHOOK_SECRET,{'\n'}
+            {'      '}onSubscriptionCreated: <span style={{ color: W }}>async</span> ({'{ data }'}) =&gt;{'\n'}
+            {'        '}createSubscription(data),{'\n'}
+            {'    }'}),{'\n'}
+            {'  ],'}{'\n'}
+            {'})'}
           </>
         }
       />
@@ -85,14 +86,15 @@ export function DeepDive() {
         eyebrowText="BETTER AUTH · SESSIONS"
         title="Auth without the headache."
         body="Sessions, protected routes, and a working sign-in flow ship in the box. Email, OAuth providers, and account linking are a config entry — not a sprint."
-        fileLabel="app/(app)/layout.tsx"
+        fileLabel="app/admin/layout.tsx"
         code={
           <>
-            <span style={{ color: C }}>// every route in (app)/ is protected by default</span>{'\n'}
-            <span style={{ color: W }}>const</span> session = <span style={{ color: W }}>await</span> auth.api.getSession({'{'}{'\n'}
+            <span style={{ color: C }}>// admin routes guarded by session + role</span>{'\n'}
+            <span style={{ color: W }}>const</span> user = <span style={{ color: W }}>await</span> auth.api.getSession({'{'}{'\n'}
             {'  '}headers: <span style={{ color: W }}>await</span> headers(),{'\n'}
             {'});'}{'\n'}
-            <span style={{ color: W }}>if</span> (!session) redirect(<span style={{ color: S }}>"/sign-in"</span>);
+            <span style={{ color: W }}>if</span> (!user) redirect(<span style={{ color: S }}>"/login"</span>);{'\n'}
+            <span style={{ color: W }}>if</span> (user.user.role !== <span style={{ color: S }}>"admin"</span>) notFound();
           </>
         }
       />
@@ -100,15 +102,16 @@ export function DeepDive() {
         eyebrowText="STRICT TYPES · CLEAN STRUCTURE"
         title="Designed to extend."
         body="Every feature has an obvious home. Strict TypeScript and a deliberately boring folder structure mean adding your own code feels like following a path, not clearing one."
-        fileLabel="features/teams/api.ts — your first feature"
+        fileLabel="services/teams/router.ts — your first feature"
         code={
           <>
-            <span style={{ color: C }}>// drop a folder in features/, wire a route, done</span>{'\n'}
-            <span style={{ color: W }}>export const</span> createTeam = protectedAction({'\n'}
-            {'  '}teamSchema,{'\n'}
-            {'  '}<span style={{ color: W }}>async</span> (input, {'{ user }'}) =&gt;{'\n'}
-            {'    '}db.insert(teams).values({'{ ...input, ownerId: user.id }'}){'\n'}
-            {');'}
+            <span style={{ color: C }}>// drop a folder in services/, add a tRPC router, done</span>{'\n'}
+            <span style={{ color: W }}>export const</span> teamsRouter = createTRPCRouter({'{'}{'\n'}
+            {'  '}create: authenticatedProcedure{'\n'}
+            {'    '}.input(teamSchema){'\n'}
+            {'    '}.mutation(({'{ input, ctx }'}) =&gt;{'\n'}
+            {'      '}db.insert(teams).values({'{ ...input, ownerId: ctx.user.id }'})),{'\n'}
+            {'});'}
           </>
         }
       />

@@ -86,16 +86,16 @@ export function Features({ span2, cols }: { span2: string; cols: string }) {
                 <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>Sign in</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, border: '1px solid #E4E4E7', borderRadius: 4, padding: '6px 9px', ...monoChip }}>
-                    <span style={{ width: 8, height: 8, background: '#0A0A0A', borderRadius: 2, flex: 'none' }} />
-                    Continue with GitHub
+                    <span style={{ width: 8, height: 8, background: '#0A0A0A', borderRadius: '50%', flex: 'none' }} />
+                    Continue with Google
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, border: '1px solid #E4E4E7', borderRadius: 4, padding: '6px 9px', ...monoChip }}>
-                    <span style={{ width: 8, height: 8, border: '1px solid #0A0A0A', borderRadius: '50%', flex: 'none' }} />
-                    Continue with Google
+                    <span style={{ width: 8, height: 8, border: '1px solid #0A0A0A', borderRadius: 2, flex: 'none' }} />
+                    Email &amp; password
                   </div>
                   <div style={{ height: 1, background: '#E4E4E7', margin: '3px 0' }} />
                   <div style={{ border: '1px solid #E4E4E7', borderRadius: 4, padding: '6px 9px', fontFamily: MONO, fontSize: 10.5, color: '#A1A1AA' }}>
-                    Continue with email
+                    Email a login code
                   </div>
                 </div>
               </div>
@@ -340,9 +340,9 @@ export function Features({ span2, cols }: { span2: string; cols: string }) {
               </div>
             </div>
             <BentoMeta
-              label="05 — UI"
-              title="Dashboard UI"
-              body="Accessible, themeable shadcn/ui components, built into a real working dashboard."
+              label="05 — ADMIN"
+              title="Admin dashboard"
+              body="A real admin built on shadcn/ui — users, products, media and logs, with MRR and churn at a glance."
             />
           </div>
 
@@ -425,7 +425,7 @@ export function Features({ span2, cols }: { span2: string; cols: string }) {
               {[
                 ['#0A0A0A', '100%', 'VERIFY', 0],
                 ['#52525B', '78%', 'RESET', 1.4],
-                ['#A1A1AA', '60%', 'RECEIPT', 2.8],
+                ['#A1A1AA', '60%', 'WELCOME', 2.8],
               ].map(([dot, w, tag, delay], i) => (
                 <div
                   key={i}
@@ -452,7 +452,7 @@ export function Features({ span2, cols }: { span2: string; cols: string }) {
             <BentoMeta
               label="07 — EMAIL"
               title="Transactional email"
-              body="Templates and sending pre-configured — verify, reset, receipt."
+              body="React Email templates sent through AWS SES — verify, reset, welcome — every send logged."
             />
           </div>
 
@@ -494,6 +494,48 @@ export function Features({ span2, cols }: { span2: string; cols: string }) {
               body="Ship to Vercel in minutes. Env validation tells you what's missing."
             />
           </div>
+        </div>
+
+        <div
+          data-reveal
+          style={{
+            marginTop: 16,
+            border: '1px solid #E4E4E7',
+            borderRadius: 8,
+            background: '#FAFAFA',
+            padding: '18px 20px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '12px 14px',
+          }}
+        >
+          <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', color: '#A1A1AA', flex: 'none' }}>
+            ALSO INCLUDED
+          </span>
+          {[
+            'File storage — Cloudflare R2',
+            'Blog — content-collections',
+            'Contact form',
+            'Activity log & audit trail',
+            'Rate limiting',
+          ].map((item) => (
+            <span
+              key={item}
+              style={{
+                fontFamily: MONO,
+                fontSize: 11.5,
+                color: '#52525B',
+                background: '#FFFFFF',
+                border: '1px solid #E4E4E7',
+                borderRadius: 4,
+                padding: '6px 10px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {item}
+            </span>
+          ))}
         </div>
       </div>
     </section>

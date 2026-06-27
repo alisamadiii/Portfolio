@@ -16,6 +16,8 @@ export const TRUST = [
   'Neon',
   'Better Auth',
   'Polar',
+  'AWS SES',
+  'Cloudflare R2',
   'React Query',
 ]
 
@@ -26,7 +28,7 @@ export const FAQS = [
   },
   {
     q: "What's the tech stack?",
-    a: 'Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM on Neon Postgres, Better Auth for authentication, Polar for payments and billing, and React Query for data fetching. No exotic dependencies — everything is documented and replaceable.',
+    a: 'Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM on Neon Postgres, Better Auth for authentication, Polar for payments and billing, AWS SES with React Email for transactional mail, Cloudflare R2 for file storage, React Hook Form + Zod for forms, content-collections for the blog, and React Query for data fetching. No exotic dependencies — everything is documented and replaceable.',
   },
   {
     q: 'Do I get updates after buying?',

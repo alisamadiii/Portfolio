@@ -24,9 +24,9 @@ const FALLBACK_TIERS: Tier[] = [
     highlight: false,
     features: [
       'The Full-Stack template, full source',
-      'Auth, payments, billing & db wired',
-      'Lifetime updates',
-      'Unlimited personal & client projects',
+      'Auth, payments & billing wired (Better Auth + Polar)',
+      'Admin dashboard, file storage & email included',
+      'Lifetime updates · unlimited personal & client projects',
     ],
     cta: 'Get Full-Stack',
   },

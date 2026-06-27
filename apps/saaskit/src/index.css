@@ -120,6 +120,27 @@ html {
     transform: scale(1);
   }
 }
+@keyframes kfFlowY {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+@keyframes kfDash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
 
 /* ---------- scroll reveal ---------- */
 [data-reveal] {
@@ -164,6 +185,12 @@ html {
   color: #fafafa !important;
 }
 .bento-card:hover {
+  border-color: #a1a1aa !important;
+}
+.fs-card:hover {
+  border-color: #3f3f46 !important;
+}
+.fs-card-light:hover {
   border-color: #a1a1aa !important;
 }
 .tmpl-card:hover {

@@ -101,20 +101,17 @@ export function Architecture() {
               {full ? (
                 <pre style={treePre}>
 {'app/\n'}
-{'├─ (marketing)/          '}<span style={{ color: '#52525B' }}>landing · pricing</span>{'\n'}
-{'├─ (app)/\n'}
-{'│  ├─ dashboard/\n'}
-{'│  ├─ settings/\n'}
-{'│  └─ billing/\n'}
-{'└─ api/\n'}
-{'   ├─ auth/[...all]/     '}<span style={{ color: '#52525B' }}>Better Auth</span>{'\n'}
-{'   └─ webhooks/polar/    '}<span style={{ color: '#52525B' }}>payments</span>{'\n'}
-{'lib/\n'}
-{'├─ auth.ts\n'}
-{'├─ polar.ts\n'}
-{'└─ db/\n'}
-{'   ├─ schema.ts          '}<span style={{ color: '#52525B' }}>Drizzle</span>{'\n'}
-{'   └─ index.ts           '}<span style={{ color: '#52525B' }}>Neon client</span>
+{'├─ (marketing)/   '}<span style={{ color: '#52525B' }}>landing · blog · contact</span>{'\n'}
+{'├─ (auth)/        '}<span style={{ color: '#52525B' }}>login · signup · reset</span>{'\n'}
+{'├─ admin/         '}<span style={{ color: '#52525B' }}>users · products · media · logs</span>{'\n'}
+{'└─ api/           '}<span style={{ color: '#52525B' }}>tRPC · auth · webhooks</span>{'\n'}
+{'services/\n'}
+{'├─ auth/          '}<span style={{ color: '#52525B' }}>Better Auth · Polar</span>{'\n'}
+{'├─ db/            '}<span style={{ color: '#52525B' }}>Drizzle · Neon</span>{'\n'}
+{'├─ payments/      '}<span style={{ color: '#52525B' }}>Polar SDK</span>{'\n'}
+{'├─ email/         '}<span style={{ color: '#52525B' }}>AWS SES</span>{'\n'}
+{'├─ storage/       '}<span style={{ color: '#52525B' }}>Cloudflare R2</span>{'\n'}
+{'└─ trpc/          '}<span style={{ color: '#52525B' }}>routers</span>
                 </pre>
               ) : (
                 <pre style={treePre}>
@@ -137,22 +134,21 @@ export function Architecture() {
             <div style={{ flex: 1.4, minWidth: 'min(100%, 360px)', display: 'flex', flexDirection: 'column', ...panelStyle }}>
               {full ? (
                 <>
-                  <div style={panelHeader}>app/api/billing/route.ts</div>
+                  <div style={panelHeader}>services/trpc/routers/products.ts</div>
                   <div style={codeBody}>
-                    {codeLine(1, <><span style={{ color: W }}>import</span> {'{ auth }'} <span style={{ color: W }}>from</span> <span style={{ color: S }}>"@/lib/auth"</span>;</>)}
-                    {codeLine(2, <><span style={{ color: W }}>import</span> {'{ polar }'} <span style={{ color: W }}>from</span> <span style={{ color: S }}>"@/lib/polar"</span>;</>)}
-                    {codeLine(3, <> </>)}
-                    {codeLine(4, <><span style={{ color: W }}>export async function</span> POST(req: Request) {'{'}</>)}
-                    {codeLine(5, <>{'  '}<span style={{ color: W }}>const</span> session = <span style={{ color: W }}>await</span> auth.api.getSession({'{ headers: req.headers }'});</>)}
-                    {codeLine(6, <>{'  '}<span style={{ color: W }}>if</span> (!session) {'{'}</>)}
-                    {codeLine(7, <>{'    '}<span style={{ color: W }}>return</span> Response.json({'{ error: '}<span style={{ color: S }}>"Unauthorized"</span>{' }'}, {'{ status: '}<span style={{ color: S }}>401</span>{' }'});</>)}
-                    {codeLine(8, <>{'  }'}</>)}
-                    {codeLine(9, <>{'  '}<span style={{ color: W }}>const</span> checkout = <span style={{ color: W }}>await</span> polar.checkouts.create({'{'}</>)}
-                    {codeLine(10, <>{'    '}customerExternalId: session.user.id,</>)}
-                    {codeLine(11, <>{'    '}products: [env.POLAR_PRO_PRODUCT_ID],</>)}
-                    {codeLine(12, <>{'  });'}</>)}
-                    {codeLine(13, <>{'  '}<span style={{ color: W }}>return</span> Response.json({'{ url: checkout.url }'});</>)}
-                    {codeLine(14, <>{'}'}</>)}
+                    {codeLine(1, <><span style={{ color: W }}>import</span> {'{ db }'} <span style={{ color: W }}>from</span> <span style={{ color: S }}>"@/services/db"</span>;</>)}
+                    {codeLine(2, <><span style={{ color: W }}>import</span> {'{ products }'} <span style={{ color: W }}>from</span> <span style={{ color: S }}>"@/services/db/schema"</span>;</>)}
+                    {codeLine(3, <><span style={{ color: W }}>import</span> {'{ adminProcedure, baseProcedure }'} <span style={{ color: W }}>from</span> <span style={{ color: S }}>"../init"</span>;</>)}
+                    {codeLine(4, <> </>)}
+                    {codeLine(5, <><span style={{ color: W }}>export const</span> productsRouter = createTRPCRouter({'{'}</>)}
+                    {codeLine(6, <>{'  '}list: baseProcedure.query(() =&gt;</>)}
+                    {codeLine(7, <>{'    '}db.select().from(products)</>)}
+                    {codeLine(8, <>{'      '}.where(eq(products.isArchived, <span style={{ color: S }}>false</span>))),</>)}
+                    {codeLine(9, <> </>)}
+                    {codeLine(10, <>{'  '}update: adminProcedure</>)}
+                    {codeLine(11, <>{'    '}.input(updateSchema)</>)}
+                    {codeLine(12, <>{'    '}.mutation(({'{ input }'}) =&gt; updateProduct(input)),</>)}
+                    {codeLine(13, <>{'});'}</>)}
                   </div>
                 </>
               ) : (

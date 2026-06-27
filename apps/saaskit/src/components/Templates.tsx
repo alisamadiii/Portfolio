@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
 import { MONO } from '../lib/constants'
 import { container, eyebrow, h2Style } from '../lib/styles'
 
@@ -74,18 +75,18 @@ export function Templates() {
             </div>
             <pre style={preStyle}>
 {'saaskit/\n'}
-{'├─ app/            '}<span style={{ color: '#52525B' }}>routes + api</span>{'\n'}
-{'├─ components/     '}<span style={{ color: '#52525B' }}>shadcn/ui</span>{'\n'}
-{'├─ lib/            '}<span style={{ color: '#52525B' }}>auth · polar · db</span>{'\n'}
-{'└─ drizzle/        '}<span style={{ color: '#52525B' }}>schema + migrations</span>
+{'├─ app/         '}<span style={{ color: '#52525B' }}>routes · admin · api</span>{'\n'}
+{'├─ components/  '}<span style={{ color: '#52525B' }}>shadcn/ui</span>{'\n'}
+{'├─ services/    '}<span style={{ color: '#52525B' }}>auth · payments · db · email · storage</span>{'\n'}
+{'└─ content/     '}<span style={{ color: '#52525B' }}>blog · legal</span>
             </pre>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {bullet('One app, zero config sprawl')}
               {bullet('Ideal for first products and solo builders')}
               {bullet('Deployable in an afternoon')}
             </div>
-            <a
-              href="#pricing"
+            <Link
+              to="/full-stack"
               className="btn-solid-light"
               style={{
                 marginTop: 'auto',
@@ -103,8 +104,8 @@ export function Templates() {
                 transition: 'background 0.2s',
               }}
             >
-              Start full-stack
-            </a>
+              Explore full-stack
+            </Link>
           </div>
 
           {/* Monorepo */}

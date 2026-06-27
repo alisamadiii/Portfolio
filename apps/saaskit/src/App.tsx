@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
+import FullStack from './pages/FullStack'
 import Changelog from './pages/Changelog'
 import Docs from './pages/Docs'
 import License from './pages/License'
@@ -25,6 +26,7 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/full-stack" element={<FullStack />} />
         <Route path="/changelog" element={<Changelog />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/license" element={<License />} />
