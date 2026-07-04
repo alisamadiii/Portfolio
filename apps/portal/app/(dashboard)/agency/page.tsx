@@ -185,20 +185,13 @@ export default function AgencyPage() {
   const [expandedSubRows, setExpandedSubRows] = useState<Set<string>>(new Set());
   const [expandedInvRows, setExpandedInvRows] = useState<Set<string>>(new Set());
 
-  const { data: clientData } = useQuery(
-    trpc.clients.getCurrent.queryOptions(undefined, {
-      enabled: !!currentUser,
-    })
-  );
-  const isStripe = !!clientData?.isStripe;
-
   const {
     data: subsData,
     isFetching: subsLoading,
     error: subsError,
   } = useQuery(
     trpc.payments.getStripeSubscriptions.queryOptions(undefined, {
-      enabled: isStripe,
+      enabled: !!currentUser,
     })
   );
 
@@ -208,7 +201,7 @@ export default function AgencyPage() {
     error: invoicesError,
   } = useQuery(
     trpc.payments.getStripeInvoices.queryOptions(undefined, {
-      enabled: isStripe,
+      enabled: !!currentUser,
     })
   );
 
@@ -273,8 +266,8 @@ export default function AgencyPage() {
     );
   }
 
-  // No Stripe account — show contact UI
-  if (!isStripe) {
+  // No Stripe data — show contact UI
+  if ((subsData?.length ?? 0) === 0 && (invoicesData?.length ?? 0) === 0) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">

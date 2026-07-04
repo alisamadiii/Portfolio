@@ -3,7 +3,6 @@ import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { createTRPCRouter } from "../init";
 import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
-import { clientsRouter } from "./clients";
 import { paymentsRouter } from "./payments";
 import { coldEmailsRouter } from "./cold-emails";
 import { filesRouter } from "./files";
@@ -16,7 +15,6 @@ import { usersRouter } from "./users";
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   users: usersRouter,
-  clients: clientsRouter,
   products: productsRouter,
   payments: paymentsRouter,
   notification: notificationRouter,

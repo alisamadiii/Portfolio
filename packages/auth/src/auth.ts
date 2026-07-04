@@ -87,6 +87,12 @@ export const auth = betterAuth({
       address: {
         type: "string",
       },
+      isClient: {
+        type: "boolean",
+        required: false,
+        input: false,
+        defaultValue: false,
+      },
     },
   },
   socialProviders: {

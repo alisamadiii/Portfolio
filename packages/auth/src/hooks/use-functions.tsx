@@ -105,6 +105,7 @@ const useSignin = () => {
               phone: response.user.phone,
               company: response.user.company,
               address: response.user.address,
+              isClient: response.user.isClient,
             },
           };
 

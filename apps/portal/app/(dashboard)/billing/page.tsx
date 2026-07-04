@@ -2,11 +2,9 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import {
-  ArrowRight,
   ChevronDown,
   ChevronRight,
   CreditCard,
@@ -175,11 +173,6 @@ export default function BillingPage() {
   const { data: user } = useCurrentUser();
   const trpc = useTRPC();
   const generatePortalLink = useGeneratePortalLink();
-  const { data: clientData } = useQuery(
-    trpc.clients.getCurrent.queryOptions(undefined, {
-      enabled: !!user,
-    })
-  );
 
   const { data: orders, isPending: ordersLoading } = useQuery(
     trpc.payments.listOrders.queryOptions(
@@ -377,23 +370,6 @@ export default function BillingPage() {
               );
             }}
           />
-        )}
-        {clientData?.isStripe && (
-          <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-            <p className="text-muted-foreground text-sm">
-              You have an agency account. View your Stripe-managed subscriptions
-              and invoices on the Agency page.
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="shrink-0 gap-1.5"
-              render={<Link href="/agency" />}
-            >
-                Agency
-                <ArrowRight className="size-3.5" />
-            </Button>
-          </div>
         )}
       </div>
 

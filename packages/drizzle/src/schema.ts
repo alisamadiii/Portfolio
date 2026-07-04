@@ -36,41 +36,7 @@ export const user = pgTable("user", {
   phone: text("phone"),
   company: text("company"),
   address: text("address"),
-});
-
-// ─── Agency Client ─────────────────────────────────────
-export const agencyClientStatusValues = [
-  "active",
-  "paused",
-  "completed",
-] as const;
-export type AgencyClientStatus = (typeof agencyClientStatusValues)[number];
-
-export const agencyClient = pgTable("agency_client", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: text("user_id")
-    .notNull()
-    .unique()
-    .references(() => user.id, { onDelete: "cascade" }),
-  isStripe: boolean("is_stripe").notNull().default(false),
-  domain: text("domain"),
-  projectRepo: text("project_repo"),
-  clickupListId: text("clickup_list_id"),
-  figmaUrl: text("figma_url"),
-  techStack: text("tech_stack"),
-  launchDate: text("launch_date"),
-  timezone: text("timezone"),
-  notes: text("notes"),
-  contactEmail: text("contact_email"),
-  apiKey: text("api_key").unique(),
-  apiKeyOrigin: text("api_key_origin"),
-  status: text("status", { enum: agencyClientStatusValues })
-    .notNull()
-    .default("active"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  isClient: boolean("is_client").notNull().default(false),
 });
 
 export const userSignals = pgTable("user_signals", {

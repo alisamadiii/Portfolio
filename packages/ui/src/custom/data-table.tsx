@@ -30,6 +30,7 @@ type DataTableProps<TData, TValue> = {
   className?: string;
   expandedRows?: Set<string>;
   renderExpandedRow?: (row: Row<TData>) => React.ReactNode;
+  rowClassName?: (row: Row<TData>) => string | undefined;
 } & (
   | {
       table: TableType<TData>;
@@ -53,7 +54,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
           getCoreRowModel: getCoreRowModel(),
         });
 
-  const { onRowClick, className, error, expandedRows, renderExpandedRow } = props;
+  const { onRowClick, className, error, expandedRows, renderExpandedRow, rowClassName } =
+    props;
 
   return (
     <div className={cn("isolate overflow-hidden rounded-xl border", className)}>
@@ -99,7 +101,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     "h-16",
                     onRowClick
                       ? "hover:bg-muted/50 cursor-pointer transition-colors"
-                      : ""
+                      : "",
+                    rowClassName?.(row)
                   )}
                   onClick={() => onRowClick?.(row)}
                 >

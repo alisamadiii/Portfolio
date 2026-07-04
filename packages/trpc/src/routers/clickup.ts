@@ -1,9 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-
-import { db } from "@workspace/drizzle/index";
-import { agencyClient } from "@workspace/drizzle/schema";
 
 import { authenticatedProcedure, createTRPCRouter } from "../init";
 
@@ -11,13 +7,7 @@ const CLICKUP_API_BASE = "https://api.clickup.com/api/v2";
 
 export const clickupRouter = createTRPCRouter({
   getTasks: authenticatedProcedure.query(async ({ ctx }) => {
-    const [clientRecord] = await db
-      .select({ id: agencyClient.id })
-      .from(agencyClient)
-      .where(eq(agencyClient.userId, ctx.session.user.id))
-      .limit(1);
-
-    if (!clientRecord) {
+    if (!ctx.session.user.isClient) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Only clients can access requests",
@@ -136,13 +126,7 @@ export const clickupRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const [clientRecord] = await db
-        .select({ id: agencyClient.id })
-        .from(agencyClient)
-        .where(eq(agencyClient.userId, ctx.session.user.id))
-        .limit(1);
-
-      if (!clientRecord) {
+      if (!ctx.session.user.isClient) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only clients can access requests",

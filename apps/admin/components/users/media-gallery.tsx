@@ -41,7 +41,7 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ClientMediaGallery({ userId }: { userId: string }) {
+export function MediaGallery({ userId }: { userId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);

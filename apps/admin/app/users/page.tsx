@@ -39,7 +39,7 @@ interface FilterUsers {
   page?: number;
   limit?: number;
   sortBy?: "email" | "created" | "banned" | "notifications";
-  filterBy?: "all" | "admin";
+  filterBy?: "all" | "admin" | "client";
   search?: string;
 }
 
@@ -53,6 +53,7 @@ const sortByOptions: FilterUsers["sortBy"][] = [
 const filterByOptions: { label: string; value: FilterUsers["filterBy"] }[] = [
   { label: "All Users", value: "all" },
   { label: "Admins", value: "admin" },
+  { label: "Clients", value: "client" },
 ];
 
 const UsersPage = () => {
@@ -193,6 +194,11 @@ const UsersPage = () => {
         table={table}
         error={error}
         onRowClick={(row) => router.push(`/users/${row.original.id}`)}
+        rowClassName={(row) =>
+          row.original.isClient
+            ? "bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent hover:from-emerald-500/25"
+            : undefined
+        }
       />
       <div
         className={cn(
