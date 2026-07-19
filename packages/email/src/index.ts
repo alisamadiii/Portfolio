@@ -1,25 +1,24 @@
 import type { ReactElement } from "react";
-import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
+import { AgencyClient } from "@alisamadiillc/agency-api";
 
 import { renderEmail, renderText } from "./utils";
 
-let sesClient: SESClient | null = null;
+let agencyClient: AgencyClient | null = null;
 
-function getSesClient() {
-  if (!sesClient) {
-    const accessKeyId = process.env.AWS_ACCESS_KEY_VALUE;
-    const secretAccessKey = process.env.AWS_SECRET_KEY_VALUE;
+function getAgencyClient() {
+  if (!agencyClient) {
+    const apiKey =
+      process.env.NEXT_PUBLIC_AGENCY_API_KEY ?? process.env.AGENCY_API_KEY;
 
-    if (!accessKeyId || !secretAccessKey) {
-      throw new Error("Missing AWS credentials in environment variables");
+    if (!apiKey) {
+      throw new Error(
+        "Missing NEXT_PUBLIC_AGENCY_API_KEY in environment variables"
+      );
     }
 
-    sesClient = new SESClient({
-      region: process.env.AWS_BUCKET_ORIGIN || "us-east-1",
-      credentials: { accessKeyId, secretAccessKey },
-    });
+    agencyClient = new AgencyClient(apiKey);
   }
-  return sesClient;
+  return agencyClient;
 }
 
 type SendOptions = {
@@ -30,32 +29,23 @@ type SendOptions = {
 };
 
 async function send({ from, to, subject, react }: SendOptions) {
-  const toAddresses = Array.isArray(to) ? to : [to];
   const source = from ?? "noreply@alisamadii.com";
-  const htmlContent = await renderEmail(react);
-  const textContent = await renderText(react);
+  const html = await renderEmail(react);
+  const text = await renderText(react);
 
-  try {
-    await getSesClient().send(
-      new SendEmailCommand({
-        Source: source,
-        Destination: { ToAddresses: toAddresses },
-        Message: {
-          Subject: { Data: subject, Charset: "UTF-8" },
-          Body: {
-            Html: { Data: htmlContent, Charset: "UTF-8" },
-            Text: { Data: textContent, Charset: "UTF-8" },
-          },
-        },
-      })
-    );
-    return { data: true as const };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to send email";
+  const { error } = await getAgencyClient().emails.send({
+    from: source,
+    to,
+    subject,
+    html,
+    text,
+  });
+
+  if (error) {
     console.error("[email] Send failed:", error);
-    return { error: errorMessage };
+    return { error: error.message };
   }
+  return { data: true as const };
 }
 
 async function resend({
@@ -69,27 +59,20 @@ async function resend({
   subject: string;
   html: string;
 }) {
-  const toAddresses = Array.isArray(to) ? to : [to];
   const source = from ?? "noreply@alisamadii.com";
 
-  try {
-    await getSesClient().send(
-      new SendEmailCommand({
-        Source: source,
-        Destination: { ToAddresses: toAddresses },
-        Message: {
-          Subject: { Data: subject, Charset: "UTF-8" },
-          Body: { Html: { Data: html, Charset: "UTF-8" } },
-        },
-      })
-    );
-    return { data: true as const };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to send email";
+  const { error } = await getAgencyClient().emails.send({
+    from: source,
+    to,
+    subject,
+    html,
+  });
+
+  if (error) {
     console.error("[email] Resend failed:", error);
-    return { error: errorMessage };
+    return { error: error.message };
   }
+  return { data: true as const };
 }
 
 export const email = { send, resend };

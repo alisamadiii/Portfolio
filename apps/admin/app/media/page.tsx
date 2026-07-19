@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { type AxiosProgressEvent } from "axios";
 import {
   CheckIcon,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ClipboardIcon,
@@ -33,21 +32,14 @@ import {
 import { Badge } from "@workspace/ui/components/badge";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@workspace/ui/components/input-group";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Spinner } from "@workspace/ui/components/spinner";
+import { agency } from "@workspace/ui/lib/agency";
 import { cn } from "@workspace/ui/lib/utils";
-
-import { useTRPC } from "@workspace/trpc/client";
 
 import { Content } from "@/components/content-admin";
 
@@ -62,30 +54,31 @@ export default function AdminMediaPage() {
 }
 
 const UploadSection = () => {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [uploads, setUploads] = useState<UploadItem[]>([]);
-
-  const getPresignedUrl = useMutation(
-    trpc.files.getPresignedUrl.mutationOptions()
-  );
 
   const uploadFile = useCallback(
     async (file: File) => {
       const id = crypto.randomUUID();
+      const contentType = file.type || "application/octet-stream";
       setUploads((prev) => [
         { id, name: file.name, status: "uploading", progress: 0 },
         ...prev,
       ]);
 
       try {
-        const { presignedUrl, publicUrl } = await getPresignedUrl.mutateAsync({
-          fileName: file.name,
-          contentType: file.type || "application/octet-stream",
+        const { data: presign, error } = await agency().uploads.presign({
+          filename: file.name,
+          contentType,
+          contentLength: file.size,
+          naming: "uuid-filename",
         });
+        if (error || !presign) {
+          throw new Error(error?.message ?? "Failed to get upload URL");
+        }
 
-        await axios.put(presignedUrl, file, {
-          headers: { "Content-Type": file.type || "application/octet-stream" },
+        await axios.put(presign.uploadUrl, file, {
+          headers: presign.headers,
           onUploadProgress: (e: AxiosProgressEvent) => {
             const progress = Math.round(
               ((e.loaded ?? 0) / (e.total ?? 1)) * 100
@@ -98,13 +91,11 @@ const UploadSection = () => {
 
         setUploads((prev) =>
           prev.map((u) =>
-            u.id === id ? { ...u, status: "done", url: publicUrl } : u
+            u.id === id ? { ...u, status: "done", url: presign.publicUrl } : u
           )
         );
 
-        queryClient.invalidateQueries({
-          queryKey: trpc.files.list.queryKey(),
-        });
+        queryClient.invalidateQueries({ queryKey: ["media"] });
       } catch (error) {
         setUploads((prev) =>
           prev.map((u) => (u.id === id ? { ...u, status: "error" } : u))
@@ -116,7 +107,7 @@ const UploadSection = () => {
         );
       }
     },
-    [queryClient, getPresignedUrl]
+    [queryClient]
   );
 
   // Paste to upload
@@ -236,36 +227,48 @@ const UploadRow = ({ item }: { item: UploadItem }) => {
 };
 
 const BrowseSection = () => {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [limit, setLimit] = useState(15);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const currentCursor = cursorStack.at(-1);
 
-  const { data, isPending, error } = useQuery(
-    trpc.files.list.queryOptions({
-      search: search || undefined,
-      cursor: currentCursor,
-      limit,
-    })
-  );
+  const { data, isPending, error } = useQuery({
+    queryKey: ["media", search, currentCursor],
+    queryFn: async () => {
+      const { data, error } = await agency().uploads.list({
+        prefix: search || undefined,
+        cursor: currentCursor,
+      });
+      if (error) throw new Error(error.message);
+      return {
+        files: data.objects
+          .filter((o) => !o.key.endsWith("/"))
+          .map((o) => ({
+            key: o.key,
+            size: o.size,
+            lastModified: o.lastModified,
+            publicUrl: o.url,
+          })),
+        nextCursor: data.nextCursor,
+      };
+    },
+  });
 
-  const deleteFile = useMutation(
-    trpc.files.adminDelete.mutationOptions({
-      onSuccess: () => {
-        if (data?.files.length === 1 && cursorStack.length > 0) {
-          setCursorStack((prev) => prev.slice(0, -1));
-        }
-        queryClient.invalidateQueries({
-          queryKey: trpc.files.list.queryKey(),
-        });
-        toast.success("File deleted");
-      },
-      onError: () => toast.error("Failed to delete file"),
-    })
-  );
+  const deleteFile = useMutation({
+    mutationFn: async (key: string) => {
+      const { error } = await agency().uploads.delete({ key });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      if (data?.files.length === 1 && cursorStack.length > 0) {
+        setCursorStack((prev) => prev.slice(0, -1));
+      }
+      queryClient.invalidateQueries({ queryKey: ["media"] });
+      toast.success("File deleted");
+    },
+    onError: () => toast.error("Failed to delete file"),
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,33 +345,7 @@ const BrowseSection = () => {
               />
             ))}
           </div>
-          <div className="bg-muted text-muted-foreground -mt-3 flex items-center justify-between rounded-b-xl p-4 pt-7 text-xs">
-            <div className="flex items-center">
-              Results per page
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button variant="outline" size="sm" className="ml-2" />
-                  }
-                >
-                  {limit} <ChevronDown data-arrow />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="min-w-20">
-                  {[10, 15, 20].map((item) => (
-                    <DropdownMenuItem
-                      key={item}
-                      onClick={() => {
-                        setLimit(item);
-                        setCursorStack([]);
-                      }}
-                      data-checked={limit === item}
-                    >
-                      {item}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+          <div className="bg-muted text-muted-foreground -mt-3 flex items-center justify-end rounded-b-xl p-4 pt-7 text-xs">
             <div className="flex items-center">
               <Button
                 variant="outline"

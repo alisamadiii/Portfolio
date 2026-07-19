@@ -15,7 +15,7 @@ import { buttonVariants } from "@workspace/ui/components/button";
 import { Field, FieldContent, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import { useUpload } from "@workspace/ui/hooks/use-upload";
+import { agency } from "@workspace/ui/lib/agency";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -27,8 +27,6 @@ const formSchema = z.object({
 
 export const PersonalInformation = () => {
   const [newAvatar, setNewAvatar] = useState<File | null>(null);
-
-  const { upload } = useUpload();
 
   const { id } = useParams<{ id: string }>();
   const trpc = useTRPC();
@@ -93,25 +91,22 @@ export const PersonalInformation = () => {
               onChange={async (e) => {
                 if (e.target.files?.[0]) {
                   setNewAvatar(e.target.files[0]);
-                  try {
-                    const result = await upload(e.target.files[0], {
-                      folder: "users",
-                      key: id,
-                    });
-                    if (result) {
-                      updateUser.mutate({
-                        id,
-                        image: result?.publicUrl ?? "",
-                      });
+                  const { data, error } = await agency().uploads.upload(
+                    e.target.files[0],
+                    {
+                      path: "users",
+                      filename: id,
+                      naming: "filename",
+                      overwrite: true,
                     }
-                  } catch (error) {
+                  );
+                  if (error) {
                     toast.error("Failed to upload avatar", {
-                      description:
-                        error instanceof Error
-                          ? error.message
-                          : "Unknown error",
+                      description: error.message,
                     });
+                    return;
                   }
+                  updateUser.mutate({ id, image: data.publicUrl });
                 }
               }}
               className="sr-only"

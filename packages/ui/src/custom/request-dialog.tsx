@@ -15,13 +15,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Field, FieldContent, FieldError, FieldLabel } from "@workspace/ui/components/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 
-import { useTRPC } from "@workspace/trpc/client";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { HandCheck } from "../icons";
+import { agency } from "../lib/agency";
 
 const SUBJECT_KEYWORDS = [
   "Upgrade My Plan",
@@ -64,10 +70,26 @@ const Content = ({
   setOpen: (open: boolean) => void;
   defaultSubject?: string;
 }) => {
-  const trpc = useTRPC();
-  const sendNotification = useMutation(
-    trpc.support.send.mutationOptions()
-  );
+  const user = useCurrentUser();
+  const sendNotification = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const email = user.data?.user?.email;
+      if (!email) throw new Error("You must be signed in to contact support");
+
+      const { error } = await agency().emails.sendContact({
+        name: user.data?.user?.name || email,
+        email,
+        subject: `AGENCY - ${values.subject}`,
+        message: values.message,
+        source: "Portal — Contact Support",
+        metadata: { priority: "URGENT", projectType: "AGENCY" },
+      });
+      if (error) throw new Error(error.message);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,19 +99,7 @@ const Content = ({
     },
   });
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    sendNotification.mutate(
-      {
-        projectType: "AGENCY",
-        priority: "URGENT",
-        subject: values.subject,
-        message: values.message,
-      },
-      {
-        onError: (error) => {
-          toast.error(error.message);
-        },
-      }
-    );
+    sendNotification.mutate(values);
   };
 
   return (
@@ -100,7 +110,7 @@ const Content = ({
           Use this form for general inquiries, billing questions, or account
           support. For website changes, bug reports, or feature requests, please
           use the{" "}
-          <a href="/requests" className="underline font-medium">
+          <a href="/requests" className="font-medium underline">
             AI Requests
           </a>{" "}
           page instead — it&apos;s faster and handled automatically.
@@ -132,7 +142,13 @@ const Content = ({
                     aria-invalid={!!form.formState.errors.subject}
                   />
                 </FieldContent>
-                <FieldError errors={form.formState.errors.subject ? [form.formState.errors.subject] : undefined} />
+                <FieldError
+                  errors={
+                    form.formState.errors.subject
+                      ? [form.formState.errors.subject]
+                      : undefined
+                  }
+                />
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {SUBJECT_KEYWORDS.map((keyword) => (
                     <Badge
@@ -165,11 +181,21 @@ const Content = ({
                     aria-invalid={!!form.formState.errors.message}
                   />
                 </FieldContent>
-                <FieldError errors={form.formState.errors.message ? [form.formState.errors.message] : undefined} />
+                <FieldError
+                  errors={
+                    form.formState.errors.message
+                      ? [form.formState.errors.message]
+                      : undefined
+                  }
+                />
               </Field>
             )}
           />
-          <Button type="submit" isLoading={sendNotification.isPending}>
+          <Button
+            type="submit"
+            isLoading={sendNotification.isPending}
+            disabled={user.isPending || !user.data?.user?.email}
+          >
             Send
           </Button>
         </form>

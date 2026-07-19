@@ -24,7 +24,8 @@ import {
 import { Spinner } from "@workspace/ui/components/spinner";
 import { Textarea } from "@workspace/ui/components/textarea";
 
-import { useTRPC } from "@workspace/trpc/client";
+import { agency } from "@workspace/ui/lib/agency";
+
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 export const DangerSettings = () => {
@@ -32,10 +33,22 @@ export const DangerSettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const user = useCurrentUser();
 
-  const trpc = useTRPC();
-  const sentNotification = useMutation(
-    trpc.support.send.mutationOptions()
-  );
+  const sentNotification = useMutation({
+    mutationFn: async () => {
+      const email = user.data?.user?.email;
+      if (!email) throw new Error("You must be signed in to request deletion");
+
+      const { error } = await agency().emails.sendContact({
+        name: user.data?.user?.name || email,
+        email,
+        subject: "🔴 Account Deletion Request",
+        message: comment,
+        source: "Portal — Account Deletion",
+        metadata: { priority: "URGENT", projectType: "PORTFOLIO" },
+      });
+      if (error) throw new Error(error.message);
+    },
+  });
 
   if (user.isPending) {
     return (
@@ -120,25 +133,17 @@ export const DangerSettings = () => {
                 <Button
                   variant="destructive"
                   onClick={() =>
-                    sentNotification.mutate(
-                      {
-                        priority: "URGENT",
-                        subject: "🔴 Account Deletion Request",
-                        message: comment,
-                        projectType: "PORTFOLIO",
+                    sentNotification.mutate(undefined, {
+                      onSuccess: () => {
+                        setIsOpen(false);
+                        toast.success(
+                          "Account deletion request sent successfully. We will review your request and get back to you as soon as possible through your email address."
+                        );
                       },
-                      {
-                        onSuccess: () => {
-                          setIsOpen(false);
-                          toast.success(
-                            "Account deletion request sent successfully. We will review your request and get back to you as soon as possible through your email address."
-                          );
-                        },
-                        onError: (error) => {
-                          toast.error(error.message);
-                        },
-                      }
-                    )
+                      onError: (error) => {
+                        toast.error(error.message);
+                      },
+                    })
                   }
                   isLoading={sentNotification.isPending}
                   size="lg"

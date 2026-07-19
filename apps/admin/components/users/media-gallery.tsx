@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, Trash2, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 import { CardAgency } from "@workspace/ui/agency/card-agency";
 import {
@@ -17,9 +18,7 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { useUpload } from "@workspace/ui/hooks/use-upload";
-
-import { useTRPC } from "@workspace/trpc/client";
+import { agency } from "@workspace/ui/lib/agency";
 
 const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 
@@ -42,35 +41,51 @@ function formatSize(bytes: number) {
 }
 
 export function MediaGallery({ userId }: { userId: string }) {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { upload, remove, isUploading, isDeleting, progress } = useUpload();
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
 
   const prefix = `clients/${userId}/`;
-  const { data, isLoading } = useQuery(
-    trpc.files.list.queryOptions({ search: prefix })
-  );
-  const files = data?.files;
+  const queryKey = ["media", prefix];
+  const { data: files, isLoading } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      const { data, error } = await agency().uploads.list({ prefix });
+      if (error) throw new Error(error.message);
+      return data.objects
+        .filter((o) => !o.key.endsWith("/"))
+        .map((o) => ({ key: o.key, size: o.size, publicUrl: o.url }));
+    },
+  });
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: trpc.files.list.queryKey({ search: prefix }),
-    });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const handleUpload = async (fileList: FileList) => {
+    setIsUploading(true);
     for (const file of Array.from(fileList)) {
-      const key = `${userId}/${Date.now()}-${file.name}`;
-      await upload(file, { folder: "clients", key });
+      const { error } = await agency().uploads.upload(file, {
+        path: `clients/${userId}`,
+        naming: "uuid-filename",
+      });
+      if (error) toast.error(`Failed to upload ${file.name}: ${error.message}`);
     }
+    setIsUploading(false);
     await invalidate();
   };
 
   const handleDelete = async () => {
     if (!deleteKey) return;
-    const ok = await remove(deleteKey);
-    if (ok) await invalidate();
+    setIsDeleting(true);
+    const { error } = await agency().uploads.delete({ key: deleteKey });
+    setIsDeleting(false);
+    if (error) {
+      toast.error(`Failed to delete: ${error.message}`);
+    } else {
+      toast.success("File deleted successfully");
+      await invalidate();
+    }
     setDeleteKey(null);
   };
 
@@ -120,16 +135,6 @@ export function MediaGallery({ userId }: { userId: string }) {
           }}
         />
       </CardAgency.Header>
-
-      {/* Upload progress */}
-      {isUploading && progress && (
-        <div className="bg-muted h-2 overflow-hidden rounded-full">
-          <div
-            className="bg-primary h-full transition-all"
-            style={{ width: `${progress.percentage}%` }}
-          />
-        </div>
-      )}
 
       {/* File grid */}
       {isLoading ? (
