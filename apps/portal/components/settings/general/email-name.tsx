@@ -76,21 +76,23 @@ export const EmailName = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Name & Email</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="card-head">
+        <CardTitle className="font-bold">Name & Email</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="card-body">
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="flex max-w-sm flex-col gap-4"
+          className="flex flex-col gap-4.5"
         >
           <Controller
             control={form.control}
             name="name"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel>Name</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">
+                  Name
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -107,7 +109,9 @@ export const EmailName = () => {
             name="email"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel>Email</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">
+                  Email
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -156,8 +160,9 @@ export const EmailName = () => {
           </>
         )}
       </CardContent>
-      <CardFooter className="justify-end">
+      <CardFooter className="card-band">
         <Button
+          className="rounded-full px-6"
           onClick={form.handleSubmit(handleSubmit)}
           disabled={updateUser.isPending || !form.formState.isDirty}
         >

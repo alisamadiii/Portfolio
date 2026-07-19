@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
@@ -15,37 +16,71 @@ export default function SettingsPage() {
 
   if (user.isPending) {
     return (
-      <div className="space-y-16">
-        <div className="space-y-6">
+      <div className="space-y-10">
+        <div className="space-y-5">
           <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-48 w-full rounded-xl" />
-          <Skeleton className="h-48 w-full rounded-xl" />
-          <Skeleton className="h-36 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-lg" />
+          <Skeleton className="h-48 w-full rounded-lg" />
+          <Skeleton className="h-36 w-full rounded-lg" />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-5">
           <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-36 w-full rounded-xl" />
+          <Skeleton className="h-36 w-full rounded-lg" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-16">
-      <div className="space-y-6">
-        <h2 className="text-3xl font-semibold capitalize">General</h2>
+    <div className="space-y-10">
+      <section className="space-y-5">
+        <SectionHeading
+          title="General"
+          description="Your personal and company details."
+        />
         <EmailName />
         <Company />
         <GeneralAvatar />
-      </div>
-      <div className="space-y-6">
-        <h2 className="text-3xl font-semibold capitalize">Accounts</h2>
+      </section>
+
+      <section className="space-y-5">
+        <SectionHeading
+          title="Accounts"
+          description="Sign-in methods linked to your account."
+        />
         <Accounts />
-      </div>
-      <div className="space-y-6">
-        <h2 className="text-3xl font-semibold capitalize">Danger</h2>
+      </section>
+
+      <section className="space-y-5">
+        <SectionHeading
+          title="Danger"
+          description="Irreversible account actions."
+          destructive
+        />
         <DangerSettings />
-      </div>
+      </section>
     </div>
   );
 }
+
+const SectionHeading = ({
+  title,
+  description,
+  destructive,
+}: {
+  title: string;
+  description: string;
+  destructive?: boolean;
+}) => (
+  <div className="space-y-1.5">
+    <h2
+      className={cn(
+        "text-[27px] font-extrabold tracking-tight",
+        destructive && "text-destructive"
+      )}
+    >
+      {title}
+    </h2>
+    <p className="text-muted-foreground text-[14.5px]">{description}</p>
+  </div>
+);

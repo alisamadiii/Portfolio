@@ -28,12 +28,12 @@ export const GeneralAvatar = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Avatar</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="card-head">
+        <CardTitle className="font-bold">Avatar</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Label>
+      <CardContent className="card-body flex items-center gap-5">
+        <Label className="cursor-pointer">
           <AvatarPreview avatar={avatar} userImage={user?.user.image ?? ""} />
           <input
             type="file"
@@ -42,9 +42,13 @@ export const GeneralAvatar = () => {
             className="hidden"
           />
         </Label>
+        <p className="text-muted-foreground text-[13.5px]">
+          Square image, at least 256×256px. PNG or JPG.
+        </p>
       </CardContent>
-      <CardFooter className="justify-end">
+      <CardFooter className="card-band">
         <Button
+          className="rounded-full px-6"
           onClick={async () => {
             if (!avatar || !user?.user.id) return;
 
@@ -86,7 +90,7 @@ export const GeneralAvatar = () => {
 const AvatarPreview = React.memo(
   ({ avatar, userImage }: { avatar: File | null; userImage: string }) => {
     return (
-      <Avatar className="size-24">
+      <Avatar className="border-border size-22 border">
         <AvatarImage src={avatar ? URL.createObjectURL(avatar) : userImage} />
         <AvatarFallback />
       </Avatar>

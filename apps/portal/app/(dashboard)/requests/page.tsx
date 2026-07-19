@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ColumnDef } from "@tanstack/react-table";
-import { formatDistanceToNow } from "date-fns";
-import { Bot, Eye, EyeOff, FileIcon, Loader2 } from "lucide-react";
+import { Bot, Lock } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -23,19 +21,14 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { Spinner } from "@workspace/ui/components/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@workspace/ui/components/tooltip";
+import { TooltipProvider } from "@workspace/ui/components/tooltip";
 import { DataTable } from "@workspace/ui/custom/data-table";
+import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import { useTRPC } from "@workspace/trpc/client";
-import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-type Task = RouterOutputs["clickup"]["getTasks"]["tasks"][number];
+import { getColumns, type Task } from "./columns";
 
 const CLICKUP_FORM_URL =
   "https://forms.clickup.com/90141012131/f/2kyd5c53-274/29BFCEPFWYVA2TSXM4";
@@ -50,6 +43,8 @@ const TYPE_OPTIONS = [
   "Security",
   "Other",
 ];
+
+const selectTriggerClass = "h-10 rounded-full px-4 capitalize";
 
 export default function RequestsPage() {
   const trpc = useTRPC();
@@ -73,181 +68,23 @@ export default function RequestsPage() {
     })
   );
 
-  const columns: ColumnDef<Task>[] = [
-    {
-      header: "Description",
-      accessorKey: "description",
-      cell: ({ row }) => (
-        <p
-          className="max-w-74 text-sm"
-          style={{ wordBreak: "break-word", whiteSpace: "normal" }}
-        >
-          {row.original.description || row.original.name}
-        </p>
-      ),
-    },
-    {
-      header: "Type",
-      accessorKey: "type",
-      cell: ({ row }) => {
-        const type = row.original.type.toLowerCase();
-        const typeStyles: Record<string, string> = {
-          bug: "bg-red-500/15 text-red-500",
-          "content update": "bg-amber-500/15 text-amber-500",
-          "new feature": "bg-purple-500/15 text-purple-500",
-          "design change": "bg-blue-500/15 text-blue-500",
-          seo: "bg-green-500/15 text-green-500",
-          integration: "bg-teal-500/15 text-teal-500",
-          security: "bg-rose-500/15 text-rose-500",
-          other: "bg-zinc-500/15 text-zinc-400",
-        };
-        return (
-          <span
-            className={`inline-flex rounded px-2 py-0.5 text-xs font-medium capitalize ${typeStyles[type] ?? "bg-muted text-muted-foreground"}`}
-          >
-            {row.original.type}
-          </span>
-        );
-      },
-    },
-    {
-      header: "Status",
-      accessorKey: "status",
-      cell: ({ row }) => {
-        const status = row.original.status.toLowerCase();
-        const statusStyles: Record<string, string> = {
-          open: "bg-blue-500/15 text-blue-500",
-          "to do": "bg-blue-500/15 text-blue-500",
-          "in progress": "bg-yellow-500/15 text-yellow-500",
-          review: "bg-purple-500/15 text-purple-500",
-          "in review": "bg-purple-500/15 text-purple-500",
-          closed: "bg-zinc-500/15 text-zinc-400",
-          done: "bg-green-500/15 text-green-500",
-          complete: "bg-green-500/15 text-green-500",
-          ignored: "bg-red-500/15 text-red-500",
-        };
-        return (
-          <span
-            className={`inline-flex rounded px-2 py-0.5 text-xs font-medium uppercase ${statusStyles[status] ?? "bg-muted text-muted-foreground"}`}
-            style={
-              !statusStyles[status]
-                ? {
-                    backgroundColor: `${row.original.statusColor}20`,
-                    color: row.original.statusColor,
-                  }
-                : undefined
-            }
-          >
-            {row.original.status}
-          </span>
-        );
-      },
-    },
-    {
-      header: "Files",
-      id: "files",
-      cell: ({ row }) =>
-        row.original.files.length > 0 ? (
-          <div className="flex items-center gap-2">
-            {row.original.files.map(
-              (file: Task["files"][number], i: number) => (
-                <a
-                  key={i}
-                  href={file.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={file.name}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {file.thumbnail ? (
-                    <img
-                      src={file.thumbnail}
-                      alt={file.name}
-                      className="size-8 rounded border object-cover"
-                    />
-                  ) : (
-                    <div className="bg-muted flex size-8 items-center justify-center rounded border">
-                      <FileIcon className="text-muted-foreground size-4" />
-                    </div>
-                  )}
-                </a>
-              )
-            )}
-          </div>
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        ),
-    },
-    {
-      header: "Date",
-      accessorKey: "createdAt",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground text-sm">
-          {formatDistanceToNow(new Date(Number(row.original.createdAt)), {
-            addSuffix: true,
-          })}
-        </span>
-      ),
-    },
-    {
-      header: "",
-      id: "actions",
-      cell: ({ row }) => {
-        const status = row.original.status.toLowerCase();
-        const isIgnored = status === "ignored";
-        const isTodo = status === "to do";
-        const canAct = isIgnored || isTodo;
-        const isPending =
-          updateStatus.isPending &&
-          updateStatus.variables?.taskId === row.original.id;
-
-        return (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={
-                    isIgnored
-                      ? "text-blue-500 hover:text-blue-600"
-                      : canAct
-                        ? "text-muted-foreground hover:text-red-500"
-                        : "text-muted-foreground/40"
-                  }
-                  disabled={!canAct || isPending}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateStatus.mutate({
-                      taskId: row.original.id,
-                      status: isIgnored ? "TO DO" : "IGNORED",
-                    });
-                  }}
-                />
-              }
-            >
-              {isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : isIgnored ? (
-                <Eye className="size-4" />
-              ) : (
-                <EyeOff className="size-4" />
-              )}
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {isIgnored
-                ? "Restore to To Do — AI will process this request"
-                : canAct
-                  ? "Mark as ignored — AI won't process this request"
-                  : "Can only ignore tasks in To Do status"}
-            </TooltipContent>
-          </Tooltip>
-        );
-      },
-    },
-  ];
-
   const tasks = tasksQuery.data?.tasks ?? [];
+
+  const columns = useMemo(
+    () =>
+      getColumns({
+        pendingTaskId: updateStatus.isPending
+          ? updateStatus.variables?.taskId
+          : undefined,
+        onToggleIgnored: (task: Task) =>
+          updateStatus.mutate({
+            taskId: task.id,
+            status:
+              task.status.toLowerCase() === "ignored" ? "TO DO" : "IGNORED",
+          }),
+      }),
+    [updateStatus]
+  );
 
   const statusOptions = useMemo(
     () => [...new Set(tasks.map((t) => t.status))],
@@ -280,41 +117,65 @@ export default function RequestsPage() {
 
   if (user.data && !isClient) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-muted-foreground text-lg">
-          This page is only available to active clients.
-        </p>
+      <div className="space-y-6">
+        <h2 className="text-[27px] font-extrabold tracking-tight">
+          Request a Change
+        </h2>
+        <div className="rounded-lg border border-dashed px-6 py-14 text-center">
+          <div className="bg-muted text-muted-foreground mx-auto grid size-12.5 place-items-center rounded-[14px]">
+            <Lock className="size-6" />
+          </div>
+          <h3 className="mt-4.5 text-[22px] font-extrabold tracking-tight">
+            Available to active clients
+          </h3>
+          <p className="text-muted-foreground mx-auto mt-2 mb-5.5 max-w-[420px] text-[14.5px] leading-relaxed">
+            AI Requests lets you send website changes straight to our AI
+            assistant — bugs, copy edits, new features. It unlocks once you have
+            an active agency plan.
+          </p>
+          <RequestDialog>
+            <Button size="lg" className="rounded-full px-6">
+              Contact Support
+            </Button>
+          </RequestDialog>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-11">
       {/* Submit Request via ClickUp Form */}
       <section className="space-y-6">
-        <div className="space-y-3">
-          <h2 className="text-3xl font-semibold">Request a Change</h2>
-          <p className="text-muted-foreground max-w-2xl text-base">
-            Need something updated on your website? Report a bug, request a new
-            feature, or ask for content changes. Describe what you need and our
-            AI assistant will handle it automatically — no waiting, no back and
-            forth.
-          </p>
-          <p className="text-muted-foreground max-w-2xl text-sm">
-            You can include screenshots or images to help explain what you need.
-            Just attach them in the form below.
-          </p>
-          <p className="text-muted-foreground max-w-2xl text-sm">
-            Changes are not applied instantly. Every day at 8:00 AM PST, our AI
-            processes all pending requests and generates a preview. At 8:30 AM,
-            each change is manually reviewed — once approved, it goes live to
-            production.
-          </p>
+        <div className="space-y-3.5">
+          <h2 className="text-[27px] font-extrabold tracking-tight">
+            Request a Change
+          </h2>
+          <div className="text-muted-foreground max-w-[680px] space-y-3 text-[14.5px] leading-relaxed">
+            <p>
+              Need something updated on your website? Report a bug, request a
+              new feature, or ask for content changes. Describe what you need
+              and our AI assistant will handle it automatically — no waiting, no
+              back and forth.
+            </p>
+            <p>
+              You can include screenshots or images to help explain what you
+              need. Just attach them in the form.
+            </p>
+            <p>
+              Changes are not applied instantly. Every day at 8:00 AM PST, our
+              AI processes all pending requests and generates a preview. At 8:30
+              AM, each change is manually reviewed — once approved, it goes live
+              to production.
+            </p>
+          </div>
         </div>
 
         {formUrl ? (
           <Dialog>
-            <DialogTrigger render={<Button size="lg" />}>
+            <DialogTrigger
+              render={<Button size="lg" className="rounded-full px-6" />}
+            >
               <Bot className="mr-2 size-5" />
               Submit a Request
             </DialogTrigger>
@@ -345,31 +206,17 @@ export default function RequestsPage() {
       </section>
 
       {/* Request History */}
-      <section className="space-y-6">
+      <section className="space-y-4.5">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-3xl font-semibold">Request History</h2>
-          <div className="ml-auto flex items-center gap-2">
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v ?? "all")}
-            >
-              <SelectTrigger className="w-[150px] capitalize">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {statusOptions.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <h2 className="text-2xl font-extrabold tracking-tight">
+            Request History
+          </h2>
+          <div className="ml-auto flex items-center gap-2.5">
             <Select
               value={typeFilter}
               onValueChange={(v) => setTypeFilter(v ?? "all")}
             >
-              <SelectTrigger className="w-[170px] capitalize">
+              <SelectTrigger className={selectTriggerClass}>
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
@@ -381,11 +228,28 @@ export default function RequestsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v ?? "all")}
+            >
+              <SelectTrigger className={selectTriggerClass}>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {statusOptions.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <TooltipProvider delay={0}>
           <DataTable
+            className="table-card"
             columns={columns}
             data={filteredTasks}
             isLoading={tasksQuery.isPending}

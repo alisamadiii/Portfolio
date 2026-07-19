@@ -1,15 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import {
-  ChevronDown,
-  ChevronRight,
-  CreditCard,
-  Loader2,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, CreditCard, Loader2 } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -22,14 +16,6 @@ import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useGeneratePortalLink } from "@workspace/auth/hooks/use-payments";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-
-const InvoiceDownloadButton = dynamic(
-  () =>
-    import("@/components/settings/billing/invoice-download-button").then(
-      (m) => m.InvoiceDownloadButton
-    ),
-  { ssr: false }
-);
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -46,14 +32,15 @@ const filters: { label: string; value: ProjectFilter; color?: string }[] = [
   { label: "Agency", value: "AGENCY", color: projectDesign.AGENCY.color },
 ];
 
-const STATUS_COLORS: Record<Subscription["status"], string> = {
-  active: "bg-emerald-500",
-  trialing: "bg-blue-500",
-  past_due: "bg-amber-500",
-  canceled: "bg-red-500",
-  unpaid: "bg-orange-500",
-  incomplete: "bg-yellow-500",
-  incomplete_expired: "bg-gray-400",
+const STATUS_PILL: Record<string, string> = {
+  active: "bg-status-success-bg text-status-success",
+  trialing: "bg-status-info-bg text-status-info",
+  past_due: "bg-status-warning-bg text-status-warning",
+  canceled: "bg-status-danger-bg text-status-danger",
+  unpaid: "bg-status-warning-bg text-status-warning",
+  incomplete: "bg-status-warning-bg text-status-warning",
+  incomplete_expired: "bg-status-neutral-bg text-status-neutral",
+  canceling: "bg-status-warning-bg text-status-warning",
 };
 
 const formatCurrency = (amount: number, currency: string = "usd") =>
@@ -62,108 +49,99 @@ const formatCurrency = (amount: number, currency: string = "usd") =>
     currency: currency.toUpperCase(),
   }).format(amount / 100);
 
-function getOrderMeta(order: Order): OrderMeta {
-  return order.metadata as OrderMeta;
-}
+const getOrderMeta = (order: Order): OrderMeta => order.metadata as OrderMeta;
 
-function getOrderProject(order: Order): string | undefined {
-  return getOrderMeta(order)?.project ?? undefined;
-}
+const getOrderProject = (order: Order): string | undefined =>
+  getOrderMeta(order)?.project ?? undefined;
 
-function getOrderProductName(order: Order): string {
+const getOrderProductName = (order: Order): string => {
   if (order.productName) return order.productName;
   const meta = getOrderMeta(order);
   if (meta?.name) return meta.name;
   if (meta?.project) return meta.project;
   if (order.billingReason === "subscription") return "Subscription";
   return "Purchase";
-}
+};
 
-// ─── StatusDot ──────────────────────────────────────────────────
+const getMark = (label: string) => label.trim().charAt(0).toUpperCase() || "•";
 
-function StatusDot({
-  status,
-  isCanceling,
-}: {
-  status: Subscription["status"];
-  isCanceling?: boolean;
-}) {
-  const color =
-    isCanceling && status === "active"
-      ? "bg-amber-500"
-      : (STATUS_COLORS[status] ?? "bg-gray-400");
+// ─── Shared bits ────────────────────────────────────────────────
 
-  return (
-    <span
-      className={cn("inline-block size-2.5 shrink-0 rounded-full", color)}
-    />
-  );
-}
+const StatusPill = ({ status }: { status: string }) => (
+  <span
+    className={cn(
+      "rounded-full px-3 py-1 text-xs font-semibold capitalize",
+      STATUS_PILL[status] ?? "bg-status-neutral-bg text-status-neutral"
+    )}
+  >
+    {status.replace(/_/g, " ")}
+  </span>
+);
+
+const SectionHeading = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="text-2xl font-extrabold tracking-tight">{children}</h2>
+);
+
+const EmptyPanel = ({ children }: { children: React.ReactNode }) => (
+  <div className="text-muted-foreground rounded-lg border border-dashed py-14 text-center text-[14.5px]">
+    {children}
+  </div>
+);
+
+const RowSkeleton = () => (
+  <div className="space-y-3">
+    <Skeleton className="h-16 w-full rounded-lg" />
+    <Skeleton className="h-16 w-full rounded-lg" />
+  </div>
+);
 
 // ─── Subscription Details Panel ─────────────────────────────────
 
-function SubscriptionDetailsPanel({
-  sub,
-}: {
-  subscriptionId: string;
-  sub: Subscription;
-}) {
+const SubscriptionDetailsPanel = ({ sub }: { sub: Subscription }) => {
+  const isCanceling = !!(sub.cancelAtPeriodEnd || sub.canceledAt);
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
-        <div>
-          <p className="text-muted-foreground text-xs">Status</p>
-          <div className="mt-0.5 flex items-center gap-1.5">
-            <StatusDot
-              status={sub.status}
-              isCanceling={!!(sub.cancelAtPeriodEnd || sub.canceledAt)}
-            />
-            <span className="capitalize">
-              {sub.cancelAtPeriodEnd || sub.canceledAt
-                ? "canceling"
-                : sub.status}
-            </span>
-          </div>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-xs">Auto-Renewal</p>
-          <Badge
-            variant={
-              sub.cancelAtPeriodEnd || sub.canceledAt
-                ? "destructive"
-                : "default"
-            }
-            className="mt-0.5"
-          >
-            {sub.cancelAtPeriodEnd || sub.canceledAt ? "Off" : "On"}
-          </Badge>
-        </div>
-        <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">Subscription ID</p>
-          <span className="text-muted-foreground block truncate font-mono text-xs">
-            {sub.id ?? "—"}
-          </span>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-xs">Billing Interval</p>
-          <span className="capitalize">{sub.recurringInterval ?? "—"}</span>
-        </div>
-        {sub.canceledAt && (
-          <div>
-            <p className="text-muted-foreground text-xs">Canceled At</p>
-            <span>{format(new Date(sub.canceledAt), "MMM d, yyyy")}</span>
-          </div>
-        )}
-        {sub.trialEnd && (
-          <div>
-            <p className="text-muted-foreground text-xs">Trial Ends</p>
-            <span>{format(new Date(sub.trialEnd), "MMM d, yyyy")}</span>
-          </div>
-        )}
+    <div className="bg-muted/40 border-rule grid grid-cols-2 gap-x-8 gap-y-3 border-t px-5.5 py-4.5 text-sm sm:grid-cols-4">
+      <div>
+        <p className="text-muted-foreground text-xs">Status</p>
+        <p className="mt-0.5 capitalize">
+          {isCanceling ? "canceling" : sub.status}
+        </p>
       </div>
+      <div>
+        <p className="text-muted-foreground text-xs">Auto-Renewal</p>
+        <Badge
+          variant={isCanceling ? "destructive" : "default"}
+          className="mt-0.5"
+        >
+          {isCanceling ? "Off" : "On"}
+        </Badge>
+      </div>
+      <div className="min-w-0">
+        <p className="text-muted-foreground text-xs">Subscription ID</p>
+        <span className="text-muted-foreground block truncate font-mono text-xs">
+          {sub.id ?? "—"}
+        </span>
+      </div>
+      <div>
+        <p className="text-muted-foreground text-xs">Billing Interval</p>
+        <span className="capitalize">{sub.recurringInterval ?? "—"}</span>
+      </div>
+      {sub.canceledAt && (
+        <div>
+          <p className="text-muted-foreground text-xs">Canceled At</p>
+          <span>{format(new Date(sub.canceledAt), "MMM d, yyyy")}</span>
+        </div>
+      )}
+      {sub.trialEnd && (
+        <div>
+          <p className="text-muted-foreground text-xs">Trial Ends</p>
+          <span>{format(new Date(sub.trialEnd), "MMM d, yyyy")}</span>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 // ─── Page ───────────────────────────────────────────────────────
 
@@ -196,10 +174,10 @@ export default function BillingPage() {
     return all.filter((o) => getOrderProject(o) === filter);
   }, [orders, filter]);
 
-  const filteredSubscriptions = useMemo(() => {
-    if (!subscriptions) return [];
-    return subscriptions;
-  }, [subscriptions]);
+  const filteredSubscriptions = useMemo(
+    () => subscriptions ?? [],
+    [subscriptions]
+  );
 
   const toggleRow = (rowId: string) => {
     setExpandedRows((prev) => {
@@ -211,281 +189,186 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-9">
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {filters.map((f) => (
-          <Button
-            key={f.value}
-            variant={filter === f.value ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(f.value)}
-            className="gap-2"
-            style={
-              filter === f.value && f.color
-                ? { backgroundColor: f.color, borderColor: f.color }
-                : undefined
-            }
-          >
-            {f.color && (
-              <span
-                className="size-2.5 rounded-full"
-                style={{
-                  backgroundColor: filter === f.value ? "#ffffff" : f.color,
-                }}
-              />
-            )}
-            {f.label}
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-2.5">
+          {filters.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFilter(f.value)}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border px-4.5 py-2 text-[13.5px] font-semibold transition-colors",
+                filter === f.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-secondary-foreground border-border hover:bg-muted"
+              )}
+            >
+              {f.color && (
+                <span
+                  className="size-2 rounded-full"
+                  style={{
+                    backgroundColor:
+                      filter === f.value ? "currentColor" : f.color,
+                  }}
+                />
+              )}
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          disabled={generatePortalLink.isPending}
+          onClick={() => generatePortalLink.mutate()}
+        >
+          {generatePortalLink.isPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <CreditCard className="size-4" />
+          )}
+        </Button>
       </div>
 
       {/* Subscriptions */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold">Subscriptions</h2>
-          <Button
-            variant="outline"
-            size="icon"
-            disabled={generatePortalLink.isPending}
-            onClick={() => generatePortalLink.mutate()}
-          >
-            {generatePortalLink.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <CreditCard className="size-4" />
-            )}
-          </Button>
-        </div>
+      <section className="space-y-4">
+        <SectionHeading>Subscriptions</SectionHeading>
         {subsLoading || getProducts.isPending ? (
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-          </div>
+          <RowSkeleton />
         ) : filteredSubscriptions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-            <p className="text-muted-foreground text-sm">
-              No subscriptions found
-            </p>
-          </div>
+          <EmptyPanel>No subscriptions found</EmptyPanel>
         ) : (
-          <DataTable
-            columns={[
-              {
-                id: "plan",
-                header: "Plan",
-                cell: ({ row }) => {
-                  const isCanceling = !!(
-                    row.original.cancelAtPeriodEnd || row.original.canceledAt
-                  );
-                  return (
-                    <div className="flex items-center gap-2.5">
-                      <StatusDot
-                        status={row.original.status}
-                        isCanceling={isCanceling}
-                      />
-                      <span className="max-w-[140px] truncate font-medium">
-                        {row.original.productName ||
-                          row.original.productId ||
-                          "—"}
-                      </span>
-                    </div>
-                  );
-                },
-              },
-              {
-                id: "price",
-                header: "Price",
-                cell: ({ row }) => {
-                  if (!row.original.amount)
-                    return <span className="text-muted-foreground">—</span>;
-                  return (
-                    <span className="text-sm">
-                      ${(row.original.amount / 100).toFixed(2)}
-                      <span className="text-muted-foreground ml-1 text-xs uppercase">
-                        {"usd"}
-                      </span>
-                    </span>
-                  );
-                },
-              },
-              {
-                id: "next_billing",
-                header: "Next Billing",
-                cell: ({ row }) => {
-                  const end = row.original.startedAt;
-                  return (
-                    <span className="flex flex-col">
-                      <span className="text-sm">
-                        {end ? format(new Date(end), "MMM dd, yyyy") : "-"}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        {end
-                          ? formatDistanceToNow(new Date(end), {
-                              addSuffix: true,
-                            })
-                          : "-"}
-                      </span>
-                    </span>
-                  );
-                },
-              },
-              {
-                id: "actions",
-                header: "",
-                cell: ({ row }) => {
-                  const isExpanded = expandedRows.has(row.id);
-                  if (!row.original.id) return null;
-                  return (
-                    <div className="flex justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleRow(row.id);
-                        }}
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="size-4" />
-                        ) : (
-                          <ChevronRight className="size-4" />
-                        )}
-                        More Info
-                      </Button>
-                    </div>
-                  );
-                },
-              },
-            ]}
-            data={filteredSubscriptions}
-            expandedRows={expandedRows}
-            renderExpandedRow={(row) => {
-              const sub = row.original;
-              if (!sub.id) return null;
+          <div className="bg-card overflow-hidden rounded-lg border">
+            {filteredSubscriptions.map((sub, index) => {
+              const rowId = sub.id ?? String(index);
+              const isExpanded = expandedRows.has(rowId);
+              const isCanceling = !!(sub.cancelAtPeriodEnd || sub.canceledAt);
+              const name = sub.productName || sub.productId || "—";
+
               return (
-                <SubscriptionDetailsPanel subscriptionId={sub.id} sub={sub} />
+                <div key={rowId} className="border-rule border-b last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleRow(rowId)}
+                    className="hover:bg-muted/40 flex w-full items-center gap-4.5 px-5.5 py-4.5 text-left transition-colors"
+                  >
+                    <span className="bg-primary text-primary-foreground grid size-10.5 shrink-0 place-items-center rounded-[12px] text-base font-bold">
+                      {getMark(name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-bold">
+                        {name}
+                      </span>
+                      <span className="text-muted-foreground block text-[13px]">
+                        {sub.startedAt
+                          ? `Renews ${formatDistanceToNow(new Date(sub.startedAt), { addSuffix: true })}`
+                          : "—"}
+                      </span>
+                    </span>
+                    <StatusPill status={isCanceling ? "canceling" : sub.status} />
+                    <span className="min-w-[110px] text-right">
+                      <span className="block text-lg font-extrabold tracking-tight">
+                        {sub.amount ? formatCurrency(sub.amount) : "—"}
+                      </span>
+                      <span className="text-muted-foreground block text-[12.5px] capitalize">
+                        {sub.recurringInterval ?? "—"}
+                      </span>
+                    </span>
+                    {isExpanded ? (
+                      <ChevronDown className="text-muted-foreground size-4 shrink-0" />
+                    ) : (
+                      <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+                    )}
+                  </button>
+                  {isExpanded && <SubscriptionDetailsPanel sub={sub} />}
+                </div>
               );
-            }}
-          />
+            })}
+          </div>
         )}
-      </div>
+      </section>
 
       {/* Orders */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Orders</h2>
+      <section className="space-y-4">
+        <SectionHeading>Orders</SectionHeading>
         {ordersLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-          </div>
+          <RowSkeleton />
         ) : filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-            <p className="text-muted-foreground text-sm">No orders found</p>
-          </div>
+          <EmptyPanel>No orders found</EmptyPanel>
         ) : (
-          <DataTable
-            columns={[
-              {
-                id: "product",
-                header: "Product",
-                cell: ({ row }) => {
-                  const project = getOrderProject(row.original);
-                  const color = getProjectColor(project);
-                  return (
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="size-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-sm font-medium">
-                        {getOrderProductName(row.original)}
-                      </span>
-                    </div>
-                  );
-                },
-              },
-              {
-                id: "amount",
-                header: "Amount",
-                cell: ({ row }) => {
-                  const amount = row.original.totalAmount / 100;
-                  const isRefund = amount < 0;
-                  return (
-                    <span className={isRefund ? "text-destructive" : ""}>
-                      {isRefund
-                        ? `-${formatCurrency(Math.abs(row.original.totalAmount), "usd")}`
-                        : formatCurrency(row.original.totalAmount, "usd")}
-                    </span>
-                  );
-                },
-              },
-              {
-                id: "date",
-                header: "Date",
-                cell: ({ row }) =>
-                  row.original.createdAt
-                    ? format(row.original.createdAt, "MMM d, yyyy")
-                    : "—",
-              },
-              {
-                id: "status",
-                header: "Status",
-                cell: ({ row }) => {
-                  const { status, totalAmount } = row.original;
-                  const isRefund = totalAmount < 0;
-                  const label = isRefund ? "refunded" : status;
-                  const variant = isRefund
-                    ? "secondary"
-                    : status === "paid"
-                      ? "default"
-                      : status === "refunded" || status === "partially_refunded"
-                        ? "secondary"
-                        : status === "void"
-                          ? "destructive"
-                          : "secondary";
-                  return <Badge variant={variant}>{label}</Badge>;
-                },
-              },
-            ]}
-            data={filteredOrders}
-          />
+          <div className="bg-card overflow-hidden rounded-lg border">
+            {filteredOrders.map((order) => {
+              const name = getOrderProductName(order);
+              const isRefund = order.totalAmount < 0;
+
+              return (
+                <div
+                  key={order.id}
+                  className="border-rule flex items-center gap-4.5 border-b px-5.5 py-4.5 last:border-b-0"
+                >
+                  <span
+                    className="grid size-10.5 shrink-0 place-items-center rounded-[12px] text-base font-bold text-white"
+                    style={{
+                      backgroundColor: getProjectColor(getOrderProject(order)),
+                    }}
+                  >
+                    {getMark(name)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold">{name}</p>
+                    <p className="text-muted-foreground text-[13px]">
+                      {order.createdAt
+                        ? format(order.createdAt, "MMM d, yyyy")
+                        : "—"}
+                    </p>
+                  </div>
+                  <span className="bg-status-neutral-bg text-secondary-foreground rounded-full px-3 py-1 text-xs font-semibold capitalize">
+                    {isRefund ? "refunded" : order.status}
+                  </span>
+                  <span
+                    className={cn(
+                      "min-w-[90px] text-right text-lg font-extrabold tracking-tight",
+                      isRefund && "text-destructive"
+                    )}
+                  >
+                    {isRefund
+                      ? `-${formatCurrency(Math.abs(order.totalAmount))}`
+                      : formatCurrency(order.totalAmount)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         )}
-      </div>
+      </section>
 
       {/* Products */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Products</h2>
+      <section className="space-y-4">
+        <SectionHeading>Products</SectionHeading>
         {getProducts.isPending ? (
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-          </div>
+          <RowSkeleton />
         ) : (getProducts.data?.filter((p) => !p.isArchived).length ?? 0) ===
           0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-            <p className="text-muted-foreground text-sm">No products found</p>
-          </div>
+          <EmptyPanel>No products found</EmptyPanel>
         ) : (
           <DataTable
+            className="table-card"
             columns={[
               {
                 id: "name",
                 header: "Product",
                 cell: ({ row }) => (
-                  <span className="text-sm font-medium">
-                    {row.original.name}
-                  </span>
+                  <span className="text-sm font-bold">{row.original.name}</span>
                 ),
               },
               {
                 id: "price",
                 header: "Price",
                 cell: ({ row }) => (
-                  <span className="text-sm">
+                  <span className="text-sm font-bold">
                     {formatCurrency(
                       row.original.priceAmount,
                       row.original.priceCurrency
@@ -497,16 +380,16 @@ export default function BillingPage() {
                 id: "type",
                 header: "Type",
                 cell: ({ row }) => (
-                  <Badge variant="secondary">
+                  <span className="bg-status-neutral-bg text-secondary-foreground rounded-full px-3 py-1 text-xs font-semibold">
                     {row.original.isRecurring ? "Recurring" : "One-time"}
-                  </Badge>
+                  </span>
                 ),
               },
               {
                 id: "interval",
                 header: "Interval",
                 cell: ({ row }) => (
-                  <span className="text-sm capitalize">
+                  <span className="text-muted-foreground text-sm capitalize">
                     {row.original.recurringInterval ?? "—"}
                   </span>
                 ),
@@ -515,7 +398,7 @@ export default function BillingPage() {
             data={getProducts.data?.filter((p) => !p.isArchived) ?? []}
           />
         )}
-      </div>
+      </section>
     </div>
   );
 }

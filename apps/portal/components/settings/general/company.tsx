@@ -67,21 +67,21 @@ export const Company = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Company</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="card-head">
+        <CardTitle className="font-bold">Company</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="card-body">
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="flex max-w-sm flex-col gap-4"
+          className="flex flex-col gap-4.5"
         >
           <Controller
             control={form.control}
             name="phone"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel>Phone</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">Phone</FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -99,11 +99,10 @@ export const Company = () => {
             name="company"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel>Company</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">Company</FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
-                    type="email"
                     aria-invalid={fieldState.invalid}
                     placeholder="AliSamadiiLLC"
                   />
@@ -118,7 +117,7 @@ export const Company = () => {
             name="address"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel>Address</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">Address</FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -134,8 +133,9 @@ export const Company = () => {
           <FieldError errors={[form.formState.errors.root]} />
         </form>
       </CardContent>
-      <CardFooter className="justify-end">
+      <CardFooter className="card-band">
         <Button
+          className="rounded-full px-6"
           onClick={form.handleSubmit(handleSubmit)}
           disabled={updateUser.isPending || !form.formState.isDirty}
         >

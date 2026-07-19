@@ -60,14 +60,14 @@ export const Accounts = () => {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Connected accounts</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="card-head">
+        <CardTitle className="font-bold">Connected accounts</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="px-0">
         {isPending
           ? Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-14 w-full" />
+              <Skeleton key={index} className="mx-5.5 my-3 h-12" />
             ))
           : accounts?.data?.map((account) => {
               const config = providerConfig[account.providerId] ?? {
@@ -77,15 +77,16 @@ export const Accounts = () => {
               return (
                 <div
                   key={account.id}
-                  className="bg-muted/30 flex items-center justify-between rounded-lg border px-4 py-3"
+                  className="border-rule flex items-center gap-3.5 border-b px-5.5 py-4.5 last:border-b-0"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-background text-muted-foreground flex size-9 items-center justify-center rounded-md border">
-                      {config.icon}
-                    </div>
-                    <span className="font-medium">{config.label}</span>
+                  <div className="bg-muted/60 text-secondary-foreground border-border flex size-9.5 items-center justify-center rounded-[12px] border">
+                    {config.icon}
                   </div>
-                  <Badge variant="secondary" className="gap-1.5">
+                  <span className="flex-1 text-[14.5px] font-semibold">
+                    {config.label}
+                  </span>
+                  <Badge className="bg-status-success-bg text-status-success gap-1.5 rounded-full border-transparent px-3 py-1 text-[12.5px] font-semibold">
+                    <span className="bg-status-success size-1.5 rounded-full" />
                     Connected
                   </Badge>
                 </div>

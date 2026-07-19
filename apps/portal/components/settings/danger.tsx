@@ -60,54 +60,57 @@ export const DangerSettings = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Delete Account</CardTitle>
+      <Card className="ring-destructive/20 gap-0 py-0">
+        <CardHeader className="border-destructive/15 bg-destructive/4 border-b px-5.5 py-4.5">
+          <CardTitle className="text-destructive font-bold">
+            Delete Account
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
+        <CardContent className="card-body space-y-4.5">
+          <p className="text-secondary-foreground text-sm">
             This action is permanent and cannot be undone. Here&apos;s what will
             happen when you delete your account:
           </p>
 
-          <ul className="space-y-3 text-sm">
+          <ul className="grid gap-4.5 sm:grid-cols-2 sm:gap-x-7">
             <li>
-              <p className="font-medium">Active Subscriptions</p>
-              <p className="text-muted-foreground">
+              <p className="text-[13.5px] font-bold">Active Subscriptions</p>
+              <p className="text-muted-foreground text-[13px]">
                 Any active subscriptions will be automatically paused/cancelled
-                in our payment system
+                in our payment system.
               </p>
             </li>
 
             <li>
-              <p className="font-medium">Account Data</p>
-              <p className="text-muted-foreground">
+              <p className="text-[13.5px] font-bold">Account Data</p>
+              <p className="text-muted-foreground text-[13px]">
                 Your profile, settings, and all personal data will be
-                permanently deleted from our database
+                permanently deleted from our database.
               </p>
             </li>
 
             <li>
-              <p className="font-medium">Purchase History</p>
-              <p className="text-muted-foreground">
-                Your order history and purchase records will not be removed from
-                our system, but you can still access them via email receipts
+              <p className="text-[13.5px] font-bold">Purchase History</p>
+              <p className="text-muted-foreground text-[13px]">
+                Your order history and purchase records will not be removed, but
+                you can still access them via email receipts.
               </p>
             </li>
 
             <li>
-              <p className="font-medium">Browser Data</p>
-              <p className="text-muted-foreground">
+              <p className="text-[13.5px] font-bold">Browser Data</p>
+              <p className="text-muted-foreground text-[13px]">
                 All cookies, local storage, and session storage will be cleared
-                from your browser
+                from your browser.
               </p>
             </li>
           </ul>
         </CardContent>
-        <CardFooter className="justify-end">
+        <CardFooter className="border-destructive/15 bg-destructive/4 flex items-center justify-end border-t px-5.5 py-3.5">
           <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogTrigger render={<Button
                 variant="destructive"
+                className="bg-status-danger-bg text-destructive hover:bg-status-danger-bg/70 rounded-full px-6"
                 disabled={sentNotification.isPending}
                 size="lg"
               />}>

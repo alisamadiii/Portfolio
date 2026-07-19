@@ -1,0 +1,138 @@
+/* Portal-only theme. Overrides the shared shadcn tokens from
+   @workspace/ui/globals.css for this app only — no other app is affected. */
+
+:root {
+  --background: #f6f6f5;
+  --foreground: #1c1c1e;
+  --card: #ffffff;
+  --card-foreground: #1c1c1e;
+  --popover: #ffffff;
+  --popover-foreground: #1c1c1e;
+  --primary: #1a1a1a;
+  --primary-foreground: #ffffff;
+  --secondary: #efeeec;
+  --secondary-foreground: #57565a;
+  --muted: #f1f0ee;
+  --muted-foreground: #8a8884;
+  --accent: #ee7a5b;
+  --accent-foreground: #1a1a1a;
+  --destructive: #dc2626;
+  --border: #ebeae8;
+  --input: #e4e3e1;
+  --ring: #1c1c1e;
+  --radius: 1.25rem;
+
+  /* the sidebar stays dark ink even though the app is light */
+  --sidebar: #1c1a19;
+  --sidebar-foreground: rgba(255, 255, 255, 0.64);
+  --sidebar-primary: #ee7a5b;
+  --sidebar-primary-foreground: #1a1a1a;
+  --sidebar-accent: rgba(238, 122, 91, 0.18);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #ee7a5b;
+
+  /* status pills — keeps badges design-accurate without arbitrary colors */
+  --status-success: #15803d;
+  --status-success-bg: #e9f7ee;
+  --status-review: #7c3aed;
+  --status-review-bg: #efeafe;
+  --status-info: #2563eb;
+  --status-info-bg: #eaf1ff;
+  --status-warning: #b45309;
+  --status-warning-bg: #fdf1de;
+  --status-danger: #dc2626;
+  --status-danger-bg: #fdeaea;
+  --status-neutral: #78767b;
+  --status-neutral-bg: #f1f0ee;
+
+  /* subtle inner divider between rows inside a card */
+  --rule: #f0efed;
+}
+
+@theme inline {
+  --color-status-success: var(--status-success);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-review: var(--status-review);
+  --color-status-review-bg: var(--status-review-bg);
+  --color-status-info: var(--status-info);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-danger: var(--status-danger);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-rule: var(--rule);
+}
+
+/* the design uses noticeably larger fields than the shadcn default.
+   Unlayered, so it wins over the primitive's own utility classes. */
+[data-slot="input"]:not([type="checkbox"]):not([type="radio"]),
+[data-slot="textarea"] {
+  background: var(--card);
+  border-radius: 0.75rem;
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+}
+
+[data-slot="input"]:not([type="checkbox"]):not([type="radio"]) {
+  height: 2.75rem;
+}
+
+[data-slot="textarea"] {
+  padding-block: 0.75rem;
+}
+
+/* outline buttons ship with bg-background, which is the cream canvas here.
+   The design wants them on the white card surface, like the inputs. */
+[data-slot="button"].bg-background {
+  background: var(--card);
+}
+
+[data-slot="button"].bg-background:hover {
+  background: var(--muted);
+}
+
+/* the title strip at the top of every settings card */
+@utility card-head {
+  border-bottom: 1px solid var(--rule);
+  padding: 1.125rem 1.375rem;
+}
+
+/* the body of a settings card */
+@utility card-body {
+  padding: 1.375rem;
+}
+
+/* the footer action strip on every settings card */
+@utility card-band {
+  border-top: 1px solid var(--rule);
+  background: #fbfbfa;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.875rem;
+  padding: 0.875rem 1.375rem;
+}
+
+/* the full table shell: white card, uppercase header strip.
+   TableBody ships with bg-background, so it needs overriding too. */
+@utility table-card {
+  background: var(--card);
+  border-radius: var(--radius);
+
+  & tbody {
+    background: var(--card);
+  }
+
+  & thead tr {
+    background: #fbfbfa;
+    border-bottom: 1px solid var(--rule);
+    color: #a09e9a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
