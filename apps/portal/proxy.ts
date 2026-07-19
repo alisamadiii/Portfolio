@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const PUBLIC_PATHS = ["/login", "/signup", "/reset-password"];
+
 export async function proxy(request: Request) {
   const nextRequest = request as NextRequest;
   const pathname = nextRequest.nextUrl.pathname;
@@ -17,24 +19,23 @@ export async function proxy(request: Request) {
     },
   });
 
-  // Protected routes: redirect to login if no session cookie
-  if (
-    (pathname === "/" || pathname.startsWith("/agency") || pathname.startsWith("/billing")) &&
-    !sessionToken
-  ) {
+  // Everything is protected except the auth pages themselves
+  const isPublicPath = PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+
+  if (!isPublicPath && !sessionToken) {
     const loginUrl = new URL("/login", nextRequest.url);
-    if (pathname !== "/") {
-      loginUrl.searchParams.set("redirectUrl", pathname);
-    }
+    loginUrl.searchParams.set(
+      "redirectUrl",
+      `${pathname}${nextRequest.nextUrl.search}`
+    );
     return NextResponse.redirect(loginUrl);
   }
 
-  // Auth routes: redirect away if session exists and no redirectUrl
-  if (
-    (pathname.startsWith("/login") || pathname.startsWith("/signup")) &&
-    sessionToken &&
-    !redirectUrl
-  ) {
+  // Auth routes: bounce signed-in users to the dashboard unless they were sent
+  // here to be returned somewhere specific
+  if (isPublicPath && !pathname.startsWith("/reset-password") && sessionToken && !redirectUrl) {
     return NextResponse.redirect(new URL("/", nextRequest.url));
   }
 

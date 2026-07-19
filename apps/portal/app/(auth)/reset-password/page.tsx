@@ -17,6 +17,8 @@ import { Input } from "@workspace/ui/components/input";
 
 import { useSendResetEmail } from "@workspace/auth/hooks/use-functions";
 
+import { AuthHeader } from "@/components/auth/auth-header";
+
 import { ResetPassword } from "./reset";
 
 const formSchema = z.object({
@@ -63,26 +65,30 @@ function Content() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-3xl font-bold">Password Reset</h1>
+    <div className="flex flex-col">
+      <AuthHeader
+        title="Reset your password"
+        description="We'll email you a link to set a new password"
+      />
 
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="mt-8 flex w-full flex-col gap-4"
+        className="mt-8 flex w-full flex-col gap-3"
       >
         <Controller
           control={form.control}
           name="email"
           render={({ field, fieldState }) => (
             <Field aria-invalid={fieldState.invalid}>
-              <FieldLabel>Email</FieldLabel>
+              <FieldLabel className="sr-only">Email</FieldLabel>
               <FieldContent>
                 <Input
                   {...field}
                   type="email"
-                  placeholder="example@email.com"
+                  placeholder="Email"
                   aria-invalid={fieldState.invalid}
                   size="lg"
+                  className="bg-background h-12 rounded-full px-5 text-base"
                 />
               </FieldContent>
               <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
@@ -91,17 +97,25 @@ function Content() {
         />
 
         <FieldError errors={[form.formState.errors.root]} />
+
+        <Button
+          type="submit"
+          isLoading={sendResetEmail.isPending}
+          className="mt-1 h-12 w-full rounded-full"
+          size="lg"
+        >
+          {sendResetEmail.isSuccess
+            ? "Please check your email"
+            : "Send Reset Email"}
+        </Button>
       </form>
-      <Button
-        onClick={form.handleSubmit(handleSubmit)}
-        isLoading={sendResetEmail.isPending}
-        className="mt-8 w-full"
-        size="lg"
+
+      <a
+        href="/login"
+        className="text-muted-foreground hover:text-foreground mt-6 w-fit text-sm transition-colors"
       >
-        {sendResetEmail.isSuccess
-          ? "Please check your email"
-          : "Send Reset Email"}
-      </Button>
+        Back to login
+      </a>
     </div>
   );
 }

@@ -73,6 +73,46 @@ export const urls: Record<Lowercase<ProjectType> | "portal", string> = {
       : "https://saaskit.alisamadii.com",
 };
 
+const ALLOWED_REDIRECT_ORIGINS = new Set(
+  [...Object.values(urls), "https://www.alisamadii.com"].map(
+    (url) => new URL(url).origin
+  )
+);
+
+/**
+ * Validates a `redirectUrl` query param before it is navigated to or handed to
+ * Better Auth as a `callbackURL`. Relative paths pass through; absolute URLs
+ * must point at one of our own apps. Anything else falls back.
+ */
+export function resolveRedirectUrl(
+  value?: string | null,
+  fallback: string = urls.portal
+) {
+  if (!value) return fallback;
+
+  // "//evil.com" is protocol-relative, not a path
+  if (value.startsWith("/") && !value.startsWith("//")) return value;
+
+  try {
+    const parsed = new URL(value);
+    return ALLOWED_REDIRECT_ORIGINS.has(parsed.origin)
+      ? parsed.toString()
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Portal login URL that returns the user to `returnTo` once authenticated. */
+export function portalLoginUrl(returnTo: string) {
+  return `${urls.portal}/login?redirectUrl=${encodeURIComponent(returnTo)}`;
+}
+
+/** Portal signup URL that returns the user to `returnTo` once authenticated. */
+export function portalSignupUrl(returnTo: string) {
+  return `${urls.portal}/signup?redirectUrl=${encodeURIComponent(returnTo)}`;
+}
+
 export const logos = {
   default: "https://cdn.alisamadii.com/company/business-logo.png",
   black: "https://cdn.alisamadii.com/company/business-logo-black.png",

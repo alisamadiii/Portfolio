@@ -7,9 +7,10 @@ import type { RouterOutputs } from '@workspace/trpc/routers/_app'
 
 export type CheckoutSession = RouterOutputs['payments']['getCheckoutSession']
 
+// Auth is centralized on the portal app — it owns every login/signup screen
 const SIGNUP_URL = import.meta.env.DEV
-  ? 'http://localhost:3000/signup'
-  : 'https://www.alisamadii.com/signup'
+  ? 'http://localhost:3006/signup'
+  : 'https://portal.alisamadii.com/signup'
 
 function redirectToSignup() {
   const redirectUrl = encodeURIComponent(window.location.href)

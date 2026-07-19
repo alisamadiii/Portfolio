@@ -4,10 +4,11 @@ import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { SignUpForm } from "@workspace/ui/custom/auth-sign-up-form";
-import { urls } from "@workspace/ui/lib/company";
+import { resolveRedirectUrl } from "@workspace/ui/lib/company";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { AuthHeader } from "@/components/auth/auth-header";
 import { VerifyEmailDialog } from "@/components/auth/verify-email-dialog";
 import { useNugsVerifyEmail } from "@/hooks/use-nugs";
 
@@ -22,23 +23,30 @@ export default function SignUpPage() {
 function Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirectUrl");
+  const rawRedirectUrl = searchParams.get("redirectUrl");
   const { isOpen, setIsOpen, setEmail } = useNugsVerifyEmail();
   const { data: user } = useCurrentUser();
 
-  const destination = redirectUrl || urls.portal;
+  const destination = resolveRedirectUrl(rawRedirectUrl);
 
   useEffect(() => {
     if (user?.user?.emailVerified && !isOpen) {
-      router.replace(destination);
+      // The client router can't route to another origin (admin, motion, …)
+      if (destination.startsWith("/")) {
+        router.replace(destination);
+      } else {
+        window.location.href = destination;
+      }
     }
   }, [user, isOpen, router, destination]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       <VerifyEmailDialog email="" />
-      <h1 className="text-3xl font-bold">Welcome</h1>
-      <p className="text-muted-foreground">Create an account to get started</p>
+      <AuthHeader
+        title="Create your account"
+        description="Get started with your client portal in under a minute"
+      />
 
       <div className="mt-8">
         <SignUpForm
@@ -48,7 +56,7 @@ function Content() {
           }}
           onSignIn={() => {
             router.push(
-              `/login${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`
+              `/login${rawRedirectUrl ? `?redirectUrl=${encodeURIComponent(rawRedirectUrl)}` : ""}`
             );
           }}
           socialRedirectUrl={destination}

@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { PageLoading } from "@workspace/ui/custom/page-loading";
 import { SignInForm } from "@workspace/ui/custom/auth-sign-in-form";
-import { urls } from "@workspace/ui/lib/company";
+import { resolveRedirectUrl } from "@workspace/ui/lib/company";
+
+import { AuthHeader } from "@/components/auth/auth-header";
 
 export default function Login() {
   return (
@@ -19,31 +19,36 @@ export default function Login() {
 function Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirectUrl");
+  const rawRedirectUrl = searchParams.get("redirectUrl");
+  // Never trust the raw param — it can point anywhere and reaches callbackURL
+  const redirectUrl = resolveRedirectUrl(rawRedirectUrl);
 
   const handleSuccess = () => {
-    if (redirectUrl) {
+    // The client router can't route to another origin (admin, motion, …)
+    if (redirectUrl.startsWith("/")) {
       router.push(redirectUrl);
     } else {
-      window.location.href = urls.portal;
+      window.location.href = redirectUrl;
     }
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-3xl font-bold">Welcome Back</h1>
-      <p className="text-muted-foreground">Login to get started</p>
+    <div className="flex flex-col">
+      <AuthHeader
+        title="Login to your portal"
+        description="Access your projects, files, and invoices in one place"
+      />
 
       <div className="mt-8">
         <SignInForm
           onSuccess={handleSuccess}
           onSignUp={() => {
             router.push(
-              `/signup${redirectUrl ? `?redirectUrl=${redirectUrl}` : ""}`
+              `/signup${rawRedirectUrl ? `?redirectUrl=${encodeURIComponent(rawRedirectUrl)}` : ""}`
             );
           }}
           forgotPasswordHref="/reset-password"
-          socialRedirectUrl={redirectUrl || urls.portal}
+          socialRedirectUrl={redirectUrl}
         />
       </div>
     </div>

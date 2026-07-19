@@ -11,6 +11,8 @@ export const ALLOWED_ORIGINS = [
   "http://127.0.0.1:3004",
   "http://127.0.0.1:3006",
   "http://127.0.0.1:5173",
+  "https://alisamadii.com",
+  "https://www.alisamadii.com",
   "https://admin.alisamadii.com",
   "https://saaskit.alisamadii.com",
   "https://motion.alisamadii.com",

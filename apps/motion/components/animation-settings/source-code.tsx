@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { BoxShield, Empty, Error, TechIcons } from "@workspace/ui/icons";
-import { urls } from "@workspace/ui/lib/company";
+import { portalLoginUrl } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -390,9 +390,7 @@ const FileList = ({
                           size="sm"
                           variant="ghost"
                           className={cn(user && "hidden")}
-                          render={<Link
-                            href={`${urls.portal}/login?redirectUrl=${window.location.href}`}
-                          />}
+                          render={<Link href={portalLoginUrl(window.location.href)} />}
                         >
                             Login
                         </Button>

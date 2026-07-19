@@ -1,4 +1,3 @@
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -50,7 +49,6 @@ export const useIsUserHaveAccess = () => {
  * @returns UseMutationResult for checkout operation
  */
 export const useCheckout = () => {
-  const router = useRouter();
   const trpc = useTRPC();
 
   return useMutation(
@@ -65,11 +63,12 @@ export const useCheckout = () => {
       },
       onError: (error, variables) => {
         if (error.data?.code === "UNAUTHORIZED") {
-          router.push(
+          // Signup lives on the portal — the old portfolio /signup never existed
+          const portal =
             process.env.NODE_ENV === "development"
-              ? `http://localhost:3000/signup?redirectUrl=${window.location.href}`
-              : `https://www.alisamadii.com/signup?redirectUrl=${window.location.href}`
-          );
+              ? "http://localhost:3006"
+              : "https://portal.alisamadii.com";
+          window.location.href = `${portal}/signup?redirectUrl=${encodeURIComponent(window.location.href)}`;
           return;
         }
         toast.error(error.message);

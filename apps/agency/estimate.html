@@ -53,7 +53,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <script>
@@ -61,14 +61,16 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-              serif: ["Instrument Serif", "Georgia", "serif"],
+              sans: ["Geist", "system-ui", "sans-serif"],
+              mono: ["Geist Mono", "ui-monospace", "monospace"],
             },
             colors: {
-              cream: "#FFFFFF",
-              charcoal: "#1a1a1a",
-              warmgray: "#8a8577",
-              accent: "#FC8464",
+              cream: "#f6f5f3",
+              charcoal: "#1b1a17",
+              warmgray: "#6f6a63",
+              muted: "#8a847c",
+              ink: "#171512",
+              accent: "#fc8464",
             },
           },
         },
@@ -97,9 +99,9 @@
       /* Scroll reveal */
       .reveal {
         opacity: 0;
-        transform: translateY(3rem);
+        transform: translateY(26px);
         filter: blur(8px);
-        transition: all 0.9s cubic-bezier(0.32, 0.72, 0, 1);
+        transition: all 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
       }
       .reveal.visible {
         opacity: 1;
@@ -452,12 +454,12 @@
       <div class="stagger mx-auto max-w-[1400px]">
         <div class="reveal">
           <span
-            class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+            class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
             >Free Estimate</span
           >
         </div>
         <h1
-          class="reveal font-serif text-5xl leading-[0.95] tracking-tight italic md:text-7xl lg:text-8xl"
+          class="reveal text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
         >
           Build Your<br />
           <span class="text-accent">Project</span>
@@ -506,12 +508,12 @@
         <div class="stagger mb-12">
           <div class="reveal">
             <span
-              class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+              class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
               >Choose Your Path</span
             >
           </div>
           <h2
-            class="reveal mt-2 font-serif text-4xl tracking-tight italic md:text-5xl"
+            class="reveal mt-2 text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
           >
             How Would You Like<br />to
             <span class="text-accent">Get Started</span>?
@@ -529,19 +531,19 @@
           <div class="reveal">
             <div
               id="starterCard"
-              class="package-card rounded-[2rem] p-1.5 ring-1 ring-charcoal/[0.04] bg-charcoal/[0.03] card-ring"
+              class="package-card rounded-[18px] p-1.5 ring-1 ring-charcoal/[0.04] bg-charcoal/[0.03] card-ring"
               onclick="selectPackage('starter')"
             >
               <div
-                class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10"
+                class="rounded-[14px] bg-white p-8 md:p-10"
               >
                 <div class="mb-6 flex items-center gap-3">
                   <span
-                    class="bg-accent inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase text-white"
+                    class="bg-accent inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase text-white"
                     >Recommended</span
                   >
                 </div>
-                <h3 class="font-serif text-2xl italic">Starter</h3>
+                <h3 class="text-2xl font-semibold tracking-[-0.02em]">Starter</h3>
                 <div class="mt-3">
                   <span class="text-3xl font-bold tracking-tight">$284</span>
                   <span class="text-warmgray text-base font-normal">/mo</span>
@@ -681,20 +683,20 @@
           <div class="reveal">
             <div
               id="customCard"
-              class="package-card rounded-[2rem] p-1.5 ring-1 ring-charcoal/[0.04] bg-charcoal/[0.03] card-ring opacity-60 pointer-events-none"
+              class="package-card rounded-[18px] p-1.5 ring-1 ring-charcoal/[0.04] bg-charcoal/[0.03] card-ring opacity-60 pointer-events-none"
             >
               <div
-                class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10"
+                class="rounded-[14px] bg-white p-8 md:p-10"
               >
                 <div class="mb-6 flex items-center gap-3">
                   <span
-                    class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase text-amber-700 ring-1 ring-amber-200/60"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase text-amber-700 ring-1 ring-amber-200/60"
                   >
                     <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
                     Coming Soon
                   </span>
                 </div>
-                <h3 class="font-serif text-2xl italic">Custom</h3>
+                <h3 class="text-2xl font-semibold tracking-[-0.02em]">Custom</h3>
                 <div class="mt-3">
                   <span class="text-3xl font-bold tracking-tight"
                     >From $149</span
@@ -832,11 +834,11 @@
       <div class="mx-auto max-w-[900px]">
         <div class="reveal mb-12">
           <span
-            class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+            class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
             >Your Estimate</span
           >
           <h2
-            class="mt-2 font-serif text-4xl tracking-tight italic md:text-5xl"
+            class="mt-2 text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
           >
             Summary
           </h2>
@@ -855,7 +857,7 @@
               <p class="text-warmgray text-sm">agency@alisamadii.com</p>
             </div>
           </div>
-          <h2 class="font-serif text-3xl italic">Project Estimate</h2>
+          <h2 class="text-3xl font-semibold tracking-[-0.03em]">Project Estimate</h2>
           <p class="text-warmgray mt-1 text-sm" id="printDate"></p>
               <p class="text-warmgray mt-0.5 text-sm" id="printPackageType"></p>
         </div>
@@ -863,9 +865,9 @@
         <!-- Selected services list -->
         <div class="reveal">
           <div
-            class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[2rem] p-1.5 ring-1"
+            class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[18px] p-1.5 ring-1"
           >
-            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+            <div class="rounded-[14px] bg-white p-8 md:p-10">
               <div id="summaryList" class="space-y-0">
                 <p id="summaryEmpty" class="text-warmgray py-4 text-sm">
                   No services selected yet. Choose services above to build your
@@ -905,9 +907,9 @@
         <!-- Client info -->
         <div class="reveal mt-8">
           <div
-            class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[2rem] p-1.5 ring-1"
+            class="bg-charcoal/[0.03] ring-charcoal/[0.04] rounded-[18px] p-1.5 ring-1"
           >
-            <div class="rounded-[calc(2rem-0.375rem)] bg-white p-8 md:p-10">
+            <div class="rounded-[14px] bg-white p-8 md:p-10">
               <h3 class="mb-6 text-lg font-semibold">Your Information</h3>
               <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
@@ -955,7 +957,7 @@
         <div class="reveal no-print mt-8 flex flex-col gap-4 sm:flex-row">
           <button
             onclick="downloadPDF()"
-            class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex flex-1 items-center justify-center gap-3 rounded-full px-8 py-4 text-sm font-medium transition-colors duration-300"
+            class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex flex-1 items-center justify-center gap-3 rounded-[11px] px-8 py-4 text-sm font-medium transition-colors duration-300"
           >
             <svg
               class="h-5 w-5"
@@ -974,7 +976,7 @@
           </button>
           <button
             onclick="sendEstimate()"
-            class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex flex-1 items-center justify-center gap-3 rounded-full px-8 py-4 text-sm font-medium transition-all duration-300"
+            class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex flex-1 items-center justify-center gap-3 rounded-[11px] px-8 py-4 text-sm font-medium transition-all duration-300"
           >
             <svg
               class="h-5 w-5"
@@ -1032,7 +1034,7 @@
         </div>
         <a
           href="#summarySection"
-          class="mag-btn bg-accent hover:text-charcoal inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium text-white transition-colors duration-300 hover:bg-white"
+          class="mag-btn bg-accent hover:text-charcoal inline-flex items-center gap-2 rounded-[11px] px-6 py-2.5 text-sm font-medium text-white transition-colors duration-300 hover:bg-white"
         >
           View Summary
           <svg
@@ -1270,7 +1272,7 @@
         starterCard.classList.toggle("selected", isStarter);
         customCard.classList.toggle("selected", isCustom);
 
-        starterBtn.className = `mag-btn inline-flex w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${isStarter ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}`;
+        starterBtn.className = `mag-btn inline-flex w-full items-center justify-center gap-3 rounded-[11px] px-5 py-3 text-sm font-medium transition-all duration-300 ${isStarter ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}`;
         starterBtn.querySelector(".check-box").classList.toggle(
           "checked",
           isStarter,
@@ -1278,7 +1280,7 @@
         starterBtn.childNodes[starterBtn.childNodes.length - 1].textContent =
           isStarter ? " Selected" : " Select Starter";
 
-        customBtn.className = `mag-btn inline-flex w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${isCustom ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}`;
+        customBtn.className = `mag-btn inline-flex w-full items-center justify-center gap-3 rounded-[11px] px-5 py-3 text-sm font-medium transition-all duration-300 ${isCustom ? "bg-accent text-white" : "bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream"}`;
         customBtn.querySelector(".check-box").classList.toggle(
           "checked",
           isCustom,
@@ -1372,8 +1374,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
               <!-- Image -->
               <div class="${imageOrder} reveal">
-                <div class="rounded-[2rem] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] overflow-hidden">
-                  <div class="rounded-[calc(2rem-0.375rem)] overflow-hidden aspect-[4/3]">
+                <div class="rounded-[18px] p-1.5 bg-charcoal/[0.03] ring-1 ring-charcoal/[0.04] overflow-hidden">
+                  <div class="rounded-[14px] overflow-hidden aspect-[4/3]">
                     <img src="${svc.image}" alt="${svc.title}" class="w-full h-full object-cover" loading="lazy" />
                   </div>
                 </div>
@@ -1384,7 +1386,7 @@
                 <div class="reveal">
                   <span class="inline-block rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium bg-charcoal/5 text-warmgray mb-4">${sectionNum} &mdash; Service</span>
                 </div>
-                <h2 class="reveal text-3xl md:text-4xl font-serif italic tracking-tight leading-tight">${svc.title}</h2>
+                <h2 class="reveal text-3xl md:text-4xl font-semibold tracking-[-0.03em] leading-[1.08]">${svc.title}</h2>
                 <p class="reveal text-warmgray text-base leading-relaxed mt-4 max-w-[50ch]">${svc.description}</p>
                 ${svc.badge ? `<div class="reveal mt-4"><div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 ring-1 ring-emerald-200/60"><svg class="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-xs font-semibold text-emerald-800">${svc.badge}</span></div></div>` : ""}
 

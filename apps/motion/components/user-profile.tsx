@@ -7,9 +7,8 @@ import {
   AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
-import { AuthDialog } from "@workspace/ui/custom/auth-dialog";
 import { MotionPremium } from "@workspace/ui/icons";
-import { urls } from "@workspace/ui/lib/company";
+import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
@@ -24,14 +23,12 @@ export const UserProfile = () => {
 
   return (
     <>
-      {/* AuthDialog always mounts so it can respond to ?auth= param (e.g. verify-email after signup) */}
-      <AuthDialog>
-        {!user ? (
-          <Button size="lg">Login</Button>
-        ) : (
-          <span />
-        )}
-      </AuthDialog>
+      {/* Auth lives entirely on the portal — send the user there and back */}
+      {!user && (
+        <Button size="lg" render={<Link href={portalLoginUrl(urls.motion)} />}>
+          Login
+        </Button>
+      )}
 
       {user && (
         <Link href={urls.portal}>

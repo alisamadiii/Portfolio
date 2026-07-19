@@ -3,16 +3,16 @@ import "@workspace/ui/globals.css";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { Providers } from "@workspace/ui/providers";
+import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
-import { Login } from "@/components/login";
 import { NavbarAdmin } from "@/components/navbar-admin";
 
 const geistSans = Geist({
@@ -47,30 +47,30 @@ export const metadata: Metadata = {
   },
 };
 
+/** tRPC surfaces the error code on `data` — checking it beats matching copy. */
+function isUnauthorized(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { data?: { code?: string } }).data?.code === "UNAUTHORIZED"
+  );
+}
+
 async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const headersStore = await headers();
+  const httpCaller = createHttpCaller(headersStore);
+
+  let currentUser;
+
   try {
-    const headersStore = await headers();
-    const httpCaller = createHttpCaller(headersStore);
-    const currentUser = await httpCaller.users.getSession.query();
-
-    if (currentUser?.role !== "admin") {
-      return notFound();
-    }
-
-    return (
-      <>
-        <NavbarAdmin />
-        <div className="pb-16">{children}</div>
-      </>
-    );
+    currentUser = await httpCaller.users.getSession.query();
   } catch (error) {
-    console.error(error);
-    if (
-      error instanceof Error &&
-      error.message.includes("You must be logged in to access this resource")
-    ) {
-      return <Login />;
+    // Admin has no login UI of its own — the portal owns auth
+    if (isUnauthorized(error)) {
+      redirect(portalLoginUrl(urls.admin));
     }
+
+    console.error(error);
     return (
       <div>
         Internal Server Error{" "}
@@ -78,6 +78,18 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
+  // Signed in but not an admin — 404 rather than bounce, which would loop
+  if (currentUser?.role !== "admin") {
+    return notFound();
+  }
+
+  return (
+    <>
+      <NavbarAdmin />
+      <div className="pb-16">{children}</div>
+    </>
+  );
 }
 
 const Layout = ({ children }: { children: React.ReactNode }) => {

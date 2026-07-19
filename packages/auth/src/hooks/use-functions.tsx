@@ -234,7 +234,11 @@ const useVerifyEmail = (options?: { onSuccess?: () => void }) => {
       if (options?.onSuccess) {
         options.onSuccess();
       } else {
-        const redirectUrl = searchParams.get("redirectUrl") ?? "/";
+        // Relative paths only — an absolute value here would be an open
+        // redirect. Cross-app returns are handled by the signup page instead.
+        const raw = searchParams.get("redirectUrl");
+        const redirectUrl =
+          raw?.startsWith("/") && !raw.startsWith("//") ? raw : "/";
         setTimeout(() => {
           router.push(redirectUrl);
         }, 2000);
