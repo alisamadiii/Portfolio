@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileUser, Settings } from "lucide-react";
+import { FileUser } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
@@ -17,8 +17,6 @@ import {
 } from "@workspace/ui/icons/tech";
 import { company, logos, projectsData, urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
-
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { ClientWork } from "@/components/client-work";
 import { Divider } from "@/components/divider";
@@ -84,7 +82,6 @@ const projects = [
 ];
 
 export default function Home() {
-  const { data: currentUser } = useCurrentUser();
   return (
     <main className="mx-auto w-full max-w-3xl space-y-20 px-8 pt-20">
       <div className="shadow-dialog mb-8 flex items-center justify-between gap-8 rounded-xl border bg-zinc-950 p-6 text-zinc-50 backdrop-blur-sm transition-all">
@@ -324,21 +321,6 @@ export default function Home() {
             ))}
         </div>
       </section> */}
-
-      {currentUser?.user?.email && (
-        <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-2">
-          <Link
-            href={urls.portal}
-            className="flex items-center gap-2 rounded-full border bg-zinc-950 py-2.5 pr-3 pl-4 text-zinc-50 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
-          >
-            <span className="text-sm font-medium">My Portal</span>
-            <Settings size={18} />
-          </Link>
-          <p className="text-muted-foreground mr-1 text-[11px]">
-            Manage billing, projects & settings
-          </p>
-        </div>
-      )}
 
       {/* <TwitterContents /> */}
       {/* <Works /> */}

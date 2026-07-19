@@ -4,7 +4,6 @@ import { createTRPCRouter } from "../init";
 import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
 import { paymentsRouter } from "./payments";
-import { coldEmailsRouter } from "./cold-emails";
 import { filesRouter } from "./files";
 import { supportRouter } from "./support";
 import { productsRouter } from "./products";
@@ -19,7 +18,6 @@ export const appRouter = createTRPCRouter({
   support: supportRouter,
   files: filesRouter,
   sources: sourcesRouter,
-  coldEmails: coldEmailsRouter,
   clickup: clickupRouter,
 });
 

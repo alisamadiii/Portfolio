@@ -10,6 +10,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
+import { urls } from "@workspace/ui/lib/company";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
@@ -116,11 +117,8 @@ export const paymentsRouter = createTRPCRouter({
           const delimiter = successUrl.includes("?") ? "&" : "?";
           url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
         } else {
-          const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-            /\/$/,
-            ""
-          );
-          url = `${base}/success?checkout_id=${checkoutIdPlaceholder}`;
+          const base = urls.portal.replace(/\/$/, "");
+          url = `${base}/?checkout_id=${checkoutIdPlaceholder}`;
         }
 
         const response = await polarClient.checkouts.create({

@@ -10,8 +10,6 @@ import { BgPattern } from "@workspace/ui/components/bg-pattern";
 import { Footer } from "@workspace/ui/components/footer";
 import { Providers } from "@workspace/ui/providers";
 
-import { TRPCReactProvider } from "@workspace/trpc/client";
-
 const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -60,16 +58,14 @@ export default async function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
-        <TRPCReactProvider>
-          <Providers>
-            <Suspense>
-              <BgPattern lessVisibleOn={["/client/", "/blog/how-i-build"]} />
-              {children}
-              <Footer />
-              <DevTools />
-            </Suspense>
-          </Providers>
-        </TRPCReactProvider>
+        <Providers>
+          <Suspense>
+            <BgPattern lessVisibleOn={["/client/", "/blog/how-i-build"]} />
+            {children}
+            <Footer />
+            <DevTools />
+          </Suspense>
+        </Providers>
       </body>
     </html>
   );
