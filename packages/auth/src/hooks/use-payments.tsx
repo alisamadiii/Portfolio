@@ -61,9 +61,11 @@ export const useCheckout = () => {
         /* eslint-disable-next-line react-hooks/immutability */
         window.location.href = data.url;
       },
-      onError: (error, variables) => {
+      onError: (error) => {
         if (error.data?.code === "UNAUTHORIZED") {
-          // Signup lives on the portal — the old portfolio /signup never existed
+          // Signup lives on the portal — the old portfolio /signup never existed.
+          // Inlined rather than imported from @workspace/ui: ui already depends
+          // on auth, and importing back would close the dependency cycle.
           const portal =
             process.env.NODE_ENV === "development"
               ? "http://localhost:3006"

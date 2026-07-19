@@ -10,7 +10,6 @@ import { Pricing } from '../components/Pricing'
 import { Faq } from '../components/Faq'
 import { FinalCta } from '../components/FinalCta'
 import { Footer } from '../components/Footer'
-import { CheckoutResult } from '../components/CheckoutResult'
 
 export default function Landing() {
   const { isMobile, isMid } = useViewport()
@@ -44,7 +43,6 @@ export default function Landing() {
       <Faq />
       <FinalCta />
       <Footer />
-      <CheckoutResult />
     </div>
   )
 }

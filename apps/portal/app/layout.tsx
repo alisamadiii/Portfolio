@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { SuccessPurchaseDialog } from "@workspace/ui/custom/success-purchase-dialog";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
@@ -56,7 +55,6 @@ export default function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
-              <SuccessPurchaseDialog project="AGENCY" />
               {children}
             </Suspense>
           </Providers>

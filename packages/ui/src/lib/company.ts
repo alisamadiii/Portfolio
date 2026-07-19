@@ -103,6 +103,27 @@ export function resolveRedirectUrl(
   }
 }
 
+/**
+ * Reverse-lookup of an absolute URL to the app it belongs to, so UI can say
+ * "Back to Motion" instead of a generic label. Returns null when it isn't ours.
+ */
+export function resolveAppName(value?: string | null) {
+  if (!value) return null;
+
+  try {
+    const origin = new URL(value).origin;
+    const match = Object.entries(urls).find(
+      ([, url]) => new URL(url).origin === origin
+    );
+    if (!match) return null;
+
+    const [key] = match;
+    return key.charAt(0).toUpperCase() + key.slice(1);
+  } catch {
+    return null;
+  }
+}
+
 /** Portal login URL that returns the user to `returnTo` once authenticated. */
 export function portalLoginUrl(returnTo: string) {
   return `${urls.portal}/login?redirectUrl=${encodeURIComponent(returnTo)}`;

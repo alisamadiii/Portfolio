@@ -11,6 +11,7 @@ import { Separator } from "@workspace/ui/components/separator";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { Switch } from "@workspace/ui/components/switch";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
+import { urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -140,7 +141,11 @@ const EachPlan = ({
           size="lg"
           className="mt-auto w-full"
           onClick={() =>
-            checkout.mutate({ productId: plan.id ?? "", successUrl: "/portfolio" })
+            checkout.mutate({
+              productId: plan.id ?? "",
+              callbackUrl: urls.portal,
+              project: "AGENCY",
+            })
           }
         >
           Get Started

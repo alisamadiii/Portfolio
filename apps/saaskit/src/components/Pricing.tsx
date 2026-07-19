@@ -131,7 +131,11 @@ export function Pricing() {
               if (!t.productId) return noop(e)
               e.preventDefault()
               if (!checkout.isPending) {
-                checkout.mutate({ productId: t.productId, successUrl: window.location.href })
+                checkout.mutate({
+                  productId: t.productId,
+                  callbackUrl: window.location.href,
+                  project: 'SAASKIT',
+                })
               }
             }
             return (

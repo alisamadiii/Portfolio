@@ -106,7 +106,8 @@ export function Pricing() {
                 onClick={() =>
                   checkout.mutate({
                     productId: product.data?.id || "",
-                    successUrl: urls.motion + pathname,
+                    callbackUrl: urls.motion + pathname,
+                    project: "MOTION",
                   })
                 }
                 className="bg-primary text-primary-foreground w-full cursor-pointer rounded-xl py-4 text-sm font-semibold transition-colors"

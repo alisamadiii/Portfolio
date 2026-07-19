@@ -7,7 +7,6 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 
 import { MotionFooter } from "@/components/footer";
-import { SuccessPurchaseDialog } from "@workspace/ui/custom/success-purchase-dialog";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
@@ -70,7 +69,6 @@ export default async function RootLayout({
           <Providers>
             <Suspense>
               <PreviousCustomerBanner />
-              <SuccessPurchaseDialog project="MOTION" />
               {children}
               <Suspense>
                 <MotionFooter />

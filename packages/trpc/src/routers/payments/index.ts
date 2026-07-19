@@ -3,6 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { asc, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
+import { resolveRedirectUrl, urls } from "@workspace/ui/lib/company";
+
 import {
   adminProcedure,
   authenticatedProcedure,
@@ -10,7 +12,6 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
-import { urls } from "@workspace/ui/lib/company";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
@@ -90,13 +91,17 @@ export const paymentsRouter = createTRPCRouter({
     .input(
       z.object({
         productId: z.string(),
-        successUrl: z.string(),
+        /** Where the portal success page sends the user once they're done. */
+        callbackUrl: z.string().optional(),
+        project: z
+          .enum(["MOTION", "AGENCY", "DOCS", "TEMPLATE", "SAASKIT"])
+          .optional(),
         discountId: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
       try {
-        const { productId, successUrl, discountId } = input;
+        const { productId, callbackUrl, project, discountId } = input;
 
         // Ensure customer exists in Polar with user.id as externalId
         try {
@@ -111,15 +116,16 @@ export const paymentsRouter = createTRPCRouter({
           });
         }
 
-        const checkoutIdPlaceholder = "{CHECKOUT_ID}";
-        let url: string;
-        if (successUrl) {
-          const delimiter = successUrl.includes("?") ? "&" : "?";
-          url = `${successUrl}${delimiter}checkout_id=${checkoutIdPlaceholder}`;
-        } else {
-          const base = urls.portal.replace(/\/$/, "");
-          url = `${base}/?checkout_id=${checkoutIdPlaceholder}`;
-        }
+        // Every checkout lands on the portal success page — it is the single
+        // source of truth for purchase confirmation across all apps.
+        const params = new URLSearchParams();
+        params.set("callbackUrl", resolveRedirectUrl(callbackUrl, urls.portal));
+        if (project) params.set("project", project);
+
+        // `{CHECKOUT_ID}` is a Polar placeholder and must stay unencoded, so it
+        // is appended after URLSearchParams has done its escaping.
+        const base = urls.portal.replace(/\/$/, "");
+        const url = `${base}/success?${params.toString()}&checkout_id={CHECKOUT_ID}`;
 
         const response = await polarClient.checkouts.create({
           products: [productId],
@@ -135,26 +141,6 @@ export const paymentsRouter = createTRPCRouter({
             error instanceof Error
               ? error.message
               : "Failed to create checkout",
-          cause: error,
-        });
-      }
-    }),
-
-  getCheckoutSession: baseProcedure
-    .input(z.string())
-    .query(async ({ input }) => {
-      try {
-        const response = await polarClient.checkouts.get({
-          id: input,
-        });
-        return response;
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to get checkout session",
           cause: error,
         });
       }
