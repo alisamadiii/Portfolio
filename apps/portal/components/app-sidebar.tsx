@@ -2,9 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import {
-  Bell,
   Bot,
   Building2,
   CreditCard,
@@ -15,29 +13,18 @@ import {
 import { toast } from "sonner";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@workspace/ui/components/sheet";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarRail,
 } from "@workspace/ui/components/sidebar";
-import { EmbedHistoryNotifications } from "@workspace/ui/custom/embed-history-notifications";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
-import { useTRPC } from "@workspace/trpc/client";
 import { useLogout } from "@workspace/auth/hooks/use-functions";
 
 import { NavPages } from "./nav-pages";
@@ -71,14 +58,6 @@ const agencyPages = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const logout = useLogout();
   const router = useRouter();
-  const trpc = useTRPC();
-  const { data: notifications } = useQuery(
-    trpc.notification.history.queryOptions()
-  );
-  const unreadCount =
-    notifications?.filter(
-      (n) => n.status === "REPLIED" || n.status === "PENDING"
-    ).length ?? 0;
 
   return (
     <Sidebar {...props}>
@@ -95,30 +74,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span>Contact Support</span>
                 </SidebarMenuButton>
               </RequestDialog>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Sheet>
-                <SheetTrigger render={<SidebarMenuButton className="py-4" />}>
-                    <Bell />
-                    <span>Notification History</span>
-                </SheetTrigger>
-                {unreadCount > 0 && (
-                  <SidebarMenuBadge>
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </SidebarMenuBadge>
-                )}
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Notifications</SheetTitle>
-                    <SheetDescription>
-                      Your support request history and updates.
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="flex-1 overflow-y-auto">
-                    <EmbedHistoryNotifications project="PORTFOLIO" />
-                  </div>
-                </SheetContent>
-              </Sheet>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>

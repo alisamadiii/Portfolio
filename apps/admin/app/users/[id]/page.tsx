@@ -24,7 +24,6 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { Content } from "@/components/content-admin";
 
-import { Notifications } from "./notifications";
 import { Payments } from "./payments";
 import { Profile } from "./profile";
 import { Settings } from "./settings";
@@ -111,7 +110,6 @@ export default function EachOrganization() {
           { label: "Profile", value: "profile" },
           { label: "Payments", value: "payments" },
           { label: "Settings", value: "settings" },
-          { label: "Notifications", value: "notifications" },
         ]}
         tab={activeTab}
         setTab={setActiveTab}
@@ -144,7 +142,6 @@ export default function EachOrganization() {
           {activeTab.toLowerCase() === "profile" && <Profile />}
           {activeTab.toLowerCase() === "payments" && <Payments />}
           {activeTab.toLowerCase() === "settings" && <Settings />}
-          {activeTab.toLowerCase() === "notifications" && <Notifications />}
         </>
       )}
     </Content>

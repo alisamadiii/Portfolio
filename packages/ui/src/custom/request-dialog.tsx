@@ -66,7 +66,7 @@ const Content = ({
 }) => {
   const trpc = useTRPC();
   const sendNotification = useMutation(
-    trpc.notification.send.mutationOptions()
+    trpc.support.send.mutationOptions()
   );
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -113,9 +113,6 @@ const Content = ({
           <p className="text-muted-foreground text-sm">
             We will get back to you shortly via email.
           </p>
-          <code className="text-muted-foreground mt-4 text-sm select-all">
-            #{sendNotification.data?.id}
-          </code>
         </div>
       ) : (
         <form

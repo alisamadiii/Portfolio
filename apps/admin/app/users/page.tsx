@@ -38,7 +38,7 @@ type UserFromAPI = RouterOutputs["users"]["list"][number];
 interface FilterUsers {
   page?: number;
   limit?: number;
-  sortBy?: "email" | "created" | "banned" | "notifications";
+  sortBy?: "email" | "created" | "banned";
   filterBy?: "all" | "admin" | "client";
   search?: string;
 }
@@ -47,7 +47,6 @@ const sortByOptions: FilterUsers["sortBy"][] = [
   "email",
   "created",
   "banned",
-  "notifications",
 ];
 
 const filterByOptions: { label: string; value: FilterUsers["filterBy"] }[] = [

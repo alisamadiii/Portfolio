@@ -7,7 +7,6 @@ interface NotifyData {
   subject: string;
   message: string;
   priority?: string;
-  referenceId: string;
 }
 
 /**
@@ -26,7 +25,6 @@ export function notify(data: NotifyData) {
         subject: data.subject,
         message: data.message,
         priority: data.priority ?? "MEDIUM",
-        referenceId: data.referenceId,
       }),
     })
     .catch(console.error);

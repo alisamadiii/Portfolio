@@ -34,7 +34,7 @@ export const DangerSettings = () => {
 
   const trpc = useTRPC();
   const sentNotification = useMutation(
-    trpc.notification.send.mutationOptions()
+    trpc.support.send.mutationOptions()
   );
 
   if (user.isPending) {

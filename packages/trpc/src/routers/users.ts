@@ -128,7 +128,7 @@ export const usersRouter = createTRPCRouter({
         page: z.number().optional(),
         limit: z.number().optional(),
         sortBy: z
-          .enum(["email", "created", "banned", "notifications"])
+          .enum(["email", "created", "banned"])
           .optional(),
         search: z.string().optional(),
         filterBy: z.enum(["all", "admin", "client"]).optional(),

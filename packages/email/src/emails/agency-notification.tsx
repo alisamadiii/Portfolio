@@ -18,7 +18,6 @@ interface AgencyNotificationProps {
   subject: string;
   message: string;
   priority: string;
-  referenceId: string;
 }
 
 const priorityColor: Record<string, string> = {
@@ -34,7 +33,6 @@ export default function AgencyNotification({
   subject,
   message,
   priority,
-  referenceId,
 }: AgencyNotificationProps) {
   const color = priorityColor[priority] ?? "#eab308";
 
@@ -108,9 +106,6 @@ export default function AgencyNotification({
                     {clientEmail ?? "Guest (not logged in)"}
                   </span>
                 </Text>
-                <Text className="m-0 mt-1 text-xs text-gray-400">
-                  Reference ID: #{referenceId}
-                </Text>
               </Section>
             </Section>
 
@@ -135,5 +130,4 @@ AgencyNotification.PreviewProps = {
   subject: "Service Change Request",
   message: "I'd like to upgrade my plan to include the e-commerce module.",
   priority: "HIGH",
-  referenceId: "abc-123",
 } satisfies AgencyNotificationProps;
