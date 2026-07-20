@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Label } from "@workspace/ui/components/label";
-import { agency } from "@workspace/ui/lib/agency";
+import { useUpload } from "@workspace/ui/hooks/use-upload";
 
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";
 
@@ -25,7 +25,7 @@ export const GeneralAvatar = () => {
   const { data: user } = useCurrentUser();
   const updateUser = useUpdateUser();
 
-  const [isUploading, setIsUploading] = useState(false);
+  const { upload, isUploading } = useUpload();
 
   return (
     <Card className="gap-0 py-0">
@@ -52,22 +52,17 @@ export const GeneralAvatar = () => {
           onClick={async () => {
             if (!avatar || !user?.user.id) return;
 
-            setIsUploading(true);
-            const { data, error } = await agency().uploads.upload(avatar, {
+            const result = await upload(avatar, {
               path: "users",
               filename: user.user.id,
               naming: "filename",
               overwrite: true,
             });
-            setIsUploading(false);
 
-            if (error) {
-              toast.error(error.message);
-              return;
-            }
+            if (!result) return;
 
             updateUser.mutate(
-              { image: data.publicUrl },
+              { image: result.publicUrl },
               {
                 onSuccess: () => {
                   toast.success("Avatar updated successfully");

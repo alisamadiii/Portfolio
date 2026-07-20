@@ -24,10 +24,10 @@ import {
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 
+import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { HandCheck } from "../icons";
-import { agency } from "../lib/agency";
 
 const SUBJECT_KEYWORDS = [
   "Upgrade My Plan",
@@ -71,25 +71,14 @@ const Content = ({
   defaultSubject?: string;
 }) => {
   const user = useCurrentUser();
-  const sendNotification = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const email = user.data?.user?.email;
-      if (!email) throw new Error("You must be signed in to contact support");
-
-      const { error } = await agency().emails.sendContact({
-        name: user.data?.user?.name || email,
-        email,
-        subject: `AGENCY - ${values.subject}`,
-        message: values.message,
-        source: "Portal — Contact Support",
-        metadata: { priority: "URGENT", projectType: "AGENCY" },
-      });
-      if (error) throw new Error(error.message);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
+  const trpc = useTRPC();
+  const sendNotification = useMutation(
+    trpc.contact.send.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    })
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,7 +88,12 @@ const Content = ({
     },
   });
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    sendNotification.mutate(values);
+    sendNotification.mutate({
+      subject: `AGENCY - ${values.subject}`,
+      message: values.message,
+      source: "Portal — Contact Support",
+      metadata: { priority: "URGENT", projectType: "AGENCY" },
+    });
   };
 
   return (

@@ -7,7 +7,6 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
-    "@alisamadiillc/agency-api": "^0.1.3",
     "@base-ui/react": "^1.4.1",
     "@hookform/resolvers": "^5.2.2",
     "@react-pdf/renderer": "^4.3.2",

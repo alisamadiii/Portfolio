@@ -5,21 +5,18 @@ import { renderEmail, renderText } from "./utils";
 
 let agencyClient: AgencyClient | null = null;
 
-function getAgencyClient() {
+const getAgencyClient = () => {
   if (!agencyClient) {
-    const apiKey =
-      process.env.NEXT_PUBLIC_AGENCY_API_KEY ?? process.env.AGENCY_API_KEY;
+    const apiKey = process.env.AGENCY_API_KEY;
 
     if (!apiKey) {
-      throw new Error(
-        "Missing NEXT_PUBLIC_AGENCY_API_KEY in environment variables"
-      );
+      throw new Error("Missing AGENCY_API_KEY in environment variables");
     }
 
     agencyClient = new AgencyClient(apiKey);
   }
   return agencyClient;
-}
+};
 
 type SendOptions = {
   from?: string;

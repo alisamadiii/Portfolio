@@ -12,10 +12,15 @@ import {
   AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { buttonVariants } from "@workspace/ui/components/button";
-import { Field, FieldContent, FieldError, FieldLabel } from "@workspace/ui/components/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import { agency } from "@workspace/ui/lib/agency";
+import { useUpload } from "@workspace/ui/hooks/use-upload";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -30,6 +35,7 @@ export const PersonalInformation = () => {
 
   const { id } = useParams<{ id: string }>();
   const trpc = useTRPC();
+  const { upload } = useUpload();
   const { data: user } = useQuery(
     trpc.users.get.queryOptions(id, {
       enabled: !!id,
@@ -91,22 +97,14 @@ export const PersonalInformation = () => {
               onChange={async (e) => {
                 if (e.target.files?.[0]) {
                   setNewAvatar(e.target.files[0]);
-                  const { data, error } = await agency().uploads.upload(
-                    e.target.files[0],
-                    {
-                      path: "users",
-                      filename: id,
-                      naming: "filename",
-                      overwrite: true,
-                    }
-                  );
-                  if (error) {
-                    toast.error("Failed to upload avatar", {
-                      description: error.message,
-                    });
-                    return;
-                  }
-                  updateUser.mutate({ id, image: data.publicUrl });
+                  const result = await upload(e.target.files[0], {
+                    path: "users",
+                    filename: id,
+                    naming: "filename",
+                    overwrite: true,
+                  });
+                  if (!result) return;
+                  updateUser.mutate({ id, image: result.publicUrl });
                 }
               }}
               className="sr-only"
@@ -135,7 +133,9 @@ export const PersonalInformation = () => {
                   aria-invalid={fieldState.invalid}
                 />
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />

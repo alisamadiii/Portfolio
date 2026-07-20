@@ -38,8 +38,9 @@ import {
 } from "@workspace/ui/components/input-group";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { agency } from "@workspace/ui/lib/agency";
 import { cn } from "@workspace/ui/lib/utils";
+
+import { useTRPC } from "@workspace/trpc/client";
 
 import { Content } from "@/components/content-admin";
 
@@ -55,8 +56,12 @@ export default function AdminMediaPage() {
 
 const UploadSection = () => {
   const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  const getPresignedUrl = useMutation(trpc.uploads.presign.mutationOptions());
   const [uploads, setUploads] = useState<UploadItem[]>([]);
 
+  // This section tracks several concurrent uploads at once, so it drives
+  // presign + PUT directly instead of using the single-file useUpload hook.
   const uploadFile = useCallback(
     async (file: File) => {
       const id = crypto.randomUUID();
@@ -67,15 +72,12 @@ const UploadSection = () => {
       ]);
 
       try {
-        const { data: presign, error } = await agency().uploads.presign({
+        const presign = await getPresignedUrl.mutateAsync({
           filename: file.name,
           contentType,
           contentLength: file.size,
           naming: "uuid-filename",
         });
-        if (error || !presign) {
-          throw new Error(error?.message ?? "Failed to get upload URL");
-        }
 
         await axios.put(presign.uploadUrl, file, {
           headers: presign.headers,
@@ -95,7 +97,7 @@ const UploadSection = () => {
           )
         );
 
-        queryClient.invalidateQueries({ queryKey: ["media"] });
+        queryClient.invalidateQueries(trpc.uploads.list.pathFilter());
       } catch (error) {
         setUploads((prev) =>
           prev.map((u) => (u.id === id ? { ...u, status: "error" } : u))
@@ -107,7 +109,7 @@ const UploadSection = () => {
         );
       }
     },
-    [queryClient]
+    [queryClient, trpc, getPresignedUrl]
   );
 
   // Paste to upload
@@ -228,47 +230,42 @@ const UploadRow = ({ item }: { item: UploadItem }) => {
 
 const BrowseSection = () => {
   const queryClient = useQueryClient();
+  const trpc = useTRPC();
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const currentCursor = cursorStack.at(-1);
 
   const { data, isPending, error } = useQuery({
-    queryKey: ["media", search, currentCursor],
-    queryFn: async () => {
-      const { data, error } = await agency().uploads.list({
-        prefix: search || undefined,
-        cursor: currentCursor,
-      });
-      if (error) throw new Error(error.message);
-      return {
-        files: data.objects
-          .filter((o) => !o.key.endsWith("/"))
-          .map((o) => ({
-            key: o.key,
-            size: o.size,
-            lastModified: o.lastModified,
-            publicUrl: o.url,
-          })),
-        nextCursor: data.nextCursor,
-      };
-    },
+    ...trpc.uploads.list.queryOptions({
+      prefix: search || undefined,
+      cursor: currentCursor,
+    }),
+    select: (data) => ({
+      files: data.objects
+        .filter((o) => !o.key.endsWith("/"))
+        .map((o) => ({
+          key: o.key,
+          size: o.size,
+          lastModified: o.lastModified,
+          publicUrl: o.url,
+        })),
+      nextCursor: data.nextCursor,
+    }),
   });
 
-  const deleteFile = useMutation({
-    mutationFn: async (key: string) => {
-      const { error } = await agency().uploads.delete({ key });
-      if (error) throw new Error(error.message);
-    },
-    onSuccess: () => {
-      if (data?.files.length === 1 && cursorStack.length > 0) {
-        setCursorStack((prev) => prev.slice(0, -1));
-      }
-      queryClient.invalidateQueries({ queryKey: ["media"] });
-      toast.success("File deleted");
-    },
-    onError: () => toast.error("Failed to delete file"),
-  });
+  const deleteFile = useMutation(
+    trpc.uploads.delete.mutationOptions({
+      onSuccess: () => {
+        if (data?.files.length === 1 && cursorStack.length > 0) {
+          setCursorStack((prev) => prev.slice(0, -1));
+        }
+        queryClient.invalidateQueries(trpc.uploads.list.pathFilter());
+        toast.success("File deleted");
+      },
+      onError: () => toast.error("Failed to delete file"),
+    })
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,9 +335,9 @@ const BrowseSection = () => {
               <FileRow
                 key={file.key}
                 file={file}
-                onDelete={() => deleteFile.mutate(file.key)}
+                onDelete={() => deleteFile.mutate({ key: file.key })}
                 isDeleting={
-                  deleteFile.isPending && deleteFile.variables === file.key
+                  deleteFile.isPending && deleteFile.variables?.key === file.key
                 }
               />
             ))}

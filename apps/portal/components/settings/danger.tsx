@@ -24,31 +24,16 @@ import {
 import { Spinner } from "@workspace/ui/components/spinner";
 import { Textarea } from "@workspace/ui/components/textarea";
 
-import { agency } from "@workspace/ui/lib/agency";
-
+import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 export const DangerSettings = () => {
   const [comment, setComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const user = useCurrentUser();
+  const trpc = useTRPC();
 
-  const sentNotification = useMutation({
-    mutationFn: async () => {
-      const email = user.data?.user?.email;
-      if (!email) throw new Error("You must be signed in to request deletion");
-
-      const { error } = await agency().emails.sendContact({
-        name: user.data?.user?.name || email,
-        email,
-        subject: "🔴 Account Deletion Request",
-        message: comment,
-        source: "Portal — Account Deletion",
-        metadata: { priority: "URGENT", projectType: "PORTFOLIO" },
-      });
-      if (error) throw new Error(error.message);
-    },
-  });
+  const sentNotification = useMutation(trpc.contact.send.mutationOptions());
 
   if (user.isPending) {
     return (
@@ -108,13 +93,17 @@ export const DangerSettings = () => {
         </CardContent>
         <CardFooter className="border-destructive/15 bg-destructive/4 flex items-center justify-end border-t px-5.5 py-3.5">
           <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-            <AlertDialogTrigger render={<Button
-                variant="destructive"
-                className="bg-status-danger-bg text-destructive hover:bg-status-danger-bg/70 rounded-full px-6"
-                disabled={sentNotification.isPending}
-                size="lg"
-              />}>
-                Request Account Deletion
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="destructive"
+                  className="bg-status-danger-bg text-destructive hover:bg-status-danger-bg/70 rounded-full px-6"
+                  disabled={sentNotification.isPending}
+                  size="lg"
+                />
+              }
+            >
+              Request Account Deletion
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader className="mb-4">
@@ -126,27 +115,44 @@ export const DangerSettings = () => {
                 onChange={(e) => setComment(e.target.value)}
               />
               <AlertDialogFooter className="grid grid-cols-2 gap-2">
-                <AlertDialogCancel render={<Button
-                    variant="outline"
-                    disabled={sentNotification.isPending}
-                    size="lg"
-                  />}>
-                    Cancel
+                <AlertDialogCancel
+                  render={
+                    <Button
+                      variant="outline"
+                      disabled={sentNotification.isPending}
+                      size="lg"
+                    />
+                  }
+                >
+                  Cancel
                 </AlertDialogCancel>
                 <Button
                   variant="destructive"
                   onClick={() =>
-                    sentNotification.mutate(undefined, {
-                      onSuccess: () => {
-                        setIsOpen(false);
-                        toast.success(
-                          "Account deletion request sent successfully. We will review your request and get back to you as soon as possible through your email address."
-                        );
+                    sentNotification.mutate(
+                      {
+                        subject: "🔴 Account Deletion Request",
+                        // The reason field is optional, but the router requires
+                        // a message — fall back to an explicit placeholder.
+                        message: comment.trim() || "No reason provided.",
+                        source: "Portal — Account Deletion",
+                        metadata: {
+                          priority: "URGENT",
+                          projectType: "PORTFOLIO",
+                        },
                       },
-                      onError: (error) => {
-                        toast.error(error.message);
-                      },
-                    })
+                      {
+                        onSuccess: () => {
+                          setIsOpen(false);
+                          toast.success(
+                            "Account deletion request sent successfully. We will review your request and get back to you as soon as possible through your email address."
+                          );
+                        },
+                        onError: (error) => {
+                          toast.error(error.message);
+                        },
+                      }
+                    )
                   }
                   isLoading={sentNotification.isPending}
                   size="lg"
