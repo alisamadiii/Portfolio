@@ -202,7 +202,10 @@ const useResetPassword = () => {
  * Custom hook for email verification using OTP
  * @returns UseMutationResult for email verification operation
  */
-const useVerifyEmail = (options?: { onSuccess?: () => void }) => {
+const useVerifyEmail = (options?: {
+  email?: string;
+  onSuccess?: () => void;
+}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: user } = useCurrentUser();
@@ -211,8 +214,10 @@ const useVerifyEmail = (options?: { onSuccess?: () => void }) => {
 
   return useMutation({
     mutationFn: async (otp: string) => {
+      // During signup there is no session yet, so the caller passes the address
+      // it collected. Signed-in callers fall back to the session.
       const { data, error } = await authClient.emailOtp.verifyEmail({
-        email: user?.user?.email || "",
+        email: options?.email || user?.user?.email || "",
         otp: otp,
       });
 
@@ -229,6 +234,13 @@ const useVerifyEmail = (options?: { onSuccess?: () => void }) => {
           ...old,
           user: { ...old.user, emailVerified: true },
         };
+      });
+
+      // On the signup path the cached entry is an UNAUTHORIZED error from
+      // before the account existed, so the optimistic update above no-ops.
+      // Refetch so the app picks up the now-valid session.
+      queryClient.invalidateQueries({
+        queryKey: trpc.users.getCurrent.queryKey(),
       });
 
       if (options?.onSuccess) {
@@ -252,12 +264,14 @@ const useVerifyEmail = (options?: { onSuccess?: () => void }) => {
  * Custom hook for resending email verification OTP
  * @returns UseMutationResult for resending email verification operation
  */
-const useResendEmailVerification = () => {
+const useResendEmailVerification = (email?: string) => {
   const { data: currentUser } = useCurrentUser();
   return useMutation({
     mutationFn: async () => {
+      // Same as useVerifyEmail: no session during signup, so prefer the
+      // address the caller already has.
       const { data, error } = await authClient.emailOtp.sendVerificationOtp({
-        email: currentUser?.user?.email || "",
+        email: email || currentUser?.user?.email || "",
         type: "email-verification",
       });
 

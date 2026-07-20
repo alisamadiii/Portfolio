@@ -45,8 +45,12 @@ export const VerifyEmailDialog = ({
     setEmail: setEmailParams,
   } = useNugsVerifyEmail();
 
-  const resendEmailVerification = useResendEmailVerification();
-  const verifyEmail = useVerifyEmail({ onSuccess });
+  // The signup page mounts this with an empty prop and puts the address in the
+  // `?email=` query state instead, since there is no session to read it from.
+  const targetEmail = email || emailParams || "";
+
+  const resendEmailVerification = useResendEmailVerification(targetEmail);
+  const verifyEmail = useVerifyEmail({ email: targetEmail, onSuccess });
 
   return (
     <AlertDialog
@@ -62,7 +66,7 @@ export const VerifyEmailDialog = ({
           <AlertDialogTitle>Verify Email</AlertDialogTitle>
           <AlertDialogDescription>
             We&apos;ve sent you an email to verify your email address. <br />
-            <span className="text-primary">{email || emailParams}</span>
+            <span className="text-primary">{targetEmail}</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="my-4 flex justify-center">

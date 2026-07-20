@@ -28,8 +28,9 @@ import { Input } from "@workspace/ui/components/input";
 import { useResendEmailVerification } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";
 
-import { VerifyEmailDialog } from "@/components/auth/verify-email-dialog";
 import { useNugsVerifyEmail } from "@/hooks/use-nugs";
+
+import { VerifyEmailDialog } from "@/components/auth/verify-email-dialog";
 
 const schema = z.object({
   name: z.string().min(1, {
@@ -43,7 +44,7 @@ const schema = z.object({
 export const EmailName = () => {
   const { data: user } = useCurrentUser();
   const updateUser = useUpdateUser();
-  const verifyEmail = useResendEmailVerification();
+  const verifyEmail = useResendEmailVerification(user?.user.email);
   const { setIsOpen, setEmail } = useNugsVerifyEmail();
 
   const form = useForm<z.infer<typeof schema>>({
@@ -94,12 +95,11 @@ export const EmailName = () => {
                   Name
                 </FieldLabel>
                 <FieldContent>
-                  <Input
-                    {...field}
-                    aria-invalid={fieldState.invalid}
-                  />
+                  <Input {...field} aria-invalid={fieldState.invalid} />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
@@ -120,7 +120,9 @@ export const EmailName = () => {
                     aria-invalid={fieldState.invalid}
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
