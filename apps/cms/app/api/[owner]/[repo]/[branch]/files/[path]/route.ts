@@ -8,7 +8,7 @@ import { deepMap, generateZodSchema, getSchemaByName, sanitizeObject } from "@/l
 import { getConfig, updateConfig } from "@/lib/config-store";
 import { getBasePath, rebaseConfigObject, resolveConfigFilePath } from "@/lib/repo-settings";
 import { getFileExtension, getFileName, normalizePath, serializedTypes, getParentPath } from "@/lib/utils/file";
-import { assertGithubIdentity } from "@/lib/authz-shared";
+import { assertAdminUser } from "@/lib/authz-shared";
 import { getToken } from "@/lib/token";
 import { updateFileCache } from "@/lib/github-cache-file";
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
@@ -185,7 +185,7 @@ export async function POST(
         }
         break;
       case "settings":
-        assertGithubIdentity(user, "Only GitHub users can manage settings.");
+        assertAdminUser(user, "Only admins can manage settings.");
         if (normalizedPath !== ".pages.yml") throw new Error(`Invalid path "${params.path}" for settings.`);
         if (!data.sha && !isContentOperationAllowed("create", { scope: "settings" })) {
           throw createHttpError(`Creating the settings file isn't allowed.`, 403);
@@ -201,16 +201,13 @@ export async function POST(
       configObject: config?.object,
       identityOverride: schemaCommitIdentity,
     });
-    const committer = (
-      commitIdentity === "user" &&
-      user.email
-    )
-      ? {
-          name: user.name?.trim() || user.email,
-          email: user.email,
-        }
+    // Commits are always authored by the org PAT owner; when the config asks
+    // for user identity, the editor's name goes into the commit message instead
+    // (stamping user emails as author can block Vercel deploys).
+    const editorName = commitIdentity === "user"
+      ? user.name?.trim() || user.email
       : undefined;
-    
+
     // Settings live at `{basePath}/.pages.yml`; content/media paths are already
     // physical (rebased via the config schema), so they write as-is.
     const writePath = data.type === "settings"
@@ -231,7 +228,7 @@ export async function POST(
         contentName: data.name,
         user: user.email || user.name || String(user.id || ""),
         onConflict,
-        committer,
+        editorName,
       }
     );
   
@@ -315,13 +312,13 @@ const githubSaveFile = async (
     contentName?: string;
     user?: string;
     onConflict?: "rename" | "error";
-    committer?: { name: string; email: string };
+    editorName?: string;
   },
 ) => {
   // We disable retries for 409 errors as it means the file has changed (conflict on SHA)
   const octokit = createOctokitInstance(token, { retry: { doNotRetry: [409] } });
   
-  const message = resolveCommitMessage({
+  const resolvedMessage = resolveCommitMessage({
     configObject: options?.configObject,
     templatesOverride: options?.templatesOverride,
     action: sha ? "update" : "create",
@@ -333,10 +330,13 @@ const githubSaveFile = async (
       path,
       contentName: options?.contentName,
       user: options?.user,
-      userName: options?.committer?.name,
-      userEmail: options?.committer?.email,
+      userName: options?.editorName,
     }),
   });
+  // Appended after the length cap so the editor's name is never truncated away.
+  const message = options?.editorName
+    ? `${resolvedMessage} — by ${options.editorName}`
+    : resolvedMessage;
 
   try {
     // First attempt: try with original path
@@ -348,7 +348,6 @@ const githubSaveFile = async (
       content: contentBase64,
       branch,
       sha: sha || undefined,
-      committer: options?.committer,
     });
 
     if (response.data.content && response.data.commit) {
@@ -417,7 +416,7 @@ const githubSaveFile = async (
           ? `${filename}-${maxNumber + i}.${extension}`
           : `${filename}-${maxNumber + i}`;
         const newPath = `${parentDir ? parentDir + '/' : ''}${candidateFilename}`;
-        const fallbackMessage = resolveCommitMessage({
+        const resolvedFallbackMessage = resolveCommitMessage({
           configObject: options?.configObject,
           templatesOverride: options?.templatesOverride,
           action: "create",
@@ -429,10 +428,12 @@ const githubSaveFile = async (
             path: newPath,
             contentName: options?.contentName,
             user: options?.user,
-            userName: options?.committer?.name,
-            userEmail: options?.committer?.email,
+            userName: options?.editorName,
           }),
         });
+        const fallbackMessage = options?.editorName
+          ? `${resolvedFallbackMessage} — by ${options.editorName}`
+          : resolvedFallbackMessage;
         try {
           const response = await octokit.rest.repos.createOrUpdateFileContents({
             owner,
@@ -441,7 +442,6 @@ const githubSaveFile = async (
             message: fallbackMessage,
             content: contentBase64,
             branch,
-            committer: options?.committer,
           });
 
           if (response.data.content && response.data.commit) {
@@ -534,16 +534,10 @@ export async function DELETE(
       configObject: config.object,
       identityOverride: schemaCommitIdentity,
     });
-    const committer = (
-      commitIdentity === "user" &&
-      user.email
-    )
-      ? {
-          name: user.name?.trim() || user.email,
-          email: user.email,
-        }
+    const editorName = commitIdentity === "user"
+      ? user.name?.trim() || user.email
       : undefined;
-    
+
     const octokit = createOctokitInstance(token);
     const response = await octokit.rest.repos.deleteFile({
       owner: params.owner,
@@ -551,23 +545,24 @@ export async function DELETE(
       branch: params.branch,
       path: normalizedPath,
       sha: sha,
-      message: resolveCommitMessage({
-        configObject: config.object,
-        templatesOverride: schemaCommitTemplates,
-        action: "delete",
-        tokens: buildCommitTokens({
+      message: (() => {
+        const resolvedMessage = resolveCommitMessage({
+          configObject: config.object,
+          templatesOverride: schemaCommitTemplates,
           action: "delete",
-          owner: params.owner,
-          repo: params.repo,
-          branch: params.branch,
-          path: normalizedPath,
-          contentName: name || undefined,
-          user: user.email || user.name || String(user.id || ""),
-          userName: committer?.name,
-          userEmail: committer?.email,
-        }),
-      }),
-      committer,
+          tokens: buildCommitTokens({
+            action: "delete",
+            owner: params.owner,
+            repo: params.repo,
+            branch: params.branch,
+            path: normalizedPath,
+            contentName: name || undefined,
+            user: user.email || user.name || String(user.id || ""),
+            userName: editorName,
+          }),
+        });
+        return editorName ? `${resolvedMessage} — by ${editorName}` : resolvedMessage;
+      })(),
     });
 
     // Update cache after successful deletion

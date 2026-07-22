@@ -1,26 +1,23 @@
 import { after } from "next/server";
 import crypto from "crypto";
-import { handleActionWebhookEvent } from "@/lib/github-webhook-actions";
-import { handleInstallationWebhookEvent } from "@/lib/github-webhook-installation";
+import { handleRepositoryWebhookEvent } from "@/lib/github-webhook-repository";
 import { handlePushWebhookEvent } from "@/lib/github-webhook-push";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * Handles GitHub webhooks:
- * - Maintains tables related to GitHub installations (e.g. collaborators,
- *   installation tokens)
- * - Maintains GitHub cache (both files and permissions)
- * 
+ * Handles GitHub org webhooks:
+ * - Maintains collaborator rows on repo rename/delete/transfer
+ * - Maintains GitHub file cache on push and branch deletion
+ *
  * POST /api/webhook/github
- * 
- * Requires GitHub App webhook secret and signature.
+ *
+ * Requires the org webhook secret and signature.
  */
 const processWebhookEvent = async (event: string | null, data: any) => {
-  if (await handleInstallationWebhookEvent(event, data)) return;
+  if (await handleRepositoryWebhookEvent(event, data)) return;
   if (await handlePushWebhookEvent(event, data)) return;
-  if (await handleActionWebhookEvent(event, data)) return;
 };
 
 export async function POST(request: Request) {
@@ -29,9 +26,9 @@ export async function POST(request: Request) {
     const event = request.headers.get("X-GitHub-Event");
     const body = await request.text();
 
-    const secret = process.env.GITHUB_APP_WEBHOOK_SECRET;
+    const secret = process.env.GITHUB_WEBHOOK_SECRET;
     if (!secret) {
-      console.error("Missing GITHUB_APP_WEBHOOK_SECRET");
+      console.error("Missing GITHUB_WEBHOOK_SECRET");
       return Response.json(null, { status: 500 });
     }
 

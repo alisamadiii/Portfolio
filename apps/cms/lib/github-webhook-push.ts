@@ -5,8 +5,8 @@ import { configVersion, normalizeConfig, parseConfig } from "@/lib/config";
 import { saveConfig, updateConfig } from "@/lib/config-store";
 import { clearFileCache, updateMultipleFilesCache } from "@/lib/github-cache-file";
 import { deleteCacheFileMeta, upsertCacheFileMeta } from "@/lib/github-cache-meta";
-import { clearScopedFileCache } from "@/lib/github-webhook-installation";
-import { getInstallationToken } from "@/lib/token";
+import { clearScopedFileCache } from "@/lib/github-webhook-repository";
+import { getPatToken } from "@/lib/token";
 import { getBasePath, rebaseConfigObject, resolveConfigFilePath } from "@/lib/repo-settings";
 import { normalizePath } from "@/lib/utils/file";
 import { createOctokitInstance } from "@/lib/utils/octokit";
@@ -139,7 +139,7 @@ const handlePushWebhookEvent = async (event: string | null, data: any) => {
     return true;
   }
 
-  const installationToken = await getInstallationToken(pushOwner, pushRepo);
+  const installationToken = await getPatToken();
 
   await updateMultipleFilesCache(
     pushOwner,

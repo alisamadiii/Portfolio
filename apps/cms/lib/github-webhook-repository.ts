@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import { cacheFileTable, collaboratorTable, githubInstallationTokenTable } from "@/db/schema";
+import { cacheFileTable, collaboratorTable } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
-import { clearFileCache, updateFileCacheOwner, updateFileCacheRepository } from "@/lib/github-cache-file";
+import { clearFileCache, updateFileCacheRepository } from "@/lib/github-cache-file";
 import { deleteCacheFileMeta, deleteCacheFileMetaByPaths } from "@/lib/github-cache-meta";
 
 const chunkArray = <T,>(items: T[], size = 200): T[][] => {
@@ -63,57 +63,8 @@ const clearScopedFileCache = async (
   }
 };
 
-const handleInstallationWebhookEvent = async (event: string | null, data: any) => {
+const handleRepositoryWebhookEvent = async (event: string | null, data: any) => {
   switch (event) {
-    case "installation":
-      if (data.action !== "deleted") return false;
-
-      {
-        const accountLogin = data.installation?.account?.login;
-        if (!accountLogin) {
-          console.error("Missing account login in installation deleted event", data.installation);
-          return true;
-        }
-
-        await Promise.all([
-          db.delete(collaboratorTable).where(
-            eq(collaboratorTable.installationId, data.installation.id),
-          ),
-          db.delete(githubInstallationTokenTable).where(
-            eq(githubInstallationTokenTable.installationId, data.installation.id),
-          ),
-          clearFileCache(accountLogin),
-          deleteCacheFileMeta(accountLogin),
-        ]);
-        return true;
-      }
-
-    case "installation_repositories":
-      if (data.action !== "removed") return false;
-
-      {
-        const reposIdRemoved = data.repositories_removed?.map((repo: any) => repo.id) || [];
-        if (reposIdRemoved.length === 0) return true;
-
-        await db.delete(collaboratorTable).where(
-          inArray(collaboratorTable.repoId, reposIdRemoved),
-        );
-
-        await Promise.all(
-          (data.repositories_removed || []).map((repo: any) => {
-            const [owner, repoName] = (repo.full_name || "").split("/");
-            if (owner && repoName) {
-              return Promise.all([
-                clearFileCache(owner, repoName),
-                deleteCacheFileMeta(owner, repoName),
-              ]);
-            }
-            return Promise.resolve();
-          }),
-        );
-        return true;
-      }
-
     case "repository": {
       const owner = data.repository?.owner?.login;
       const repoName = data.repository?.name;
@@ -161,30 +112,6 @@ const handleInstallationWebhookEvent = async (event: string | null, data: any) =
       return true;
     }
 
-    case "installation_target":
-      if (data.action !== "renamed") return false;
-
-      {
-        const oldOwner = data.changes?.login?.from;
-        const newOwner = data.account?.login;
-        const accountId = data.account?.id;
-
-        if (!oldOwner || !newOwner || !accountId) {
-          console.error("Missing account rename data in webhook", { oldOwner, newOwner, accountId });
-          return true;
-        }
-
-        await Promise.all([
-          db.update(collaboratorTable).set({
-            owner: newOwner,
-          }).where(
-            eq(collaboratorTable.ownerId, accountId),
-          ),
-          updateFileCacheOwner(oldOwner, newOwner),
-        ]);
-        return true;
-      }
-
     case "delete":
       if (data.ref_type !== "branch") return false;
 
@@ -208,4 +135,4 @@ const handleInstallationWebhookEvent = async (event: string | null, data: any) =
   }
 };
 
-export { clearScopedFileCache, handleInstallationWebhookEvent };
+export { clearScopedFileCache, handleRepositoryWebhookEvent };

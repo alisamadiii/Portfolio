@@ -5,7 +5,7 @@ import { configTable } from "@/db/schema";
 import { getBasePath, setBasePath } from "@/lib/repo-settings";
 import { clearFileCache } from "@/lib/github-cache-file";
 import { deleteCacheFileMeta } from "@/lib/github-cache-meta";
-import { assertGithubIdentity } from "@/lib/authz-shared";
+import { assertAdminUser } from "@/lib/authz-shared";
 import { getToken } from "@/lib/token";
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
 import { requireApiUserSession } from "@/lib/session-server";
@@ -30,7 +30,7 @@ export async function GET(
     if ("response" in sessionResult) return sessionResult.response;
     const user = sessionResult.user;
 
-    assertGithubIdentity(user, "Only GitHub users can manage the base path.");
+    assertAdminUser(user, "Only admins can manage the base path.");
 
     const { token } = await getToken(user, params.owner, params.repo, true);
     if (!token) throw createHttpError("Token not found", 401);
@@ -57,7 +57,7 @@ export async function PUT(
     if ("response" in sessionResult) return sessionResult.response;
     const user = sessionResult.user;
 
-    assertGithubIdentity(user, "Only GitHub users can manage the base path.");
+    assertAdminUser(user, "Only admins can manage the base path.");
 
     const { token } = await getToken(user, params.owner, params.repo, true);
     if (!token) throw createHttpError("Token not found", 401);

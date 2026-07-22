@@ -1,12 +1,11 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { cacheFileTable, cachePermissionTable, configTable } from "@/db/schema";
-import { requireGithubRepoWriteAccess } from "@/lib/authz-server";
+import { cacheFileTable, configTable } from "@/db/schema";
+import { requireAdminRepoAccess } from "@/lib/authz-server";
 import {
   clearFileCache,
   ensureFileCacheFreshness,
 } from "@/lib/github-cache-file";
-import { clearPermissionCache } from "@/lib/github-cache-permissions";
 import { deleteCacheFileMeta, getCacheFileMeta, listCacheFileMeta, upsertCacheFileMeta } from "@/lib/github-cache-meta";
 import { getConfig } from "@/lib/config-store";
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
@@ -23,11 +22,11 @@ export async function GET(
     const sessionResult = await requireApiUserSession();
     if ("response" in sessionResult) return sessionResult.response;
 
-    const { token } = await requireGithubRepoWriteAccess(
+    const { token } = await requireAdminRepoAccess(
       sessionResult.user,
       params.owner,
       params.repo,
-      "Only GitHub users can view cache status.",
+      "Only admins can view cache status.",
     );
 
     const config = await getConfig(
@@ -58,15 +57,6 @@ export async function GET(
           eq(cacheFileTable.branch, params.branch),
         ),
       );
-    const permissionCountResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(cachePermissionTable)
-      .where(
-        and(
-          eq(cachePermissionTable.owner, params.owner.toLowerCase()),
-          eq(cachePermissionTable.repo, params.repo.toLowerCase()),
-        ),
-      );
     const cachedConfig = await db.query.configTable.findFirst({
       where: and(
         sql`lower(${configTable.owner}) = lower(${params.owner})`,
@@ -82,7 +72,6 @@ export async function GET(
         fileMeta: meta ?? null,
         folderMeta,
         fileCount: Number(fileCountResult[0]?.count || 0),
-        permissionCount: Number(permissionCountResult[0]?.count || 0),
         config: cachedConfig
           ? {
               sha: cachedConfig.sha,
@@ -111,11 +100,11 @@ export async function POST(
     const sessionResult = await requireApiUserSession();
     if ("response" in sessionResult) return sessionResult.response;
 
-    const { token } = await requireGithubRepoWriteAccess(
+    const { token } = await requireAdminRepoAccess(
       sessionResult.user,
       params.owner,
       params.repo,
-      "Only GitHub users can manage cache.",
+      "Only admins can manage cache.",
     );
 
     const config = await getConfig(
@@ -152,12 +141,6 @@ export async function POST(
         return Response.json({
           status: "success",
           message: "File cache cleared.",
-        });
-      case "clear-permission-cache":
-        await clearPermissionCache(params.owner, params.repo);
-        return Response.json({
-          status: "success",
-          message: "Permission cache cleared.",
         });
       case "refresh-config":
         await getConfig(
@@ -196,7 +179,6 @@ export async function POST(
           status: "ok",
           error: null,
         });
-        await clearPermissionCache(params.owner, params.repo);
         await db
           .delete(configTable)
           .where(

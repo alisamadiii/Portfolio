@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { DocumentTitle, formatRepoBranchTitle } from "@/components/document-title";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
-import { hasGithubIdentity } from "@/lib/authz-shared";
+import { isAdminUser } from "@/lib/authz-shared";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { BasePath } from "@/components/settings/base-path";
 import {
@@ -24,7 +24,7 @@ export default function Page() {
   );
   useRepoHeader({ header });
 
-  if (!hasGithubIdentity(user)) {
+  if (!isAdminUser(user)) {
     return (
       <Empty className="absolute inset-0 border-0 rounded-none">
         <EmptyHeader>

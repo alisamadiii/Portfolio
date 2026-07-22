@@ -4,9 +4,6 @@ import { getToken } from "@/lib/token";
 import { RepoProvider } from "@/contexts/repo-context";
 import { getServerSession } from "@/lib/session-server";
 import { getRepoSnapshot } from "@/lib/github-cache-file";
-import { GithubAuthExpired } from "@/components/github-auth-expired";
-import { isGithubAuthError } from "@/lib/github-auth";
-import { invalidateSessionForGithubAuthError } from "@/lib/github-auth-server";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -58,11 +55,6 @@ export default async function Layout({
       </RepoProvider>
     );
   } catch (error: any) {
-    if (isGithubAuthError(error)) {
-      await invalidateSessionForGithubAuthError(session);
-      return <GithubAuthExpired />;
-    }
-
     switch (error.status) {
       case 404:
         // TODO: adjust as it may be the permissions as insufficient (suggest installing the app)

@@ -5,23 +5,19 @@ import { useDebounce } from "use-debounce";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
-import { getGithubInstallationUrl } from "@/lib/github-app";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronsUpDown, LockKeyhole, Search, Settings } from "lucide-react";
+import { ChevronsUpDown, LockKeyhole, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { hasGithubIdentity } from "@/lib/authz-shared";
 import { requireApiSuccess } from "@/lib/api-client";
 
 export function RepoSelect({
@@ -30,7 +26,6 @@ export function RepoSelect({
   onAccountSelect?: (account: any) => void
 }) {
   const { user } = useUser();
-  const isGithubUser = hasGithubIdentity(user);
 
   const accounts = useMemo(() => {
     if (!user) return [];
@@ -56,23 +51,13 @@ export function RepoSelect({
     return results;
   }, [results, keyword, selectedAccount]);
 
-  const selectedAccountInstallationUrl = useMemo(() => {
-    if (!selectedAccount) return null;
-    return getGithubInstallationUrl(selectedAccount);
-  }, [selectedAccount]);
-
-  const displayedKeyword = useMemo(() => {
-    if (selectedAccount?.repositorySelection === "all") return debouncedKeyword.trim();
-    return keyword.trim();
-  }, [debouncedKeyword, keyword, selectedAccount]);
-
   useEffect(() => {
     const fetchResults = async () => {
       if (!selectedAccount) return;
-  
+
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
-  
+
       setIsLoading(true);
       try {
         const params = new URLSearchParams({
@@ -80,7 +65,7 @@ export function RepoSelect({
           keyword: debouncedKeyword,
           repository_selection: selectedAccount.repositorySelection
         });
-  
+
         const response = await fetch(
           `/api/repos/${selectedAccount.login}?${params.toString()}`,
           { signal: abortControllerRef.current.signal }
@@ -89,7 +74,7 @@ export function RepoSelect({
           response,
           "Failed to fetch repos",
         );
-  
+
         setResults(data.data);
       } catch (error: any) {
         if (error.name !== "AbortError") {
@@ -125,58 +110,39 @@ export function RepoSelect({
   return (
     <div className="flex flex-col gap-y-4">
       <div className="flex w-full max-w items-center gap-x-2">
-        <ButtonGroup>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <img className="size-6 rounded" src={`https://github.com/${selectedAccount?.login}.png`} alt={`${selectedAccount?.login}'s avatar`}/>
-                <span className="mr-2">{selectedAccount?.login}</span>
-                <ChevronsUpDown className="ml-auto h-4 w-4 opacity-50"/>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {accounts.map((account: any) => (
-                <DropdownMenuItem
-                  key={`${account.login}-${account.installationId}`}
-                  onSelect={() => {
-                    setSelectedAccount(account);
-                    if (onAccountSelect) onAccountSelect(account);
-                  }}
-                >
-                  <img className="size-6 rounded" src={`https://github.com/${account.login}.png`} alt={`${account.login}'s avatar`}/>
-                  <span className="truncate">{account.login}</span>
-                </DropdownMenuItem>
-              ))}
-              {isGithubUser &&
-                <>
-                  <DropdownMenuSeparator/>
-                  <DropdownMenuItem asChild>
-                    <Link href="/api/github-app/install">Manage GitHub accounts</Link>
+        {accounts.length > 1 ? (
+          <ButtonGroup>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <img className="size-6 rounded" src={`https://github.com/${selectedAccount?.login}.png`} alt={`${selectedAccount?.login}'s avatar`}/>
+                  <span className="mr-2">{selectedAccount?.login}</span>
+                  <ChevronsUpDown className="ml-auto h-4 w-4 opacity-50"/>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {accounts.map((account: any) => (
+                  <DropdownMenuItem
+                    key={account.login}
+                    onSelect={() => {
+                      setSelectedAccount(account);
+                      if (onAccountSelect) onAccountSelect(account);
+                    }}
+                  >
+                    <img className="size-6 rounded" src={`https://github.com/${account.login}.png`} alt={`${account.login}'s avatar`}/>
+                    <span className="truncate">{account.login}</span>
                   </DropdownMenuItem>
-                </>
-              }
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {selectedAccountInstallationUrl && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "icon" })
-                  )}
-                  href={selectedAccountInstallationUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Manage ${selectedAccount.login} installation settings on GitHub`}
-                >
-                  <Settings />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={6}>Manage GitHub App</TooltipContent>
-            </Tooltip>
-          )}
-        </ButtonGroup>
-        <div className="relative flex-1"> 
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ButtonGroup>
+        ) : selectedAccount ? (
+          <div className="flex items-center gap-x-2 rounded-md border px-3 py-2 text-sm font-medium">
+            <img className="size-6 rounded" src={`https://github.com/${selectedAccount.login}.png`} alt={`${selectedAccount.login}'s avatar`}/>
+            <span>{selectedAccount.login}</span>
+          </div>
+        ) : null}
+        <div className="relative flex-1">
           <Input
             placeholder="Search repositories by name"
             className="pl-9"
@@ -216,18 +182,6 @@ export function RepoSelect({
                   No projects matched your search.
                 </EmptyDescription>
               </EmptyHeader>
-              {selectedAccountInstallationUrl && (
-                <EmptyContent>
-                  <a
-                    href={selectedAccountInstallationUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={buttonVariants({ variant: "outline" })}
-                  >
-                    Manage GitHub App
-                  </a>
-                </EmptyContent>
-              )}
             </Empty>
       }
     </div>

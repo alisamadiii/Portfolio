@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { RepoActionButtons } from "@/components/repo/repo-action-buttons";
 import {
   getParentPath,
   getFileName,
@@ -22,7 +21,6 @@ import {
   sortFiles,
 } from "@/lib/utils/file";
 import { viewComponents } from "@/fields/registry";
-import { getSchemaActions } from "@/lib/actions";
 import {
   getSchemaByName,
   getPrimaryField,
@@ -247,10 +245,6 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const primaryField = useMemo(
     () => getPrimaryField(schema) ?? "name",
-    [schema],
-  );
-  const collectionActions = useMemo(
-    () => getSchemaActions(schema, "collection"),
     [schema],
   );
   const requestedFieldPaths = useMemo(() => {
@@ -926,24 +920,6 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         <div className="min-w-0 truncate">{breadcrumbNode}</div>
         <CollectionHeaderActions
           addEntryHref={addEntryHref}
-          actionNode={
-            collectionActions.length > 0 ? (
-              <RepoActionButtons
-                actions={collectionActions}
-                owner={config.owner}
-                repo={config.repo}
-                refName={config.branch}
-                contextType="collection"
-                contextName={schema.name}
-                contextPath={collectionPath}
-                contextData={{
-                  label: schema.label || schema.name,
-                  rootPath: schema.path,
-                  format: schema.format ?? null,
-                }}
-              />
-            ) : undefined
-          }
           collectionPath={collectionPath}
           name={name}
           showAddEntry={canCreate}
@@ -956,7 +932,6 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     [
       addEntryHref,
       breadcrumbNode,
-      collectionActions,
       collectionPath,
       config.branch,
       config.owner,

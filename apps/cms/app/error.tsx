@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { GithubAuthExpired } from "@/components/github-auth-expired";
-import { isGithubAuthError } from "@/lib/github-auth";
 import {
   Empty,
   EmptyContent,
@@ -23,10 +21,6 @@ export default function Error({
   useEffect(() => {
     console.error(error);
   }, [error]);
-
-  if (isGithubAuthError(error)) {
-    return <GithubAuthExpired />;
-  }
 
   return (
     <Empty className="absolute inset-0 border-0 rounded-none">

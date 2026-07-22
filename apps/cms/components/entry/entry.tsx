@@ -8,7 +8,6 @@ import { useConfig } from "@/contexts/config-context";
 import { parseAndValidateConfig } from "@/lib/config";
 import { resolveContentOperations } from "@/lib/operations";
 import { requireApiSuccess } from "@/lib/api-client";
-import { getSchemaActions } from "@/lib/actions";
 import {
   generateFilename,
   getPrimaryField,
@@ -28,7 +27,6 @@ import { EntryForm } from "./entry-form";
 import { EntryHistoryDropdown } from "./entry-history";
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
-import { RepoActionButtons } from "@/components/repo/repo-action-buttons";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -603,56 +601,7 @@ export function Entry({
   }, [config.branch, config.owner, config.repo, displayTitle, name, path, schema, schemaType]);
   const isCreationBlocked = !path && schemaType === "collection" && !canCreate;
   const showHeaderActions = error !== "Not found" && !isCreationBlocked;
-  const headerActionsNode = useMemo(() => {
-    if (!schema || !path) return null;
-
-    if (schemaType === "file") {
-      const fileActions = getSchemaActions(schema);
-      if (fileActions.length === 0) return null;
-
-      return (
-        <RepoActionButtons
-          actions={fileActions}
-          owner={config.owner}
-          repo={config.repo}
-          refName={config.branch}
-          contextType="file"
-          contextName={schema.name}
-          contextPath={path}
-          contextData={{
-            label: schema.label || schema.name,
-            sha: sha ?? null,
-            content: entry?.contentObject ?? null,
-          }}
-        />
-      );
-    }
-
-    if (schemaType === "collection" && entry) {
-      const entryActions = getSchemaActions(schema, "entry");
-      if (entryActions.length === 0) return null;
-
-      return (
-        <RepoActionButtons
-          actions={entryActions}
-          owner={config.owner}
-          repo={config.repo}
-          refName={config.branch}
-          contextType="entry"
-          contextName={schema.name}
-          contextPath={path}
-          contextData={{
-            label: schema.label || schema.name,
-            entryName: entry.name ?? null,
-            sha: sha ?? null,
-            content: entry.contentObject ?? null,
-          }}
-        />
-      );
-    }
-
-    return null;
-  }, [config.branch, config.owner, config.repo, entry, path, schema, schemaType, sha]);
+  const headerActionsNode = null;
 
   const headerNode = useMemo(() => (
     <div className="flex min-w-0 items-center gap-2">

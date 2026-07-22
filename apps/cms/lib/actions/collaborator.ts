@@ -2,8 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@workspace/auth/auth";
-import { getInstallationRepos, getInstallations } from "@/lib/github-app";
-import { requireGithubRepoWriteAccess } from "@/lib/authz-server";
+import { requireAdminRepoAccess } from "@/lib/authz-server";
 import { InviteEmailTemplate } from "@/components/email/invite";
 import { CollaboratorAddedEmailTemplate } from "@/components/email/collaborator-added";
 import { render } from "@react-email/render";
@@ -27,33 +26,19 @@ const parseInviteEmails = (raw: FormDataEntryValue | null) => {
   return z.array(z.string().email()).safeParse(unique);
 };
 
-const assertRepoInInstallation = async (
-  user: { id: string; githubUsername?: string | null },
+const assertCollaboratorManageAccess = async (
+  user: { id: string; role?: string | null },
   owner: string,
   repo: string
 ) => {
-  const { token, repoAccess } = await requireGithubRepoWriteAccess(
+  const { repoAccess } = await requireAdminRepoAccess(
     user,
     owner,
     repo,
-    "You must be signed in with GitHub to manage collaborators.",
+    "Only admins can manage collaborators.",
   );
-  const installations = await getInstallations(token, [owner]);
-  if (installations.length !== 1) throw new Error(`"${owner}" is not part of your GitHub App installations`);
-  const installationRepos = await getInstallationRepos(token, installations[0].id);
-  const isInstalledForRepo = installationRepos.some((installationRepo) =>
-    installationRepo.id === repoAccess.repoId ||
-    (
-      installationRepo.owner?.login?.toLowerCase() === owner.toLowerCase() &&
-      installationRepo.name?.toLowerCase() === repo.toLowerCase()
-    )
-  );
-  if (!isInstalledForRepo) throw new Error(`"${owner}/${repo}" is not part of your Pages CMS installation.`);
 
-  return {
-    repoAccess,
-    installation: installations[0],
-  };
+  return { repoAccess };
 };
 
 const generateInviteToken = () => {
@@ -116,7 +101,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
       headers: await headers(),
     });
     const user = session?.user;
-		if (!user) throw new Error("You must be signed in with GitHub to invite collaborators.");
+		if (!user) throw new Error("You must be signed in to manage collaborators.");
 
 		// TODO: add support for branches
 		const ownerAndRepoValidation = z.object({
@@ -135,7 +120,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
 		if (!emailsValidation.success || emailsValidation.data.length === 0) throw new Error("Invalid email list");
     const emails = emailsValidation.data;
 
-    const { repoAccess, installation } = await assertRepoInInstallation(user, owner, repo);
+    const { repoAccess } = await assertCollaboratorManageAccess(user, owner, repo);
 
 		const baseUrl = getBaseUrl();
     const repoUrl = new URL(`/${owner}/${repo}`, baseUrl).toString();
@@ -182,8 +167,8 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
               inviteUrl,
               repoName: `${formData.get("owner")}/${formData.get("repo")}`,
               email: normalizedEmail,
-              invitedByName: user.name || user.githubUsername || user.email,
-              invitedByUrl: `https://github.com/${user.githubUsername}`,
+              invitedByName: user.name || user.email,
+              invitedByUrl: baseUrl,
             }),
           );
           await sendEmail({
@@ -203,8 +188,8 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
               email: normalizedEmail,
               repoName: `${formData.get("owner")}/${formData.get("repo")}`,
               repoUrl,
-              invitedByName: user.name || user.githubUsername || user.email,
-              invitedByUrl: `https://github.com/${user.githubUsername}`,
+              invitedByName: user.name || user.email,
+              invitedByUrl: baseUrl,
             }),
           );
           await sendEmail({
@@ -220,7 +205,6 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
 
       const inserted = await db.insert(collaboratorTable).values({
         type: repoAccess.ownerType,
-        installationId: installation.id,
         ownerId: repoAccess.ownerId,
         repoId: repoAccess.repoId,
         owner: repoAccess.ownerLogin,
@@ -269,12 +253,12 @@ const handleRemoveCollaborator = async (collaboratorId: number, owner: string, r
       headers: await headers(),
     });
     const user = session?.user;
-		if (!user) throw new Error("You must be signed in with GitHub to invite collaborators.");
+		if (!user) throw new Error("You must be signed in to manage collaborators.");
 
 		const collaborator = await db.query.collaboratorTable.findFirst({ where: eq(collaboratorTable.id, collaboratorId) });
 		if (!collaborator) throw new Error("Collaborator not found");
 
-    const { repoAccess } = await assertRepoInInstallation(user, owner, repo);
+    const { repoAccess } = await assertCollaboratorManageAccess(user, owner, repo);
 
 		const deletedCollaborator = await db.delete(collaboratorTable).where(
 			and(
@@ -308,8 +292,8 @@ const handleResendCollaboratorInvite = async (collaboratorId: number, owner: str
       headers: await headers(),
     });
     const user = session?.user;
-    if (!user) throw new Error("You must be signed in with GitHub to resend collaborator invites.");
-    await assertRepoInInstallation(user, owner, repo);
+    if (!user) throw new Error("You must be signed in to manage collaborators.");
+    await assertCollaboratorManageAccess(user, owner, repo);
 
     const collaborator = await db.query.collaboratorTable.findFirst({ where: eq(collaboratorTable.id, collaboratorId) });
     if (!collaborator) throw new Error("Collaborator not found");
@@ -331,8 +315,8 @@ const handleResendCollaboratorInvite = async (collaboratorId: number, owner: str
         inviteUrl,
         repoName: `${owner}/${repo}`,
         email: collaborator.email,
-        invitedByName: user.name || user.githubUsername || user.email,
-        invitedByUrl: `https://github.com/${user.githubUsername}`,
+        invitedByName: user.name || user.email,
+        invitedByUrl: baseUrl,
       }),
     );
 

@@ -4,7 +4,6 @@ import { SubscriptionRecurringInterval } from "@polar-sh/sdk/models/components/s
 import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   index,
   integer,
@@ -233,28 +232,11 @@ export const previousCustomers = pgTable("previous_customers", {
 
 // CMS (cms.alisamadii.com) — GitHub-backed content management
 
-export const cmsGithubInstallationToken = pgTable(
-  "cms_github_installation_token",
-  {
-    id: serial("id").primaryKey(),
-    ciphertext: text("ciphertext").notNull(),
-    iv: text("iv").notNull(),
-    installationId: integer("installation_id").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-  },
-  (table) => ({
-    uqCmsGithubInstallationTokenInstallationId: uniqueIndex(
-      "uq_cms_github_installation_token_installation_id"
-    ).on(table.installationId),
-  })
-);
-
 export const cmsCollaborator = pgTable(
   "cms_collaborator",
   {
     id: serial("id").primaryKey(),
     type: text("type").notNull(),
-    installationId: integer("installation_id").notNull(),
     ownerId: integer("owner_id").notNull(),
     repoId: integer("repo_id"),
     owner: text("owner").notNull(),
@@ -396,70 +378,6 @@ export const cmsCacheFileMeta = pgTable(
     idxCmsCacheFileMetaOwnerRepoBranchPathContext: uniqueIndex(
       "idx_cms_cache_file_meta_owner_repo_branch_path_context"
     ).on(table.owner, table.repo, table.branch, table.path, table.context),
-  })
-);
-
-export const cmsCachePermission = pgTable(
-  "cms_cache_permission",
-  {
-    id: serial("id").primaryKey(),
-    githubId: integer("github_id").notNull(),
-    owner: text("owner").notNull(),
-    repo: text("repo").notNull(),
-    lastUpdated: timestamp("last_updated").notNull(),
-  },
-  (table) => ({
-    idxCmsCachePermissionGithubIdOwnerRepo: uniqueIndex(
-      "idx_cms_cache_permission_github_id_owner_repo"
-    ).on(table.githubId, table.owner, table.repo),
-  })
-);
-
-export const cmsActionRun = pgTable(
-  "cms_action_run",
-  {
-    id: serial("id").primaryKey(),
-    owner: text("owner").notNull(),
-    repo: text("repo").notNull(),
-    ref: text("ref").notNull(),
-    workflowRef: text("workflow_ref").notNull(),
-    sha: text("sha").notNull(),
-    actionName: text("action_name").notNull(),
-    contextType: text("context_type").notNull(),
-    contextName: text("context_name"),
-    contextPath: text("context_path"),
-    workflow: text("workflow").notNull(),
-    workflowRunId: bigint("workflow_run_id", { mode: "number" }),
-    status: text("status").notNull(),
-    conclusion: text("conclusion"),
-    htmlUrl: text("html_url"),
-    triggeredBy: jsonb("triggered_by").notNull(),
-    failure: jsonb("failure"),
-    payload: jsonb("payload").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-    completedAt: timestamp("completed_at"),
-  },
-  (table) => ({
-    idxCmsActionRunOwnerRepoCreatedAt: index(
-      "idx_cms_action_run_owner_repo_created_at"
-    ).on(table.owner, table.repo, table.createdAt),
-    idxCmsActionRunOwnerRepoActionName: index(
-      "idx_cms_action_run_owner_repo_action_name"
-    ).on(table.owner, table.repo, table.actionName),
-    idxCmsActionRunOwnerRepoStatus: index(
-      "idx_cms_action_run_owner_repo_status"
-    ).on(table.owner, table.repo, table.status),
-    idxCmsActionRunContext: index("idx_cms_action_run_context").on(
-      table.owner,
-      table.repo,
-      table.contextType,
-      table.contextName,
-      table.contextPath
-    ),
-    idxCmsActionRunWorkflowRunId: uniqueIndex(
-      "idx_cms_action_run_workflow_run_id"
-    ).on(table.workflowRunId),
   })
 );
 

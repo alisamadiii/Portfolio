@@ -1,31 +1,25 @@
 import "server-only";
 
 import type { User } from "@/types/user";
-import { assertGithubIdentity } from "@/lib/authz-shared";
-import { getUserToken } from "@/lib/token";
+import { isAdminUser } from "@/lib/authz-shared";
+import { createHttpError } from "@/lib/api-error";
+import { getPatToken } from "@/lib/token";
 import { createOctokitInstance } from "@/lib/utils/octokit";
 
-const requireGithubUserToken = async (
-  user: Pick<User, "id" | "githubUsername">,
-  identityErrorMessage = "Only GitHub users can perform this action.",
-) => {
-  assertGithubIdentity(user, identityErrorMessage);
-  return getUserToken(user.id);
-};
-
-const requireGithubRepoWriteAccess = async (
-  user: Pick<User, "id" | "githubUsername">,
+// Admin-gated repo access with the org PAT (repo lookup 404s if the PAT can't see it).
+const requireAdminRepoAccess = async (
+  user: Pick<User, "id" | "role"> & { isAdmin?: boolean },
   owner: string,
   repo: string,
-  identityErrorMessage = "Only GitHub users can perform this action.",
+  message = "Admin access required.",
 ) => {
-  const token = await requireGithubUserToken(user, identityErrorMessage);
+  if (!isAdminUser(user)) {
+    throw createHttpError(message, 403);
+  }
+
+  const token = await getPatToken();
   const octokit = createOctokitInstance(token);
   const response = await octokit.rest.repos.get({ owner, repo });
-
-  if (!response.data.permissions?.push) {
-    throw new Error(`You do not have write access to "${owner}/${repo}".`);
-  }
 
   const repoAccess = {
     repoId: response.data.id,
@@ -38,4 +32,4 @@ const requireGithubRepoWriteAccess = async (
   return { token, repoAccess };
 };
 
-export { requireGithubUserToken, requireGithubRepoWriteAccess };
+export { requireAdminRepoAccess };

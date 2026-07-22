@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useTheme } from "next-themes";
+import { urls } from "@workspace/ui/lib/company";
 import { useUser } from "@/contexts/user-context";
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight, Settings, LogOut } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 export function User({
   className,
@@ -83,7 +83,10 @@ export function User({
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/settings">Settings</Link>
+          <a href={urls.portal} target="_blank" rel="noreferrer">
+            Account
+            <ArrowUpRight className="ml-auto size-3.5 opacity-60" />
+          </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

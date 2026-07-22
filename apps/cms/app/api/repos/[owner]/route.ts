@@ -1,11 +1,10 @@
 import { type NextRequest } from "next/server";
-import { createOctokitInstance } from "@/lib/utils/octokit";
-import { getInstallations, getInstallationRepos } from "@/lib/github-app";
+import { headers } from "next/headers";
+import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { db } from "@/db";
 import { and, sql } from "drizzle-orm";
 import { collaboratorTable } from "@/db/schema";
-import { getGithubAccount } from "@/lib/github-account";
-import { hasGithubIdentity } from "@/lib/authz-shared";
+import { isAdminUser } from "@/lib/authz-shared";
 import { toErrorResponse } from "@/lib/api-error";
 import { requireApiUserSession } from "@/lib/session-server";
 import { collaboratorMatchesUser } from "@/lib/collaborator-access";
@@ -14,9 +13,11 @@ export const dynamic = "force-dynamic";
 
 /**
  * Fetches repositories for a user.
- * 
+ * Admins get the org repo list from the portfolio API (org PAT lives there);
+ * other users only see repos they were invited to.
+ *
  * GET /api/repos/[owner]
- * 
+ *
  * Requires authentication.
  */
 
@@ -31,49 +32,20 @@ export async function GET(
     const user = sessionResult.user;
 
     let githubRepos: any[] = [];
-    let collaboratorRepos: any[] = [];
 
-    const searchParams = request.nextUrl.searchParams;
-    const type = searchParams.get("type");
+    const keyword = request.nextUrl.searchParams.get("keyword") ?? undefined;
+    const org = process.env.GITHUB_ORG;
 
-    const githubAccount = await getGithubAccount(user.id);
-    if (githubAccount?.accessToken && hasGithubIdentity(user)) {
-      const token = githubAccount.accessToken;
-
-      const repositorySelection = searchParams.get("repository_selection");
-
-      if (repositorySelection === "selected") {  
-        // Only some repos are selected
-        // TODO: investigate why it's slow
-        const installations = await getInstallations(token, [params.owner]);
-        if (installations.length === 1) {
-          githubRepos = await getInstallationRepos(token, installations[0].id);
-        }
-      } else {
-        // All repos are selected, we search for the repos based on parameters
-        const keyword = searchParams.get("keyword");
-        
-        const octokit = createOctokitInstance(token);
-        const query = `${keyword} in:name ${type}:${params.owner} fork:true`;
-        const response = await octokit.rest.search.repos({
-          q: query,
-          sort: "updated",
-          order: "desc",
-          per_page: 5
-        });
-        githubRepos = response.data.items;
-      }
-
-      githubRepos = githubRepos.filter(repo => repo.permissions.push).map(repo => ({
-        owner: repo.owner.login,
-        repo: repo.name,
-        private: repo.private,
-        defaultBranch: repo.default_branch,
-        updatedAt: repo.updated_at,
-      }));
+    if (
+      isAdminUser(user) &&
+      org &&
+      params.owner.toLowerCase() === org.toLowerCase()
+    ) {
+      const caller = createHttpCaller(await headers());
+      githubRepos = await caller.cms.listRepos.query({ keyword });
     }
 
-    collaboratorRepos = await db.query.collaboratorTable.findMany({
+    const collaboratorRepos = await db.query.collaboratorTable.findMany({
       where: and(
         collaboratorMatchesUser(user),
         sql`lower(${collaboratorTable.owner}) = lower(${params.owner})`

@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { collaboratorTable } from "@/db/schema";
-import { requireGithubRepoWriteAccess } from "@/lib/authz-server";
+import { requireAdminRepoAccess } from "@/lib/authz-server";
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
 import { requireApiUserSession } from "@/lib/session-server";
 
@@ -31,7 +31,7 @@ export async function GET(
     const owner = params.slug[0];
 		const repo = params.slug[1];
 
-    const { repoAccess } = await requireGithubRepoWriteAccess(
+    const { repoAccess } = await requireAdminRepoAccess(
       sessionResult.user,
       owner,
       repo,

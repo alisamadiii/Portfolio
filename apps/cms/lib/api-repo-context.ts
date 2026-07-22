@@ -1,7 +1,5 @@
 import { createHttpError } from "@/lib/api-error";
 import { getConfig } from "@/lib/config-store";
-import { getGithubId } from "@/lib/github-account";
-import { checkRepoAccess } from "@/lib/github-cache-permissions";
 import { requireApiUserSession } from "@/lib/session-server";
 import { getToken } from "@/lib/token";
 import type { Config } from "@/types/config";
@@ -26,14 +24,8 @@ const getRepoReadContext = async ({ owner, repo, branch }: RepoRef): Promise<Rep
   }
 
   const user = sessionResult.user as User;
-  const { token, source } = await getToken(user, owner, repo);
+  const { token } = await getToken(user, owner, repo);
   if (!token) throw createHttpError("Token not found", 401);
-
-  const githubId = await getGithubId(user.id);
-  if (githubId && source === "user") {
-    const hasAccess = await checkRepoAccess(token, owner, repo, githubId);
-    if (!hasAccess) throw createHttpError(`No access to repository ${owner}/${repo}.`, 403);
-  }
 
   const config = await getConfig(owner, repo, branch, {
     getToken: async () => token,

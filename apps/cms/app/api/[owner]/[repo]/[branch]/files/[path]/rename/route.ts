@@ -100,16 +100,10 @@ export async function POST(
       configObject: config.object,
       identityOverride: schemaCommitIdentity,
     });
-    const committer = (
-      commitIdentity === "user" &&
-      user.email
-    )
-      ? {
-          name: user.name?.trim() || user.email,
-          email: user.email,
-        }
+    const editorName = commitIdentity === "user"
+      ? user.name?.trim() || user.email
       : undefined;
-    
+
     const response = await githubRenameFile(
       token,
       params.owner,
@@ -122,7 +116,7 @@ export async function POST(
         templatesOverride: schemaCommitTemplates,
         contentName: data.name,
         user: user.email || user.name || String(user.id || ""),
-        committer,
+        editorName,
       }
     );
 
@@ -177,7 +171,7 @@ const githubRenameFile = async (
     templatesOverride?: Record<string, string>;
     contentName?: string;
     user?: string;
-    committer?: { name: string; email: string };
+    editorName?: string;
   },
 ) => {
   const octokit = createOctokitInstance(token);
@@ -212,29 +206,31 @@ const githubRenameFile = async (
   const newTreeSha = newTreeData.sha;
 
   // Step 4: Create a commit for the new tree
+  const resolvedMessage = resolveCommitMessage({
+    configObject: options?.configObject,
+    templatesOverride: options?.templatesOverride,
+    action: "rename",
+    tokens: buildCommitTokens({
+      action: "rename",
+      owner,
+      repo,
+      branch,
+      oldPath: path,
+      newPath,
+      contentName: options?.contentName,
+      user: options?.user,
+      userName: options?.editorName,
+    }),
+  });
+
   const { data: commitData } = await octokit.rest.git.createCommit({
     owner,
     repo,
-    message: resolveCommitMessage({
-      configObject: options?.configObject,
-      templatesOverride: options?.templatesOverride,
-      action: "rename",
-      tokens: buildCommitTokens({
-        action: "rename",
-        owner,
-        repo,
-        branch,
-        oldPath: path,
-        newPath,
-        contentName: options?.contentName,
-        user: options?.user,
-        userName: options?.committer?.name,
-        userEmail: options?.committer?.email,
-      }),
-    }),
+    message: options?.editorName
+      ? `${resolvedMessage} — by ${options.editorName}`
+      : resolvedMessage,
     tree: newTreeSha,
     parents: [currentSha],
-    committer: options?.committer,
   });
   const commitSha = commitData.sha;
 

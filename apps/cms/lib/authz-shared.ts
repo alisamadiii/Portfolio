@@ -1,16 +1,19 @@
-import type { User } from "@/types/user";
+type UserLike = {
+  role?: string | null;
+  isAdmin?: boolean;
+} | null | undefined;
 
-type UserLike = Pick<User, "githubUsername"> | null | undefined;
+// Client-safe admin check: server users carry `role`, context users carry `isAdmin`.
+const isAdminUser = (user: UserLike): boolean =>
+  Boolean(user?.isAdmin || user?.role === "admin");
 
-const hasGithubIdentity = (user: UserLike): boolean => Boolean(user?.githubUsername);
-
-const assertGithubIdentity = (
+const assertAdminUser = (
   user: UserLike,
-  message = "Only GitHub users can perform this action.",
+  message = "Only admins can perform this action.",
 ) => {
-  if (!hasGithubIdentity(user)) {
+  if (!isAdminUser(user)) {
     throw new Error(message);
   }
 };
 
-export { hasGithubIdentity, assertGithubIdentity };
+export { isAdminUser, assertAdminUser };

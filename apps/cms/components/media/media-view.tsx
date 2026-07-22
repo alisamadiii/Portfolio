@@ -4,7 +4,6 @@ import { Fragment, memo, type ReactNode, startTransition, useCallback, useEffect
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { RepoActionButtons } from "@/components/repo/repo-action-buttons";
 import {
   extensionCategories,
   getFileSize,
@@ -40,7 +39,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { requireApiSuccess } from "@/lib/api-client";
-import { getSchemaActions } from "@/lib/actions";
 import type { FileSaveData, MediaItem } from "@/types/api";
 import useSWR, { useSWRConfig } from "swr";
 import {
@@ -234,10 +232,6 @@ const MediaView = ({
 
     return allowedExtensions || [];
   }, [extensions, mediaConfig?.extensions]);
-  const mediaActions = useMemo(
-    () => getSchemaActions(mediaConfig),
-    [mediaConfig],
-  );
 
   const filteredExtensionsSet = useMemo(
     () => new Set((filteredExtensions || []).map((ext: string) => ext.toLowerCase())),
@@ -573,29 +567,14 @@ const MediaView = ({
       <div className="min-w-0 truncate overflow-hidden">{breadcrumbNode}</div>
       <MediaUpload media={mediaConfig.name} path={path} onUpload={handleUpload} extensions={filteredExtensions}>
         <MediaHeaderActions
-          actionNode={mediaActions.length > 0 ? (
-            <RepoActionButtons
-              actions={mediaActions}
-              owner={config.owner}
-              repo={config.repo}
-              refName={config.branch}
-              contextType="media"
-              contextName={mediaConfig.name}
-              contextPath={path}
-              contextData={{
-                label: mediaConfig.label || mediaConfig.name,
-                input: mediaConfig.input,
-                output: mediaConfig.output,
-              }}
-            />
-          ) : undefined}
+          actionNode={undefined}
           mediaName={mediaConfig.name}
           path={path}
           onFolderCreate={handleFolderCreate}
         />
       </MediaUpload>
     </div>
-  ), [breadcrumbNode, config.branch, config.owner, config.repo, filteredExtensions, handleFolderCreate, handleUpload, mediaActions, mediaConfig.input, mediaConfig.label, mediaConfig.name, mediaConfig.output, path]);
+  ), [breadcrumbNode, config.branch, config.owner, config.repo, filteredExtensions, handleFolderCreate, handleUpload, mediaConfig.input, mediaConfig.label, mediaConfig.name, mediaConfig.output, path]);
 
   useOptionalRepoHeader(
     { header: headerNode },
@@ -715,22 +694,7 @@ const MediaView = ({
               </Button>
             </div>
             <MediaHeaderActions
-              actionNode={mediaActions.length > 0 ? (
-                <RepoActionButtons
-                  actions={mediaActions}
-                  owner={config.owner}
-                  repo={config.repo}
-                  refName={config.branch}
-                  contextType="media"
-                  contextName={mediaConfig.name}
-                  contextPath={path}
-                  contextData={{
-                    label: mediaConfig.label || mediaConfig.name,
-                    input: mediaConfig.input,
-                    output: mediaConfig.output,
-                  }}
-                />
-              ) : undefined}
+              actionNode={undefined}
               mediaName={mediaConfig.name}
               path={path}
               onFolderCreate={handleFolderCreate}

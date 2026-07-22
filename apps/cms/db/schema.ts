@@ -9,13 +9,10 @@ export {
   session as sessionTable,
   account as accountTable,
   verification as verificationTable,
-  cmsGithubInstallationToken as githubInstallationTokenTable,
   cmsCollaborator as collaboratorTable,
   cmsCollaboratorInvite as collaboratorInviteTable,
   cmsConfig as configTable,
   cmsRepoSettings as repoSettingsTable,
   cmsCacheFile as cacheFileTable,
   cmsCacheFileMeta as cacheFileMetaTable,
-  cmsCachePermission as cachePermissionTable,
-  cmsActionRun as actionRunTable,
 } from "@workspace/drizzle/schema";

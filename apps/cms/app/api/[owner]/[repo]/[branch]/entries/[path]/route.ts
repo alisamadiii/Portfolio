@@ -6,7 +6,7 @@ import { parse } from "@/lib/serialization";
 import { getConfig } from "@/lib/config-store";
 import { getBasePath, resolveConfigFilePath } from "@/lib/repo-settings";
 import { getFileExtension, normalizePath } from "@/lib/utils/file";
-import { assertGithubIdentity } from "@/lib/authz-shared";
+import { assertAdminUser } from "@/lib/authz-shared";
 import { getToken } from "@/lib/token";
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
 import { requireApiUserSession } from "@/lib/session-server";
@@ -42,7 +42,7 @@ export async function GET(
     
     const normalizedPath = normalizePath(params.path);
     if (normalizedPath === ".pages.yml") {
-      assertGithubIdentity(user, "Only GitHub users can access settings.");
+      assertAdminUser(user, "Only admins can access settings.");
     }
 
     if (!name && normalizedPath !== ".pages.yml") {

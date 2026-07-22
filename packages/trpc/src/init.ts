@@ -43,6 +43,21 @@ export const authenticatedProcedure = baseProcedure.use(
     });
   }
 );
+// Server-to-server only: guarded by a shared secret header, never a browser session.
+export const internalProcedure = baseProcedure.use(async ({ next, ctx }) => {
+  const secret = process.env.INTERNAL_API_SECRET;
+  const provided = (await headers()).get("x-internal-secret");
+
+  if (!secret || provided !== secret) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid internal secret",
+    });
+  }
+
+  return next({ ctx });
+});
+
 export const adminProcedure = authenticatedProcedure.use(
   async ({ next, ctx }) => {
     if (ctx.session.user.role !== "admin") {
