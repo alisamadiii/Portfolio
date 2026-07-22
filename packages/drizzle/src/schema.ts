@@ -4,13 +4,17 @@ import { SubscriptionRecurringInterval } from "@polar-sh/sdk/models/components/s
 import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscriptionstatus.js";
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
+  serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -37,6 +41,7 @@ export const user = pgTable("user", {
   company: text("company"),
   address: text("address"),
   isClient: boolean("is_client").notNull().default(false),
+  githubUsername: text("github_username"),
 });
 
 export const userSignals = pgTable("user_signals", {
@@ -226,6 +231,238 @@ export const previousCustomers = pgTable("previous_customers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// CMS (cms.alisamadii.com) — GitHub-backed content management
+
+export const cmsGithubInstallationToken = pgTable(
+  "cms_github_installation_token",
+  {
+    id: serial("id").primaryKey(),
+    ciphertext: text("ciphertext").notNull(),
+    iv: text("iv").notNull(),
+    installationId: integer("installation_id").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+  },
+  (table) => ({
+    uqCmsGithubInstallationTokenInstallationId: uniqueIndex(
+      "uq_cms_github_installation_token_installation_id"
+    ).on(table.installationId),
+  })
+);
+
+export const cmsCollaborator = pgTable(
+  "cms_collaborator",
+  {
+    id: serial("id").primaryKey(),
+    type: text("type").notNull(),
+    installationId: integer("installation_id").notNull(),
+    ownerId: integer("owner_id").notNull(),
+    repoId: integer("repo_id"),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    branch: text("branch"),
+    email: text("email").notNull(),
+    userId: text("user_id").references(() => user.id),
+    invitedBy: text("invited_by").references(() => user.id),
+  },
+  (table) => ({
+    idxCmsCollaboratorOwnerRepoEmail: index(
+      "idx_cms_collaborator_owner_repo_email"
+    ).on(table.owner, table.repo, table.email),
+    idxCmsCollaboratorUserId: index("idx_cms_collaborator_user_id").on(
+      table.userId
+    ),
+    uqCmsCollaboratorOwnerRepoEmailCi: uniqueIndex(
+      "uq_cms_collaborator_owner_repo_email_ci"
+    ).on(
+      sql`lower(${table.owner})`,
+      sql`lower(${table.repo})`,
+      sql`lower(${table.email})`
+    ),
+  })
+);
+
+export const cmsCollaboratorInvite = pgTable(
+  "cms_collaborator_invite",
+  {
+    id: serial("id").primaryKey(),
+    token: text("token").notNull(),
+    email: text("email").notNull(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqCmsCollaboratorInviteToken: uniqueIndex(
+      "uq_cms_collaborator_invite_token"
+    ).on(table.token),
+    idxCmsCollaboratorInviteOwnerRepoEmail: index(
+      "idx_cms_collaborator_invite_owner_repo_email"
+    ).on(table.owner, table.repo, table.email),
+    uqCmsCollaboratorInviteOwnerRepoEmailCi: uniqueIndex(
+      "uq_cms_collaborator_invite_owner_repo_email_ci"
+    ).on(
+      sql`lower(${table.owner})`,
+      sql`lower(${table.repo})`,
+      sql`lower(${table.email})`
+    ),
+  })
+);
+
+export const cmsConfig = pgTable(
+  "cms_config",
+  {
+    id: serial("id").primaryKey(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    branch: text("branch").notNull(),
+    sha: text("sha").notNull(),
+    version: text("version").notNull(),
+    object: text("object").notNull(),
+    lastCheckedAt: timestamp("last_checked_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    idxCmsConfigOwnerRepoBranch: uniqueIndex(
+      "idx_cms_config_owner_repo_branch"
+    ).on(table.owner, table.repo, table.branch),
+  })
+);
+
+export const cmsRepoSettings = pgTable(
+  "cms_repo_settings",
+  {
+    id: serial("id").primaryKey(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    basePath: text("base_path").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqCmsRepoSettingsOwnerRepoCi: uniqueIndex(
+      "uq_cms_repo_settings_owner_repo_ci"
+    ).on(sql`lower(${table.owner})`, sql`lower(${table.repo})`),
+  })
+);
+
+export const cmsCacheFile = pgTable(
+  "cms_cache_file",
+  {
+    id: serial("id").primaryKey(),
+    context: text("context").notNull().default("collection"),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    branch: text("branch").notNull(),
+    parentPath: text("parent_path").notNull(),
+    name: text("name").notNull(),
+    path: text("path").notNull(),
+    type: text("type").notNull(),
+    content: text("content"),
+    sha: text("sha"),
+    size: integer("size"),
+    downloadUrl: text("download_url"),
+    commitSha: text("commit_sha"),
+    commitTimestamp: timestamp("commit_timestamp"),
+    updatedAt: timestamp("updated_at").notNull(),
+  },
+  (table) => ({
+    idxCmsCacheFileOwnerRepoBranchParentPath: index(
+      "idx_cms_cache_file_owner_repo_branch_parent_path"
+    ).on(table.owner, table.repo, table.branch, table.parentPath),
+    idxCmsCacheFileOwnerRepoBranchPath: uniqueIndex(
+      "idx_cms_cache_file_owner_repo_branch_path"
+    ).on(table.owner, table.repo, table.branch, table.path),
+  })
+);
+
+export const cmsCacheFileMeta = pgTable(
+  "cms_cache_file_meta",
+  {
+    id: serial("id").primaryKey(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    branch: text("branch").notNull(),
+    path: text("path").notNull().default(""),
+    context: text("context").notNull().default("branch"),
+    commitSha: text("commit_sha"),
+    commitTimestamp: timestamp("commit_timestamp"),
+    status: text("status").notNull().default("ok"),
+    error: text("error"),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    lastCheckedAt: timestamp("last_checked_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    idxCmsCacheFileMetaOwnerRepoBranchPathContext: uniqueIndex(
+      "idx_cms_cache_file_meta_owner_repo_branch_path_context"
+    ).on(table.owner, table.repo, table.branch, table.path, table.context),
+  })
+);
+
+export const cmsCachePermission = pgTable(
+  "cms_cache_permission",
+  {
+    id: serial("id").primaryKey(),
+    githubId: integer("github_id").notNull(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    lastUpdated: timestamp("last_updated").notNull(),
+  },
+  (table) => ({
+    idxCmsCachePermissionGithubIdOwnerRepo: uniqueIndex(
+      "idx_cms_cache_permission_github_id_owner_repo"
+    ).on(table.githubId, table.owner, table.repo),
+  })
+);
+
+export const cmsActionRun = pgTable(
+  "cms_action_run",
+  {
+    id: serial("id").primaryKey(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    ref: text("ref").notNull(),
+    workflowRef: text("workflow_ref").notNull(),
+    sha: text("sha").notNull(),
+    actionName: text("action_name").notNull(),
+    contextType: text("context_type").notNull(),
+    contextName: text("context_name"),
+    contextPath: text("context_path"),
+    workflow: text("workflow").notNull(),
+    workflowRunId: bigint("workflow_run_id", { mode: "number" }),
+    status: text("status").notNull(),
+    conclusion: text("conclusion"),
+    htmlUrl: text("html_url"),
+    triggeredBy: jsonb("triggered_by").notNull(),
+    failure: jsonb("failure"),
+    payload: jsonb("payload").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => ({
+    idxCmsActionRunOwnerRepoCreatedAt: index(
+      "idx_cms_action_run_owner_repo_created_at"
+    ).on(table.owner, table.repo, table.createdAt),
+    idxCmsActionRunOwnerRepoActionName: index(
+      "idx_cms_action_run_owner_repo_action_name"
+    ).on(table.owner, table.repo, table.actionName),
+    idxCmsActionRunOwnerRepoStatus: index(
+      "idx_cms_action_run_owner_repo_status"
+    ).on(table.owner, table.repo, table.status),
+    idxCmsActionRunContext: index("idx_cms_action_run_context").on(
+      table.owner,
+      table.repo,
+      table.contextType,
+      table.contextName,
+      table.contextPath
+    ),
+    idxCmsActionRunWorkflowRunId: uniqueIndex(
+      "idx_cms_action_run_workflow_run_id"
+    ).on(table.workflowRunId),
+  })
+);
+
 // Don't change the order of the values
 export const projectsTypeValues = [
   "PORTFOLIO",
@@ -235,6 +472,7 @@ export const projectsTypeValues = [
   "TEMPLATE",
   "ADMIN",
   "SAASKIT",
+  "CMS",
 ] as const;
 export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
 

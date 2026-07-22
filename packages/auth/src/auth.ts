@@ -93,6 +93,11 @@ export const auth = betterAuth({
         input: false,
         defaultValue: false,
       },
+      githubUsername: {
+        type: "string",
+        required: false,
+        input: false,
+      },
     },
   },
   socialProviders: {

@@ -22,7 +22,21 @@
         "POLAR_SERVER",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "AGENCY_API_KEY"
+        "AGENCY_API_KEY",
+        "BASE_URL",
+        "CRYPTO_KEY",
+        "GITHUB_APP_ID",
+        "GITHUB_APP_NAME",
+        "GITHUB_APP_PRIVATE_KEY",
+        "GITHUB_APP_WEBHOOK_SECRET",
+        "EMAIL_PROVIDER",
+        "EMAIL_FROM",
+        "RESEND_API_KEY",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
+        "SMTP_SECURE"
       ]
     },
     "lint": {

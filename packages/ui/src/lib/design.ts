@@ -11,6 +11,7 @@ export const projectDesign: Record<
   TEMPLATE: { color: "#9B59B6", label: "Template" },
   ADMIN: { color: "#95A5A6", label: "Admin" },
   SAASKIT: { color: "#9B59B6", label: "SaaSKit" },
+  CMS: { color: "#E17055", label: "CMS" },
 };
 
 export function getProjectColor(project?: string | null): string {
