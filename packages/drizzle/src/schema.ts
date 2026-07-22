@@ -328,6 +328,29 @@ export const cmsRepoSettings = pgTable(
   })
 );
 
+export const cmsOrgRepo = pgTable(
+  "cms_org_repo",
+  {
+    id: serial("id").primaryKey(),
+    repoId: integer("repo_id").notNull(),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    private: boolean("private").notNull().default(false),
+    defaultBranch: text("default_branch").notNull(),
+    githubUpdatedAt: timestamp("github_updated_at").notNull(),
+    syncedAt: timestamp("synced_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(
+      table.repoId
+    ),
+    uqCmsOrgRepoOwnerRepoCi: uniqueIndex("uq_cms_org_repo_owner_repo_ci").on(
+      sql`lower(${table.owner})`,
+      sql`lower(${table.repo})`
+    ),
+  })
+);
+
 export const cmsCacheFile = pgTable(
   "cms_cache_file",
   {

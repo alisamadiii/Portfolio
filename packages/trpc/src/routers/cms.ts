@@ -1,7 +1,9 @@
-import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
+import { desc, ilike, notInArray, sql } from "drizzle-orm";
 import z from "zod";
 
+import { db } from "@workspace/drizzle/index";
+import { cmsOrgRepo } from "@workspace/drizzle/schema";
 import {
   adminProcedure,
   createTRPCRouter,
@@ -9,6 +11,7 @@ import {
 } from "@workspace/trpc/init";
 
 type OrgRepo = {
+  repoId: number;
   owner: string;
   repo: string;
   private: boolean;
@@ -30,13 +33,7 @@ const getGithubEnv = () => {
   return { org, token };
 };
 
-const ORG_REPOS_CACHE_TAG = "cms-org-repos";
-
-const listOrgRepos = async (): Promise<OrgRepo[]> => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(ORG_REPOS_CACHE_TAG);
-
+const fetchOrgRepos = async (): Promise<OrgRepo[]> => {
   const { org, token } = getGithubEnv();
   const repos: OrgRepo[] = [];
 
@@ -66,6 +63,7 @@ const listOrgRepos = async (): Promise<OrgRepo[]> => {
 
     repos.push(
       ...data.map((repo) => ({
+        repoId: repo.id,
         owner: repo.owner?.login ?? org,
         repo: repo.name,
         private: Boolean(repo.private),
@@ -81,25 +79,88 @@ const listOrgRepos = async (): Promise<OrgRepo[]> => {
   return repos;
 };
 
+// Full reconcile: upsert every org repo by GitHub id, drop rows no longer in the org.
+const syncOrgRepos = async () => {
+  const repos = await fetchOrgRepos();
+  const syncedAt = new Date();
+
+  const chunkSize = 100;
+  for (let i = 0; i < repos.length; i += chunkSize) {
+    const chunk = repos.slice(i, i + chunkSize);
+
+    await db
+      .insert(cmsOrgRepo)
+      .values(
+        chunk.map((repo) => ({
+          repoId: repo.repoId,
+          owner: repo.owner,
+          repo: repo.repo,
+          private: repo.private,
+          defaultBranch: repo.defaultBranch,
+          githubUpdatedAt: new Date(repo.updatedAt),
+          syncedAt,
+        }))
+      )
+      .onConflictDoUpdate({
+        target: cmsOrgRepo.repoId,
+        set: {
+          owner: sql`excluded.owner`,
+          repo: sql`excluded.repo`,
+          private: sql`excluded.private`,
+          defaultBranch: sql`excluded.default_branch`,
+          githubUpdatedAt: sql`excluded.github_updated_at`,
+          syncedAt: sql`excluded.synced_at`,
+        },
+      });
+  }
+
+  const repoIds = repos.map((repo) => repo.repoId);
+  await db
+    .delete(cmsOrgRepo)
+    .where(
+      repoIds.length ? notInArray(cmsOrgRepo.repoId, repoIds) : sql`true`
+    );
+
+  return { synced: repos.length };
+};
+
 export const cmsRouter = createTRPCRouter({
   listRepos: adminProcedure
     .input(z.object({ keyword: z.string().optional() }).optional())
     .query(async ({ input }) => {
-      const repos = await listOrgRepos();
-      const keyword = input?.keyword?.trim().toLowerCase();
+      const keyword = input?.keyword?.trim();
 
-      if (!keyword) return repos;
-      return repos.filter((repo) => repo.repo.toLowerCase().includes(keyword));
+      const selectRepos = () =>
+        db
+          .select()
+          .from(cmsOrgRepo)
+          .where(keyword ? ilike(cmsOrgRepo.repo, `%${keyword}%`) : undefined)
+          .orderBy(desc(cmsOrgRepo.githubUpdatedAt));
+
+      let rows = await selectRepos();
+
+      // Seed on first read after deploy so the picker is never empty.
+      if (rows.length === 0 && !keyword) {
+        await syncOrgRepos();
+        rows = await selectRepos();
+      }
+
+      return rows.map((row) => ({
+        owner: row.owner,
+        repo: row.repo,
+        private: row.private,
+        defaultBranch: row.defaultBranch,
+        updatedAt: row.githubUpdatedAt.toISOString(),
+      }));
     }),
+  // Refresh button in the CMS repo picker.
+  syncRepos: adminProcedure.mutation(() => syncOrgRepos()),
   internal: createTRPCRouter({
     getGithubToken: internalProcedure.query(() => {
       const { token } = getGithubEnv();
       return { token };
     }),
     // Called by the CMS webhook when org repos change (created/deleted/renamed).
-    revalidateRepos: internalProcedure.mutation(() => {
-      revalidateTag(ORG_REPOS_CACHE_TAG, "max");
-      return { revalidated: true };
-    }),
+    syncRepos: internalProcedure.mutation(() => syncOrgRepos()),
   }),
 });

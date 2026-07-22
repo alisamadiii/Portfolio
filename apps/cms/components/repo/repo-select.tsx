@@ -16,9 +16,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronsUpDown, LockKeyhole, Search } from "lucide-react";
+import { ChevronsUpDown, LockKeyhole, RefreshCw, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requireApiSuccess } from "@/lib/api-client";
+import { isAdminUser } from "@/lib/authz-shared";
 
 export function RepoSelect({
   onAccountSelect
@@ -40,6 +41,8 @@ export function RepoSelect({
   );
   const [results, setResults] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [refreshIndex, setRefreshIndex] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -91,7 +94,20 @@ export function RepoSelect({
     return () => {
       abortControllerRef.current?.abort();
     };
-  }, [debouncedKeyword, selectedAccount]);
+  }, [debouncedKeyword, selectedAccount, refreshIndex]);
+
+  const handleRefresh = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch("/api/repos/sync", { method: "POST" });
+      await requireApiSuccess(response, "Failed to refresh repos");
+      setRefreshIndex((index) => index + 1);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const resultsLoadingSkeleton = useMemo(() => (
     <ul>
@@ -151,6 +167,17 @@ export function RepoSelect({
           />
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none"/>
         </div>
+        {isAdminUser(user) && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isSyncing}
+            title="Refresh repositories from GitHub"
+          >
+            <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")}/>
+          </Button>
+        )}
       </div>
       {isLoading || results === null
         ? resultsLoadingSkeleton
