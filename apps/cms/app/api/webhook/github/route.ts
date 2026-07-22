@@ -1,5 +1,6 @@
 import { after } from "next/server";
 import crypto from "crypto";
+import { createInternalCaller } from "@workspace/trpc/http-caller";
 import { handleRepositoryWebhookEvent } from "@/lib/github-webhook-repository";
 import { handlePushWebhookEvent } from "@/lib/github-webhook-push";
 
@@ -16,6 +17,16 @@ export const maxDuration = 60;
  * Requires the org webhook secret and signature.
  */
 const processWebhookEvent = async (event: string | null, data: any) => {
+  // Any repository change (created/deleted/renamed/transferred) invalidates
+  // the org repo listing cached on the portfolio app.
+  if (event === "repository") {
+    await createInternalCaller()
+      .cms.internal.revalidateRepos.mutate()
+      .catch((error) => {
+        console.error("Failed to revalidate org repo cache", error);
+      });
+  }
+
   if (await handleRepositoryWebhookEvent(event, data)) return;
   if (await handlePushWebhookEvent(event, data)) return;
 };

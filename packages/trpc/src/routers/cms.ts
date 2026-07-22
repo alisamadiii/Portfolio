@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 
@@ -29,13 +30,12 @@ const getGithubEnv = () => {
   return { org, token };
 };
 
-let orgReposCache: { repos: OrgRepo[]; fetchedAt: number } | null = null;
-const ORG_REPOS_CACHE_TTL = 60_000;
+const ORG_REPOS_CACHE_TAG = "cms-org-repos";
 
 const listOrgRepos = async (): Promise<OrgRepo[]> => {
-  if (orgReposCache && Date.now() - orgReposCache.fetchedAt < ORG_REPOS_CACHE_TTL) {
-    return orgReposCache.repos;
-  }
+  "use cache";
+  cacheLife("hours");
+  cacheTag(ORG_REPOS_CACHE_TAG);
 
   const { org, token } = getGithubEnv();
   const repos: OrgRepo[] = [];
@@ -78,7 +78,6 @@ const listOrgRepos = async (): Promise<OrgRepo[]> => {
     page++;
   }
 
-  orgReposCache = { repos, fetchedAt: Date.now() };
   return repos;
 };
 
@@ -96,6 +95,11 @@ export const cmsRouter = createTRPCRouter({
     getGithubToken: internalProcedure.query(() => {
       const { token } = getGithubEnv();
       return { token };
+    }),
+    // Called by the CMS webhook when org repos change (created/deleted/renamed).
+    revalidateRepos: internalProcedure.mutation(() => {
+      revalidateTag(ORG_REPOS_CACHE_TAG, "max");
+      return { revalidated: true };
     }),
   }),
 });
