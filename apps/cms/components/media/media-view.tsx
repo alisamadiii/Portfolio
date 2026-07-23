@@ -133,7 +133,7 @@ const MediaFolderTile = memo(function MediaFolderTile({
 }: MediaFolderTileProps) {
   return (
     <button
-      className="hover:bg-muted focus:ring-offset-background focus:ring-ring block w-full rounded-md outline-none focus:ring-2 focus:ring-offset-2"
+      className="bg-background hover:bg-muted focus:ring-offset-background focus:ring-ring block w-full overflow-hidden rounded-xl border shadow-xs outline-none focus:ring-2 focus:ring-offset-2"
       onClick={() => onNavigate(item.path)}
     >
       <div className="flex aspect-video items-center justify-center">
@@ -174,7 +174,7 @@ const MediaFileTile = memo(function MediaFileTile({
   const content = (
     <div
       className={cn(
-        "relative rounded-md",
+        "bg-background relative overflow-hidden rounded-xl border shadow-xs",
         selectable &&
           "hover:bg-muted peer-focus:ring-offset-background peer-focus:ring-ring peer-checked:ring-offset-background peer-checked:ring-ring peer-checked:ring-2 peer-checked:ring-offset-2 peer-focus:ring-2 peer-focus:ring-offset-2"
       )}
@@ -183,14 +183,14 @@ const MediaFileTile = memo(function MediaFileTile({
         <Thumbnail
           name={mediaName}
           path={item.path}
-          className="aspect-video rounded-t-md"
+          className="aspect-video rounded-none"
         />
       ) : (
         <div className="flex aspect-video items-center justify-center rounded-md">
           <File className="h-24 w-24 stroke-[0.5]" />
         </div>
       )}
-      <div className="flex items-center gap-x-2 pt-2">
+      <div className="flex items-center gap-x-2 p-2">
         <div className="mr-auto h-9 overflow-hidden">
           <div className="truncate text-sm font-medium">{item.name}</div>
           <div className="text-muted-foreground truncate text-xs">
@@ -554,7 +554,7 @@ const MediaView = ({
   const loadingSkeleton = useMemo(
     () => (
       <ul className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        <li>
+        <li className="bg-background overflow-hidden rounded-xl border shadow-xs">
           <div className="text-muted flex aspect-video items-center justify-center">
             <Folder className="h-[5.5rem] w-[5.5rem] animate-pulse stroke-[0.5]" />
           </div>
@@ -565,8 +565,11 @@ const MediaView = ({
           </div>
         </li>
         {[...Array(3)].map((_, index) => (
-          <li key={index}>
-            <Skeleton className="aspect-video rounded-t-md rounded-b-none" />
+          <li
+            key={index}
+            className="bg-background overflow-hidden rounded-xl border shadow-xs"
+          >
+            <Skeleton className="aspect-video rounded-none" />
             <div className="flex items-center gap-x-2 p-2">
               <div className="h-9 overflow-hidden">
                 <Skeleton className="mb-2 h-5 w-24 rounded" />
@@ -854,7 +857,7 @@ const MediaView = ({
             ))}
           </ul>
         ) : (
-          <Empty className="border-0 shadow-none">
+          <Empty className="bg-background/50 rounded-xl border-dashed shadow-none">
             <EmptyHeader>
               <EmptyTitle>Empty folder</EmptyTitle>
               <EmptyDescription>

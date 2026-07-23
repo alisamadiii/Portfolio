@@ -67,36 +67,38 @@ export default function Page() {
       {isConfigMissing && config?.owner && config?.repo && (
         <BasePath owner={config.owner} repo={config.repo} />
       )}
-      <div className="relative min-h-0 flex-1 overflow-y-auto">
-        <Entry
-          path=".pages.yml"
-          onSave={handleSave}
-          title="Configuration"
-          headerMeta={
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                    render={
-                      <Link
-                        href="https://pagescms.org/docs/configuration/"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <BookText />
-                        <span className="sr-only">Configuration docs</span>
-                      </Link>
-                    }
-                  />
-                }
-              />
-              <TooltipContent>View docs</TooltipContent>
-            </Tooltip>
-          }
-        />
+      <div className="bg-background shadow-xs flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border p-5 md:p-6">
+        <div className="relative min-h-0 flex-1 overflow-y-auto">
+          <Entry
+            path=".pages.yml"
+            onSave={handleSave}
+            title="Configuration"
+            headerMeta={
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground"
+                      render={
+                        <Link
+                          href="https://pagescms.org/docs/configuration/"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <BookText />
+                          <span className="sr-only">Configuration docs</span>
+                        </Link>
+                      }
+                    />
+                  }
+                />
+                <TooltipContent>View docs</TooltipContent>
+              </Tooltip>
+            }
+          />
+        </div>
       </div>
     </div>
   );

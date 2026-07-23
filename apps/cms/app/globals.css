@@ -7,8 +7,14 @@
  * class is `light` or `dark` — override :root, .light AND .dark.
  */
 
+@theme inline {
+  --color-shell: var(--shell);
+}
+
 :root,
 .light {
+  /* App canvas + sidebar: soft warm gray so white cards/inputs pop */
+  --shell: oklch(0.965 0.003 58);
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
   --card: oklch(1 0 0);
@@ -33,7 +39,7 @@
   --chart-4: oklch(0.60 0.13 163);
   --chart-5: oklch(0.51 0.10 166);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.001 106.423);
+  --sidebar: var(--background);
   --sidebar-foreground: oklch(0.147 0.004 49.25);
   --sidebar-primary: oklch(0.60 0.13 163);
   --sidebar-primary-foreground: oklch(0.98 0.02 166);
@@ -44,6 +50,8 @@
 }
 
 .dark {
+  /* Dark shell = base background; cards (0.216) provide the pop */
+  --shell: oklch(0.147 0.004 49.25);
   --background: oklch(0.147 0.004 49.25);
   --foreground: oklch(0.985 0.001 106.423);
   --card: oklch(0.216 0.006 56.043);
@@ -67,7 +75,7 @@
   --chart-3: oklch(0.70 0.15 162);
   --chart-4: oklch(0.60 0.13 163);
   --chart-5: oklch(0.51 0.10 166);
-  --sidebar: oklch(0.216 0.006 56.043);
+  --sidebar: var(--background);
   --sidebar-foreground: oklch(0.985 0.001 106.423);
   --sidebar-primary: oklch(0.77 0.15 163);
   --sidebar-primary-foreground: oklch(0.26 0.05 173);
@@ -75,4 +83,29 @@
   --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.553 0.013 58.071);
+}
+
+/*
+ * Solid fills for form controls so they pop on the gray shell.
+ * Intentionally unlayered: must beat the package's utility classes
+ * (bg-transparent, dark:bg-input/30), and unlayered CSS outranks
+ * every @layer including Tailwind's utilities.
+ */
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+[data-slot="input-group"] {
+  background-color: var(--background);
+}
+
+.dark [data-slot="input"],
+.dark [data-slot="textarea"],
+.dark [data-slot="select-trigger"],
+.dark [data-slot="input-group"] {
+  background-color: var(--card);
+}
+
+/* Inputs nested in an input-group keep the group's fill */
+[data-slot="input-group"] [data-slot="input"] {
+  background-color: transparent;
 }

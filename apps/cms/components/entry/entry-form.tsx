@@ -475,7 +475,7 @@ const ListField = ({
           {shouldShowListHeader && (
             <div className="flex h-5 items-center gap-x-2">
               {field.label !== false && (
-                <FormLabel className="text-sm font-medium">
+                <FormLabel className="text-sm font-semibold">
                   {field.label || field.name}
                 </FormLabel>
               )}
@@ -550,6 +550,7 @@ const ListField = ({
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="w-full justify-center border-dashed bg-background"
                   onClick={addItem}
                 >
                   <Plus />
@@ -634,7 +635,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
     return (
       <div className="space-y-3" ref={ref as React.Ref<HTMLDivElement>}>
         {!selectedBlockDefinition ? (
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="space-y-4 rounded-lg border bg-background shadow-xs overflow-hidden p-4">
             <div className="text-sm">Choose content block:</div>
             <div className="flex flex-wrap gap-2">
               {blocks.map((blockDef: Field) => (
@@ -653,11 +654,10 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border">
+          <div className="rounded-lg border bg-background shadow-xs overflow-hidden">
             <header
               className={cn(
-                "flex h-8.5 items-center gap-x-2 rounded-t-lg px-4 text-sm font-medium transition-colors",
-                isOpen ? "" : "rounded-b-lg",
+                "bg-muted/50 flex h-10 items-center gap-x-2 px-4 text-sm font-medium transition-colors",
                 isCollapsible ? "hover:bg-muted cursor-pointer" : ""
               )}
               onClick={isCollapsible ? onToggleOpen : undefined}
@@ -740,7 +740,10 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
               </Badge>
             </header>
             <div
-              className={cn("grid gap-6 border-t p-4", isOpen ? "" : "hidden")}
+              className={cn(
+                "grid gap-5 border-t p-4 md:p-5",
+                isOpen ? "" : "hidden"
+              )}
             >
               {selectedBlockDefinition.type === "object" ? (
                 (() => {
@@ -833,13 +836,10 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
     );
 
     return (
-      <div className="rounded-lg border">
+      <div className="rounded-lg border bg-background shadow-xs overflow-hidden">
         {isCollapsible && (
           <header
-            className={cn(
-              "hover:bg-muted flex h-8.5 cursor-pointer items-center gap-x-2 rounded-t-lg pr-1 pl-4 text-sm font-medium transition-colors",
-              isOpen ? "" : "rounded-b-lg"
-            )}
+            className="bg-muted/50 hover:bg-muted flex h-10 cursor-pointer items-center gap-x-2 pr-1 pl-4 text-sm font-medium transition-colors"
             onClick={onToggleOpen}
           >
             <ChevronRight
@@ -855,7 +855,7 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
         )}
         <div
           className={cn(
-            "grid gap-6 p-4",
+            "grid gap-5 p-4 md:p-5",
             isCollapsible && "border-t",
             isOpen ? "" : "hidden"
           )}
@@ -927,7 +927,12 @@ const SingleField = ({
         {shouldShowFieldMeta && (
           <div className="flex h-5 items-center gap-x-2">
             {field.label !== false && (
-              <Label className={hasErrors() ? "text-destructive" : ""}>
+              <Label
+                className={cn(
+                  "text-sm font-semibold",
+                  hasErrors() ? "text-destructive" : ""
+                )}
+              >
                 {field.label || field.name}
               </Label>
             )}
@@ -1178,20 +1183,22 @@ const EntryForm = ({
       <form
         id="entry-form"
         onSubmit={handleFormSubmit}
-        className="mx-auto grid w-full max-w-screen-md items-start gap-6"
+        className="mx-auto w-full max-w-screen-md"
       >
-        {filePath && (
-          <div className="space-y-2 overflow-hidden">
-            <FormLabel>Filename</FormLabel>
-            {filePath}
-          </div>
-        )}
-        {renderFields(
-          fields,
-          undefined,
-          registerBeforeSubmitHook,
-          runBeforeValidationHooks
-        )}
+        <div className="rounded-xl border bg-background p-5 shadow-xs md:p-6 grid gap-6">
+          {filePath && (
+            <div className="space-y-2 overflow-hidden">
+              <FormLabel>Filename</FormLabel>
+              {filePath}
+            </div>
+          )}
+          {renderFields(
+            fields,
+            undefined,
+            registerBeforeSubmitHook,
+            runBeforeValidationHooks
+          )}
+        </div>
       </form>
     </Form>
   );

@@ -373,11 +373,11 @@ export function Collaborators({
 
   const loadingSkeleton = useMemo(
     () => (
-      <ul>
+      <ul className="bg-background shadow-xs divide-y overflow-hidden rounded-xl border">
         {[0, 1, 2].map((index) => (
           <li
             key={index}
-            className="flex items-center gap-x-2 border border-b-0 px-3 py-2 text-sm first:rounded-t-md last:rounded-b-md last:border-b"
+            className="flex items-center gap-x-2 px-4 py-2.5 text-sm"
           >
             <Skeleton className="h-6 w-6 rounded-full" />
             <Skeleton className="h-5 w-24 rounded text-left" />
@@ -424,11 +424,11 @@ export function Collaborators({
         loadingSkeleton
       ) : collaborators.length > 0 ? (
         <>
-          <ul>
+          <ul className="bg-background shadow-xs divide-y overflow-hidden rounded-xl border">
             {collaborators.map((collaborator) => (
               <li
                 key={collaborator.id}
-                className="flex items-center gap-x-2 border border-b-0 px-3 py-2 text-sm first:rounded-t-md last:rounded-b-md last:border-b"
+                className="flex items-center gap-x-2 px-4 py-2.5 text-sm"
               >
                 <Avatar className="h-6 w-6">
                   <AvatarImage

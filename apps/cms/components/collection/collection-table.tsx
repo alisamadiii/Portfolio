@@ -212,20 +212,23 @@ export function CollectionTable<TData extends TableData>({
   }, [isTree, path, handleRowExpansion, table, data]);
 
   return (
-    <div className="space-y-2">
-      <Table className="border-separate border-spacing-0 text-sm">
+    <div className="space-y-4">
+      {/* No overflow-hidden: it would break the sticky header row. Corners are
+          rounded on the header/last-row cells instead. */}
+      <div className="bg-background rounded-xl border shadow-xs">
+        <Table className="border-separate border-spacing-0 text-sm">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
               key={headerGroup.id}
-              className="bg-background hover:bg-background sticky -top-4 z-20 md:-top-6"
+              className="hover:bg-transparent sticky -top-4 z-20 md:-top-6"
             >
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
                     className={cn(
-                      "hover:bg-muted/50 last:hover:bg-background h-10 cursor-pointer truncate border-b p-2 select-none last:cursor-default",
+                      "bg-muted first:rounded-tl-xl last:rounded-tr-xl h-10 cursor-pointer truncate border-b p-2 select-none last:cursor-default",
                       header.column.columnDef.meta?.className
                     )}
                     onClick={header.column.getToggleSortingHandler()}
@@ -257,7 +260,7 @@ export function CollectionTable<TData extends TableData>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
+        <TableBody className="[&>tr:last-child>td]:border-b-0 [&>tr:last-child>td:first-child]:rounded-bl-xl [&>tr:last-child>td:last-child]:rounded-br-xl">
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
@@ -386,7 +389,8 @@ export function CollectionTable<TData extends TableData>({
             </TableRow>
           )}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
       {pageCount > 1 && (
         <footer className="flex items-center justify-end">
           <Pagination className="mx-0 w-auto justify-end">

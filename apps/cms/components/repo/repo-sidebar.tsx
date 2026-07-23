@@ -166,7 +166,7 @@ function RepoSwitcher() {
             render={
               <SidebarMenuButton
                 size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                className="rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <Avatar className="h-8 w-8 rounded-md">
                   <AvatarImage
@@ -531,6 +531,7 @@ export function RepoSidebar() {
         <SidebarMenuSubItem key={key}>
           <SidebarMenuSubButton
             isActive={isActive}
+            className="h-9 rounded-lg data-[active=true]:bg-muted data-[active=true]:border data-[active=true]:border-border data-[active=true]:font-medium"
             render={
               <Link href={href} onClick={handleNavigation}>
                 {getNodeIcon(node)}
@@ -546,6 +547,7 @@ export function RepoSidebar() {
       <SidebarMenuItem key={key}>
         <SidebarMenuButton
           isActive={isActive}
+          className="h-9 rounded-lg data-[active=true]:bg-muted data-[active=true]:border data-[active=true]:border-border data-[active=true]:font-medium"
           render={
             <Link href={href} onClick={handleNavigation}>
               {getNodeIcon(node)}
@@ -562,7 +564,9 @@ export function RepoSidebar() {
 
     return (
       <SidebarGroup>
-        <SidebarGroupLabel>{label}</SidebarGroupLabel>
+        <SidebarGroupLabel className="uppercase tracking-wider text-[11px] text-muted-foreground/70">
+          {label}
+        </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {nodes.map((node) =>
@@ -579,7 +583,9 @@ export function RepoSidebar() {
 
     return (
       <SidebarGroup>
-        <SidebarGroupLabel>{label}</SidebarGroupLabel>
+        <SidebarGroupLabel className="uppercase tracking-wider text-[11px] text-muted-foreground/70">
+          {label}
+        </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {items.map((item) => {
@@ -589,6 +595,7 @@ export function RepoSidebar() {
                 <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton
                     isActive={isActive}
+                    className="h-9 rounded-lg data-[active=true]:bg-muted data-[active=true]:border data-[active=true]:border-border data-[active=true]:font-medium"
                     render={
                       <Link href={item.href} onClick={handleNavigation}>
                         {item.icon}

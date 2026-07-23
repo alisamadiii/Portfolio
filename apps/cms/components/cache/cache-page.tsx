@@ -296,16 +296,16 @@ export function CachePage({
 
   if (loading || !data) {
     return (
-      <div className="mx-auto max-w-screen-lg space-y-4">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="text-base">Content</CardTitle>
+      <div className="mx-auto max-w-screen-lg space-y-6">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Card className="bg-background shadow-xs h-full gap-4 rounded-xl border py-5 ring-0 md:py-6">
+            <CardHeader className="px-5 md:px-6">
+              <CardTitle className="text-sm font-semibold">Content</CardTitle>
               <CardDescription>
                 Cached content (files and collections).
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 text-sm">
+            <CardContent className="flex-1 px-5 text-sm md:px-6">
               <div className="divide-y rounded-md border">
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
                   <span className="text-muted-foreground">Files cached</span>
@@ -337,7 +337,7 @@ export function CachePage({
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-end px-5 md:px-6">
               <div className="inline-flex items-center">
                 <Button
                   variant="outline"
@@ -359,16 +359,16 @@ export function CachePage({
             </CardFooter>
           </Card>
 
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Config</CardTitle>
+          <div className="space-y-5">
+            <Card className="bg-background shadow-xs gap-4 rounded-xl border py-5 ring-0 md:py-6">
+              <CardHeader className="px-5 md:px-6">
+                <CardTitle className="text-sm font-semibold">Config</CardTitle>
                 <CardDescription>
                   Cache of the configuration file (
                   <code className="text-[13px]">.pages.yml</code>).
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 text-sm">
+              <CardContent className="flex-1 px-5 text-sm md:px-6">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Cache SHA</span>
@@ -384,7 +384,7 @@ export function CachePage({
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end">
+              <CardFooter className="flex justify-end px-5 md:px-6">
                 <div className="inline-flex items-center">
                   <Button
                     variant="outline"
@@ -406,14 +406,14 @@ export function CachePage({
               </CardFooter>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Permissions</CardTitle>
+            <Card className="bg-background shadow-xs gap-4 rounded-xl border py-5 ring-0 md:py-6">
+              <CardHeader className="px-5 md:px-6">
+                <CardTitle className="text-sm font-semibold">Permissions</CardTitle>
                 <CardDescription>
                   Cached repository permission checks.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 text-sm">
+              <CardContent className="flex-1 px-5 text-sm md:px-6">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Entries</span>
@@ -421,7 +421,7 @@ export function CachePage({
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="justify-end">
+              <CardFooter className="justify-end px-5 md:px-6">
                 <Button variant="outline" size="icon-sm" disabled>
                   <Trash2 className="size-4" />
                 </Button>
@@ -435,16 +435,16 @@ export function CachePage({
 
   return (
     <TooltipProvider>
-      <div className="mx-auto max-w-screen-lg space-y-4">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="text-base">Content</CardTitle>
+      <div className="mx-auto max-w-screen-lg space-y-6">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Card className="bg-background shadow-xs h-full gap-4 rounded-xl border py-5 ring-0 md:py-6">
+            <CardHeader className="px-5 md:px-6">
+              <CardTitle className="text-sm font-semibold">Content</CardTitle>
               <CardDescription>
                 Cached content (files and collections).
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 text-sm">
+            <CardContent className="flex-1 px-5 text-sm md:px-6">
               <div className="divide-y rounded-md border">
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
                   <span className="text-muted-foreground">Files cached</span>
@@ -493,7 +493,7 @@ export function CachePage({
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-end px-5 md:px-6">
               <div className="inline-flex items-center">
                 <ConfirmActionButton
                   label="Refresh cache"
@@ -531,16 +531,16 @@ export function CachePage({
             </CardFooter>
           </Card>
 
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Config</CardTitle>
+          <div className="space-y-5">
+            <Card className="bg-background shadow-xs gap-4 rounded-xl border py-5 ring-0 md:py-6">
+              <CardHeader className="px-5 md:px-6">
+                <CardTitle className="text-sm font-semibold">Config</CardTitle>
                 <CardDescription>
                   Cache of the configuration file (
                   <code className="text-[13px]">.pages.yml</code>).
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 text-sm">
+              <CardContent className="flex-1 px-5 text-sm md:px-6">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Cache SHA</span>
@@ -560,7 +560,7 @@ export function CachePage({
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end">
+              <CardFooter className="flex justify-end px-5 md:px-6">
                 <div className="inline-flex items-center">
                   <ConfirmActionButton
                     label="Refresh cache"
@@ -598,14 +598,14 @@ export function CachePage({
               </CardFooter>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Permissions</CardTitle>
+            <Card className="bg-background shadow-xs gap-4 rounded-xl border py-5 ring-0 md:py-6">
+              <CardHeader className="px-5 md:px-6">
+                <CardTitle className="text-sm font-semibold">Permissions</CardTitle>
                 <CardDescription>
                   Cached repository permission checks.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 text-sm">
+              <CardContent className="flex-1 px-5 text-sm md:px-6">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Entries</span>
@@ -613,7 +613,7 @@ export function CachePage({
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="justify-end">
+              <CardFooter className="justify-end px-5 md:px-6">
                 <ConfirmActionButton
                   label="Clear cache"
                   title="Clear permission cache?"

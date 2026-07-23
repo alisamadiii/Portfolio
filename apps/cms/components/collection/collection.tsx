@@ -752,9 +752,10 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const loadingSkeleton = useMemo(
     () => (
+      <div className="bg-background rounded-xl border shadow-xs overflow-hidden">
       <table className="w-full">
         <thead>
-          <tr className="border-b font-medium">
+          <tr className="bg-muted/50 border-b font-medium">
             <th className="h-10 p-2 align-middle">
               <Skeleton className="h-4 w-8 rounded" />
             </th>
@@ -807,6 +808,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           ))}
         </tbody>
       </table>
+      </div>
     ),
     [schema.view?.layout]
   );

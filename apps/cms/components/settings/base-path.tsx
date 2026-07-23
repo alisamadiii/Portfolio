@@ -87,9 +87,9 @@ export function BasePath({ owner, repo }: BasePathProps) {
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Base path</CardTitle>
+    <Card className="bg-background shadow-xs mb-6 gap-4 rounded-xl border py-5 ring-0 md:py-6">
+      <CardHeader className="px-5 md:px-6">
+        <CardTitle className="text-sm font-semibold">Base path</CardTitle>
         <CardDescription>
           For monorepos, point Pages CMS at the subfolder that holds your{" "}
           <code>.pages.yml</code> and content (e.g. <code>frontend</code>). All
@@ -97,7 +97,7 @@ export function BasePath({ owner, repo }: BasePathProps) {
           to it. Leave empty to use the repository root.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-5 md:px-6">
         <form
           className="w-full"
           onSubmit={(event) => {
@@ -119,7 +119,7 @@ export function BasePath({ owner, repo }: BasePathProps) {
           </div>
         </form>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="px-5 md:px-6">
         <Button
           className="ml-auto"
           onClick={() => void handleSave()}
