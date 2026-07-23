@@ -1,10 +1,7 @@
 import "server-only";
 
-import { headers } from "next/headers";
-
-import { auth } from "@workspace/auth/auth";
-
 import { createHttpError } from "@/lib/api-error";
+import { getServerUser } from "@/lib/session-server";
 
 // Admin access follows the shared Better Auth admin plugin role.
 const hasAdminAccess = (user: { role?: string | null } | null | undefined) => {
@@ -12,10 +9,7 @@ const hasAdminAccess = (user: { role?: string | null } | null | undefined) => {
 };
 
 const requireAdminSession = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  const user = session?.user;
+  const user = await getServerUser();
 
   if (!user) {
     throw createHttpError("Not signed in.", 401);
@@ -25,7 +19,7 @@ const requireAdminSession = async () => {
     throw createHttpError("Admin access required.", 403);
   }
 
-  return { session, user };
+  return { user };
 };
 
 export { hasAdminAccess, requireAdminSession };

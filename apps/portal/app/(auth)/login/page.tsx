@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { SignInForm } from "@workspace/ui/custom/auth-sign-in-form";
-import { resolveRedirectUrl } from "@workspace/ui/lib/company";
+import { resolveAppName, resolveRedirectUrl } from "@workspace/ui/lib/company";
 
 import { AuthHeader } from "@/components/auth/auth-header";
 
@@ -23,6 +23,11 @@ function Content() {
   // Never trust the raw param — it can point anywhere and reaches callbackURL
   const redirectUrl = resolveRedirectUrl(rawRedirectUrl);
 
+  const appName = resolveAppName(redirectUrl);
+  const hasApp = Boolean(appName) && appName !== "Portal";
+
+  const [magicSent, setMagicSent] = useState(false);
+
   const handleSuccess = () => {
     // The client router can't route to another origin (admin, motion, …)
     if (redirectUrl.startsWith("/")) {
@@ -34,12 +39,18 @@ function Content() {
 
   return (
     <div className="flex flex-col">
-      <AuthHeader
-        title="Login to your portal"
-        description="Access your projects, files, and invoices in one place"
-      />
+      {!magicSent && (
+        <AuthHeader
+          title={`Login to ${hasApp ? appName : "your portal"}`}
+          description={
+            hasApp
+              ? `Sign in to continue to ${appName}`
+              : "Access your projects, files, and invoices in one place"
+          }
+        />
+      )}
 
-      <div className="mt-8">
+      <div className={magicSent ? "" : "mt-8"}>
         <SignInForm
           onSuccess={handleSuccess}
           onSignUp={() => {
@@ -49,6 +60,7 @@ function Content() {
           }}
           forgotPasswordHref="/reset-password"
           socialRedirectUrl={redirectUrl}
+          onMagicSentChange={setMagicSent}
         />
       </div>
     </div>

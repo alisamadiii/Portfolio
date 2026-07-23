@@ -1,7 +1,6 @@
 "use server";
 
 import { randomBytes } from "crypto";
-import { headers } from "next/headers";
 import { render } from "@react-email/render";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -9,10 +8,9 @@ import { z } from "zod";
 import { db } from "@/db";
 import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
 
-import { auth } from "@workspace/auth/auth";
-
 import { requireAdminRepoAccess } from "@/lib/authz-server";
 import { getBaseUrl } from "@/lib/base-url";
+import { getServerUser } from "@/lib/session-server";
 import {
   findVerifiedUserByEmail,
   normalizeEmail,
@@ -105,10 +103,7 @@ const createCollaboratorInviteUrl = async ({
 const handleAddCollaborator = async (prevState: any, formData: FormData) => {
   try {
     // TODO: remove the requirement for Github account, let any collaborator invite others
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    const user = session?.user;
+    const user = await getServerUser();
     if (!user)
       throw new Error("You must be signed in to manage collaborators.");
 
@@ -284,10 +279,7 @@ const handleRemoveCollaborator = async (
   repo: string
 ) => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    const user = session?.user;
+    const user = await getServerUser();
     if (!user)
       throw new Error("You must be signed in to manage collaborators.");
 
@@ -340,10 +332,7 @@ const handleResendCollaboratorInvite = async (
   repo: string
 ) => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    const user = session?.user;
+    const user = await getServerUser();
     if (!user)
       throw new Error("You must be signed in to manage collaborators.");
     await assertCollaboratorManageAccess(user, owner, repo);

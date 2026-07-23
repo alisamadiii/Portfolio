@@ -36,15 +36,7 @@ const parseBoolean = (value: string, envName: string) => {
   throw new Error(`${envName} must be "true" or "false" when set.`);
 };
 
-const getFromEmail = () => {
-  const from = getEnv("EMAIL_FROM") || getEnv("RESEND_FROM_EMAIL");
-  if (!from) {
-    throw new Error(
-      "Missing sender email. Set EMAIL_FROM (or RESEND_FROM_EMAIL for compatibility)."
-    );
-  }
-  return from;
-};
+const getFromEmail = () => "Ali Samadi CMS <no-reply@alisamadii.com>";
 
 const getEmailProvider = (): MailProvider => {
   const configured = getEnv("EMAIL_PROVIDER")?.toLowerCase();

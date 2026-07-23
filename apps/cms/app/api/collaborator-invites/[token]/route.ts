@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
 
-import { auth } from "@workspace/auth/auth";
+import { resolveUserFromHeaders } from "@/lib/session-server";
 
 export const dynamic = "force-dynamic";
 
@@ -101,12 +101,10 @@ export async function GET(
     return Response.json({ status: "unavailable" } satisfies InviteState);
   }
 
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
+  const user = await resolveUserFromHeaders(request.headers);
   const destinationPath = getDestinationPath(invite);
 
-  if (!session?.user) {
+  if (!user) {
     return Response.json({
       status: "signin_required",
       maskedEmail: maskEmail(invite.email),
@@ -114,7 +112,7 @@ export async function GET(
     } satisfies InviteState);
   }
 
-  const claimed = await claimInvite(invite, session.user);
+  const claimed = await claimInvite(invite, user);
   if (!claimed) {
     return Response.json({ status: "wrong_account" } satisfies InviteState);
   }
@@ -137,16 +135,14 @@ export async function POST(
     });
   }
 
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
-  if (!session?.user) {
+  const user = await resolveUserFromHeaders(request.headers);
+  if (!user) {
     return Response.json({ status: "unavailable" } satisfies InviteState, {
       status: 401,
     });
   }
 
-  const claimed = await claimInvite(invite, session.user);
+  const claimed = await claimInvite(invite, user);
   if (!claimed) {
     return Response.json({ status: "wrong_account" } satisfies InviteState, {
       status: 403,

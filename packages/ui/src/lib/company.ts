@@ -107,6 +107,12 @@ export function resolveRedirectUrl(
   }
 }
 
+/** Prettier labels for keys where naive capitalization reads wrong. */
+const appDisplayNames: Partial<Record<string, string>> = {
+  cms: "CMS",
+  saaskit: "SaaS Kit",
+};
+
 /**
  * Reverse-lookup of an absolute URL to the app it belongs to, so UI can say
  * "Back to Motion" instead of a generic label. Returns null when it isn't ours.
@@ -122,7 +128,7 @@ export function resolveAppName(value?: string | null) {
     if (!match) return null;
 
     const [key] = match;
-    return key.charAt(0).toUpperCase() + key.slice(1);
+    return appDisplayNames[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
   } catch {
     return null;
   }

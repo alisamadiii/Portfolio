@@ -14,6 +14,7 @@ import {
 } from "@react-email/components";
 
 import { emailTheme } from "@/components/email/theme";
+import { getBaseUrl } from "@/lib/base-url";
 
 export const LoginEmailTemplate = ({
   email,
@@ -24,11 +25,7 @@ export const LoginEmailTemplate = ({
   otp: string;
   preview?: string;
 }) => {
-  const baseUrl = process.env.BASE_URL
-    ? process.env.BASE_URL
-    : process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : "";
+  const baseUrl = getBaseUrl();
 
   return (
     <Html>

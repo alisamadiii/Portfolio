@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { SignUpForm } from "@workspace/ui/custom/auth-sign-up-form";
-import { resolveRedirectUrl } from "@workspace/ui/lib/company";
+import { resolveAppName, resolveRedirectUrl } from "@workspace/ui/lib/company";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
@@ -30,6 +30,11 @@ function Content() {
 
   const destination = resolveRedirectUrl(rawRedirectUrl);
 
+  const appName = resolveAppName(destination);
+  const hasApp = Boolean(appName) && appName !== "Portal";
+
+  const [magicSent, setMagicSent] = useState(false);
+
   useEffect(() => {
     if (user?.user?.emailVerified && !isOpen) {
       // The client router can't route to another origin (admin, motion, …)
@@ -44,12 +49,18 @@ function Content() {
   return (
     <div className="flex flex-col">
       <VerifyEmailDialog email="" />
-      <AuthHeader
-        title="Create your account"
-        description="Get started with your client portal in under a minute"
-      />
+      {!magicSent && (
+        <AuthHeader
+          title="Create your account"
+          description={
+            hasApp
+              ? `Create an account to continue to ${appName}`
+              : "Get started with your client portal in under a minute"
+          }
+        />
+      )}
 
-      <div className="mt-8">
+      <div className={magicSent ? "" : "mt-8"}>
         <SignUpForm
           onSuccess={(email) => {
             setIsOpen(true);
@@ -61,6 +72,7 @@ function Content() {
             );
           }}
           socialRedirectUrl={destination}
+          onMagicSentChange={setMagicSent}
         />
       </div>
     </div>
