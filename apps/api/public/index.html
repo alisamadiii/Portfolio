@@ -1,0 +1,248 @@
+<!doctype html>
+<!-- Local upload tester for agency-api. Open this file directly in a browser
+     (or `npx serve .`). Not served by the Worker — dev tool only. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>agency-api · upload tester</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+        max-width: 640px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+      h1 {
+        font-size: 1.2rem;
+      }
+      label {
+        display: block;
+        margin: 0.9rem 0 0.25rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+      input[type="text"],
+      input[type="password"],
+      select {
+        width: 100%;
+        padding: 0.5rem 0.6rem;
+        box-sizing: border-box;
+        border: 1px solid #8884;
+        border-radius: 6px;
+        font: inherit;
+      }
+      label.inline {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 400;
+        margin-top: 0.5rem;
+      }
+      #drop {
+        margin-top: 1rem;
+        border: 2px dashed #8886;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+      }
+      #drop.hover {
+        border-color: #3b82f6;
+        background: #3b82f61a;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.55rem 1.4rem;
+        font: inherit;
+        font-weight: 600;
+        border: 0;
+        border-radius: 6px;
+        background: #3b82f6;
+        color: #fff;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .result {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        background: #8881;
+        word-break: break-all;
+      }
+      .result.err {
+        background: #ef44441a;
+      }
+      .result img {
+        max-width: 100%;
+        max-height: 220px;
+        display: block;
+        margin-top: 0.5rem;
+        border-radius: 6px;
+      }
+      .result a {
+        color: #3b82f6;
+      }
+      small.hint {
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>agency-api · upload tester</h1>
+
+    <label for="baseUrl">Base URL</label>
+    <!-- <input id="baseUrl" type="text" value="http://localhost:8787" /> -->
+    <input id="baseUrl" type="text" value="https://api.alisamadii.com" />
+
+    <label for="apiKey"
+      >API key <small class="hint">(saved in this browser only)</small></label
+    >
+    <input id="apiKey" type="password" placeholder="ak_pub_…" />
+
+    <label for="path"
+      >Path prefix
+      <small class="hint">(optional folder, e.g. avatars)</small></label
+    >
+    <input id="path" type="text" value="test" />
+
+    <label for="naming">Object naming</label>
+    <select id="naming">
+      <option value="filename" selected>filename — photo.jpg</option>
+      <option value="uuid">uuid — b3161280-….jpg</option>
+      <option value="uuid-filename">
+        uuid-filename — b3161280-…-photo.jpg
+      </option>
+    </select>
+    <label class="inline"
+      ><input id="overwrite" type="checkbox" /> overwrite if the name already
+      exists <small class="hint">(filename mode)</small></label
+    >
+
+    <div id="drop">
+      Drop a file here or click to choose<input id="file" type="file" hidden />
+    </div>
+
+    <label for="filename"
+      >File name
+      <small class="hint"
+        >(auto-filled from the picked file — edit before uploading)</small
+      ></label
+    >
+    <input id="filename" type="text" placeholder="pick a file first" />
+    <button id="go" disabled>Upload</button>
+    <div id="out"></div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let picked = null;
+
+      $("apiKey").value = localStorage.getItem("agencyApiKey") || "";
+      $("apiKey").addEventListener("input", () =>
+        localStorage.setItem("agencyApiKey", $("apiKey").value)
+      );
+
+      const drop = $("drop");
+      drop.addEventListener("click", () => $("file").click());
+      $("file").addEventListener("change", () => setFile($("file").files[0]));
+      drop.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        drop.classList.add("hover");
+      });
+      drop.addEventListener("dragleave", () => drop.classList.remove("hover"));
+      drop.addEventListener("drop", (e) => {
+        e.preventDefault();
+        drop.classList.remove("hover");
+        setFile(e.dataTransfer.files[0]);
+      });
+
+      function setFile(f) {
+        if (!f) return;
+        picked = f;
+        drop.textContent = `${f.name} — ${f.size.toLocaleString()} bytes (${f.type || "unknown type"})`;
+        $("filename").value = f.name;
+        $("go").disabled = false;
+      }
+
+      function show(html, isErr = false) {
+        const div = document.createElement("div");
+        div.className = "result" + (isErr ? " err" : "");
+        div.innerHTML = html;
+        $("out").prepend(div);
+      }
+
+      async function api(pathname, options = {}) {
+        const res = await fetch(
+          $("baseUrl").value.replace(/\/+$/, "") + pathname,
+          {
+            ...options,
+            headers: {
+              Authorization: "Bearer " + $("apiKey").value.trim(),
+              ...(options.headers || {}),
+            },
+          }
+        );
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const e = json.error || {};
+          throw new Error(
+            `${e.code || res.status}: ${e.message || "request failed"}${e.cause ? " — " + e.cause : ""}`
+          );
+        }
+        return json;
+      }
+
+      async function uploadPresigned(file) {
+        const presign = await api("/v1/uploads/presign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: $("filename").value.trim() || file.name,
+            contentType: file.type || "application/octet-stream",
+            contentLength: file.size,
+            path: $("path").value || undefined,
+            naming: $("naming").value,
+            overwrite: $("overwrite").checked,
+          }),
+        });
+        // Plain fetch on purpose: the signature is in the URL — no auth header.
+        const put = await fetch(presign.uploadUrl, {
+          method: "PUT",
+          headers: presign.headers,
+          body: file,
+        });
+        if (!put.ok)
+          throw new Error(`PUT to presigned URL failed (${put.status})`);
+        return presign;
+      }
+
+      $("go").addEventListener("click", async () => {
+        if (!picked) return;
+        $("go").disabled = true;
+        $("go").textContent = "Uploading…";
+        try {
+          const r = await uploadPresigned(picked);
+          const isImg = (picked.type || "").startsWith("image/");
+          show(
+            `✅ <strong>${$("filename").value.trim() || picked.name}</strong> → <a href="${r.publicUrl}" target="_blank">${r.publicUrl}</a>` +
+              `<br><small class="hint">key: ${r.key}</small>` +
+              (isImg ? `<img src="${r.publicUrl}" alt="">` : "")
+          );
+        } catch (err) {
+          show("❌ " + err.message, true);
+        } finally {
+          $("go").disabled = false;
+          $("go").textContent = "Upload";
+        }
+      });
+    </script>
+  </body>
+</html>

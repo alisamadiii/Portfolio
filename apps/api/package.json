@@ -1,0 +1,36 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Simple Hono API on Cloudflare Workers",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "cf-typegen": "wrangler types",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "admin:key": "tsx scripts/admin-key.ts",
+    "reveal-password": "tsx scripts/reveal-password.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "aws4fetch": "^1.0.20",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.6.14",
+    "hono-rate-limiter": "^0.5.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/node": "^26.1.1",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
+    "wrangler": "^3.95.0"
+  }
+}

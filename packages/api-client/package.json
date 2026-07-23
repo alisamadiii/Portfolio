@@ -1,0 +1,54 @@
+{
+  "name": "@alisamadiillc/agency-api",
+  "version": "0.1.3",
+  "description": "TypeScript client for the agency API — emails and uploads.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm run typecheck && pnpm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alisamadiii/Portfolio.git",
+    "directory": "packages/api-client"
+  },
+  "keywords": [
+    "agency-api",
+    "email",
+    "uploads",
+    "r2",
+    "api-client"
+  ],
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT"
+}

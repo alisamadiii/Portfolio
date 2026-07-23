@@ -23,6 +23,7 @@
     "run-api": "cd apps/dashboard && pnpm dev",
     "ios": "cd apps/mobile && pnpm ios",
     "android": "expo run:android",
+    "api:key": "pnpm --filter api admin:key",
     "sync:plans": "tsx packages/auth/scripts/sync-plans.ts",
     "webhooks:check": "tsx packages/auth/scripts/check-webhooks.ts"
   },

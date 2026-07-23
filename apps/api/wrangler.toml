@@ -1,0 +1,29 @@
+name = "agency-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Vars are set in the Cloudflare dashboard as plain-text bindings; without
+# this every deploy (incl. GitHub auto-deploys) deletes them and the API 500s.
+keep_vars = true
+
+# Rate limiting for POST /v1/emails/contact (hono-rate-limiter KV store).
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "5fbe475b09dc41719ffadd7d2428d815"
+
+# Secrets (do NOT put here). Local: .dev.vars. Prod: `wrangler secret put <NAME>`.
+#   DATABASE_URL           Neon Postgres connection string (pooled URL)
+#   R2_ENDPOINT            https://<account_id>.r2.cloudflarestorage.com
+#   R2_ACCESS_KEY_ID
+#   R2_SECRET_ACCESS_KEY
+#   KEY_ENC_SECRET         AES key material for encrypting API-key values at rest
+#   AWS_ACCESS_KEY_VALUE   SES access key id
+#   AWS_SECRET_KEY_VALUE   SES secret access key
+#   AWS_BUCKET_ORIGIN      SES region (e.g. us-east-1); optional, defaults us-east-1
+#   EMAIL_FROM             default sender address; optional
+
+# Health cron (src/scheduled.ts): deep-checks DB/KV/SES/R2 every 10 minutes,
+# stores the result in KV for GET /health, alerts once per incident.
+[triggers]
+crons = ["*/10 * * * *"]

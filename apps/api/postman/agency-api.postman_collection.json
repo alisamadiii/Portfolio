@@ -1,0 +1,1144 @@
+{
+  "info": {
+    "name": "agency-api",
+    "description": "Hono API on Cloudflare Workers. Every /v1 endpoint requires an API key: Authorization: Bearer ak_pub_... (set the `apiKey` variable once — collection or environment — all requests inherit it).\n\nPublic endpoints work with any valid key; what a key can do comes from its user's config (bucketName/publicBaseUrl for uploads, emailDomain for emails, allowedOrigins for where its keys may be called from). /v1/admin/* requires a key whose user has type \"admin\".\n\n## Key types\n\nA key's type is encoded in its prefix, and decides whether the origin check applies:\n\n- `ak_pub_` — **public key.** Safe to embed in a client website: it only works when the request carries an Origin matching that user's allowedOrigins (bare domain \"acme.com\" or exact origin \"https://acme.com\"). Anything else gets 403 ACCESS_DENIED. A public key with an empty allowedOrigins is denied everywhere.\n- `ak_ser_` — **server key.** No origin check at all: accepted from any origin, or from a server-side caller that sends no Origin. Never ship one to a browser — anyone who reads it can use it from anywhere. Use it for backend-to-backend calls, cron jobs, and scripts.\n\nKeys issued before this split start with `ak_live_`. They still authenticate and behave exactly like `ak_pub_` keys.\n\nAdmin users' keys skip the origin check regardless of type (that's why Postman works). All keys, both types, are rate-limited to 60 req/min each.\n\nEvery sent email is logged to the user's history (GET /v1/emails) with the rendered HTML archived in private storage, readable via a 15-min presigned link (GET /v1/emails/:id/html).\n\nSwitch between localhost and production with the environment dropdown (local / production). With No Environment selected, requests hit production (collection-variable default).\n\n## Errors\n\nEvery error uses one standard shape:\n\n```json\n{ \"error\": { \"code\": \"USER_NOT_FOUND\", \"message\": \"No user with email \\\"x@y.com\\\"\", \"cause\": \"how to fix it (optional)\" } }\n```\n\n`code` is stable and machine-readable (UPPER_SNAKE_CASE) — branch on it, not on `message`. Common codes: MISSING_API_KEY, UNKNOWN_API_KEY, API_KEY_REVOKED (401) · ACCESS_DENIED (403, origin not allowed — deliberately vague message; only ever returned for public keys), ADMIN_REQUIRED, BUCKET_NOT_CONFIGURED, EMAIL_DOMAIN_NOT_CONFIGURED, SENDER_DOMAIN_MISMATCH (403) · VALIDATION_FAILED, INVALID_JSON, MISSING_EMAIL_PARAM, INVALID_PATH, INVALID_KEY, INVALID_CURSOR (400) · USER_NOT_FOUND, API_KEY_NOT_FOUND, EMAIL_NOT_FOUND, ROUTE_NOT_FOUND (404) · DUPLICATE_EMAIL (409) · RATE_LIMIT_EXCEEDED (429) · EMAIL_PROVIDER_ERROR, STORAGE_DELETE_FAILED, STORAGE_LIST_FAILED (502) · INTERNAL_ERROR, STORAGE_NOT_CONFIGURED, EMAIL_NOT_CONFIGURED (500).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Meta",
+      "item": [
+        {
+          "name": "Service banner",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health (last cron result)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Public, no auth. Returns the latest health-cron result from KV (the cron deep-checks DB/KV/SES/R2 every 10 minutes).\n\nstatus values:\n- healthy — last cron run passed all checks (200)\n- degraded — last cron run had failing checks; see lastCheck.checks for which and why (503)\n- stale — no cron write for >25 min, the cron itself isn't running (503)\n- unknown — no cron result yet, e.g. right after deploy (200)\n\nFor a live on-demand probe use GET /v1/admin/health instead."
+          },
+          "response": []
+        },
+        {
+          "name": "Me (which key is this?)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me"
+              ]
+            },
+            "description": "\"Which key am I holding?\" Returns the calling key's prefix, its derived type, and the full user record (type, bucketName, publicBaseUrl, emailDomain, allowedOrigins).\n\n```json\n{ \"keyPrefix\": \"ak_pub_a1b2c3\", \"keyType\": \"public\", \"user\": { … } }\n```\n\n`keyType` is `\"public\"` for `ak_pub_` keys (and legacy `ak_live_` ones) or `\"server\"` for `ak_ser_` keys. Useful for confirming a client is actually using the kind of key you think it is — a `\"server\"` here on a key that lives in browser JavaScript means it's exposed and should be rotated."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "Presign upload",
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filename\": \"photo.jpg\",\n  \"contentType\": \"image/jpeg\",\n  \"contentLength\": 123456,\n  \"path\": \"avatars\",\n  \"naming\": \"filename\",\n  \"overwrite\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/uploads/presign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "uploads",
+                "presign"
+              ]
+            },
+            "description": "Uploads go to YOUR user's bucket — no bucket field. Max 50 MB. contentLength must be the file's exact byte size (signed into the URL).\n\n**naming** — how the object key is built:\n- `filename` (default) → `avatars/photo.jpg`\n- `uuid` → `avatars/<uuid>.jpg`\n- `uuid-filename` → `avatars/<uuid>-photo.jpg`\n\nIn `filename` mode an existing object with the same name returns **409 `FILE_ALREADY_EXISTS`** — pass `\"overwrite\": true` to replace it. UUID modes never collide.\n\nResponse includes uploadUrl (PUT the file there with the returned headers, no auth header) and publicUrl (store this — uploadUrl expires in 15 min). For hands-on testing use the repo's index.html upload tester."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete object",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"https://cdn.example.com/avatars/photo.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/uploads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "uploads"
+              ]
+            },
+            "description": "`key` accepts **either** form:\n\n- bare object key: `\"avatars/photo.jpg\"`\n- any full URL of the file: your publicBaseUrl, a `pub-….r2.dev` URL, an R2 endpoint / presigned URL — the URL's path becomes the key (query string ignored). The host is not checked; deletes only ever target your own bucket.\n\nResponses:\n- **204** — deleted. Idempotent: also 204 when the key didn't exist (no existence check on purpose).\n- **400 `INVALID_KEY`** — URL contains no object path"
+          },
+          "response": []
+        },
+        {
+          "name": "List objects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/uploads/objects?prefix=&cursor=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "uploads",
+                "objects"
+              ],
+              "query": [
+                {
+                  "description": "Optional key prefix filter, e.g. avatars/",
+                  "key": "prefix",
+                  "value": ""
+                },
+                {
+                  "description": "Pagination cursor from the previous response's nextCursor",
+                  "key": "cursor",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Lists your bucket's objects. Each object's `url` is its **durable public URL** (your publicBaseUrl + key) — no expiration, safe to store and share. `prefix` filters by folder; `cursor` paginates via the previous response's `nextCursor`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Emails",
+      "item": [
+        {
+          "name": "Send email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from\": \"noreply@alisamadii.com\",\n  \"to\": \"alisamadi0583@gmail.com\",\n  \"subject\": \"Hello\",\n  \"html\": \"<p>Hello world</p>\",\n  \"text\": \"Hello world\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/emails/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "emails",
+                "send"
+              ]
+            },
+            "description": "from must be @ your user's emailDomain (admins exempt). to accepts a string or an array. Returns 202 { id } (SES MessageId).\n\nEvery send is logged to your email history (List emails) with an HTML copy archived in private storage — fetch it via Get email HTML link."
+          },
+          "response": []
+        },
+        {
+          "name": "Send contact email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"message\": \"Hi! I'd like to work with you.\",\n  \"subject\": \"Project inquiry\",\n  \"source\": \"My Site — Contact Form\",\n  \"metadata\": {\n    \"Phone\": \"+1 555 010 1234\",\n    \"Company\": \"Acme Inc\",\n    \"Budget\": \"$5k–10k\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/emails/contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "emails",
+                "contact"
+              ]
+            },
+            "description": "Contact-form submission for public sites. The server renders the notification email (name, message, source, device, IP, reply button) and delivers it to **your account email** — the caller never chooses the recipient, so a browser-exposed key can't spam anyone. The visitor's `email` becomes the Reply-To.\n\n- `subject` optional — defaults to `New contact from {name}`.\n- `source` optional — defaults to the request `Origin` header, then \"Contact Form\".\n- `metadata` optional — any extra form fields your site collects (string/number/boolean values, max 25 keys, strings ≤ 2000 chars). Rendered as a \"Details\" section in the email exactly as sent.\n- Device/IP are read from `User-Agent` / `CF-Connecting-IP`.\n- Requires your user to have `emailDomain` configured (sender is `noreply@<emailDomain>`), else 403 `EMAIL_DOMAIN_NOT_CONFIGURED`.\n\n**Rate limit: 1 request per 10 minutes per IP** (Workers KV backed; runs before auth; skipped on localhost so local testing is never throttled). Exceeding it returns 429 `RATE_LIMIT_EXCEEDED`. On top of that, every key allows 60 requests/min.\n\nEvery contact email lands in your email history (List emails, `kind: \"contact\"` with `visitorEmail`/`source`) with the rendered HTML archived — view it via Get email HTML link."
+          },
+          "response": [
+            {
+              "name": "Sent",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"message\": \"Hi! I'd like to work with you.\",\n  \"subject\": \"Project inquiry\",\n  \"source\": \"My Site — Contact Form\",\n  \"metadata\": {\n    \"Phone\": \"+1 555 010 1234\",\n    \"Company\": \"Acme Inc\",\n    \"Budget\": \"$5k–10k\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/emails/contact",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "emails",
+                    "contact"
+                  ]
+                },
+                "description": "Contact-form submission for public sites. The server renders the notification email (name, message, source, device, IP, reply button) and delivers it to **your account email** — the caller never chooses the recipient, so a browser-exposed key can't spam anyone. The visitor's `email` becomes the Reply-To.\n\n- `subject` optional — defaults to `New contact from {name}`.\n- `source` optional — defaults to the request `Origin` header, then \"Contact Form\".\n- `metadata` optional — any extra form fields your site collects (string/number/boolean values, max 25 keys, strings ≤ 2000 chars). Rendered as a \"Details\" section in the email exactly as sent.\n- Device/IP are read from `User-Agent` / `CF-Connecting-IP`.\n- Requires your user to have `emailDomain` configured (sender is `noreply@<emailDomain>`), else 403 `EMAIL_DOMAIN_NOT_CONFIGURED`.\n\n**Rate limit: 1 request per 10 minutes per IP** (Workers KV backed; runs before auth; skipped on localhost so local testing is never throttled). Exceeding it returns 429 `RATE_LIMIT_EXCEEDED`. On top of that, every key allows 60 requests/min.\n\nEvery contact email lands in your email history (List emails, `kind: \"contact\"` with `visitorEmail`/`source`) with the rendered HTML archived — view it via Get email HTML link."
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "responseTime": null,
+              "body": "{ \"id\": \"0101019f39e949dd-fd7bdd07-f329-477d-a99b-a44f320d7d0b-000000\" }"
+            },
+            {
+              "name": "Rate limited",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"message\": \"Hi! I'd like to work with you.\",\n  \"subject\": \"Project inquiry\",\n  \"source\": \"My Site — Contact Form\",\n  \"metadata\": {\n    \"Phone\": \"+1 555 010 1234\",\n    \"Company\": \"Acme Inc\",\n    \"Budget\": \"$5k–10k\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/emails/contact",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "emails",
+                    "contact"
+                  ]
+                },
+                "description": "Contact-form submission for public sites. The server renders the notification email (name, message, source, device, IP, reply button) and delivers it to **your account email** — the caller never chooses the recipient, so a browser-exposed key can't spam anyone. The visitor's `email` becomes the Reply-To.\n\n- `subject` optional — defaults to `New contact from {name}`.\n- `source` optional — defaults to the request `Origin` header, then \"Contact Form\".\n- `metadata` optional — any extra form fields your site collects (string/number/boolean values, max 25 keys, strings ≤ 2000 chars). Rendered as a \"Details\" section in the email exactly as sent.\n- Device/IP are read from `User-Agent` / `CF-Connecting-IP`.\n- Requires your user to have `emailDomain` configured (sender is `noreply@<emailDomain>`), else 403 `EMAIL_DOMAIN_NOT_CONFIGURED`.\n\n**Rate limit: 1 request per 10 minutes per IP** (Workers KV backed; runs before auth; skipped on localhost so local testing is never throttled). Exceeding it returns 429 `RATE_LIMIT_EXCEEDED`. On top of that, every key allows 60 requests/min.\n\nEvery contact email lands in your email history (List emails, `kind: \"contact\"` with `visitorEmail`/`source`) with the rendered HTML archived — view it via Get email HTML link."
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "value": "application/json",
+                  "key": "Content-Type"
+                }
+              ],
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n  \"error\": {\n    \"code\": \"RATE_LIMIT_EXCEEDED\",\n    \"message\": \"Too many contact requests. Try again in a few minutes.\",\n    \"cause\": \"The contact endpoint allows 1 request per 10 minutes per IP.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List emails (history)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/emails?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "emails"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "description": "Max rows (default 50, max 100)",
+                  "value": "50"
+                },
+                {
+                  "key": "before",
+                  "description": "ISO timestamp cursor — pass the createdAt of the last row to page back",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Your own email history, newest first — every email the API sent for your user (both Send email and Send contact email).\n\nEach row: `{ id, kind (\"send\" | \"contact\"), from, to, subject, messageId, visitorEmail?, source?, createdAt }`. `visitorEmail`/`source` are set on contact-form emails only.\n\nPagination: response is `{ \"emails\": [...] }`; to page back, resend with `before=<createdAt of the last row>`.\n\nThe rendered HTML of each email is archived — get a link via **Get email HTML link** with the row's `id`."
+          },
+          "response": []
+        },
+        {
+          "name": "Get email HTML link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/emails/:id/html",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "emails",
+                ":id",
+                "html"
+              ],
+              "variable": [
+                {
+                  "key": "id"
+                }
+              ]
+            },
+            "description": "Returns a presigned URL for one archived email's HTML: `{ \"url\": \"…\", \"expiresIn\": 900 }`. Open the URL in a browser to see the email exactly as sent. The link dies after 15 minutes — request a fresh one anytime.\n\n`:id` is the row id from List emails. 404 `EMAIL_NOT_FOUND` when the id doesn't exist or isn't yours (admins can fetch any).\n\nThe archive bucket is private — this endpoint is the only way to read it."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "List users",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get user",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/users/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create user (returns API key)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"client@example.com\",\n  \"name\": \"Client Name\",\n  \"type\": \"user\",\n  \"keyType\": \"public\",\n  \"bucketName\": \"client-bucket\",\n  \"publicBaseUrl\": \"https://media.example.com\",\n  \"emailDomain\": \"example.com\",\n  \"allowedOrigins\": [\"https://example.com\"]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                },
+                "description": "Fill in and send — every field ready:\n\n- **email** (required) — unique, identifies the user\n- **name** — display name\n- **type** — \"user\" | \"admin\" (admins bypass the email-domain check, can call /v1/admin/*, and their keys skip the origin check)\n- **keyType** — type of the key minted below: \"public\" (default, `ak_pub_…`) or \"server\" (`ak_ser_…`). Public is origin-secured and meant for the client's website; server skips the origin check entirely and must stay server-side. Omitting this always gives a public key.\n- **bucketName** + **publicBaseUrl** — set BOTH or remove both. R2 bucket uploads go to + public URL objects are served from. No bucket needed? Delete both lines.\n- **emailDomain** — domain the user may send email as (from: *@domain). Delete the line to disable sending.\n- **allowedOrigins** — origin rules this user's **public** keys may be called from (admins and `ak_ser_` keys exempt). Each entry is either a bare domain — `\"acme.com\"` matches any scheme, port, and subdomain (https://acme.com, https://www.acme.com, …) — or an exact origin like `\"https://acme.com\"` / `\"http://localhost:5173\"` (lowercase, no path or trailing slash, no `*`; max 20). Defaults to `[]`, which means the user's public keys are dead until origins are set. Wrong/missing origin → 403 `ACCESS_DENIED`.\n\nResponse (201) = full user row **plus a freshly minted API key**:\n\n```json\n{ \"id\": \"…\", \"email\": \"…\", …, \"apiKey\": { \"id\": \"…\", \"prefix\": \"ak_pub_a1b2c3\", \"key\": \"ak_pub_…\", \"type\": \"public\" } }\n```\n\nCopy `apiKey.key` and hand it to the client — no separate Create key call needed. Recoverable later via Lookup user by email. Need both a browser key and a server key? Create the user, then use Create key for the second one."
+              },
+              "response": []
+            },
+            {
+              "name": "Update user",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"emailDomain\": \"acme.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/users/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Any subset of the create fields. Set bucketName + publicBaseUrl together; send null for both to remove bucket access.\n\nThere is no `keyType` here — a key's type is fixed when it's minted. To switch a client between a public and a server key, create the new key (Keys > Create key) and revoke the old one.\n\n**allowedOrigins** replaces the whole array (not a merge) — send the full list each time; send `[]` to kill all the user's **public** keys. `ak_ser_` server keys and admin users' keys ignore allowedOrigins entirely, so emptying the list does not disable them. Each entry is either:\n\n- a bare domain — `\"acme.com\"` matches any scheme, port, and subdomain (https://acme.com, http://acme.com, https://www.acme.com, …)\n- an exact origin — `\"https://acme.com\"` or `\"http://localhost:5173\"` (lowercase, no path or trailing slash, no `*`)\n\n```json\n{ \"allowedOrigins\": [\"acme.com\", \"http://localhost:5173\"] }\n```"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete user",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/users/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Hard delete. The user's API keys are deleted too (cascade)."
+              },
+              "response": []
+            },
+            {
+              "name": "Lookup user by email (+ keys)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const res = pm.response.json();",
+                      "",
+                      "const template = `",
+                      "<style>",
+                      "  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; color: #333; }",
+                      "  h2 { margin-bottom: 4px; font-size: 16px; color: #1a1a2e; }",
+                      "  .section { margin-bottom: 20px; }",
+                      "  table { width: 100%; border-collapse: collapse; font-size: 13px; }",
+                      "  th { background: #f0f4ff; text-align: left; padding: 8px 10px; border-bottom: 2px solid #c5d0f5; color: #3a3a6e; }",
+                      "  td { padding: 7px 10px; border-bottom: 1px solid #e8ecf5; word-break: break-all; }",
+                      "  tr:last-child td { border-bottom: none; }",
+                      "  .label { font-weight: 600; width: 160px; color: #555; }",
+                      "  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: #e0f0e9; color: #2a7a4f; font-weight: 600; }",
+                      "  .badge-server { background: #fdecec; color: #a33; }",
+                      "  .key-val { font-family: monospace; background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 12px; }",
+                      "  .no-keys { color: #999; font-style: italic; }",
+                      "</style>",
+                      "",
+                      "<div class=\"section\">",
+                      "  <h2>👤 User Details</h2>",
+                      "  <table>",
+                      "    <tr><td class=\"label\">ID</td><td>{{id}}</td></tr>",
+                      "    <tr><td class=\"label\">Email</td><td>{{email}}</td></tr>",
+                      "    <tr><td class=\"label\">Name</td><td>{{name}}</td></tr>",
+                      "    <tr><td class=\"label\">Type</td><td><span class=\"badge\">{{type}}</span></td></tr>",
+                      "    <tr><td class=\"label\">Bucket Name</td><td>{{bucketName}}</td></tr>",
+                      "    <tr><td class=\"label\">Public Base URL</td><td>{{publicBaseUrl}}</td></tr>",
+                      "    <tr><td class=\"label\">Email Domain</td><td>{{emailDomain}}</td></tr>",
+                      "    <tr><td class=\"label\">Created At</td><td>{{createdAt}}</td></tr>",
+                      "  </table>",
+                      "</div>",
+                      "",
+                      "<div class=\"section\">",
+                      "  <h2>🔑 Active API Keys ({{keyCount}})</h2>",
+                      "  {{keysTable}}",
+                      "</div>",
+                      "`;",
+                      "",
+                      "// Fall back to reading the prefix in case an older deploy omits `type`.",
+                      "const keyType = (k) => k.type || (String(k.prefix || '').startsWith('ak_ser_') ? 'server' : 'public');",
+                      "",
+                      "const keysTable = res.keys && res.keys.length > 0",
+                      "  ? `<table>",
+                      "      <tr>",
+                      "        <th>Prefix</th>",
+                      "        <th>Type</th>",
+                      "        <th>Full Key</th>",
+                      "        <th>Last Used</th>",
+                      "        <th>Created</th>",
+                      "      </tr>",
+                      "      ${res.keys.map(k => `",
+                      "        <tr>",
+                      "          <td><span class=\"key-val\">${k.prefix}</span></td>",
+                      "          <td><span class=\"badge ${keyType(k) === 'server' ? 'badge-server' : ''}\">${keyType(k)}</span></td>",
+                      "          <td><span class=\"key-val\">${k.key}</span></td>",
+                      "          <td>${k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleString() : '—'}</td>",
+                      "          <td>${new Date(k.createdAt).toLocaleString()}</td>",
+                      "        </tr>",
+                      "      `).join('')}",
+                      "    </table>`",
+                      "  : `<p class=\"no-keys\">No active keys found for this user.</p>`;",
+                      "",
+                      "pm.visualizer.set(template, {",
+                      "  id: res.id || '—',",
+                      "  email: res.email || '—',",
+                      "  name: res.name || '—',",
+                      "  type: res.type || '—',",
+                      "  bucketName: res.bucketName || '—',",
+                      "  publicBaseUrl: res.publicBaseUrl || '—',",
+                      "  emailDomain: res.emailDomain || '—',",
+                      "  createdAt: res.createdAt ? new Date(res.createdAt).toLocaleString() : '—',",
+                      "  keyCount: (res.keys || []).length,",
+                      "  keysTable: keysTable",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/users/lookup?email=client@acme.com",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users",
+                    "lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "email",
+                      "value": "client@acme.com",
+                      "description": "Exact user email"
+                    }
+                  ]
+                },
+                "description": "One-stop handoff lookup: returns the full user row plus a `keys` array with every ACTIVE key decrypted ({ id, prefix, type, key, lastUsedAt, createdAt }). Revoked keys are excluded. Empty `keys` array means the user has no active key — create one via Keys > Create key.\n\n`type` is `\"public\"` (`ak_pub_`, or a legacy `ak_live_` key) or `\"server\"` (`ak_ser_`). Check it before handing a key over: a public key only works from the user's allowedOrigins, a server key works from anywhere and must not go into a browser.\n\nThe Visualize tab renders this as a table."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Keys",
+          "item": [
+            {
+              "name": "List keys",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/keys",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "keys"
+                  ]
+                },
+                "description": "Every key, newest first, with its owner's email and name. Never returns the secret.\n\nEach row carries a derived `type` — `\"public\"` or `\"server\"`. There is no type column; it's read from the key's prefix (`ak_pub_` / `ak_ser_`, with legacy `ak_live_` reported as public). Handy for auditing which users still hold legacy keys, or spotting a server key issued by mistake."
+              },
+              "response": []
+            },
+            {
+              "name": "Create key",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"client@acme.com\",\n  \"type\": \"public\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/keys",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "keys"
+                  ]
+                },
+                "description": "A key is a pointer to a user, plus a type. Identify the user by **either** field:\n\n```json\n{ \"email\": \"client@acme.com\" }\n```\nor\n```json\n{ \"userId\": \"00000000-0000-0000-0000-000000000000\" }\n```\n\nEmail is an exact match against the user's stored email. Unknown user → 404 `USER_NOT_FOUND`; neither field → 400 `VALIDATION_FAILED`.\n\n## type\n\nOptional, `\"public\"` (default) or `\"server\"`. Omitting it always gives you a public key — a forgotten field can never hand out a key that skips the origin check. An unknown value → 400 `VALIDATION_FAILED`.\n\n- `\"public\"` → **`ak_pub_…`**. Origin-secured: only works from a browser whose `Origin` matches the user's `allowedOrigins` (set via Update user). Wrong or missing origin → 403 `ACCESS_DENIED` with a deliberately vague \"Access denied.\" (the real cause is visible in PostHog). This is the key you embed in a client website.\n- `\"server\"` → **`ak_ser_…`**. No origin check: works from any origin, or from a server-side caller sending no `Origin` at all. Never ship one to a browser — it is usable from anywhere by anyone who reads it.\n\nBoth types are rate-limited to 60 requests/min per key (429 `RATE_LIMIT_EXCEEDED`), and admin users' keys skip the origin check regardless of type.\n\nCreating a **public** key before the user has `allowedOrigins` configured is fine — it's just dead until an admin sets them. A **server** key works immediately.\n\nA key's type is fixed at creation (it's encoded in the prefix, there's no type column). To change it, create a new key and revoke the old one.\n\nThe response echoes the derived `type`. The full key is in the response too (also recoverable via Reveal key or Lookup user by email)."
+              },
+              "response": []
+            },
+            {
+              "name": "Reveal key",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/keys/:id/reveal",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "keys",
+                    ":id",
+                    "reveal"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Decrypts and returns the key's full value: `{ \"key\": \"ak_live_…\" }`.\n\nRevoked keys are never revealed — returns **410** `API_KEY_REVOKED` (\"This key was revoked.\"). Create a new key for the user instead."
+              },
+              "response": []
+            },
+            {
+              "name": "Revoke key",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/keys/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "keys",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Soft revoke — the key stops authenticating but the row stays. Returns 204, or 404 `API_KEY_NOT_FOUND`. The holder starts getting 401 `API_KEY_REVOKED` immediately.\n\nThis is also **step 2 of the `ak_live_` → `ak_pub_` migration**. After running Migrate legacy keys and updating a client site to its new key, revoke that site's legacy key here. Do it one site at a time, and check the legacy key's `lastUsedAt` in List keys first — if it hasn't moved since you updated the site, nothing is still calling with it. Revoking before the site is updated takes the site down."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete key permanently",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/keys/:id?permanent=1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "keys",
+                    ":id"
+                  ],
+                  "query": [
+                    {
+                      "key": "permanent",
+                      "value": "1"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Hard-deletes the row (and its email logs, cascade)."
+              },
+              "response": []
+            },
+            {
+              "name": "Migrate legacy keys (ak_live_ → ak_pub_)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/keys/migrate-legacy?dryRun=1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "keys",
+                    "migrate-legacy"
+                  ],
+                  "query": [
+                    {
+                      "value": "1",
+                      "key": "dryRun",
+                      "description": "Preview only — lists what would be migrated, mints nothing, and returns newKey: null. Remove or disable to actually mint."
+                    }
+                  ]
+                },
+                "description": "**Step 1 of 2** in retiring the legacy `ak_live_` prefix. Mints a fresh `ak_pub_` key for every user still on a legacy key, and returns the new key values so you can update each client site.\n\nSafe to run: this is **purely additive**. The legacy keys are deliberately left ACTIVE, because their value is still embedded in client websites that haven't been updated. Nothing breaks when you run this — each affected user simply holds two working keys for a while.\n\n```json\n{\n  \"dryRun\": false,\n  \"migrated\": [\n    { \"userId\": \"…\", \"email\": \"client@acme.com\", \"legacyKeyId\": \"…\", \"legacyPrefix\": \"ak_live_a1b2c3\", \"newKeyId\": \"…\", \"newKey\": \"ak_pub_…\" }\n  ],\n  \"skipped\": [],\n  \"next\": \"Update each client site to its new key, then revoke the legacy key…\"\n}\n```\n\n`newKey` is the full value — copy it out now; later it's recoverable via Reveal key or Lookup user by email.\n\n## Then what\n\n**Step 2 is manual and is the part that can break things.** For each entry: update that client's site to the new key → confirm the site works → only then revoke the legacy key with Revoke key (`DELETE /v1/admin/keys/:legacyKeyId`), using `legacyKeyId` from the response. Revoking before the site is updated takes the site down.\n\nCheck `lastUsedAt` on the legacy key in List keys before revoking — if it hasn't moved since you updated the site, nothing is calling with it anymore.\n\n## Notes\n\n- **Idempotent** — a user who already holds an active `ak_pub_` key is reported under `skipped` rather than getting another key, so re-running is safe.\n- A user holding two legacy keys gets **one** new key, not two.\n- `?dryRun=1` (as configured here) writes nothing and returns `newKey: null`. Run it first to see the scope, then disable the param to mint for real.\n- Revoked legacy keys are ignored entirely."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Envs",
+          "description": "Off-machine backups of client projects' `.env` files.\n\n**Admin-only, with no client-facing equivalent.** There is deliberately no `/v1/me/envs`: a client key lives inside someone else's codebase, so any route that hands a decrypted `.env` to a non-admin key would turn one leaked key into every credential that client owns.\n\n**Reading one back needs two factors:** an admin key *and* the vault password, posted in the body of **Reveal env file**. Everything else here (list, create, update, delete) needs only the admin key — the password guards decryption specifically.\n\nThe content is encrypted with AES-256-GCM under `KEY_ENC_SECRET` before it is stored, so a database dump on its own leaks nothing.\n\nUploads take two things: the raw `.env` text and an optional `description`. Everything else (`varCount`, timestamps, the encryption) is derived server-side; sending a derived field is a 400. Env request bodies are also excluded from error telemetry, so neither a failed upload nor a failed password attempt ships anything sensitive to PostHog.\n\nSnapshots stack up — a new upload never overwrites an older one, so a bad paste can't destroy a good backup. Deleting a user cascades their env files away with them.",
+          "item": [
+            {
+              "name": "List env files",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs?email=client@acme.com",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs"
+                  ]
+                },
+                "description": "Every env snapshot, newest first, with its owner's email and name. Metadata only — `contentEnc` is never returned.\n\nOptional filters (either one, not both): `?userId=<uuid>` or `?email=client@acme.com` (exact match). Omit both to list every client's snapshots.\n\n`varCount` is the number of `KEY=value` lines counted at upload — a cheap way to spot a truncated or empty paste without decrypting anything."
+              },
+              "response": []
+            },
+            {
+              "name": "Create env file",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"client@acme.com\",\n  \"content\": \"# Acme production\\\\nDATABASE_URL=postgres://user:pw@host/db\\\\nSTRIPE_SECRET_KEY=sk_live_abc\\\\n\",\n  \"description\": \"acme-site production\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs"
+                  ]
+                },
+                "description": "Back up one `.env` file. Identify the owner by **either** field:\n\n```json\n{ \"email\": \"client@acme.com\" }\n```\nor\n```json\n{ \"userId\": \"00000000-0000-0000-0000-000000000000\" }\n```\n\nUnknown user → 404 `USER_NOT_FOUND`; neither field → 400 `VALIDATION_FAILED`.\n\n## content\n\nRequired. The raw `.env` text, pasted verbatim — comments, blank lines, ordering and multi-line values are all preserved byte-for-byte and come back exactly as sent. It is **not** parsed into key/value pairs. Remember to escape newlines as `\\n` in the JSON body.\n\n## description\n\nOptional free text, max 500 chars, e.g. `\"acme-site production\"`. This is the only label a snapshot has — it's what you'll scan the list by later, so make it say which project and which environment.\n\nThe body is strict: any other field (`varCount`, `contentEnc`, …) → 400 `VALIDATION_FAILED`. Those are derived here, never taken from the caller.\n\nReturns **201** with the metadata row. The content is deliberately not echoed back — read it via **Reveal env file**."
+              },
+              "response": []
+            },
+            {
+              "name": "Create env file (paste .env)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "text/plain"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx\nCLERK_SECRET_KEY=sk_test_xxx\n\n# `npx convex dev` writes these to .env.local\nNEXT_PUBLIC_CONVEX_URL=https://precious-lark-922.convex.cloud\n\n# Public by design — the agency API enforces an origin allowlist.\nNEXT_PUBLIC_AGENCY_API_KEY=ak_pub_xxx\nCONVEX_DEPLOYMENT=dev:precious-lark-922\n",
+                  "options": {
+                    "raw": {
+                      "language": "text"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs?email=client@acme.com&description=acme-site production",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs"
+                  ],
+                  "query": [
+                    {
+                      "key": "email",
+                      "value": "client@acme.com"
+                    },
+                    {
+                      "key": "description",
+                      "value": "acme-site production"
+                    }
+                  ]
+                },
+                "description": "Same as **Create env file**, but you paste the `.env` in raw — no JSON, no escaping newlines.\n\nSend `Content-Type: text/plain` (anything that isn't `application/json` works) and put the file itself in the body. The owner and label move to the query string:\n\n- `?email=client@acme.com` or `?userId=<uuid>` — required, same rules as the JSON form.\n- `?description=acme-site production` — optional.\n\nThe body is stored **exactly** as pasted: blank lines, `#` comments, ordering and spacing all survive, and **Reveal env file** hands it back byte-for-byte, ready to drop straight into a project. Nothing is parsed — `varCount` just counts `KEY=value` lines for the listing.\n\nEmpty or whitespace-only body → 400 `VALIDATION_FAILED`. No user in the query → 400 with a reminder that these come from the query string here.\n\n`PATCH /v1/admin/envs/:id` accepts the same raw form (body = new content, `?description=` optional)."
+              },
+              "response": []
+            },
+            {
+              "name": "Get env file",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "One snapshot's metadata, with its owner's email and name. No content — use **Reveal env file** for that. Unknown id → 404 `ENV_FILE_NOT_FOUND`."
+              },
+              "response": []
+            },
+            {
+              "name": "Reveal env file",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs/:id/reveal",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs",
+                    ":id",
+                    "reveal"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Decrypts the stored `.env` and serves it as `text/plain` — the file itself, byte-for-byte as it was uploaded: real newlines, blank lines and `#` comments intact. Send, then copy the response body straight into your project's `.env`.\n\n## Two factors, both required\n\nAn admin key gets you to this endpoint. The **vault password** in the body gets you the plaintext. A leaked admin key alone cannot decrypt anything.\n\n```json\n{ \"password\": \"…\" }\n```\n\nFill the password in yourself each time — the saved request deliberately keeps it empty so it is never stored in the collection or synced to Postman's cloud.\n\n- Wrong password → 403 `ENV_PASSWORD_INVALID`. Checked *before* the row is looked up, so a wrong password can't be used to probe which ids exist (an unknown id also returns 403, not 404).\n- 5 wrong attempts in 15 minutes → 429 `TOO_MANY_PASSWORD_ATTEMPTS` for that key.\n- Missing `password` → 400 `VALIDATION_FAILED`.\n- Every failed attempt is reported to PostHog with the admin's email — the password itself never is.\n\n## Why POST\n\nA password in a query string is recorded in Worker logs, Postman history and PostHog's `request.query`. Request bodies are not, and env-route bodies are additionally excluded from telemetry buffering. There is deliberately **no GET version** of this route — it would be a passwordless path to the same plaintext.\n\nResponses carry `Cache-Control: no-store, private`. Errors are the standard JSON envelope; only the 200 body is raw. Unknown id (with a correct password) → 404 `ENV_FILE_NOT_FOUND`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update env file",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"acme-site staging\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Edits one snapshot in place. Two writable fields, both optional (send at least one, or 400 `VALIDATION_FAILED`):\n\n- `content` — replaces the stored text; it is re-encrypted and `varCount` is recounted.\n- `description` — `null` clears it.\n\n`updatedAt` is stamped on every call. Any other field → 400.\n\nNote this **overwrites** the old content, unlike Create which adds a new snapshot. When in doubt, create a new one instead — snapshots are cheap and the old value stays recoverable.\n\nUnknown id → 404 `ENV_FILE_NOT_FOUND`."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete env file",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/envs/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "envs",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                },
+                "description": "Hard delete — the row is gone and the content is unrecoverable. There is no soft-delete here: a stale env snapshot has no audit value worth keeping. Returns **204**; unknown id → 404 `ENV_FILE_NOT_FOUND`."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "SES status (email health)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/admin/ses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "ses"
+              ]
+            },
+            "description": "Full breakdown of AWS SES state. Aggregates several SES Query API reads into one response:\n\n- `account` — sending enabled, production vs sandbox (`productionAccess: false` = SES sandbox), 24h quota (`max24HourSend`), send rate (`maxSendRate`, emails/sec), `sentLast24Hours`.\n- `identities` — every verified email/domain identity with `verificationStatus`; domains also carry `dkimEnabled` + `dkimStatus`.\n- `statistics` — last 14 send data points (newest first): `deliveryAttempts`, `bounces`, `complaints`, `rejects` per timestamp.\n\nAdmin key required (403 ADMIN_REQUIRED otherwise). Errors: 500 EMAIL_NOT_CONFIGURED (missing AWS creds), 502 EMAIL_PROVIDER_ERROR (SES rejected a call — message is SES's own error)."
+          },
+          "response": [
+            {
+              "name": "SES status",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/ses",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "ses"
+                  ]
+                },
+                "description": "Full breakdown of AWS SES state. Aggregates several SES Query API reads into one response:\n\n- `account` — sending enabled, production vs sandbox (`productionAccess: false` = SES sandbox), 24h quota (`max24HourSend`), send rate (`maxSendRate`, emails/sec), `sentLast24Hours`.\n- `identities` — every verified email/domain identity with `verificationStatus`; domains also carry `dkimEnabled` + `dkimStatus`.\n- `statistics` — last 14 send data points (newest first): `deliveryAttempts`, `bounces`, `complaints`, `rejects` per timestamp.\n\nAdmin key required (403 ADMIN_REQUIRED otherwise). Errors: 500 EMAIL_NOT_CONFIGURED (missing AWS creds), 502 EMAIL_PROVIDER_ERROR (SES rejected a call — message is SES's own error)."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n  \"account\": {\n    \"sendingEnabled\": true,\n    \"productionAccess\": true,\n    \"max24HourSend\": 50000,\n    \"maxSendRate\": 14,\n    \"sentLast24Hours\": 132\n  },\n  \"identities\": [\n    {\n      \"identity\": \"alisamadii.com\",\n      \"type\": \"domain\",\n      \"verificationStatus\": \"Success\",\n      \"dkimEnabled\": true,\n      \"dkimStatus\": \"Success\"\n    },\n    {\n      \"identity\": \"noreply@alisamadii.com\",\n      \"type\": \"email\",\n      \"verificationStatus\": \"Success\"\n    }\n  ],\n  \"statistics\": [\n    {\n      \"timestamp\": \"2026-07-13T21:15:00Z\",\n      \"deliveryAttempts\": 42,\n      \"bounces\": 0,\n      \"complaints\": 0,\n      \"rejects\": 0\n    },\n    {\n      \"timestamp\": \"2026-07-13T21:00:00Z\",\n      \"deliveryAttempts\": 90,\n      \"bounces\": 1,\n      \"complaints\": 0,\n      \"rejects\": 0\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Health (live deep check)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/admin/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "health"
+              ]
+            },
+            "description": "Runs all dependency probes live and returns per-check status + latency: db (Neon select 1), kv (put/get roundtrip), ses (GetAccountSendingEnabled), r2 (ListBuckets). 200 when all pass, 503 when any fail (failing check carries an error message).\n\nEach call hits every dependency — that's why it's admin-only; the public GET /health serves the cached cron result instead."
+          },
+          "response": []
+        }
+      ],
+      "description": "Requires a key whose user has type \"admin\"."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{apiKey}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://agency-api.a-141.workers.dev"
+    },
+    {
+      "key": "apiKey",
+      "value": ""
+    }
+  ]
+}
