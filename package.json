@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "go": "tsx scripts/run.ts",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "turbo:up": "pnpm up --latest -r",
@@ -26,13 +27,14 @@
     "webhooks:check": "tsx packages/auth/scripts/check-webhooks.ts"
   },
   "devDependencies": {
+    "@clack/prompts": "^1.7.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@types/node": "^25.3.5",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "dotenv": "^16.5.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "dotenv": "^16.5.0",
     "tsx": "^4.19.0",
     "turbo": "^2.8.13",
     "typescript": "^5.9.3"
