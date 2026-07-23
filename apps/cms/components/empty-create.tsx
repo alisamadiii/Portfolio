@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader as LucideLoader } from "lucide-react";
 import { useConfig } from "@/contexts/config-context";
-import { normalizePath } from "@/lib/utils/file";
-import { getSchemaByName, initializeState } from "@/lib/schema";
-import { requireApiSuccess } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
+import { Loader as LucideLoader } from "lucide-react";
 import { toast } from "sonner";
+
+import { Button } from "@workspace/ui/components/button";
+
+import { requireApiSuccess } from "@/lib/api-client";
+import { getSchemaByName, initializeState } from "@/lib/schema";
+import { normalizePath } from "@/lib/utils/file";
 
 const EmptyCreate = ({
   children,
   type,
   name,
-  onCreate
+  onCreate,
 }: {
   children: React.ReactNode;
   type: "content" | "media" | "settings";
@@ -65,27 +67,27 @@ const EmptyCreate = ({
   } else {
     throw new Error(`Invalid type "${type}".`);
   }
-  
+
   const handleCreate = async () => {
     if (isCreating) return;
     setIsCreating(true);
     const toastId = toast.loading(`Creating ${toCreate}...`);
 
     try {
-      const response = await fetch(`/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizePath(path))}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          name,
-          content,
-          ...(path.endsWith("/.gitkeep") ? { onConflict: "error" } : {}),
-        }),
-      });
-      await requireApiSuccess<any>(
-        response,
-        `Failed to create ${toCreate}`,
+      const response = await fetch(
+        `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizePath(path))}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type,
+            name,
+            content,
+            ...(path.endsWith("/.gitkeep") ? { onConflict: "error" } : {}),
+          }),
+        }
       );
+      await requireApiSuccess<any>(response, `Failed to create ${toCreate}`);
 
       toast.loading(`Opening ${toCreate}...`, { id: toastId });
       onCreate?.(normalizePath(path));
@@ -95,9 +97,14 @@ const EmptyCreate = ({
       toast.success(`Created ${toCreate}. Opening...`, { id: toastId });
     } catch (error) {
       setIsCreating(false);
-      toast.error(error instanceof Error ? error.message : `Failed to create ${toCreate}.`, {
-        id: toastId,
-      });
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : `Failed to create ${toCreate}.`,
+        {
+          id: toastId,
+        }
+      );
     }
   };
 
@@ -108,7 +115,9 @@ const EmptyCreate = ({
           Creating...
           <LucideLoader className="h-4 w-4 animate-spin" />
         </span>
-      ) : children}
+      ) : (
+        children
+      )}
     </Button>
   );
 };

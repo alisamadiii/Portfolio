@@ -4,7 +4,14 @@ export type Field = {
   description?: string | null;
   type: string;
   default?: any;
-  list?: boolean | { min?: number; max?: number; default?: any; collapsible?: boolean | { collapsed?: boolean; summary?: string } };
+  list?:
+    | boolean
+    | {
+        min?: number;
+        max?: number;
+        default?: any;
+        collapsible?: boolean | { collapsed?: boolean; summary?: string };
+      };
   collapsible?: boolean | { collapsed?: boolean; summary?: string };
   hidden?: boolean | null;
   readonly?: boolean | null;

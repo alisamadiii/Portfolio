@@ -44,10 +44,7 @@ export const LibrariesUsedDialog = ({
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-xl"
-      >
+      <DialogContent showCloseButton={false} className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Libraries Used</DialogTitle>
           <DialogDescription>

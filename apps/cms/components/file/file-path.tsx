@@ -1,18 +1,24 @@
 "use client";
 
-import { useMemo, Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
+import { ChevronRight, Ellipsis, Folder, Pencil } from "lucide-react";
+
+import { Button } from "@workspace/ui/components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+import { cn } from "@workspace/ui/lib/utils";
+
 import { FileRename } from "@/components/file/file-rename";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Pencil } from "lucide-react";
-import { Ellipsis, ChevronRight, Folder } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+
 export function FilePath({
   path,
   sha,
   type,
   name,
-  onRename
+  onRename,
 }: {
   path: string;
   sha: string;
@@ -26,36 +32,53 @@ export function FilePath({
 
   return (
     <>
-      <div className="flex items-center w-full">
-        <div className="flex-1 flex items-center gap-x-1 overflow-hidden rounded-md rounded-r-none border-l border-y border-input  bg-muted px-3 py-1 text-muted-foreground h-10 max-sm:hidden">
-          {pathSegments.length > 3 &&
+      <div className="flex w-full items-center">
+        <div className="border-input bg-muted text-muted-foreground flex h-10 flex-1 items-center gap-x-1 overflow-hidden rounded-md rounded-r-none border-y border-l px-3 py-1 max-sm:hidden">
+          {pathSegments.length > 3 && (
             <>
               <Ellipsis className="h-4 w-4 shrink-0" />
               <ChevronRight className="h-4 w-4 shrink-0" />
             </>
-          }
-          {pathSegments.slice(pathSegments.length > 3 ? -2 : 0).map((segment, index, array) => (
-            <Fragment key={index}>
-              <div className="flex items-center gap-x-1.5 truncate">
-                {index !== array.length - 1 && <Folder className="h-4 w-4 shrink-0" />}
-                <span className={cn("truncate", index === array.length - 1 && "text-foreground")}>{segment}</span>
-              </div>
-              {index !== array.length - 1 && <ChevronRight className="h-4 w-4 shrink-0" />}
-            </Fragment>
-          ))}
+          )}
+          {pathSegments
+            .slice(pathSegments.length > 3 ? -2 : 0)
+            .map((segment, index, array) => (
+              <Fragment key={index}>
+                <div className="flex items-center gap-x-1.5 truncate">
+                  {index !== array.length - 1 && (
+                    <Folder className="h-4 w-4 shrink-0" />
+                  )}
+                  <span
+                    className={cn(
+                      "truncate",
+                      index === array.length - 1 && "text-foreground"
+                    )}
+                  >
+                    {segment}
+                  </span>
+                </div>
+                {index !== array.length - 1 && (
+                  <ChevronRight className="h-4 w-4 shrink-0" />
+                )}
+              </Fragment>
+            ))}
         </div>
-        <div className="flex-1 flex items-center gap-x-1 overflow-hidden rounded-md rounded-r-none border-l border-y border-input  bg-muted px-3 py-1 h-10 sm:hidden">
+        <div className="border-input bg-muted flex h-10 flex-1 items-center gap-x-1 overflow-hidden rounded-md rounded-r-none border-y border-l px-3 py-1 sm:hidden">
           <span className="truncate">{path}</span>
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button type="button" variant="outline" className="rounded-l-none" size="icon" onClick={() => setIsRenameOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-l-none"
+              size="icon"
+              onClick={() => setIsRenameOpen(true)}
+            >
               <Pencil className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            Rename
-          </TooltipContent>
+          <TooltipContent>Rename</TooltipContent>
         </Tooltip>
       </div>
 

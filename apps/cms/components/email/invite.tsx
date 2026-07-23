@@ -10,9 +10,10 @@ import {
   Link,
   Preview,
   Section,
-  Text,
   Tailwind,
+  Text,
 } from "@react-email/components";
+
 import { emailTheme } from "@/components/email/theme";
 
 export const InviteEmailTemplate = ({
@@ -42,24 +43,24 @@ export const InviteEmailTemplate = ({
       </Preview>
       <Tailwind>
         <Body
-          className="my-auto mx-auto font-sans px-2 antialiased"
+          className="mx-auto my-auto px-2 font-sans antialiased"
           style={{
             backgroundColor: emailTheme.background,
             color: emailTheme.foreground,
           }}
         >
-          <Container className="my-[40px] mx-auto p-[20px] max-w-[465px]">
+          <Container className="mx-auto my-[40px] max-w-[465px] p-[20px]">
             <Section className="mt-[24px]">
               <Img
                 src={`${baseUrl}/images/email-logo.png`}
                 width="42"
                 height="42"
                 alt="Pages CMS"
-                className="my-0 mx-auto"
+                className="mx-auto my-0"
               />
             </Section>
             <Heading
-              className="text-[24px] font-semibold p-0 my-[30px] mx-0 text-center tracking-tight"
+              className="mx-0 my-[30px] p-0 text-center text-[24px] font-semibold tracking-tight"
               style={{ color: emailTheme.foreground }}
             >
               Join &quot;{repoName}&quot; on Pages CMS
@@ -70,7 +71,7 @@ export const InviteEmailTemplate = ({
             >
               <Link
                 href={invitedByUrl}
-                className="underline rounded-md"
+                className="rounded-md underline"
                 style={{ color: emailTheme.link }}
               >
                 {invitedByName}
@@ -78,9 +79,9 @@ export const InviteEmailTemplate = ({
               has invited you to the &quot;{repoName}&quot; project on Pages
               CMS. Use the following link to start collaborating:
             </Text>
-            <Section className="text-center mt-[24px] mb-[24px]">
+            <Section className="mt-[24px] mb-[24px] text-center">
               <Button
-                className="rounded-lg text-[14px] font-medium no-underline text-center px-5 py-3"
+                className="rounded-lg px-5 py-3 text-center text-[14px] font-medium no-underline"
                 href={inviteUrl}
                 style={{
                   backgroundColor: emailTheme.buttonBackground,
@@ -103,14 +104,14 @@ export const InviteEmailTemplate = ({
             >
               <Link
                 href={inviteUrl}
-                className="underline rounded-md"
+                className="rounded-md underline"
                 style={{ color: emailTheme.link }}
               >
                 {inviteUrl}
               </Link>
             </Text>
             <Text
-              className="text-[14px] leading-[24px] mt-[36px]"
+              className="mt-[36px] text-[14px] leading-[24px]"
               style={{ color: emailTheme.mutedForeground }}
             >
               This email was intended for{" "}

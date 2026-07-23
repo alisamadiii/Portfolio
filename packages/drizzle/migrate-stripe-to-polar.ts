@@ -7,10 +7,10 @@
  * Idempotent — safe to re-run. Checks column existence before each step.
  */
 
-import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { neon } from "@neondatabase/serverless";
+import dotenv from "dotenv";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, ".env") });
@@ -58,7 +58,9 @@ async function main() {
     orderCount = r.c;
   }
 
-  console.log(`Records: ${productCount.c} products, ${subCount.c} subscriptions, ${orderCount} orders\n`);
+  console.log(
+    `Records: ${productCount.c} products, ${subCount.c} subscriptions, ${orderCount} orders\n`
+  );
 
   // ─── Step 1: Product table cleanup ──────────────────────────────
   // Product PK already migrated to UUID in partial first run.
@@ -103,7 +105,9 @@ async function main() {
     if (!(await columnExists("subscription", "customer_cancellation_reason"))) {
       await sql`ALTER TABLE subscription ADD COLUMN customer_cancellation_reason text`;
     }
-    if (!(await columnExists("subscription", "customer_cancellation_comment"))) {
+    if (
+      !(await columnExists("subscription", "customer_cancellation_comment"))
+    ) {
       await sql`ALTER TABLE subscription ADD COLUMN customer_cancellation_comment text`;
     }
 
@@ -134,7 +138,9 @@ async function main() {
     // Best approach: set product_id = plan (preserving the Stripe price reference),
     // and note it'll need to be updated to Polar product IDs when those are created.
     await sql`UPDATE subscription SET product_id = COALESCE(plan, '') WHERE product_id = '' OR product_id IS NULL`;
-    console.log("  NOTE: product_id set to Stripe plan/price ID. Update to Polar product IDs after Polar products are created.");
+    console.log(
+      "  NOTE: product_id set to Stripe plan/price ID. Update to Polar product IDs after Polar products are created."
+    );
 
     if (await columnExists("subscription", "period_start")) {
       await sql`UPDATE subscription SET started_at = period_start WHERE started_at IS NULL`;
@@ -154,9 +160,18 @@ async function main() {
 
     // Drop Stripe-only columns one by one
     const stripeCols = [
-      "reference_id", "plan", "stripe_customer_id", "stripe_subscription_id",
-      "stripe_schedule_id", "period_start", "period_end", "ended_at",
-      "total_amount", "seats", "item_count", "cancel_at",
+      "reference_id",
+      "plan",
+      "stripe_customer_id",
+      "stripe_subscription_id",
+      "stripe_schedule_id",
+      "period_start",
+      "period_end",
+      "ended_at",
+      "total_amount",
+      "seats",
+      "item_count",
+      "cancel_at",
     ];
     for (const col of stripeCols) {
       await dropColumnIfExists("subscription", col);
@@ -218,8 +233,13 @@ async function main() {
 
     // Drop Stripe-only columns
     const stripeOrderCols = [
-      "stripe_customer_id", "stripe_session_id", "price_id",
-      "amount", "currency", "refunded_amount", "receipt_url",
+      "stripe_customer_id",
+      "stripe_session_id",
+      "price_id",
+      "amount",
+      "currency",
+      "refunded_amount",
+      "receipt_url",
     ];
     for (const col of stripeOrderCols) {
       await dropColumnIfExists("orders", col);

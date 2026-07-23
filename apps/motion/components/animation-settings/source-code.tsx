@@ -358,9 +358,7 @@ const FileList = ({
                 key={file.id}
                 className={cn(
                   "custom-scrollbar shrink-0 basis-full overflow-auto",
-                  file.content === null &&
-                    file.preview &&
-                    "overflow-hidden"
+                  file.content === null && file.preview && "overflow-hidden"
                 )}
               >
                 {file.content !== null ? (
@@ -390,9 +388,11 @@ const FileList = ({
                           size="sm"
                           variant="ghost"
                           className={cn(user && "hidden")}
-                          render={<Link href={portalLoginUrl(window.location.href)} />}
+                          render={
+                            <Link href={portalLoginUrl(window.location.href)} />
+                          }
                         >
-                            Login
+                          Login
                         </Button>
                       </div>
                     </div>

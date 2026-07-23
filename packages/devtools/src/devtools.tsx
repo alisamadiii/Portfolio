@@ -13,7 +13,12 @@ import { ViewPanel } from "./components/view-panel";
 import { useElementSelector } from "./hooks/use-element-selector";
 import { useFeedback } from "./hooks/use-feedback";
 import { useLocalStorageFlag } from "./hooks/use-local-storage";
-import type { Change, DevToolsProps, DevToolsState, ElementRect } from "./types";
+import type {
+  Change,
+  DevToolsProps,
+  DevToolsState,
+  ElementRect,
+} from "./types";
 import { copyFeedbackToClipboard } from "./utils/clipboard";
 import {
   getCssSelector,
@@ -82,8 +87,7 @@ export function DevTools({
     feedback.changes.forEach((change) => {
       const el = document.querySelector(change.selector);
       if (el) {
-        (el as HTMLElement).style.outline =
-          "2px solid rgba(59, 130, 246, 0.5)";
+        (el as HTMLElement).style.outline = "2px solid rgba(59, 130, 246, 0.5)";
         (el as HTMLElement).style.outlineOffset = "2px";
       }
     });
@@ -360,7 +364,9 @@ export function DevTools({
         <Toast
           message={toast.message}
           variant={toast.variant}
-          duration={toast.linkUrl ? 6000 : toast.variant === "warning" ? 5000 : 3000}
+          duration={
+            toast.linkUrl ? 6000 : toast.variant === "warning" ? 5000 : 3000
+          }
           linkUrl={toast.linkUrl}
           linkText={toast.linkText}
           onDone={() => setToast(null)}

@@ -4,7 +4,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@workspace/ui/components/tooltip";
 
 export function AdminTimeAgo({
   label,
@@ -16,7 +16,7 @@ export function AdminTimeAgo({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="cursor-help text-sm text-foreground">{label}</span>
+        <span className="text-foreground cursor-help text-sm">{label}</span>
       </TooltipTrigger>
       <TooltipContent sideOffset={6}>{fullDate}</TooltipContent>
     </Tooltip>

@@ -49,7 +49,13 @@ export function NotePopup({
         zIndex: zIndex + 1,
       }}
     >
-      <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginBottom: 8 }}>
+      <div
+        style={{
+          fontSize: 12,
+          color: "var(--muted-foreground)",
+          marginBottom: 8,
+        }}
+      >
         Describe the change you want:
       </div>
       <textarea

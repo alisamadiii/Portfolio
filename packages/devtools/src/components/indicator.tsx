@@ -9,7 +9,12 @@ interface IndicatorProps {
   position: "bottom-right" | "bottom-left";
 }
 
-export function Indicator({ onClick, onHide, zIndex, position }: IndicatorProps) {
+export function Indicator({
+  onClick,
+  onHide,
+  zIndex,
+  position,
+}: IndicatorProps) {
   const positionStyle =
     position === "bottom-left"
       ? { left: 16, right: "auto" }
@@ -36,10 +41,7 @@ export function Indicator({ onClick, onHide, zIndex, position }: IndicatorProps)
       }}
     >
       <div style={styles.indicatorDot} />
-      <span
-        onClick={onClick}
-        style={{ cursor: "pointer", padding: "2px 4px" }}
-      >
+      <span onClick={onClick} style={{ cursor: "pointer", padding: "2px 4px" }}>
         Feedback
       </span>
       <span

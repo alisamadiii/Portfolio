@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-muted dark:bg-background antialiased [--primary:#6C5CE7]`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-muted dark:bg-background font-sans antialiased [--primary:#6C5CE7]`}
       >
         <TRPCReactProvider>
           <Providers>

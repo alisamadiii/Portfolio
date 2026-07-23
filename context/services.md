@@ -42,39 +42,39 @@ Used when creating custom products for specific clients via admin panel. Each se
 
 ### Infrastructure
 
-| ID | Service | Default Price/mo | Description |
-|----|---------|-----------------|-------------|
-| `hosting` | Hosting & Uptime Management | $29 | Website hosting, server config, uptime monitoring, incident response |
-| `domain` | Domain & DNS Management | $15 | Domain registration, DNS config, SSL certificate, annual renewal |
-| `business_email` | Business Email | $15 | Professional email setup (Google Workspace/custom SMTP), config, admin |
-| `database` | Database Management | $29 | Neon PostgreSQL provisioning, backups, and monitoring |
+| ID               | Service                     | Default Price/mo | Description                                                            |
+| ---------------- | --------------------------- | ---------------- | ---------------------------------------------------------------------- |
+| `hosting`        | Hosting & Uptime Management | $29              | Website hosting, server config, uptime monitoring, incident response   |
+| `domain`         | Domain & DNS Management     | $15              | Domain registration, DNS config, SSL certificate, annual renewal       |
+| `business_email` | Business Email              | $15              | Professional email setup (Google Workspace/custom SMTP), config, admin |
+| `database`       | Database Management         | $29              | Neon PostgreSQL provisioning, backups, and monitoring                  |
 
 ### Development
 
-| ID | Service | Default Price/mo | Description |
-|----|---------|-----------------|-------------|
-| `website_design` | Website Design & Development | $76 | Template-based multi-page site (5 pages included), fully customized |
-| `web_app` | Web App Development | $199 | Dashboards, portals, SaaS tools — auth, CRUD, integrations |
-| `contact_form` | Contact Form & Email Automation | $29 | Contact form with email forwarding, auto-responders, spam protection |
-| `maintenance` | Ongoing Maintenance | $69 | Updates, dependency patches, content changes, bug fixes |
+| ID               | Service                         | Default Price/mo | Description                                                          |
+| ---------------- | ------------------------------- | ---------------- | -------------------------------------------------------------------- |
+| `website_design` | Website Design & Development    | $76              | Template-based multi-page site (5 pages included), fully customized  |
+| `web_app`        | Web App Development             | $199             | Dashboards, portals, SaaS tools — auth, CRUD, integrations           |
+| `contact_form`   | Contact Form & Email Automation | $29              | Contact form with email forwarding, auto-responders, spam protection |
+| `maintenance`    | Ongoing Maintenance             | $69              | Updates, dependency patches, content changes, bug fixes              |
 
 ### Growth
 
-| ID | Service | Default Price/mo | Description |
-|----|---------|-----------------|-------------|
-| `seo` | SEO Setup & Optimization | $49 | Technical SEO, metadata, sitemap, structured data, Core Web Vitals |
-| `analytics` | Analytics Integration | $15 | GA4 or privacy-first analytics with goal tracking and reporting |
-| `priority_support` | Priority Technical Support | $39 | Priority support via email with guaranteed response time |
+| ID                 | Service                    | Default Price/mo | Description                                                        |
+| ------------------ | -------------------------- | ---------------- | ------------------------------------------------------------------ |
+| `seo`              | SEO Setup & Optimization   | $49              | Technical SEO, metadata, sitemap, structured data, Core Web Vitals |
+| `analytics`        | Analytics Integration      | $15              | GA4 or privacy-first analytics with goal tracking and reporting    |
+| `priority_support` | Priority Technical Support | $39              | Priority support via email with guaranteed response time           |
 
 ## Extra Pages (tiered, monthly)
 
 Base website includes pages per plan (Starter: 3, custom: 5). Additional pages:
 
 | Tier | Pages | Price per page/mo |
-|------|-------|-------------------|
-| 1 | 1–5 | $25 |
-| 2 | 6–10 | $40 |
-| 3 | 11–15 | $60 |
+| ---- | ----- | ----------------- |
+| 1    | 1–5   | $25               |
+| 2    | 6–10  | $40               |
+| 3    | 11–15 | $60               |
 
 Maximum 15 extra pages per client.
 

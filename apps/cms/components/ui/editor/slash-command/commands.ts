@@ -1,15 +1,20 @@
 import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
+
 import createSuggestion, {
+  type ImagePickerContext,
   type ImagePickerFileResult,
   type ImagePickerHandler,
-  type ImagePickerContext,
   type SlashImageFallback,
 } from "./suggestion";
 
 type SlashCommandsOptions = {
   onRequestImage: ImagePickerHandler | null;
-  onInsertLocalImageFile: ((context: ImagePickerContext & Omit<ImagePickerFileResult, "kind">) => void | Promise<void>) | null;
+  onInsertLocalImageFile:
+    | ((
+        context: ImagePickerContext & Omit<ImagePickerFileResult, "kind">
+      ) => void | Promise<void>)
+    | null;
   enableImages: boolean;
   imageSlashFallback: SlashImageFallback;
 };

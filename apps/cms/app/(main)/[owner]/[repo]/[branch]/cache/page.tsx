@@ -1,12 +1,23 @@
 "use client";
 
-import { CachePage } from "@/components/cache/cache-page";
-import { DocumentTitle, formatRepoBranchTitle } from "@/components/document-title";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
+
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
+
 import { isAdminUser } from "@/lib/authz-shared";
 import { isCacheEnabled } from "@/lib/config";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+
+import { CachePage } from "@/components/cache/cache-page";
+import {
+  DocumentTitle,
+  formatRepoBranchTitle,
+} from "@/components/document-title";
 
 export default function Page() {
   const { config } = useConfig();
@@ -16,10 +27,12 @@ export default function Page() {
 
   if (!isAdminUser(user)) {
     return (
-      <Empty className="absolute inset-0 border-0 rounded-none">
+      <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Access denied</EmptyTitle>
-          <EmptyDescription>Only GitHub users can manage the cache.</EmptyDescription>
+          <EmptyDescription>
+            Only GitHub users can manage the cache.
+          </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -27,10 +40,13 @@ export default function Page() {
 
   if (!isCacheEnabled(config.object)) {
     return (
-      <Empty className="absolute inset-0 border-0 rounded-none">
+      <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Cache disabled</EmptyTitle>
-          <EmptyDescription>Enable the cache in &quot;.pages.yml&quot; by setting &quot;settings.cache: true&quot;.</EmptyDescription>
+          <EmptyDescription>
+            Enable the cache in &quot;.pages.yml&quot; by setting
+            &quot;settings.cache: true&quot;.
+          </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -39,9 +55,18 @@ export default function Page() {
   return (
     <>
       <DocumentTitle
-        title={formatRepoBranchTitle("Cache", config.owner, config.repo, config.branch)}
+        title={formatRepoBranchTitle(
+          "Cache",
+          config.owner,
+          config.repo,
+          config.branch
+        )}
       />
-      <CachePage owner={config.owner} repo={config.repo} branch={config.branch} />
+      <CachePage
+        owner={config.owner}
+        repo={config.repo}
+        branch={config.branch}
+      />
     </>
   );
 }

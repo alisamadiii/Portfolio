@@ -98,7 +98,7 @@ export const Password = () => {
       </span>
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
-            <Ellipsis />
+          <Ellipsis />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
           <DropdownMenuItem onClick={() => setChangePasswordOpen(true)}>
@@ -137,7 +137,9 @@ export const Password = () => {
                       aria-invalid={fieldState.invalid}
                     />
                   </FieldContent>
-                  <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                  <FieldError
+                    errors={fieldState.error ? [fieldState.error] : undefined}
+                  />
                 </Field>
               )}
             />
@@ -156,7 +158,9 @@ export const Password = () => {
                       aria-invalid={fieldState.invalid}
                     />
                   </FieldContent>
-                  <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                  <FieldError
+                    errors={fieldState.error ? [fieldState.error] : undefined}
+                  />
                 </Field>
               )}
             />
@@ -239,8 +243,12 @@ export const Password = () => {
               </form>
             </Form> */}
           <DialogFooter>
-            <DialogClose render={<Button variant="outline" disabled={changePassword.isPending} />}>
-                Cancel
+            <DialogClose
+              render={
+                <Button variant="outline" disabled={changePassword.isPending} />
+              }
+            >
+              Cancel
             </DialogClose>
             <Button
               onClick={form.handleSubmit(handleSubmit)}

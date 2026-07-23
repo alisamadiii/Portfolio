@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { cn } from "@/lib/utils";
+
 import {
   Combobox,
   ComboboxChip,
@@ -14,7 +14,8 @@ import {
   ComboboxList,
   ComboboxValue,
   useComboboxAnchor,
-} from "@/components/ui/combobox";
+} from "@workspace/ui/components/combobox";
+import { cn } from "@workspace/ui/lib/utils";
 
 type Option = {
   value: string;
@@ -46,7 +47,7 @@ const EditComponent = (props: any) => {
       Array.isArray(field.options?.values)
         ? field.options.values.map(normalizeOption)
         : [],
-    [field.options?.values],
+    [field.options?.values]
   );
 
   const selectedValue = useMemo(() => {
@@ -59,7 +60,9 @@ const EditComponent = (props: any) => {
             : null;
         const optionValue = option?.value ?? String(item);
         return (
-          options.find((candidate: Option) => candidate.value === optionValue) ??
+          options.find(
+            (candidate: Option) => candidate.value === optionValue
+          ) ??
           option ??
           normalizeOption(item)
         );
@@ -114,7 +117,7 @@ const EditComponent = (props: any) => {
           <ComboboxChips
             ref={anchor}
             className={cn(
-              isReadonly && "focus-within:border-input focus-within:ring-0",
+              isReadonly && "focus-within:border-input focus-within:ring-0"
             )}
           >
             <ComboboxValue>
@@ -149,7 +152,10 @@ const EditComponent = (props: any) => {
         <>
           <ComboboxInput
             placeholder={placeholder}
-            className={cn(isReadonly && "has-[[data-slot=input-group-control]:focus-visible]:border-input has-[[data-slot=input-group-control]:focus-visible]:ring-0")}
+            className={cn(
+              isReadonly &&
+                "has-[[data-slot=input-group-control]:focus-visible]:border-input has-[[data-slot=input-group-control]:focus-visible]:ring-0"
+            )}
             showTrigger={!isReadonly}
             readOnly={isReadonly}
           />

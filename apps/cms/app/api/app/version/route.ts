@@ -16,7 +16,7 @@ export async function GET() {
     if (!response.ok) {
       return NextResponse.json(
         { status: "error", message: "Unable to fetch latest app version." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
@@ -31,7 +31,7 @@ export async function GET() {
   } catch {
     return NextResponse.json(
       { status: "error", message: "Unable to fetch latest app version." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

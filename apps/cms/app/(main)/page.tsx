@@ -2,17 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/user-context";
-import { RepoSelect } from "@/components/repo/repo-select";
-import { RepoLatest } from "@/components/repo/repo-latest";
-import { DocumentTitle } from "@/components/document-title";
+
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { MainRootLayout } from "./main-root-layout";
+} from "@workspace/ui/components/empty";
+
 import { getVisits } from "@/lib/tracker";
+
+import { DocumentTitle } from "@/components/document-title";
+import { RepoLatest } from "@/components/repo/repo-latest";
+import { RepoSelect } from "@/components/repo/repo-select";
+
+import { MainRootLayout } from "./main-root-layout";
 
 export default function Page() {
   const [hasRecentVisits, setHasRecentVisits] = useState(false);
@@ -28,9 +32,9 @@ export default function Page() {
   return (
     <MainRootLayout>
       <DocumentTitle title="Projects" />
-      <div className="max-w-screen-sm mx-auto p-4 md:p-6 space-y-8">
+      <div className="mx-auto max-w-screen-sm space-y-8 p-4 md:p-6">
         {user.accounts.length > 0 ? (
-          <div className="min-h-[calc(100vh-12rem)] flex flex-col justify-center space-y-8">
+          <div className="flex min-h-[calc(100vh-12rem)] flex-col justify-center space-y-8">
             {hasRecentVisits && (
               <div className="space-y-4">
                 <h2 className="text-lg font-medium tracking-tight">
@@ -47,7 +51,7 @@ export default function Page() {
             </div>
           </div>
         ) : (
-          <Empty className="absolute inset-0 border-0 rounded-none">
+          <Empty className="absolute inset-0 rounded-none border-0">
             <EmptyHeader>
               <EmptyTitle>No repositories yet</EmptyTitle>
               <EmptyDescription>

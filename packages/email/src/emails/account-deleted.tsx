@@ -30,7 +30,7 @@ export default function AccountDeleted({
           style={{ backgroundColor: "#FC8464", margin: 0, padding: 0 }}
         >
           <Preview>We&apos;re sorry to see you go - Dream Website</Preview>
-          <Container className="mx-auto max-w-xl py-12 px-4">
+          <Container className="mx-auto max-w-xl px-4 py-12">
             {/* Brand header */}
             <Section className="mb-6 text-center">
               <Img
@@ -175,7 +175,10 @@ export default function AccountDeleted({
 
             {/* Outer footer */}
             <Section className="mt-6 text-center">
-              <Text className="m-0 text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
+              <Text
+                className="m-0 text-xs"
+                style={{ color: "rgba(255,255,255,0.7)" }}
+              >
                 &copy; {new Date().getFullYear()} Dream Website · AliSamadii.LLC
               </Text>
             </Section>

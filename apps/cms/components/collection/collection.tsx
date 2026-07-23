@@ -3,55 +3,20 @@
 import {
   Fragment,
   memo,
-  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useState,
+  type ReactNode,
 } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import {
-  getParentPath,
-  getFileName,
-  getRelativePath,
-  joinPathSegments,
-  normalizePath,
-  sortFiles,
-} from "@/lib/utils/file";
 import { viewComponents } from "@/fields/registry";
-import {
-  getSchemaByName,
-  getPrimaryField,
-  getFieldByPath,
-  safeAccess,
-} from "@/lib/schema";
-import { requireApiSuccess } from "@/lib/api-client";
-import { EmptyCreate } from "@/components/empty-create";
-import { FileOptions } from "@/components/file/file-options";
-import { CollectionTable } from "./collection-table";
-import { FolderCreate } from "@/components/folder-create";
-import { resolveContentOperations } from "@/lib/operations";
-import { useRepoHeader } from "@/components/repo/repo-header-context";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
-  Breadcrumb,
-  BreadcrumbEllipsis,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { EllipsisVertical, FolderPlus, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
+import useSWR, { useSWRConfig } from "swr";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,24 +27,64 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import useSWR, { useSWRConfig } from "swr";
+} from "@workspace/ui/components/alert-dialog";
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@workspace/ui/components/breadcrumb";
+import { Button } from "@workspace/ui/components/button";
+import { ButtonGroup } from "@workspace/ui/components/button-group";
+import { buttonVariants } from "@workspace/ui/components/button-variants";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { EllipsisVertical, FolderPlus, Plus, Search } from "lucide-react";
+} from "@workspace/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
+import { Input } from "@workspace/ui/components/input";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@workspace/ui/components/tooltip";
+import { cn } from "@workspace/ui/lib/utils";
+
+import { requireApiSuccess } from "@/lib/api-client";
+import { resolveContentOperations } from "@/lib/operations";
+import {
+  getFieldByPath,
+  getPrimaryField,
+  getSchemaByName,
+  safeAccess,
+} from "@/lib/schema";
+import {
+  getFileName,
+  getParentPath,
+  getRelativePath,
+  joinPathSegments,
+  normalizePath,
+  sortFiles,
+} from "@/lib/utils/file";
+
+import { EmptyCreate } from "@/components/empty-create";
+import { FileOptions } from "@/components/file/file-options";
+import { FolderCreate } from "@/components/folder-create";
+import { useRepoHeader } from "@/components/repo/repo-header-context";
+
+import { CollectionTable } from "./collection-table";
 
 type GroupTrailItem = {
   name: string;
@@ -115,8 +120,8 @@ const CollectionHeaderActions = memo(function CollectionHeaderActions({
   return (
     <div className="flex items-center gap-x-2">
       {actionNode}
-      <div className="relative hidden sm:block w-52 md:w-64">
-        <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
+      <div className="relative hidden w-52 sm:block md:w-64">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-50" />
         <Input
           className="pl-9"
           value={searchInput}
@@ -157,7 +162,10 @@ const CollectionHeaderActions = memo(function CollectionHeaderActions({
             Add an entry
           </Link>
           <Link
-            className={cn(buttonVariants({ size: "icon" }), "sm:hidden shrink-0")}
+            className={cn(
+              buttonVariants({ size: "icon" }),
+              "shrink-0 sm:hidden"
+            )}
             href={addEntryHref}
           >
             <Plus className="size-4" />
@@ -183,12 +191,15 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const schema = useMemo(
     () => getSchemaByName(config?.object, name),
-    [config, name],
+    [config, name]
   );
   if (!schema) throw new Error(`Schema not found for "${name}".`);
   if (schema.type !== "collection")
     throw new Error(`"${name}" is not a collection.`);
-  const operations = useMemo(() => resolveContentOperations({ schema }), [schema]);
+  const operations = useMemo(
+    () => resolveContentOperations({ schema }),
+    [schema]
+  );
   const canCreate = operations.create;
   const canRename = operations.rename;
   const canDelete = operations.delete;
@@ -207,7 +218,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         pathAndFieldArray = schema.fields
           .filter(
             (field: any) =>
-              !["object", "block"].includes(field.type) && !field.hidden,
+              !["object", "block"].includes(field.type) && !field.hidden
           )
           .map((field: any) => ({ path: field.name, field: field }));
       }
@@ -245,7 +256,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const primaryField = useMemo(
     () => getPrimaryField(schema) ?? "name",
-    [schema],
+    [schema]
   );
   const requestedFieldPaths = useMemo(() => {
     const paths = new Set<string>(["name", "path", primaryField]);
@@ -265,7 +276,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       });
       return `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?${params.toString()}`;
     },
-    [config.branch, config.owner, config.repo, name, requestedFieldPaths],
+    [config.branch, config.owner, config.repo, name, requestedFieldPaths]
   );
 
   const fetchCollectionByUrl = useCallback(
@@ -287,14 +298,14 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         return a.name.localeCompare(b.name);
       });
     },
-    [schema.view?.foldersFirst],
+    [schema.view?.foldersFirst]
   );
 
   const collectionPath =
     schema.view?.layout === "tree" ? schema.path : path || schema.path;
   const rootCollectionKey = useMemo(
     () => buildCollectionApiUrl(collectionPath),
-    [buildCollectionApiUrl, collectionPath],
+    [buildCollectionApiUrl, collectionPath]
   );
 
   const { data: swrCollectionData, error: swrCollectionError } = useSWR<
@@ -321,7 +332,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     setError(
       swrCollectionError instanceof Error
         ? swrCollectionError.message
-        : "Fetch failed",
+        : "Fetch failed"
     );
   }, [swrCollectionError]);
 
@@ -343,7 +354,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           setError(err.message);
         } else {
           toast.error(
-            `Could not load items inside ${getFileName(fetchPath)}: ${err.message}`,
+            `Could not load items inside ${getFileName(fetchPath)}: ${err.message}`
           );
         }
         return undefined;
@@ -356,7 +367,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       mutate,
       path,
       schema.path,
-    ],
+    ]
   );
 
   const handleDelete = useCallback((path: string) => {
@@ -451,11 +462,11 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                   name,
                   newPath: normalizedNewPath,
                 }),
-              },
+              }
             );
             const data = await requireApiSuccess<any>(
               response,
-              "Failed to rename file",
+              "Failed to rename file"
             );
 
             resolve(data);
@@ -468,7 +479,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           loading: `Renaming "${path}" to "${newPath}"`,
           success: (data: any) => {
             router.push(
-              `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`,
+              `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
             );
             return data.message;
           },
@@ -478,7 +489,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         console.error(error);
       }
     },
-    [config.owner, config.repo, config.branch, name, router],
+    [config.owner, config.repo, config.branch, name, router]
   );
 
   const columns = useMemo(() => {
@@ -515,7 +526,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
               if (path === primaryField) {
                 return (
                   <Link
-                    className="font-medium truncate"
+                    className="truncate font-medium"
                     href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
                   >
                     {CellView}
@@ -523,7 +534,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                 );
               }
               return (
-                <div className="truncate w-full max-w-[12rem]">{CellView}</div>
+                <div className="w-full max-w-[12rem] truncate">{CellView}</div>
               );
             },
             sortUndefined: schema.view?.foldersFirst ? "first" : "last",
@@ -535,12 +546,12 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       accessorKey: "actions",
       header: "Actions",
       cell: ({ row }: { row: any }) => (
-        <div className="flex gap-1 justify-end">
+        <div className="flex justify-end gap-1">
           {row.original.type === "file" && (
             <ButtonGroup>
               <Link
                 className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
+                  buttonVariants({ variant: "outline", size: "sm" })
                 )}
                 href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
               >
@@ -571,52 +582,54 @@ export function Collection({ name, path }: { name: string; path?: string }) {
               row.original.name === schema.view?.node?.filename
             ) ? (
               canRename ? (
-              <AlertDialog>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon-sm"
-                        className="w-8 h-8"
+                <AlertDialog>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          className="h-8 w-8"
+                        >
+                          <Plus className="size-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>Add children entry</TooltipContent>
+                  </Tooltip>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Rename this file first?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Before adding children to this file, you must rename it
+                        from &quot;{row.original.path}&quot; to &quot;
+                        {row.original.path.replace(
+                          `.${schema.extension}`,
+                          `/${schema.view?.node?.filename}`
+                        )}
+                        &quot;.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() =>
+                          handleConfirmRenameNode(
+                            row.original.path,
+                            row.original.path.replace(
+                              `.${schema.extension}`,
+                              `/${schema.view?.node?.filename}`
+                            )
+                          )
+                        }
                       >
-                        <Plus className="size-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>Add children entry</TooltipContent>
-                </Tooltip>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Rename this file first?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Before adding children to this file, you must rename it
-                      from &quot;{row.original.path}&quot; to &quot;
-                      {row.original.path.replace(
-                        `.${schema.extension}`,
-                        `/${schema.view?.node?.filename}`,
-                      )}
-                      &quot;.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() =>
-                        handleConfirmRenameNode(
-                          row.original.path,
-                          row.original.path.replace(
-                            `.${schema.extension}`,
-                            `/${schema.view?.node?.filename}`,
-                          ),
-                        )
-                      }
-                    >
-                      Rename
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                        Rename
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               ) : null
             ) : (
               <Tooltip>
@@ -624,7 +637,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                   <Link
                     className={cn(
                       buttonVariants({ variant: "outline", size: "icon-sm" }),
-                      "w-8 h-8",
+                      "h-8 w-8"
                     )}
                     href={
                       row.original.isNode
@@ -698,14 +711,14 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       params.set("path", newPath || schema.path);
       router.push(`${pathname}?${params.toString()}`);
     },
-    [pathname, router, schema.path, searchParams],
+    [pathname, router, schema.path, searchParams]
   );
 
   const handleExpand = useCallback(
     async (row: any) => {
       if (!row) return;
       const subRows = await fetchCollectionData(
-        row.isNode ? row.parentPath : row.path,
+        row.isNode ? row.parentPath : row.path
       );
       if (subRows !== undefined) {
         setData((currentData: any[]) => {
@@ -726,7 +739,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         });
       }
     },
-    [fetchCollectionData],
+    [fetchCollectionData]
   );
 
   const loadingSkeleton = useMemo(
@@ -734,34 +747,34 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       <table className="w-full">
         <thead>
           <tr className="border-b font-medium">
-            <th className="p-2 h-10 align-middle">
-              <Skeleton className="w-8 h-4 rounded" />
+            <th className="h-10 p-2 align-middle">
+              <Skeleton className="h-4 w-8 rounded" />
             </th>
-            <th className="p-2 h-10 align-middle">
-              <Skeleton className="w-16 h-4 rounded" />
+            <th className="h-10 p-2 align-middle">
+              <Skeleton className="h-4 w-16 rounded" />
             </th>
-            <th className="p-2 h-10 align-middle">
-              <Skeleton className="w-12 h-4 rounded" />
+            <th className="h-10 p-2 align-middle">
+              <Skeleton className="h-4 w-12 rounded" />
             </th>
-            <th className="p-2 h-10 align-middle">
-              <Skeleton className="w-12 h-4 rounded" />
+            <th className="h-10 p-2 align-middle">
+              <Skeleton className="h-4 w-12 rounded" />
             </th>
           </tr>
         </thead>
         <tbody>
           {[...Array(5)].map((_, index) => (
             <tr className="border-b" key={index}>
-              <td className="p-2 py-0 h-12 align-middle">
+              <td className="h-12 p-2 py-0 align-middle">
                 <Skeleton className="h-8 w-8 rounded-md" />
               </td>
-              <td className="p-2 py-0 h-12 align-middle w-full min-w-[12rem] max-w-px">
-                <Skeleton className="w-full h-5 rounded" />
+              <td className="h-12 w-full max-w-px min-w-[12rem] p-2 py-0 align-middle">
+                <Skeleton className="h-5 w-full rounded" />
               </td>
-              <td className="p-2 py-0 h-12 align-middle">
-                <Skeleton className="w-24 h-5 rounded" />
+              <td className="h-12 p-2 py-0 align-middle">
+                <Skeleton className="h-5 w-24 rounded" />
               </td>
-              <td className="p-2 py-0 h-12 align-middle">
-                <div className="flex gap-1 justify-end">
+              <td className="h-12 p-2 py-0 align-middle">
+                <div className="flex justify-end gap-1">
                   <ButtonGroup>
                     <Button variant="outline" size="sm" disabled>
                       Edit
@@ -774,7 +787,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                     <Button
                       variant="outline"
                       size="icon-sm"
-                      className="w-8 h-8"
+                      className="h-8 w-8"
                       disabled
                     >
                       <Plus className="size-4" />
@@ -787,7 +800,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         </tbody>
       </table>
     ),
-    [schema.view?.layout],
+    [schema.view?.layout]
   );
 
   const addEntryHref = `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new${
@@ -804,7 +817,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     const normalizedCurrentPath = normalizePath(collectionPath);
     const relativePath = getRelativePath(
       normalizedCurrentPath,
-      normalizedRootPath,
+      normalizedRootPath
     );
     const segments = relativePath
       ? relativePath.split("/").filter(Boolean)
@@ -824,7 +837,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
     return (
       <Breadcrumb>
-        <BreadcrumbList className="font-semibold text-lg flex-nowrap">
+        <BreadcrumbList className="flex-nowrap text-lg font-semibold">
           {groupTrail.map((group) => (
             <Fragment key={`group-${group.name}`}>
               <BreadcrumbItem>
@@ -835,7 +848,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           ))}
           <BreadcrumbItem
             className={
-              entries.length === 0 ? "min-w-0 max-w-full truncate" : undefined
+              entries.length === 0 ? "max-w-full min-w-0 truncate" : undefined
             }
           >
             {entries.length > 0 ? (
@@ -846,7 +859,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                 {schema.label || schema.name}
               </BreadcrumbLink>
             ) : (
-              <BreadcrumbPage className="block max-w-full font-semibold truncate">
+              <BreadcrumbPage className="block max-w-full truncate font-semibold">
                 {schema.label || schema.name}
               </BreadcrumbPage>
             )}
@@ -883,10 +896,10 @@ export function Collection({ name, path }: { name: string; path?: string }) {
             return (
               <Fragment key={entry.path}>
                 <BreadcrumbItem
-                  className={isLast ? "min-w-0 max-w-full truncate" : undefined}
+                  className={isLast ? "max-w-full min-w-0 truncate" : undefined}
                 >
                   {isLast ? (
-                    <BreadcrumbPage className="block max-w-full font-semibold truncate">
+                    <BreadcrumbPage className="block max-w-full truncate font-semibold">
                       {entry.name}
                     </BreadcrumbPage>
                   ) : (
@@ -945,7 +958,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       schema.name,
       schema.path,
       schema.subfolders,
-    ],
+    ]
   );
 
   useRepoHeader({
@@ -1005,5 +1018,5 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     />
   );
 
-  return <div className="min-w-0 flex flex-col space-y-6">{contentNode}</div>;
+  return <div className="flex min-w-0 flex-col space-y-6">{contentNode}</div>;
 }

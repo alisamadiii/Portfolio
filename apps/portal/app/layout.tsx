@@ -54,9 +54,7 @@ export default function RootLayout({
       >
         <TRPCReactProvider>
           <Providers>
-            <Suspense>
-              {children}
-            </Suspense>
+            <Suspense>{children}</Suspense>
           </Providers>
         </TRPCReactProvider>
       </body>

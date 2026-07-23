@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
 import { design } from "@workspace/ui/lib/design";
+
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { FormattedJSON } from "@/components/json-format";
@@ -88,8 +89,12 @@ export const paymentColumns: ColumnDef<
     cell: ({ row }) => {
       return (
         <Dialog>
-          <DialogTrigger render={<Button variant="outline" size="icon" data-sticky-element />}>
-              <Braces />
+          <DialogTrigger
+            render={
+              <Button variant="outline" size="icon" data-sticky-element />
+            }
+          >
+            <Braces />
           </DialogTrigger>
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>

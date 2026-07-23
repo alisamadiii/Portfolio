@@ -8,9 +8,10 @@ import { resolveRedirectUrl } from "@workspace/ui/lib/company";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { useNugsVerifyEmail } from "@/hooks/use-nugs";
+
 import { AuthHeader } from "@/components/auth/auth-header";
 import { VerifyEmailDialog } from "@/components/auth/verify-email-dialog";
-import { useNugsVerifyEmail } from "@/hooks/use-nugs";
 
 export default function SignUpPage() {
   return (

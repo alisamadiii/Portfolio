@@ -91,7 +91,9 @@ function Content() {
                   className="bg-background h-12 rounded-full px-5 text-base"
                 />
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />

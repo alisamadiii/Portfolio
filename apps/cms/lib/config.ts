@@ -4,11 +4,12 @@
  * Persistence and GitHub sync live in `lib/config-store.ts`.
  */
 
-import YAML from "yaml";
-import { getFileExtension, extensionCategories } from "@/lib/utils/file";
-import { ConfigSchema } from "@/lib/config-schema";
-import { z } from "zod";
 import mergeWith from "lodash.mergewith";
+import YAML from "yaml";
+import { z } from "zod";
+
+import { ConfigSchema } from "@/lib/config-schema";
+import { extensionCategories, getFileExtension } from "@/lib/utils/file";
 
 const configVersion = "3.0";
 
@@ -21,7 +22,7 @@ type NavigationNode = {
 
 const resolveSettingsObject = (configObject?: Record<string, any>) => {
   if (!configObject || typeof configObject !== "object") return {};
-  return (configObject.settings && typeof configObject.settings === "object")
+  return configObject.settings && typeof configObject.settings === "object"
     ? configObject.settings
     : {};
 };
@@ -38,7 +39,8 @@ const isCacheEnabled = (configObject?: Record<string, any>) => {
   const settings = resolveSettingsObject(configObject);
 
   if (typeof settings.cache === "boolean") return settings.cache;
-  if (typeof (configObject as any)?.cache === "boolean") return Boolean((configObject as any).cache);
+  if (typeof (configObject as any)?.cache === "boolean")
+    return Boolean((configObject as any).cache);
   return false;
 };
 
@@ -101,7 +103,7 @@ const normalizeConfig = (configObject: any) => {
     Object.keys(configObjectCopy.components).forEach((componentKey: string) => {
       configObjectCopy.components[componentKey] = resolveComponent(
         configObjectCopy.components[componentKey],
-        configObjectCopy.components,
+        configObjectCopy.components
       );
     });
   }
@@ -154,7 +156,7 @@ const normalizeConfig = (configObject: any) => {
           mediaConfig.categories.map((category: string) => {
             if (extensionCategories[category] != null) {
               mediaConfig.extensions = mediaConfig.extensions.concat(
-                extensionCategories[category],
+                extensionCategories[category]
               );
             }
           });
@@ -188,7 +190,7 @@ const normalizeConfig = (configObject: any) => {
   ) {
     const normalizedContent = normalizeContentEntries(
       configObjectCopy.content,
-      configObjectCopy?.components,
+      configObjectCopy?.components
     );
     configObjectCopy.content = normalizedContent.items;
     navigation.content = normalizedContent.navigation;
@@ -245,7 +247,7 @@ const normalizeConfig = (configObject: any) => {
 
 const normalizeContentEntry = (
   item: any,
-  componentsMap: Record<string, any>,
+  componentsMap: Record<string, any>
 ) => {
   if (item.path != null) {
     item.path = item.path.replace(/^\/|\/$/g, "");
@@ -346,7 +348,7 @@ const normalizeContentEntry = (
 
 const normalizeContentEntries = (
   entries: any[],
-  componentsMap: Record<string, any>,
+  componentsMap: Record<string, any>
 ): { items: any[]; navigation: NavigationNode[] } => {
   const items: any[] = [];
   const navigation: NavigationNode[] = [];
@@ -355,7 +357,7 @@ const normalizeContentEntries = (
     if (entry?.type === "group") {
       const normalizedGroup = normalizeContentEntries(
         entry.items || [],
-        componentsMap,
+        componentsMap
       );
       navigation.push({
         type: "group",
@@ -400,13 +402,13 @@ function resolveComponent(field: any, componentsMap: Record<string, any>): any {
           if (Array.isArray(srcValue)) {
             return srcValue;
           }
-        },
+        }
       );
       result.name = originalName;
       result.type = componentType;
     } else {
       console.error(
-        `Component reference "${componentKey}" could not be resolved.`,
+        `Component reference "${componentKey}" could not be resolved.`
       );
       delete result.component; // Remove the broken reference
     }
@@ -475,7 +477,7 @@ const validateConfig = (document: YAML.Document.Parsed) => {
 const processZodError = (
   error: any,
   document: YAML.Document.Parsed,
-  errors: any[],
+  errors: any[]
 ) => {
   let path = error.path;
   let yamlNode: any = document.getIn(path, true);

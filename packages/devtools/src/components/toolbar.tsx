@@ -82,20 +82,21 @@ function ResetButton({ onReset }: { onReset: () => void }) {
             : {}),
         }}
         onMouseEnter={(e) => {
-          if (!confirming) hoverIn(e, {
-            background: "rgba(239, 68, 68, 0.1)",
-            color: "#f87171",
-          });
+          if (!confirming)
+            hoverIn(e, {
+              background: "rgba(239, 68, 68, 0.1)",
+              color: "#f87171",
+            });
         }}
         onMouseLeave={(e) => {
           if (!confirming) hoverOut(e);
         }}
-        title={confirming ? "Click again to confirm reset" : "Reset all changes"}
+        title={
+          confirming ? "Click again to confirm reset" : "Reset all changes"
+        }
       >
         <ToolbarIcon d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
-        {confirming && (
-          <span style={{ fontSize: 11 }}>Confirm?</span>
-        )}
+        {confirming && <span style={{ fontSize: 11 }}>Confirm?</span>}
       </button>
     </>
   );
@@ -270,9 +271,7 @@ export function Toolbar({
           color: "var(--card-foreground)",
         }}
         onMouseEnter={(e) => hoverIn(e)}
-        onMouseLeave={(e) =>
-          hoverOut(e, { color: "var(--card-foreground)" })
-        }
+        onMouseLeave={(e) => hoverOut(e, { color: "var(--card-foreground)" })}
         title="Submit feedback request"
       >
         <ToolbarIcon d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
@@ -280,9 +279,7 @@ export function Toolbar({
       </a>
 
       {/* Reset with confirmation */}
-      {changesCount > 0 && (
-        <ResetButton onReset={onReset} />
-      )}
+      {changesCount > 0 && <ResetButton onReset={onReset} />}
 
       <div style={styles.toolbarDivider} />
 

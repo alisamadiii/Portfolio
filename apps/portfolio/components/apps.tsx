@@ -29,15 +29,19 @@ export default function Apps() {
       {icons.map((icon, index) => (
         <TooltipProvider key={index}>
           <Tooltip>
-            <TooltipTrigger render={<div
-                key={index}
-                className={cn(
-                  "bg-natural-150 flex flex-col items-center justify-center rounded-lg border p-4",
-                  typeof icon.value === "string" &&
-                    "text-3xl font-semibold tracking-tighter"
-                )}
-              />}>
-                {icon.value}
+            <TooltipTrigger
+              render={
+                <div
+                  key={index}
+                  className={cn(
+                    "bg-natural-150 flex flex-col items-center justify-center rounded-lg border p-4",
+                    typeof icon.value === "string" &&
+                      "text-3xl font-semibold tracking-tighter"
+                  )}
+                />
+              }
+            >
+              {icon.value}
             </TooltipTrigger>
             <TooltipContent>{icon.label}</TooltipContent>
           </Tooltip>

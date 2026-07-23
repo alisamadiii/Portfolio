@@ -81,7 +81,9 @@ export const Company = () => {
             name="phone"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">Phone</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">
+                  Phone
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -89,7 +91,9 @@ export const Company = () => {
                     placeholder="+1 (971) 382-8969"
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
@@ -99,7 +103,9 @@ export const Company = () => {
             name="company"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">Company</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">
+                  Company
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -107,7 +113,9 @@ export const Company = () => {
                     placeholder="AliSamadiiLLC"
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
@@ -117,7 +125,9 @@ export const Company = () => {
             name="address"
             render={({ field, fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">Address</FieldLabel>
+                <FieldLabel className="text-[13px] font-semibold">
+                  Address
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     {...field}
@@ -125,7 +135,9 @@ export const Company = () => {
                     placeholder="Oregon, USA"
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />

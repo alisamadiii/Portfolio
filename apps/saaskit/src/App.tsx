@@ -1,23 +1,24 @@
-import { useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
-import Landing from './pages/Landing'
-import FullStack from './pages/FullStack'
-import Changelog from './pages/Changelog'
-import Docs from './pages/Docs'
-import License from './pages/License'
-import Terms from './pages/Terms'
+import { useEffect } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
+
+import Changelog from "./pages/Changelog";
+import Docs from "./pages/Docs";
+import FullStack from "./pages/FullStack";
+import Landing from "./pages/Landing";
+import License from "./pages/License";
+import Terms from "./pages/Terms";
 
 /** Scroll to top on route change, but honour in-page #hash anchors. */
 function ScrollToTop() {
-  const { pathname, hash } = useLocation()
+  const { pathname, hash } = useLocation();
   useEffect(() => {
     if (hash) {
-      document.getElementById(hash.slice(1))?.scrollIntoView()
-      return
+      document.getElementById(hash.slice(1))?.scrollIntoView();
+      return;
     }
-    window.scrollTo(0, 0)
-  }, [pathname, hash])
-  return null
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+  return null;
 }
 
 export default function App() {
@@ -33,5 +34,5 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
       </Routes>
     </>
-  )
+  );
 }

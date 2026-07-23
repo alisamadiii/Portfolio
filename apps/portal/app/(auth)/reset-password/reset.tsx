@@ -92,7 +92,9 @@ export function ResetPassword({ token }: ResetPasswordProps) {
                   )}
                 </button>
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />

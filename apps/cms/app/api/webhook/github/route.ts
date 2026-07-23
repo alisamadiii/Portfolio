@@ -1,8 +1,10 @@
-import { after } from "next/server";
 import crypto from "crypto";
+import { after } from "next/server";
+
 import { createInternalCaller } from "@workspace/trpc/http-caller";
-import { handleRepositoryWebhookEvent } from "@/lib/github-webhook-repository";
+
 import { handlePushWebhookEvent } from "@/lib/github-webhook-push";
+import { handleRepositoryWebhookEvent } from "@/lib/github-webhook-repository";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -52,8 +54,8 @@ export async function POST(request: Request) {
     const signatureBuffer = Buffer.from(signature, "utf8");
     const digestBuffer = Buffer.from(digest, "utf8");
     if (
-      signatureBuffer.length !== digestBuffer.length
-      || !crypto.timingSafeEqual(signatureBuffer, digestBuffer)
+      signatureBuffer.length !== digestBuffer.length ||
+      !crypto.timingSafeEqual(signatureBuffer, digestBuffer)
     ) {
       return Response.json(null, { status: 401 });
     }

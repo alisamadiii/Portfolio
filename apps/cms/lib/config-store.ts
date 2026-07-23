@@ -2,29 +2,37 @@
  * Persist and synchronize repository configuration between GitHub and the DB.
  */
 
+import { and, eq, sql } from "drizzle-orm";
+
 import { Config } from "@/types/config";
+
 import { db } from "@/db";
 import { configTable } from "@/db/schema";
-import { and, eq, sql } from "drizzle-orm";
-import { createOctokitInstance } from "@/lib/utils/octokit";
+
 import { configVersion, normalizeConfig, parseConfig } from "@/lib/config";
-import { getBasePath, rebaseConfigObject, resolveConfigFilePath } from "@/lib/repo-settings";
+import {
+  getBasePath,
+  rebaseConfigObject,
+  resolveConfigFilePath,
+} from "@/lib/repo-settings";
+import { createOctokitInstance } from "@/lib/utils/octokit";
 
 const getConfigFromDb = async (
   owner: string,
   repo: string,
-  branch: string,
+  branch: string
 ): Promise<Config | null> => {
-  if (!owner || !repo || !branch) throw new Error(`Owner, repo, and branch must all be provided.`);
-  
+  if (!owner || !repo || !branch)
+    throw new Error(`Owner, repo, and branch must all be provided.`);
+
   const config = await db.query.configTable.findFirst({
     where: and(
       sql`lower(${configTable.owner}) = lower(${owner})`,
       sql`lower(${configTable.repo}) = lower(${repo})`,
-      eq(configTable.branch, branch),
-    )
+      eq(configTable.branch, branch)
+    ),
   });
-  
+
   if (!config) return null;
 
   const parsedConfig = {
@@ -40,63 +48,68 @@ const getConfigFromDb = async (
   return parsedConfig;
 };
 
-const saveConfig = async (
-  config: Config,
-): Promise<Config> => {
-  await db.insert(configTable).values({
-    owner: config.owner,
-    repo: config.repo,
-    branch: config.branch,
-    sha: config.sha,
-    version: config.version,
-    object: JSON.stringify(config.object),
-    lastCheckedAt: new Date(),
-  }).onConflictDoUpdate({
-    target: [configTable.owner, configTable.repo, configTable.branch],
-    set: {
+const saveConfig = async (config: Config): Promise<Config> => {
+  await db
+    .insert(configTable)
+    .values({
+      owner: config.owner,
+      repo: config.repo,
+      branch: config.branch,
       sha: config.sha,
       version: config.version,
       object: JSON.stringify(config.object),
       lastCheckedAt: new Date(),
-    },
-  });
+    })
+    .onConflictDoUpdate({
+      target: [configTable.owner, configTable.repo, configTable.branch],
+      set: {
+        sha: config.sha,
+        version: config.version,
+        object: JSON.stringify(config.object),
+        lastCheckedAt: new Date(),
+      },
+    });
 
   return config;
-}
+};
 
-const updateConfig = async (
-  config: Config,
-): Promise<Config> => {
-  await db.update(configTable).set({
-    sha: config.sha,
-    version: config.version,
-    object: JSON.stringify(config.object),
-    lastCheckedAt: new Date(),
-  }).where(
-    and(
-      sql`lower(${configTable.owner}) = lower(${config.owner})`,
-      sql`lower(${configTable.repo}) = lower(${config.repo})`,
-      eq(configTable.branch, config.branch)
-    )
-  );
+const updateConfig = async (config: Config): Promise<Config> => {
+  await db
+    .update(configTable)
+    .set({
+      sha: config.sha,
+      version: config.version,
+      object: JSON.stringify(config.object),
+      lastCheckedAt: new Date(),
+    })
+    .where(
+      and(
+        sql`lower(${configTable.owner}) = lower(${config.owner})`,
+        sql`lower(${configTable.repo}) = lower(${config.repo})`,
+        eq(configTable.branch, config.branch)
+      )
+    );
 
   return config;
-}
+};
 
 const touchConfigCheck = async (
   owner: string,
   repo: string,
-  branch: string,
+  branch: string
 ) => {
-  await db.update(configTable).set({
-    lastCheckedAt: new Date(),
-  }).where(
-    and(
-      sql`lower(${configTable.owner}) = lower(${owner})`,
-      sql`lower(${configTable.repo}) = lower(${repo})`,
-      eq(configTable.branch, branch),
-    ),
-  );
+  await db
+    .update(configTable)
+    .set({
+      lastCheckedAt: new Date(),
+    })
+    .where(
+      and(
+        sql`lower(${configTable.owner}) = lower(${owner})`,
+        sql`lower(${configTable.repo}) = lower(${repo})`,
+        eq(configTable.branch, branch)
+      )
+    );
 };
 
 type GetConfigOptions = {
@@ -107,15 +120,21 @@ type GetConfigOptions = {
   backgroundRefreshWhenStale?: boolean;
 };
 
-const DEFAULT_CONFIG_CHECK_TTL_MS = parseInt(
-  process.env.CONFIG_CHECK_MIN ||
-    process.env.CFG_CHECK_MIN ||
-    process.env.CONFIG_CHECK_TTL ||
-    "5",
-  10,
-) * 60 * 1000;
+const DEFAULT_CONFIG_CHECK_TTL_MS =
+  parseInt(
+    process.env.CONFIG_CHECK_MIN ||
+      process.env.CFG_CHECK_MIN ||
+      process.env.CONFIG_CHECK_TTL ||
+      "5",
+    10
+  ) *
+  60 *
+  1000;
 
-const isConfigCheckDue = (lastCheckedAt?: Date, ttlMs = DEFAULT_CONFIG_CHECK_TTL_MS) => {
+const isConfigCheckDue = (
+  lastCheckedAt?: Date,
+  ttlMs = DEFAULT_CONFIG_CHECK_TTL_MS
+) => {
   if (!lastCheckedAt) return true;
   return Date.now() - new Date(lastCheckedAt).getTime() > ttlMs;
 };
@@ -129,7 +148,7 @@ const fetchConfigFromGithub = async (
   repo: string,
   branch: string,
   token: string,
-  basePath: string,
+  basePath: string
 ): Promise<Pick<Config, "sha" | "object"> | null> => {
   const octokit = createOctokitInstance(token);
   try {
@@ -142,7 +161,9 @@ const fetchConfigFromGithub = async (
     });
 
     if (Array.isArray(response.data)) {
-      throw new Error("Expected .pages.yml to be a file but found a directory.");
+      throw new Error(
+        "Expected .pages.yml to be a file but found a directory."
+      );
     }
     if (response.data.type !== "file") {
       throw new Error("Invalid .pages.yml response type.");
@@ -152,7 +173,7 @@ const fetchConfigFromGithub = async (
     const parsed = parseConfig(configFile);
     const configObject = rebaseConfigObject(
       normalizeConfig(parsed.document.toJSON()),
-      basePath,
+      basePath
     );
 
     return {
@@ -160,7 +181,10 @@ const fetchConfigFromGithub = async (
       object: configObject,
     };
   } catch (error: any) {
-    if (error?.status === 404 && error?.response?.data?.message === "Not Found") {
+    if (
+      error?.status === 404 &&
+      error?.response?.data?.message === "Not Found"
+    ) {
       return null;
     }
     throw error;
@@ -171,12 +195,13 @@ const getConfig = async (
   owner: string,
   repo: string,
   branch: string,
-  options?: GetConfigOptions,
+  options?: GetConfigOptions
 ): Promise<Config | null> => {
   const sync = options?.sync ?? false;
   const getToken = options?.getToken;
   const bootstrapOnMiss = options?.bootstrapOnMiss ?? true;
-  if (sync && !getToken) throw new Error("getToken is required when sync is enabled.");
+  if (sync && !getToken)
+    throw new Error("getToken is required when sync is enabled.");
   const resolveToken = getToken;
   const requireToken = getToken!;
 
@@ -188,7 +213,11 @@ const getConfig = async (
 
   const run = (async (): Promise<Config | null> => {
     const basePath = await getBasePath(normalizedOwner, normalizedRepo);
-    const cachedConfig = await getConfigFromDb(normalizedOwner, normalizedRepo, branch);
+    const cachedConfig = await getConfigFromDb(
+      normalizedOwner,
+      normalizedRepo,
+      branch
+    );
     if (!sync) {
       if (cachedConfig?.version === configVersion) return cachedConfig;
       if (!resolveToken || !bootstrapOnMiss) return cachedConfig;
@@ -196,7 +225,13 @@ const getConfig = async (
       const token = await resolveToken();
       if (!token) throw new Error("Token not found");
 
-      const latest = await fetchConfigFromGithub(owner, repo, branch, token, basePath);
+      const latest = await fetchConfigFromGithub(
+        owner,
+        repo,
+        branch,
+        token,
+        basePath
+      );
       if (!latest) return null;
 
       const nextConfig: Config = {
@@ -212,7 +247,8 @@ const getConfig = async (
     }
 
     const ttlMs = options?.ttlMs ?? DEFAULT_CONFIG_CHECK_TTL_MS;
-    const backgroundRefreshWhenStale = options?.backgroundRefreshWhenStale ?? false;
+    const backgroundRefreshWhenStale =
+      options?.backgroundRefreshWhenStale ?? false;
 
     if (
       cachedConfig &&
@@ -232,15 +268,23 @@ const getConfig = async (
         try {
           const token = await requireToken();
           if (!token) return;
-          const latest = await fetchConfigFromGithub(owner, repo, branch, token, basePath);
+          const latest = await fetchConfigFromGithub(
+            owner,
+            repo,
+            branch,
+            token,
+            basePath
+          );
           if (!latest) {
-            await db.delete(configTable).where(
-              and(
-                sql`lower(${configTable.owner}) = lower(${normalizedOwner})`,
-                sql`lower(${configTable.repo}) = lower(${normalizedRepo})`,
-                eq(configTable.branch, branch),
-              ),
-            );
+            await db
+              .delete(configTable)
+              .where(
+                and(
+                  sql`lower(${configTable.owner}) = lower(${normalizedOwner})`,
+                  sql`lower(${configTable.repo}) = lower(${normalizedRepo})`,
+                  eq(configTable.branch, branch)
+                )
+              );
             return;
           }
           if (cachedConfig.sha === latest.sha) {
@@ -267,21 +311,33 @@ const getConfig = async (
     const token = await requireToken();
     if (!token) throw new Error("Token not found");
 
-    const latest = await fetchConfigFromGithub(owner, repo, branch, token, basePath);
+    const latest = await fetchConfigFromGithub(
+      owner,
+      repo,
+      branch,
+      token,
+      basePath
+    );
     if (!latest) {
       if (cachedConfig) {
-        await db.delete(configTable).where(
-          and(
-            sql`lower(${configTable.owner}) = lower(${normalizedOwner})`,
-            sql`lower(${configTable.repo}) = lower(${normalizedRepo})`,
-            eq(configTable.branch, branch),
-          ),
-        );
+        await db
+          .delete(configTable)
+          .where(
+            and(
+              sql`lower(${configTable.owner}) = lower(${normalizedOwner})`,
+              sql`lower(${configTable.repo}) = lower(${normalizedRepo})`,
+              eq(configTable.branch, branch)
+            )
+          );
       }
       return null;
     }
 
-    if (cachedConfig && cachedConfig.version === configVersion && cachedConfig.sha === latest.sha) {
+    if (
+      cachedConfig &&
+      cachedConfig.version === configVersion &&
+      cachedConfig.sha === latest.sha
+    ) {
       await touchConfigCheck(normalizedOwner, normalizedRepo, branch);
       return {
         ...cachedConfig,

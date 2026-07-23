@@ -5,23 +5,24 @@
  * preview UI to see every heading, text style, and layout primitive.
  */
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+
 import type { DraftModule } from "../../types/draft";
 import {
+  Body,
+  BulletItem,
+  Caption,
+  colors,
+  Divider,
+  DividerBold,
   H1,
   H2,
   H3,
   H4,
   H5,
   H6,
-  Body,
-  Small,
-  Caption,
   Label,
-  Divider,
-  DividerBold,
-  BulletItem,
+  Small,
   Spacer,
-  colors,
 } from "./_util";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -78,7 +79,13 @@ const s = StyleSheet.create({
 
 // ─── Showcase helpers ────────────────────────────────────────────────────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <View>
       <Text style={s.sectionTitle}>{title}</Text>
@@ -88,7 +95,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Annotated({ label, children }: { label: string; children: React.ReactNode }) {
+function Annotated({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <View>
       <Text style={s.annotation}>{label}</Text>
@@ -102,7 +115,9 @@ function ColorSwatch({ name, hex }: { name: string; hex: string }) {
     <View style={s.swatchItem}>
       <View style={[s.swatchBox, { backgroundColor: hex }]} />
       <View>
-        <Text style={[s.swatchLabel, { fontFamily: "Helvetica-Bold" }]}>{name}</Text>
+        <Text style={[s.swatchLabel, { fontFamily: "Helvetica-Bold" }]}>
+          {name}
+        </Text>
         <Text style={s.swatchLabel}>{hex}</Text>
       </View>
     </View>
@@ -116,7 +131,13 @@ function ShowcaseDocument() {
     <Document title="Design System — Component Showcase">
       <Page size="A4" style={s.page}>
         <H1 style={{ marginBottom: 4 }}>Design System</H1>
-        <H3 style={{ color: colors.mutedForeground, fontFamily: "Helvetica", marginBottom: 24 }}>
+        <H3
+          style={{
+            color: colors.mutedForeground,
+            fontFamily: "Helvetica",
+            marginBottom: 24,
+          }}
+        >
           Typography, Colors & Components
         </H3>
 
@@ -173,13 +194,14 @@ function ShowcaseDocument() {
           </Annotated>
           <Annotated label="Small — 9px Regular">
             <Small>
-              Small text for secondary information, footnotes, and supporting details
-              that don't need primary visual weight.
+              Small text for secondary information, footnotes, and supporting
+              details that don't need primary visual weight.
             </Small>
           </Annotated>
           <Annotated label="Caption — 8px Regular">
             <Caption>
-              Caption text for the smallest annotations, timestamps, and fine print.
+              Caption text for the smallest annotations, timestamps, and fine
+              print.
             </Caption>
           </Annotated>
         </Section>
@@ -240,7 +262,8 @@ function ShowcaseDocument() {
 const draft: DraftModule<Record<string, never>> = {
   meta: {
     title: "Components",
-    description: "Design system showcase — typography, colors, and layout primitives",
+    description:
+      "Design system showcase — typography, colors, and layout primitives",
   },
   mockData: {},
   Document: ShowcaseDocument,

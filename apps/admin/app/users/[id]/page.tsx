@@ -45,7 +45,8 @@ export default function EachOrganization() {
 
   const setActiveTab = (tab: string) => {
     setTabParam(tab);
-    if (typeof window !== "undefined") localStorage.setItem(TAB_STORAGE_KEY, tab);
+    if (typeof window !== "undefined")
+      localStorage.setItem(TAB_STORAGE_KEY, tab);
   };
 
   const { id } = useParams<{ id: string }>();
@@ -91,7 +92,7 @@ export default function EachOrganization() {
         </div>
         <div className="ml-auto flex items-center gap-2.5">
           <div className="text-right">
-            <p className="text-sm font-medium leading-none">Client</p>
+            <p className="text-sm leading-none font-medium">Client</p>
             <p className="text-muted-foreground text-[11px]">
               Unlock portal client features
             </p>

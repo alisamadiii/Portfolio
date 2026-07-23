@@ -22,9 +22,7 @@ export const CodeEditorView = ({
   const selectedFile = source.files.find((f) => f.id === selectedTab);
 
   const trpc = useTRPC();
-  const updateFile = useMutation(
-    trpc.sources.file.update.mutationOptions()
-  );
+  const updateFile = useMutation(trpc.sources.file.update.mutationOptions());
 
   return (
     <div key={selectedTab} className="flex flex-1 flex-col overflow-hidden">

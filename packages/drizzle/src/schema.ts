@@ -341,9 +341,7 @@ export const cmsOrgRepo = pgTable(
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
   },
   (table) => ({
-    uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(
-      table.repoId
-    ),
+    uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(table.repoId),
     uqCmsOrgRepoOwnerRepoCi: uniqueIndex("uq_cms_org_repo_owner_repo_ci").on(
       sql`lower(${table.owner})`,
       sql`lower(${table.repo})`

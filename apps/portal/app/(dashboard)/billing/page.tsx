@@ -249,7 +249,10 @@ export default function BillingPage() {
               const name = sub.productName || sub.productId || "—";
 
               return (
-                <div key={rowId} className="border-rule border-b last:border-b-0">
+                <div
+                  key={rowId}
+                  className="border-rule border-b last:border-b-0"
+                >
                   <button
                     type="button"
                     onClick={() => toggleRow(rowId)}
@@ -268,7 +271,9 @@ export default function BillingPage() {
                           : "—"}
                       </span>
                     </span>
-                    <StatusPill status={isCanceling ? "canceling" : sub.status} />
+                    <StatusPill
+                      status={isCanceling ? "canceling" : sub.status}
+                    />
                     <span className="min-w-[110px] text-right">
                       <span className="block text-lg font-extrabold tracking-tight">
                         {sub.amount ? formatCurrency(sub.amount) : "—"}

@@ -14,8 +14,8 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useIsPurchased } from "@/hooks/use-is-purchased";
 import { getPackagesFromCode, updateSourceCode } from "@/lib/utils";
+import { useIsPurchased } from "@/hooks/use-is-purchased";
 
 const AI_SERVICES = [
   {
@@ -52,10 +52,7 @@ function buildPrompt({
   packages: string[];
 }) {
   const fileBlocks = files
-    .map(
-      (f) =>
-        `// ── ${f.filename} ──\n${updateSourceCode(f.content)}`
-    )
+    .map((f) => `// ── ${f.filename} ──\n${updateSourceCode(f.content)}`)
     .join("\n\n");
 
   return `I have a React animation component called "${name}" from the Motion library.

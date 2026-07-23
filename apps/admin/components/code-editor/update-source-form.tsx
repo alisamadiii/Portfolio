@@ -7,7 +7,11 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { Button } from "@workspace/ui/components/button";
-import { Field, FieldContent, FieldLabel } from "@workspace/ui/components/field";
+import {
+  Field,
+  FieldContent,
+  FieldLabel,
+} from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -27,9 +31,7 @@ export const UpdateFormSource = () => {
   const sourceId = params.id;
 
   const trpc = useTRPC();
-  const getSource = useQuery(
-    trpc.sources.get.queryOptions(sourceId)
-  );
+  const getSource = useQuery(trpc.sources.get.queryOptions(sourceId));
   const updateSource = useMutation(trpc.sources.update.mutationOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({

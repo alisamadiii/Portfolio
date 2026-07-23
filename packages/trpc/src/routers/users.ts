@@ -127,9 +127,7 @@ export const usersRouter = createTRPCRouter({
       z.object({
         page: z.number().optional(),
         limit: z.number().optional(),
-        sortBy: z
-          .enum(["email", "created", "banned"])
-          .optional(),
+        sortBy: z.enum(["email", "created", "banned"]).optional(),
         search: z.string().optional(),
         filterBy: z.enum(["all", "admin", "client"]).optional(),
       })
@@ -159,8 +157,7 @@ export const usersRouter = createTRPCRouter({
           conditions.push(eq(user.isClient, true));
         }
 
-        const where =
-          conditions.length > 0 ? and(...conditions) : undefined;
+        const where = conditions.length > 0 ? and(...conditions) : undefined;
 
         const users = await db
           .select({
@@ -388,5 +385,4 @@ export const usersRouter = createTRPCRouter({
       });
     }
   }),
-
 });

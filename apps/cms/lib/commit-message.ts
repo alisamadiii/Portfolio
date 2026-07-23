@@ -11,7 +11,9 @@ const defaultCommitTemplates: Record<CommitAction, string> = {
   rename: "Rename {oldPath} to {newPath} (via Pages CMS)",
 };
 
-const getCommitTemplates = (configObject?: Record<string, any>): CommitTemplates => {
+const getCommitTemplates = (
+  configObject?: Record<string, any>
+): CommitTemplates => {
   const templates = configObject?.settings?.commit?.templates;
   return templates && typeof templates === "object" ? templates : {};
 };
@@ -23,7 +25,8 @@ const resolveCommitIdentity = ({
   configObject?: Record<string, any>;
   identityOverride?: CommitIdentity;
 }): CommitIdentity => {
-  if (identityOverride === "app" || identityOverride === "user") return identityOverride;
+  if (identityOverride === "app" || identityOverride === "user")
+    return identityOverride;
 
   const identity = configObject?.settings?.commit?.identity;
   return identity === "user" ? "user" : "app";
@@ -31,7 +34,7 @@ const resolveCommitIdentity = ({
 
 const renderCommitTemplate = (
   template: string,
-  tokens: Record<string, string | undefined>,
+  tokens: Record<string, string | undefined>
 ): string => {
   return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (_match, token) => {
     const value = tokens[token];
@@ -99,12 +102,17 @@ const resolveCommitMessage = ({
 }): string => {
   const globalTemplates = getCommitTemplates(configObject);
   const overrideTemplate = templatesOverride?.[action];
-  const template = typeof overrideTemplate === "string" && overrideTemplate.trim()
-    ? overrideTemplate
-    : (typeof globalTemplates[action] === "string" && globalTemplates[action]?.trim()
-      ? (globalTemplates[action] as string)
-      : defaultCommitTemplates[action]);
-  return renderCommitTemplate(template, tokens).replace(/\s+/g, " ").trim().slice(0, 200);
+  const template =
+    typeof overrideTemplate === "string" && overrideTemplate.trim()
+      ? overrideTemplate
+      : typeof globalTemplates[action] === "string" &&
+          globalTemplates[action]?.trim()
+        ? (globalTemplates[action] as string)
+        : defaultCommitTemplates[action];
+  return renderCommitTemplate(template, tokens)
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
 };
 
 export { buildCommitTokens, resolveCommitIdentity, resolveCommitMessage };

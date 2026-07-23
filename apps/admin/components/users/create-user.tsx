@@ -81,7 +81,9 @@ export const CreateUser = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger render={<Button className="ml-auto" />}>Create User</DialogTrigger>
+      <DialogTrigger render={<Button className="ml-auto" />}>
+        Create User
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create User</DialogTitle>
@@ -103,7 +105,9 @@ export const CreateUser = () => {
                     aria-invalid={fieldState.invalid}
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
@@ -122,7 +126,9 @@ export const CreateUser = () => {
                     aria-invalid={fieldState.invalid}
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
@@ -141,7 +147,9 @@ export const CreateUser = () => {
                     aria-invalid={fieldState.invalid}
                   />
                 </FieldContent>
-                <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
               </Field>
             )}
           />
@@ -176,8 +184,10 @@ export const CreateUser = () => {
           <FieldError errors={[form.formState.errors.root]} />
         </form>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" onClick={() => form.reset()} />}>
-              Cancel
+          <DialogClose
+            render={<Button variant="outline" onClick={() => form.reset()} />}
+          >
+            Cancel
           </DialogClose>
           <Button
             onClick={form.handleSubmit(handleSubmit)}

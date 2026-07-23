@@ -1,11 +1,11 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { BookText, RefreshCcw, Trash2 } from "lucide-react";
-import { useRepoHeader } from "@/components/repo/repo-header-context";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@workspace/ui/components/alert-dialog";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
@@ -24,16 +25,18 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@workspace/ui/components/card";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { toast } from "sonner";
+} from "@workspace/ui/components/tooltip";
+
 import { requireApiSuccess } from "@/lib/api-client";
+
+import { useRepoHeader } from "@/components/repo/repo-header-context";
 
 type CacheStatusPayload = {
   fileMeta: {
@@ -184,7 +187,7 @@ export function CachePage({
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/${owner}/${repo}/${encodeURIComponent(branch)}/cache`,
+        `/api/${owner}/${repo}/${encodeURIComponent(branch)}/cache`
       );
       const payload = await requireApiSuccess<{
         status: string;
@@ -213,7 +216,7 @@ export function CachePage({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action }),
-          },
+          }
         );
         await requireApiSuccess(response, "Failed cache action");
         toast.success(successMessage, { id: loadingId });
@@ -224,14 +227,14 @@ export function CachePage({
         setActionLoading(null);
       }
     },
-    [branch, fetchStatus, owner, repo],
+    [branch, fetchStatus, owner, repo]
   );
 
   const headerNode = useMemo(
     () => (
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h1 className="font-semibold text-lg">Cache</h1>
+          <h1 className="text-lg font-semibold">Cache</h1>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -267,7 +270,7 @@ export function CachePage({
         />
       </div>
     ),
-    [actionLoading, loading, runAction],
+    [actionLoading, loading, runAction]
   );
 
   useRepoHeader({ header: headerNode });
@@ -281,7 +284,7 @@ export function CachePage({
 
   if (loading || !data) {
     return (
-      <div className="max-w-screen-lg mx-auto space-y-4">
+      <div className="mx-auto max-w-screen-lg space-y-4">
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="h-full">
             <CardHeader>
@@ -290,7 +293,7 @@ export function CachePage({
                 Cached content (files and collections).
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm flex-1">
+            <CardContent className="flex-1 text-sm">
               <div className="divide-y rounded-md border">
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
                   <span className="text-muted-foreground">Files cached</span>
@@ -353,7 +356,7 @@ export function CachePage({
                   <code className="text-[13px]">.pages.yml</code>).
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm flex-1">
+              <CardContent className="flex-1 text-sm">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Cache SHA</span>
@@ -398,7 +401,7 @@ export function CachePage({
                   Cached repository permission checks.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm flex-1">
+              <CardContent className="flex-1 text-sm">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Entries</span>
@@ -420,7 +423,7 @@ export function CachePage({
 
   return (
     <TooltipProvider>
-      <div className="max-w-screen-lg mx-auto space-y-4">
+      <div className="mx-auto max-w-screen-lg space-y-4">
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="h-full">
             <CardHeader>
@@ -429,7 +432,7 @@ export function CachePage({
                 Cached content (files and collections).
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm flex-1">
+            <CardContent className="flex-1 text-sm">
               <div className="divide-y rounded-md border">
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
                   <span className="text-muted-foreground">Files cached</span>
@@ -467,11 +470,11 @@ export function CachePage({
                 </div>
               </div>
               {data.fileMeta?.status === "error" && (
-                <div className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-3 text-sm">
-                  <p className="font-medium text-destructive">
+                <div className="border-destructive/40 bg-destructive/10 mt-4 rounded-md border px-3 py-3 text-sm">
+                  <p className="text-destructive font-medium">
                     Unknown cache error
                   </p>
-                  <p className="mt-1 text-muted-foreground">
+                  <p className="text-muted-foreground mt-1">
                     Try refreshing the cache first. If the issue persists, clear
                     the cache and refresh it again.
                   </p>
@@ -525,7 +528,7 @@ export function CachePage({
                   <code className="text-[13px]">.pages.yml</code>).
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm flex-1">
+              <CardContent className="flex-1 text-sm">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Cache SHA</span>
@@ -590,7 +593,7 @@ export function CachePage({
                   Cached repository permission checks.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm flex-1">
+              <CardContent className="flex-1 text-sm">
                 <div className="divide-y rounded-md border">
                   <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <span className="text-muted-foreground">Entries</span>
@@ -613,7 +616,7 @@ export function CachePage({
                   onConfirm={async () =>
                     runAction(
                       "clear-permission-cache",
-                      "Permission cache cleared",
+                      "Permission cache cleared"
                     )
                   }
                 />

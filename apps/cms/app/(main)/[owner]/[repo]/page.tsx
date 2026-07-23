@@ -10,8 +10,10 @@ export default function Page() {
 
   useEffect(() => {
     // If no branch is provided, redirect to the default branch
-    router.replace(`/${owner}/${repo}/${encodeURIComponent(defaultBranch as string)}`);
+    router.replace(
+      `/${owner}/${repo}/${encodeURIComponent(defaultBranch as string)}`
+    );
   }, [owner, repo, defaultBranch, router]);
-  
+
   return null;
-};
+}

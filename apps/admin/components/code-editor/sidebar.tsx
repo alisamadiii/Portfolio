@@ -301,24 +301,28 @@ function FileItem({
 }) {
   return (
     <ContextMenu>
-      <ContextMenuTrigger render={<div
-          className={cn(
-            "group flex cursor-pointer items-center gap-1 rounded px-1 py-1 text-xs",
-            isActive
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            isReordering && "opacity-70"
-          )}
-          onClick={onClick}
-          {...dragHandlers}
-        />}>
-          {isReordering ? (
-            <Spinner className="size-3 shrink-0" />
-          ) : (
-            <GripVertical className="size-3 shrink-0 cursor-grab opacity-0 group-hover:opacity-50 active:cursor-grabbing" />
-          )}
-          <File className={cn("size-4 shrink-0", "text-muted-foreground")} />
-          <span className="flex-1 truncate">{file.filename}</span>
+      <ContextMenuTrigger
+        render={
+          <div
+            className={cn(
+              "group flex cursor-pointer items-center gap-1 rounded px-1 py-1 text-xs",
+              isActive
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              isReordering && "opacity-70"
+            )}
+            onClick={onClick}
+            {...dragHandlers}
+          />
+        }
+      >
+        {isReordering ? (
+          <Spinner className="size-3 shrink-0" />
+        ) : (
+          <GripVertical className="size-3 shrink-0 cursor-grab opacity-0 group-hover:opacity-50 active:cursor-grabbing" />
+        )}
+        <File className={cn("size-4 shrink-0", "text-muted-foreground")} />
+        <span className="flex-1 truncate">{file.filename}</span>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={onClick}>

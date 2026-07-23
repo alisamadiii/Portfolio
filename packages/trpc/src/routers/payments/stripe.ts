@@ -1,5 +1,7 @@
+import { cacheLife } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
+import Stripe from "stripe";
 import { z } from "zod";
 
 import {
@@ -7,13 +9,13 @@ import {
   authenticatedProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
-import Stripe from "stripe";
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import { user } from "@workspace/drizzle/schema";
-import { cacheLife } from "next/cache";
 
-const getStripeCustomerIdsByEmail = async (email: string): Promise<string[]> => {
+const getStripeCustomerIdsByEmail = async (
+  email: string
+): Promise<string[]> => {
   "use cache";
   cacheLife("minutes");
   const customers = await stripe.customers.list({ email, limit: 100 });
@@ -120,9 +122,7 @@ const mapInvoice = (inv: Stripe.Invoice) => ({
 
 export const stripeRouter = createTRPCRouter({
   getStripeSubscriptions: authenticatedProcedure.query(async ({ ctx }) => {
-    const customerIds = await getStripeCustomerIdsForUser(
-      ctx.session.user.id
-    );
+    const customerIds = await getStripeCustomerIdsForUser(ctx.session.user.id);
     if (customerIds.length === 0) return [];
 
     const results = await Promise.all(
@@ -132,9 +132,7 @@ export const stripeRouter = createTRPCRouter({
   }),
 
   getStripeInvoices: authenticatedProcedure.query(async ({ ctx }) => {
-    const customerIds = await getStripeCustomerIdsForUser(
-      ctx.session.user.id
-    );
+    const customerIds = await getStripeCustomerIdsForUser(ctx.session.user.id);
     if (customerIds.length === 0) return [];
 
     const results = await Promise.all(

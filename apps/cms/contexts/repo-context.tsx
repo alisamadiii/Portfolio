@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+
 import { Repo } from "@/types/repo";
 
 interface RepoContextType extends Repo {
@@ -19,7 +20,7 @@ export const useRepo = () => {
 
 export const RepoProvider = ({
   repo,
-  children
+  children,
 }: {
   repo: Repo;
   children: React.ReactNode;

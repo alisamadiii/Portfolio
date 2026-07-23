@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 
 type RepoHeaderSlots = {
@@ -42,16 +49,22 @@ export function RepoHeaderProvider({ children }: { children: ReactNode }) {
       setSlots,
       clearSlots,
     }),
-    [slots, setSlots, clearSlots],
+    [slots, setSlots, clearSlots]
   );
 
-  return <RepoHeaderContext.Provider value={value}>{children}</RepoHeaderContext.Provider>;
+  return (
+    <RepoHeaderContext.Provider value={value}>
+      {children}
+    </RepoHeaderContext.Provider>
+  );
 }
 
 export function useRepoHeaderState() {
   const context = useContext(RepoHeaderContext);
   if (!context) {
-    throw new Error("useRepoHeaderState must be used within a RepoHeaderProvider");
+    throw new Error(
+      "useRepoHeaderState must be used within a RepoHeaderProvider"
+    );
   }
 
   return context.slots;
@@ -80,7 +93,7 @@ export function useRepoHeader(slots: Partial<RepoHeaderSlots>) {
 
 export function useOptionalRepoHeader(
   slots: Partial<RepoHeaderSlots>,
-  { enabled = true }: { enabled?: boolean } = {},
+  { enabled = true }: { enabled?: boolean } = {}
 ) {
   const context = useContext(RepoHeaderContext);
   const setSlots = context?.setSlots;

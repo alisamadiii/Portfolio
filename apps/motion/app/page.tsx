@@ -41,7 +41,12 @@ export default function Home() {
     >
       {/* Hero */}
       <section className="px-4 pt-8 md:pt-12">
-        <div className={cn("bg-background relative mx-auto flex h-[600px] w-full max-w-[1400px] flex-col overflow-hidden rounded-[48px]", invertedTheme)}>
+        <div
+          className={cn(
+            "bg-background relative mx-auto flex h-[600px] w-full max-w-[1400px] flex-col overflow-hidden rounded-[48px]",
+            invertedTheme
+          )}
+        >
           {/* Ambient glow */}
           <div className="pointer-events-none absolute inset-0 z-0">
             <div className="bg-primary/15 absolute -top-1/4 -left-1/4 h-[600px] w-[600px] rounded-full blur-[120px]" />
@@ -198,7 +203,11 @@ const AnimationCard = ({
       {animation.isPremium && !isPurchased && (
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger render={<MotionPremium className="absolute top-2 right-2 size-8 text-yellow-500" />} />
+            <TooltipTrigger
+              render={
+                <MotionPremium className="absolute top-2 right-2 size-8 text-yellow-500" />
+              }
+            />
             <TooltipContent>Only available to premium users</TooltipContent>
           </Tooltip>
         </TooltipProvider>

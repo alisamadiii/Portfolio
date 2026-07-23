@@ -1,35 +1,35 @@
-import { useViewport, useReveals } from '../lib/hooks'
-import { Navbar } from '../components/Navbar'
-import { Hero } from '../components/Hero'
-import { Features } from '../components/Features'
-import { Templates } from '../components/Templates'
-import { Architecture } from '../components/Architecture'
-import { Quickstart } from '../components/Quickstart'
-import { DeepDive } from '../components/DeepDive'
-import { Pricing } from '../components/Pricing'
-import { Faq } from '../components/Faq'
-import { FinalCta } from '../components/FinalCta'
-import { Footer } from '../components/Footer'
+import { Architecture } from "../components/Architecture";
+import { DeepDive } from "../components/DeepDive";
+import { Faq } from "../components/Faq";
+import { Features } from "../components/Features";
+import { FinalCta } from "../components/FinalCta";
+import { Footer } from "../components/Footer";
+import { Hero } from "../components/Hero";
+import { Navbar } from "../components/Navbar";
+import { Pricing } from "../components/Pricing";
+import { Quickstart } from "../components/Quickstart";
+import { Templates } from "../components/Templates";
+import { useReveals, useViewport } from "../lib/hooks";
 
 export default function Landing() {
-  const { isMobile, isMid } = useViewport()
-  useReveals()
+  const { isMobile, isMid } = useViewport();
+  useReveals();
 
   const cols = isMobile
-    ? '1fr'
+    ? "1fr"
     : isMid
-      ? 'repeat(2, minmax(0, 1fr))'
-      : 'repeat(4, minmax(0, 1fr))'
-  const span2 = isMobile ? 'auto' : 'span 2'
+      ? "repeat(2, minmax(0, 1fr))"
+      : "repeat(4, minmax(0, 1fr))";
+  const span2 = isMobile ? "auto" : "span 2";
 
   return (
     <div
       style={{
-        background: '#0A0A0A',
-        color: '#FAFAFA',
+        background: "#0A0A0A",
+        color: "#FAFAFA",
         fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif",
-        WebkitFontSmoothing: 'antialiased',
-        overflowX: 'clip',
+        WebkitFontSmoothing: "antialiased",
+        overflowX: "clip",
       }}
     >
       <Navbar />
@@ -44,5 +44,5 @@ export default function Landing() {
       <FinalCta />
       <Footer />
     </div>
-  )
+  );
 }

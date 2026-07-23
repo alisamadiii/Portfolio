@@ -12,7 +12,12 @@ import {
 } from "@workspace/auth/hooks/use-functions";
 
 import { Button } from "../components/button";
-import { Field, FieldContent, FieldError, FieldLabel } from "../components/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "../components/field";
 import { Input } from "../components/input";
 import { GitHubIcon, GoogleIcon } from "./provider-icons";
 
@@ -91,7 +96,9 @@ export function SignInForm({
                   className={inputClassName}
                 />
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />
@@ -124,12 +131,20 @@ export function SignInForm({
                   )}
                 </button>
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />
 
-        <FieldError errors={form.formState.errors.root ? [form.formState.errors.root] : undefined} />
+        <FieldError
+          errors={
+            form.formState.errors.root
+              ? [form.formState.errors.root]
+              : undefined
+          }
+        />
 
         <Button
           type="submit"

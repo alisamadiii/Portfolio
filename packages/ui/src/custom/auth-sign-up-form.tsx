@@ -7,13 +7,18 @@ import { Eye, EyeOff } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "../components/button";
-import { Field, FieldContent, FieldError, FieldLabel } from "../components/field";
-import { Input } from "../components/input";
-import { GitHubIcon, GoogleIcon } from "./provider-icons";
-
 import { authClient } from "@workspace/auth/auth-client";
 import { useSignInWithProvider } from "@workspace/auth/hooks/use-functions";
+
+import { Button } from "../components/button";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "../components/field";
+import { Input } from "../components/input";
+import { GitHubIcon, GoogleIcon } from "./provider-icons";
 
 const signupSchema = z.object({
   name: z.string().min(1),
@@ -118,7 +123,9 @@ export function SignUpForm({
                   className={inputClassName}
                 />
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />
@@ -139,7 +146,9 @@ export function SignUpForm({
                   className={inputClassName}
                 />
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />
@@ -172,12 +181,20 @@ export function SignUpForm({
                   )}
                 </button>
               </FieldContent>
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
             </Field>
           )}
         />
 
-        <FieldError errors={form.formState.errors.root ? [form.formState.errors.root] : undefined} />
+        <FieldError
+          errors={
+            form.formState.errors.root
+              ? [form.formState.errors.root]
+              : undefined
+          }
+        />
 
         <Button
           type="submit"

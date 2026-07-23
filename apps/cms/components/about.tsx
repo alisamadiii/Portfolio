@@ -3,14 +3,9 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +13,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@workspace/ui/components/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+
 import packageJson from "../package.json";
 
 const releaseRef = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
@@ -47,7 +49,7 @@ export function About() {
         const data = (await response.json()) as { latest?: string | null };
         if (!cancelled) {
           setLatestVersion(
-            typeof data.latest === "string" ? data.latest : null,
+            typeof data.latest === "string" ? data.latest : null
           );
         }
       } catch {
@@ -74,7 +76,7 @@ export function About() {
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
               <Button size="icon-sm" variant="ghost">
-                <span className="bg-primary text-primary-foreground rounded-md size-6 flex items-center justify-center">
+                <span className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
                   <svg
                     className="size-4"
                     viewBox="0 0 24 24"
@@ -93,7 +95,7 @@ export function About() {
       </TooltipProvider>
       <DialogContent className="w-[20rem] max-w-[calc(100vw-2rem)]">
         <DialogHeader className="items-center gap-3 text-center">
-          <div className="flex size-15 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+          <div className="bg-primary text-primary-foreground flex size-15 items-center justify-center rounded-2xl">
             <svg
               className="size-10"
               viewBox="0 0 24 24"
@@ -127,7 +129,7 @@ export function About() {
                   >
                     <Badge
                       variant="secondary"
-                      className="bg-primary/10 font-medium text-primary"
+                      className="bg-primary/10 text-primary font-medium"
                     >
                       Update to {latestVersion}
                       <ArrowUpRight className="ml-1 size-3" />
@@ -190,7 +192,7 @@ function parseSemver(versionString: string): [number, number, number] | null {
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5 last:border-b-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-sm">{label}</span>
       <div className="text-sm">{value}</div>
     </div>
   );

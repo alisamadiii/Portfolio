@@ -1,11 +1,22 @@
 "use client";
 
-import { Collaborators } from "@/components/collaborators";
-import { DocumentTitle, formatRepoBranchTitle } from "@/components/document-title";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
+
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
+
 import { isAdminUser } from "@/lib/authz-shared";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+
+import { Collaborators } from "@/components/collaborators";
+import {
+  DocumentTitle,
+  formatRepoBranchTitle,
+} from "@/components/document-title";
 
 export default function Page() {
   const { config } = useConfig();
@@ -13,22 +24,33 @@ export default function Page() {
   if (!config) throw new Error(`Configuration not found.`);
   if (!isAdminUser(user)) {
     return (
-      <Empty className="absolute inset-0 border-0 rounded-none">
+      <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Access denied</EmptyTitle>
-          <EmptyDescription>Only GitHub users can manage collaborators.</EmptyDescription>
+          <EmptyDescription>
+            Only GitHub users can manage collaborators.
+          </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
   }
 
   return (
-    <div className="max-w-screen-sm mx-auto flex-1 flex flex-col h-full">
+    <div className="mx-auto flex h-full max-w-screen-sm flex-1 flex-col">
       <DocumentTitle
-        title={formatRepoBranchTitle("Collaborators", config.owner, config.repo, config.branch)}
+        title={formatRepoBranchTitle(
+          "Collaborators",
+          config.owner,
+          config.repo,
+          config.branch
+        )}
       />
-      <div className="flex flex-col relative flex-1">
-        <Collaborators owner={config.owner} repo={config.repo} branch={config?.branch}/>
+      <div className="relative flex flex-1 flex-col">
+        <Collaborators
+          owner={config.owner}
+          repo={config.repo}
+          branch={config?.branch}
+        />
       </div>
     </div>
   );

@@ -32,8 +32,7 @@ export function getCssSelector(element: Element): string {
     // Always use nth-child for uniqueness
     const parent = current.parentElement;
     if (parent) {
-      const index =
-        Array.from(parent.children).indexOf(current) + 1;
+      const index = Array.from(parent.children).indexOf(current) + 1;
       parts.unshift(`${tag}:nth-child(${index})`);
     } else {
       parts.unshift(tag);

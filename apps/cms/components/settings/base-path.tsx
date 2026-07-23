@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
@@ -11,10 +13,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+} from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 
 type BasePathProps = {
   owner: string;
@@ -43,7 +44,8 @@ export function BasePath({ owner, repo }: BasePathProps) {
           setInitialBasePath(value);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load base path.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load base path.";
         if (active) toast.error(message);
       } finally {
         if (active) setIsLoading(false);
@@ -76,7 +78,8 @@ export function BasePath({ owner, repo }: BasePathProps) {
       toast.success("Base path updated.");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update base path.";
+      const message =
+        error instanceof Error ? error.message : "Failed to update base path.";
       toast.error(message);
     } finally {
       setIsSaving(false);

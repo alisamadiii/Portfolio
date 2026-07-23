@@ -6,10 +6,7 @@ import { ChevronDownIcon } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-function Accordion({
-  className,
-  ...props
-}: AccordionPrimitive.Root.Props) {
+function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
@@ -19,10 +16,7 @@ function Accordion({
   );
 }
 
-function AccordionItem({
-  className,
-  ...props
-}: AccordionPrimitive.Item.Props) {
+function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
@@ -62,7 +56,7 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Panel
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-[ending-style]:h-0 data-[starting-style]:h-0 transition-[height] duration-200"
+      className="overflow-hidden text-sm transition-[height] duration-200 data-[ending-style]:h-0 data-[starting-style]:h-0"
       {...props}
     >
       <div className={cn("pt-0 pb-4", className)}>{children}</div>

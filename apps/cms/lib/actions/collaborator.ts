@@ -1,19 +1,26 @@
 "use server";
 
-import { headers } from "next/headers";
-import { auth } from "@workspace/auth/auth";
-import { requireAdminRepoAccess } from "@/lib/authz-server";
-import { InviteEmailTemplate } from "@/components/email/invite";
-import { CollaboratorAddedEmailTemplate } from "@/components/email/collaborator-added";
-import { render } from "@react-email/render";
-import { sendEmail } from "@/lib/mailer";
-import { getBaseUrl } from "@/lib/base-url";
-import { db } from "@/db";
-import { and, eq, sql } from "drizzle-orm";
-import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
-import { z } from "zod";
 import { randomBytes } from "crypto";
-import { findVerifiedUserByEmail, normalizeEmail } from "@/lib/collaborator-access";
+import { headers } from "next/headers";
+import { render } from "@react-email/render";
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod";
+
+import { db } from "@/db";
+import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
+
+import { auth } from "@workspace/auth/auth";
+
+import { requireAdminRepoAccess } from "@/lib/authz-server";
+import { getBaseUrl } from "@/lib/base-url";
+import {
+  findVerifiedUserByEmail,
+  normalizeEmail,
+} from "@/lib/collaborator-access";
+import { sendEmail } from "@/lib/mailer";
+
+import { CollaboratorAddedEmailTemplate } from "@/components/email/collaborator-added";
+import { InviteEmailTemplate } from "@/components/email/invite";
 
 const parseInviteEmails = (raw: FormDataEntryValue | null) => {
   const value = typeof raw === "string" ? raw : "";
@@ -35,7 +42,7 @@ const assertCollaboratorManageAccess = async (
     user,
     owner,
     repo,
-    "Only admins can manage collaborators.",
+    "Only admins can manage collaborators."
   );
 
   return { repoAccess };
@@ -66,7 +73,8 @@ const createCollaboratorInviteUrl = async ({
 }) => {
   const token = generateInviteToken();
   const expiresAt = new Date(
-    Date.now() + ((Number(process.env.COLLABORATOR_INVITE_LINK_EXPIRES_IN) || 86400) * 1000),
+    Date.now() +
+      (Number(process.env.COLLABORATOR_INVITE_LINK_EXPIRES_IN) || 86400) * 1000
   );
 
   await db
@@ -75,8 +83,8 @@ const createCollaboratorInviteUrl = async ({
       and(
         sql`lower(${collaboratorInviteTable.email}) = lower(${email})`,
         sql`lower(${collaboratorInviteTable.owner}) = lower(${owner})`,
-        sql`lower(${collaboratorInviteTable.repo}) = lower(${repo})`,
-      ),
+        sql`lower(${collaboratorInviteTable.repo}) = lower(${repo})`
+      )
     );
 
   await db.insert(collaboratorInviteTable).values({
@@ -95,34 +103,45 @@ const createCollaboratorInviteUrl = async ({
 
 // Invite a collaborator to a repository.
 const handleAddCollaborator = async (prevState: any, formData: FormData) => {
-	try {
-		// TODO: remove the requirement for Github account, let any collaborator invite others
-		const session = await auth.api.getSession({
+  try {
+    // TODO: remove the requirement for Github account, let any collaborator invite others
+    const session = await auth.api.getSession({
       headers: await headers(),
     });
     const user = session?.user;
-		if (!user) throw new Error("You must be signed in to manage collaborators.");
+    if (!user)
+      throw new Error("You must be signed in to manage collaborators.");
 
-		// TODO: add support for branches
-		const ownerAndRepoValidation = z.object({
-			owner: z.string().trim().min(1),
-			repo: z.string().trim().min(1),
-		}).safeParse({
-			owner: formData.get("owner"),
-			repo: formData.get("repo")
-		});
-		if (!ownerAndRepoValidation.success) throw new Error ("Invalid owner and/or repo");
+    // TODO: add support for branches
+    const ownerAndRepoValidation = z
+      .object({
+        owner: z.string().trim().min(1),
+        repo: z.string().trim().min(1),
+      })
+      .safeParse({
+        owner: formData.get("owner"),
+        repo: formData.get("repo"),
+      });
+    if (!ownerAndRepoValidation.success)
+      throw new Error("Invalid owner and/or repo");
 
-		const owner = ownerAndRepoValidation.data.owner;
-		const repo = ownerAndRepoValidation.data.repo;
+    const owner = ownerAndRepoValidation.data.owner;
+    const repo = ownerAndRepoValidation.data.repo;
 
-    const emailsValidation = parseInviteEmails(formData.get("emails") ?? formData.get("email"));
-		if (!emailsValidation.success || emailsValidation.data.length === 0) throw new Error("Invalid email list");
+    const emailsValidation = parseInviteEmails(
+      formData.get("emails") ?? formData.get("email")
+    );
+    if (!emailsValidation.success || emailsValidation.data.length === 0)
+      throw new Error("Invalid email list");
     const emails = emailsValidation.data;
 
-    const { repoAccess } = await assertCollaboratorManageAccess(user, owner, repo);
+    const { repoAccess } = await assertCollaboratorManageAccess(
+      user,
+      owner,
+      repo
+    );
 
-		const baseUrl = getBaseUrl();
+    const baseUrl = getBaseUrl();
     const repoUrl = new URL(`/${owner}/${repo}`, baseUrl).toString();
     const createdCollaborators: (typeof collaboratorTable.$inferSelect)[] = [];
     const errors: string[] = [];
@@ -133,15 +152,16 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
       const normalizedEmail = normalizeEmail(email);
       const existingUser = await findVerifiedUserByEmail(normalizedEmail);
       const collaborator = await db.query.collaboratorTable.findFirst({
-				where: and(
-        eq(collaboratorTable.ownerId, repoAccess.ownerId),
-        eq(collaboratorTable.repoId, repoAccess.repoId),
-					sql`lower(${collaboratorTable.email}) = lower(${normalizedEmail})`
-      ),
-			});
+        where: and(
+          eq(collaboratorTable.ownerId, repoAccess.ownerId),
+          eq(collaboratorTable.repoId, repoAccess.repoId),
+          sql`lower(${collaboratorTable.email}) = lower(${normalizedEmail})`
+        ),
+      });
       if (collaborator) {
         if (existingUser && collaborator.userId !== existingUser.id) {
-          const updated = await db.update(collaboratorTable)
+          const updated = await db
+            .update(collaboratorTable)
             .set({ userId: existingUser.id })
             .where(eq(collaboratorTable.id, collaborator.id))
             .returning();
@@ -150,7 +170,9 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
             immediateAccessCount += 1;
           }
         }
-        errors.push(`${normalizedEmail} is already invited to "${owner}/${repo}".`);
+        errors.push(
+          `${normalizedEmail} is already invited to "${owner}/${repo}".`
+        );
         continue;
       }
 
@@ -169,7 +191,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
               email: normalizedEmail,
               invitedByName: user.name || user.email,
               invitedByUrl: baseUrl,
-            }),
+            })
           );
           await sendEmail({
             to: normalizedEmail,
@@ -177,7 +199,10 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
             html,
           });
         } catch (error: any) {
-          console.error(`Failed to send invitation email to ${normalizedEmail}:`, error.message);
+          console.error(
+            `Failed to send invitation email to ${normalizedEmail}:`,
+            error.message
+          );
           errors.push(`${normalizedEmail}: ${error.message}`);
           continue;
         }
@@ -190,7 +215,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
               repoUrl,
               invitedByName: user.name || user.email,
               invitedByUrl: baseUrl,
-            }),
+            })
           );
           await sendEmail({
             to: normalizedEmail,
@@ -198,21 +223,27 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
             html,
           });
         } catch (error: any) {
-          console.error(`Failed to send collaborator notification email to ${normalizedEmail}:`, error.message);
+          console.error(
+            `Failed to send collaborator notification email to ${normalizedEmail}:`,
+            error.message
+          );
           errors.push(`${normalizedEmail}: ${error.message}`);
         }
       }
 
-      const inserted = await db.insert(collaboratorTable).values({
-        type: repoAccess.ownerType,
-        ownerId: repoAccess.ownerId,
-        repoId: repoAccess.repoId,
-        owner: repoAccess.ownerLogin,
-        repo: repoAccess.repoName,
-        email: normalizedEmail,
-        userId: existingUser?.id ?? null,
-        invitedBy: user.id
-      }).returning();
+      const inserted = await db
+        .insert(collaboratorTable)
+        .values({
+          type: repoAccess.ownerType,
+          ownerId: repoAccess.ownerId,
+          repoId: repoAccess.repoId,
+          owner: repoAccess.ownerLogin,
+          repo: repoAccess.repoName,
+          email: normalizedEmail,
+          userId: existingUser?.id ?? null,
+          invitedBy: user.id,
+        })
+        .returning();
 
       if (inserted.length > 0) {
         createdCollaborators.push(...inserted);
@@ -228,7 +259,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
       throw new Error(errors.join(" "));
     }
 
-		return {
+    return {
       message:
         immediateAccessCount > 0 && pendingInviteCount > 0
           ? `${immediateAccessCount} collaborator${immediateAccessCount === 1 ? "" : "s"} added immediately and ${pendingInviteCount} invite${pendingInviteCount === 1 ? "" : "s"} sent for "${owner}/${repo}".`
@@ -237,37 +268,52 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
             : pendingInviteCount === 1
               ? `${createdCollaborators[0].email} invited to "${owner}/${repo}".`
               : `${pendingInviteCount} collaborators invited to "${owner}/${repo}".`,
-			data: createdCollaborators,
-      errors
-		};
-	} catch (error: any) {
-		console.error(error);
-		return { error: error.message };
-	}
+      data: createdCollaborators,
+      errors,
+    };
+  } catch (error: any) {
+    console.error(error);
+    return { error: error.message };
+  }
 };
 
 // Remove a collaborator from a repository.
-const handleRemoveCollaborator = async (collaboratorId: number, owner: string, repo: string) => {
-	try {
-		const session = await auth.api.getSession({
+const handleRemoveCollaborator = async (
+  collaboratorId: number,
+  owner: string,
+  repo: string
+) => {
+  try {
+    const session = await auth.api.getSession({
       headers: await headers(),
     });
     const user = session?.user;
-		if (!user) throw new Error("You must be signed in to manage collaborators.");
+    if (!user)
+      throw new Error("You must be signed in to manage collaborators.");
 
-		const collaborator = await db.query.collaboratorTable.findFirst({ where: eq(collaboratorTable.id, collaboratorId) });
-		if (!collaborator) throw new Error("Collaborator not found");
+    const collaborator = await db.query.collaboratorTable.findFirst({
+      where: eq(collaboratorTable.id, collaboratorId),
+    });
+    if (!collaborator) throw new Error("Collaborator not found");
 
-    const { repoAccess } = await assertCollaboratorManageAccess(user, owner, repo);
+    const { repoAccess } = await assertCollaboratorManageAccess(
+      user,
+      owner,
+      repo
+    );
 
-		const deletedCollaborator = await db.delete(collaboratorTable).where(
-			and(
-				eq(collaboratorTable.id, collaboratorId),
-				eq(collaboratorTable.repoId, repoAccess.repoId)
-			)
-		).returning();
+    const deletedCollaborator = await db
+      .delete(collaboratorTable)
+      .where(
+        and(
+          eq(collaboratorTable.id, collaboratorId),
+          eq(collaboratorTable.repoId, repoAccess.repoId)
+        )
+      )
+      .returning();
 
-		if (!deletedCollaborator || deletedCollaborator.length === 0) throw new Error("Failed to delete collaborator");
+    if (!deletedCollaborator || deletedCollaborator.length === 0)
+      throw new Error("Failed to delete collaborator");
 
     await db
       .delete(collaboratorInviteTable)
@@ -275,30 +321,42 @@ const handleRemoveCollaborator = async (collaboratorId: number, owner: string, r
         and(
           sql`lower(${collaboratorInviteTable.email}) = lower(${collaborator.email})`,
           sql`lower(${collaboratorInviteTable.owner}) = lower(${owner})`,
-          sql`lower(${collaboratorInviteTable.repo}) = lower(${repo})`,
-        ),
+          sql`lower(${collaboratorInviteTable.repo}) = lower(${repo})`
+        )
       );
 
-		return { message: `Invitation to ${collaborator.email} for "${owner}/${repo}" successfully removed.` };
-	} catch (error: any) {
-		console.error(error);
-		return { error: error.message };
-	}
+    return {
+      message: `Invitation to ${collaborator.email} for "${owner}/${repo}" successfully removed.`,
+    };
+  } catch (error: any) {
+    console.error(error);
+    return { error: error.message };
+  }
 };
 
-const handleResendCollaboratorInvite = async (collaboratorId: number, owner: string, repo: string) => {
+const handleResendCollaboratorInvite = async (
+  collaboratorId: number,
+  owner: string,
+  repo: string
+) => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
     const user = session?.user;
-    if (!user) throw new Error("You must be signed in to manage collaborators.");
+    if (!user)
+      throw new Error("You must be signed in to manage collaborators.");
     await assertCollaboratorManageAccess(user, owner, repo);
 
-    const collaborator = await db.query.collaboratorTable.findFirst({ where: eq(collaboratorTable.id, collaboratorId) });
+    const collaborator = await db.query.collaboratorTable.findFirst({
+      where: eq(collaboratorTable.id, collaboratorId),
+    });
     if (!collaborator) throw new Error("Collaborator not found");
 
-    if (collaborator.owner.toLowerCase() !== owner.toLowerCase() || collaborator.repo.toLowerCase() !== repo.toLowerCase()) {
+    if (
+      collaborator.owner.toLowerCase() !== owner.toLowerCase() ||
+      collaborator.repo.toLowerCase() !== repo.toLowerCase()
+    ) {
       throw new Error("Collaborator does not belong to this repository.");
     }
 
@@ -317,7 +375,7 @@ const handleResendCollaboratorInvite = async (collaboratorId: number, owner: str
         email: collaborator.email,
         invitedByName: user.name || user.email,
         invitedByUrl: baseUrl,
-      }),
+      })
     );
 
     await sendEmail({
@@ -333,4 +391,8 @@ const handleResendCollaboratorInvite = async (collaboratorId: number, owner: str
   }
 };
 
-export { handleAddCollaborator, handleRemoveCollaborator, handleResendCollaboratorInvite };
+export {
+  handleAddCollaborator,
+  handleRemoveCollaborator,
+  handleResendCollaboratorInvite,
+};

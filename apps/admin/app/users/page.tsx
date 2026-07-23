@@ -43,11 +43,7 @@ interface FilterUsers {
   search?: string;
 }
 
-const sortByOptions: FilterUsers["sortBy"][] = [
-  "email",
-  "created",
-  "banned",
-];
+const sortByOptions: FilterUsers["sortBy"][] = ["email", "created", "banned"];
 
 const filterByOptions: { label: string; value: FilterUsers["filterBy"] }[] = [
   { label: "All Users", value: "all" },
@@ -141,10 +137,12 @@ const UsersPage = () => {
           />
         </InputGroup>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="outline" className="font-medium" />}>
-              Sort by:{" "}
-              <span className="capitalize">{sortBy?.replace("_", " ")}</span>{" "}
-              <ChevronDown data-arrow />
+          <DropdownMenuTrigger
+            render={<Button variant="outline" className="font-medium" />}
+          >
+            Sort by:{" "}
+            <span className="capitalize">{sortBy?.replace("_", " ")}</span>{" "}
+            <ChevronDown data-arrow />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-40" align="start">
             {sortByOptions.map((item) => (
@@ -162,13 +160,15 @@ const UsersPage = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="outline" className="font-medium" />}>
-              Filter:{" "}
-              <span className="capitalize">
-                {filterByOptions.find((f) => f.value === filterBy)?.label ??
-                  "All Users"}
-              </span>{" "}
-              <ChevronDown data-arrow />
+          <DropdownMenuTrigger
+            render={<Button variant="outline" className="font-medium" />}
+          >
+            Filter:{" "}
+            <span className="capitalize">
+              {filterByOptions.find((f) => f.value === filterBy)?.label ??
+                "All Users"}
+            </span>{" "}
+            <ChevronDown data-arrow />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-40" align="start">
             {filterByOptions.map((item) => (
@@ -212,8 +212,10 @@ const UsersPage = () => {
           <Separator className="mx-2 h-5!" orientation="vertical" /> Results per
           page{" "}
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="ml-2" />}>
-                {limit} <ChevronDown data-arrow />
+            <DropdownMenuTrigger
+              render={<Button variant="outline" size="sm" className="ml-2" />}
+            >
+              {limit} <ChevronDown data-arrow />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="min-w-20">
               {[10, 15, 20, 100].map((item) => (

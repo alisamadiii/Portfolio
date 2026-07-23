@@ -1,5 +1,5 @@
-import { Resend } from "resend";
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 type MailProvider = "resend" | "smtp" | "agency";
 
@@ -39,7 +39,9 @@ const parseBoolean = (value: string, envName: string) => {
 const getFromEmail = () => {
   const from = getEnv("EMAIL_FROM") || getEnv("RESEND_FROM_EMAIL");
   if (!from) {
-    throw new Error("Missing sender email. Set EMAIL_FROM (or RESEND_FROM_EMAIL for compatibility).");
+    throw new Error(
+      "Missing sender email. Set EMAIL_FROM (or RESEND_FROM_EMAIL for compatibility)."
+    );
   }
   return from;
 };
@@ -47,8 +49,15 @@ const getFromEmail = () => {
 const getEmailProvider = (): MailProvider => {
   const configured = getEnv("EMAIL_PROVIDER")?.toLowerCase();
   if (configured) {
-    if (configured === "resend" || configured === "smtp" || configured === "agency") return configured;
-    throw new Error(`Unsupported EMAIL_PROVIDER "${configured}". Use "resend", "smtp", or "agency".`);
+    if (
+      configured === "resend" ||
+      configured === "smtp" ||
+      configured === "agency"
+    )
+      return configured;
+    throw new Error(
+      `Unsupported EMAIL_PROVIDER "${configured}". Use "resend", "smtp", or "agency".`
+    );
   }
 
   if (getEnv("RESEND_API_KEY")) return "resend";
@@ -56,7 +65,7 @@ const getEmailProvider = (): MailProvider => {
   if (getEnv("AGENCY_API_KEY")) return "agency";
 
   throw new Error(
-    "No email provider configured. Set EMAIL_PROVIDER=resend|smtp|agency, or define RESEND_API_KEY / SMTP_HOST / AGENCY_API_KEY.",
+    "No email provider configured. Set EMAIL_PROVIDER=resend|smtp|agency, or define RESEND_API_KEY / SMTP_HOST / AGENCY_API_KEY."
   );
 };
 
@@ -68,10 +77,13 @@ const getSmtpTransporter = () => {
 
   const portRaw = getEnv("SMTP_PORT") || "587";
   const port = Number(portRaw);
-  if (!Number.isInteger(port) || port <= 0) throw new Error("SMTP_PORT must be a positive integer.");
+  if (!Number.isInteger(port) || port <= 0)
+    throw new Error("SMTP_PORT must be a positive integer.");
 
   const secureRaw = getEnv("SMTP_SECURE");
-  const secure = secureRaw ? parseBoolean(secureRaw, "SMTP_SECURE") : port === 465;
+  const secure = secureRaw
+    ? parseBoolean(secureRaw, "SMTP_SECURE")
+    : port === 465;
 
   const user = getEnv("SMTP_USER");
   const pass = getEnv("SMTP_PASSWORD");
@@ -90,9 +102,15 @@ const getSmtpTransporter = () => {
   return transporter;
 };
 
-export const sendEmail = async ({ to, subject, html, text }: SendEmailInput) => {
+export const sendEmail = async ({
+  to,
+  subject,
+  html,
+  text,
+}: SendEmailInput) => {
   const recipients = Array.isArray(to) ? to : [to];
-  if (recipients.length === 0) throw new Error("At least one recipient is required.");
+  if (recipients.length === 0)
+    throw new Error("At least one recipient is required.");
 
   const from = getFromEmail();
   const provider = getEmailProvider();

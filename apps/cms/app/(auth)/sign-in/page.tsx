@@ -15,6 +15,8 @@ export default async function Page({
   const safeRedirect = getSafeRedirect(redirectTo);
 
   redirect(
-    portalLoginUrl(`${urls.cms}${safeRedirect === "/sign-in" ? "/" : safeRedirect}`)
+    portalLoginUrl(
+      `${urls.cms}${safeRedirect === "/sign-in" ? "/" : safeRedirect}`
+    )
   );
 }

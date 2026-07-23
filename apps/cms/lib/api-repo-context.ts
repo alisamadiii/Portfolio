@@ -1,9 +1,10 @@
+import type { Config } from "@/types/config";
+import type { User } from "@/types/user";
+
 import { createHttpError } from "@/lib/api-error";
 import { getConfig } from "@/lib/config-store";
 import { requireApiUserSession } from "@/lib/session-server";
 import { getToken } from "@/lib/token";
-import type { Config } from "@/types/config";
-import type { User } from "@/types/user";
 
 type RepoRef = {
   owner: string;
@@ -17,10 +18,17 @@ type RepoReadContext = {
   config: Config;
 };
 
-const getRepoReadContext = async ({ owner, repo, branch }: RepoRef): Promise<RepoReadContext> => {
+const getRepoReadContext = async ({
+  owner,
+  repo,
+  branch,
+}: RepoRef): Promise<RepoReadContext> => {
   const sessionResult = await requireApiUserSession();
   if ("response" in sessionResult) {
-    throw createHttpError("Not signed in.", sessionResult.response?.status ?? 401);
+    throw createHttpError(
+      "Not signed in.",
+      sessionResult.response?.status ?? 401
+    );
   }
 
   const user = sessionResult.user as User;
@@ -30,7 +38,11 @@ const getRepoReadContext = async ({ owner, repo, branch }: RepoRef): Promise<Rep
   const config = await getConfig(owner, repo, branch, {
     getToken: async () => token,
   });
-  if (!config) throw createHttpError(`Configuration not found for ${owner}/${repo}/${branch}.`, 404);
+  if (!config)
+    throw createHttpError(
+      `Configuration not found for ${owner}/${repo}/${branch}.`,
+      404
+    );
 
   return { user, token, config };
 };

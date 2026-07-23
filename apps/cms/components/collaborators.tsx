@@ -1,23 +1,16 @@
 "use client";
 
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useActionState } from "react";
-import {
-  handleAddCollaborator,
-  handleRemoveCollaborator,
-  handleResendCollaboratorInvite,
-} from "@/lib/actions/collaborator";
-import { useRepoHeader } from "@/components/repo/repo-header-context";
-import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/submit-button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { BookText, EllipsisVertical, Loader } from "lucide-react";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +20,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@workspace/ui/components/alert-dialog";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -36,25 +35,38 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@workspace/ui/components/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
+} from "@workspace/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Textarea } from "@workspace/ui/components/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@workspace/ui/components/tooltip";
+
+import {
+  handleAddCollaborator,
+  handleRemoveCollaborator,
+  handleResendCollaboratorInvite,
+} from "@/lib/actions/collaborator";
 import { requireApiSuccess } from "@/lib/api-client";
-import { toast } from "sonner";
-import { BookText, EllipsisVertical, Loader } from "lucide-react";
+
+import { useRepoHeader } from "@/components/repo/repo-header-context";
+import { SubmitButton } from "@/components/submit-button";
 
 type Collaborator = {
   id: number;
@@ -101,8 +113,8 @@ function InviteCollaboratorsDialog({
         value
           .split(/[\n,]+/)
           .map((email) => email.trim())
-          .filter(Boolean),
-      ),
+          .filter(Boolean)
+      )
     );
   }, [value]);
 
@@ -133,7 +145,7 @@ function InviteCollaboratorsDialog({
             rows={6}
           />
           {state?.error ? (
-            <p className="text-sm font-medium text-destructive">
+            <p className="text-destructive text-sm font-medium">
               {state.error}
             </p>
           ) : null}
@@ -176,10 +188,10 @@ export function Collaborators({
   const addNewCollaborator = useCallback((newCollaborators: Collaborator[]) => {
     setCollaborators((prevCollaborators) => {
       const seenIds = new Set(
-        prevCollaborators.map((collaborator) => collaborator.id),
+        prevCollaborators.map((collaborator) => collaborator.id)
       );
       const uniqueCollaborators = newCollaborators.filter(
-        (collaborator) => !seenIds.has(collaborator.id),
+        (collaborator) => !seenIds.has(collaborator.id)
       );
       return [...prevCollaborators, ...uniqueCollaborators];
     });
@@ -206,7 +218,7 @@ export function Collaborators({
         if (err instanceof DOMException && err.name === "AbortError") return;
         console.error(err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch collaborators",
+          err instanceof Error ? err.message : "Failed to fetch collaborators"
         );
       } finally {
         // In React Strict Mode, an aborted first pass can race with the active request.
@@ -252,14 +264,14 @@ export function Collaborators({
       const removed = await handleRemoveCollaborator(
         collaboratorId,
         owner,
-        repo,
+        repo
       );
 
       if (removed.error) {
         toast.error(removed.error);
       } else {
         setCollaborators((prev) =>
-          prev.filter((collaborator) => collaborator.id !== collaboratorId),
+          prev.filter((collaborator) => collaborator.id !== collaboratorId)
         );
         toast.success(removed.message);
       }
@@ -278,7 +290,7 @@ export function Collaborators({
       const resent = await handleResendCollaboratorInvite(
         collaboratorId,
         owner,
-        repo,
+        repo
       );
       if (resent.error) {
         toast.error(resent.error);
@@ -298,7 +310,7 @@ export function Collaborators({
     return (
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h1 className="font-semibold text-lg">Collaborators</h1>
+          <h1 className="text-lg font-semibold">Collaborators</h1>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -357,10 +369,10 @@ export function Collaborators({
         {[0, 1, 2].map((index) => (
           <li
             key={index}
-            className="flex gap-x-2 items-center border border-b-0 last:border-b first:rounded-t-md last:rounded-b-md px-3 py-2 text-sm"
+            className="flex items-center gap-x-2 border border-b-0 px-3 py-2 text-sm first:rounded-t-md last:rounded-b-md last:border-b"
           >
             <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-5 w-24 text-left rounded" />
+            <Skeleton className="h-5 w-24 rounded text-left" />
             <Button
               variant="outline"
               size="icon-xs"
@@ -373,12 +385,12 @@ export function Collaborators({
         ))}
       </ul>
     ),
-    [],
+    []
   );
 
   if (error) {
     return (
-      <div className="absolute inset-0 p-4 md:p-6 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center p-4 md:p-6">
         <Empty className="max-w-[420px] flex-none">
           <EmptyHeader>
             <EmptyTitle>Something went wrong</EmptyTitle>
@@ -395,11 +407,11 @@ export function Collaborators({
     pendingRemoveId === null
       ? null
       : collaborators.find(
-          (collaborator) => collaborator.id === pendingRemoveId,
+          (collaborator) => collaborator.id === pendingRemoveId
         ) || null;
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4">
       {isLoading ? (
         loadingSkeleton
       ) : collaborators.length > 0 ? (
@@ -408,18 +420,18 @@ export function Collaborators({
             {collaborators.map((collaborator) => (
               <li
                 key={collaborator.id}
-                className="flex gap-x-2 items-center border border-b-0 last:border-b first:rounded-t-md last:rounded-b-md px-3 py-2 text-sm"
+                className="flex items-center gap-x-2 border border-b-0 px-3 py-2 text-sm first:rounded-t-md last:rounded-b-md last:border-b"
               >
                 <Avatar className="h-6 w-6">
                   <AvatarImage
                     src={`https://unavatar.io/${collaborator.email}?fallback=false`}
                     alt={`${collaborator.email}'s avatar`}
                   />
-                  <AvatarFallback className="font-medium text-muted-foreground uppercase text-xs">
+                  <AvatarFallback className="text-muted-foreground text-xs font-medium uppercase">
                     {collaborator.email.split("@")[0].substring(0, 2)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="font-medium text-left truncate">
+                <div className="truncate text-left font-medium">
                   {collaborator.email}
                 </div>
 
@@ -499,7 +511,7 @@ export function Collaborators({
           </AlertDialog>
         </>
       ) : (
-        <div className="flex-1 flex items-center">
+        <div className="flex flex-1 items-center">
           <Empty>
             <EmptyHeader>
               <EmptyTitle>No collaborators</EmptyTitle>

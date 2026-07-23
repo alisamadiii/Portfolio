@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader } from "lucide-react";
-import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
-import { authClient } from "@/lib/auth-client";
-import { Button, buttonVariants } from "@/components/ui/button";
+
+import { Button } from "@workspace/ui/components/button";
+import { buttonVariants } from "@workspace/ui/components/button-variants";
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from "@/components/ui/empty";
+} from "@workspace/ui/components/empty";
+import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
+
+import { authClient } from "@/lib/auth-client";
 
 type InviteState =
   | { status: "loading" }
@@ -35,7 +38,9 @@ export function InviteSignIn({ token }: { token: string }) {
     async function loadInvite() {
       setState({ status: "loading" });
       try {
-        const response = await fetch(`/api/collaborator-invites/${encodeURIComponent(token)}`);
+        const response = await fetch(
+          `/api/collaborator-invites/${encodeURIComponent(token)}`
+        );
         const next = (await response.json()) as InviteState;
         if (!cancelled) setState(next);
       } catch {
@@ -64,7 +69,7 @@ export function InviteSignIn({ token }: { token: string }) {
   if (state.status === "loading" || state.status === "ready") {
     return (
       <Empty className={shellClassName}>
-        <Loader className="size-5 animate-spin text-muted-foreground" />
+        <Loader className="text-muted-foreground size-5 animate-spin" />
       </Empty>
     );
   }
@@ -74,7 +79,9 @@ export function InviteSignIn({ token }: { token: string }) {
       <Empty className={shellClassName}>
         <EmptyHeader>
           <EmptyTitle>Invite unavailable</EmptyTitle>
-          <EmptyDescription>This invitation is no longer available.</EmptyDescription>
+          <EmptyDescription>
+            This invitation is no longer available.
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Link href="/sign-in" className={buttonVariants()}>
@@ -90,7 +97,9 @@ export function InviteSignIn({ token }: { token: string }) {
       <Empty className={shellClassName}>
         <EmptyHeader>
           <EmptyTitle>Wrong account</EmptyTitle>
-          <EmptyDescription>This invitation was sent to another account.</EmptyDescription>
+          <EmptyDescription>
+            This invitation was sent to another account.
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button

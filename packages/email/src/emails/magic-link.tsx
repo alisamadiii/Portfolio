@@ -26,7 +26,7 @@ export default function MagicLink({ magicLinkUrl }: MagicLinkProps) {
           style={{ backgroundColor: "#FC8464", margin: 0, padding: 0 }}
         >
           <Preview>Sign in to your account</Preview>
-          <Container className="mx-auto max-w-xl py-12 px-4">
+          <Container className="mx-auto max-w-xl px-4 py-12">
             {/* Brand header */}
             <Section className="mb-6 text-center">
               <Img
@@ -149,5 +149,6 @@ export default function MagicLink({ magicLinkUrl }: MagicLinkProps) {
 }
 
 MagicLink.PreviewProps = {
-  magicLinkUrl: "https://dreamwebsite.com/api/auth/magic-link/verify?token=abc123",
+  magicLinkUrl:
+    "https://dreamwebsite.com/api/auth/magic-link/verify?token=abc123",
 } satisfies MagicLinkProps;

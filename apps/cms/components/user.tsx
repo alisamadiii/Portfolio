@@ -1,11 +1,15 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { urls } from "@workspace/ui/lib/company";
 import { useUser } from "@/contexts/user-context";
-import { signOut } from "@/lib/auth-client";
-import { getInitialsFromName } from "@/lib/utils/avatar";
-import { Button } from "@/components/ui/button";
+import { ArrowUpRight } from "lucide-react";
+import { useTheme } from "next-themes";
+
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
+import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +19,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { ArrowUpRight } from "lucide-react";
+} from "@workspace/ui/components/dropdown-menu";
+import { urls } from "@workspace/ui/lib/company";
+import { cn } from "@workspace/ui/lib/utils";
+
+import { signOut } from "@/lib/auth-client";
+import { getInitialsFromName } from "@/lib/utils/avatar";
 
 export function User({
   className,
@@ -57,17 +63,17 @@ export function User({
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent forceMount align={align} className="max-w-[12.5rem]">
+      <DropdownMenuContent align={align} className="max-w-[12.5rem]">
         <DropdownMenuLabel>
-          <div className="text-sm font-medium truncate">
+          <div className="truncate text-sm font-medium">
             {user.name || user.githubUsername || user.email}
           </div>
-          <div className="text-xs font-normal text-muted-foreground truncate">
+          <div className="text-muted-foreground truncate text-xs font-normal">
             {user.email}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="w-40 text-xs text-muted-foreground font-medium">
+        <DropdownMenuLabel className="text-muted-foreground w-40 text-xs font-medium">
           Theme
         </DropdownMenuLabel>
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>

@@ -1,9 +1,24 @@
-import { ReactRenderer } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
-import tippy, { type Instance as TippyInstance } from "tippy.js";
-import CommandsList, { type CommandsListHandle, type SlashItem } from "./commands-list";
-import { Code, Heading1, Heading2, Heading3, Image, List, ListOrdered, Pilcrow, Quote, Table } from "lucide-react";
+import { ReactRenderer } from "@tiptap/react";
 import type { SuggestionOptions as TiptapSuggestionOptions } from "@tiptap/suggestion";
+import {
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  Image,
+  List,
+  ListOrdered,
+  Pilcrow,
+  Quote,
+  Table,
+} from "lucide-react";
+import tippy, { type Instance as TippyInstance } from "tippy.js";
+
+import CommandsList, {
+  type CommandsListHandle,
+  type SlashItem,
+} from "./commands-list";
 
 export type ImagePickerUrlResult = {
   kind: "url";
@@ -27,14 +42,18 @@ export type ImagePickerContext = {
 };
 
 export type ImagePickerHandler = (
-  context: ImagePickerContext,
+  context: ImagePickerContext
 ) => ImagePickerResult | null | Promise<ImagePickerResult | null>;
 
 export type SlashImageFallback = "prompt-url" | "none";
 
 type SuggestionOptions = {
   onRequestImage?: ImagePickerHandler | null;
-  onInsertLocalImageFile?: ((context: ImagePickerContext & Omit<ImagePickerFileResult, "kind">) => void | Promise<void>) | null;
+  onInsertLocalImageFile?:
+    | ((
+        context: ImagePickerContext & Omit<ImagePickerFileResult, "kind">
+      ) => void | Promise<void>)
+    | null;
   enableImages?: boolean;
   imageSlashFallback?: SlashImageFallback;
 };
@@ -43,7 +62,11 @@ const TABLE_SAFE_COMMANDS = new Set(["Image"]);
 
 type RequestImageAndInsertArgs = ImagePickerContext & {
   onRequestImage: ImagePickerHandler | null;
-  onInsertLocalImageFile: ((context: ImagePickerContext & Omit<ImagePickerFileResult, "kind">) => void | Promise<void>) | null;
+  onInsertLocalImageFile:
+    | ((
+        context: ImagePickerContext & Omit<ImagePickerFileResult, "kind">
+      ) => void | Promise<void>)
+    | null;
   imageSlashFallback: SlashImageFallback;
 };
 
@@ -68,7 +91,8 @@ const requestImageAndInsert = async ({
 
   if (result.kind === "file") {
     if (!onInsertLocalImageFile) return;
-    const fileInsertContext: ImagePickerContext & Omit<ImagePickerFileResult, "kind"> = {
+    const fileInsertContext: ImagePickerContext &
+      Omit<ImagePickerFileResult, "kind"> = {
       editor,
       range,
       file: result.file,
@@ -85,43 +109,45 @@ const requestImageAndInsert = async ({
     ...(result.title ? { title: result.title } : {}),
   };
 
-  editor
-    .chain()
-    .focus()
-    .setImage(imageAttrs)
-    .run();
+  editor.chain().focus().setImage(imageAttrs).run();
 };
 
 const getAllItems = (options: SuggestionOptions): SlashItem[] => [
   {
     title: "Text",
     icon: Pilcrow,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setParagraph().run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).setParagraph().run(),
   },
   {
     title: "Heading 1",
     icon: Heading1,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run(),
   },
   {
     title: "Heading 2",
     icon: Heading2,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run(),
   },
   {
     title: "Heading 3",
     icon: Heading3,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run(),
   },
   {
     title: "Bulleted list",
     icon: List,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBulletList().run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).toggleBulletList().run(),
   },
   {
     title: "Numbered list",
     icon: ListOrdered,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
   },
   {
     title: "Image",
@@ -140,30 +166,46 @@ const getAllItems = (options: SuggestionOptions): SlashItem[] => [
     title: "Table",
     icon: Table,
     command: ({ editor, range }) =>
-      editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run(),
   },
   {
     title: "Quote",
     icon: Quote,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
   },
   {
     title: "Code block",
     icon: Code,
-    command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   },
 ];
 
 type SlashSuggestion = Pick<TiptapSuggestionOptions, "items" | "render">;
-type SuggestionRenderLifecycle = NonNullable<ReturnType<NonNullable<SlashSuggestion["render"]>>>;
-type SuggestionKeyDownProps = Parameters<NonNullable<SuggestionRenderLifecycle["onKeyDown"]>>[0];
+type SuggestionRenderLifecycle = NonNullable<
+  ReturnType<NonNullable<SlashSuggestion["render"]>>
+>;
+type SuggestionKeyDownProps = Parameters<
+  NonNullable<SuggestionRenderLifecycle["onKeyDown"]>
+>[0];
 
-const createSuggestion = (options: SuggestionOptions = {}): SlashSuggestion => ({
+const createSuggestion = (
+  options: SuggestionOptions = {}
+): SlashSuggestion => ({
   items: ({ query, editor }: { query: string; editor: Editor }) => {
-    const isInTableCell = editor.isActive("tableCell") || editor.isActive("tableHeader");
+    const isInTableCell =
+      editor.isActive("tableCell") || editor.isActive("tableHeader");
     return getAllItems(options)
       .filter((item) => !isInTableCell || TABLE_SAFE_COMMANDS.has(item.title))
-      .filter((item) => options.enableImages !== false || item.title !== "Image")
+      .filter(
+        (item) => options.enableImages !== false || item.title !== "Image"
+      )
       .filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 10);
   },
@@ -180,7 +222,8 @@ const createSuggestion = (options: SuggestionOptions = {}): SlashSuggestion => (
         });
 
         if (!props.clientRect) return;
-        const referenceRect = () => props.clientRect?.() ?? new DOMRect(0, 0, 0, 0);
+        const referenceRect = () =>
+          props.clientRect?.() ?? new DOMRect(0, 0, 0, 0);
 
         popup = tippy(document.body, {
           getReferenceClientRect: referenceRect,
@@ -197,7 +240,8 @@ const createSuggestion = (options: SuggestionOptions = {}): SlashSuggestion => (
         if (!component) return;
         component.updateProps(props);
         if (!props.clientRect || !popup) return;
-        const referenceRect = () => props.clientRect?.() ?? new DOMRect(0, 0, 0, 0);
+        const referenceRect = () =>
+          props.clientRect?.() ?? new DOMRect(0, 0, 0, 0);
         popup.setProps({ getReferenceClientRect: referenceRect });
       },
 

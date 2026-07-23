@@ -1,7 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
-import { auth } from "@workspace/auth/auth";
+
 import { db } from "@/db";
 import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
+
+import { auth } from "@workspace/auth/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,7 @@ const getInvite = async (token: string) => {
     where: and(
       sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
       sql`lower(${collaboratorTable.owner}) = lower(${invite.owner})`,
-      sql`lower(${collaboratorTable.repo}) = lower(${invite.repo})`,
+      sql`lower(${collaboratorTable.repo}) = lower(${invite.repo})`
     ),
   });
 
@@ -49,7 +51,9 @@ const getInvite = async (token: string) => {
   return invite;
 };
 
-const getDestinationPath = (invite: typeof collaboratorInviteTable.$inferSelect) => {
+const getDestinationPath = (
+  invite: typeof collaboratorInviteTable.$inferSelect
+) => {
   return `/${invite.owner}/${invite.repo}`;
 };
 
@@ -63,7 +67,7 @@ const maskEmail = (email: string) => {
 
 const claimInvite = async (
   invite: typeof collaboratorInviteTable.$inferSelect,
-  user: { id: string; email: string },
+  user: { id: string; email: string }
 ) => {
   if (normalizeEmail(user.email) !== normalizeEmail(invite.email)) {
     return false;
@@ -76,8 +80,8 @@ const claimInvite = async (
       and(
         sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
         sql`lower(${collaboratorTable.owner}) = lower(${invite.owner})`,
-        sql`lower(${collaboratorTable.repo}) = lower(${invite.repo})`,
-      ),
+        sql`lower(${collaboratorTable.repo}) = lower(${invite.repo})`
+      )
     );
 
   await db
@@ -89,7 +93,7 @@ const claimInvite = async (
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ token: string }> },
+  context: { params: Promise<{ token: string }> }
 ) {
   const { token } = await context.params;
   const invite = await getInvite(token);
@@ -123,7 +127,7 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  context: { params: Promise<{ token: string }> },
+  context: { params: Promise<{ token: string }> }
 ) {
   const { token } = await context.params;
   const invite = await getInvite(token);

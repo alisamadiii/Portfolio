@@ -6,11 +6,11 @@ import "./global.css";
 import { Suspense } from "react";
 import { Metadata } from "next";
 
-import { MotionFooter } from "@/components/footer";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 
+import { MotionFooter } from "@/components/footer";
 import { PreviousCustomerBanner } from "@/components/previous-customer-banner";
 
 const fontDisplay = Outfit({

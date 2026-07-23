@@ -1,43 +1,59 @@
 "use client";
 
 import {
-  memo,
-  useState,
-  useMemo,
-  useEffect,
   forwardRef,
+  memo,
   useCallback,
-  useRef,
+  useEffect,
   useId,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
+import { editComponents } from "@/fields/registry";
 import {
-  useForm,
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Asterisk,
+  Ban,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  GripVertical,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import {
   useFieldArray,
+  useForm,
   useFormContext,
   useWatch,
 } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { editComponents } from "@/fields/registry";
-import {
-  initializeState,
-  getDefaultValue,
-  generateZodSchema,
-  sanitizeObject,
-} from "@/lib/schema";
+import { toast } from "sonner";
+
 import { Field } from "@/types/field";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,51 +64,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@workspace/ui/components/alert-dialog";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form";
+import { Label } from "@workspace/ui/components/label";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@workspace/ui/components/tooltip";
+import { cn } from "@workspace/ui/lib/utils";
+
 import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import {
-  restrictToVerticalAxis,
-  restrictToParentElement,
-} from "@dnd-kit/modifiers";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  Ban,
-  Asterisk,
-  X,
-  GripVertical,
-  Plus,
-  Trash2,
-  ChevronsDownUp,
-  ChevronsUpDown,
-  ChevronRight,
-} from "lucide-react";
-import { toast } from "sonner";
-import { interpolate } from "@/lib/schema";
+  generateZodSchema,
+  getDefaultValue,
+  initializeState,
+  interpolate,
+  sanitizeObject,
+} from "@/lib/schema";
 
 type BeforeSubmitHook = () => void | Promise<void>;
 type RegisterBeforeSubmitHook = (
   key: string,
-  hook: BeforeSubmitHook,
+  hook: BeforeSubmitHook
 ) => () => void;
 
 type FieldWithReadonlyMeta = Field & {
@@ -105,7 +108,7 @@ type RenderFields = (
   registerBeforeSubmitHook?: RegisterBeforeSubmitHook,
   runBeforeSubmitHooks?: () => Promise<void>,
   inheritedReadonly?: boolean,
-  keyPrefix?: string,
+  keyPrefix?: string
 ) => React.ReactNode[];
 
 type NestedFieldProps = {
@@ -133,7 +136,7 @@ const hasFieldPathError = (errors: unknown, fieldName: string): boolean => {
 const getCollapsibleItemLabel = (
   field: Field,
   fieldValues: unknown,
-  index?: number,
+  index?: number
 ): string => {
   if (
     typeof field.list === "object" &&
@@ -147,7 +150,7 @@ const getCollapsibleItemLabel = (
         index: index !== undefined ? `${index + 1}` : "",
         fields: fieldValues as Record<string, unknown>,
       },
-      "fields",
+      "fields"
     );
   }
 
@@ -192,7 +195,7 @@ const SortableItem = ({
       ref={setNodeRef}
       className={cn(
         "flex items-center gap-x-1",
-        isDragging ? "opacity-50 z-50" : "z-10",
+        isDragging ? "z-50 opacity-50" : "z-10"
       )}
       style={style}
     >
@@ -201,7 +204,7 @@ const SortableItem = ({
           type="button"
           variant="ghost"
           size="icon-sm"
-          className="h-auto w-6 self-stretch cursor-move text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground h-auto w-6 cursor-move self-stretch"
           {...attributes}
           {...listeners}
         >
@@ -245,7 +248,7 @@ const ListItemRow = memo(function ListItemRow({
   const isReadonly = Boolean(field.readonly);
   return (
     <SortableItem id={id} readonly={isReadonly}>
-      <div className="grid gap-6 flex-1">
+      <div className="grid flex-1 gap-6">
         <SingleField
           field={field}
           fieldName={`${fieldName}.${index}`}
@@ -365,8 +368,8 @@ const ListField = ({
   const toggleOpen = useCallback((index: number) => {
     setOpenStates((prev) =>
       prev.map((isOpen, currentIndex) =>
-        currentIndex === index ? !isOpen : isOpen,
-      ),
+        currentIndex === index ? !isOpen : isOpen
+      )
     );
   }, []);
 
@@ -391,7 +394,7 @@ const ListField = ({
     append(
       field.type === "object"
         ? initializeState(field.fields, {})
-        : getDefaultValue(field),
+        : getDefaultValue(field)
     );
     setOpenStates((prev) => [...prev, true]);
   };
@@ -402,13 +405,13 @@ const ListField = ({
       await runBeforeSubmitHooks?.();
       remove(index);
       setOpenStates((prev) =>
-        prev.filter((_, currentIndex) => currentIndex !== index),
+        prev.filter((_, currentIndex) => currentIndex !== index)
       );
     },
-    [isReadonly, remove, runBeforeSubmitHooks],
+    [isReadonly, remove, runBeforeSubmitHooks]
   );
   const [pendingRemoveIndex, setPendingRemoveIndex] = useState<number | null>(
-    null,
+    null
   );
 
   const sensors = useSensors(
@@ -419,23 +422,23 @@ const ListField = ({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
   const modifiers = useMemo(
     () => [restrictToVerticalAxis, restrictToParentElement],
-    [],
+    []
   );
   const sortableItems = useMemo(
     () => arrayFields.map((item) => item.id),
-    [arrayFields],
+    [arrayFields]
   );
 
   const handleToggleOpen = useCallback(
     (index: number) => {
       toggleOpen(index);
     },
-    [toggleOpen],
+    [toggleOpen]
   );
   const handleRequestRemove = useCallback((index: number) => {
     setPendingRemoveIndex(index);
@@ -445,14 +448,14 @@ const ListField = ({
       if (open) return;
       setPendingRemoveIndex((prev) => (prev === index ? null : prev));
     },
-    [],
+    []
   );
   const handleRemoveConfirm = useCallback(
     (index: number) => {
       removeItem(index);
       setPendingRemoveIndex(null);
     },
-    [removeItem],
+    [removeItem]
   );
 
   const toggleAll = (collapsed: boolean) => {
@@ -466,7 +469,7 @@ const ListField = ({
       render={() => (
         <FormItem>
           {shouldShowListHeader && (
-            <div className="flex items-center h-5 gap-x-2">
+            <div className="flex h-5 items-center gap-x-2">
               {field.label !== false && (
                 <FormLabel className="text-sm font-medium">
                   {field.label || field.name}
@@ -474,7 +477,7 @@ const ListField = ({
               )}
               {field.required && (
                 <Badge variant="secondary" className="text-muted-foreground">
-                  <Asterisk className="-ml-1 -mr-0.5" />
+                  <Asterisk className="-mr-0.5 -ml-1" />
                   Required
                 </Badge>
               )}
@@ -494,7 +497,7 @@ const ListField = ({
                       type="button"
                       variant="ghost"
                       size="xs"
-                      className="ml-auto text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground ml-auto"
                       onClick={() => toggleAll(isAllExpanded)}
                     >
                       {isAllExpanded ? <ChevronsDownUp /> : <ChevronsUpDown />}
@@ -535,7 +538,7 @@ const ListField = ({
                 ))}
               </SortableContext>
             </DndContext>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               {isReadonly ? null : typeof field.list === "object" &&
                 field.list?.max &&
                 arrayFields.length >= field.list.max ? null : (
@@ -617,7 +620,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
 
     const selectedBlockDefinition = useMemo(() => {
       const definition = blocks.find(
-        (b: Field) => b.name === selectedBlockName,
+        (b: Field) => b.name === selectedBlockName
       );
       return definition;
     }, [blocks, selectedBlockName]);
@@ -627,7 +630,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
     return (
       <div className="space-y-3" ref={ref as React.Ref<HTMLDivElement>}>
         {!selectedBlockDefinition ? (
-          <div className="rounded-lg border p-4 space-y-4">
+          <div className="space-y-4 rounded-lg border p-4">
             <div className="text-sm">Choose content block:</div>
             <div className="flex flex-wrap gap-2">
               {blocks.map((blockDef: Field) => (
@@ -646,12 +649,12 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
             </div>
           </div>
         ) : (
-          <div className="border rounded-lg">
+          <div className="rounded-lg border">
             <header
               className={cn(
-                "flex items-center gap-x-2 px-4 h-8.5 text-sm font-medium transition-colors rounded-t-lg",
+                "flex h-8.5 items-center gap-x-2 rounded-t-lg px-4 text-sm font-medium transition-colors",
                 isOpen ? "" : "rounded-b-lg",
-                isCollapsible ? "cursor-pointer hover:bg-muted" : "",
+                isCollapsible ? "hover:bg-muted cursor-pointer" : ""
               )}
               onClick={isCollapsible ? onToggleOpen : undefined}
             >
@@ -659,14 +662,14 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
                 <>
                   <ChevronRight
                     className={cn(
-                      "size-4 transition-transform shrink-0",
-                      isOpen ? "rotate-90" : "",
+                      "size-4 shrink-0 transition-transform",
+                      isOpen ? "rotate-90" : ""
                     )}
                   />
                   <span
                     className={cn(
                       "truncate",
-                      hasErrors() ? "text-destructive" : "",
+                      hasErrors() ? "text-destructive" : ""
                     )}
                   >
                     {itemLabel}
@@ -674,7 +677,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
                 </>
               )}
               <Badge
-                className="text-muted-foreground ml-auto -mr-2"
+                className="text-muted-foreground -mr-2 ml-auto"
                 variant="outline"
               >
                 {selectedBlockDefinition.label || selectedBlockDefinition.name}
@@ -693,7 +696,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
                               event.stopPropagation();
                               setIsRemoveBlockDialogOpen(true);
                             }}
-                            className="text-muted-foreground hover:text-foreground -my-0.5 -mx-2 px-2 transition-colors"
+                            className="text-muted-foreground hover:text-foreground -mx-2 -my-0.5 px-2 transition-colors"
                           >
                             <X className="size-3" />
                           </button>
@@ -729,7 +732,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
               </Badge>
             </header>
             <div
-              className={cn("p-4 grid gap-6 border-t", isOpen ? "" : "hidden")}
+              className={cn("grid gap-6 border-t p-4", isOpen ? "" : "hidden")}
             >
               {selectedBlockDefinition.type === "object" ? (
                 (() => {
@@ -739,7 +742,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
                     registerBeforeSubmitHook,
                     undefined,
                     isReadonly,
-                    keyPrefix,
+                    keyPrefix
                   );
                   return renderedElements;
                 })()
@@ -766,7 +769,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
         )}
       </div>
     );
-  },
+  }
 );
 
 BlocksField.displayName = "BlocksField";
@@ -822,19 +825,19 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
     );
 
     return (
-      <div className="border rounded-lg">
+      <div className="rounded-lg border">
         {isCollapsible && (
           <header
             className={cn(
-              "flex items-center gap-x-2 rounded-t-lg pl-4 pr-1 h-8.5 text-sm font-medium hover:bg-muted transition-colors cursor-pointer",
-              isOpen ? "" : "rounded-b-lg",
+              "hover:bg-muted flex h-8.5 cursor-pointer items-center gap-x-2 rounded-t-lg pr-1 pl-4 text-sm font-medium transition-colors",
+              isOpen ? "" : "rounded-b-lg"
             )}
             onClick={onToggleOpen}
           >
             <ChevronRight
               className={cn(
                 "size-4 transition-transform",
-                isOpen ? "rotate-90" : "",
+                isOpen ? "rotate-90" : ""
               )}
             />
             <span className={hasErrors() ? "text-destructive" : ""}>
@@ -844,9 +847,9 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
         )}
         <div
           className={cn(
-            "p-4 grid gap-6",
+            "grid gap-6 p-4",
             isCollapsible && "border-t",
-            isOpen ? "" : "hidden",
+            isOpen ? "" : "hidden"
           )}
         >
           {renderFields(
@@ -855,12 +858,12 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
             registerBeforeSubmitHook,
             undefined,
             Boolean(field.readonly),
-            keyPrefix,
+            keyPrefix
           )}
         </div>
       </div>
     );
-  },
+  }
 );
 
 ObjectField.displayName = "ObjectField";
@@ -899,7 +902,7 @@ const SingleField = ({
   const rawLabelSlotId = useId();
   const labelSlotId = useMemo(
     () => `field-label-slot-${rawLabelSlotId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
-    [rawLabelSlotId],
+    [rawLabelSlotId]
   );
 
   const isCollapsible = !!(
@@ -914,7 +917,7 @@ const SingleField = ({
     return (
       <FormItem key={fieldName}>
         {shouldShowFieldMeta && (
-          <div className="flex items-center h-5 gap-x-2">
+          <div className="flex h-5 items-center gap-x-2">
             {field.label !== false && (
               <Label className={hasErrors() ? "text-destructive" : ""}>
                 {field.label || field.name}
@@ -922,7 +925,7 @@ const SingleField = ({
             )}
             {field.required && (
               <Badge variant="secondary" className="text-muted-foreground">
-                <Asterisk className="-ml-1 -mr-0.5" />
+                <Asterisk className="-mr-0.5 -ml-1" />
                 Required
               </Badge>
             )}
@@ -956,7 +959,7 @@ const SingleField = ({
       FieldComponent = editComponents[field.type];
     } else {
       console.warn(
-        `No component found for field type: ${field.type}. Defaulting to 'text'.`,
+        `No component found for field type: ${field.type}. Defaulting to 'text'.`
       );
       FieldComponent = editComponents["text"];
     }
@@ -968,8 +971,8 @@ const SingleField = ({
         render={({ field: rhfManagedFieldProps }) => (
           <FormItem>
             {shouldShowFieldMeta && (
-              <div className="flex items-center justify-between min-h-6 gap-x-2">
-                <div className="flex items-center gap-x-2 min-w-0">
+              <div className="flex min-h-6 items-center justify-between gap-x-2">
+                <div className="flex min-w-0 items-center gap-x-2">
                   {field.label !== false && (
                     <FormLabel>{field.label || field.name}</FormLabel>
                   )}
@@ -978,7 +981,7 @@ const SingleField = ({
                       variant="secondary"
                       className="text-muted-foreground"
                     >
-                      <Asterisk className="-ml-1 -mr-0.5" />
+                      <Asterisk className="-mr-0.5 -ml-1" />
                       Required
                     </Badge>
                   )}
@@ -1077,7 +1080,7 @@ const EntryForm = ({
         beforeSubmitHooksRef.current.delete(key);
       };
     },
-    [],
+    []
   );
 
   const renderFields: RenderFields = useCallback(
@@ -1087,7 +1090,7 @@ const EntryForm = ({
       registerBeforeSubmitHook?: RegisterBeforeSubmitHook,
       runBeforeSubmitHooks?: () => Promise<void>,
       inheritedReadonly = false,
-      keyPrefix?: string,
+      keyPrefix?: string
     ): React.ReactNode[] => {
       return fields.map((field) => {
         if (!field || field.hidden) return null;
@@ -1131,7 +1134,7 @@ const EntryForm = ({
         );
       });
     },
-    [onChangeRegistered],
+    [onChangeRegistered]
   );
 
   const runBeforeValidationHooks = useCallback(async () => {
@@ -1146,7 +1149,7 @@ const EntryForm = ({
       const latestValues = form.getValues() as Record<string, unknown>;
       await onSubmit(latestValues);
     },
-    [form, onSubmit],
+    [form, onSubmit]
   );
 
   const handleError = () => {
@@ -1159,7 +1162,7 @@ const EntryForm = ({
       await runBeforeValidationHooks();
       await form.handleSubmit(handleSubmit, handleError)(event);
     },
-    [form, handleSubmit, runBeforeValidationHooks],
+    [form, handleSubmit, runBeforeValidationHooks]
   );
 
   return (
@@ -1167,7 +1170,7 @@ const EntryForm = ({
       <form
         id="entry-form"
         onSubmit={handleFormSubmit}
-        className="w-full max-w-screen-md mx-auto grid items-start gap-6"
+        className="mx-auto grid w-full max-w-screen-md items-start gap-6"
       >
         {filePath && (
           <div className="space-y-2 overflow-hidden">
@@ -1175,7 +1178,12 @@ const EntryForm = ({
             {filePath}
           </div>
         )}
-        {renderFields(fields, undefined, registerBeforeSubmitHook, runBeforeValidationHooks)}
+        {renderFields(
+          fields,
+          undefined,
+          registerBeforeSubmitHook,
+          runBeforeValidationHooks
+        )}
       </form>
     </Form>
   );

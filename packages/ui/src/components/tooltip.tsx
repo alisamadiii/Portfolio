@@ -3,9 +3,12 @@
 import * as React from "react";
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 
+import { resolveAsChild } from "@workspace/ui/lib/as-child";
 import { cn } from "@workspace/ui/lib/utils";
 
-function TooltipProvider(props: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+function TooltipProvider(
+  props: React.ComponentProps<typeof TooltipPrimitive.Provider>
+) {
   return <TooltipPrimitive.Provider {...props} />;
 }
 
@@ -13,8 +16,22 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
+function TooltipTrigger({
+  asChild,
+  render,
+  children,
+  ...props
+}: TooltipPrimitive.Trigger.Props & { asChild?: boolean }) {
+  const resolved = resolveAsChild(asChild, render, children);
+  return (
+    <TooltipPrimitive.Trigger
+      data-slot="tooltip-trigger"
+      render={resolved.render as TooltipPrimitive.Trigger.Props["render"]}
+      {...props}
+    >
+      {resolved.children}
+    </TooltipPrimitive.Trigger>
+  );
 }
 
 function TooltipContent({

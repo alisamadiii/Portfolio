@@ -28,11 +28,8 @@ const resolveContentOperations = ({
   schema?: Record<string, any> | null;
   scope?: ContentScope;
 }): ContentOperations => {
-  const resolvedScope = scope ?? (
-    schema?.type === "file"
-      ? "file"
-      : "collection"
-  );
+  const resolvedScope =
+    scope ?? (schema?.type === "file" ? "file" : "collection");
 
   const defaults = contentOperationDefaults[resolvedScope];
   const configured =
@@ -52,7 +49,7 @@ const isContentOperationAllowed = (
   options: {
     schema?: Record<string, any> | null;
     scope?: ContentScope;
-  },
+  }
 ) => resolveContentOperations(options)[operation];
 
 export {

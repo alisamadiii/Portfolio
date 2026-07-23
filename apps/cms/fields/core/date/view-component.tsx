@@ -1,15 +1,18 @@
 "use client";
-import { parse, format, isValid } from "date-fns";
-import { Field } from "@/types/field";
+
+import { format, isValid, parse } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+
+import { Field } from "@/types/field";
+
+import { Badge } from "@workspace/ui/components/badge";
 
 const ViewComponent = ({
   value,
-  field
+  field,
 }: {
-  value: string | string[],
-  field: Field
+  value: string | string[];
+  field: Field;
 }) => {
   if (!value) return null;
 
@@ -17,21 +20,25 @@ const ViewComponent = ({
   if (firstValue == null) return null;
   const extraValuesCount = Array.isArray(value) ? value.length - 1 : 0;
   const inputFormat = field.options?.time ? "yyyy-MM-dd'T'HH:mm" : "yyyy-MM-dd";
-  const outputFormat = field.options?.time ? "MMM d, yyyy - HH:mm" : "MMM d, yyyy";
+  const outputFormat = field.options?.time
+    ? "MMM d, yyyy - HH:mm"
+    : "MMM d, yyyy";
 
   const formatDate = (date: string) => {
     const parsedDate = parse(date, inputFormat, new Date());
     if (!isValid(parsedDate)) {
-      console.warn(`Date for field '${field.name}' is saved in the wrong format or invalid: ${date}.`);
+      console.warn(
+        `Date for field '${field.name}' is saved in the wrong format or invalid: ${date}.`
+      );
       return null;
     }
     return format(parsedDate, outputFormat);
   };
-  
+
   return (
     <span className="flex items-center gap-x-1.5">
       <Badge variant="secondary">
-        <CalendarIcon/>
+        <CalendarIcon />
         {formatDate(firstValue)}
       </Badge>
       {extraValuesCount > 0 && (
@@ -41,6 +48,6 @@ const ViewComponent = ({
       )}
     </span>
   );
-}
+};
 
 export { ViewComponent };

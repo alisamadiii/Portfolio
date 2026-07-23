@@ -9,9 +9,7 @@ export type ApiError = {
   message: string;
 };
 
-export type ApiResponse<T> =
-  | ApiSuccess<T>
-  | ApiError;
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
 export type EntryHistoryItem = {
   sha: string;

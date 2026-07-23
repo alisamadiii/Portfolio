@@ -4,8 +4,8 @@
  * Look at the `lib/config.ts` file to understand how we use this schema.
  */
 
-import { z } from "zod";
 import { fieldTypes } from "@/fields/registry";
+import { z } from "zod";
 
 const ActionSchema = z
   .object({
@@ -45,54 +45,74 @@ const ActionSchema = z
         z.boolean({
           message: "'confirm' must be a boolean or an object.",
         }),
-        z.object({
-          title: z.string().optional(),
-          message: z.string().optional(),
-          button: z.string().optional(),
-        }).strict(),
+        z
+          .object({
+            title: z.string().optional(),
+            message: z.string().optional(),
+            button: z.string().optional(),
+          })
+          .strict(),
       ])
       .optional(),
     fields: z
-      .array(z.object({
-        name: z
-          .string({
-            required_error: "'fields[].name' is required.",
-            invalid_type_error: "'fields[].name' must be a string.",
+      .array(
+        z
+          .object({
+            name: z
+              .string({
+                required_error: "'fields[].name' is required.",
+                invalid_type_error: "'fields[].name' must be a string.",
+              })
+              .regex(/^[a-zA-Z0-9-_]+$/, {
+                message:
+                  "'fields[].name' must be alphanumeric with dashes and underscores.",
+              }),
+            label: z.string({
+              required_error: "'fields[].label' is required.",
+              invalid_type_error: "'fields[].label' must be a string.",
+            }),
+            type: z.enum(["text", "textarea", "select", "checkbox", "number"], {
+              message:
+                "'fields[].type' must be 'text', 'textarea', 'select', 'checkbox', or 'number'.",
+            }),
+            required: z.boolean().optional(),
+            default: z.union([z.string(), z.number(), z.boolean()]).optional(),
+            options: z
+              .array(
+                z
+                  .object({
+                    label: z.string(),
+                    value: z.string(),
+                  })
+                  .strict()
+              )
+              .optional(),
           })
-          .regex(/^[a-zA-Z0-9-_]+$/, {
-            message: "'fields[].name' must be alphanumeric with dashes and underscores.",
+          .strict()
+          .superRefine((field, ctx) => {
+            if (
+              field.type === "select" &&
+              (!field.options || field.options.length === 0)
+            ) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "'fields[].options' is required for select fields.",
+                path: ["options"],
+              });
+            }
+            if (field.type !== "select" && field.options) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                  "'fields[].options' is only allowed for select fields.",
+                path: ["options"],
+              });
+            }
           }),
-        label: z.string({
-          required_error: "'fields[].label' is required.",
-          invalid_type_error: "'fields[].label' must be a string.",
-        }),
-        type: z.enum(["text", "textarea", "select", "checkbox", "number"], {
-          message: "'fields[].type' must be 'text', 'textarea', 'select', 'checkbox', or 'number'.",
-        }),
-        required: z.boolean().optional(),
-        default: z.union([z.string(), z.number(), z.boolean()]).optional(),
-        options: z.array(z.object({
-          label: z.string(),
-          value: z.string(),
-        }).strict()).optional(),
-      }).strict().superRefine((field, ctx) => {
-        if (field.type === "select" && (!field.options || field.options.length === 0)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "'fields[].options' is required for select fields.",
-            path: ["options"],
-          });
+        {
+          message: "'fields' must be an array of action field definitions.",
         }
-        if (field.type !== "select" && field.options) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "'fields[].options' is only allowed for select fields.",
-            path: ["options"],
-          });
-        }
-      }), {
-        message: "'fields' must be an array of action field definitions.",
-      })
+      )
       .optional(),
   })
   .strict();
@@ -158,7 +178,7 @@ const MediaConfigObject = z
         }),
         {
           message: "'extensions' must be an array of strings.",
-        },
+        }
       )
       .optional(),
     categories: z
@@ -177,11 +197,11 @@ const MediaConfigObject = z
           {
             message:
               "Entries in the 'categories' array must be 'image', 'document', 'video', 'audio', 'compressed', 'code', 'font', or 'spreadsheet'.",
-          },
+          }
         ),
         {
           message: "'categories' must be an array of strings.",
-        },
+        }
       )
       .optional(),
     rename: z
@@ -202,7 +222,7 @@ const MediaConfigObject = z
         },
         {
           message: "'commit' must be an object.",
-        },
+        }
       )
       .optional(),
     name: z.string().optional(),
@@ -261,14 +281,14 @@ const ListSchema = z.union([
             {
               message:
                 "'collapsible' must be either a boolean or an object with 'collapsed' and 'summary' properties.",
-            },
+            }
           ),
         ]),
       },
       {
         message:
           "'list' must be either a boolean or an object with 'min' and 'max' properties.",
-      },
+      }
     )
     .strict(),
 ]);
@@ -298,7 +318,7 @@ const FilenameConfigSchema = z.union([
       {
         message:
           "'filename' object must contain 'template' and optionally 'field'.",
-      },
+      }
     )
     .strict(),
 ]);
@@ -326,7 +346,7 @@ const ContentOperationsSchema = z
 // Generator for Field Object Schema (components do not have a `name` field)
 const generateFieldObjectSchema = (
   isComponent?: boolean,
-  isBlock?: boolean,
+  isBlock?: boolean
 ): z.ZodType<any> => {
   let baseObjectSchema = {
     label: z
@@ -351,7 +371,7 @@ const generateFieldObjectSchema = (
     fields: z
       .array(
         z.lazy(() => generateFieldObjectSchema()),
-        { message: "'fields' must be an array of field definitions." },
+        { message: "'fields' must be an array of field definitions." }
       )
       .optional(),
   };
@@ -385,7 +405,7 @@ const generateFieldObjectSchema = (
             {
               message: "'type' must be a valid field type.",
               path: ["type"],
-            },
+            }
           )
           .optional(),
         list: ListSchema.optional(),
@@ -428,7 +448,7 @@ const generateFieldObjectSchema = (
                 {
                   message:
                     "'pattern' must be a string (regex) or an object with 'regex' and optionally 'message' properties.",
-                },
+                }
               )
               .strict(),
           ])
@@ -437,7 +457,7 @@ const generateFieldObjectSchema = (
         blocks: z
           .array(
             z.lazy(() => generateFieldObjectSchema(false, true)),
-            { message: "'blocks' must be an array of field definitions." },
+            { message: "'blocks' must be an array of field definitions." }
           )
           .optional(),
         blockKey: z
@@ -508,7 +528,7 @@ const generateFieldObjectSchema = (
             path: ["blockKey"],
           });
         }
-      }),
+      })
   );
 };
 
@@ -546,7 +566,7 @@ const ContentLeafSchema = z
         }),
         {
           message: "'exclude' must be an array of strings.",
-        },
+        }
       )
       .optional(),
     view: z
@@ -576,7 +596,7 @@ const ContentLeafSchema = z
                   {
                     message:
                       "'node' must contain 'filename' and optionally 'hideDirs'.",
-                  },
+                  }
                 ),
                 z.string({
                   message:
@@ -586,7 +606,7 @@ const ContentLeafSchema = z
               {
                 message:
                   "'node' must be a string or an object with 'filename' and 'hideDirs'.",
-              },
+              }
             )
             .optional(),
           fields: z
@@ -596,7 +616,7 @@ const ContentLeafSchema = z
               }),
               {
                 message: "'fields' must be an array of strings.",
-              },
+              }
             )
             .optional(),
           primary: z
@@ -612,7 +632,7 @@ const ContentLeafSchema = z
               }),
               {
                 message: "'sort' must be an array of strings.",
-              },
+              }
             )
             .optional(),
           search: z
@@ -622,7 +642,7 @@ const ContentLeafSchema = z
               }),
               {
                 message: "'search' must be an array of strings.",
-              },
+              }
             )
             .optional(),
           default: z
@@ -650,7 +670,7 @@ const ContentLeafSchema = z
               {
                 message:
                   "'default' must be an object with 'search', 'sort' and 'order' attributes.",
-              },
+              }
             )
             .strict()
             .optional()
@@ -659,7 +679,7 @@ const ContentLeafSchema = z
         {
           message:
             "'view' must be an object with 'fields', 'primary', 'sort', 'search' and 'default' attributes.",
-        },
+        }
       )
       .strict()
       .optional()
@@ -680,7 +700,7 @@ const ContentLeafSchema = z
         {
           message:
             "'format' must be 'yaml-frontmatter', 'json-frontmatter', 'tom-frontmatter', 'yaml', 'json', 'toml', 'datagrid', 'code' or 'raw'.",
-        },
+        }
       )
       .optional()
       .nullable(),
@@ -690,7 +710,7 @@ const ContentLeafSchema = z
           .array(
             z.string({
               message: "Delimiters must be strings",
-            }),
+            })
           )
           .length(2, "'delimiters' must contain exactly two string values."),
         z.string({
@@ -718,7 +738,7 @@ const ContentLeafSchema = z
         },
         {
           message: "'commit' must be an object.",
-        },
+        }
       )
       .optional(),
     actions: z
@@ -749,11 +769,11 @@ const ContentGroupSchema: z.ZodType<any> = z.lazy(() =>
         message: "'items' must be an array of content entries.",
       }),
     })
-    .strict(),
+    .strict()
 );
 
 const ContentObjectSchema: z.ZodType<any> = z.lazy(() =>
-  z.union([ContentLeafSchema, ContentGroupSchema]),
+  z.union([ContentLeafSchema, ContentGroupSchema])
 );
 
 // Main schema with media and content
@@ -782,7 +802,7 @@ const ConfigSchema = z
           message:
             "Component key must be alphanumeric with dashes and underscores.",
         }),
-        generateFieldObjectSchema(true),
+        generateFieldObjectSchema(true)
       )
       .optional(),
     actions: z
@@ -821,7 +841,7 @@ const ConfigSchema = z
                   },
                   {
                     message: "'content' must be an object.",
-                  },
+                  }
                 )
                 .optional(),
               commit: z
@@ -832,13 +852,13 @@ const ConfigSchema = z
                   },
                   {
                     message: "'commit' must be an object.",
-                  },
+                  }
                 )
                 .optional(),
             },
             {
               message: "'settings' must be an object.",
-            },
+            }
           )
           .strict()
           .optional(),
@@ -856,7 +876,7 @@ const ConfigSchema = z
       if (item.type === "group") {
         if (Array.isArray(item.items)) {
           item.items.forEach((child: any, index: number) =>
-            validateContentItem(child, [...path, "items", index]),
+            validateContentItem(child, [...path, "items", index])
           );
         }
         return;
@@ -885,7 +905,9 @@ const ConfigSchema = z
 
     const content = data?.content;
     if (!Array.isArray(content)) return;
-    content.forEach((item, index) => validateContentItem(item, ["content", index]));
+    content.forEach((item, index) =>
+      validateContentItem(item, ["content", index])
+    );
   })
   .nullable();
 

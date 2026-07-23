@@ -15,8 +15,7 @@ export function formatFeedbackMarkdown(payload: FeedbackPayload): string {
 
     payload.changes.forEach((change, i) => {
       const num = i + 1;
-      const typeLabel =
-        change.type === "text" ? "Text Change" : "Image Change";
+      const typeLabel = change.type === "text" ? "Text Change" : "Image Change";
       lines.push(`${num}. **${typeLabel}** on \`${change.selector}\``);
       lines.push(`   - **Element**: \`${change.element}\``);
       lines.push(`   - **Current**: "${change.original}"`);

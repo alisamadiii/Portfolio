@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
-import { getParentPath, getRelativePath, joinPathSegments, normalizePath } from "@/lib/utils/file";
-import { getSchemaByName } from "@/lib/schema";
-import { requireApiSuccess } from "@/lib/api-client";
+import { ArrowUpRight } from "lucide-react";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,16 +15,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@workspace/ui/components/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import { ArrowUpRight } from "lucide-react";
+} from "@workspace/ui/components/dropdown-menu";
+
+import { requireApiSuccess } from "@/lib/api-client";
+import { getSchemaByName } from "@/lib/schema";
+import {
+  getParentPath,
+  getRelativePath,
+  joinPathSegments,
+  normalizePath,
+} from "@/lib/utils/file";
+
 import { FileRename } from "@/components/file/file-rename";
 
 export function FileOptions({
@@ -37,7 +45,7 @@ export function FileOptions({
   portalProps,
   onDelete,
   onRename,
-  children
+  children,
 }: {
   path: string;
   sha: string;
@@ -65,8 +73,12 @@ export function FileOptions({
     }
     return getParentPath(path);
   }, [type, name, config.object, path]);
-  const relativePath = useMemo(() => getRelativePath(normalizedPath, rootPath), [normalizedPath, rootPath]);
-  const showRename = type !== "settings" && type !== "file" && canRename !== false;
+  const relativePath = useMemo(
+    () => getRelativePath(normalizedPath, rootPath),
+    [normalizedPath, rootPath]
+  );
+  const showRename =
+    type !== "settings" && type !== "file" && canRename !== false;
   const showDelete = type !== "settings" && canDelete !== false;
 
   const [newPath, setNewPath] = useState(relativePath);
@@ -76,17 +88,23 @@ export function FileOptions({
     try {
       const deletePromise = new Promise(async (resolve, reject) => {
         try {
-          const params = new URLSearchParams({ 
+          const params = new URLSearchParams({
             sha,
-            type: (type === "collection" || type === "file") ? "content" : type
+            type: type === "collection" || type === "file" ? "content" : type,
           });
           if (name) params.set("name", name);
 
-          const response = await fetch(`/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizedPath)}?${params.toString()}`, {
-            method: "DELETE",
-          });
+          const response = await fetch(
+            `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizedPath)}?${params.toString()}`,
+            {
+              method: "DELETE",
+            }
+          );
 
-          const data = await requireApiSuccess<any>(response, "Failed to delete file");
+          const data = await requireApiSuccess<any>(
+            response,
+            "Failed to delete file"
+          );
 
           resolve(data);
         } catch (error) {
@@ -106,54 +124,60 @@ export function FileOptions({
       console.error(error);
     }
   };
-  
+
   return (
     <>
       <AlertDialog>
         <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            {children}
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
           <DropdownMenuContent align="end" portalProps={portalProps}>
             <DropdownMenuItem asChild>
-              <a href={`https://github.com/${config.owner}/${config.repo}/blob/${encodeURIComponent(config.branch)}/${path}`} target="_blank">
+              <a
+                href={`https://github.com/${config.owner}/${config.repo}/blob/${encodeURIComponent(config.branch)}/${path}`}
+                target="_blank"
+              >
                 View on GitHub
-                <ArrowUpRight className="size-3 text-muted-foreground ml-auto" />
+                <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
               </a>
             </DropdownMenuItem>
-            {(showRename || showDelete)
-              ? <>
-                  <DropdownMenuSeparator />
-                  {showRename &&
-                    <DropdownMenuItem onSelect={() => setIsRenameOpen(true)}>
-                      Rename
+            {showRename || showDelete ? (
+              <>
+                <DropdownMenuSeparator />
+                {showRename && (
+                  <DropdownMenuItem onSelect={() => setIsRenameOpen(true)}>
+                    Rename
+                  </DropdownMenuItem>
+                )}
+                {showDelete && (
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem variant="destructive">
+                      Delete
                     </DropdownMenuItem>
-                  }
-                  {showDelete && (
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem variant="destructive">
-                        Delete
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                  )}
-                </>
-              : null
-            }
+                  </AlertDialogTrigger>
+                )}
+              </>
+            ) : null}
           </DropdownMenuContent>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure you want to delete this file?</AlertDialogTitle>
-              <AlertDialogDescription>This will premanently delete &quot;{path}&quot;.</AlertDialogDescription>
+              <AlertDialogTitle>
+                Are you sure you want to delete this file?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This will premanently delete &quot;{path}&quot;.
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction onClick={handleConfirmDelete}>
+                Delete
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </DropdownMenu>
       </AlertDialog>
 
-      {showRename &&
+      {showRename && (
         <FileRename
           isOpen={isRenameOpen}
           onOpenChange={setIsRenameOpen}
@@ -163,7 +187,7 @@ export function FileOptions({
           name={name}
           onRename={onRename}
         />
-      }
+      )}
     </>
   );
 }

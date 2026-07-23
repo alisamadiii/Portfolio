@@ -5,22 +5,51 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
+import { resolveAsChild } from "@workspace/ui/lib/as-child";
 import { cn } from "@workspace/ui/lib/utils";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
+function DialogTrigger({
+  asChild,
+  render,
+  children,
+  ...props
+}: DialogPrimitive.Trigger.Props & { asChild?: boolean }) {
+  const resolved = resolveAsChild(asChild, render, children);
+  return (
+    <DialogPrimitive.Trigger
+      data-slot="dialog-trigger"
+      render={resolved.render as DialogPrimitive.Trigger.Props["render"]}
+      {...props}
+    >
+      {resolved.children}
+    </DialogPrimitive.Trigger>
+  );
 }
 
 function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
+function DialogClose({
+  asChild,
+  render,
+  children,
+  ...props
+}: DialogPrimitive.Close.Props & { asChild?: boolean }) {
+  const resolved = resolveAsChild(asChild, render, children);
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      render={resolved.render as DialogPrimitive.Close.Props["render"]}
+      {...props}
+    >
+      {resolved.children}
+    </DialogPrimitive.Close>
+  );
 }
 
 function DialogOverlay({

@@ -43,7 +43,9 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/minimatch": "npm:@types/minimatch@5.1.2"
+      "@types/minimatch": "npm:@types/minimatch@5.1.2",
+      "react": "19.2.7",
+      "react-dom": "19.2.7"
     }
   },
   "dependencies": {

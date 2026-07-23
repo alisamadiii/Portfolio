@@ -8,9 +8,13 @@
  */
 
 import { cache } from "react";
-import { createInternalCaller } from "@workspace/trpc/http-caller";
-import { db } from "@/db";
+
 import { User } from "@/types/user";
+
+import { db } from "@/db";
+
+import { createInternalCaller } from "@workspace/trpc/http-caller";
+
 import { hasAdminAccess } from "@/lib/admin";
 import { createHttpError } from "@/lib/api-error";
 import { collaboratorMatchesUserForRepo } from "@/lib/collaborator-access";
@@ -35,33 +39,35 @@ const clearPatTokenCache = () => {
 };
 
 // Get a token for a user: admins access any repo, others need a collaborator row.
-const getToken = cache(async (
-  user: User,
-  owner: string,
-  repo: string,
-  _verifyGithubAccess: boolean = false,
-) => {
-  if (hasAdminAccess(user)) {
-    return {
-      token: await getPatToken(),
-      source: "pat" as const,
-    };
-  }
+const getToken = cache(
+  async (
+    user: User,
+    owner: string,
+    repo: string,
+    _verifyGithubAccess: boolean = false
+  ) => {
+    if (hasAdminAccess(user)) {
+      return {
+        token: await getPatToken(),
+        source: "pat" as const,
+      };
+    }
 
-  const permission = await db.query.collaboratorTable.findFirst({
-    where: collaboratorMatchesUserForRepo(user, owner, repo),
-  });
-  if (permission) {
-    return {
-      token: await getPatToken(),
-      source: "pat" as const,
-    };
-  }
+    const permission = await db.query.collaboratorTable.findFirst({
+      where: collaboratorMatchesUserForRepo(user, owner, repo),
+    });
+    if (permission) {
+      return {
+        token: await getPatToken(),
+        source: "pat" as const,
+      };
+    }
 
-  throw createHttpError(
-    `You do not have permission to access "${owner}/${repo}".`,
-    403,
-  );
-});
+    throw createHttpError(
+      `You do not have permission to access "${owner}/${repo}".`,
+      403
+    );
+  }
+);
 
 export { getPatToken, clearPatTokenCache, getToken };

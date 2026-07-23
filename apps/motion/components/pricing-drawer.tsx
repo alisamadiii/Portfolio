@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { animations } from "@/animations/registry";
-import { createPortal } from "react-dom";
 import { motion } from "motion/react";
+import { createPortal } from "react-dom";
 
 import {
   Drawer,
@@ -17,9 +17,7 @@ export const PricingDrawer = ({ children }: { children: React.ReactNode }) => {
     <div>
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger>{children}</DrawerTrigger>
-        <DrawerContent
-          className="rounded-t-5xl! shadow-dialog z-102 mx-auto max-w-3xl px-8 pb-8"
-        >
+        <DrawerContent className="rounded-t-5xl! shadow-dialog z-102 mx-auto max-w-3xl px-8 pb-8">
           <Pricing />
         </DrawerContent>
       </Drawer>

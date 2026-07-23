@@ -2,9 +2,11 @@
  * Get the list of GitHub accounts the user (incl. collaborators) has access to.
  */
 
+import { User } from "@/types/user";
+
 import { db } from "@/db";
 import { collaboratorTable } from "@/db/schema";
-import { User } from "@/types/user";
+
 import { isAdminUser } from "@/lib/authz-shared";
 import { collaboratorMatchesUser } from "@/lib/collaborator-access";
 

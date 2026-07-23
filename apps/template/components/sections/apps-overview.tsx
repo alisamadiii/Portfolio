@@ -40,8 +40,7 @@ const apps = [
     tech: "Next.js · port 3001",
     color: "text-rose-500",
     bg: "bg-rose-500/10",
-    description:
-      "Manage users and payments — connected to Dashboard API.",
+    description: "Manage users and payments — connected to Dashboard API.",
     features: [
       "Role-based access (admin role required)",
       "User search, sort, paginate, edit, delete",

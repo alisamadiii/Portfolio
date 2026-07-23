@@ -373,7 +373,6 @@ export function InvoiceDocument({ data }: { data: InvoiceData }) {
             </Text>
           </View>
         </View>
-
       </Page>
     </Document>
   );

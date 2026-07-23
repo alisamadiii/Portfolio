@@ -130,12 +130,12 @@ export function resolveAppName(value?: string | null) {
 
 /** Portal login URL that returns the user to `returnTo` once authenticated. */
 export function portalLoginUrl(returnTo: string) {
-  return `${urls.portal}/login?redirectUrl=${encodeURIComponent(returnTo)}`;
+  return `${urls.portal}/login?redirectUrl=${returnTo}`;
 }
 
 /** Portal signup URL that returns the user to `returnTo` once authenticated. */
 export function portalSignupUrl(returnTo: string) {
-  return `${urls.portal}/signup?redirectUrl=${encodeURIComponent(returnTo)}`;
+  return `${urls.portal}/signup?redirectUrl=${returnTo}`;
 }
 
 export const logos = {

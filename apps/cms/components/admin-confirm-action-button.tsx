@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@workspace/ui/components/alert-dialog";
+import { Button } from "@workspace/ui/components/button";
 
 export function AdminConfirmActionButton({
   action,
@@ -59,7 +60,9 @@ export function AdminConfirmActionButton({
               setOpen(false);
             }}
           >
-            <AlertDialogAction variant={variant === "destructive" ? "destructive" : "default"}>
+            <AlertDialogAction
+              variant={variant === "destructive" ? "destructive" : "default"}
+            >
               {confirmLabel}
             </AlertDialogAction>
           </form>

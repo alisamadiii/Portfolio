@@ -6,4 +6,4 @@ export interface Repo {
   branches?: string[];
   defaultBranch?: string;
   isPrivate: boolean;
-};
+}

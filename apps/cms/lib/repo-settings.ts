@@ -11,9 +11,11 @@
  * An empty base path means "repository root" — identical to the legacy behavior.
  */
 
+import { sql } from "drizzle-orm";
+
 import { db } from "@/db";
 import { repoSettingsTable } from "@/db/schema";
-import { sql } from "drizzle-orm";
+
 import { joinPathSegments, normalizePath } from "@/lib/utils/file";
 
 const normalizeBasePath = (basePath: string): string => {
@@ -34,7 +36,7 @@ const getBasePath = async (owner: string, repo: string): Promise<string> => {
 const setBasePath = async (
   owner: string,
   repo: string,
-  basePath: string,
+  basePath: string
 ): Promise<string> => {
   const normalized = normalizeBasePath(basePath);
   const match = sql`lower(${repoSettingsTable.owner}) = lower(${owner}) and lower(${repoSettingsTable.repo}) = lower(${repo})`;
@@ -76,7 +78,7 @@ const resolveConfigFilePath = (basePath: string): string =>
  */
 const rebaseConfigObject = (
   configObject: Record<string, any>,
-  basePath: string,
+  basePath: string
 ): Record<string, any> => {
   if (!basePath || !configObject || typeof configObject !== "object") {
     return configObject;

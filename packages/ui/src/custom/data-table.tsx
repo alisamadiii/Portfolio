@@ -54,8 +54,14 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
           getCoreRowModel: getCoreRowModel(),
         });
 
-  const { onRowClick, className, error, expandedRows, renderExpandedRow, rowClassName } =
-    props;
+  const {
+    onRowClick,
+    className,
+    error,
+    expandedRows,
+    renderExpandedRow,
+    rowClassName,
+  } = props;
 
   return (
     <div className={cn("isolate overflow-hidden rounded-xl border", className)}>
@@ -108,7 +114,10 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>

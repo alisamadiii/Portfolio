@@ -2,13 +2,13 @@ import { TRPCError } from "@trpc/server";
 import { desc, ilike, notInArray, sql } from "drizzle-orm";
 import z from "zod";
 
-import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo } from "@workspace/drizzle/schema";
 import {
   adminProcedure,
   createTRPCRouter,
   internalProcedure,
 } from "@workspace/trpc/init";
+import { db } from "@workspace/drizzle/index";
+import { cmsOrgRepo } from "@workspace/drizzle/schema";
 
 type OrgRepo = {
   repoId: number;
@@ -117,9 +117,7 @@ const syncOrgRepos = async () => {
   const repoIds = repos.map((repo) => repo.repoId);
   await db
     .delete(cmsOrgRepo)
-    .where(
-      repoIds.length ? notInArray(cmsOrgRepo.repoId, repoIds) : sql`true`
-    );
+    .where(repoIds.length ? notInArray(cmsOrgRepo.repoId, repoIds) : sql`true`);
 
   return { synced: repos.length };
 };

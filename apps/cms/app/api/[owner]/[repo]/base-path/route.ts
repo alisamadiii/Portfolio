@@ -1,14 +1,16 @@
 import { type NextRequest } from "next/server";
 import { and, sql } from "drizzle-orm";
+
 import { db } from "@/db";
 import { configTable } from "@/db/schema";
-import { getBasePath, setBasePath } from "@/lib/repo-settings";
+
+import { createHttpError, toErrorResponse } from "@/lib/api-error";
+import { assertAdminUser } from "@/lib/authz-shared";
 import { clearFileCache } from "@/lib/github-cache-file";
 import { deleteCacheFileMeta } from "@/lib/github-cache-meta";
-import { assertAdminUser } from "@/lib/authz-shared";
-import { getToken } from "@/lib/token";
-import { createHttpError, toErrorResponse } from "@/lib/api-error";
+import { getBasePath, setBasePath } from "@/lib/repo-settings";
 import { requireApiUserSession } from "@/lib/session-server";
+import { getToken } from "@/lib/token";
 
 /**
  * Get or set the per-repository base path (monorepo subfolder support).
@@ -22,7 +24,7 @@ import { requireApiUserSession } from "@/lib/session-server";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ owner: string; repo: string }> },
+  context: { params: Promise<{ owner: string; repo: string }> }
 ) {
   try {
     const params = await context.params;
@@ -49,7 +51,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ owner: string; repo: string }> },
+  context: { params: Promise<{ owner: string; repo: string }> }
 ) {
   try {
     const params = await context.params;
@@ -64,20 +66,29 @@ export async function PUT(
 
     const body: any = await request.json().catch(() => ({}));
     if (typeof body?.basePath !== "string") {
-      throw createHttpError('"basePath" is required and must be a string.', 400);
+      throw createHttpError(
+        '"basePath" is required and must be a string.',
+        400
+      );
     }
 
-    const basePath = await setBasePath(params.owner, params.repo, body.basePath);
+    const basePath = await setBasePath(
+      params.owner,
+      params.repo,
+      body.basePath
+    );
 
     // The base path changes both where `.pages.yml` loads from and how every
     // collection/media path is rebased, so all cached data for ALL branches of
     // this repo is now stale. Clear it so the next load re-resolves from GitHub.
-    await db.delete(configTable).where(
-      and(
-        sql`lower(${configTable.owner}) = lower(${params.owner})`,
-        sql`lower(${configTable.repo}) = lower(${params.repo})`,
-      ),
-    );
+    await db
+      .delete(configTable)
+      .where(
+        and(
+          sql`lower(${configTable.owner}) = lower(${params.owner})`,
+          sql`lower(${configTable.repo}) = lower(${params.repo})`
+        )
+      );
     await clearFileCache(params.owner, params.repo);
     await deleteCacheFileMeta(params.owner, params.repo);
 

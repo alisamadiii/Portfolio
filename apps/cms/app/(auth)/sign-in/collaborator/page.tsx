@@ -1,5 +1,11 @@
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
+
 import { InviteSignIn } from "@/components/invite-sign-in";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export default async function Page({
   searchParams,
@@ -10,7 +16,7 @@ export default async function Page({
 
   if (!token?.trim()) {
     return (
-      <Empty className="absolute inset-0 border-0 rounded-none">
+      <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Invite unavailable</EmptyTitle>
           <EmptyDescription>This invitation link is invalid.</EmptyDescription>

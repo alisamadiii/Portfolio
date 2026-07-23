@@ -1,13 +1,16 @@
-import { type NextRequest } from "next/server";
 import { headers } from "next/headers";
-import { createHttpCaller } from "@workspace/trpc/http-caller";
-import { db } from "@/db";
+import { type NextRequest } from "next/server";
 import { and, sql } from "drizzle-orm";
+
+import { db } from "@/db";
 import { collaboratorTable } from "@/db/schema";
-import { isAdminUser } from "@/lib/authz-shared";
+
+import { createHttpCaller } from "@workspace/trpc/http-caller";
+
 import { toErrorResponse } from "@/lib/api-error";
-import { requireApiUserSession } from "@/lib/session-server";
+import { isAdminUser } from "@/lib/authz-shared";
 import { collaboratorMatchesUser } from "@/lib/collaborator-access";
+import { requireApiUserSession } from "@/lib/session-server";
 
 export const dynamic = "force-dynamic";
 
@@ -49,12 +52,15 @@ export async function GET(
       where: and(
         collaboratorMatchesUser(user),
         sql`lower(${collaboratorTable.owner}) = lower(${params.owner})`
-      )
+      ),
     });
 
     const reposByKey = new Map<string, any>();
     for (const repo of githubRepos) {
-      reposByKey.set(`${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`, repo);
+      reposByKey.set(
+        `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`,
+        repo
+      );
     }
     for (const repo of collaboratorRepos) {
       const key = `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`;

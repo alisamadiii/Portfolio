@@ -1,45 +1,73 @@
-import { getRepoReadContext } from "@/lib/api-repo-context";
-import { getFileExtension, normalizePath } from "@/lib/utils/file";
-import { getMediaCache } from "@/lib/github-cache-file";
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
+import { getRepoReadContext } from "@/lib/api-repo-context";
+import { getMediaCache } from "@/lib/github-cache-file";
+import { getFileExtension, normalizePath } from "@/lib/utils/file";
 
 /**
  * Get the list of media files in a directory.
  *
  * GET /api/[owner]/[repo]/[branch]/media/[path]
- * 
+ *
  * Requires authentication.
  */
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ owner: string, repo: string, branch: string, name: string, path: string }> }
+  context: {
+    params: Promise<{
+      owner: string;
+      repo: string;
+      branch: string;
+      name: string;
+      path: string;
+    }>;
+  }
 ) {
   try {
     const params = await context.params;
     const { token, config } = await getRepoReadContext(params);
-    
-    const mediaConfig = config.object.media.find((item: any) => item.name === params.name) || config.object.media[0];
+
+    const mediaConfig =
+      config.object.media.find((item: any) => item.name === params.name) ||
+      config.object.media[0];
 
     if (!mediaConfig) {
-      if (params.name) throw createHttpError(`No media configuration named "${params.name}" found for ${params.owner}/${params.repo}/${params.branch}.`, 404);
-      throw createHttpError(`No media configuration found for ${params.owner}/${params.repo}/${params.branch}.`, 404);
+      if (params.name)
+        throw createHttpError(
+          `No media configuration named "${params.name}" found for ${params.owner}/${params.repo}/${params.branch}.`,
+          404
+        );
+      throw createHttpError(
+        `No media configuration found for ${params.owner}/${params.repo}/${params.branch}.`,
+        404
+      );
     }
 
     const normalizedPath = normalizeMediaPath(
       params.path,
       params.owner,
       params.repo,
-      params.branch,
+      params.branch
     );
-    if (!normalizedPath.startsWith(mediaConfig.input)) throw createHttpError(`Invalid path "${params.path}" for media "${params.name}".`, 400);
+    if (!normalizedPath.startsWith(mediaConfig.input))
+      throw createHttpError(
+        `Invalid path "${params.path}" for media "${params.name}".`,
+        400
+      );
 
     const { searchParams } = new URL(request.url);
-    const nocache = searchParams.get('nocache');
+    const nocache = searchParams.get("nocache");
 
     let results;
     try {
-      results = await getMediaCache(params.owner, params.repo, params.branch, normalizedPath, token, !!nocache);
+      results = await getMediaCache(
+        params.owner,
+        params.repo,
+        params.branch,
+        normalizedPath,
+        token,
+        !!nocache
+      );
     } catch (error: any) {
       if (error?.status === 404) {
         results = [];
@@ -72,9 +100,10 @@ export async function GET(
           sha: item.sha,
           name: item.name,
           path: item.path,
-          extension: item.type === "dir" ? undefined : getFileExtension(item.name),
+          extension:
+            item.type === "dir" ? undefined : getFileExtension(item.name),
           size: item.size,
-          url: item.downloadUrl
+          url: item.downloadUrl,
         };
       }),
     });
@@ -88,7 +117,7 @@ const normalizeMediaPath = (
   rawPath: string,
   owner: string,
   repo: string,
-  branch: string,
+  branch: string
 ) => {
   const decodedPath = decodeURIComponent(rawPath || "");
 
@@ -96,9 +125,9 @@ const normalizeMediaPath = (
   const markdownMatch = decodedPath.match(/^\[.*?\]\((.+)\)$/);
   const markdownLooseMatch = decodedPath.match(/^\[.*?\]\((.+)$/);
   const candidate = (
-    markdownMatch?.[1]
-    || markdownLooseMatch?.[1]?.replace(/\)$/, "")
-    || decodedPath
+    markdownMatch?.[1] ||
+    markdownLooseMatch?.[1]?.replace(/\)$/, "") ||
+    decodedPath
   ).trim();
 
   // If caller accidentally passes a raw.githubusercontent URL, map it back to repo-relative path.
@@ -116,7 +145,8 @@ const normalizeMediaPath = (
     }
   }
 
-  repoRelativePath = repoRelativePath.split("#")[0]?.split("?")[0] || repoRelativePath;
+  repoRelativePath =
+    repoRelativePath.split("#")[0]?.split("?")[0] || repoRelativePath;
 
   return normalizePath(repoRelativePath);
 };

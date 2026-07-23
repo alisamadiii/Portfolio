@@ -4,18 +4,15 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { useDebounce } from "use-debounce";
+
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
-} from "@/components/ui/input-group";
+} from "@workspace/ui/components/input-group";
 
-export function AdminUserSearch({
-  initialQuery,
-}: {
-  initialQuery: string;
-}) {
+export function AdminUserSearch({ initialQuery }: { initialQuery: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -42,7 +39,9 @@ export function AdminUserSearch({
     }
 
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
   }, [debouncedValue, pathname, router, searchParams]);
 
   return (

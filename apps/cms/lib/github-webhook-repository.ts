@@ -1,10 +1,18 @@
+import { and, eq, inArray } from "drizzle-orm";
+
 import { db } from "@/db";
 import { cacheFileTable, collaboratorTable } from "@/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
-import { clearFileCache, updateFileCacheRepository } from "@/lib/github-cache-file";
-import { deleteCacheFileMeta, deleteCacheFileMetaByPaths } from "@/lib/github-cache-meta";
 
-const chunkArray = <T,>(items: T[], size = 200): T[][] => {
+import {
+  clearFileCache,
+  updateFileCacheRepository,
+} from "@/lib/github-cache-file";
+import {
+  deleteCacheFileMeta,
+  deleteCacheFileMetaByPaths,
+} from "@/lib/github-cache-meta";
+
+const chunkArray = <T>(items: T[], size = 200): T[][] => {
   const chunks: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
     chunks.push(items.slice(i, i + size));
@@ -33,7 +41,7 @@ const clearScopedFileCache = async (
   owner: string,
   repo: string,
   branch: string,
-  changedPaths: string[],
+  changedPaths: string[]
 ) => {
   const uniqueChangedPaths = Array.from(new Set(changedPaths.filter(Boolean)));
   const affectedParentPaths = getAffectedParentPaths(uniqueChangedPaths);
@@ -41,29 +49,28 @@ const clearScopedFileCache = async (
   const whereBase = and(
     eq(cacheFileTable.owner, owner.toLowerCase()),
     eq(cacheFileTable.repo, repo.toLowerCase()),
-    eq(cacheFileTable.branch, branch),
+    eq(cacheFileTable.branch, branch)
   );
 
   for (const pathsChunk of chunkArray(uniqueChangedPaths, 200)) {
-    await db.delete(cacheFileTable).where(
-      and(
-        whereBase,
-        inArray(cacheFileTable.path, pathsChunk),
-      ),
-    );
+    await db
+      .delete(cacheFileTable)
+      .where(and(whereBase, inArray(cacheFileTable.path, pathsChunk)));
   }
 
   for (const parentPathsChunk of chunkArray(affectedParentPaths, 200)) {
-    await db.delete(cacheFileTable).where(
-      and(
-        whereBase,
-        inArray(cacheFileTable.parentPath, parentPathsChunk),
-      ),
-    );
+    await db
+      .delete(cacheFileTable)
+      .where(
+        and(whereBase, inArray(cacheFileTable.parentPath, parentPathsChunk))
+      );
   }
 };
 
-const handleRepositoryWebhookEvent = async (event: string | null, data: any) => {
+const handleRepositoryWebhookEvent = async (
+  event: string | null,
+  data: any
+) => {
   switch (event) {
     case "repository": {
       const owner = data.repository?.owner?.login;
@@ -71,15 +78,19 @@ const handleRepositoryWebhookEvent = async (event: string | null, data: any) => 
       const repoId = data.repository?.id;
 
       if (!owner || !repoName || !repoId) {
-        console.error("Missing repository data in webhook", { owner, repoName, repoId });
+        console.error("Missing repository data in webhook", {
+          owner,
+          repoName,
+          repoId,
+        });
         return true;
       }
 
       if (data.action === "deleted") {
         await Promise.all([
-          db.delete(collaboratorTable).where(
-            eq(collaboratorTable.repoId, repoId),
-          ),
+          db
+            .delete(collaboratorTable)
+            .where(eq(collaboratorTable.repoId, repoId)),
           clearFileCache(owner, repoName),
           deleteCacheFileMeta(owner, repoName),
         ]);
@@ -87,9 +98,9 @@ const handleRepositoryWebhookEvent = async (event: string | null, data: any) => 
         const oldOwner = data.changes?.owner?.from?.login || owner;
 
         await Promise.all([
-          db.delete(collaboratorTable).where(
-            eq(collaboratorTable.repoId, repoId),
-          ),
+          db
+            .delete(collaboratorTable)
+            .where(eq(collaboratorTable.repoId, repoId)),
           clearFileCache(oldOwner, repoName),
           deleteCacheFileMeta(oldOwner, repoName),
         ]);
@@ -101,11 +112,12 @@ const handleRepositoryWebhookEvent = async (event: string | null, data: any) => 
         }
 
         await Promise.all([
-          db.update(collaboratorTable).set({
-            repo: repoName,
-          }).where(
-            eq(collaboratorTable.repoId, repoId),
-          ),
+          db
+            .update(collaboratorTable)
+            .set({
+              repo: repoName,
+            })
+            .where(eq(collaboratorTable.repoId, repoId)),
           updateFileCacheRepository(owner, oldName, repoName),
         ]);
       }
@@ -121,7 +133,11 @@ const handleRepositoryWebhookEvent = async (event: string | null, data: any) => 
         const deleteBranch = data.ref?.replace("refs/heads/", "");
 
         if (!deleteOwner || !deleteRepo || !deleteBranch) {
-          console.error("Missing branch deletion data in webhook", { deleteOwner, deleteRepo, deleteBranch });
+          console.error("Missing branch deletion data in webhook", {
+            deleteOwner,
+            deleteRepo,
+            deleteBranch,
+          });
           return true;
         }
 

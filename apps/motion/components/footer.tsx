@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { animations } from "@/animations/registry";
 import { useTheme } from "next-themes";
 
+import { Button } from "@workspace/ui/components/button";
 import { Logo } from "@workspace/ui/icons/logo";
 import { Github, Linkedin, XIcon } from "@workspace/ui/icons/social";
 import { cn } from "@workspace/ui/lib/utils";
-import { Button } from "@workspace/ui/components/button";
-
-import { animations } from "@/animations/registry";
 
 const animationList = Object.entries(animations).map(([key, anim]) => ({
   name: anim.name,

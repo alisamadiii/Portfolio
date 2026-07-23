@@ -26,12 +26,12 @@ just sees GitHub's not-found page (plus a buy link from the CLI).
 npx create-saaskit [options]
 ```
 
-| Option | Description |
-| --- | --- |
+| Option              | Description                                                    |
+| ------------------- | -------------------------------------------------------------- |
 | `--template <name>` | Template to use (`full-stack`, `monorepo`). Prompts if omitted |
-| `--no-open` | Print the link instead of opening the browser |
-| `-h, --help` | Show help |
-| `-v, --version` | Show version |
+| `--no-open`         | Print the link instead of opening the browser                  |
+| `-h, --help`        | Show help                                                      |
+| `-v, --version`     | Show version                                                   |
 
 ## Requirements
 

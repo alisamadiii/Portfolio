@@ -14,11 +14,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { CardAgency } from "@workspace/ui/agency/card-agency";
 import { Badge } from "@workspace/ui/components/badge";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn, formatPrice } from "@workspace/ui/lib/utils";
-
-import { CardAgency } from "@workspace/ui/agency/card-agency";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -113,9 +112,8 @@ export function BillingOverview() {
     const paidInvoices = invoices?.filter((i) => i.status === "paid") ?? [];
     const totalPaid = paidInvoices.reduce((sum, i) => sum + i.amountPaid, 0);
     const activeSubs =
-      subs?.filter(
-        (s) => s.status === "active" || s.status === "trialing"
-      ) ?? [];
+      subs?.filter((s) => s.status === "active" || s.status === "trialing") ??
+      [];
     const monthlyRevenue = activeSubs.reduce((sum, s) => {
       if (s.interval === "year") return sum + s.amount / 12;
       return sum + s.amount;
@@ -275,7 +273,7 @@ export function BillingOverview() {
                   const isExpanded = expandedInvoices.has(inv.id);
                   return (
                     <Fragment key={inv.id}>
-                      <tr className="border-b last:border-b-0 transition-colors hover:bg-muted/50">
+                      <tr className="hover:bg-muted/50 border-b transition-colors last:border-b-0">
                         <td className="px-4 py-3 font-mono text-xs">
                           {inv.number ?? inv.id.slice(0, 16)}
                         </td>
@@ -347,7 +345,7 @@ export function BillingOverview() {
                                 {inv.lineItems.map((item) => (
                                   <div
                                     key={item.id}
-                                    className="flex items-center justify-between rounded-lg border bg-background px-3 py-2"
+                                    className="bg-background flex items-center justify-between rounded-lg border px-3 py-2"
                                   >
                                     <div className="min-w-0 flex-1">
                                       <p className="truncate text-sm">

@@ -35,7 +35,12 @@ export async function proxy(request: Request) {
 
   // Auth routes: bounce signed-in users to the dashboard unless they were sent
   // here to be returned somewhere specific
-  if (isPublicPath && !pathname.startsWith("/reset-password") && sessionToken && !redirectUrl) {
+  if (
+    isPublicPath &&
+    !pathname.startsWith("/reset-password") &&
+    sessionToken &&
+    !redirectUrl
+  ) {
     return NextResponse.redirect(new URL("/", nextRequest.url));
   }
 

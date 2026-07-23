@@ -6,10 +6,7 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-function ContextMenu({
-  children,
-  ...props
-}: MenuPrimitive.Root.Props) {
+function ContextMenu({ children, ...props }: MenuPrimitive.Root.Props) {
   return (
     <MenuPrimitive.Root data-slot="context-menu" {...props}>
       {children}

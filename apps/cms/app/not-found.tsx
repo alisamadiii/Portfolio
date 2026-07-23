@@ -1,13 +1,22 @@
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+
+import { buttonVariants } from "@workspace/ui/components/button-variants";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
 
 export default function NotFound() {
   return (
-    <Empty className="absolute inset-0 border-0 rounded-none">
+    <Empty className="absolute inset-0 rounded-none border-0">
       <EmptyHeader>
         <EmptyTitle>Page not found</EmptyTitle>
-        <EmptyDescription>The page or resource you requested could not be found.</EmptyDescription>
+        <EmptyDescription>
+          The page or resource you requested could not be found.
+        </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Link className={buttonVariants({ variant: "default" })} href="/">
@@ -15,5 +24,5 @@ export default function NotFound() {
         </Link>
       </EmptyContent>
     </Empty>
-  )
+  );
 }

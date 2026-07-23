@@ -8,19 +8,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { useFormContext } from "react-hook-form";
-import { createPortal } from "react-dom";
-import { Editor, type ImagePickerContext } from "@/components/ui/editor";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import {
-  MediaDialog,
-  type MediaDialogHandle,
-} from "@/components/media/media-dialog";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { getSchemaByName } from "@/lib/schema";
+import { createPortal } from "react-dom";
+import { useFormContext } from "react-hook-form";
+
+import type { ApiResponse, FileSaveData } from "@/types/api";
+import type { Field } from "@/types/field";
+
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Textarea } from "@workspace/ui/components/textarea";
+import { cn } from "@workspace/ui/lib/utils";
+
 import {
   getRawUrl,
   getRelativeUrl,
@@ -29,6 +28,7 @@ import {
   relativeToRawUrls,
   swapPrefix,
 } from "@/lib/github-image";
+import { getSchemaByName } from "@/lib/schema";
 import {
   decodePathSafely,
   extensionCategories,
@@ -38,8 +38,13 @@ import {
   normalizeMediaPath,
   normalizePath,
 } from "@/lib/utils/file";
-import type { ApiResponse, FileSaveData } from "@/types/api";
-import type { Field } from "@/types/field";
+
+import { Editor, type ImagePickerContext } from "@/components/ui/editor";
+import {
+  MediaDialog,
+  type MediaDialogHandle,
+} from "@/components/media/media-dialog";
+
 import "./edit-component.css";
 
 type MediaSchema = {
@@ -69,7 +74,7 @@ type EditProps = {
   labelSlotId?: string;
   registerBeforeSubmitHook?: (
     key: string,
-    hook: () => void | Promise<void>,
+    hook: () => void | Promise<void>
   ) => () => void;
   onChangeRegistered?: () => void;
   onChange: (value: string) => void;
@@ -112,7 +117,7 @@ const isValidMarkdownTitle = (value: string) => {
 };
 
 const parseMarkdownTarget = (
-  target: string,
+  target: string
 ): { url: string; rest: string; wrapped: boolean } => {
   const trimmed = target.trim();
   if (trimmed.startsWith("<")) {
@@ -158,7 +163,7 @@ const findMatchingMarkdownBracket = (
   input: string,
   start: number,
   open: string,
-  close: string,
+  close: string
 ) => {
   let depth = 1;
 
@@ -233,7 +238,9 @@ const findMatchingMarkdownParen = (input: string, start: number) => {
   return -1;
 };
 
-const findMarkdownImageTargets = (markdown: string): MarkdownImageTargetMatch[] => {
+const findMarkdownImageTargets = (
+  markdown: string
+): MarkdownImageTargetMatch[] => {
   const matches: MarkdownImageTargetMatch[] = [];
 
   for (let i = 0; i < markdown.length; i += 1) {
@@ -260,7 +267,7 @@ const findMarkdownImageTargets = (markdown: string): MarkdownImageTargetMatch[] 
 
 const rewriteMarkdownImagesSync = (
   markdown: string,
-  transformUrl: (url: string) => string,
+  transformUrl: (url: string) => string
 ) => {
   const matches = findMarkdownImageTargets(markdown);
   if (!matches.length) return markdown;
@@ -274,7 +281,7 @@ const rewriteMarkdownImagesSync = (
     const nextTarget = formatMarkdownTarget(
       nextUrl,
       parsed.rest,
-      parsed.wrapped,
+      parsed.wrapped
     );
 
     rebuilt += markdown.slice(cursor, match.targetStart);
@@ -288,7 +295,7 @@ const rewriteMarkdownImagesSync = (
 
 const rewriteMarkdownImagesAsync = async (
   markdown: string,
-  transformUrl: (url: string) => Promise<string>,
+  transformUrl: (url: string) => Promise<string>
 ) => {
   const matches = findMarkdownImageTargets(markdown);
   if (!matches.length) return markdown;
@@ -302,7 +309,7 @@ const rewriteMarkdownImagesAsync = async (
     const nextTarget = formatMarkdownTarget(
       nextUrl,
       parsed.rest,
-      parsed.wrapped,
+      parsed.wrapped
     );
 
     rebuilt += markdown.slice(cursor, match.targetStart);
@@ -403,14 +410,14 @@ const EditComponent = forwardRef(
         options.categories.length > 0
       ) {
         extensions = options.categories.flatMap(
-          (category) => extensionCategories[category] || [],
+          (category) => extensionCategories[category] || []
         );
       }
 
       const mediaExtensions = mediaConfig.extensions;
       if (Array.isArray(mediaExtensions) && mediaExtensions.length > 0) {
         extensions = extensions.filter((extension) =>
-          mediaExtensions.includes(extension),
+          mediaExtensions.includes(extension)
         );
       }
 
@@ -425,14 +432,14 @@ const EditComponent = forwardRef(
         const canonicalOutputPath = swapPrefix(
           decodedUrl,
           mediaConfig.input,
-          mediaConfig.output,
+          mediaConfig.output
         );
 
         const inputPath = swapPrefix(
           decodedUrl,
           mediaConfig.output,
           mediaConfig.input,
-          true,
+          true
         );
         const normalizedInputPath = normalizePath(inputPath);
         const mediaInputRoot = normalizePath(mediaConfig.input);
@@ -451,7 +458,7 @@ const EditComponent = forwardRef(
             mediaConfig.name,
             normalizedInputPath,
             isPrivate,
-            true,
+            true
           );
           // Keep output-space path canonical when raw URL resolution misses.
           return rawUrl || canonicalOutputPath;
@@ -459,14 +466,17 @@ const EditComponent = forwardRef(
           return canonicalOutputPath;
         }
       },
-      [config, isPrivate, mediaConfig],
+      [config, isPrivate, mediaConfig]
     );
 
     const toCanonicalImageUrl = useCallback(
       (url: string) => {
         if (!config || !mediaConfig) return url;
         if (!url) return url;
-        if (isExternalUrl(url) && !url.startsWith("https://raw.githubusercontent.com/")) {
+        if (
+          isExternalUrl(url) &&
+          !url.startsWith("https://raw.githubusercontent.com/")
+        ) {
           return url;
         }
 
@@ -475,19 +485,19 @@ const EditComponent = forwardRef(
           config.repo,
           config.branch,
           url,
-          false,
+          false
         );
         const normalizedRelativePath = normalizeMediaPath(
-          decodePathSafely(relativePath),
+          decodePathSafely(relativePath)
         );
 
         return swapPrefix(
           normalizedRelativePath,
           mediaConfig.input,
-          mediaConfig.output,
+          mediaConfig.output
         );
       },
-      [config, mediaConfig],
+      [config, mediaConfig]
     );
 
     const sourceToEditor = useCallback(
@@ -499,7 +509,7 @@ const EditComponent = forwardRef(
             source,
             mediaConfig.output,
             mediaConfig.input,
-            true,
+            true
           );
           return relativeToRawUrls(
             config.owner,
@@ -507,18 +517,18 @@ const EditComponent = forwardRef(
             config.branch,
             mediaConfig.name,
             withInputPrefix,
-            isPrivate,
+            isPrivate
           );
         }
 
         const withInputPrefixInMd = rewriteMarkdownImagesSync(source, (url) =>
-          swapPrefix(url, mediaConfig.output, mediaConfig.input, true),
+          swapPrefix(url, mediaConfig.output, mediaConfig.input, true)
         );
         const withInputPrefixEverywhere = htmlSwapPrefix(
           withInputPrefixInMd,
           mediaConfig.output,
           mediaConfig.input,
-          true,
+          true
         );
         const htmlNormalized = await relativeToRawUrls(
           config.owner,
@@ -526,11 +536,11 @@ const EditComponent = forwardRef(
           config.branch,
           mediaConfig.name,
           withInputPrefixEverywhere,
-          isPrivate,
+          isPrivate
         );
         return rewriteMarkdownImagesAsync(htmlNormalized, toDisplayImageUrl);
       },
-      [config, format, isPrivate, mediaConfig, toDisplayImageUrl],
+      [config, format, isPrivate, mediaConfig, toDisplayImageUrl]
     );
 
     const editorToSource = useCallback(
@@ -542,36 +552,36 @@ const EditComponent = forwardRef(
             config.owner,
             config.repo,
             config.branch,
-            editorContent,
+            editorContent
           );
           return htmlSwapPrefix(
             withRelativeUrls,
             mediaConfig.input,
-            mediaConfig.output,
+            mediaConfig.output
           );
         }
 
         const withRelativeMd = rewriteMarkdownImagesSync(
           editorContent,
-          toCanonicalImageUrl,
+          toCanonicalImageUrl
         );
         const withRelativeHtml = rawToRelativeUrls(
           config.owner,
           config.repo,
           config.branch,
-          withRelativeMd,
+          withRelativeMd
         );
         const withOutputPrefixInMd = rewriteMarkdownImagesSync(
           withRelativeHtml,
-          (url) => swapPrefix(url, mediaConfig.input, mediaConfig.output),
+          (url) => swapPrefix(url, mediaConfig.input, mediaConfig.output)
         );
         return htmlSwapPrefix(
           withOutputPrefixInMd,
           mediaConfig.input,
-          mediaConfig.output,
+          mediaConfig.output
         );
       },
-      [config, format, mediaConfig, toCanonicalImageUrl],
+      [config, format, mediaConfig, toCanonicalImageUrl]
     );
 
     useEffect(() => {
@@ -687,7 +697,7 @@ const EditComponent = forwardRef(
         pendingImageSelectionRef.current = null;
         pending.resolve(result);
       },
-      [],
+      []
     );
 
     const handleRequestImage = useCallback(
@@ -712,7 +722,7 @@ const EditComponent = forwardRef(
           });
         });
       },
-      [mediaConfig, resolvePendingImageSelection],
+      [mediaConfig, resolvePendingImageSelection]
     );
 
     const handleMediaSubmit = useCallback(
@@ -725,7 +735,7 @@ const EditComponent = forwardRef(
         try {
           const pending = pendingImageSelectionRef.current;
           const sources = await Promise.all(
-            images.map((image) => toDisplayImageUrl(image)),
+            images.map((image) => toDisplayImageUrl(image))
           );
 
           if (images.length === 1 || !pending?.context) {
@@ -744,7 +754,7 @@ const EditComponent = forwardRef(
           imageSubmitInFlightRef.current = false;
         }
       },
-      [resolvePendingImageSelection, toDisplayImageUrl],
+      [resolvePendingImageSelection, toDisplayImageUrl]
     );
 
     const handleSourceChange = useCallback(
@@ -753,7 +763,7 @@ const EditComponent = forwardRef(
         onChange(nextValue);
         onChangeRegistered?.();
       },
-      [onChange, onChangeRegistered],
+      [onChange, onChangeRegistered]
     );
 
     const handleUploadImage = useCallback(
@@ -768,7 +778,7 @@ const EditComponent = forwardRef(
           throw new Error(
             `Invalid file extension ".${extension}". Allowed: ${allowedExtensions
               .map((item) => `.${item}`)
-              .join(", ")}`,
+              .join(", ")}`
           );
         }
 
@@ -782,7 +792,7 @@ const EditComponent = forwardRef(
         const content = dataUrl.replace(/^(.+,)/, "");
         const uploadFilename = getUploadFileName(
           file.name,
-          options.rename ?? mediaConfig.rename,
+          options.rename ?? mediaConfig.rename
         );
         const targetPath = joinPathSegments([
           rootPath ?? mediaConfig.input,
@@ -799,11 +809,11 @@ const EditComponent = forwardRef(
               name: mediaConfig.name,
               content,
             }),
-          },
+          }
         );
         if (!response.ok) {
           throw new Error(
-            `Failed to upload file: ${response.status} ${response.statusText}`,
+            `Failed to upload file: ${response.status} ${response.statusText}`
           );
         }
 
@@ -826,25 +836,25 @@ const EditComponent = forwardRef(
         options.rename,
         rootPath,
         toDisplayImageUrl,
-      ],
+      ]
     );
 
     const triggerClass = cn(
       "relative inline-flex h-[calc(100%-1px)] items-center justify-center whitespace-nowrap border border-transparent px-2 text-xs text-foreground/60 transition-all",
       "hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring",
       "disabled:pointer-events-none disabled:opacity-50",
-      "dark:text-muted-foreground dark:hover:text-foreground",
+      "dark:text-muted-foreground dark:hover:text-foreground"
     );
 
     const switcherNode = (
-      <div className="inline-flex h-6 w-fit items-center justify-center rounded-md bg-muted p-0.5 text-muted-foreground">
+      <div className="bg-muted text-muted-foreground inline-flex h-6 w-fit items-center justify-center rounded-md p-0.5">
         <button
           type="button"
           className={cn(
             triggerClass,
             "rounded-sm",
             mode === "editor" &&
-              "bg-background text-foreground dark:border-input dark:bg-input/30 dark:text-foreground",
+              "bg-background text-foreground dark:border-input dark:bg-input/30 dark:text-foreground"
           )}
           onClick={() => void handleSwitchToEditor()}
           disabled={isReadonly || isTransforming || pendingUploads > 0}
@@ -858,7 +868,7 @@ const EditComponent = forwardRef(
             triggerClass,
             "rounded-sm",
             mode === "source" &&
-              "bg-background text-foreground dark:border-input dark:bg-input/30 dark:text-foreground",
+              "bg-background text-foreground dark:border-input dark:bg-input/30 dark:text-foreground"
           )}
           onClick={() => void handleSwitchToSource()}
           disabled={isReadonly || isTransforming || pendingUploads > 0}
@@ -878,7 +888,7 @@ const EditComponent = forwardRef(
           labelSlotEl &&
           createPortal(
             <div className="flex items-center">{switcherNode}</div>,
-            labelSlotEl,
+            labelSlotEl
           )}
 
         {mode === "editor" ? (
@@ -917,7 +927,7 @@ const EditComponent = forwardRef(
           <Textarea
             value={sourceValue}
             onChange={(event) => handleSourceChange(event.target.value)}
-            className="font-mono min-h-40"
+            className="min-h-40 font-mono"
             spellCheck={false}
             readOnly={isReadonly}
           />
@@ -939,7 +949,7 @@ const EditComponent = forwardRef(
         )}
       </div>
     );
-  },
+  }
 );
 
 EditComponent.displayName = "EditComponent";

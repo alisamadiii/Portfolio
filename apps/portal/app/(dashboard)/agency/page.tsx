@@ -364,21 +364,33 @@ export default function AgencyPage() {
                   return (
                     <div className="flex justify-end gap-1">
                       {hostedInvoiceUrl && (
-                        <Button variant="ghost" size="sm" render={<a
-                            href={hostedInvoiceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          />}>
-                            <ExternalLink className="size-4" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          render={
+                            <a
+                              href={hostedInvoiceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          }
+                        >
+                          <ExternalLink className="size-4" />
                         </Button>
                       )}
                       {invoicePdf && (
-                        <Button variant="ghost" size="sm" render={<a
-                            href={invoicePdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          />}>
-                            <FileText className="size-4" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          render={
+                            <a
+                              href={invoicePdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          }
+                        >
+                          <FileText className="size-4" />
                         </Button>
                       )}
                       <Button

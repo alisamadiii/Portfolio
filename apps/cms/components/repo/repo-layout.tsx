@@ -1,19 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { RepoSidebar } from "@/components/repo/repo-sidebar";
+import { useConfig } from "@/contexts/config-context";
+import { useRepo } from "@/contexts/repo-context";
+
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { useConfig } from "@/contexts/config-context";
-import { useRepo } from "@/contexts/repo-context";
+} from "@workspace/ui/components/sidebar";
+
 import { trackVisit } from "@/lib/tracker";
+
 import {
   RepoHeaderProvider,
   useRepoHeaderState,
 } from "@/components/repo/repo-header-context";
+import { RepoSidebar } from "@/components/repo/repo-sidebar";
 
 function RepoHeader() {
   const { header } = useRepoHeaderState();
@@ -26,7 +29,7 @@ function RepoHeader() {
   if (!hasHeaderContent) return null;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b bg-background px-4 md:px-6">
+    <header className="bg-background sticky top-0 z-30 flex h-14 shrink-0 items-center border-b px-4 md:px-6">
       <SidebarTrigger className="mr-2 md:hidden" />
       <div className="min-w-0 flex-1">{header}</div>
     </header>

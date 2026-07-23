@@ -1,8 +1,9 @@
 import "server-only";
 
 import type { User } from "@/types/user";
-import { isAdminUser } from "@/lib/authz-shared";
+
 import { createHttpError } from "@/lib/api-error";
+import { isAdminUser } from "@/lib/authz-shared";
 import { getPatToken } from "@/lib/token";
 import { createOctokitInstance } from "@/lib/utils/octokit";
 
@@ -11,7 +12,7 @@ const requireAdminRepoAccess = async (
   user: Pick<User, "id" | "role"> & { isAdmin?: boolean },
   owner: string,
   repo: string,
-  message = "Admin access required.",
+  message = "Admin access required."
 ) => {
   if (!isAdminUser(user)) {
     throw createHttpError(message, 403);

@@ -5,10 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
+import { FileStack, FileText, FolderOpen, Settings, Users } from "lucide-react";
+
+import { cn } from "@workspace/ui/lib/utils";
+
 import { isAdminUser } from "@/lib/authz-shared";
 import { isConfigEnabled } from "@/lib/config";
-import { cn } from "@/lib/utils";
-import { FileStack, FileText, FolderOpen, Settings, Users } from "lucide-react";
 
 const RepoNavItem = ({
   children,
@@ -26,7 +28,7 @@ const RepoNavItem = ({
   <Link
     className={cn(
       active ? "bg-accent" : "hover:bg-accent",
-      "flex items-center rounded-lg px-3 py-2 font-medium focus:bg-accent outline-none",
+      "focus:bg-accent flex items-center rounded-lg px-3 py-2 font-medium outline-none"
     )}
     href={href}
     onClick={onClick}
@@ -49,9 +51,9 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
         key: item.name,
         icon:
           item.type === "collection" ? (
-            <FileStack className="h-5 w-5 mr-2" />
+            <FileStack className="mr-2 h-5 w-5" />
           ) : (
-            <FileText className="h-5 w-5 mr-2" />
+            <FileText className="mr-2 h-5 w-5" />
           ),
         href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/${item.type}/${encodeURIComponent(item.name)}`,
         label: item.label || item.name,
@@ -60,7 +62,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
     const mediaItems =
       configObject.media?.map((item: any) => ({
         key: item.name || "media",
-        icon: <FolderOpen className="h-5 w-5 mr-2" />,
+        icon: <FolderOpen className="mr-2 h-5 w-5" />,
         href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/${item.name}`,
         label: item.label || item.name || "Media",
       })) || [];
@@ -71,7 +73,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
       canManageRepo && isConfigEnabled(configObject)
         ? {
             key: "configuration",
-            icon: <Settings className="h-5 w-5 mr-2" />,
+            icon: <Settings className="mr-2 h-5 w-5" />,
             href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/configuration`,
             label: "Configuration",
           }
@@ -81,7 +83,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
       configObject && Object.keys(configObject).length !== 0 && canManageRepo
         ? {
             key: "collaborators",
-            icon: <Users className="h-5 w-5 mr-2" />,
+            icon: <Users className="mr-2 h-5 w-5" />,
             href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collaborators`,
             label: "Collaborators",
           }

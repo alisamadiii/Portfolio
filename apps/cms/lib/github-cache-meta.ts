@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, eq, inArray, lt, ne, or, sql } from "drizzle-orm";
+
 import { db } from "@/db";
 import { cacheFileMetaTable } from "@/db/schema";
 
@@ -16,7 +17,7 @@ const normalizeScope = (scope?: CacheMetaScope) => ({
 
 const CACHE_META_SYNC_STALE_MS = parseInt(
   process.env.CACHE_META_SYNC_STALE_MS || "15000",
-  10,
+  10
 );
 
 const upsertCacheFileMeta = async (
@@ -31,7 +32,7 @@ const upsertCacheFileMeta = async (
     status?: string;
     error?: string | null;
     lastCheckedAt?: Date;
-  } = {},
+  } = {}
 ) => {
   const now = new Date();
   const scope = normalizeScope(values);
@@ -54,7 +55,7 @@ const upsertCacheFileMeta = async (
     sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
     eq(cacheFileMetaTable.branch, branch),
     eq(cacheFileMetaTable.path, scope.path),
-    eq(cacheFileMetaTable.context, scope.context),
+    eq(cacheFileMetaTable.context, scope.context)
   );
 
   const updated = await db
@@ -72,7 +73,7 @@ const getCacheFileMeta = async (
   owner: string,
   repo: string,
   branch: string,
-  scope?: CacheMetaScope,
+  scope?: CacheMetaScope
 ) => {
   const normalizedScope = normalizeScope(scope);
   return db.query.cacheFileMetaTable.findFirst({
@@ -81,7 +82,7 @@ const getCacheFileMeta = async (
       sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
       eq(cacheFileMetaTable.branch, branch),
       eq(cacheFileMetaTable.path, normalizedScope.path),
-      eq(cacheFileMetaTable.context, normalizedScope.context),
+      eq(cacheFileMetaTable.context, normalizedScope.context)
     ),
   });
 };
@@ -97,7 +98,7 @@ const tryClaimCacheFileMeta = async (
     commitTimestamp?: Date | null;
     error?: string | null;
     lastCheckedAt?: Date;
-  } = {},
+  } = {}
 ) => {
   const now = new Date();
   const staleBefore = new Date(now.getTime() - CACHE_META_SYNC_STALE_MS);
@@ -121,7 +122,7 @@ const tryClaimCacheFileMeta = async (
     sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
     eq(cacheFileMetaTable.branch, branch),
     eq(cacheFileMetaTable.path, scope.path),
-    eq(cacheFileMetaTable.context, scope.context),
+    eq(cacheFileMetaTable.context, scope.context)
   );
 
   const updated = await db
@@ -132,9 +133,9 @@ const tryClaimCacheFileMeta = async (
         scopeWhere,
         or(
           ne(cacheFileMetaTable.status, "syncing"),
-          lt(cacheFileMetaTable.updatedAt, staleBefore),
-        ),
-      ),
+          lt(cacheFileMetaTable.updatedAt, staleBefore)
+        )
+      )
     )
     .returning({ id: cacheFileMetaTable.id });
 
@@ -161,10 +162,12 @@ const deleteCacheFileMeta = async (
   owner: string,
   repo?: string,
   branch?: string,
-  scope?: CacheMetaScope,
+  scope?: CacheMetaScope
 ) => {
   const normalizedScope = scope ? normalizeScope(scope) : null;
-  const conditions = [sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`];
+  const conditions = [
+    sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
+  ];
 
   if (repo) {
     conditions.push(sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`);
@@ -178,12 +181,10 @@ const deleteCacheFileMeta = async (
           baseWhere,
           eq(cacheFileMetaTable.branch, branch),
           eq(cacheFileMetaTable.path, normalizedScope.path),
-          eq(cacheFileMetaTable.context, normalizedScope.context),
+          eq(cacheFileMetaTable.context, normalizedScope.context)
         )
       : and(baseWhere, eq(cacheFileMetaTable.branch, branch));
-    await db
-      .delete(cacheFileMetaTable)
-      .where(scopedWhere);
+    await db.delete(cacheFileMetaTable).where(scopedWhere);
     return;
   }
 
@@ -194,31 +195,33 @@ const deleteCacheFileMetaByPaths = async (
   owner: string,
   repo: string,
   branch: string,
-  paths: string[],
+  paths: string[]
 ) => {
   const normalizedPaths = Array.from(new Set(paths));
   if (normalizedPaths.length === 0) return;
 
-  await db.delete(cacheFileMetaTable).where(
-    and(
-      sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
-      sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
-      eq(cacheFileMetaTable.branch, branch),
-      inArray(cacheFileMetaTable.path, normalizedPaths),
-    ),
-  );
+  await db
+    .delete(cacheFileMetaTable)
+    .where(
+      and(
+        sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
+        sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
+        eq(cacheFileMetaTable.branch, branch),
+        inArray(cacheFileMetaTable.path, normalizedPaths)
+      )
+    );
 };
 
 const listCacheFileMeta = async (
   owner: string,
   repo: string,
-  branch: string,
+  branch: string
 ) => {
   return db.query.cacheFileMetaTable.findMany({
     where: and(
       sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
       sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
-      eq(cacheFileMetaTable.branch, branch),
+      eq(cacheFileMetaTable.branch, branch)
     ),
     orderBy: (table, { asc }) => [asc(table.context), asc(table.path)],
   });

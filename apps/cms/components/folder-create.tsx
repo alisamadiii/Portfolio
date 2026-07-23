@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useConfig } from "@/contexts/config-context";
-import { joinPathSegments, normalizePath } from "@/lib/utils/file";
 import { toast } from "sonner";
+
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogClose,
@@ -13,9 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "@workspace/ui/components/dialog";
+import { Input } from "@workspace/ui/components/input";
+
+import { joinPathSegments, normalizePath } from "@/lib/utils/file";
 
 type FolderCreateResult = {
   path: string;
@@ -41,7 +43,7 @@ const FolderCreate = ({
   const [open, setOpen] = useState(false);
   const [folderPath, setFolderPath] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const handleCreate = async () => {
     const normalizedFolderInput = normalizePath(folderPath.trim());
     if (!normalizedFolderInput) {
@@ -60,16 +62,19 @@ const FolderCreate = ({
         status: string;
         message?: string;
         data: FolderCreateResult;
-      }> = fetch(`/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(fullNewPath + "/.gitkeep")}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          name,
-          content: "",
-          onConflict: "error",
-        }),
-      }).then(async (response) => {
+      }> = fetch(
+        `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(fullNewPath + "/.gitkeep")}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type,
+            name,
+            content: "",
+            onConflict: "error",
+          }),
+        }
+      ).then(async (response) => {
         const payload = await response.json().catch(() => null);
         if (!response.ok) {
           if (response.status === 409) {
@@ -114,13 +119,14 @@ const FolderCreate = ({
         }
       }}
     >
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create a folder</DialogTitle>
-          <DialogDescription>Choose a name for the folder to create{path ? ` under "${normalizePath(path)}"` : null}.</DialogDescription>
+          <DialogDescription>
+            Choose a name for the folder to create
+            {path ? ` under "${normalizePath(path)}"` : null}.
+          </DialogDescription>
         </DialogHeader>
         <form
           onSubmit={async (event) => {
@@ -136,9 +142,13 @@ const FolderCreate = ({
           />
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button>
+              <Button type="button" variant="secondary" disabled={isSubmitting}>
+                Cancel
+              </Button>
             </DialogClose>
-            <Button type="submit" disabled={isSubmitting || !folderPath.trim()}>Create</Button>
+            <Button type="submit" disabled={isSubmitting || !folderPath.trim()}>
+              Create
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,13 +1,13 @@
 import "@workspace/ui/globals.css";
 
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import type { Metadata } from "next";
 
-import { Providers } from "@workspace/ui/providers";
 import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
+import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
@@ -31,16 +31,19 @@ export const metadata: Metadata = {
     default: "Admin | Ali Samadi",
     template: "%s | Admin",
   },
-  description: "Internal admin dashboard for managing clients, projects, and operations.",
+  description:
+    "Internal admin dashboard for managing clients, projects, and operations.",
   openGraph: {
     title: "Admin | Ali Samadi",
-    description: "Internal admin dashboard for managing clients, projects, and operations.",
+    description:
+      "Internal admin dashboard for managing clients, projects, and operations.",
     type: "website",
   },
   twitter: {
     card: "summary",
     title: "Admin | Ali Samadi",
-    description: "Internal admin dashboard for managing clients, projects, and operations.",
+    description:
+      "Internal admin dashboard for managing clients, projects, and operations.",
   },
   icons: {
     icon: "/favicon.ico",

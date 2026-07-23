@@ -2,20 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRepo } from "@/contexts/repo-context";
 import { useConfig } from "@/contexts/config-context";
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { requireApiSuccess } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
+import { useRepo } from "@/contexts/repo-context";
 import { Check, Loader } from "lucide-react";
+
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { cn } from "@workspace/ui/lib/utils";
+
+import { requireApiSuccess } from "@/lib/api-client";
 
 export function RepoBranches() {
   const { owner, repo, branches, setBranches } = useRepo();
   const { config } = useConfig();
 
   const [search, setSearch] = useState("");
-  const [filteredBranches, setFilteredBranches] = useState<string[] | undefined>([]);
+  const [filteredBranches, setFilteredBranches] = useState<
+    string[] | undefined
+  >([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -28,7 +32,8 @@ export function RepoBranches() {
 
   const isValidBranchName = useCallback((name: string) => {
     if (!name || name.length > 255) return false;
-    const validBranchRegex = /^(?!\/|.*(?:\/\.|\/\/|\.\.|@{|\\))[^\x20\x7f ~^:?*\[\]]+(?<!\.|\/)$/;
+    const validBranchRegex =
+      /^(?!\/|.*(?:\/\.|\/\/|\.\.|@{|\\))[^\x20\x7f ~^:?*\[\]]+(?<!\.|\/)$/;
     return validBranchRegex.test(name);
   }, []);
 
@@ -40,13 +45,16 @@ export function RepoBranches() {
         try {
           const newBranch = search;
 
-          const response = await fetch(`/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/branches`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: newBranch
-            }),
-          });
+          const response = await fetch(
+            `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/branches`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: newBranch,
+              }),
+            }
+          );
           await requireApiSuccess<any>(response, "Failed to create branch");
 
           if (branches) {
@@ -77,32 +85,43 @@ export function RepoBranches() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <Button
-          disabled={!search || !isValidBranchName(search) || branches.includes(search) || isSubmitting}
-          onClick={handleCreateBranch}>
+          disabled={
+            !search ||
+            !isValidBranchName(search) ||
+            branches.includes(search) ||
+            isSubmitting
+          }
+          onClick={handleCreateBranch}
+        >
           Create
-          {isSubmitting && (<Loader className="ml-2 h-4 w-4 animate-spin" />)}
+          {isSubmitting && <Loader className="ml-2 h-4 w-4 animate-spin" />}
         </Button>
       </header>
-      <main className="flex flex-col gap-y-1 overflow-auto max-h-[calc(100vh-9rem)] scrollbar text-sm">
-        {filteredBranches && filteredBranches.length > 0
-          ? filteredBranches.map(branch => (
+      <main className="scrollbar flex max-h-[calc(100vh-9rem)] flex-col gap-y-1 overflow-auto text-sm">
+        {filteredBranches && filteredBranches.length > 0 ? (
+          filteredBranches.map((branch) => (
             <Link
               key={branch}
               className={cn(
                 branch === config?.branch
                   ? "bg-accent cursor-default"
                   : "hover:bg-accent",
-                "inline-flex items-center rounded-lg px-3 py-2 transition-all ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                "ring-offset-background focus-visible:ring-ring inline-flex items-center rounded-lg px-3 py-2 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               )}
               href={`/${owner}/${repo}/${encodeURIComponent(branch)}`}
             >
               <span className="truncate">{branch}</span>
-              {branch === config?.branch && <Check className="h-4 w-4 ml-auto opacity-50" />}
+              {branch === config?.branch && (
+                <Check className="ml-auto h-4 w-4 opacity-50" />
+              )}
             </Link>
           ))
-          : <div className="text-muted-foreground py-6 text-center">No branches found.</div>
-        }
+        ) : (
+          <div className="text-muted-foreground py-6 text-center">
+            No branches found.
+          </div>
+        )}
       </main>
     </div>
-  )
+  );
 }

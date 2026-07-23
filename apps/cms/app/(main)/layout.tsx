@@ -1,11 +1,13 @@
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { getAccounts } from "@/lib/accounts";
+import { redirect } from "next/navigation";
 import { UserProvider } from "@/contexts/user-context";
+
 import { User } from "@/types/user";
-import { getServerSession } from "@/lib/session-server";
+
+import { getAccounts } from "@/lib/accounts";
 import { hasAdminAccess } from "@/lib/admin";
 import { bindCollaboratorInvitesToUser } from "@/lib/collaborator-access";
+import { getServerSession } from "@/lib/session-server";
 
 export default async function Layout({
   children,
@@ -34,9 +36,5 @@ export default async function Layout({
     accounts,
   };
 
-	return (
-    <UserProvider user={userWithAccounts}>
-      {children}
-    </UserProvider>
-  );
+  return <UserProvider user={userWithAccounts}>{children}</UserProvider>;
 }

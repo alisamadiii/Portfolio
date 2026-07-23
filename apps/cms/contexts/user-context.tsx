@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
+
 import { User } from "@/types/user";
 
 interface UserContextType {
@@ -19,14 +20,12 @@ export const useUser = () => {
 
 export const UserProvider = ({
   user,
-  children
+  children,
 }: {
   user: User | null;
   children: React.ReactNode;
 }) => {
   return (
-    <UserContext.Provider value={{ user }}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={{ user }}>{children}</UserContext.Provider>
   );
 };

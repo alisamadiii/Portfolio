@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { LogOut, MoreHorizontal } from "lucide-react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +12,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@workspace/ui/components/alert-dialog";
+import { Button } from "@workspace/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 
 export function AdminUserRowActions({
   name,
@@ -33,7 +34,11 @@ export function AdminUserRowActions({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon-sm" aria-label={`User actions for ${name}`}>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label={`User actions for ${name}`}
+          >
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>

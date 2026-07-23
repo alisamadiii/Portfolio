@@ -10,9 +10,10 @@ import {
   Link,
   Preview,
   Section,
-  Text,
   Tailwind,
+  Text,
 } from "@react-email/components";
+
 import { emailTheme } from "@/components/email/theme";
 
 export const CollaboratorAddedEmailTemplate = ({
@@ -37,29 +38,27 @@ export const CollaboratorAddedEmailTemplate = ({
   return (
     <Html>
       <Head />
-      <Preview>
-        You were added to &quot;{repoName}&quot; on Pages CMS
-      </Preview>
+      <Preview>You were added to &quot;{repoName}&quot; on Pages CMS</Preview>
       <Tailwind>
         <Body
-          className="my-auto mx-auto font-sans px-2 antialiased"
+          className="mx-auto my-auto px-2 font-sans antialiased"
           style={{
             backgroundColor: emailTheme.background,
             color: emailTheme.foreground,
           }}
         >
-          <Container className="my-[40px] mx-auto p-[20px] max-w-[465px]">
+          <Container className="mx-auto my-[40px] max-w-[465px] p-[20px]">
             <Section className="mt-[24px]">
               <Img
                 src={`${baseUrl}/images/email-logo.png`}
                 width="42"
                 height="42"
                 alt="Pages CMS"
-                className="my-0 mx-auto"
+                className="mx-auto my-0"
               />
             </Section>
             <Heading
-              className="text-[24px] font-semibold p-0 my-[30px] mx-0 text-center tracking-tight"
+              className="mx-0 my-[30px] p-0 text-center text-[24px] font-semibold tracking-tight"
               style={{ color: emailTheme.foreground }}
             >
               You were added to &quot;{repoName}&quot;
@@ -70,17 +69,17 @@ export const CollaboratorAddedEmailTemplate = ({
             >
               <Link
                 href={invitedByUrl}
-                className="underline rounded-md"
+                className="rounded-md underline"
                 style={{ color: emailTheme.link }}
               >
                 {invitedByName}
               </Link>{" "}
-              added you to the &quot;{repoName}&quot; project on Pages CMS.
-              You already have access, so there is nothing to accept.
+              added you to the &quot;{repoName}&quot; project on Pages CMS. You
+              already have access, so there is nothing to accept.
             </Text>
-            <Section className="text-center mt-[24px] mb-[24px]">
+            <Section className="mt-[24px] mb-[24px] text-center">
               <Button
-                className="rounded-lg text-[14px] font-medium no-underline text-center px-5 py-3"
+                className="rounded-lg px-5 py-3 text-center text-[14px] font-medium no-underline"
                 href={repoUrl}
                 style={{
                   backgroundColor: emailTheme.buttonBackground,
@@ -92,7 +91,7 @@ export const CollaboratorAddedEmailTemplate = ({
               </Button>
             </Section>
             <Text
-              className="text-[14px] leading-[24px] mt-[36px]"
+              className="mt-[36px] text-[14px] leading-[24px]"
               style={{ color: emailTheme.mutedForeground }}
             >
               This email was intended for{" "}

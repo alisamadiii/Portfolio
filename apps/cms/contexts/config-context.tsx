@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+
 import { Config } from "@/types/config";
 
 interface ConfigContextType {

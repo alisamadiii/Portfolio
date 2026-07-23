@@ -4,6 +4,7 @@
  */
 
 import { Octokit } from "@octokit/rest";
+
 import { createHttpError } from "@/lib/api-error";
 
 const getRetryAfter = (response: Response) => {
@@ -41,10 +42,15 @@ export const createOctokitInstance = (token: string, options?: any) => {
       fetch: async (url: string, options: RequestInit) => {
         const response = await fetch(url, options);
 
-        if (response.status === 401 || response.status === 403 || response.status === 429) {
-          let message = response.status === 401
-            ? "GitHub authentication failed."
-            : "GitHub request failed.";
+        if (
+          response.status === 401 ||
+          response.status === 403 ||
+          response.status === 429
+        ) {
+          let message =
+            response.status === 401
+              ? "GitHub authentication failed."
+              : "GitHub request failed.";
 
           try {
             const data = await response.clone().json();
@@ -67,13 +73,13 @@ export const createOctokitInstance = (token: string, options?: any) => {
                 ? `GitHub rate limit reached. Please wait ${retryAfter} seconds and try again.`
                 : "GitHub rate limit reached. Please wait a minute and try again.",
               429,
-              retryAfter ? { "Retry-After": retryAfter } : undefined,
+              retryAfter ? { "Retry-After": retryAfter } : undefined
             );
           }
         }
 
         return response;
-      }
-    }
+      },
+    },
   });
 };

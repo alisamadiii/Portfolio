@@ -83,8 +83,8 @@ export function PaymentsSection() {
             Monetize from Day One
           </h2>
           <p className="text-muted-foreground mt-4 text-lg">
-            Stripe integration gives you checkout, subscriptions, billing portal,
-            and webhooks — out of the box.
+            Stripe integration gives you checkout, subscriptions, billing
+            portal, and webhooks — out of the box.
           </p>
         </div>
 
