@@ -45,6 +45,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -161,29 +162,31 @@ function RepoSwitcher() {
             if (open) loadRecentRepos();
           }}
         >
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-md">
-                <AvatarImage
-                  src={`https://github.com/${owner}.png`}
-                  alt={owner}
-                />
-                <AvatarFallback>
-                  {owner.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{repo}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {currentBranch || owner}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Avatar className="h-8 w-8 rounded-md">
+                  <AvatarImage
+                    src={`https://github.com/${owner}.png`}
+                    alt={owner}
+                  />
+                  <AvatarFallback>
+                    {owner.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">{repo}</span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {currentBranch || owner}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </SidebarMenuButton>
+            }
+          />
           <DropdownMenuContent
             className="rounded-lg"
             align="start"
@@ -193,63 +196,67 @@ function RepoSwitcher() {
                 : undefined
             }
           >
-            <DropdownMenuItem asChild>
-              <a
-                href={`https://github.com/${owner}/${repo}`}
-                target="_blank"
-                rel="noreferrer"
+            <DropdownMenuItem
+              render={
+                <a
+                  href={`https://github.com/${owner}/${repo}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on GitHub
+                  <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
+                </a>
+              }
+            />
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-muted-foreground text-xs">
+                Branches
+              </DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={currentBranch}
+                onValueChange={handleBranchChange}
               >
-                View on GitHub
-                <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
-              </a>
-            </DropdownMenuItem>
+                {sortedBranches.map((branch) => (
+                  <DropdownMenuRadioItem key={branch} value={branch}>
+                    <span className="truncate">{branch}</span>
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Branches
-            </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={currentBranch}
-              onValueChange={handleBranchChange}
-            >
-              {sortedBranches.map((branch) => (
-                <DropdownMenuRadioItem key={branch} value={branch}>
-                  <span className="truncate">{branch}</span>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-            <DialogTrigger asChild>
-              <DropdownMenuItem>Manage branches</DropdownMenuItem>
-            </DialogTrigger>
+            <DialogTrigger
+              render={<DropdownMenuItem>Manage branches</DropdownMenuItem>}
+            />
             {recentRepos.length > 0 && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-muted-foreground text-xs">
-                  Recently visited
-                </DropdownMenuLabel>
-                {recentRepos.map((visit) => (
-                  <DropdownMenuItem
-                    asChild
-                    key={`${visit.owner}/${visit.repo}/${visit.branch}`}
-                  >
-                    <Link
-                      href={`/${visit.owner}/${visit.repo}/${encodeURIComponent(visit.branch)}`}
-                    >
-                      <img
-                        src={`https://github.com/${visit.owner}.png`}
-                        alt={`${visit.owner}'s avatar`}
-                        className="size-5 rounded"
-                      />
-                      <span className="truncate">{visit.repo}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-muted-foreground text-xs">
+                    Recently visited
+                  </DropdownMenuLabel>
+                  {recentRepos.map((visit) => (
+                    <DropdownMenuItem
+                      key={`${visit.owner}/${visit.repo}/${visit.branch}`}
+                      render={
+                        <Link
+                          href={`/${visit.owner}/${visit.repo}/${encodeURIComponent(visit.branch)}`}
+                        >
+                          <img
+                            src={`https://github.com/${visit.owner}.png`}
+                            alt={`${visit.owner}'s avatar`}
+                            className="size-5 rounded"
+                          />
+                          <span className="truncate">{visit.repo}</span>
+                        </Link>
+                      }
+                    />
+                  ))}
+                </DropdownMenuGroup>
               </>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/">All projects</Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/">All projects</Link>} />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -467,17 +474,19 @@ export function RepoSidebar() {
       if (nested) {
         return (
           <SidebarMenuSubItem key={key}>
-            <SidebarMenuSubButton asChild>
-              <button type="button" onClick={() => toggleGroup(key)}>
-                <ChevronRight
-                  className={cn(
-                    "size-4 transition-transform",
-                    isOpen && "rotate-90"
-                  )}
-                />
-                <span>{node.label || node.name}</span>
-              </button>
-            </SidebarMenuSubButton>
+            <SidebarMenuSubButton
+              render={
+                <button type="button" onClick={() => toggleGroup(key)}>
+                  <ChevronRight
+                    className={cn(
+                      "size-4 transition-transform",
+                      isOpen && "rotate-90"
+                    )}
+                  />
+                  <span>{node.label || node.name}</span>
+                </button>
+              }
+            />
             {isOpen && node.items && node.items.length > 0 && (
               <SidebarMenuSub>
                 {node.items.map((item) =>
@@ -491,17 +500,19 @@ export function RepoSidebar() {
 
       return (
         <SidebarMenuItem key={key}>
-          <SidebarMenuButton asChild>
-            <button type="button" onClick={() => toggleGroup(key)}>
-              <ChevronRight
-                className={cn(
-                  "size-4 transition-transform",
-                  isOpen && "rotate-90"
-                )}
-              />
-              <span>{node.label || node.name}</span>
-            </button>
-          </SidebarMenuButton>
+          <SidebarMenuButton
+            render={
+              <button type="button" onClick={() => toggleGroup(key)}>
+                <ChevronRight
+                  className={cn(
+                    "size-4 transition-transform",
+                    isOpen && "rotate-90"
+                  )}
+                />
+                <span>{node.label || node.name}</span>
+              </button>
+            }
+          />
           {isOpen && node.items && node.items.length > 0 && (
             <SidebarMenuSub>
               {node.items.map((item) =>
@@ -518,24 +529,30 @@ export function RepoSidebar() {
     if (nested) {
       return (
         <SidebarMenuSubItem key={key}>
-          <SidebarMenuSubButton asChild isActive={isActive}>
-            <Link href={href} onClick={handleNavigation}>
-              {getNodeIcon(node)}
-              <span>{node.label || node.name}</span>
-            </Link>
-          </SidebarMenuSubButton>
+          <SidebarMenuSubButton
+            isActive={isActive}
+            render={
+              <Link href={href} onClick={handleNavigation}>
+                {getNodeIcon(node)}
+                <span>{node.label || node.name}</span>
+              </Link>
+            }
+          />
         </SidebarMenuSubItem>
       );
     }
 
     return (
       <SidebarMenuItem key={key}>
-        <SidebarMenuButton asChild isActive={isActive}>
-          <Link href={href} onClick={handleNavigation}>
-            {getNodeIcon(node)}
-            <span>{node.label || node.name}</span>
-          </Link>
-        </SidebarMenuButton>
+        <SidebarMenuButton
+          isActive={isActive}
+          render={
+            <Link href={href} onClick={handleNavigation}>
+              {getNodeIcon(node)}
+              <span>{node.label || node.name}</span>
+            </Link>
+          }
+        />
       </SidebarMenuItem>
     );
   }
@@ -570,12 +587,15 @@ export function RepoSidebar() {
                 pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <SidebarMenuItem key={item.key}>
-                  <SidebarMenuButton asChild isActive={isActive}>
-                    <Link href={item.href} onClick={handleNavigation}>
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    render={
+                      <Link href={item.href} onClick={handleNavigation}>
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Link>
+                    }
+                  />
                 </SidebarMenuItem>
               );
             })}

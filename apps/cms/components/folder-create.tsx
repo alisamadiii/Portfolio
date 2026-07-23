@@ -119,7 +119,7 @@ const FolderCreate = ({
         }
       }}
     >
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children as React.ReactElement} />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create a folder</DialogTitle>
@@ -141,11 +141,17 @@ const FolderCreate = ({
             onChange={(e) => setFolderPath(e.target.value)}
           />
           <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={isSubmitting}>
-                Cancel
-              </Button>
-            </DialogClose>
+            <DialogClose
+              render={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              }
+            />
             <Button type="submit" disabled={isSubmitting || !folderPath.trim()}>
               Create
             </Button>

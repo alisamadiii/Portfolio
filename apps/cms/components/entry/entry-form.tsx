@@ -267,19 +267,23 @@ const ListItemRow = memo(function ListItemRow({
             open={isPendingRemove}
             onOpenChange={(open) => onPendingRemoveChange(index, open)}
           >
-            <TooltipTrigger asChild>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground self-start"
-                  onClick={() => onRequestRemove(index)}
-                >
-                  <Trash2 />
-                </Button>
-              </AlertDialogTrigger>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <AlertDialogTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground self-start"
+                      onClick={() => onRequestRemove(index)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  }
+                />
+              }
+            />
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove this item?</AlertDialogTitle>
@@ -688,20 +692,24 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
                       open={isRemoveBlockDialogOpen}
                       onOpenChange={setIsRemoveBlockDialogOpen}
                     >
-                      <TooltipTrigger asChild>
-                        <AlertDialogTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setIsRemoveBlockDialogOpen(true);
-                            }}
-                            className="text-muted-foreground hover:text-foreground -mx-2 -my-0.5 px-2 transition-colors"
-                          >
-                            <X className="size-3" />
-                          </button>
-                        </AlertDialogTrigger>
-                      </TooltipTrigger>
+                      <TooltipTrigger
+                        render={
+                          <AlertDialogTrigger
+                            render={
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setIsRemoveBlockDialogOpen(true);
+                                }}
+                                className="text-muted-foreground hover:text-foreground -mx-2 -my-0.5 px-2 transition-colors"
+                              >
+                                <X className="size-3" />
+                              </button>
+                            }
+                          />
+                        }
+                      />
                       <AlertDialogContent
                         onClick={(event) => event.stopPropagation()}
                       >

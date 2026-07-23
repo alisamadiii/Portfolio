@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfigProvider } from "@/contexts/config-context";
 
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -71,12 +71,12 @@ export default async function Layout({
               <EmptyDescription>{`The branch "${decodedBranch}" could not be found. It may have been removed or renamed.`}</EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link
-                className={buttonVariants({ variant: "default" })}
-                href={`/${owner}/${repo}`}
-              >
-                Open default branch
-              </Link>
+              <Button
+                variant="default"
+                render={
+                  <Link href={`/${owner}/${repo}`}>Open default branch</Link>
+                }
+              />
             </EmptyContent>
           </Empty>
         );
@@ -91,9 +91,10 @@ export default async function Layout({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Link className={buttonVariants({ variant: "default" })} href="/">
-              Choose another repository
-            </Link>
+            <Button
+              variant="default"
+              render={<Link href="/">Choose another repository</Link>}
+            />
           </EmptyContent>
         </Empty>
       );

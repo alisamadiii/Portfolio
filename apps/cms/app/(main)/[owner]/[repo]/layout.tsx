@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RepoProvider } from "@/contexts/repo-context";
 
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -52,9 +52,10 @@ export default async function Layout({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Link className={buttonVariants({ variant: "default" })} href="/">
-              Choose another repository
-            </Link>
+            <Button
+              variant="default"
+              render={<Link href="/">Choose another repository</Link>}
+            />
           </EmptyContent>
         </Empty>
       );
@@ -74,9 +75,10 @@ export default async function Layout({
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link className={buttonVariants({ variant: "default" })} href="/">
-                Choose another repository
-              </Link>
+              <Button
+                variant="default"
+                render={<Link href="/">Choose another repository</Link>}
+              />
             </EmptyContent>
           </Empty>
         );
@@ -90,9 +92,10 @@ export default async function Layout({
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link className={buttonVariants({ variant: "default" })} href="/">
-                Choose another repository
-              </Link>
+              <Button
+                variant="default"
+                render={<Link href="/">Choose another repository</Link>}
+              />
             </EmptyContent>
           </Empty>
         );

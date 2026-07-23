@@ -121,7 +121,6 @@ export function BasePath({ owner, repo }: BasePathProps) {
       </CardContent>
       <CardFooter>
         <Button
-          size="sm"
           className="ml-auto"
           onClick={() => void handleSave()}
           disabled={!canSave}

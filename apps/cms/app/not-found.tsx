@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -19,9 +19,7 @@ export default function NotFound() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Link className={buttonVariants({ variant: "default" })} href="/">
-          Go home
-        </Link>
+        <Button variant="default" render={<Link href="/">Go home</Link>} />
       </EmptyContent>
     </Empty>
   );

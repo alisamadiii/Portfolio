@@ -112,40 +112,44 @@ const FileTeaser = ({
 
       <ButtonGroup>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              asChild
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <a
-                href={`https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`View ${getFileName(file)} on GitHub`}
-              >
-                <ArrowUpRight />
-              </a>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>View on GitHub</TooltipContent>
-        </Tooltip>
-        {onRemove && (
-          <Tooltip>
-            <TooltipTrigger asChild>
+          <TooltipTrigger
+            render={
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground"
-                onClick={onRemove}
-                aria-label={`Remove ${getFileName(file)}`}
-              >
-                <Trash2 />
-              </Button>
-            </TooltipTrigger>
+                render={
+                  <a
+                    href={`https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`View ${getFileName(file)} on GitHub`}
+                  >
+                    <ArrowUpRight />
+                  </a>
+                }
+              />
+            }
+          />
+          <TooltipContent>View on GitHub</TooltipContent>
+        </Tooltip>
+        {onRemove && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={onRemove}
+                  aria-label={`Remove ${getFileName(file)}`}
+                >
+                  <Trash2 />
+                </Button>
+              }
+            />
             <TooltipContent>Remove</TooltipContent>
           </Tooltip>
         )}

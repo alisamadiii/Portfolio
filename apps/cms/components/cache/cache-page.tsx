@@ -81,9 +81,13 @@ function TimeWithTooltip({ value }: { value: string | null | undefined }) {
   if (!value) return <span className="font-medium">-</span>;
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="cursor-help font-medium">{formatTimeAgo(value)}</span>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <span className="cursor-help font-medium">
+            {formatTimeAgo(value)}
+          </span>
+        }
+      />
       <TooltipContent sideOffset={6}>{fullDate(value)}</TooltipContent>
     </Tooltip>
   );
@@ -122,32 +126,38 @@ function ConfirmActionButton({
     <AlertDialog open={open} onOpenChange={setOpen}>
       {iconOnly ? (
         <Tooltip>
-          <TooltipTrigger asChild>
-            <AlertDialogTrigger asChild>
-              <Button
-                size={size}
-                variant={variant}
-                className={className}
-                disabled={disabled}
-                aria-label={label}
-              >
-                {icon ?? <Trash2 className="size-4" />}
-              </Button>
-            </AlertDialogTrigger>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    size={size}
+                    variant={variant}
+                    className={className}
+                    disabled={disabled}
+                    aria-label={label}
+                  >
+                    {icon ?? <Trash2 className="size-4" />}
+                  </Button>
+                }
+              />
+            }
+          />
           <TooltipContent sideOffset={6}>{tooltip || label}</TooltipContent>
         </Tooltip>
       ) : (
-        <AlertDialogTrigger asChild>
-          <Button
-            size={size}
-            variant={variant}
-            className={className}
-            disabled={disabled}
-          >
-            {label}
-          </Button>
-        </AlertDialogTrigger>
+        <AlertDialogTrigger
+          render={
+            <Button
+              size={size}
+              variant={variant}
+              className={className}
+              disabled={disabled}
+            >
+              {label}
+            </Button>
+          }
+        />
       )}
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -236,23 +246,25 @@ export function CachePage({
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">Cache</h1>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                asChild
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Link
-                  href="https://pagescms.org/docs/development/caching/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <BookText />
-                  <span className="sr-only">Cache docs</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                  render={
+                    <Link
+                      href="https://pagescms.org/docs/development/caching/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <BookText />
+                      <span className="sr-only">Cache docs</span>
+                    </Link>
+                  }
+                />
+              }
+            />
             <TooltipContent>View docs</TooltipContent>
           </Tooltip>
         </div>

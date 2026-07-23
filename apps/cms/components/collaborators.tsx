@@ -120,11 +120,17 @@ function InviteCollaboratorsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant={triggerVariant} size={triggerSize} disabled={disabled}>
-          {triggerLabel || "Invite"}
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button
+            variant={triggerVariant}
+            size={triggerSize}
+            disabled={disabled}
+          >
+            {triggerLabel || "Invite"}
+          </Button>
+        }
+      />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite collaborators</DialogTitle>
@@ -312,23 +318,25 @@ export function Collaborators({
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">Collaborators</h1>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                asChild
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Link
-                  href="https://pagescms.org/docs/configuration/collaborators/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <BookText />
-                  <span className="sr-only">Collaborators docs</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                  render={
+                    <Link
+                      href="https://pagescms.org/docs/configuration/collaborators/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <BookText />
+                      <span className="sr-only">Collaborators docs</span>
+                    </Link>
+                  }
+                />
+              }
+            />
             <TooltipContent>View docs</TooltipContent>
           </Tooltip>
         </div>
@@ -436,25 +444,27 @@ export function Collaborators({
                 </div>
 
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon-xs"
-                      variant="outline"
-                      className="ml-auto"
-                      disabled={
-                        removing.includes(collaborator.id) ||
-                        resending.includes(collaborator.id)
-                      }
-                    >
-                      {removing.includes(collaborator.id) ||
-                      resending.includes(collaborator.id) ? (
-                        <Loader className="animate-spin" />
-                      ) : (
-                        <EllipsisVertical />
-                      )}
-                      <span className="sr-only">Collaborator actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        size="icon-xs"
+                        variant="outline"
+                        className="ml-auto"
+                        disabled={
+                          removing.includes(collaborator.id) ||
+                          resending.includes(collaborator.id)
+                        }
+                      >
+                        {removing.includes(collaborator.id) ||
+                        resending.includes(collaborator.id) ? (
+                          <Loader className="animate-spin" />
+                        ) : (
+                          <EllipsisVertical />
+                        )}
+                        <span className="sr-only">Collaborator actions</span>
+                      </Button>
+                    }
+                  />
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onClick={() => void handleResendInvite(collaborator.id)}

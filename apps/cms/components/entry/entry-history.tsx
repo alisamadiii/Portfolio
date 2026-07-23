@@ -124,36 +124,43 @@ export function EntryHistoryDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant={triggerVariant} size={triggerSize}>
-          <History />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button type="button" variant={triggerVariant} size={triggerSize}>
+            <History />
+          </Button>
+        }
+      />
       <DropdownMenuContent align="end" className="max-w-3xs">
         {history.slice(0, 3).map((item) => (
-          <DropdownMenuItem key={item.sha} asChild>
-            <a
-              href={item.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center gap-3 truncate"
-            >
-              <HistoryItemContent item={item} compact />
-            </a>
-          </DropdownMenuItem>
+          <DropdownMenuItem
+            key={item.sha}
+            render={
+              <a
+                href={item.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center gap-3 truncate"
+              >
+                <HistoryItemContent item={item} compact />
+              </a>
+            }
+          />
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a
-            href={`https://github.com/${config?.owner}/${config?.repo}/commits/${encodeURIComponent(config!.branch)}/${path}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center"
-          >
-            View on GitHub
-            <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
-          </a>
-        </DropdownMenuItem>
+        <DropdownMenuItem
+          render={
+            <a
+              href={`https://github.com/${config?.owner}/${config?.repo}/commits/${encodeURIComponent(config!.branch)}/${path}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center"
+            >
+              View on GitHub
+              <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
+            </a>
+          }
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

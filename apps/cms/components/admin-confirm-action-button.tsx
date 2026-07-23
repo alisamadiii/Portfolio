@@ -40,12 +40,14 @@ export function AdminConfirmActionButton({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} aria-label={label}>
-          {icon}
-          {!iconOnly ? label : null}
-        </Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger
+        render={
+          <Button variant={variant} size={size} aria-label={label}>
+            {icon}
+            {!iconOnly ? label : null}
+          </Button>
+        }
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

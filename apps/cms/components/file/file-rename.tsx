@@ -119,16 +119,20 @@ export function FileRename({
           onChange={(e) => setNewRelativePath(e.target.value)}
         />
         <DialogFooter className="max-sm:gap-y-2">
-          <DialogClose asChild>
-            <Button type="button" variant="outline">
-              Cancel
-            </Button>
-          </DialogClose>
-          <DialogClose asChild>
-            <Button type="submit" onClick={handleRename}>
-              Rename
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            }
+          />
+          <DialogClose
+            render={
+              <Button type="submit" onClick={handleRename}>
+                Rename
+              </Button>
+            }
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

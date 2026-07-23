@@ -15,9 +15,11 @@ export function AdminTimeAgo({
 }) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="text-foreground cursor-help text-sm">{label}</span>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <span className="text-foreground cursor-help text-sm">{label}</span>
+        }
+      />
       <TooltipContent sideOffset={6}>{fullDate}</TooltipContent>
     </Tooltip>
   );

@@ -39,7 +39,7 @@ import {
 } from "@workspace/ui/components/breadcrumb";
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -131,25 +131,27 @@ const CollectionHeaderActions = memo(function CollectionHeaderActions({
       </div>
       {showFolderCreate && (
         <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <FolderCreate
-                path={collectionPath}
-                type="content"
-                name={name}
-                onCreate={onFolderCreate}
-              >
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="shrink-0"
-                  size="icon"
+          <TooltipTrigger
+            render={
+              <div>
+                <FolderCreate
+                  path={collectionPath}
+                  type="content"
+                  name={name}
+                  onCreate={onFolderCreate}
                 >
-                  <FolderPlus />
-                </Button>
-              </FolderCreate>
-            </div>
-          </TooltipTrigger>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    size="icon"
+                  >
+                    <FolderPlus />
+                  </Button>
+                </FolderCreate>
+              </div>
+            }
+          />
           <TooltipContent>Create folder</TooltipContent>
         </Tooltip>
       )}
@@ -584,17 +586,21 @@ export function Collection({ name, path }: { name: string; path?: string }) {
               canRename ? (
                 <AlertDialog>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon-sm"
-                          className="h-8 w-8"
-                        >
-                          <Plus className="size-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                    </TooltipTrigger>
+                    <TooltipTrigger
+                      render={
+                        <AlertDialogTrigger
+                          render={
+                            <Button
+                              variant="outline"
+                              size="icon-sm"
+                              className="h-8 w-8"
+                            >
+                              <Plus className="size-4" />
+                            </Button>
+                          }
+                        />
+                      }
+                    />
                     <TooltipContent>Add children entry</TooltipContent>
                   </Tooltip>
                   <AlertDialogContent>
@@ -633,23 +639,25 @@ export function Collection({ name, path }: { name: string; path?: string }) {
               ) : null
             ) : (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    className={cn(
-                      buttonVariants({ variant: "outline", size: "icon-sm" }),
-                      "h-8 w-8"
-                    )}
-                    href={
-                      row.original.isNode
-                        ? `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.parentPath)}`
-                        : row.original.type === "dir"
-                          ? `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.path)}`
-                          : `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.path)}`
-                    }
-                  >
-                    <Plus className="size-4" />
-                  </Link>
-                </TooltipTrigger>
+                <TooltipTrigger
+                  render={
+                    <Link
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "icon-sm" }),
+                        "h-8 w-8"
+                      )}
+                      href={
+                        row.original.isNode
+                          ? `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.parentPath)}`
+                          : row.original.type === "dir"
+                            ? `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.path)}`
+                            : `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.path)}`
+                      }
+                    >
+                      <Plus className="size-4" />
+                    </Link>
+                  }
+                />
                 <TooltipContent>Add children entry</TooltipContent>
               </Tooltip>
             ))}

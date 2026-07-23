@@ -32,18 +32,20 @@ const EditComponent = forwardRef(
         {field?.options?.generate !== false && (
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={generateNewUUID}
-                  className="shrink-0"
-                  disabled={field?.readonly}
-                >
-                  <RefreshCcw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={generateNewUUID}
+                    className="shrink-0"
+                    disabled={field?.readonly}
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                  </Button>
+                }
+              />
               <TooltipContent>
                 <p>Generate new UUID</p>
               </TooltipContent>

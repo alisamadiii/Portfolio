@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Loader } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,

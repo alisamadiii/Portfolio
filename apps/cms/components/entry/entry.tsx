@@ -627,13 +627,15 @@ export function Entry({
             </Fragment>
           ))}
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link
-                href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}`}
-              >
-                {rootLabel}
-              </Link>
-            </BreadcrumbLink>
+            <BreadcrumbLink
+              render={
+                <Link
+                  href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}`}
+                >
+                  {rootLabel}
+                </Link>
+              }
+            />
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="truncate">
@@ -676,13 +678,15 @@ export function Entry({
           </Fragment>
         ))}
         <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link
-              href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}`}
-            >
-              {rootLabel}
-            </Link>
-          </BreadcrumbLink>
+          <BreadcrumbLink
+            render={
+              <Link
+                href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}`}
+              >
+                {rootLabel}
+              </Link>
+            }
+          />
         </BreadcrumbItem>
         <BreadcrumbSeparator />
 
@@ -696,13 +700,16 @@ export function Entry({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   {middleEntries.map((entry) => (
-                    <DropdownMenuItem key={entry.path} asChild>
-                      <Link
-                        href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(entry.path)}`}
-                      >
-                        {entry.name}
-                      </Link>
-                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      key={entry.path}
+                      render={
+                        <Link
+                          href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(entry.path)}`}
+                        >
+                          {entry.name}
+                        </Link>
+                      }
+                    />
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -714,13 +721,15 @@ export function Entry({
         {immediateParent && (
           <>
             <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link
-                  href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(immediateParent.path)}`}
-                >
-                  {immediateParent.name}
-                </Link>
-              </BreadcrumbLink>
+              <BreadcrumbLink
+                render={
+                  <Link
+                    href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(immediateParent.path)}`}
+                  >
+                    {immediateParent.name}
+                  </Link>
+                }
+              />
             </BreadcrumbItem>
             <BreadcrumbSeparator />
           </>
@@ -991,23 +1000,27 @@ export function Entry({
             {path && filenameFieldMode === "enabled" && canRename && (
               <InputGroupAddon align="inline-end">
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InputGroupButton
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => setIsFilenameUnlocked((prev) => !prev)}
-                      aria-label={
-                        isFilenameUnlocked ? "Lock filename" : "Unlock filename"
-                      }
-                    >
-                      {isFilenameUnlocked ? (
-                        <LockOpen className="size-3.5" />
-                      ) : (
-                        <Lock className="size-3.5" />
-                      )}
-                    </InputGroupButton>
-                  </TooltipTrigger>
+                  <TooltipTrigger
+                    render={
+                      <InputGroupButton
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => setIsFilenameUnlocked((prev) => !prev)}
+                        aria-label={
+                          isFilenameUnlocked
+                            ? "Lock filename"
+                            : "Unlock filename"
+                        }
+                      >
+                        {isFilenameUnlocked ? (
+                          <LockOpen className="size-3.5" />
+                        ) : (
+                          <Lock className="size-3.5" />
+                        )}
+                      </InputGroupButton>
+                    }
+                  />
                   <TooltipContent>
                     {isFilenameUnlocked ? "Lock filename" : "Unlock to edit"}
                   </TooltipContent>

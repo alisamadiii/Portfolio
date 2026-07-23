@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
 
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -54,12 +54,16 @@ export default function Page() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link
-            className={buttonVariants({ variant: "default" })}
-            href={`https://github.com/${config?.owner}/${config?.repo}/edit/${encodeURIComponent(config!.branch)}/.pages.yml`}
-          >
-            Edit configuration on GitHub
-          </Link>
+          <Button
+            variant="default"
+            render={
+              <Link
+                href={`https://github.com/${config?.owner}/${config?.repo}/edit/${encodeURIComponent(config!.branch)}/.pages.yml`}
+              >
+                Edit configuration on GitHub
+              </Link>
+            }
+          />
         </EmptyContent>
       </Empty>
     ) : (

@@ -74,23 +74,25 @@ export default function Page() {
           title="Configuration"
           headerMeta={
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Link
-                    href="https://pagescms.org/docs/configuration/"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <BookText />
-                    <span className="sr-only">Configuration docs</span>
-                  </Link>
-                </Button>
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground"
+                    render={
+                      <Link
+                        href="https://pagescms.org/docs/configuration/"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <BookText />
+                        <span className="sr-only">Configuration docs</span>
+                      </Link>
+                    }
+                  />
+                }
+              />
               <TooltipContent>View docs</TooltipContent>
             </Tooltip>
           }

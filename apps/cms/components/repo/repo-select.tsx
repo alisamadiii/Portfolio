@@ -9,7 +9,7 @@ import { useDebounce } from "use-debounce";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -146,17 +146,19 @@ export function RepoSelect({
         {accounts.length > 1 ? (
           <ButtonGroup>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <img
-                    className="size-6 rounded"
-                    src={`https://github.com/${selectedAccount?.login}.png`}
-                    alt={`${selectedAccount?.login}'s avatar`}
-                  />
-                  <span className="mr-2">{selectedAccount?.login}</span>
-                  <ChevronsUpDown className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline">
+                    <img
+                      className="size-6 rounded"
+                      src={`https://github.com/${selectedAccount?.login}.png`}
+                      alt={`${selectedAccount?.login}'s avatar`}
+                    />
+                    <span className="mr-2">{selectedAccount?.login}</span>
+                    <ChevronsUpDown className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="start">
                 {accounts.map((account: any) => (
                   <DropdownMenuItem

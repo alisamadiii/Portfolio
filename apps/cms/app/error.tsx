@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -30,15 +30,10 @@ export default function Error({
         <EmptyDescription>{error.message}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <Link className={buttonVariants({ variant: "default" })} href="/">
-          Go home
-        </Link>
-        <button
-          className={buttonVariants({ variant: "outline" })}
-          onClick={reset}
-        >
+        <Button variant="default" render={<Link href="/">Go home</Link>} />
+        <Button variant="outline" onClick={reset}>
           Try again
-        </button>
+        </Button>
       </EmptyContent>
     </Empty>
   );

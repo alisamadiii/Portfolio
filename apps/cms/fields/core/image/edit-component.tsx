@@ -82,40 +82,44 @@ const ImageTeaser = ({
     <div className="bg-background/95 absolute right-1 bottom-1 rounded-md backdrop-blur-sm">
       <ButtonGroup>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              asChild
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <a
-                href={`https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View image on GitHub"
-              >
-                <ArrowUpRight />
-              </a>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>View on GitHub</TooltipContent>
-        </Tooltip>
-        {onRemove && (
-          <Tooltip>
-            <TooltipTrigger asChild>
+          <TooltipTrigger
+            render={
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
                 className="text-muted-foreground hover:text-foreground"
-                onClick={onRemove}
-                aria-label="Remove image"
-              >
-                <Trash2 />
-              </Button>
-            </TooltipTrigger>
+                render={
+                  <a
+                    href={`https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View image on GitHub"
+                  >
+                    <ArrowUpRight />
+                  </a>
+                }
+              />
+            }
+          />
+          <TooltipContent>View on GitHub</TooltipContent>
+        </Tooltip>
+        {onRemove && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={onRemove}
+                  aria-label="Remove image"
+                >
+                  <Trash2 />
+                </Button>
+              }
+            />
             <TooltipContent>Remove</TooltipContent>
           </Tooltip>
         )}

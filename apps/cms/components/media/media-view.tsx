@@ -39,7 +39,7 @@ import {
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb";
 import { Button } from "@workspace/ui/components/button";
-import { buttonVariants } from "@workspace/ui/components/button-variants";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,20 +94,22 @@ function MediaHeaderActions({
     <div className="flex shrink-0 items-center gap-x-2">
       {actionNode}
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div>
-            <FolderCreate
-              path={path}
-              name={mediaName}
-              type="media"
-              onCreate={onFolderCreate}
-            >
-              <Button type="button" variant="outline" size="icon">
-                <FolderPlus />
-              </Button>
-            </FolderCreate>
-          </div>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <div>
+              <FolderCreate
+                path={path}
+                name={mediaName}
+                type="media"
+                onCreate={onFolderCreate}
+              >
+                <Button type="button" variant="outline" size="icon">
+                  <FolderPlus />
+                </Button>
+              </FolderCreate>
+            </div>
+          }
+        />
         <TooltipContent>Create folder</TooltipContent>
       </Tooltip>
       <MediaUpload.Trigger>
@@ -153,7 +155,6 @@ type MediaFileTileProps = {
   isSelected: boolean;
   isImage: boolean;
   displaySize: string;
-  portalContainer: HTMLDivElement | null;
   onSelect: (path: string) => void;
   onDelete: (path: string) => void;
   onRename: (path: string, newPath: string) => void;
@@ -166,7 +167,6 @@ const MediaFileTile = memo(function MediaFileTile({
   isSelected,
   isImage,
   displaySize,
-  portalContainer,
   onSelect,
   onDelete,
   onRename,
@@ -204,7 +204,6 @@ const MediaFileTile = memo(function MediaFileTile({
           name={mediaName}
           onDelete={onDelete}
           onRename={onRename}
-          portalProps={{ container: portalContainer }}
         >
           <Button
             variant="ghost"
@@ -846,7 +845,6 @@ const MediaView = ({
                     isSelected={selectedPaths.has(item.path)}
                     isImage={isImage}
                     displaySize={displaySize}
-                    portalContainer={filesGridRef.current}
                     onSelect={handleSelect}
                     onDelete={handleDelete}
                     onRename={handleRename}

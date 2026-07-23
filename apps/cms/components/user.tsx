@@ -13,6 +13,7 @@ import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -42,58 +43,66 @@ export function User({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className={cn(className, "rounded-full")}
-        >
-          <Avatar className="size-6">
-            <AvatarImage
-              src={
-                user?.githubUsername
-                  ? `https://github.com/${user.githubUsername}.png`
-                  : `https://unavatar.io/${user?.email}?fallback=false`
-              }
-              alt={user?.name || user.email}
-            />
-            <AvatarFallback>
-              {getInitialsFromName(user.name ?? undefined)}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="max-w-[12.5rem]">
-        <DropdownMenuLabel>
-          <div className="truncate text-sm font-medium">
-            {user.name || user.githubUsername || user.email}
-          </div>
-          <div className="text-muted-foreground truncate text-xs font-normal">
-            {user.email}
-          </div>
-        </DropdownMenuLabel>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(className, "rounded-full")}
+          >
+            <Avatar className="size-6">
+              <AvatarImage
+                src={
+                  user?.githubUsername
+                    ? `https://github.com/${user.githubUsername}.png`
+                    : `https://unavatar.io/${user?.email}?fallback=false`
+                }
+                alt={user?.name || user.email}
+              />
+              <AvatarFallback>
+                {getInitialsFromName(user.name ?? undefined)}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        }
+      />
+      <DropdownMenuContent align={align} className="w-[14rem]">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <div className="truncate text-sm font-medium">
+              {user.name || user.githubUsername || user.email}
+            </div>
+            <div className="text-muted-foreground truncate text-xs font-normal">
+              {user.email}
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-muted-foreground w-40 text-xs font-medium">
-          Theme
-        </DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-          <DropdownMenuRadioItem value="light" onClick={onClick}>
-            Light
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="dark" onClick={onClick}>
-            Dark
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="system" onClick={onClick}>
-            System
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-muted-foreground w-40 text-xs font-medium">
+            Theme
+          </DropdownMenuLabel>
+          <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+            <DropdownMenuRadioItem value="light" onClick={onClick}>
+              Light
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="dark" onClick={onClick}>
+              Dark
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="system" onClick={onClick}>
+              System
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href={urls.portal} target="_blank" rel="noreferrer">
-            Account
-            <ArrowUpRight className="ml-auto size-3.5 opacity-60" />
-          </a>
-        </DropdownMenuItem>
+        <DropdownMenuItem
+          render={
+            <a href={urls.portal} target="_blank" rel="noreferrer">
+              Account
+              <ArrowUpRight className="ml-auto size-3.5 opacity-60" />
+            </a>
+          }
+        />
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

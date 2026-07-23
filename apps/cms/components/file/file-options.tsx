@@ -42,7 +42,6 @@ export function FileOptions({
   name,
   canDelete,
   canRename,
-  portalProps,
   onDelete,
   onRename,
   children,
@@ -53,7 +52,6 @@ export function FileOptions({
   name?: string;
   canDelete?: boolean;
   canRename?: boolean;
-  portalProps?: any;
   onDelete?: (path: string) => void;
   onRename?: (path: string, newPath: string) => void;
   children: React.ReactNode;
@@ -129,17 +127,19 @@ export function FileOptions({
     <>
       <AlertDialog>
         <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-          <DropdownMenuContent align="end" portalProps={portalProps}>
-            <DropdownMenuItem asChild>
-              <a
-                href={`https://github.com/${config.owner}/${config.repo}/blob/${encodeURIComponent(config.branch)}/${path}`}
-                target="_blank"
-              >
-                View on GitHub
-                <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
-              </a>
-            </DropdownMenuItem>
+          <DropdownMenuTrigger render={children as React.ReactElement} />
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              render={
+                <a
+                  href={`https://github.com/${config.owner}/${config.repo}/blob/${encodeURIComponent(config.branch)}/${path}`}
+                  target="_blank"
+                >
+                  View on GitHub
+                  <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
+                </a>
+              }
+            />
             {showRename || showDelete ? (
               <>
                 <DropdownMenuSeparator />
@@ -149,11 +149,13 @@ export function FileOptions({
                   </DropdownMenuItem>
                 )}
                 {showDelete && (
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem variant="destructive">
-                      Delete
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
+                  <AlertDialogTrigger
+                    render={
+                      <DropdownMenuItem variant="destructive">
+                        Delete
+                      </DropdownMenuItem>
+                    }
+                  />
                 )}
               </>
             ) : null}

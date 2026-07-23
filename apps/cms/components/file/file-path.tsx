@@ -67,17 +67,19 @@ export function FilePath({
           <span className="truncate">{path}</span>
         </div>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-l-none"
-              size="icon"
-              onClick={() => setIsRenameOpen(true)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-l-none"
+                size="icon"
+                onClick={() => setIsRenameOpen(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            }
+          />
           <TooltipContent>Rename</TooltipContent>
         </Tooltip>
       </div>
