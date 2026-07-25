@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
 import { Repo } from "@/types/repo";
 
@@ -27,8 +27,13 @@ export const RepoProvider = ({
 }) => {
   const [branches, setBranches] = useState<string[]>(repo?.branches || []);
 
+  const contextValue = useMemo(
+    () => ({ ...repo, branches, setBranches }),
+    [repo, branches]
+  );
+
   return (
-    <RepoContext.Provider value={{ ...repo, branches, setBranches }}>
+    <RepoContext.Provider value={contextValue}>
       {children}
     </RepoContext.Provider>
   );

@@ -62,6 +62,7 @@ export function RepoLatest() {
           <img
             src={`https://github.com/${visit.owner}.png`}
             alt={visit.owner}
+            loading="lazy"
             className="h-6 w-6 rounded"
           />
           <Link

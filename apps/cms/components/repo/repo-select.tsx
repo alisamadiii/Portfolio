@@ -153,6 +153,7 @@ export function RepoSelect({
                       className="size-6 rounded"
                       src={`https://github.com/${selectedAccount?.login}.png`}
                       alt={`${selectedAccount?.login}'s avatar`}
+                      loading="lazy"
                     />
                     <span className="mr-2">{selectedAccount?.login}</span>
                     <ChevronsUpDown className="ml-auto h-4 w-4 opacity-50" />
@@ -172,6 +173,7 @@ export function RepoSelect({
                       className="size-6 rounded"
                       src={`https://github.com/${account.login}.png`}
                       alt={`${account.login}'s avatar`}
+                      loading="lazy"
                     />
                     <span className="truncate">{account.login}</span>
                   </DropdownMenuItem>
@@ -185,6 +187,7 @@ export function RepoSelect({
               className="size-6 rounded"
               src={`https://github.com/${selectedAccount.login}.png`}
               alt={`${selectedAccount.login}'s avatar`}
+              loading="lazy"
             />
             <span>{selectedAccount.login}</span>
           </div>

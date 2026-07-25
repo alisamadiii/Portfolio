@@ -875,28 +875,28 @@ export function Entry({
         {path !== ".pages.yml" ? (
           <>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-24 rounded" />
-              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="bg-background h-5 w-24 rounded" />
+              <Skeleton className="bg-background h-10 w-full rounded-md" />
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-24 rounded" />
-              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="bg-background h-5 w-24 rounded" />
+              <Skeleton className="bg-background h-10 w-full rounded-md" />
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-24 rounded" />
+              <Skeleton className="bg-background h-5 w-24 rounded" />
               <div className="grid auto-cols-max grid-flow-col gap-4">
-                <Skeleton className="h-28 w-28 rounded-md" />
-                <Skeleton className="h-28 w-28 rounded-md" />
-                <Skeleton className="h-28 w-28 rounded-md" />
+                <Skeleton className="bg-background h-28 w-28 rounded-md" />
+                <Skeleton className="bg-background h-28 w-28 rounded-md" />
+                <Skeleton className="bg-background h-28 w-28 rounded-md" />
               </div>
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-24 rounded" />
-              <Skeleton className="h-60 w-full rounded-md" />
+              <Skeleton className="bg-background h-5 w-24 rounded" />
+              <Skeleton className="bg-background h-60 w-full rounded-md" />
             </div>
           </>
         ) : (
-          <Skeleton className="h-96 w-full rounded-md" />
+          <Skeleton className="bg-background h-96 w-full rounded-md" />
         )}
       </div>
     ),

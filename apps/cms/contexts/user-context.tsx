@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import { User } from "@/types/user";
 
@@ -25,7 +25,9 @@ export const UserProvider = ({
   user: User | null;
   children: React.ReactNode;
 }) => {
+  const contextValue = useMemo(() => ({ user }), [user]);
+
   return (
-    <UserContext.Provider value={{ user }}>{children}</UserContext.Provider>
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
   );
 };

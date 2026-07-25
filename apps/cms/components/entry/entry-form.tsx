@@ -41,6 +41,7 @@ import {
   ChevronsUpDown,
   GripVertical,
   Plus,
+  Search,
   Trash2,
   X,
 } from "lucide-react";
@@ -327,13 +328,19 @@ const ListField = ({
     !(typeof field.list === "object" && field.list?.collapsible === false)
   );
   const defaultOpen = useMemo(() => {
-    const defaultCollapsed =
-      isCollapsible &&
-      typeof field.list === "object" &&
-      field.list.collapsible &&
-      typeof field.list.collapsible === "object" &&
-      field.list.collapsible.collapsed;
-    return !defaultCollapsed;
+    if (!isCollapsible) return true;
+    const collapsible =
+      typeof field.list === "object" ? field.list.collapsible : undefined;
+    // Collapsible list items are collapsed by default; opt back in with
+    // `collapsible: { collapsed: false }`.
+    if (
+      collapsible &&
+      typeof collapsible === "object" &&
+      collapsible.collapsed === false
+    ) {
+      return true;
+    }
+    return false;
   }, [field.list, isCollapsible]);
 
   const {
@@ -550,7 +557,7 @@ const ListField = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="w-full justify-center border-dashed bg-background"
+                  className="bg-background w-full justify-center border-dashed"
                   onClick={addItem}
                 >
                   <Plus />
@@ -635,7 +642,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
     return (
       <div className="space-y-3" ref={ref as React.Ref<HTMLDivElement>}>
         {!selectedBlockDefinition ? (
-          <div className="space-y-4 rounded-lg border bg-background shadow-xs overflow-hidden p-4">
+          <div className="bg-background space-y-4 overflow-hidden rounded-lg border p-4 shadow-xs">
             <div className="text-sm">Choose content block:</div>
             <div className="flex flex-wrap gap-2">
               {blocks.map((blockDef: Field) => (
@@ -654,7 +661,7 @@ const BlocksField = forwardRef<HTMLDivElement, NestedFieldProps>(
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border bg-background shadow-xs overflow-hidden">
+          <div className="bg-background overflow-hidden rounded-lg border shadow-xs">
             <header
               className={cn(
                 "bg-muted/50 flex h-10 items-center gap-x-2 px-4 text-sm font-medium transition-colors",
@@ -836,7 +843,7 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
     );
 
     return (
-      <div className="rounded-lg border bg-background shadow-xs overflow-hidden">
+      <div className="bg-background overflow-hidden rounded-lg border shadow-xs">
         {isCollapsible && (
           <header
             className="bg-muted/50 hover:bg-muted flex h-10 cursor-pointer items-center gap-x-2 pr-1 pl-4 text-sm font-medium transition-colors"
@@ -875,6 +882,46 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
 );
 
 ObjectField.displayName = "ObjectField";
+
+const truncate = (value: string, max: number) =>
+  value.length > max ? `${value.slice(0, max).trimEnd()}…` : value;
+
+const SeoPreview = ({ fieldName }: { fieldName: string }) => {
+  const rawTitle = useWatch({ name: `${fieldName}.title` });
+  const rawDescription = useWatch({ name: `${fieldName}.description` });
+
+  const title = typeof rawTitle === "string" ? rawTitle.trim() : "";
+  const description =
+    typeof rawDescription === "string" ? rawDescription.trim() : "";
+
+  return (
+    <div className="bg-background space-y-1 rounded-lg border p-4">
+      <div className="text-muted-foreground truncate text-xs">
+        yoursite.com › page
+      </div>
+      <div
+        className={cn(
+          "truncate text-lg leading-tight",
+          title
+            ? "text-[#1a0dab] dark:text-[#8ab4f8]"
+            : "text-muted-foreground italic"
+        )}
+      >
+        {title ? truncate(title, 60) : "Untitled"}
+      </div>
+      <p
+        className={cn(
+          "text-sm",
+          description ? "text-muted-foreground" : "text-muted-foreground/70 italic"
+        )}
+      >
+        {description
+          ? truncate(description, 155)
+          : "No description set — add one to control the search snippet."}
+      </p>
+    </div>
+  );
+};
 
 const SingleField = ({
   field,
@@ -921,18 +968,22 @@ const SingleField = ({
   if (["object", "block"].includes(field.type)) {
     const hasErrors = () => hasFieldPathError(errors, fieldName);
     const NestedComponent = field.type === "block" ? BlocksField : ObjectField;
+    const isSeoSection = field.name === "seo" && !fieldName.includes(".");
 
     return (
       <FormItem key={fieldName}>
         {shouldShowFieldMeta && (
-          <div className="flex h-5 items-center gap-x-2">
+          <div className="flex min-h-5 items-center gap-x-2">
             {field.label !== false && (
               <Label
                 className={cn(
-                  "text-sm font-semibold",
+                  fieldName.includes(".")
+                    ? "text-sm font-semibold"
+                    : "flex items-center gap-x-2 px-4 text-3xl font-bold tracking-tight",
                   hasErrors() ? "text-destructive" : ""
                 )}
               >
+                {isSeoSection && <Search className="size-6" />}
                 {field.label || field.name}
               </Label>
             )}
@@ -950,6 +1001,7 @@ const SingleField = ({
             )}
           </div>
         )}
+        {isSeoSection && <SeoPreview fieldName={fieldName} />}
         <NestedComponent
           field={field}
           fieldName={fieldName}
@@ -1185,7 +1237,7 @@ const EntryForm = ({
         onSubmit={handleFormSubmit}
         className="mx-auto w-full max-w-screen-md"
       >
-        <div className="rounded-xl border bg-background p-5 shadow-xs md:p-6 grid gap-6">
+        <div className="grid gap-6 rounded-xl p-5 md:p-6">
           {filePath && (
             <div className="space-y-2 overflow-hidden">
               <FormLabel>Filename</FormLabel>

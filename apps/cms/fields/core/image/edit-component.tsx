@@ -19,7 +19,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowUpRight, FolderOpen, Trash2, Upload } from "lucide-react";
+import { ArrowUpRight, FolderOpen, Link2, Trash2, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 import type { FileSaveData } from "@/types/api";
 import type { Config } from "@/types/config";
@@ -27,6 +28,12 @@ import type { Field } from "@/types/field";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
+import { Input } from "@workspace/ui/components/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -34,7 +41,11 @@ import {
 } from "@workspace/ui/components/tooltip";
 
 import { getSchemaByName } from "@/lib/schema";
-import { normalizeMediaPath, normalizePath } from "@/lib/utils/file";
+import {
+  isAbsoluteMediaUrl,
+  normalizeMediaPath,
+  normalizePath,
+} from "@/lib/utils/file";
 
 import { MediaDialog } from "@/components/media/media-dialog";
 import { MediaUpload } from "@/components/media/media-upload";
@@ -78,6 +89,10 @@ const ImageTeaser = ({
   config: Pick<Config, "owner" | "repo" | "branch">;
   onRemove?: () => void;
 }) => {
+  const isExternal = isAbsoluteMediaUrl(file);
+  const href = isExternal
+    ? file
+    : `https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`;
   return (
     <div className="bg-background/95 absolute right-1 bottom-1 rounded-md backdrop-blur-sm">
       <ButtonGroup>
@@ -91,10 +106,12 @@ const ImageTeaser = ({
                 className="text-muted-foreground hover:text-foreground"
                 render={
                   <a
-                    href={`https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="View image on GitHub"
+                    aria-label={
+                      isExternal ? "Open image URL" : "View image on GitHub"
+                    }
                   >
                     <ArrowUpRight />
                   </a>
@@ -102,7 +119,9 @@ const ImageTeaser = ({
               />
             }
           />
-          <TooltipContent>View on GitHub</TooltipContent>
+          <TooltipContent>
+            {isExternal ? "Open URL" : "View on GitHub"}
+          </TooltipContent>
         </Tooltip>
         {onRemove && (
           <Tooltip>
@@ -383,12 +402,13 @@ const EditComponent = forwardRef(
                   </DndContext>
                 </div>
               ) : (
-                <div className="relative aspect-square w-28">
+                <div className="relative max-w-sm">
                   <div title={files[0].path}>
                     <Thumbnail
                       name={mediaConfig.name}
                       path={files[0].path}
-                      className="h-28 w-28 rounded-md"
+                      className="aspect-video w-full rounded-md border"
+                      imgClassName="object-contain"
                     />
                   </div>
                   <ImageTeaser
@@ -425,6 +445,7 @@ const EditComponent = forwardRef(
                     Select
                   </Button>
                 </MediaDialog>
+                <UrlPopover onSubmit={(url) => handleSelected([url])} />
               </div>
             )}
           </div>
@@ -435,5 +456,70 @@ const EditComponent = forwardRef(
 );
 
 EditComponent.displayName = "EditComponent";
+
+const UrlPopover = ({ onSubmit }: { onSubmit: (url: string) => void }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button type="button" size="sm" variant="outline">
+            <Link2 />
+            Link
+          </Button>
+        }
+      />
+      <PopoverContent align="start" className="w-80">
+        {open && (
+          <UrlPopoverContent
+            onSubmit={(url) => {
+              onSubmit(url);
+              setOpen(false);
+            }}
+          />
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+const UrlPopoverContent = ({
+  onSubmit,
+}: {
+  onSubmit: (url: string) => void;
+}) => {
+  const [url, setUrl] = useState("");
+
+  const handleSubmit = () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    if (!isAbsoluteMediaUrl(trimmed)) {
+      toast.error("Enter a full URL (https://…) or data URI.");
+      return;
+    }
+    onSubmit(trimmed);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Input
+        type="url"
+        placeholder="https://cdn.example.com/image.png"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
+      />
+      <Button type="button" size="sm" onClick={handleSubmit}>
+        Add image
+      </Button>
+    </div>
+  );
+};
 
 export { EditComponent };

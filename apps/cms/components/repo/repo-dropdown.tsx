@@ -75,6 +75,7 @@ export function RepoDropdown({ onClick }: { onClick?: () => void }) {
                 className="h-10 w-10 rounded-lg"
                 src={`https://github.com/${owner}.png`}
                 alt="Picture of the author"
+                loading="lazy"
               />
               <div className="ml-3 overflow-hidden text-left">
                 <div className="truncate font-medium">{repo}</div>

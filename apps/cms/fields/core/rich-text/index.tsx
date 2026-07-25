@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { Field } from "@/types/field";
 
-import { EditComponent } from "./edit-component";
+import { EditComponent } from "./lazy-edit-component";
 import { ViewComponent } from "./view-component";
 
 const schema = (field: Field, configObject?: Record<string, any>) => {

@@ -7,6 +7,7 @@ import { getSchemaByName } from "@/lib/schema";
 import {
   extensionCategories,
   getFileExtension,
+  isAbsoluteMediaUrl,
   normalizeMediaPath,
 } from "@/lib/utils/file";
 
@@ -173,6 +174,9 @@ const schema = (field: Field, configObject?: Record<string, any>) => {
     // Path and extension checks
     const checkPath = (path: unknown) => {
       if (typeof path !== "string" || path === "") return;
+
+      // Absolute / CDN / data URLs are stored verbatim — skip repo path + extension checks.
+      if (isAbsoluteMediaUrl(path)) return;
 
       // Path Prefix Check
       if (mediaInputPath && !path.startsWith(mediaInputPath)) {

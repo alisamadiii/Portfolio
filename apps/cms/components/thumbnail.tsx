@@ -8,18 +8,21 @@ import { Ban, ImageOff, Loader } from "lucide-react";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { getRawUrl } from "@/lib/github-image";
+import { isAbsoluteMediaUrl } from "@/lib/utils/file";
 
 export function Thumbnail({
   name,
   path,
   className,
+  imgClassName,
 }: {
   name: string;
   path: string | null;
   className?: string;
+  imgClassName?: string;
 }) {
   const [rawUrl, setRawUrl] = useState<string | null>(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const { owner, repo, isPrivate } = useRepo();
 
@@ -27,31 +30,42 @@ export function Thumbnail({
   const branch = config?.branch!;
 
   useEffect(() => {
+    setError(null);
+    setRawUrl(null);
+
+    if (!path) return;
+
+    // CDN / external / data URLs render directly — never resolved via GitHub.
+    if (isAbsoluteMediaUrl(path)) {
+      setRawUrl(path);
+      return;
+    }
+
+    let cancelled = false;
     const fetchRawUrl = async () => {
-      if (path) {
-        setError(null);
-        if (!rawUrl) setRawUrl(null);
-        try {
-          const url = await getRawUrl(
-            owner,
-            repo,
-            branch,
-            name,
-            path,
-            isPrivate
-          );
+      try {
+        const url = await getRawUrl(owner, repo, branch, name, path, isPrivate);
+        if (cancelled) return;
+        if (url) {
           setRawUrl(url);
-        } catch (error: any) {
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error";
-          console.warn(errorMessage);
-          setError(error.message);
+        } else {
+          setError("Image could not be resolved");
         }
+      } catch (err: any) {
+        if (cancelled) return;
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
+        console.warn(errorMessage);
+        setError(errorMessage);
       }
     };
 
     fetchRawUrl();
-  }, [path, owner, repo, branch, isPrivate, name, rawUrl]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [path, owner, repo, branch, isPrivate, name]);
 
   return (
     <div
@@ -61,20 +75,24 @@ export function Thumbnail({
       )}
     >
       {path ? (
-        rawUrl ? (
-          <img
-            src={rawUrl}
-            alt={path.split("/").pop() || "thumbnail"}
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : error ? (
+        error ? (
           <div
             className="text-muted-foreground absolute inset-0 flex items-center justify-center"
             title={error}
           >
             <Ban className="h-4 w-4" />
           </div>
+        ) : rawUrl ? (
+          <img
+            src={rawUrl}
+            alt={path.split("/").pop() || "thumbnail"}
+            loading="lazy"
+            onError={() => setError("Image failed to load")}
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover",
+              imgClassName
+            )}
+          />
         ) : (
           <div
             className="text-muted-foreground absolute inset-0 flex items-center justify-center"

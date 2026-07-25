@@ -166,6 +166,12 @@ const decodePathSafely = (path: string): string => {
   return current;
 };
 
+const isAbsoluteMediaUrl = (value: string): boolean =>
+  value.startsWith("http://") ||
+  value.startsWith("https://") ||
+  value.startsWith("//") ||
+  value.startsWith("data:");
+
 const normalizeMediaPath = (path: string): string => {
   if (!path) return path;
   if (
@@ -241,6 +247,7 @@ export {
   getRelativePath,
   normalizePath,
   normalizeMediaPath,
+  isAbsoluteMediaUrl,
   joinPathSegments,
   decodePathSafely,
   generateRandomUploadName,

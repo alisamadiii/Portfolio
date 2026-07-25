@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
 import { Config } from "@/types/config";
 
@@ -28,8 +28,10 @@ export const ConfigProvider = ({
 }) => {
   const [config, setConfig] = useState<Config | null>(value);
 
+  const contextValue = useMemo(() => ({ config, setConfig }), [config]);
+
   return (
-    <ConfigContext.Provider value={{ config, setConfig }}>
+    <ConfigContext.Provider value={contextValue}>
       {children}
     </ConfigContext.Provider>
   );

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { Field } from "@/types/field";
 
-import { EditComponent } from "./edit-component";
+import { EditComponent } from "./lazy-edit-component";
 
 const schema = (field: Field, configObject?: Record<string, any>) => {
   let zodSchema = z.string();

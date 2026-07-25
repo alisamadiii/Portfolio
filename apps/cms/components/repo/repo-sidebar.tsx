@@ -245,6 +245,7 @@ function RepoSwitcher() {
                           <img
                             src={`https://github.com/${visit.owner}.png`}
                             alt={`${visit.owner}'s avatar`}
+                            loading="lazy"
                             className="size-5 rounded"
                           />
                           <span className="truncate">{visit.repo}</span>
