@@ -12,12 +12,22 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { EllipsisVertical, History, Lock, LockOpen, Save } from "lucide-react";
+import { EllipsisVertical, Lock, LockOpen, Save } from "lucide-react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
-import type { ApiSuccess, EntryData, EntryHistoryItem } from "@/types/api";
+import type { ApiSuccess, EntryData } from "@/types/api";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -80,8 +90,14 @@ import { FileOptions } from "@/components/file/file-options";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
 import { EntryForm } from "./entry-form";
-import { EntryHistoryDropdown } from "./entry-history";
 import { PreviewPanel } from "./preview-panel";
+
+// Shown once per browser the first time a user saves — see the save gate below.
+const SAVE_EDU_KEY = "cms:save-education-ack";
+function readSaveEduAck() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(SAVE_EDU_KEY) === "1";
+}
 
 type LintView = {
   state: {
@@ -127,6 +143,11 @@ export function Entry({
   const [hasRegisteredChanges, setHasRegisteredChanges] = useState(false);
   const [error, setError] = useState<string | undefined | null>(null);
   const changeVersionRef = useRef(0);
+
+  // First-save education dialog (once per browser).
+  const [saveEduAcked, setSaveEduAcked] = useState(readSaveEduAck);
+  const [saveEduOpen, setSaveEduOpen] = useState(false);
+  const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
   const { mutate } = useSWRConfig();
 
   const router = useRouter();
@@ -311,43 +332,6 @@ export function Entry({
     setIsLoading(false);
   }, [swrEntryError]);
 
-  const historyApiUrl = useMemo(
-    () =>
-      path
-        ? `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/entries/${encodeURIComponent(path)}/history?name=${encodeURIComponent(name)}`
-        : null,
-    [config.branch, config.owner, config.repo, name, path]
-  );
-
-  const historyKey = useMemo(
-    () => (historyApiUrl ? ([historyApiUrl, sha ?? ""] as const) : null),
-    [historyApiUrl, sha]
-  );
-
-  const fetchEntryHistory = useCallback(
-    async ([apiUrl]: readonly [string, string]): Promise<
-      EntryHistoryItem[]
-    > => {
-      const response = await fetch(apiUrl);
-      const data = await requireApiSuccess<any>(
-        response,
-        "Failed to fetch entry's history"
-      );
-      return data.data as EntryHistoryItem[];
-    },
-    []
-  );
-
-  const { data: historyData } = useSWR<EntryHistoryItem[]>(
-    historyKey,
-    fetchEntryHistory,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 2000,
-    }
-  );
-
   const currentFilename = useMemo(
     () => (path ? getFileName(normalizePath(path)) : ""),
     [path]
@@ -357,7 +341,7 @@ export function Entry({
     filenameValue.trim().length > 0 &&
     filenameValue.trim() !== currentFilename;
 
-  const onSubmit = async (contentObject: Record<string, unknown>) => {
+  const performSave = async (contentObject: Record<string, unknown>) => {
     setIsSaving(true);
     const submitStartChangeVersion = changeVersionRef.current;
 
@@ -502,6 +486,34 @@ export function Entry({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // First save in this browser: educate before saving. RHF has already validated
+  // by the time this runs, so the captured values are safe to save later verbatim.
+  const onSubmit = async (contentObject: Record<string, unknown>) => {
+    if (!saveEduAcked) {
+      pendingSaveRef.current = contentObject;
+      setSaveEduOpen(true);
+      return;
+    }
+    await performSave(contentObject);
+  };
+
+  const ackSaveEdu = () => {
+    window.localStorage.setItem(SAVE_EDU_KEY, "1");
+    setSaveEduAcked(true);
+  };
+  const confirmSaveEdu = () => {
+    ackSaveEdu();
+    setSaveEduOpen(false);
+    const pending = pendingSaveRef.current;
+    pendingSaveRef.current = null;
+    if (pending) void performSave(pending);
+  };
+  const dismissSaveEdu = () => {
+    ackSaveEdu();
+    setSaveEduOpen(false);
+    pendingSaveRef.current = null;
   };
 
   const isBusy = isLoading || isSaving;
@@ -778,24 +790,6 @@ export function Entry({
         {showHeaderActions && (
           <div className="flex shrink-0 items-center gap-x-2">
             {headerActionsNode}
-            {path &&
-              (historyData && historyData.length > 0 && !isLoading ? (
-                <EntryHistoryDropdown
-                  history={historyData}
-                  path={path}
-                  triggerVariant="outline"
-                  triggerSize="icon"
-                />
-              ) : (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                  disabled
-                >
-                  <History />
-                </Button>
-              ))}
             <Button
               type="submit"
               form="entry-form"
@@ -861,7 +855,6 @@ export function Entry({
       hasRegisteredChanges,
       headerActionsNode,
       headerMeta,
-      historyData,
       isBusy,
       isFilenameUnlocked,
       isFormDirty,
@@ -988,7 +981,7 @@ export function Entry({
     );
   }
 
-  const formNode = isLoading ? (
+  const entryBody = isLoading ? (
     loadingSkeleton
   ) : (
     <EntryForm
@@ -1044,6 +1037,49 @@ export function Entry({
         setHasRegisteredChanges(true);
       }}
     />
+  );
+
+  const formNode = (
+    <>
+      {entryBody}
+      <AlertDialog
+        open={saveEduOpen}
+        onOpenChange={(open) => {
+          if (!open) dismissSaveEdu();
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Before you save</AlertDialogTitle>
+            <AlertDialogDescription>
+              Save publishes this page&apos;s changes. Finish all your edits on
+              this page first, then click Save.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <ul className="text-muted-foreground list-disc space-y-1.5 pl-5 text-sm">
+            <li>
+              <span className="text-foreground font-medium">
+                Unsaved edits are lost if you switch to another page.
+              </span>{" "}
+              Each page saves on its own — always Save before leaving.
+            </li>
+            <li>
+              After you save, your changes go live on the site in about 10–20
+              seconds.
+            </li>
+            <li>You&apos;ll only see this message once.</li>
+          </ul>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={dismissSaveEdu}>
+              Not now
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSaveEdu}>
+              Got it — save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 
   // Live preview only makes sense for an existing content entry with a page.

@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Columns2,
+  ExternalLink,
   Maximize2,
   Minimize2,
   Minus,
@@ -154,9 +155,29 @@ export function PreviewPanel({
     if (iframeRef.current) iframeRef.current.src = target.href;
   }, [target.href]);
 
+  // Clean live URL (without the CMS preview flag) for opening in a new tab.
+  const siteHref = (() => {
+    try {
+      const url = new URL(target.href);
+      url.searchParams.delete("cms-preview");
+      return url.href;
+    } catch {
+      return target.href;
+    }
+  })();
+
   // Shared header controls. `collapse` (float-only) hidden in split mode.
   const controls = (
     <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        onClick={() => window.open(siteHref, "_blank", "noopener,noreferrer")}
+        aria-label="Open site in new tab"
+      >
+        <ExternalLink className="size-3.5" />
+      </Button>
       <Button
         type="button"
         variant="ghost"

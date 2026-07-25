@@ -11,20 +11,6 @@ export type ApiError = {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
-export type EntryHistoryItem = {
-  sha: string;
-  html_url: string;
-  author?: {
-    login?: string;
-  } | null;
-  commit: {
-    author?: {
-      name?: string | null;
-      date?: string | null;
-    } | null;
-  };
-};
-
 export type EntryData = {
   sha: string;
   path: string;
