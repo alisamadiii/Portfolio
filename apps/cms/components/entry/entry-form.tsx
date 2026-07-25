@@ -93,6 +93,8 @@ import {
   sanitizeObject,
 } from "@/lib/schema";
 
+import { usePreview } from "./preview-context";
+
 type BeforeSubmitHook = () => void | Promise<void>;
 type RegisterBeforeSubmitHook = (
   key: string,
@@ -950,6 +952,7 @@ const SingleField = ({
     control,
     formState: { errors },
   } = useFormContext();
+  const { focusField } = usePreview();
   const isRichTextField = field.type === "rich-text";
   const showLabelSlot = isRichTextField && field.options?.switcher !== false;
   const shouldShowFieldMeta =
@@ -1068,6 +1071,7 @@ const SingleField = ({
                 const sharedProps = {
                   ...rhfManagedFieldProps,
                   field,
+                  onFocusCapture: () => focusField(fieldName),
                 };
                 if (field.type === "rich-text") {
                   return (

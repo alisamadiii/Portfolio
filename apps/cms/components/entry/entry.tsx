@@ -73,12 +73,15 @@ import {
   normalizePath,
 } from "@/lib/utils/file";
 
+import { getPreviewUrl } from "@/lib/preview";
+
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
 import { EntryForm } from "./entry-form";
 import { EntryHistoryDropdown } from "./entry-history";
+import { PreviewPanel } from "./preview-panel";
 
 type LintView = {
   state: {
@@ -202,6 +205,11 @@ export function Entry({
           ]
         : schema.fields;
   }, [schema, entry, path, showFilenameField]);
+
+  const previewTarget = useMemo(
+    () => getPreviewUrl(config, name),
+    [config, name]
+  );
 
   const entryContentObject = useMemo(() => {
     return path
@@ -980,7 +988,7 @@ export function Entry({
     );
   }
 
-  return isLoading ? (
+  const formNode = isLoading ? (
     loadingSkeleton
   ) : (
     <EntryForm
@@ -1037,4 +1045,19 @@ export function Entry({
       }}
     />
   );
+
+  // Live preview only makes sense for an existing content entry with a page.
+  if (previewTarget && path && path !== ".pages.yml") {
+    return (
+      <PreviewPanel
+        target={previewTarget}
+        pageKey={previewTarget.href}
+        pageTitle={displayTitle}
+      >
+        {formNode}
+      </PreviewPanel>
+    );
+  }
+
+  return formNode;
 }

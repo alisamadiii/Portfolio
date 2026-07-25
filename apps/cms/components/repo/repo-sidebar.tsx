@@ -19,11 +19,9 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Database,
-  FileStack,
-  FileText,
-  FolderOpen,
   LogOut,
   Moon,
+  Search,
   Settings,
   SlidersHorizontal,
   Sun,
@@ -73,10 +71,19 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { isAdminUser } from "@/lib/authz-shared";
 import { isCacheEnabled, isConfigEnabled } from "@/lib/config";
+import {
+  countLeaves,
+  getContentNavigation,
+  getMediaNavigation,
+  getNodeHref,
+  getNodeIcon,
+  type NavigationNode,
+} from "@/lib/repo-nav";
 import { getVisits } from "@/lib/tracker";
 
 import { About } from "@/components/about";
 import { RepoBranches } from "@/components/repo/repo-branches";
+import { RepoCommandPalette } from "@/components/repo/repo-command-palette";
 import { User } from "@/components/user";
 
 type NavItem = {
@@ -84,13 +91,6 @@ type NavItem = {
   label: string;
   href: string;
   icon: React.ReactNode;
-};
-
-type NavigationNode = {
-  type: "group" | "file" | "collection" | "media";
-  name: string;
-  label?: string;
-  items?: NavigationNode[];
 };
 
 function RepoSwitcher() {
@@ -279,6 +279,31 @@ export function RepoSidebar() {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {}
   );
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const storageKey = config
+    ? `cms:expandedGroups:${config.owner}/${config.repo}/${config.branch}`
+    : null;
+
+  // Hydrate persisted expand/collapse state for this repo/branch.
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (stored) setExpandedGroups(JSON.parse(stored));
+    } catch {
+      // ignore malformed / unavailable storage
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(expandedGroups));
+    } catch {
+      // ignore quota / unavailable storage
+    }
+  }, [storageKey, expandedGroups]);
 
   useEffect(() => {
     if (isMobile) {
@@ -306,31 +331,15 @@ export function RepoSidebar() {
     }
   }, [isMobile, setOpenMobile]);
 
-  const contentNavigation = useMemo<NavigationNode[]>(() => {
-    if (!config?.object) return [];
-    const navigation = (config.object as any).navigation?.content;
-    if (Array.isArray(navigation)) return navigation;
+  const contentNavigation = useMemo<NavigationNode[]>(
+    () => getContentNavigation(config),
+    [config]
+  );
 
-    const content = (config.object as any).content ?? [];
-    return content.map((item: any) => ({
-      type: item.type,
-      name: item.name,
-      label: item.label || item.name,
-    }));
-  }, [config]);
-
-  const mediaNavigation = useMemo<NavigationNode[]>(() => {
-    if (!config?.object) return [];
-    const navigation = (config.object as any).navigation?.media;
-    if (Array.isArray(navigation)) return navigation;
-
-    const media = (config.object as any).media ?? [];
-    return media.map((item: any) => ({
-      type: "media",
-      name: item.name || "default",
-      label: item.label || item.name || "Media",
-    }));
-  }, [config]);
+  const mediaNavigation = useMemo<NavigationNode[]>(
+    () => getMediaNavigation(config),
+    [config]
+  );
 
   const adminItems = useMemo<NavItem[]>(() => {
     if (!config) return [];
@@ -378,32 +387,16 @@ export function RepoSidebar() {
 
     return items;
   }, [config, user]);
-  const getNodeHref = useCallback(
-    (node: NavigationNode) => {
-      if (!config) return "#";
-      if (node.type === "media") {
-        return `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/${encodeURIComponent(node.name)}`;
-      }
-      return `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/${node.type}/${encodeURIComponent(node.name)}`;
-    },
-    [config]
-  );
-
-  const getNodeIcon = (node: NavigationNode) => {
-    if (node.type === "collection") return <FileStack className="size-4" />;
-    if (node.type === "media") return <FolderOpen className="size-4" />;
-    return <FileText className="size-4" />;
-  };
 
   const hasActiveDescendant = useCallback(
     function hasActiveDescendant(node: NavigationNode): boolean {
       if (node.type !== "group") {
-        const href = getNodeHref(node);
+        const href = getNodeHref(node, config);
         return pathname === href || pathname.startsWith(`${href}/`);
       }
       return (node.items || []).some((item) => hasActiveDescendant(item));
     },
-    [getNodeHref, pathname]
+    [config, pathname]
   );
 
   const activeGroupKeys = useMemo(() => {
@@ -472,6 +465,7 @@ export function RepoSidebar() {
     if (node.type === "group") {
       const isActive = hasActiveDescendant(node);
       const isOpen = expandedGroups[key] ?? isActive;
+      const leafCount = countLeaves(node);
       if (nested) {
         return (
           <SidebarMenuSubItem key={key}>
@@ -484,7 +478,10 @@ export function RepoSidebar() {
                       isOpen && "rotate-90"
                     )}
                   />
-                  <span>{node.label || node.name}</span>
+                  <span className="flex-1">{node.label || node.name}</span>
+                  <span className="text-muted-foreground/60 text-xs tabular-nums">
+                    {leafCount}
+                  </span>
                 </button>
               }
             />
@@ -510,7 +507,10 @@ export function RepoSidebar() {
                     isOpen && "rotate-90"
                   )}
                 />
-                <span>{node.label || node.name}</span>
+                <span className="flex-1">{node.label || node.name}</span>
+                <span className="text-muted-foreground/60 text-xs tabular-nums">
+                  {leafCount}
+                </span>
               </button>
             }
           />
@@ -525,7 +525,7 @@ export function RepoSidebar() {
       );
     }
 
-    const href = getNodeHref(node);
+    const href = getNodeHref(node, config);
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
     if (nested) {
       return (
@@ -627,12 +627,28 @@ export function RepoSidebar() {
             <RepoSwitcher />
           </SidebarMenuItem>
         </SidebarMenu>
+        <button
+          type="button"
+          onClick={() => setPaletteOpen(true)}
+          className="bg-sidebar-accent/50 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground flex h-9 w-full items-center gap-2 rounded-lg border px-2.5 text-sm transition-colors"
+        >
+          <Search className="size-4 shrink-0" />
+          <span className="flex-1 text-left">Search pages…</span>
+          <kbd className="bg-background text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-0.5 rounded border px-1.5 font-sans text-[11px] font-medium">
+            ⌘K
+          </kbd>
+        </button>
       </SidebarHeader>
       <SidebarContent>
         {groups.map((group, index) => (
           <Fragment key={index}>{group}</Fragment>
         ))}
       </SidebarContent>
+      <RepoCommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        adminItems={adminItems}
+      />
       <SidebarFooter className="border-t">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

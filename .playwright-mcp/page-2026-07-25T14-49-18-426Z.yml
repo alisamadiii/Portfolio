@@ -1,0 +1,316 @@
+- generic [active] [ref=f6e1]:
+  - navigation [ref=f6e2]:
+    - generic [ref=f6e3]:
+      - link "EmpowerHer Initiative" [ref=f6e4] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f6e10]:
+        - link "About" [ref=f6e12] [cursor=pointer]:
+          - /url: /about-us
+        - generic [ref=f6e13]:
+          - button "Programs" [ref=f6e14] [cursor=pointer]
+          - generic:
+            - generic:
+              - generic:
+                - link "Mentorship Program":
+                  - /url: /mentorship
+                - link "Monthly Internet Scholarship (MIS)":
+                  - /url: /mis
+                - link "Student Project Roadmap":
+                  - /url: /success-stories/spr
+              - generic:
+                - link "HerVoice":
+                  - /url: /hervoice
+                - link "Featured Writings from Our Partners":
+                  - /url: /hervoice/featured-writings-from-our-partners
+        - link "Success Stories" [ref=f6e18] [cursor=pointer]:
+          - /url: /success-stories
+        - link "Resources" [ref=f6e20] [cursor=pointer]:
+          - /url: /resources
+        - link "AGFAF" [ref=f6e22] [cursor=pointer]:
+          - /url: /agfaf
+        - link "Contact" [ref=f6e24] [cursor=pointer]:
+          - /url: /contact
+      - link "Get Involved" [ref=f6e25] [cursor=pointer]:
+        - /url: /get-involved
+  - generic [ref=f6e29]:
+    - heading "Empowering Dreams, Inspiring Futures" [level=1] [ref=f6e30]: Empowering Dreams,Inspiring Futures
+    - paragraph [ref=f6e31]: At EmpowerHer, we believe every Afghan girl and woman has a story worth telling and a future worth fighting for. Through mentorship programs and publication opportunities, we help them find the tools, confidence, and platforms they need to raise their voices and become changemakers in their communities and beyond.
+    - link [ref=f6e33] [cursor=pointer]:
+      - /url: /about-us
+    - generic [ref=f6e37]:
+      - button "Image 1" [ref=f6e38] [cursor=pointer]
+      - button "Image 2" [ref=f6e39] [cursor=pointer]
+      - button "Image 3" [ref=f6e40] [cursor=pointer]
+      - button "Image 4" [ref=f6e41] [cursor=pointer]
+  - generic [ref=f6e43]:
+    - generic [ref=f6e44]:
+      - 'heading "Abandoned Futures: Let Afghan Girls Learn" [level=2] [ref=f6e45]'
+      - paragraph [ref=f6e46]: Since September 2021, all Afghan girls over the age of 12 have been banned from attending school.
+      - link "More Details" [ref=f6e47] [cursor=pointer]:
+        - /url: https://www.unesco.org/en/articles/let-girls-and-women-afghanistan-learn
+    - generic [ref=f6e50]:
+      - generic [ref=f6e51]:
+        - generic [ref=f6e52]: 0.0 million
+        - generic [ref=f6e53]: Girls have lost access to formal education.
+      - generic [ref=f6e54]:
+        - generic [ref=f6e55]: 0.0 million
+        - generic [ref=f6e56]: School-aged Afghan girls (80%) are currently out of school.
+      - generic [ref=f6e57]:
+        - generic [ref=f6e58]: 0%
+        - generic [ref=f6e59]: Nearly 30% of Afghan girls have never attended primary school.
+  - generic [ref=f6e62]:
+    - generic [ref=f6e63]:
+      - paragraph [ref=f6e65]: EmpowerHer Presents
+      - heading "HerVoice 2026 Writing Contest" [level=2] [ref=f6e67]: HerVoice 2026Writing Contest
+      - paragraph [ref=f6e69]: Courage, identity, and storytelling — by Afghan girls and women, written from within Afghanistan.
+      - generic [ref=f6e72]:
+        - img [ref=f6e73]:
+          - generic [ref=f6e76]: HERVOICE · CELEBRATING WINNERS ·
+        - generic [ref=f6e77]:
+          - paragraph [ref=f6e78]: "2026"
+          - paragraph [ref=f6e79]: Winners
+      - generic [ref=f6e81]:
+        - generic [ref=f6e82]:
+          - paragraph [ref=f6e83]: 300+
+          - paragraph [ref=f6e84]: Submissions
+        - generic [ref=f6e85]:
+          - paragraph [ref=f6e86]: "3"
+          - paragraph [ref=f6e87]: Honorees
+        - generic [ref=f6e88]:
+          - paragraph [ref=f6e89]: "5"
+          - paragraph [ref=f6e90]: Cash Winners
+      - link "Explore Winning Stories" [ref=f6e93] [cursor=pointer]:
+        - /url: /hervoice/winners
+    - generic [ref=f6e96]:
+      - link "HerVoice · 2026 Bread and a Red Apple Z.H. Z.H. 1st $400 Bread and a Red Apple “I have turned the basement of my house into a school, a secret school for girls, to teach them everything that is forbidden.” Read Preview" [ref=f6e98] [cursor=pointer]:
+        - /url: /hervoice/bread-and-a-red-apple
+        - generic [ref=f6e100]:
+          - generic [ref=f6e101]: HerVoice · 2026
+          - generic [ref=f6e102]: Bread and a Red Apple
+          - generic [ref=f6e104]: Z.H.
+        - generic [ref=f6e106]:
+          - generic [ref=f6e107]:
+            - generic [ref=f6e108]: Z.H.
+            - generic [ref=f6e109]:
+              - generic [ref=f6e110]: 1st
+              - generic [ref=f6e111]: $400
+          - paragraph [ref=f6e112]: Bread and a Red Apple
+          - paragraph [ref=f6e113]: “I have turned the basement of my house into a school, a secret school for girls, to teach them everything that is forbidden.”
+          - generic [ref=f6e114]: Read Preview
+      - link "HerVoice · 2026 When Did I Feel That I Am a Strong Girl? Roqia Qasemi Roqia Qasemi 2nd $300 When Did I Feel That I Am a Strong Girl? “You close the door, I will reach my dreams through the window. You beat me, I will use my blood as ink for my pen.” Read Preview" [ref=f6e118] [cursor=pointer]:
+        - /url: /hervoice/when-did-i-feel-that-i-am-a-strong-girl
+        - generic [ref=f6e120]:
+          - generic [ref=f6e121]: HerVoice · 2026
+          - generic [ref=f6e122]: When Did I Feel That I Am a Strong Girl?
+          - generic [ref=f6e124]: Roqia Qasemi
+        - generic [ref=f6e126]:
+          - generic [ref=f6e127]:
+            - generic [ref=f6e128]: Roqia Qasemi
+            - generic [ref=f6e129]:
+              - generic [ref=f6e130]: 2nd
+              - generic [ref=f6e131]: $300
+          - paragraph [ref=f6e132]: When Did I Feel That I Am a Strong Girl?
+          - paragraph [ref=f6e133]: “You close the door, I will reach my dreams through the window. You beat me, I will use my blood as ink for my pen.”
+          - generic [ref=f6e134]: Read Preview
+      - link "HerVoice · 2026 What I Carried in My Voice Nazifa Popal Nazifa Popal 3rd $200 What I Carried in My Voice “Every limitation had been, in its own crooked and unasked-for way, a preparation. And I had used all of it.” Read Preview" [ref=f6e138] [cursor=pointer]:
+        - /url: /hervoice/what-i-carried-in-my-voice
+        - generic [ref=f6e140]:
+          - generic [ref=f6e141]: HerVoice · 2026
+          - generic [ref=f6e142]: What I Carried in My Voice
+          - generic [ref=f6e144]: Nazifa Popal
+        - generic [ref=f6e146]:
+          - generic [ref=f6e147]:
+            - generic [ref=f6e148]: Nazifa Popal
+            - generic [ref=f6e149]:
+              - generic [ref=f6e150]: 3rd
+              - generic [ref=f6e151]: $200
+          - paragraph [ref=f6e152]: What I Carried in My Voice
+          - paragraph [ref=f6e153]: “Every limitation had been, in its own crooked and unasked-for way, a preparation. And I had used all of it.”
+          - generic [ref=f6e154]: Read Preview
+  - generic [ref=f6e158]:
+    - generic [ref=f6e159]:
+      - paragraph [ref=f6e160]: By the Numbers
+      - heading "EmpowerHer at a Glance" [level=2] [ref=f6e161]
+    - generic [ref=f6e162]:
+      - generic [ref=f6e163]:
+        - generic [ref=f6e164]: 0+
+        - generic [ref=f6e165]: Students Mentored
+      - generic [ref=f6e166]:
+        - generic [ref=f6e167]: 0+
+        - generic [ref=f6e168]: Countries Reached
+        - generic [ref=f6e169]: Afghanistan, Tajikistan, Kazakhstan, Pakistan, Iran, Turkey, India, Bangladesh, Malaysia
+      - generic [ref=f6e170]:
+        - generic [ref=f6e171]: 0+
+        - generic [ref=f6e172]: Countries in Our Global Team
+        - generic [ref=f6e173]: Afghanistan, Poland, Peru, United States, China, Pakistan, Iran, Bangladesh
+      - generic [ref=f6e174]:
+        - generic [ref=f6e175]: 0+
+        - generic [ref=f6e176]: Provinces of Afghanistan Reached
+      - generic [ref=f6e177]:
+        - generic [ref=f6e178]: 0+
+        - generic [ref=f6e179]: Student Publications
+        - generic [ref=f6e180]: Published through HerVoice
+  - generic [ref=f6e183]:
+    - paragraph [ref=f6e184]: Message From Our Co-Founders
+    - heading "We see you. We hear you. And we are with you." [level=2] [ref=f6e185]
+    - generic [ref=f6e186]:
+      - paragraph [ref=f6e187]: EmpowerHer was born from the hope and strength that you carry within you—even in the darkest of days. You are not forgotten. Your dreams, your voices, your potential—they matter. They are powerful, and they are needed in this world.
+      - paragraph [ref=f6e188]: We know that many of you are facing unimaginable challenges. Barriers to education, threats to your freedom, and a world that too often refuses to see your worth. But we believe in your resilience. And through EmpowerHer, we are building a path forward—together.
+      - paragraph [ref=f6e189]: "Our mission is simple: to support you, to uplift you, and to walk beside you. Whether through education, mentorship, leadership workshops, or simply being a voice when yours is silenced, we are here for you."
+      - paragraph [ref=f6e190]: Please don't give up. There is a growing community—inside and outside Afghanistan—that believes in your power to lead, to learn, and to rise. And we are proud to stand with you.
+    - generic [ref=f6e191]:
+      - paragraph [ref=f6e192]: Mahdi Rahimi & Nahid Karimi
+      - paragraph [ref=f6e193]: – Co-Founders
+    - generic [ref=f6e194]:
+      - generic [ref=f6e195]:
+        - blockquote [ref=f6e199]: “For too long, Afghan girls have been written into history as victims. This time, let's write our own.”
+        - generic [ref=f6e200]:
+          - img "Nahid Karimi" [ref=f6e201]
+          - generic [ref=f6e202]:
+            - paragraph [ref=f6e203]: Nahid Karimi
+            - paragraph [ref=f6e204]: Co-Founder
+      - generic [ref=f6e205]:
+        - blockquote [ref=f6e209]: “WE RISE, WE RISE, WE RISE IN THE FACE OF ADVERSITY”
+        - generic [ref=f6e210]:
+          - img "Mahdi Rahimi" [ref=f6e211]
+          - generic [ref=f6e212]:
+            - paragraph [ref=f6e213]: Mahdi Rahimi
+            - paragraph [ref=f6e214]: Co-Founder
+    - link "Our Team" [ref=f6e215] [cursor=pointer]:
+      - /url: /about-us
+  - generic [ref=f6e219]:
+    - generic [ref=f6e221]:
+      - generic [ref=f6e222]:
+        - paragraph [ref=f6e223]: What We Do
+        - heading "Our Programs" [level=2] [ref=f6e224]
+      - link "View all programs" [ref=f6e225] [cursor=pointer]:
+        - /url: /mentorship
+    - paragraph [ref=f6e229]: Our projects are designed to meet Afghan girls where they are—and help them grow into who they're meant to be. Each initiative provides a safe, inclusive space where participants gain the tools, guidance, and community they need to rise. From leadership workshops to storytelling programs, every project builds confidence, sharpens skills, and encourages bold self-expression. Together, we're creating spaces where Afghan girls can learn, lead, and shape their own futures.
+    - generic [ref=f6e231]:
+      - link "HerVoice Storytelling Platform HerVoice A platform for Afghan girls to share their stories, amplify their voices, and inspire change through creative expression. Explore" [ref=f6e232] [cursor=pointer]:
+        - /url: /hervoice
+        - generic [ref=f6e233]:
+          - img "HerVoice" [ref=f6e234]
+          - generic [ref=f6e236]:
+            - generic [ref=f6e237]: Storytelling Platform
+            - heading "HerVoice" [level=3] [ref=f6e241]
+            - paragraph [ref=f6e242]: A platform for Afghan girls to share their stories, amplify their voices, and inspire change through creative expression.
+            - generic [ref=f6e243]: Explore
+      - link "Mentorship Core Program Mentorship EmpowerHer's core program offers Afghan girls free workshops and mentorship to build resilience, gain support, and launch impact projects. Explore" [ref=f6e247] [cursor=pointer]:
+        - /url: /mentorship
+        - generic [ref=f6e248]:
+          - img "Mentorship" [ref=f6e249]
+          - generic [ref=f6e251]:
+            - generic [ref=f6e252]: Core Program
+            - heading "Mentorship" [level=3] [ref=f6e259]
+            - paragraph [ref=f6e260]: EmpowerHer's core program offers Afghan girls free workshops and mentorship to build resilience, gain support, and launch impact projects.
+            - generic [ref=f6e261]: Explore
+  - generic [ref=f6e267]:
+    - generic [ref=f6e268]:
+      - paragraph [ref=f6e269]: Media Coverage
+      - heading "EmpowerHer in the News" [level=2] [ref=f6e270]
+      - paragraph [ref=f6e271]: Our mission to empower Afghan girls has been recognized and celebrated by local media, amplifying the voices of resilience and leadership within our community.
+      - heading "Featured in Rappahannock News" [level=3] [ref=f6e272]
+      - paragraph [ref=f6e273]: EmpowerHer was featured in a local Virginia newsletter through our former partnership with Rappahannock News. This acknowledgment underscored our mission to empower Afghan girls and amplify their narratives of resilience and leadership within a broader community.
+      - generic [ref=f6e274]:
+        - link "Featured Writings from Our Partners" [ref=f6e275] [cursor=pointer]:
+          - /url: /hervoice/featured-writings-from-our-partners
+        - link "Success Stories" [ref=f6e278] [cursor=pointer]:
+          - /url: /success-stories
+    - generic:
+      - generic:
+        - img "EmpowerHer in the news"
+  - generic [ref=f6e282]:
+    - generic [ref=f6e285]:
+      - paragraph [ref=f6e286]: Watch & Listen
+      - heading "Featured Media" [level=2] [ref=f6e287]
+    - generic [ref=f6e292]:
+      - iframe [ref=f6e294]
+      - generic [ref=f6e295]:
+        - generic [ref=f6e296]: Podcast
+        - heading "Interview with EmpowerHer Co-Founders" [level=3] [ref=f6e300]
+        - paragraph [ref=f6e301]: Our co-founders, Nahid Karimi and Mahdi Rahimi, joined the NSHSS Scholars Connect Podcast to share their personal journeys from Afghanistan to the United States and the experiences that inspired them to launch EmpowerHer. In this episode, they discuss the challenges facing Afghan girls under Taliban rule, the role of education and mentorship in creating opportunity, and how young people can transform adversity into meaningful impact and leadership.
+  - generic [ref=f6e303]:
+    - paragraph [ref=f6e305]: Trusted Partners & Supporters
+    - generic [ref=f6e307]:
+      - link "Afghan Girls Financial Assistance Fund":
+        - /url: /agfaf
+        - img "Afghan Girls Financial Assistance Fund"
+  - generic [ref=f6e310]:
+    - generic [ref=f6e312]:
+      - generic [ref=f6e313]: Stay Connected
+      - heading "Join Our Community" [level=2] [ref=f6e317]: Join OurCommunity
+      - paragraph [ref=f6e318]: Get updates on our programs, success stories, and ways to support Afghan girls' education. Be part of a growing movement for change.
+    - generic [ref=f6e320]:
+      - heading "Subscribe to Our Newsletter" [level=3] [ref=f6e321]
+      - paragraph [ref=f6e322]: Join hundreds of supporters and community members.
+      - generic [ref=f6e323]:
+        - textbox "Your email address" [ref=f6e325]
+        - button "Subscribe" [ref=f6e326] [cursor=pointer]
+      - paragraph [ref=f6e327]: We respect your privacy. Unsubscribe anytime.
+  - contentinfo [ref=f6e328]:
+    - generic [ref=f6e329]:
+      - generic [ref=f6e330]:
+        - generic [ref=f6e331]:
+          - link "EmpowerHer":
+            - /url: /
+            - img "EmpowerHer"
+          - paragraph [ref=f6e332]: We envision Afghan women as guiding lights in their communities, inspiring hope and progress while leading the way to a more equitable, inclusive, and sustainable society.
+          - 'link "Email: info@empowerher-initiative.org" [ref=f6e333] [cursor=pointer]':
+            - /url: mailto:info@empowerher-initiative.org
+          - paragraph [ref=f6e334]: EST. 2024
+          - paragraph [ref=f6e335]: United States of America
+        - generic [ref=f6e336]:
+          - generic [ref=f6e337]:
+            - paragraph [ref=f6e338]: Pages
+            - list [ref=f6e339]:
+              - listitem [ref=f6e340]:
+                - link "About" [ref=f6e341] [cursor=pointer]:
+                  - /url: /about-us
+              - listitem [ref=f6e342]:
+                - link "Mentorship" [ref=f6e343] [cursor=pointer]:
+                  - /url: /mentorship
+              - listitem [ref=f6e344]:
+                - link "HerVoice" [ref=f6e345] [cursor=pointer]:
+                  - /url: /hervoice
+              - listitem [ref=f6e346]:
+                - link "Success Stories" [ref=f6e347] [cursor=pointer]:
+                  - /url: /success-stories
+              - listitem [ref=f6e348]:
+                - link "Get Involved" [ref=f6e349] [cursor=pointer]:
+                  - /url: /get-involved
+              - listitem [ref=f6e350]:
+                - link "Resources" [ref=f6e351] [cursor=pointer]:
+                  - /url: /resources
+              - listitem [ref=f6e352]:
+                - link "AGFAF" [ref=f6e353] [cursor=pointer]:
+                  - /url: /afgaf
+              - listitem [ref=f6e354]:
+                - link "Newsletter" [ref=f6e355] [cursor=pointer]:
+                  - /url: /newsletter
+              - listitem [ref=f6e356]:
+                - link "Contact" [ref=f6e357] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=f6e358]:
+            - paragraph [ref=f6e359]: Follow Us
+            - generic [ref=f6e360]:
+              - link "Facebook" [ref=f6e361] [cursor=pointer]:
+                - /url: https://www.facebook.com/share/157naMfgkw
+              - link "Instagram" [ref=f6e364] [cursor=pointer]:
+                - /url: https://www.instagram.com/_empowerher_org
+              - link "LinkedIn" [ref=f6e367] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/empowerher-org/
+            - link "Annual Impact Report" [ref=f6e370] [cursor=pointer]:
+              - /url: /annual-report
+      - generic [ref=f6e374]:
+        - paragraph [ref=f6e375]: © 2026 EmpowerHer Initiative. All rights reserved.
+        - generic [ref=f6e376]:
+          - link "Privacy" [ref=f6e377] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=f6e378] [cursor=pointer]:
+            - /url: /terms
+  - generic [ref=f6e381]:
+    - button [ref=f6e382]
+    - button [ref=f6e388]
+    - button [ref=f6e392]
+    - button [ref=f6e397]
