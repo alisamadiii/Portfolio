@@ -53,10 +53,12 @@ import {
   extensionCategories,
   getFileExtension,
   getFileName,
+  isAbsoluteMediaUrl,
   normalizeMediaPath,
   normalizePath,
 } from "@/lib/utils/file";
 
+import { ImageKitLibraryDialog } from "@/components/media/imagekit-widget";
 import { MediaDialog } from "@/components/media/media-dialog";
 import { MediaUpload } from "@/components/media/media-upload";
 
@@ -100,6 +102,10 @@ const FileTeaser = ({
   onRemove?: () => void;
   getFileIcon: (file: string) => React.ReactNode;
 }) => {
+  const isExternal = isAbsoluteMediaUrl(file);
+  const href = isExternal
+    ? file
+    : `https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`;
   return (
     <>
       <div
@@ -121,10 +127,14 @@ const FileTeaser = ({
                 className="text-muted-foreground hover:text-foreground"
                 render={
                   <a
-                    href={`https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${file}`}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`View ${getFileName(file)} on GitHub`}
+                    aria-label={
+                      isExternal
+                        ? `Open ${getFileName(file)}`
+                        : `View ${getFileName(file)} on GitHub`
+                    }
                   >
                     <ArrowUpRight />
                   </a>
@@ -132,7 +142,9 @@ const FileTeaser = ({
               />
             }
           />
-          <TooltipContent>View on GitHub</TooltipContent>
+          <TooltipContent>
+            {isExternal ? "Open URL" : "View on GitHub"}
+          </TooltipContent>
         </Tooltip>
         {onRemove && (
           <Tooltip>
@@ -231,6 +243,10 @@ const EditComponent = forwardRef(
     if (!config) throw new Error("Configuration not found.");
     const options = (field.options ?? {}) as FieldOptions;
     const isReadonly = Boolean(field.readonly);
+    // Hosted providers (e.g. ImageKit) store absolute URLs and need no
+    // `.pages.yml` media config — the repo upload flow is bypassed entirely.
+    const isHostedMedia =
+      !!config.mediaSettings && config.mediaSettings.provider !== "github";
 
     const [files, setFiles] = useState<FileEntry[]>(() =>
       typeof value === "string"
@@ -284,7 +300,7 @@ const EditComponent = forwardRef(
     }, [options.path, mediaConfig?.input]);
 
     const allowedExtensions = useMemo(() => {
-      if (!mediaConfig) return [];
+      if (!mediaConfig && !isHostedMedia) return [];
 
       const fieldExtensions =
         options.extensions && Array.isArray(options.extensions)
@@ -295,13 +311,16 @@ const EditComponent = forwardRef(
               )
             : [];
 
+      // Hosted providers have no media config to intersect with.
+      if (!mediaConfig) return fieldExtensions;
+
       if (!fieldExtensions.length) return mediaConfig.extensions || [];
 
       const mediaExtensions = mediaConfig.extensions || [];
       return mediaConfig.extensions
         ? fieldExtensions.filter((ext: string) => mediaExtensions.includes(ext))
         : fieldExtensions;
-    }, [options.extensions, options.categories, mediaConfig]);
+    }, [options.extensions, options.categories, mediaConfig, isHostedMedia]);
 
     const isMultiple = !!options.multiple;
     const maxFiles =
@@ -421,7 +440,7 @@ const EditComponent = forwardRef(
       [isMultiple, maxFiles]
     );
 
-    if (!mediaConfig) {
+    if (!isHostedMedia && !mediaConfig) {
       return (
         <p className="text-muted-foreground bg-muted rounded-md px-3 py-2">
           No media configuration found.{" "}
@@ -436,58 +455,82 @@ const EditComponent = forwardRef(
       );
     }
 
+    const filesBlock =
+      files.length > 0 &&
+      (isMultiple ? (
+        <div className="space-y-2">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={files.map((f) => f.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {files.map((file) => (
+                <SortableItem
+                  key={file.id}
+                  id={file.id}
+                  file={file.path}
+                  config={config}
+                  onRemove={
+                    isReadonly ? undefined : () => handleRemove(file.id)
+                  }
+                  getFileIcon={getFileIcon}
+                  readonly={isReadonly}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      ) : (
+        <div className="bg-muted grid h-10 grid-cols-[1fr_auto] items-center gap-2 rounded-md pr-1 pl-3">
+          <FileTeaser
+            file={files[0].path}
+            config={config}
+            onRemove={
+              isReadonly ? undefined : () => handleRemove(files[0].id)
+            }
+            getFileIcon={getFileIcon}
+          />
+        </div>
+      ));
+
+    if (isHostedMedia) {
+      return (
+        <div className="space-y-2">
+          {filesBlock}
+          {!isReadonly && remainingSlots > 0 && (
+            <div className="flex items-center gap-2">
+              <ImageKitLibraryDialog
+                maxSelected={remainingSlots}
+                onSubmit={handleSelected}
+              >
+                <Button type="button" size="sm" variant="outline">
+                  <FolderOpen />
+                  Media library
+                </Button>
+              </ImageKitLibraryDialog>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <MediaUpload
         path={rootPath}
-        media={mediaConfig.name}
+        media={mediaConfig!.name}
         extensions={allowedExtensions}
         onUpload={handleUpload}
         multiple={isMultiple}
-        rename={options.rename ?? mediaConfig.rename}
+        rename={options.rename ?? mediaConfig!.rename}
         disabled={isReadonly}
       >
         <MediaUpload.DropZone>
           <div className="space-y-2">
-            {files.length > 0 &&
-              (isMultiple ? (
-                <div className="space-y-2">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={files.map((f) => f.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {files.map((file) => (
-                        <SortableItem
-                          key={file.id}
-                          id={file.id}
-                          file={file.path}
-                          config={config}
-                          onRemove={
-                            isReadonly ? undefined : () => handleRemove(file.id)
-                          }
-                          getFileIcon={getFileIcon}
-                          readonly={isReadonly}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </div>
-              ) : (
-                <div className="bg-muted grid h-10 grid-cols-[1fr_auto] items-center gap-2 rounded-md pr-1 pl-3">
-                  <FileTeaser
-                    file={files[0].path}
-                    config={config}
-                    onRemove={
-                      isReadonly ? undefined : () => handleRemove(files[0].id)
-                    }
-                    getFileIcon={getFileIcon}
-                  />
-                </div>
-              ))}
+            {filesBlock}
             {!isReadonly && remainingSlots > 0 && (
               <div className="flex items-center gap-2">
                 <MediaUpload.Trigger>
@@ -503,7 +546,7 @@ const EditComponent = forwardRef(
                 </MediaUpload.Trigger>
 
                 <MediaDialog
-                  media={mediaConfig.name}
+                  media={mediaConfig!.name}
                   initialPath={rootPath}
                   maxSelected={remainingSlots}
                   extensions={allowedExtensions}

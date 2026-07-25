@@ -47,6 +47,7 @@ import {
   normalizePath,
 } from "@/lib/utils/file";
 
+import { ImageKitLibraryDialog } from "@/components/media/imagekit-widget";
 import { MediaDialog } from "@/components/media/media-dialog";
 import { MediaUpload } from "@/components/media/media-upload";
 import { Thumbnail } from "@/components/thumbnail";
@@ -158,7 +159,7 @@ const SortableItem = ({
   id: string;
   file: string;
   config: Pick<Config, "owner" | "repo" | "branch">;
-  media: string;
+  media?: string;
   onRemove?: () => void;
   readonly?: boolean;
 }) => {
@@ -202,6 +203,10 @@ const EditComponent = forwardRef(
     if (!config) throw new Error("Configuration not found.");
     const options = (field.options ?? {}) as FieldOptions;
     const isReadonly = Boolean(field.readonly);
+    // Hosted providers (e.g. ImageKit) store absolute URLs and need no
+    // `.pages.yml` media config — the repo upload flow is bypassed entirely.
+    const isHostedMedia =
+      !!config.mediaSettings && config.mediaSettings.provider !== "github";
 
     const [files, setFiles] = useState<FileEntry[]>(() =>
       typeof value === "string"
@@ -255,9 +260,10 @@ const EditComponent = forwardRef(
     }, [options.path, mediaConfig?.input]);
 
     const allowedExtensions = useMemo(() => {
-      if (!mediaConfig) return [];
+      // Hosted providers don't need a media config — default to image extensions.
+      if (!mediaConfig && !isHostedMedia) return [];
       return getAllowedExtensions(field, mediaConfig);
-    }, [field, mediaConfig]);
+    }, [field, mediaConfig, isHostedMedia]);
 
     const isMultiple = !!options.multiple;
     const maxFiles =
@@ -346,7 +352,7 @@ const EditComponent = forwardRef(
       [isMultiple, maxFiles]
     );
 
-    if (!mediaConfig) {
+    if (!isHostedMedia && !mediaConfig) {
       return (
         <p className="text-muted-foreground bg-muted rounded-md px-3 py-2">
           No media configuration found.{" "}
@@ -361,65 +367,90 @@ const EditComponent = forwardRef(
       );
     }
 
+    const filesBlock =
+      files.length > 0 &&
+      (isMultiple ? (
+        <div className="flex flex-wrap gap-2">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={files.map((f) => f.id)}
+              strategy={rectSortingStrategy}
+            >
+              {files.map((file) => (
+                <SortableItem
+                  key={file.id}
+                  id={file.id}
+                  file={file.path}
+                  config={config}
+                  media={mediaConfig?.name}
+                  onRemove={
+                    isReadonly ? undefined : () => handleRemove(file.id)
+                  }
+                  readonly={isReadonly}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      ) : (
+        <div className="relative max-w-sm">
+          <div title={files[0].path}>
+            <Thumbnail
+              name={mediaConfig?.name}
+              path={files[0].path}
+              className="aspect-video w-full rounded-md border"
+              imgClassName="object-contain"
+            />
+          </div>
+          <ImageTeaser
+            file={files[0].path}
+            config={config}
+            onRemove={
+              isReadonly ? undefined : () => handleRemove(files[0].id)
+            }
+          />
+        </div>
+      ));
+
+    if (isHostedMedia) {
+      return (
+        <div className="space-y-2">
+          {filesBlock}
+          {!isReadonly && remainingSlots > 0 && (
+            <div className="flex gap-2">
+              <ImageKitLibraryDialog
+                maxSelected={remainingSlots}
+                onSubmit={handleSelected}
+              >
+                <Button type="button" size="sm" variant="outline">
+                  <FolderOpen />
+                  Media library
+                </Button>
+              </ImageKitLibraryDialog>
+              <UrlPopover onSubmit={(url) => handleSelected([url])} />
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <MediaUpload
         path={rootPath}
-        media={mediaConfig.name}
+        media={mediaConfig!.name}
         extensions={allowedExtensions || undefined}
         onUpload={handleUpload}
         multiple={isMultiple}
-        rename={options.rename ?? mediaConfig.rename}
+        rename={options.rename ?? mediaConfig!.rename}
         disabled={isReadonly}
       >
         <MediaUpload.DropZone>
           <div className="space-y-2">
-            {files.length > 0 &&
-              (isMultiple ? (
-                <div className="flex flex-wrap gap-2">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={files.map((f) => f.id)}
-                      strategy={rectSortingStrategy}
-                    >
-                      {files.map((file) => (
-                        <SortableItem
-                          key={file.id}
-                          id={file.id}
-                          file={file.path}
-                          config={config}
-                          media={mediaConfig.name}
-                          onRemove={
-                            isReadonly ? undefined : () => handleRemove(file.id)
-                          }
-                          readonly={isReadonly}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </div>
-              ) : (
-                <div className="relative max-w-sm">
-                  <div title={files[0].path}>
-                    <Thumbnail
-                      name={mediaConfig.name}
-                      path={files[0].path}
-                      className="aspect-video w-full rounded-md border"
-                      imgClassName="object-contain"
-                    />
-                  </div>
-                  <ImageTeaser
-                    file={files[0].path}
-                    config={config}
-                    onRemove={
-                      isReadonly ? undefined : () => handleRemove(files[0].id)
-                    }
-                  />
-                </div>
-              ))}
+            {filesBlock}
             {!isReadonly && remainingSlots > 0 && (
               <div className="flex gap-2">
                 <MediaUpload.Trigger>
@@ -434,7 +465,7 @@ const EditComponent = forwardRef(
                   </Button>
                 </MediaUpload.Trigger>
                 <MediaDialog
-                  media={mediaConfig.name}
+                  media={mediaConfig!.name}
                   initialPath={rootPath}
                   maxSelected={remainingSlots}
                   extensions={allowedExtensions}

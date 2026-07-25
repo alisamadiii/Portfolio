@@ -59,13 +59,25 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
         label: item.label || item.name,
       })) || [];
 
-    const mediaItems =
-      configObject.media?.map((item: any) => ({
-        key: item.name || "media",
-        icon: <FolderOpen className="mr-2 h-5 w-5" />,
-        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/${item.name}`,
-        label: item.label || item.name || "Media",
-      })) || [];
+    // Hosted providers (e.g. ImageKit) get a single "Media" entry — no
+    // `.pages.yml` media config needed.
+    const isHostedMedia =
+      config.mediaSettings && config.mediaSettings.provider !== "github";
+    const mediaItems = isHostedMedia
+      ? [
+          {
+            key: "media-library",
+            icon: <FolderOpen className="mr-2 h-5 w-5" />,
+            href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/library`,
+            label: "Media",
+          },
+        ]
+      : configObject.media?.map((item: any) => ({
+          key: item.name || "media",
+          icon: <FolderOpen className="mr-2 h-5 w-5" />,
+          href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/${item.name}`,
+          label: item.label || item.name || "Media",
+        })) || [];
 
     const canManageRepo = isAdminUser(user);
 

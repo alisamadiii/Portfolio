@@ -16,7 +16,8 @@ export function Thumbnail({
   className,
   imgClassName,
 }: {
-  name: string;
+  /** `.pages.yml` media name — only needed for repo-relative paths. */
+  name?: string;
   path: string | null;
   className?: string;
   imgClassName?: string;
@@ -38,6 +39,12 @@ export function Thumbnail({
     // CDN / external / data URLs render directly — never resolved via GitHub.
     if (isAbsoluteMediaUrl(path)) {
       setRawUrl(path);
+      return;
+    }
+
+    // Repo-relative paths need the `.pages.yml` media name to resolve.
+    if (!name) {
+      setError("Image could not be resolved");
       return;
     }
 

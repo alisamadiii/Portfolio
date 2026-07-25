@@ -12,6 +12,7 @@ import { configTable } from "@/db/schema";
 import { configVersion, normalizeConfig, parseConfig } from "@/lib/config";
 import {
   getBasePath,
+  getPublicMediaSettings,
   rebaseConfigObject,
   resolveConfigFilePath,
 } from "@/lib/repo-settings";
@@ -363,9 +364,20 @@ const getConfig = async (
     return nextConfig;
   })();
 
-  configSyncInFlight.set(key, run);
+  // Media settings are attached at read time (never persisted with the cached
+  // config) so settings changes take effect without any cache invalidation.
+  const withMediaSettings = run.then(async (config) => {
+    if (!config) return null;
+    const mediaSettings = await getPublicMediaSettings(
+      normalizedOwner,
+      normalizedRepo
+    );
+    return { ...config, mediaSettings };
+  });
+
+  configSyncInFlight.set(key, withMediaSettings);
   try {
-    return await run;
+    return await withMediaSettings;
   } finally {
     configSyncInFlight.delete(key);
   }
