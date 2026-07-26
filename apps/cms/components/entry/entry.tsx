@@ -231,8 +231,14 @@ export function Entry({
   }, [schema, entry, path, showFilenameField]);
 
   const previewTarget = useMemo(
-    () => getPreviewUrl(config, name),
-    [config, name]
+    () =>
+      getPreviewUrl(config, name, {
+        slug: path
+          ? getFileName(normalizePath(path)).replace(/\.[^./]+$/, "")
+          : undefined,
+        fields: entry?.contentObject as Record<string, unknown> | undefined,
+      }),
+    [config, name, path, entry]
   );
 
   const entryContentObject = useMemo(() => {
