@@ -32,6 +32,14 @@ export default function Page({
   const schema = getSchemaByName(config.object, schemaName);
   const displayName = schema?.label || schema?.name || schemaName;
 
+  // Reorderable collections pass ?order=<max+1> so new entries land at the end.
+  const orderParam = searchParams.get("order");
+  const orderField = schema?.view?.reorder;
+  const initialValues =
+    orderField && orderParam !== null && Number.isFinite(Number(orderParam))
+      ? { [orderField]: Number(orderParam) }
+      : undefined;
+
   return (
     <>
       <DocumentTitle
@@ -42,7 +50,12 @@ export default function Page({
           config.branch
         )}
       />
-      <Entry name={schemaName} title="New entry" parent={parent} />
+      <Entry
+        name={schemaName}
+        title="New entry"
+        parent={parent}
+        initialValues={initialValues}
+      />
     </>
   );
 }

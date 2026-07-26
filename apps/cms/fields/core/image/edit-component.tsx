@@ -19,8 +19,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowUpRight, FolderOpen, Link2, Trash2, Upload } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowUpRight, FolderOpen, Trash2, Upload } from "lucide-react";
 
 import type { FileSaveData } from "@/types/api";
 import type { Config } from "@/types/config";
@@ -28,12 +27,6 @@ import type { Field } from "@/types/field";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
-import { Input } from "@workspace/ui/components/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@workspace/ui/components/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -47,9 +40,10 @@ import {
   normalizePath,
 } from "@/lib/utils/file";
 
-import { ImageKitLibraryDialog } from "@/components/media/imagekit-widget";
+import { HostedMediaControls } from "@/components/media/hosted-media-controls";
 import { MediaDialog } from "@/components/media/media-dialog";
 import { MediaUpload } from "@/components/media/media-upload";
+import { UrlPopover } from "@/components/media/url-popover";
 import { Thumbnail } from "@/components/thumbnail";
 
 import { getAllowedExtensions } from "./index";
@@ -421,18 +415,13 @@ const EditComponent = forwardRef(
         <div className="space-y-2">
           {filesBlock}
           {!isReadonly && remainingSlots > 0 && (
-            <div className="flex gap-2">
-              <ImageKitLibraryDialog
-                maxSelected={remainingSlots}
-                onSubmit={handleSelected}
-              >
-                <Button type="button" size="sm" variant="outline">
-                  <FolderOpen />
-                  Media library
-                </Button>
-              </ImageKitLibraryDialog>
-              <UrlPopover onSubmit={(url) => handleSelected([url])} />
-            </div>
+            <HostedMediaControls
+              files={files.map((file) => file.path)}
+              maxSelected={remainingSlots}
+              onSelected={handleSelected}
+              submitLabel="Add image"
+              placeholder="https://cdn.example.com/image.png"
+            />
           )}
         </div>
       );
@@ -487,70 +476,5 @@ const EditComponent = forwardRef(
 );
 
 EditComponent.displayName = "EditComponent";
-
-const UrlPopover = ({ onSubmit }: { onSubmit: (url: string) => void }) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button type="button" size="sm" variant="outline">
-            <Link2 />
-            Link
-          </Button>
-        }
-      />
-      <PopoverContent align="start" className="w-80">
-        {open && (
-          <UrlPopoverContent
-            onSubmit={(url) => {
-              onSubmit(url);
-              setOpen(false);
-            }}
-          />
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-};
-
-const UrlPopoverContent = ({
-  onSubmit,
-}: {
-  onSubmit: (url: string) => void;
-}) => {
-  const [url, setUrl] = useState("");
-
-  const handleSubmit = () => {
-    const trimmed = url.trim();
-    if (!trimmed) return;
-    if (!isAbsoluteMediaUrl(trimmed)) {
-      toast.error("Enter a full URL (https://…) or data URI.");
-      return;
-    }
-    onSubmit(trimmed);
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Input
-        type="url"
-        placeholder="https://cdn.example.com/image.png"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            handleSubmit();
-          }
-        }}
-      />
-      <Button type="button" size="sm" onClick={handleSubmit}>
-        Add image
-      </Button>
-    </div>
-  );
-};
 
 export { EditComponent };

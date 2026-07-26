@@ -58,7 +58,7 @@ import {
   normalizePath,
 } from "@/lib/utils/file";
 
-import { ImageKitLibraryDialog } from "@/components/media/imagekit-widget";
+import { HostedMediaControls } from "@/components/media/hosted-media-controls";
 import { MediaDialog } from "@/components/media/media-dialog";
 import { MediaUpload } from "@/components/media/media-upload";
 
@@ -502,17 +502,13 @@ const EditComponent = forwardRef(
         <div className="space-y-2">
           {filesBlock}
           {!isReadonly && remainingSlots > 0 && (
-            <div className="flex items-center gap-2">
-              <ImageKitLibraryDialog
-                maxSelected={remainingSlots}
-                onSubmit={handleSelected}
-              >
-                <Button type="button" size="sm" variant="outline">
-                  <FolderOpen />
-                  Media library
-                </Button>
-              </ImageKitLibraryDialog>
-            </div>
+            <HostedMediaControls
+              files={files.map((file) => file.path)}
+              maxSelected={remainingSlots}
+              onSelected={handleSelected}
+              submitLabel="Add file"
+              placeholder="https://cdn.example.com/file.pdf"
+            />
           )}
         </div>
       );

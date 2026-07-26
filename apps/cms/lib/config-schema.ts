@@ -635,6 +635,13 @@ const ContentLeafSchema = z
               }
             )
             .optional(),
+          reorder: z
+            .string({
+              message:
+                "'reorder' must be a string (the name of a number field).",
+            })
+            .optional()
+            .nullable(),
           search: z
             .array(
               z.string({

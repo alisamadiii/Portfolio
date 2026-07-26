@@ -178,10 +178,35 @@ const CollectionHeaderActions = memo(function CollectionHeaderActions({
   );
 });
 
+const withFieldValue = (
+  fields: Record<string, any> | undefined,
+  path: string,
+  value: number
+) => {
+  const segments = path.split(".");
+  const clone: Record<string, any> = { ...(fields ?? {}) };
+  let cursor: Record<string, any> = clone;
+
+  for (let i = 0; i < segments.length - 1; i++) {
+    const key = segments[i];
+    cursor[key] =
+      cursor[key] != null &&
+      typeof cursor[key] === "object" &&
+      !Array.isArray(cursor[key])
+        ? { ...cursor[key] }
+        : {};
+    cursor = cursor[key];
+  }
+
+  cursor[segments[segments.length - 1]] = value;
+  return clone;
+};
+
 export function Collection({ name, path }: { name: string; path?: string }) {
   const [tableSearch, setTableSearch] = useState("");
   const [data, setData] = useState<Record<string, any>[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
   const { cache, mutate } = useSWRConfig();
 
   const searchParams = useSearchParams();
@@ -260,11 +285,23 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     () => getPrimaryField(schema) ?? "name",
     [schema]
   );
+
+  // Manual ordering (drag-to-reorder): view.reorder names a number field that
+  // stores each entry's position. Not supported for tree layouts.
+  const orderField = useMemo(() => {
+    const fieldName = schema.view?.reorder;
+    if (!fieldName || typeof fieldName !== "string") return undefined;
+    const field = getFieldByPath(schema.fields ?? [], fieldName);
+    return field?.type === "number" ? fieldName : undefined;
+  }, [schema]);
+  const orderEnabled = !!orderField && schema.view?.layout !== "tree";
+
   const requestedFieldPaths = useMemo(() => {
     const paths = new Set<string>(["name", "path", primaryField]);
     viewFields.forEach((item: any) => paths.add(item.path));
+    if (orderField) paths.add(orderField);
     return Array.from(paths);
-  }, [primaryField, viewFields]);
+  }, [primaryField, viewFields, orderField]);
 
   const handleTableSearchChange = useCallback((value: string) => {
     setTableSearch(value);
@@ -544,6 +581,23 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         })
         .filter(Boolean) || [];
 
+    // Hidden sortable column for the manual-order field so the table can sort
+    // by it even when it's not shown (visibility is off in initialState).
+    if (
+      orderEnabled &&
+      orderField &&
+      !viewFields.some((item: any) => item.path === orderField)
+    ) {
+      tableColumns.push({
+        id: orderField,
+        accessorKey: orderField,
+        accessorFn: (originalRow: any) =>
+          safeAccess(originalRow.fields, orderField),
+        header: "Order",
+        sortUndefined: "last",
+      });
+    }
+
     tableColumns.push({
       accessorKey: "actions",
       header: "Actions",
@@ -684,16 +738,20 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     canCreate,
     canDelete,
     canRename,
+    orderEnabled,
+    orderField,
   ]);
 
   const initialState = useMemo(() => {
     const sortId =
-      viewFields == null
-        ? "name"
-        : schema.view?.default?.sort ||
-          (viewFields.find((item: any) => item.field.name === "date") &&
-            "date") ||
-          primaryField;
+      orderEnabled && orderField
+        ? schema.view?.default?.sort || orderField
+        : viewFields == null
+          ? "name"
+          : schema.view?.default?.sort ||
+            (viewFields.find((item: any) => item.field.name === "date") &&
+              "date") ||
+            primaryField;
 
     return {
       sorting: [
@@ -708,10 +766,96 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         },
       ],
       pagination: {
-        pageSize: 25,
+        // Reorderable collections stay on one page so a drag index is the
+        // entry's true position.
+        pageSize: orderEnabled ? 10000 : 25,
       },
+      ...(orderEnabled &&
+      orderField &&
+      !viewFields.some((item: any) => item.path === orderField)
+        ? { columnVisibility: { [orderField]: false } }
+        : {}),
     };
-  }, [schema, primaryField, viewFields]);
+  }, [schema, primaryField, viewFields, orderEnabled, orderField]);
+
+  const handleReorder = useCallback(
+    async (orderedPaths: string[]) => {
+      if (!orderField) return;
+
+      const prevData = data;
+      const indexByPath = new Map(orderedPaths.map((p, i) => [p, i]));
+      const items = orderedPaths.map((itemPath, index) => {
+        const row: any = prevData.find((item: any) => item.path === itemPath);
+        return { path: itemPath, sha: row?.sha, value: index };
+      });
+
+      setIsReordering(true);
+      // Optimistic: rows re-sort instantly since the table sorts by orderField.
+      setData((current) =>
+        current.map((item: any) =>
+          indexByPath.has(item.path)
+            ? {
+                ...item,
+                fields: withFieldValue(
+                  item.fields,
+                  orderField,
+                  indexByPath.get(item.path)!
+                ),
+              }
+            : item
+        )
+      );
+
+      try {
+        const response = await fetch(
+          `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}/reorder`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: collectionPath, items }),
+          }
+        );
+        const result = await requireApiSuccess<any>(
+          response,
+          "Failed to save the new order"
+        );
+
+        const updated: { path: string; sha: string | null }[] =
+          result.data?.updated ?? [];
+        if (updated.length > 0) {
+          const shaByPath = new Map(updated.map((u) => [u.path, u.sha]));
+          setData((current) =>
+            current.map((item: any) =>
+              shaByPath.has(item.path)
+                ? { ...item, sha: shaByPath.get(item.path) ?? item.sha }
+                : item
+            )
+          );
+        }
+
+        const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
+        void mutate(
+          (key) =>
+            typeof key === "string" && key.startsWith(collectionKeyPrefix)
+        );
+      } catch (error: any) {
+        setData(prevData);
+        toast.error(error?.message ?? "Failed to save the new order");
+      } finally {
+        setIsReordering(false);
+      }
+    },
+    [
+      collectionPath,
+      config.branch,
+      config.owner,
+      config.repo,
+      data,
+      mutate,
+      name,
+      orderField,
+    ]
+  );
 
   const handleNavigate = useCallback(
     (newPath: string) => {
@@ -813,11 +957,35 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     [schema.view?.layout]
   );
 
-  const addEntryHref = `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new${
-    schema.view?.layout !== "tree" && path && path !== schema.path
-      ? `?parent=${encodeURIComponent(path)}`
-      : ""
-  }`;
+  const addEntryHref = useMemo(() => {
+    const params = new URLSearchParams();
+    if (schema.view?.layout !== "tree" && path && path !== schema.path)
+      params.set("parent", path);
+    if (orderEnabled && orderField) {
+      // Default a new entry's order to max + 1 so it lands at the bottom.
+      const values = data
+        .filter((item: any) => item.type === "file")
+        .map((item: any) => Number(safeAccess(item.fields ?? {}, orderField)))
+        .filter((value) => Number.isFinite(value));
+      params.set(
+        "order",
+        String(values.length > 0 ? Math.max(...values) + 1 : 0)
+      );
+    }
+    const query = params.toString();
+    return `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new${query ? `?${query}` : ""}`;
+  }, [
+    config.branch,
+    config.owner,
+    config.repo,
+    data,
+    name,
+    orderEnabled,
+    orderField,
+    path,
+    schema.path,
+    schema.view?.layout,
+  ]);
 
   const breadcrumbNode = useMemo(() => {
     const groupTrail: GroupTrailItem[] = Array.isArray(schema.groupTrail)
@@ -1025,6 +1193,9 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       path={path || schema.path}
       isTree={schema.view?.layout === "tree"}
       primaryField={primaryField}
+      orderField={orderEnabled ? orderField : undefined}
+      onReorder={handleReorder}
+      reorderDisabled={isReordering}
     />
   );
 

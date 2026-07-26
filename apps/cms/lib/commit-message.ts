@@ -1,6 +1,6 @@
 import { getFileName, normalizePath } from "@/lib/utils/file";
 
-type CommitAction = "create" | "update" | "delete" | "rename";
+type CommitAction = "create" | "update" | "delete" | "rename" | "reorder";
 type CommitTemplates = Partial<Record<CommitAction, string>>;
 type CommitIdentity = "app" | "user";
 
@@ -9,6 +9,7 @@ const defaultCommitTemplates: Record<CommitAction, string> = {
   update: "Update {path} (via Pages CMS)",
   delete: "Delete {path} (via Pages CMS)",
   rename: "Rename {oldPath} to {newPath} (via Pages CMS)",
+  reorder: "Reorder {name} entries (via Pages CMS)",
 };
 
 const getCommitTemplates = (

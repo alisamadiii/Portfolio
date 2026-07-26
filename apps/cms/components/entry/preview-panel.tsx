@@ -28,6 +28,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import type { PreviewTarget } from "@/lib/preview";
 
 import { PreviewProvider } from "@/components/entry/preview-context";
+import { useMediaLibrary } from "@/components/media/media-library-context";
 
 const VISIBLE_KEY = "cms-preview:visible";
 const COLLAPSED_KEY = "cms-preview:collapsed";
@@ -307,9 +308,17 @@ export function PreviewPanel({
     </div>
   );
 
+  // The media library split panel takes over the right column — the preview
+  // yields its UI while staying mounted. IMPORTANT: yielding must not change
+  // where `children` sits in the tree (bare vs. inside the panel group), or
+  // the form remounts and unsaved react-hook-form state is wiped — so each
+  // branch below hides its own chrome instead of an early bare return here.
+  const { activeFieldId: mediaLibraryFieldId } = useMediaLibrary();
+  const mediaLibraryOpen = mediaLibraryFieldId !== null && isWide;
+
   // Maximized: iframe fills the screen as a fixed overlay. Form stays mounted
   // underneath so RHF state survives the toggle.
-  if (maximized && visible) {
+  if (maximized && visible && !mediaLibraryOpen) {
     return (
       <PreviewProvider focusField={focusField}>
         {children}
@@ -338,6 +347,8 @@ export function PreviewPanel({
           style={{ overflow: "visible", height: "auto" }}
         >
           <ResizablePanel
+            id="entry-form"
+            order={1}
             defaultSize={62}
             minSize={35}
             className="min-w-0"
@@ -345,17 +356,23 @@ export function PreviewPanel({
           >
             {children}
           </ResizablePanel>
-          <ResizableHandle withHandle className="mx-2" />
-          <ResizablePanel
-            defaultSize={38}
-            minSize={25}
-            style={{ overflow: "visible" }}
-          >
-            <div className="bg-background sticky top-16 flex h-[calc(100vh-5rem)] flex-col overflow-hidden rounded-xl border shadow-sm">
-              {header}
-              {frame("flex-1")}
-            </div>
-          </ResizablePanel>
+          {!mediaLibraryOpen && (
+            <>
+              <ResizableHandle withHandle className="mx-2" />
+              <ResizablePanel
+                id="preview"
+                order={2}
+                defaultSize={38}
+                minSize={25}
+                style={{ overflow: "visible" }}
+              >
+                <div className="bg-background sticky top-16 flex h-[calc(100vh-5rem)] flex-col overflow-hidden rounded-xl border shadow-sm">
+                  {header}
+                  {frame("flex-1")}
+                </div>
+              </ResizablePanel>
+            </>
+          )}
         </ResizablePanelGroup>
       </PreviewProvider>
     );
@@ -365,7 +382,7 @@ export function PreviewPanel({
     <PreviewProvider focusField={focusField}>
       {children}
 
-      {visible ? (
+      {mediaLibraryOpen ? null : visible ? (
         <div
           className={cn(
             "bg-background fixed right-4 bottom-4 z-40 flex flex-col overflow-hidden rounded-xl border shadow-2xl",

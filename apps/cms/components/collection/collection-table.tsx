@@ -1,7 +1,34 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   ExpandedState,
   flexRender,
@@ -21,6 +48,7 @@ import {
   CirclePlus,
   Folder,
   FolderOpen,
+  GripVertical,
   Loader,
 } from "lucide-react";
 
@@ -63,6 +91,68 @@ export type TableData = {
   fields?: Record<string, any>;
 };
 
+// Lets the drag-handle cell know whether dragging is currently allowed without
+// threading state through the column definitions.
+const ReorderStateContext = createContext<{ active: boolean }>({
+  active: false,
+});
+
+// Same-id useSortable in the handle and the row is the standard TanStack ×
+// dnd-kit row-DnD pattern: the row gets the node ref, the handle the listeners.
+const RowDragHandle = ({ path }: { path: string }) => {
+  const { active } = useContext(ReorderStateContext);
+  const { attributes, listeners } = useSortable({
+    id: path,
+    disabled: !active,
+  });
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      className={cn(
+        "text-muted-foreground h-8 w-6",
+        active
+          ? "hover:text-foreground cursor-move"
+          : "cursor-default opacity-30"
+      )}
+      title={
+        active ? "Drag to reorder" : "Clear search and sort by order to drag"
+      }
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical />
+    </Button>
+  );
+};
+
+function DraggableRow({
+  id,
+  disabled,
+  children,
+}: {
+  id: string;
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  const { setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled,
+  });
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={isDragging ? "relative z-50 opacity-50" : undefined}
+    >
+      {children}
+    </TableRow>
+  );
+}
+
 const LShapeIcon = ({ className }: { className?: string }) => (
   <svg
     width="24"
@@ -93,6 +183,9 @@ export function CollectionTable<TData extends TableData>({
   path,
   isTree = false,
   primaryField,
+  orderField,
+  onReorder,
+  reorderDisabled = false,
 }: {
   columns: any[];
   data: Record<string, any>[];
@@ -104,8 +197,12 @@ export function CollectionTable<TData extends TableData>({
   path: string;
   isTree?: boolean;
   primaryField?: string;
+  orderField?: string;
+  onReorder?: (orderedPaths: string[]) => void;
+  reorderDisabled?: boolean;
 }) {
   const [expanded, setExpanded] = useState<ExpandedState>({});
+  const dndEnabled = !!orderField && !isTree;
 
   const [loadingRows, setLoadingRows] = useState<Record<string, boolean>>({});
   const loadingPathSetRef = useRef<Set<string>>(new Set());
@@ -150,9 +247,26 @@ export function CollectionTable<TData extends TableData>({
     [onExpand]
   );
 
+  const effectiveColumns = useMemo(() => {
+    if (!dndEnabled) return columns;
+    return [
+      {
+        id: "drag",
+        header: () => null,
+        enableSorting: false,
+        meta: { className: "w-8" },
+        cell: ({ row }: { row: any }) =>
+          row.original.type === "file" ? (
+            <RowDragHandle path={row.original.path} />
+          ) : null,
+      },
+      ...columns,
+    ];
+  }, [columns, dndEnabled]);
+
   const table = useReactTable({
     data,
-    columns,
+    columns: effectiveColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     initialState,
@@ -172,6 +286,48 @@ export function CollectionTable<TData extends TableData>({
 
   const currentPage = table.getState().pagination.pageIndex;
   const pageCount = table.getPageCount();
+
+  const sorting = table.getState().sorting;
+  const reorderActive =
+    dndEnabled &&
+    !reorderDisabled &&
+    search === "" &&
+    sorting.length === 1 &&
+    sorting[0].id === orderField &&
+    !sorting[0].desc;
+
+  const filePaths = dndEnabled
+    ? table
+        .getRowModel()
+        .rows.filter((row) => row.original.type === "file")
+        .map((row) => row.original.path)
+    : [];
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = filePaths.indexOf(String(active.id));
+      const newIndex = filePaths.indexOf(String(over.id));
+      if (oldIndex < 0 || newIndex < 0) return;
+
+      onReorder?.(arrayMove(filePaths, oldIndex, newIndex));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filePaths.join("\n"), onReorder]
+  );
 
   const paginationItems = (() => {
     if (pageCount <= 7) {
@@ -212,6 +368,13 @@ export function CollectionTable<TData extends TableData>({
   }, [isTree, path, handleRowExpansion, table, data]);
 
   return (
+    <ReorderStateContext.Provider value={{ active: reorderActive }}>
+    <DndContext
+      sensors={sensors}
+      modifiers={[restrictToVerticalAxis]}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
     <div className="space-y-4">
       {/* No overflow-hidden: it would break the sticky header row. Corners are
           rounded on the header/last-row cells instead. */}
@@ -261,13 +424,17 @@ export function CollectionTable<TData extends TableData>({
           ))}
         </TableHeader>
         <TableBody className="[&>tr:last-child>td]:border-b-0 [&>tr:last-child>td:first-child]:rounded-bl-xl [&>tr:last-child>td:last-child]:rounded-br-xl">
+          <SortableContext
+            items={filePaths}
+            strategy={verticalListSortingStrategy}
+          >
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.original.type === "dir" ? (
+            table.getRowModel().rows.map((row) => {
+              const rowCells =
+                row.original.type === "dir" ? (
                   <>
                     <TableCell
-                      colSpan={columns.length - 1}
+                      colSpan={table.getVisibleLeafColumns().length - 1}
                       className="h-12 border-b p-2 py-0"
                       style={{
                         paddingLeft:
@@ -375,19 +542,31 @@ export function CollectionTable<TData extends TableData>({
                       </div>
                     </TableCell>
                   ))
-                )}
-              </TableRow>
-            ))
+                );
+
+              return dndEnabled && row.original.type === "file" ? (
+                <DraggableRow
+                  key={row.id}
+                  id={row.original.path}
+                  disabled={!reorderActive}
+                >
+                  {rowCells}
+                </DraggableRow>
+              ) : (
+                <TableRow key={row.id}>{rowCells}</TableRow>
+              );
+            })
           ) : (
             <TableRow className="hover:bg-transparent">
               <TableCell
-                colSpan={columns.length}
+                colSpan={table.getVisibleLeafColumns().length}
                 className="text-muted-foreground p-6 text-center text-sm"
               >
                 <span>No entries</span>
               </TableCell>
             </TableRow>
           )}
+          </SortableContext>
         </TableBody>
         </Table>
       </div>
@@ -448,5 +627,7 @@ export function CollectionTable<TData extends TableData>({
         </footer>
       )}
     </div>
+    </DndContext>
+    </ReorderStateContext.Provider>
   );
 }

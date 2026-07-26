@@ -77,7 +77,8 @@ export function FileOptions({
   );
   const showRename =
     type !== "settings" && type !== "file" && canRename !== false;
-  const showDelete = type !== "settings" && canDelete !== false;
+  // const showDelete = type !== "settings" && canDelete !== false;
+  const showDelete = false;
 
   const [newPath, setNewPath] = useState(relativePath);
   const [isRenameOpen, setIsRenameOpen] = useState(false);

@@ -87,6 +87,7 @@ import { getPreviewUrl } from "@/lib/preview";
 
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
+import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
 import { EntryForm } from "./entry-form";
@@ -119,6 +120,7 @@ export function Entry({
   title,
   headerMeta,
   onSave,
+  initialValues,
 }: {
   name?: string;
   path?: string;
@@ -126,6 +128,7 @@ export function Entry({
   title?: string;
   headerMeta?: ReactNode;
   onSave?: (data: Record<string, unknown>) => void;
+  initialValues?: Record<string, unknown>;
 }) {
   const [path, setPath] = useState<string | undefined>(initialPath);
   const [entry, setEntry] = useState<EntryData | null>();
@@ -239,8 +242,8 @@ export function Entry({
         : entry?.contentObject
       : schema?.list === true
         ? { listWrapper: [] }
-        : {};
-  }, [schema, entry, path]);
+        : { ...(initialValues ?? {}) };
+  }, [schema, entry, path, initialValues]);
 
   useEffect(() => {
     if (!showFilenameField || schemaType !== "collection" || !schema) return;
@@ -1083,17 +1086,19 @@ export function Entry({
   );
 
   // Live preview only makes sense for an existing content entry with a page.
-  if (previewTarget && path && path !== ".pages.yml") {
-    return (
-      <PreviewPanel
-        target={previewTarget}
-        pageKey={previewTarget.href}
-        pageTitle={displayTitle}
-      >
-        {formNode}
-      </PreviewPanel>
-    );
-  }
-
-  return formNode;
+  return (
+    <MediaLibraryProvider>
+      {previewTarget && path && path !== ".pages.yml" ? (
+        <PreviewPanel
+          target={previewTarget}
+          pageKey={previewTarget.href}
+          pageTitle={displayTitle}
+        >
+          {formNode}
+        </PreviewPanel>
+      ) : (
+        formNode
+      )}
+    </MediaLibraryProvider>
+  );
 }

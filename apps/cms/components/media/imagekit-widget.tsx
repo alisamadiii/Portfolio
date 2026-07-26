@@ -26,10 +26,22 @@ type WidgetPayload = {
   data?: Array<{ url?: string }>;
 };
 
-// The widget ships its modal with `z-index: 1`, which would sit under the CMS
-// chrome. Lift it above everything (dialogs use z-50).
-const Z_INDEX_FIX = `
-  .ik-media-library-widget-modal { z-index: 60 !important; }
+// The widget ships its modal with `z-index: 1` (would sit under the CMS
+// chrome — dialogs use z-50) and a windowed layout with a visible backdrop.
+// Clicking the backdrop closes the widget WITHOUT firing the callback (so the
+// clipboard-assisted Link flow never runs) — make the modal fullscreen so
+// there is no backdrop to click and closing always goes through the widget's
+// own Close button.
+const MODAL_STYLE_FIX = `
+  .ik-media-library-widget-modal {
+    z-index: 60 !important;
+    padding-top: 0 !important;
+  }
+  .ik-media-library-widget-modal-content {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+  }
 `;
 
 const loadWidget = async () => {
@@ -45,10 +57,12 @@ const loadWidget = async () => {
  */
 const ImageKitLibraryDialog = ({
   onSubmit,
+  onClose,
   maxSelected,
   children,
 }: {
   onSubmit: (urls: string[]) => void;
+  onClose?: () => void;
   maxSelected?: number;
   children: ReactElement<{ onClick?: () => void }>;
 }) => {
@@ -56,6 +70,8 @@ const ImageKitLibraryDialog = ({
   const widgetRef = useRef<ImagekitMediaLibraryWidget | null>(null);
   const onSubmitRef = useRef(onSubmit);
   onSubmitRef.current = onSubmit;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     return () => {
@@ -87,6 +103,10 @@ const ImageKitLibraryDialog = ({
           },
         },
         (payload: WidgetPayload) => {
+          if (payload?.eventType === "CLOSE_MEDIA_LIBRARY_WIDGET") {
+            onCloseRef.current?.();
+            return;
+          }
           if (payload?.eventType !== "INSERT") return;
           const urls = (payload.data ?? [])
             .map((asset) => asset?.url)
@@ -100,7 +120,7 @@ const ImageKitLibraryDialog = ({
 
   return (
     <>
-      <style>{Z_INDEX_FIX}</style>
+      <style>{MODAL_STYLE_FIX}</style>
       {/* The widget appends its (position: fixed) modal INSIDE this container —
           it must not be `hidden` or the modal can never show. Empty div, zero
           footprint in the layout. */}
@@ -108,6 +128,62 @@ const ImageKitLibraryDialog = ({
       {cloneElement(children, { onClick: () => void handleOpen() })}
     </>
   );
+};
+
+/**
+ * Inline library for the entry-page split panel: embedded next to the form
+ * with the Insert button enabled. `INSERT` routes the selected assets' URLs
+ * to the active field (the panel owner swaps `onInsert` when another field
+ * takes over — one widget instance lives for the whole panel mount).
+ *
+ * No `maxFiles`: the widget config is fixed at instantiation but the active
+ * field changes — fields clamp selections themselves.
+ */
+const ImageKitLibraryPanel = ({
+  onInsert,
+}: {
+  onInsert: (urls: string[]) => void;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<ImagekitMediaLibraryWidget | null>(null);
+  const onInsertRef = useRef(onInsert);
+  onInsertRef.current = onInsert;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!containerRef.current || widgetRef.current) return;
+      const Widget = await loadWidget();
+      if (cancelled || !containerRef.current) return;
+      widgetRef.current = new Widget(
+        {
+          container: containerRef.current,
+          view: "inline",
+          renderOpenButton: false,
+          dimensions: { height: "100%", width: "100%" },
+          mlSettings: {
+            multiple: true,
+            toolbar: { showInsertButton: true, showCloseButton: false },
+          },
+        },
+        (payload: WidgetPayload) => {
+          if (payload?.eventType !== "INSERT") return;
+          const urls = (payload.data ?? [])
+            .map((asset) => asset?.url)
+            .filter((url): url is string => typeof url === "string" && !!url);
+          if (urls.length) onInsertRef.current(urls);
+        }
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      widgetRef.current?.destroy();
+      widgetRef.current = null;
+    };
+  }, []);
+
+  return <div ref={containerRef} className="h-full min-h-0 flex-1" />;
 };
 
 /**
@@ -151,4 +227,4 @@ const ImageKitLibraryInline = () => {
   return <div ref={containerRef} className="h-full min-h-0 flex-1" />;
 };
 
-export { ImageKitLibraryDialog, ImageKitLibraryInline };
+export { ImageKitLibraryDialog, ImageKitLibraryInline, ImageKitLibraryPanel };
