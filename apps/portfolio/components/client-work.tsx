@@ -10,7 +10,7 @@ const projects = [
     name: "Crosspost",
     description:
       "A platform that allows you to cross-post your content to multiple platforms.",
-    href: "/client/crosspost",
+    href: "https://www.crosspost.app/",
     icon: Crosspost,
     colors: ["#FB3953", "#CC50F8"],
   },

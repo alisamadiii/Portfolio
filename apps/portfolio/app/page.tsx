@@ -68,6 +68,24 @@ const skills = [
   },
 ];
 
+const howIWork = [
+  {
+    title: "I direct, AI executes",
+    description:
+      "I build with Claude Code every day — I decide the architecture first, AI implements it, and I review every change before it ships.",
+  },
+  {
+    title: "My platform is the proof",
+    description:
+      "One codebase running 10 apps on 10 shared packages — portfolio, agency, admin, CMS, API — all built and operated end-to-end by me.",
+  },
+  {
+    title: "Real speed",
+    description:
+      "Landing site in days. Full client site in about a week. SaaS MVP with auth, payments, and dashboard in 2–4 weeks.",
+  },
+];
+
 const projects = [
   {
     name: "Zuude UI",
@@ -170,12 +188,48 @@ export default function Home() {
             </Link> */}
           </div>
         </div>
-        <Link
-          href={`${urls.portfolio}/blog/how-i-build`}
-          className="text-muted-foreground mt-2 inline-block px-3 text-sm underline"
-        >
-          How I Build
-        </Link>
+      </section>
+
+      <section>
+        <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
+          How I work
+        </h2>
+
+        <ul className="relative flex flex-col justify-center">
+          <Divider />
+          {howIWork.map((item) => (
+            <li key={item.title} className="w-full p-6">
+              <p className="text-sm font-bold">{item.title}</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {item.description}
+              </p>
+            </li>
+          ))}
+          <Divider />
+          <div className="flex justify-center p-8">
+            <Button
+              size={"lg"}
+              variant={"outline"}
+              className="w-full"
+              render={<Link href={`/blog/how-i-build`} />}
+            >
+              How I Build — the full breakdown
+            </Button>
+          </div>
+          <Divider />
+          <Divider
+            borderTop
+            className="border-t-none absolute h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute left-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+          <Divider
+            borderTop
+            className="border-t-none absolute right-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
+          />
+        </ul>
       </section>
 
       <section>

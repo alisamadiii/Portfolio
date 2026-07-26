@@ -776,9 +776,6 @@ importers:
       '@trpc/server':
         specifier: ^11.11.0
         version: 11.18.0(typescript@5.9.3)
-      '@vidstack/react':
-        specifier: ^1.12.13
-        version: 1.15.6(@types/react@19.2.17)(react@19.2.7)
       '@workspace/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -809,9 +806,6 @@ importers:
       fumadocs-ui:
         specifier: 16.6.9
         version: 16.6.9(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(fumadocs-core@16.6.9(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.17)(lucide-react@0.577.0(react@19.2.7))(next@16.1.6(@babel/core@7.29.7)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@7.18.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3))(next@16.1.6(@babel/core@7.29.7)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.3)
-      hls.js:
-        specifier: ^1.6.15
-        version: 1.6.16
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.7)
@@ -6185,13 +6179,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vidstack/react@1.15.6':
-    resolution: {integrity: sha512-hO7cLld5yfxCdDnDCYqh5aS7JxmHfsmX43PmKBJWzDTwK40P3hh5qAdDQzl3qDtEJLYjuo3Sv+kr6tt/VRtJzQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@types/react': ^18.0.0 || ^19.0.0
-      react: 19.2.7
-
   '@vitejs/plugin-react@6.0.4':
     resolution: {integrity: sha512-XcCQz0TBpBgljhj0gMuuDj49i6Ytqh5q1osT/Gp5uAVJUCTWxyskk/l1jwYYiu2xcNHHipdMz40EGfM1VdamVg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -8093,9 +8080,6 @@ packages:
   hermes-parser@0.35.0:
     resolution: {integrity: sha512-9JLjeHxBx8T4CAsydZR49PNZUaix+WpQJwu9p2010lu+7Kwl6D/7wYFFJxoz+aXkaaClp9Zfg6W6/zVlSJORaA==}
 
-  hls.js@1.6.16:
-    resolution: {integrity: sha512-VSIRpLfRwlAAdGL4wiTucx2ScRipo0ed1FBatWkyt832jC4CReKstga6yIhYVwGu9LOBjuX9wzmRMeQdBJtzEA==}
-
   hono-rate-limiter@0.5.3:
     resolution: {integrity: sha512-M0DxbVMpPELEzLi0AJg1XyBHLGJXz7GySjsPoK+gc5YeeBsdGDGe+2RvVuCAv8ydINiwlbxqYMNxUEyYfRji/A==}
     peerDependencies:
@@ -8925,10 +8909,6 @@ packages:
     engines: {node: '>=18', npm: '>=6'}
     peerDependencies:
       esbuild: 0.*
-
-  media-captions@1.0.4:
-    resolution: {integrity: sha512-cyDNmuZvvO4H27rcBq2Eudxo9IZRDCOX/I7VEyqbxsEiD2Ei7UYUhG/Sc5fvMZjmathgz3fEK7iAKqvpY+Ux1w==}
-    engines: {node: '>=16'}
 
   media-engine@1.0.3:
     resolution: {integrity: sha512-aa5tG6sDoK+k70B9iEX1NeyfT8ObCKhNDs6lJVpwF6r8vhUfuKMslIcirq6HIUYuuUYLefcEQOn9bSBOvawtwg==}
@@ -15899,13 +15879,6 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
 
-  '@vidstack/react@1.15.6(@types/react@19.2.17)(react@19.2.7)':
-    dependencies:
-      '@floating-ui/dom': 1.8.0
-      '@types/react': 19.2.17
-      media-captions: 1.0.4
-      react: 19.2.7
-
   '@vitejs/plugin-react@6.0.4(@rolldown/plugin-babel@0.2.3(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.1.5)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0)))(babel-plugin-react-compiler@1.0.0)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
@@ -18376,8 +18349,6 @@ snapshots:
     dependencies:
       hermes-estree: 0.35.0
 
-  hls.js@1.6.16: {}
-
   hono-rate-limiter@0.5.3(hono@4.12.32):
     dependencies:
       hono: 4.12.32
@@ -19249,8 +19220,6 @@ snapshots:
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
-
-  media-captions@1.0.4: {}
 
   media-engine@1.0.3: {}
 

@@ -1,5 +1,7 @@
 import { MetadataRoute } from "next";
-import { allClients, allPosts } from "content-collections";
+import { allPosts } from "content-collections";
+
+import { clientProjects } from "@/lib/clients";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Use Vercel production URL if available, otherwise fallback to localhost
@@ -37,9 +39,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // Dynamic routes from client pages
-  const clientRoutes: MetadataRoute.Sitemap = allClients.map((client) => ({
-    url: `${baseUrl}/client/${client._meta.path}`,
-    lastModified: new Date(client.date),
+  const clientRoutes: MetadataRoute.Sitemap = clientProjects.map((client) => ({
+    url: `${baseUrl}/client/${client.slug}`,
+    lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));

@@ -25,27 +25,6 @@ const posts = defineCollection({
   },
 });
 
-const clients = defineCollection({
-  name: "clients",
-  directory: "content/client",
-  include: "**/*.mdx",
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    date: z.coerce.date(),
-    url: z.string().optional(),
-  }),
-  transform: async (document, context) => {
-    const mdx = await compileMDX(context, document, {
-      remarkPlugins: [remarkGfm],
-    });
-    return {
-      ...document,
-      mdx,
-    };
-  },
-});
-
 const legal = defineCollection({
   name: "legal",
   directory: "content/legal",
@@ -66,5 +45,5 @@ const legal = defineCollection({
 });
 
 export default defineConfig({
-  content: [posts, legal, clients],
+  content: [posts, legal],
 });

@@ -6,8 +6,6 @@ import type { MDXComponents } from "mdx/types";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { Videos } from "./videos";
-
 export const mdxComponents: MDXComponents = {
   ...defaultComponents,
   h1: ({ children, ...props }) => (
@@ -117,5 +115,4 @@ export const mdxComponents: MDXComponents = {
   // ),
   Step,
   Steps,
-  Videos,
 };

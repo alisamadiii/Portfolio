@@ -1,0 +1,42 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e3]:
+    - heading "404" [level=1] [ref=f1e4]
+    - heading "This page could not be found." [level=2] [ref=f1e6]
+  - contentinfo [ref=f1e7]:
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]:
+        - generic [ref=f1e10]:
+          - link "Home" [ref=f1e11] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f1e15]: SOFTWARE DEVELOPMENT, SAAS PRODUCTS, AND ONLINE TECHNOLOGY SERVICES.
+          - link "a@alisamadii.com" [ref=f1e16] [cursor=pointer]:
+            - /url: mailto:a@alisamadii.com
+          - navigation [ref=f1e17]:
+            - link "Privacy policy" [ref=f1e18] [cursor=pointer]:
+              - /url: https://alisamadii.com/privacy
+            - link "Terms of Service" [ref=f1e19] [cursor=pointer]:
+              - /url: https://alisamadii.com/terms
+        - navigation [ref=f1e20]:
+          - heading "Follow me" [level=3] [ref=f1e21]
+          - list [ref=f1e22]:
+            - listitem [ref=f1e23]:
+              - link "X" [ref=f1e24] [cursor=pointer]:
+                - /url: https://x.com/alisamadii_
+                - img "x-twitter" [ref=f1e25]
+            - listitem [ref=f1e28]:
+              - link "X" [ref=f1e29] [cursor=pointer]:
+                - /url: https://x.com/alisamadi__
+                - img "x-twitter" [ref=f1e30]
+            - listitem [ref=f1e33]:
+              - link "Linkedin" [ref=f1e34] [cursor=pointer]:
+                - /url: https://www.linkedin.com/in/alireza17/
+                - img "linkedin" [ref=f1e35]
+            - listitem [ref=f1e38]:
+              - link "Github" [ref=f1e39] [cursor=pointer]:
+                - /url: https://github.com/alisamadiii
+                - img "github" [ref=f1e40]
+          - heading "Theme" [level=3] [ref=f1e43]
+          - button [ref=f1e44] [cursor=pointer]
+      - paragraph [ref=f1e46]: © 2026 Ali Samadii LLC
+  - region "Notifications alt+T"
+  - alert [ref=f1e48]
