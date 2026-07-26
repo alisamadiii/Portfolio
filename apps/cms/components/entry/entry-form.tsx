@@ -1228,8 +1228,17 @@ const EntryForm = ({
   const handleFormSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      await runBeforeValidationHooks();
-      await form.handleSubmit(handleSubmit, handleError)(event);
+      try {
+        await runBeforeValidationHooks();
+        await form.handleSubmit(handleSubmit, handleError)(event);
+      } catch (error) {
+        console.error("Save failed:", error);
+        toast.error(
+          error instanceof Error && error.message
+            ? error.message
+            : "Something went wrong while saving. Please try again."
+        );
+      }
     },
     [form, handleSubmit, runBeforeValidationHooks]
   );
