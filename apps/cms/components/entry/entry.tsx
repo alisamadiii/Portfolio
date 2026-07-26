@@ -68,6 +68,7 @@ import {
 import { requireApiSuccess } from "@/lib/api-client";
 import { parseAndValidateConfig } from "@/lib/config";
 import { resolveContentOperations } from "@/lib/operations";
+import { getPreviewUrl } from "@/lib/preview";
 import {
   generateFilename,
   getPrimaryField,
@@ -82,8 +83,6 @@ import {
   joinPathSegments,
   normalizePath,
 } from "@/lib/utils/file";
-
-import { getPreviewUrl } from "@/lib/preview";
 
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
@@ -536,8 +535,8 @@ export function Entry({
       event.preventDefault();
       if (isBusy) return;
 
-      const form = document.getElementById("entry-form");
-      if (form instanceof HTMLFormElement) {
+      const form = document.querySelector<HTMLFormElement>("form#entry-form");
+      if (form) {
         form.requestSubmit();
       }
     };
@@ -802,6 +801,15 @@ export function Entry({
             <Button
               type="submit"
               form="entry-form"
+              onClick={() => {
+                // Base UI's Button forces type="button" on the native element,
+                // overriding type="submit" — so a click never submits the form.
+                // Trigger the submit explicitly (mirrors the Cmd/Ctrl+S handler).
+
+                const form =
+                  document.querySelector<HTMLFormElement>("form#entry-form");
+                form?.requestSubmit();
+              }}
               disabled={
                 isBusy ||
                 (showFilenameField && filenameValue.trim().length === 0) ||

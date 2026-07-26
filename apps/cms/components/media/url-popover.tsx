@@ -109,6 +109,7 @@ const UrlInput = ({
       return;
     }
     onSubmit(trimmed);
+    setUrl("");
   };
 
   return (

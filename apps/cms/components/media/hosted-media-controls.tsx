@@ -167,7 +167,6 @@ const HostedMediaControls = ({
             placeholder={placeholder}
             onSubmit={(url) => {
               onSelectedRef.current([url]);
-              hideUrlInput();
             }}
             onDismiss={hideUrlInput}
           />
