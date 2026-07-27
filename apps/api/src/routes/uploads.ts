@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 
-import type { User } from "../db/schema.js";
+import type { ApiUser } from "../db/schema.js";
 import { ApiError } from "../lib/errors.js";
 import { r2Client } from "../lib/r2.js";
 import { parseBody } from "../lib/validate.js";
@@ -30,7 +30,10 @@ const deleteSchema = z.object({
 });
 
 // The caller's bucket + public URL, or a readable 403 if none is configured.
-function requireBucket(user: User): { bucket: string; publicBaseUrl: string } {
+function requireBucket(user: ApiUser): {
+  bucket: string;
+  publicBaseUrl: string;
+} {
   if (!user.bucketName || !user.publicBaseUrl) {
     throw new ApiError(
       403,

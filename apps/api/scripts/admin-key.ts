@@ -70,12 +70,19 @@ for (const required of ["DATABASE_URL", "KEY_ENC_SECRET"]) {
 const dbHost = new URL(env.DATABASE_URL).hostname;
 const sql = neon(env.DATABASE_URL);
 
+// Identity lives in Better Auth's "user" table since the merge into the
+// portfolio DB; "admin" is user.role. "user" is a reserved word — quote it.
 const [user] = await sql`
-  select id, email, type from users where email = ${email} limit 1`;
+  select id, email, coalesce(role, 'user') as type
+  from "user" where email = ${email} limit 1`;
 if (!user) {
   throw new Error(
-    `No user with email "${email}". Existing users: ` +
-      (await sql`select email from users order by created_at`)
+    `No user with email "${email}". Existing API users: ` +
+      (
+        await sql`select u.email from "user" u
+          join api_client_settings s on s.user_id = u.id
+          order by s.created_at`
+      )
         .map((r) => r.email)
         .join(", ")
   );

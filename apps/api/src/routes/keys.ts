@@ -34,7 +34,8 @@ const publicCols = {
 // a key that skips the origin check.
 const createSchema = z
   .object({
-    userId: z.string().uuid().optional(),
+    // Better Auth user ids are opaque text, not UUIDs.
+    userId: z.string().min(1).optional(),
     email: z.string().min(1).optional(),
     type: z.enum(["public", "server"]).default("public"),
   })

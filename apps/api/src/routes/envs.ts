@@ -71,7 +71,8 @@ const revealSchema = z.object({ password: z.string().min(1) }).strict();
 // supplied: a body carrying them is a mistake worth surfacing, not ignoring.
 const createSchema = z
   .object({
-    userId: z.string().uuid().optional(),
+    // Better Auth user ids are opaque text, not UUIDs.
+    userId: z.string().min(1).optional(),
     email: z.string().min(1).optional(),
     content: z.string().min(1),
     description: z.string().max(500).optional(),

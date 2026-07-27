@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 
 import { createDb } from "../db/index.js";
-import { emailLogs, type User } from "../db/schema.js";
+import { emailLogs, type ApiUser } from "../db/schema.js";
 import type { AppEnv } from "../middleware/auth.js";
 
 import { capture } from "./posthog.js";
@@ -17,7 +17,7 @@ export const EMAILS_BUCKET = "emails";
 export async function logEmail(
   c: Context<AppEnv>,
   args: {
-    user: User;
+    user: ApiUser;
     kind: "send" | "contact";
     from: string;
     to: string[];

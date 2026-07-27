@@ -1,13 +1,22 @@
 // API-key auth. A key belongs to a user; what the key can do is whatever its
-// user is configured for. requireAuth loads both in one joined query and
-// stamps last_used_at. requireAdmin additionally checks user.type === "admin".
+// user is configured for. requireAuth loads identity (Better Auth `user`) and
+// API config (`api_client_settings`) in one joined query, flattens them into
+// the ApiUser view, and stamps last_used_at. requireAdmin additionally checks
+// user.type === "admin" (derived from user.role).
 import { eq } from "drizzle-orm";
 import type { MiddlewareHandler } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
 import { createMiddleware } from "hono/factory";
 
 import { createDb } from "../db/index.js";
-import { apiKeys, users, type ApiKey, type User } from "../db/schema.js";
+import {
+  apiClientSettings,
+  apiKeys,
+  toApiUser,
+  users,
+  type ApiKey,
+  type ApiUser,
+} from "../db/schema.js";
 import type { Env } from "../env.js";
 import { ApiError, ExpectedError } from "../lib/errors.js";
 import { hashKey, keyTypeFromPrefix } from "../lib/keys.js";
@@ -15,7 +24,7 @@ import { KvRateStore } from "../lib/kv-rate-store.js";
 import { originAllowed } from "../lib/origins.js";
 import { capture, type TelemetryVars } from "../lib/posthog.js";
 
-export type AuthVars = { apiKey: ApiKey; user: User };
+export type AuthVars = { apiKey: ApiKey; user: ApiUser };
 
 // Hono env for routers that run behind requireAuth/requireAdmin.
 export type AppEnv = { Bindings: Env; Variables: AuthVars & TelemetryVars };
@@ -60,9 +69,10 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const keyHash = await hashKey(token);
   const db = createDb(c.env);
   const [row] = await db
-    .select({ apiKey: apiKeys, user: users })
+    .select({ apiKey: apiKeys, user: users, settings: apiClientSettings })
     .from(apiKeys)
     .innerJoin(users, eq(apiKeys.userId, users.id))
+    .leftJoin(apiClientSettings, eq(apiClientSettings.userId, users.id))
     .where(eq(apiKeys.keyHash, keyHash))
     .limit(1);
 
@@ -83,24 +93,26 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
     );
   }
 
+  const user = toApiUser(row.user, row.settings);
+
   // Set before the origin check so a denial's telemetry resolves the user.
   c.set("apiKey", row.apiKey);
-  c.set("user", row.user);
+  c.set("user", user);
 
   const isServerKey = keyTypeFromPrefix(row.apiKey.prefix) === "server";
-  if (row.user.type !== "admin" && !isServerKey) {
+  if (user.type !== "admin" && !isServerKey) {
     const origin = c.req.header("Origin");
-    if (!originAllowed(origin, row.user.allowedOrigins)) {
+    if (!originAllowed(origin, user.allowedOrigins)) {
       // The client-facing error is deliberately vague: don't teach whoever
       // holds the key (it's embedded in client websites) that an origin
       // allowlist exists or how to satisfy it. The real cause goes to
       // PostHog here — ExpectedError skips the generic onError capture.
       const detail =
-        row.user.allowedOrigins.length === 0
-          ? `No allowedOrigins configured for user ${row.user.email}.`
+        user.allowedOrigins.length === 0
+          ? `No allowedOrigins configured for user ${user.email}.`
           : !origin
             ? "Request has no Origin header (server-side caller, non-admin user)."
-            : `Origin "${origin}" not in allowedOrigins [${row.user.allowedOrigins.join(", ")}].`;
+            : `Origin "${origin}" not in allowedOrigins [${user.allowedOrigins.join(", ")}].`;
       capture(c, "$exception", {
         $exception_list: [{ type: "ApiError", value: detail }],
         status: 403,

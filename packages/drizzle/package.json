@@ -4,9 +4,10 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.ts",
-    "./schema": "./schema.ts",
-    "./*": "./*.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./index": "./src/index.ts",
+    "./*": "./src/*.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

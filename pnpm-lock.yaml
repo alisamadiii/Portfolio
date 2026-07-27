@@ -168,6 +168,9 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.1.0
         version: 1.1.0
+      '@workspace/drizzle':
+        specifier: workspace:*
+        version: link:../../packages/drizzle
       aws4fetch:
         specifier: ^1.0.20
         version: 1.0.20
@@ -190,9 +193,6 @@ importers:
       '@types/node':
         specifier: ^26.1.1
         version: 26.1.1
-      drizzle-kit:
-        specifier: ^0.31.10
-        version: 0.31.10
       tsx:
         specifier: ^4.19.2
         version: 4.23.1

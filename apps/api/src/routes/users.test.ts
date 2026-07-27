@@ -6,6 +6,7 @@ import {
   json,
   makeUser,
   seedAuth,
+  splitApiUser,
   testCtx,
   testEnv,
 } from "../test/helpers.js";
@@ -71,8 +72,10 @@ describe("POST /v1/admin/users", () => {
 
   it("201 creates the user and mints a key", async () => {
     const auth = await admin();
-    const created = makeUser({ email: "new@acme.com" });
-    dbQueue.push([created]); // insert user returning
+    const created = splitApiUser(makeUser({ email: "new@acme.com" }));
+    dbQueue.push([]); // existing-account lookup: none
+    dbQueue.push([created.user]); // insert user returning
+    dbQueue.push([created.settings]); // insert settings returning
     dbQueue.push([{ id: "key-row-id" }]); // insert key returning
     const res = await req("/v1/admin/users", auth, {
       method: "POST",
@@ -87,7 +90,10 @@ describe("POST /v1/admin/users", () => {
 
   it("201 mints a server key when keyType is server", async () => {
     const auth = await admin();
-    dbQueue.push([makeUser({ email: "svc@acme.com" })]); // insert user returning
+    const created = splitApiUser(makeUser({ email: "svc@acme.com" }));
+    dbQueue.push([]); // existing-account lookup: none
+    dbQueue.push([created.user]); // insert user returning
+    dbQueue.push([created.settings]); // insert settings returning
     dbQueue.push([{ id: "key-row-id" }]); // insert key returning
     const res = await req("/v1/admin/users", auth, {
       method: "POST",
@@ -97,12 +103,25 @@ describe("POST /v1/admin/users", () => {
     const body = await json(res);
     expect(body.apiKey.key).toMatch(/^ak_ser_[0-9a-f]{32}$/);
     expect(body.apiKey.type).toBe("server");
-    // keyType is not a users column — it must not leak into the row.
+    // keyType is not a column — it must not leak into the row.
     expect(body.keyType).toBeUndefined();
+  });
+
+  it("409 DUPLICATE_EMAIL when the account already has API settings", async () => {
+    const auth = await admin();
+    const dupe = splitApiUser(makeUser({ email: "dupe@acme.com" }));
+    dbQueue.push([{ user: dupe.user, settings: dupe.settings }]); // existing-account lookup
+    const res = await req("/v1/admin/users", auth, {
+      method: "POST",
+      json: { email: "dupe@acme.com" },
+    });
+    expect(res.status).toBe(409);
+    expect((await json(res)).error.code).toBe("DUPLICATE_EMAIL");
   });
 
   it("409 DUPLICATE_EMAIL on unique violation", async () => {
     const auth = await admin();
+    dbQueue.push([]); // existing-account lookup: none
     dbQueue.push(Object.assign(new Error("duplicate"), { code: "23505" }));
     const res = await req("/v1/admin/users", auth, {
       method: "POST",
@@ -110,6 +129,21 @@ describe("POST /v1/admin/users", () => {
     });
     expect(res.status).toBe(409);
     expect((await json(res)).error.code).toBe("DUPLICATE_EMAIL");
+  });
+
+  it("201 attaches API access to an existing portfolio account", async () => {
+    const auth = await admin();
+    const existing = splitApiUser(makeUser({ email: "old@acme.com" }));
+    dbQueue.push([{ user: existing.user, settings: null }]); // account without settings
+    dbQueue.push([existing.user]); // update user returning
+    dbQueue.push([existing.settings]); // insert settings returning
+    dbQueue.push([{ id: "key-row-id" }]); // insert key returning
+    const res = await req("/v1/admin/users", auth, {
+      method: "POST",
+      json: { email: "old@acme.com" },
+    });
+    expect(res.status).toBe(201);
+    expect((await json(res)).email).toBe("old@acme.com");
   });
 });
 
