@@ -30,7 +30,7 @@ app.use("*", cors());
 // Telemetry context only — no event is sent here. Stamps a request id (echoed
 // as X-Request-Id so clients can report it) and buffers small JSON bodies so
 // onError can attach them to $exception events. Errors are the only thing we
-// log to PostHog.
+// log to PostHog
 app.use("*", async (c, next) => {
   c.set("requestId", crypto.randomUUID());
   // Never buffer an env upload: the body IS a client's secrets, and a buffered
