@@ -23,7 +23,7 @@ export class EmailsResource {
   /**
    * Submit a contact form. The API renders the notification email and
    * delivers it to your account email; the visitor's address becomes the
-   * Reply-To. Rate limited to 1 request per 10 minutes per IP
+   * Reply-To. Rate limited to 5 requests per 10 minutes per IP
    * (RATE_LIMIT_EXCEEDED, 429).
    */
   sendContact(params: SendContactRequest): Promise<Result<SendEmailResponse>> {

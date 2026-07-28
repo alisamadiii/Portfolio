@@ -61,7 +61,7 @@ const contactSchema = z.object({
 
 export const emails = new Hono<AppEnv>();
 
-// Contact-form limiter: 1 request / 10 min per IP, counted in Workers KV so
+// Contact-form limiter: 5 requests / 10 min per IP, counted in Workers KV so
 // the limit holds across isolates. Runs BEFORE requireAuth so bots get a 429
 // without touching the DB. Throwing ApiError routes the 429 through onError —
 // standard error shape + PostHog like every other error. Skipped entirely on
@@ -69,7 +69,7 @@ export const emails = new Hono<AppEnv>();
 const contactLimiter: MiddlewareHandler<AppEnv> = (c, next) =>
   rateLimiter<AppEnv>({
     windowMs: 10 * 60 * 1000,
-    limit: 1,
+    limit: 5,
     standardHeaders: "draft-6",
     skip: (c) => {
       const host = new URL(c.req.url).hostname;
@@ -85,7 +85,7 @@ const contactLimiter: MiddlewareHandler<AppEnv> = (c, next) =>
         429,
         "RATE_LIMIT_EXCEEDED",
         "Too many contact requests. Try again in a few minutes.",
-        "The contact endpoint allows 1 request per 10 minutes per IP."
+        "The contact endpoint allows 5 requests per 10 minutes per IP."
       );
     },
   })(c, next);

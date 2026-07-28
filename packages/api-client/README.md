@@ -61,7 +61,7 @@ const { data, error } = await agency.emails.sendContact({
 });
 ```
 
-Rate limited to **1 request per 10 minutes per IP** — surface `RATE_LIMIT_EXCEEDED` (429) as a "please try again in a few minutes" message.
+Rate limited to **5 requests per 10 minutes per IP** — surface `RATE_LIMIT_EXCEEDED` (429) as a "please try again in a few minutes" message.
 
 ## Uploads
 
@@ -187,9 +187,9 @@ if (error.code === "FILE_ALREADY_EXISTS") {
 }
 ```
 
-Common codes: `MISSING_API_KEY`, `UNKNOWN_API_KEY`, `API_KEY_REVOKED`, `VALIDATION_FAILED`, `RATE_LIMIT_EXCEEDED` (contact form, 1 per 10 min per IP), `SENDER_DOMAIN_MISMATCH`, `EMAIL_DOMAIN_NOT_CONFIGURED`, `BUCKET_NOT_CONFIGURED`, `FILE_ALREADY_EXISTS`, `OBJECT_NOT_FOUND`, `NETWORK_ERROR`.
+Common codes: `MISSING_API_KEY`, `UNKNOWN_API_KEY`, `API_KEY_REVOKED`, `VALIDATION_FAILED`, `RATE_LIMIT_EXCEEDED` (contact form, 5 per 10 min per IP), `SENDER_DOMAIN_MISMATCH`, `EMAIL_DOMAIN_NOT_CONFIGURED`, `BUCKET_NOT_CONFIGURED`, `FILE_ALREADY_EXISTS`, `OBJECT_NOT_FOUND`, `NETWORK_ERROR`.
 
 ## Limits
 
 - Uploads: 50 MB max per file; presigned URLs expire after 15 minutes.
-- Emails: `from` must be on your configured domain (`send`); `sendContact` is limited to 1 request per 10 minutes per IP.
+- Emails: `from` must be on your configured domain (`send`); `sendContact` is limited to 5 requests per 10 minutes per IP.

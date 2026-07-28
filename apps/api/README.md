@@ -42,7 +42,7 @@ const { data, error } = await agency.emails.send({
 
 > **Note:** anything in a `VITE_` var ships to the browser. Only use an API key you are comfortable exposing to the client (scoped, rate-limited); otherwise proxy through your own backend.
 
-For contact forms, use `emails.sendContact` — the API renders the notification email (name, message, source, device, IP, reply-to button) and delivers it to **your account email**; the caller never picks the recipient, so the browser-exposed key can't be used to spam anyone. Rate limited to **1 request per 10 minutes per IP** (`RATE_LIMIT_EXCEEDED`, 429).
+For contact forms, use `emails.sendContact` — the API renders the notification email (name, message, source, device, IP, reply-to button) and delivers it to **your account email**; the caller never picks the recipient, so the browser-exposed key can't be used to spam anyone. Rate limited to **5 requests per 10 minutes per IP** (`RATE_LIMIT_EXCEEDED`, 429).
 
 ```ts
 const { data, error } = await agency.emails.sendContact({
