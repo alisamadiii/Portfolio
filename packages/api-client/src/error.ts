@@ -20,6 +20,29 @@ export type AgencyErrorCode =
   | "RATE_LIMIT_EXCEEDED"
   | "EMAIL_PROVIDER_ERROR"
   | "EMAIL_NOT_CONFIGURED"
+  // auth: origin allowlist (public keys only)
+  | "ACCESS_DENIED"
+  // admin: users/keys
+  | "USER_NOT_FOUND"
+  | "DUPLICATE_EMAIL"
+  | "MISSING_EMAIL_PARAM"
+  | "MISSING_USERID_PARAM"
+  | "API_KEY_NOT_FOUND"
+  // admin: R2/SES verification on user create/update
+  | "BUCKET_NOT_FOUND"
+  | "STORAGE_VERIFY_FAILED"
+  | "PUBLIC_URL_UNREACHABLE"
+  | "PUBLIC_URL_NOT_SERVING"
+  | "PUBLIC_URL_WRONG_BUCKET"
+  | "EMAIL_VERIFY_FAILED"
+  | "EMAIL_DOMAIN_NOT_VERIFIED"
+  // admin: envs
+  | "ENV_FILE_NOT_FOUND"
+  | "ENV_PASSWORD_INVALID"
+  | "TOO_MANY_PASSWORD_ATTEMPTS"
+  // emails: history
+  | "INVALID_CURSOR"
+  | "EMAIL_NOT_FOUND"
   // uploads
   | "BUCKET_NOT_CONFIGURED"
   | "STORAGE_NOT_CONFIGURED"

@@ -1,6 +1,9 @@
 import type { AgencyClient } from "../client.js";
 import type { Result } from "../error.js";
 import type {
+  EmailHtmlResponse,
+  ListEmailsParams,
+  ListEmailsResponse,
   SendContactRequest,
   SendEmailRequest,
   SendEmailResponse,
@@ -25,5 +28,27 @@ export class EmailsResource {
    */
   sendContact(params: SendContactRequest): Promise<Result<SendEmailResponse>> {
     return this.client.request("POST", "/v1/emails/contact", { body: params });
+  }
+
+  /**
+   * Your own send history, newest first. Page by passing the createdAt of the
+   * last row you received as `before`.
+   */
+  list(params: ListEmailsParams = {}): Promise<Result<ListEmailsResponse>> {
+    return this.client.request("GET", "/v1/emails", {
+      query: {
+        limit: params.limit !== undefined ? String(params.limit) : undefined,
+        before: params.before,
+      },
+    });
+  }
+
+  /**
+   * Presigned URL for one archived email's HTML. The URL expires in ~60
+   * seconds — fetch on demand, don't cache. Your own emails only (admins can
+   * read any).
+   */
+  getHtml(id: string): Promise<Result<EmailHtmlResponse>> {
+    return this.client.request("GET", `/v1/emails/${id}/html`);
   }
 }

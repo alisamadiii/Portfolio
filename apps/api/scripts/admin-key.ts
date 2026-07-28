@@ -55,7 +55,7 @@ function arg(name: string): string | undefined {
   return i === -1 ? undefined : process.argv[i + 1];
 }
 
-const email = arg("email") ?? "admin@local";
+const email = arg("email") ?? "a@alisamadii.com";
 const mintNew = process.argv.includes("--new");
 const type = (arg("type") ?? "server") as ApiKeyType;
 if (type !== "server" && type !== "public") {

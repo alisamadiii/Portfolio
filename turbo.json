@@ -23,6 +23,8 @@
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
         "AGENCY_API_KEY",
+        "AGENCY_API_URL",
+        "AGENCY_ADMIN_API_KEY",
         "CRYPTO_KEY",
         "GITHUB_APP_ID",
         "GITHUB_APP_NAME",

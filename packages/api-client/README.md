@@ -110,6 +110,64 @@ const { data } = await agency.me.get();
 // data.keyPrefix, data.user.email, data.user.bucketName, ...
 ```
 
+## Email history
+
+```ts
+const { data } = await agency.emails.list({ limit: 20 });
+// data.emails: [{ id, kind, from, to, subject, createdAt, ... }], newest first
+// Next page: pass the last row's createdAt as `before`.
+
+const { data: html } = await agency.emails.getHtml(data.emails[0].id);
+// html.url — presigned link to the archived HTML, dies in ~60s
+```
+
+## Admin
+
+Every `/v1/admin/*` route, 1:1. Requires a key whose user has type `"admin"` — anything else gets `ADMIN_REQUIRED`. Never ship an admin key to a browser; call these server-side (or behind a server-side proxy).
+
+```ts
+// Keys
+const { data: keys } = await agency.admin.keys.list(); // + owner email/name
+const { data: created } = await agency.admin.keys.create({
+  userId: "user-id", // or email: "client@acme.com"
+  type: "server", // default "public"
+});
+created.key; // full value — returned only here and via reveal
+await agency.admin.keys.reveal(created.id); // { key } — 410 if revoked
+await agency.admin.keys.revoke(created.id); // soft; { permanent: true } deletes
+
+// Users (API user = portfolio account + API settings)
+const { data: users } = await agency.admin.users.list();
+const { data: user } = await agency.admin.users.get("user-id"); // 200 with null fields if no settings yet
+const { data: full } = await agency.admin.users.lookup("client@acme.com"); // + active keys, decrypted
+await agency.admin.users.create({
+  email: "client@acme.com",
+  bucketName: "acme-media", // verified to exist in R2
+  publicBaseUrl: "https://media.acme.com", // verified to serve that bucket
+  emailDomain: "acme.com", // verified in SES
+  allowedOrigins: ["acme.com"],
+}); // auto-mints a key, returned once as .apiKey
+await agency.admin.users.update("user-id", { emailDomain: "acme.com" }); // settings upsert + same verification
+await agency.admin.users.delete("user-id"); // removes API access, keeps the account
+
+// Email usage (per user — the admin counterpart of agency.emails.list())
+const { data: usage } = await agency.admin.emailLogs.list({
+  userId: "user-id",
+  limit: 10,
+});
+usage.stats; // { total, thisMonth, send, contact, lastSentAt }
+
+// Env backups (metadata only; content requires the vault password)
+const { data: envs } = await agency.admin.envs.list({ email: "client@acme.com" });
+const { data: dotenv } = await agency.admin.envs.reveal("env-id", "vault-password"); // raw .env text
+
+// Health
+await agency.admin.sesHealth(); // SES account/identities/statistics
+await agency.admin.health(); // live Neon/KV/SES/R2 probe (503 when degraded)
+```
+
+Config edits are verified server-side before they're saved: a missing bucket, an unreachable public URL, or an unverified SES domain fails with `BUCKET_NOT_FOUND`, `PUBLIC_URL_UNREACHABLE` / `PUBLIC_URL_NOT_SERVING` / `PUBLIC_URL_WRONG_BUCKET`, or `EMAIL_DOMAIN_NOT_VERIFIED`.
+
 ## Errors
 
 `error` is an `AgencyError` with:

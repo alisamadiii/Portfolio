@@ -18,6 +18,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@trpc/server": "^11.11.0",
     "@uidotdev/usehooks": "^2.4.1",
+    "@alisamadiillc/agency-api": "workspace:*",
     "@workspace/auth": "workspace:*",
     "@workspace/drizzle": "workspace:*",
     "@workspace/email": "workspace:*",

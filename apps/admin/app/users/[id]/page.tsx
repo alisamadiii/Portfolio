@@ -24,6 +24,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { Content } from "@/components/content-admin";
 
+import { Api } from "./api";
 import { Payments } from "./payments";
 import { Profile } from "./profile";
 import { Settings } from "./settings";
@@ -110,6 +111,7 @@ export default function EachOrganization() {
         tabs={[
           { label: "Profile", value: "profile" },
           { label: "Payments", value: "payments" },
+          { label: "API", value: "api" },
           { label: "Settings", value: "settings" },
         ]}
         tab={activeTab}
@@ -142,6 +144,7 @@ export default function EachOrganization() {
         <>
           {activeTab.toLowerCase() === "profile" && <Profile />}
           {activeTab.toLowerCase() === "payments" && <Payments />}
+          {activeTab.toLowerCase() === "api" && <Api />}
           {activeTab.toLowerCase() === "settings" && <Settings />}
         </>
       )}

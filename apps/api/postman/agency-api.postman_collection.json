@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "agency-api",
-    "description": "Hono API on Cloudflare Workers. Every /v1 endpoint requires an API key: Authorization: Bearer ak_pub_... (set the `apiKey` variable once — collection or environment — all requests inherit it).\n\nPublic endpoints work with any valid key; what a key can do comes from its user's config (bucketName/publicBaseUrl for uploads, emailDomain for emails, allowedOrigins for where its keys may be called from). /v1/admin/* requires a key whose user has type \"admin\".\n\n## Key types\n\nA key's type is encoded in its prefix, and decides whether the origin check applies:\n\n- `ak_pub_` — **public key.** Safe to embed in a client website: it only works when the request carries an Origin matching that user's allowedOrigins (bare domain \"acme.com\" or exact origin \"https://acme.com\"). Anything else gets 403 ACCESS_DENIED. A public key with an empty allowedOrigins is denied everywhere.\n- `ak_ser_` — **server key.** No origin check at all: accepted from any origin, or from a server-side caller that sends no Origin. Never ship one to a browser — anyone who reads it can use it from anywhere. Use it for backend-to-backend calls, cron jobs, and scripts.\n\nKeys issued before this split start with `ak_live_`. They still authenticate and behave exactly like `ak_pub_` keys.\n\nAdmin users' keys skip the origin check regardless of type (that's why Postman works). All keys, both types, are rate-limited to 60 req/min each.\n\nEvery sent email is logged to the user's history (GET /v1/emails) with the rendered HTML archived in private storage, readable via a 15-min presigned link (GET /v1/emails/:id/html).\n\nSwitch between localhost and production with the environment dropdown (local / production). With No Environment selected, requests hit production (collection-variable default).\n\n## Errors\n\nEvery error uses one standard shape:\n\n```json\n{ \"error\": { \"code\": \"USER_NOT_FOUND\", \"message\": \"No user with email \\\"x@y.com\\\"\", \"cause\": \"how to fix it (optional)\" } }\n```\n\n`code` is stable and machine-readable (UPPER_SNAKE_CASE) — branch on it, not on `message`. Common codes: MISSING_API_KEY, UNKNOWN_API_KEY, API_KEY_REVOKED (401) · ACCESS_DENIED (403, origin not allowed — deliberately vague message; only ever returned for public keys), ADMIN_REQUIRED, BUCKET_NOT_CONFIGURED, EMAIL_DOMAIN_NOT_CONFIGURED, SENDER_DOMAIN_MISMATCH (403) · VALIDATION_FAILED, INVALID_JSON, MISSING_EMAIL_PARAM, INVALID_PATH, INVALID_KEY, INVALID_CURSOR (400) · USER_NOT_FOUND, API_KEY_NOT_FOUND, EMAIL_NOT_FOUND, ROUTE_NOT_FOUND (404) · DUPLICATE_EMAIL (409) · RATE_LIMIT_EXCEEDED (429) · EMAIL_PROVIDER_ERROR, STORAGE_DELETE_FAILED, STORAGE_LIST_FAILED (502) · INTERNAL_ERROR, STORAGE_NOT_CONFIGURED, EMAIL_NOT_CONFIGURED (500).",
+    "description": "Hono API on Cloudflare Workers. Every /v1 endpoint requires an API key: Authorization: Bearer ak_pub_... (set the `apiKey` variable once — collection or environment — all requests inherit it).\n\nPublic endpoints work with any valid key; what a key can do comes from its user's config (bucketName/publicBaseUrl for uploads, emailDomain for emails, allowedOrigins for where its keys may be called from). /v1/admin/* requires a key whose user has type \"admin\".\n\n## Key types\n\nA key's type is encoded in its prefix, and decides whether the origin check applies:\n\n- `ak_pub_` — **public key.** Safe to embed in a client website: it only works when the request carries an Origin matching that user's allowedOrigins (bare domain \"acme.com\" or exact origin \"https://acme.com\"). Anything else gets 403 ACCESS_DENIED. A public key with an empty allowedOrigins is denied everywhere.\n- `ak_ser_` — **server key.** No origin check at all: accepted from any origin, or from a server-side caller that sends no Origin. Never ship one to a browser — anyone who reads it can use it from anywhere. Use it for backend-to-backend calls, cron jobs, and scripts.\n\nKeys issued before this split start with `ak_live_`. They still authenticate and behave exactly like `ak_pub_` keys.\n\nAdmin users' keys skip the origin check regardless of type (that's why Postman works). All keys, both types, are rate-limited to 60 req/min each.\n\nEvery sent email is logged to the user's history (GET /v1/emails) with the rendered HTML archived in private storage, readable via a 15-min presigned link (GET /v1/emails/:id/html).\n\nSwitch between localhost and production with the environment dropdown (local / production). With No Environment selected, requests hit production (collection-variable default).\n\n## Errors\n\nEvery error uses one standard shape:\n\n```json\n{ \"error\": { \"code\": \"USER_NOT_FOUND\", \"message\": \"No user with email \\\"x@y.com\\\"\", \"cause\": \"how to fix it (optional)\" } }\n```\n\n`code` is stable and machine-readable (UPPER_SNAKE_CASE) — branch on it, not on `message`. Common codes: MISSING_API_KEY, UNKNOWN_API_KEY, API_KEY_REVOKED (401) · ACCESS_DENIED (403, origin not allowed — deliberately vague message; only ever returned for public keys), ADMIN_REQUIRED, BUCKET_NOT_CONFIGURED, EMAIL_DOMAIN_NOT_CONFIGURED, SENDER_DOMAIN_MISMATCH (403) · VALIDATION_FAILED, INVALID_JSON, MISSING_EMAIL_PARAM, MISSING_USERID_PARAM, INVALID_PATH, INVALID_KEY, INVALID_CURSOR (400) · USER_NOT_FOUND, API_KEY_NOT_FOUND, EMAIL_NOT_FOUND, ROUTE_NOT_FOUND (404) · DUPLICATE_EMAIL (409) · RATE_LIMIT_EXCEEDED (429) · EMAIL_PROVIDER_ERROR, STORAGE_DELETE_FAILED, STORAGE_LIST_FAILED (502) · INTERNAL_ERROR, STORAGE_NOT_CONFIGURED, EMAIL_NOT_CONFIGURED (500).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -817,6 +817,38 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "Email logs for user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/admin/email-logs?userId={{userId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "email-logs"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}",
+                  "description": "Required. The portfolio user id whose email history to read."
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Optional. Recent rows to return (default 10, max 50)."
+                }
+              ]
+            },
+            "description": "Per-user email usage for the admin dashboard: aggregate stats plus the most recent sends.\n\nReturns `{ stats: { total, thisMonth, send, contact, lastSentAt }, emails: [...] }`. `send` counts transactional sends via POST /v1/emails/send; `contact` counts contact-form deliveries. An unknown `userId` returns empty stats, not a 404.\n\nThis is the admin-side counterpart of GET /v1/emails, which only ever shows the calling key's own history."
+          },
+          "response": []
         },
         {
           "name": "Envs",
