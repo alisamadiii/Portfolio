@@ -242,8 +242,51 @@ export default function AgencyPage() {
     return (
       <div className="space-y-6">
         <PageHeading />
-        <Skeleton className="h-56 w-full rounded-lg" />
-        <Skeleton className="h-40 w-full rounded-lg" />
+        <div className="bg-card overflow-hidden rounded-lg border">
+          <div className="border-rule flex items-center gap-4 border-b px-5.5 py-5.5">
+            <Skeleton className="size-12.5 shrink-0 rounded-[14px]" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-56" />
+            </div>
+            <Skeleton className="h-7 w-20 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="ml-auto h-6 w-24" />
+              <Skeleton className="ml-auto h-4 w-16" />
+            </div>
+          </div>
+          <div className="border-rule grid grid-cols-1 border-b sm:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="border-rule space-y-2 border-r px-5.5 py-4.5 last:border-r-0"
+              >
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-4.5 w-28" />
+              </div>
+            ))}
+          </div>
+          <div className="card-band">
+            <Skeleton className="h-9 w-36 rounded-full" />
+            <Skeleton className="h-9 w-32 rounded-full" />
+          </div>
+        </div>
+        <section className="space-y-4 pt-2">
+          <Skeleton className="h-7 w-28" />
+          <div className="bg-card space-y-0 overflow-hidden rounded-lg border">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="border-rule flex items-center justify-between border-b px-5.5 py-4.5 last:border-b-0"
+              >
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     );
   }
@@ -300,18 +343,43 @@ export default function AgencyPage() {
     <div className="space-y-6">
       <PageHeading />
 
-      {subsData?.map((sub) => (
-        <SubscriptionCard
-          key={sub.id}
-          sub={sub}
-          onManageBilling={openBillingPortal}
-          isManaging={portalMutation.isPending}
-        />
-      ))}
+      {(subsData?.length ?? 0) === 0 ? (
+        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+          <h3 className="text-[19px] font-extrabold tracking-tight">
+            No active subscription
+          </h3>
+          <p className="text-muted-foreground mx-auto mt-2 mb-5 max-w-[380px] text-[14.5px]">
+            You don&apos;t have an active subscription right now. Your past
+            invoices are available below.
+          </p>
+          <RequestDialog>
+            <Button className="rounded-full px-5">Contact Support</Button>
+          </RequestDialog>
+        </div>
+      ) : (
+        subsData?.map((sub) => (
+          <SubscriptionCard
+            key={sub.id}
+            sub={sub}
+            onManageBilling={openBillingPortal}
+            isManaging={portalMutation.isPending}
+          />
+        ))
+      )}
 
-      {(invoicesData?.length ?? 0) > 0 && (
-        <section className="space-y-4 pt-2">
-          <h3 className="text-2xl font-extrabold tracking-tight">Invoices</h3>
+      <section className="space-y-4 pt-2">
+        <h3 className="text-2xl font-extrabold tracking-tight">Invoices</h3>
+        {(invoicesData?.length ?? 0) === 0 ? (
+          <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+            <h3 className="text-[19px] font-extrabold tracking-tight">
+              No invoices yet
+            </h3>
+            <p className="text-muted-foreground mx-auto mt-2 max-w-[380px] text-[14.5px]">
+              Your first invoice will appear here after your first billing
+              cycle.
+            </p>
+          </div>
+        ) : (
           <DataTable
             className="table-card"
             columns={[
@@ -418,8 +486,8 @@ export default function AgencyPage() {
               <InvoiceDetailsPanel invoice={row.original} />
             )}
           />
-        </section>
-      )}
+        )}
+      </section>
 
       <LegalFooter />
     </div>

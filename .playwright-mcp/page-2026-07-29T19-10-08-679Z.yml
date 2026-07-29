@@ -1,0 +1,26 @@
+- generic [active] [ref=f7e1]:
+  - navigation [ref=f7e4]:
+    - generic [ref=f7e5]:
+      - link "AS Ali Samadi" [ref=f7e6] [cursor=pointer]:
+        - /url: index.html
+        - generic [ref=f7e7]: AS
+        - generic [ref=f7e9]: Ali Samadi
+      - link "Back to Pricing" [ref=f7e10] [cursor=pointer]:
+        - /url: estimate.html
+  - main [ref=f7e13]:
+    - generic [ref=f7e14]:
+      - paragraph [ref=f7e15]: Step 1 of 6
+      - generic [ref=f7e16]:
+        - heading "First, tell us about you." [level=1] [ref=f7e17]: First, tell usabout you.
+        - paragraph [ref=f7e18]: So we know who we're building for and where to reach you.
+        - generic [ref=f7e19]:
+          - generic [ref=f7e20]:
+            - generic [ref=f7e21]: Your name
+            - textbox "Jane Doe" [ref=f7e22]
+          - generic [ref=f7e23]:
+            - generic [ref=f7e24]: Email
+            - textbox "you@email.com" [ref=f7e25]
+          - generic [ref=f7e26]:
+            - generic [ref=f7e27]: Business name (optional)
+            - textbox "Acme Inc." [ref=f7e28]
+      - button "Continue" [ref=f7e30] [cursor=pointer]

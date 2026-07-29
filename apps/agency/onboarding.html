@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Get Started — Ali Samadi | Creative Agency</title>
+    <meta
+      name="description"
+      content="Set up your upfront website project — a few quick questions and you're on your way."
+    />
+    <meta name="author" content="Ali Samadi" />
+    <meta name="robots" content="noindex, follow" />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://cdn.alisamadii.com/company/business-logo.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://cdn.alisamadii.com/company/business-logo.png"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Geist", "system-ui", "sans-serif"],
+              mono: ["Geist Mono", "ui-monospace", "monospace"],
+            },
+            colors: {
+              cream: "#f6f5f3",
+              charcoal: "#1b1a17",
+              warmgray: "#6f6a63",
+              muted: "#8a847c",
+              ink: "#171512",
+              accent: "#fc8464",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="pricing.js"></script>
+    <style>
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Noise overlay */
+      .noise::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        pointer-events: none;
+        opacity: 0.025;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      }
+
+      /* Magnetic button */
+      .mag-btn {
+        transition:
+          transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+          background-color 0.3s ease,
+          color 0.3s ease,
+          opacity 0.3s ease;
+      }
+      .mag-btn:active {
+        transform: scale(0.97);
+      }
+
+      /* Progress bar */
+      #progressFill {
+        transition: width 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+
+      /* Step transitions */
+      .step {
+        display: none;
+      }
+      .step.active {
+        display: block;
+        animation: step-in 0.55s cubic-bezier(0.32, 0.72, 0, 1) both;
+      }
+      .step.leaving {
+        display: block;
+        animation: step-out 0.28s cubic-bezier(0.32, 0.72, 0, 1) both;
+      }
+      @keyframes step-in {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+          filter: blur(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+      @keyframes step-out {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-18px);
+          filter: blur(6px);
+        }
+      }
+
+      /* Choice cards */
+      .choice-card {
+        border: 1.5px solid rgba(26, 26, 26, 0.08);
+        background: white;
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .choice-card:hover {
+        border-color: rgba(252, 132, 100, 0.35);
+        transform: translateY(-1px);
+      }
+      .choice-card.selected {
+        border-color: #fc8464;
+        background: rgba(252, 132, 100, 0.04);
+      }
+      .choice-card .choice-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 9999px;
+        border: 1.5px solid rgba(26, 26, 26, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .choice-card.selected .choice-dot {
+        border-color: #fc8464;
+        background: #fc8464;
+      }
+      .choice-card .choice-dot::after {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 9999px;
+        background: white;
+        transform: scale(0);
+        transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .choice-card.selected .choice-dot::after {
+        transform: scale(1);
+      }
+    </style>
+  </head>
+
+  <body
+    class="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent flex min-h-screen flex-col font-sans"
+  >
+    <!-- ==================== PROGRESS ==================== -->
+    <div class="bg-charcoal/[0.06] fixed top-0 right-0 left-0 z-40 h-[3px]">
+      <div id="progressFill" class="bg-accent h-full" style="width: 0%"></div>
+    </div>
+
+    <!-- ==================== NAV ==================== -->
+    <nav class="px-4 py-5 md:px-8">
+      <div class="mx-auto flex max-w-[1400px] items-center justify-between">
+        <a href="index.html" class="group flex items-center gap-3">
+          <div
+            class="bg-charcoal flex h-10 w-10 items-center justify-center rounded-full"
+          >
+            <span class="text-cream text-sm font-bold">AS</span>
+          </div>
+          <span
+            class="text-warmgray group-hover:text-charcoal text-sm font-medium transition-colors duration-300"
+            >Ali Samadi</span
+          >
+        </a>
+        <a
+          href="estimate.html"
+          class="mag-btn text-warmgray hover:text-charcoal flex items-center gap-2 text-sm transition-colors duration-300"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+            />
+          </svg>
+          Back to Pricing
+        </a>
+      </div>
+    </nav>
+
+    <!-- ==================== WIZARD ==================== -->
+    <main class="flex flex-1 items-center px-4 py-12 md:px-8">
+      <div class="mx-auto w-full max-w-[640px]">
+        <p
+          id="stepCounter"
+          class="text-warmgray mb-6 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+        ></p>
+
+        <!-- Step 1: About you -->
+        <section class="step" data-step="about">
+          <h1
+            class="text-[clamp(28px,4.5vw,44px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+          >
+            First, tell us<br />about <span class="text-accent">you</span>.
+          </h1>
+          <p class="text-warmgray mt-4 text-base leading-relaxed">
+            So we know who we're building for and where to reach you.
+          </p>
+          <div class="mt-8 space-y-5">
+            <div>
+              <label
+                class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+                >Your name</label
+              >
+              <input
+                id="fieldName"
+                type="text"
+                placeholder="Jane Doe"
+                class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full rounded-xl border bg-white px-4 py-3.5 text-sm transition-all focus:ring-2 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label
+                class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+                >Email</label
+              >
+              <input
+                id="fieldEmail"
+                type="email"
+                placeholder="you@email.com"
+                class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full rounded-xl border bg-white px-4 py-3.5 text-sm transition-all focus:ring-2 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label
+                class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+                >Business name
+                <span class="text-muted normal-case">(optional)</span></label
+              >
+              <input
+                id="fieldBusiness"
+                type="text"
+                placeholder="Acme Inc."
+                class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full rounded-xl border bg-white px-4 py-3.5 text-sm transition-all focus:ring-2 focus:outline-none"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Project -->
+        <section class="step" data-step="project">
+          <h1
+            class="text-[clamp(28px,4.5vw,44px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+          >
+            What are we<br /><span class="text-accent">building</span>?
+          </h1>
+          <p class="text-warmgray mt-4 text-base leading-relaxed">
+            A few sentences is plenty — goals, pages you have in mind, anything
+            that matters to you.
+          </p>
+          <div class="mt-8">
+            <textarea
+              id="fieldProject"
+              rows="5"
+              placeholder="Tell us about your project — goals, timeline, any specifics..."
+              class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full resize-none rounded-xl border bg-white px-4 py-3.5 text-sm transition-all focus:ring-2 focus:outline-none"
+            ></textarea>
+          </div>
+        </section>
+
+        <!-- Step 3: Hosting -->
+        <section class="step" data-step="hosting">
+          <h1
+            class="text-[clamp(28px,4.5vw,44px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+          >
+            Want us to handle<br /><span class="text-accent">hosting</span>?
+          </h1>
+          <p class="text-warmgray mt-4 text-base leading-relaxed">
+            Premium infrastructure, domain, SSL, uptime monitoring, and security
+            updates — fully managed so you never think about servers.
+          </p>
+          <div class="mt-8 space-y-3">
+            <button class="choice-card" data-choice="hosting" data-value="yes">
+              <div class="flex items-center gap-4">
+                <div class="choice-dot"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold">
+                    Yes, manage it for me
+                    <span class="text-accent hosting-price-label"></span>
+                  </p>
+                  <p class="text-warmgray mt-0.5 text-xs">
+                    Recommended — hands-off and worry-free
+                  </p>
+                </div>
+              </div>
+            </button>
+            <button class="choice-card" data-choice="hosting" data-value="no">
+              <div class="flex items-center gap-4">
+                <div class="choice-dot"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold">No, I'll host it myself</p>
+                  <p class="text-warmgray mt-0.5 text-xs">
+                    We hand over deployment-ready files
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <!-- Step 4: CMS -->
+        <section class="step" data-step="cms">
+          <h1
+            class="text-[clamp(28px,4.5vw,44px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+          >
+            Edit your site<br /><span class="text-accent">yourself</span>?
+          </h1>
+          <p class="text-warmgray mt-4 text-base leading-relaxed">
+            CMS access lets you change text, images, and content anytime — no
+            developer needed.
+          </p>
+          <div class="mt-8 space-y-3">
+            <button class="choice-card" data-choice="cms" data-value="yes">
+              <div class="flex items-center gap-4">
+                <div class="choice-dot"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold">
+                    Yes, I want CMS access
+                    <span class="text-accent cms-price-label"></span>
+                  </p>
+                  <p class="text-warmgray mt-0.5 text-xs">
+                    Edit content anytime from a simple dashboard
+                  </p>
+                </div>
+              </div>
+            </button>
+            <button class="choice-card" data-choice="cms" data-value="no">
+              <div class="flex items-center gap-4">
+                <div class="choice-dot"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold">No thanks</p>
+                  <p class="text-warmgray mt-0.5 text-xs">
+                    Send us change requests instead
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <!-- Step 5: Email -->
+        <section class="step" data-step="email">
+          <h1
+            class="text-[clamp(28px,4.5vw,44px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+          >
+            Emails are<br /><span class="text-accent">on us</span>.
+          </h1>
+          <p class="text-warmgray mt-4 text-base leading-relaxed">
+            Contact forms and transactional emails are included with your site.
+          </p>
+          <div
+            class="border-charcoal/[0.06] mt-8 rounded-2xl border bg-white p-6"
+          >
+            <div class="flex items-start gap-4">
+              <div
+                class="bg-accent/10 text-accent grid h-10 w-10 flex-shrink-0 place-items-center rounded-full"
+              >
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold" id="emailFreeLine"></p>
+                <p class="text-warmgray mt-1 text-sm leading-relaxed" id="emailExtraLine"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 6: Summary -->
+        <section class="step" data-step="summary">
+          <h1
+            class="text-[clamp(28px,4.5vw,44px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+          >
+            Your <span class="text-accent">project</span>,<br />summed up.
+          </h1>
+          <p class="text-warmgray mt-4 text-base leading-relaxed">
+            We'll review your details and confirm the exact quote before any
+            work begins.
+          </p>
+          <div
+            class="bg-charcoal/[0.03] ring-charcoal/[0.04] mt-8 rounded-[18px] p-1.5 ring-1"
+          >
+            <div class="rounded-[14px] bg-white p-6 md:p-8">
+              <div id="summaryRows" class="space-y-0"></div>
+            </div>
+          </div>
+          <p class="text-muted mt-4 text-xs leading-relaxed" id="summaryNote"></p>
+        </section>
+
+        <!-- Controls -->
+        <div class="mt-10 flex items-center gap-3">
+          <button
+            id="backBtn"
+            class="mag-btn text-warmgray hover:text-charcoal hidden items-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors duration-300"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+              />
+            </svg>
+            Back
+          </button>
+          <button
+            id="nextBtn"
+            class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span id="nextBtnLabel">Continue</span>
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+      // ─── STATE ───────────────────────────────────────────────────
+
+      const STORAGE_KEY = "agency-onboarding";
+      const STEPS = ["about", "project", "hosting", "cms", "email", "summary"];
+
+      let state = {
+        step: 0,
+        name: "",
+        email: "",
+        business: "",
+        project: "",
+        hosting: null, // true | false | null
+        cms: null,
+      };
+
+      const saveState = () =>
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+      const loadState = () => {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) state = { ...state, ...JSON.parse(saved) };
+        } catch (e) {
+          console.warn("Failed to load saved state", e);
+        }
+      };
+
+      // ─── PRICE INJECTION (from pricing.js) ───────────────────────
+
+      document.querySelectorAll(".hosting-price-label").forEach((el) => {
+        el.textContent = `${fmtPrice(PRICING.hosting)}/mo`;
+      });
+      document.querySelectorAll(".cms-price-label").forEach((el) => {
+        el.textContent = `${fmtPrice(PRICING.cms)}/mo`;
+      });
+      document.getElementById("emailFreeLine").textContent =
+        `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails per month — free`;
+      document.getElementById("emailExtraLine").textContent =
+        `Beyond that, ${fmtPrice(PRICING.email.perExtraThousand)} per extra 1,000 emails. Most sites never come close.`;
+
+      // ─── RENDER ──────────────────────────────────────────────────
+
+      let animating = false;
+
+      const currentStepEl = () =>
+        document.querySelector(`.step[data-step="${STEPS[state.step]}"]`);
+
+      const renderProgress = () => {
+        const pct = ((state.step + 1) / STEPS.length) * 100;
+        document.getElementById("progressFill").style.width = `${pct}%`;
+        document.getElementById("stepCounter").textContent =
+          `Step ${state.step + 1} of ${STEPS.length}`;
+      };
+
+      const renderControls = () => {
+        const backBtn = document.getElementById("backBtn");
+        const nextLabel = document.getElementById("nextBtnLabel");
+        backBtn.classList.toggle("hidden", state.step === 0);
+        backBtn.classList.toggle("flex", state.step !== 0);
+
+        const isSummary = STEPS[state.step] === "summary";
+        const hasCheckout = isSummary && (state.hosting || state.cms);
+        nextLabel.textContent = isSummary
+          ? hasCheckout
+            ? "Continue to Checkout"
+            : "Send My Project"
+          : "Continue";
+      };
+
+      const renderChoices = () => {
+        document.querySelectorAll(".choice-card").forEach((card) => {
+          const key = card.dataset.choice;
+          const val = card.dataset.value === "yes";
+          card.classList.toggle("selected", state[key] === val);
+        });
+      };
+
+      const summaryRow = (label, value, sub) => `
+        <div class="flex items-start justify-between gap-6 border-b border-charcoal/[0.04] py-3.5 last:border-0">
+          <div class="min-w-0">
+            <p class="text-sm font-medium">${label}</p>
+            ${sub ? `<p class="text-warmgray mt-0.5 text-xs leading-relaxed">${sub}</p>` : ""}
+          </div>
+          <p class="flex-shrink-0 text-sm font-semibold tabular-nums">${value}</p>
+        </div>`;
+
+      const esc = (s) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      const renderSummary = () => {
+        const rows = document.getElementById("summaryRows");
+        let monthly = 0;
+        if (state.hosting) monthly += PRICING.hosting;
+        if (state.cms) monthly += PRICING.cms;
+
+        let html = "";
+        html += summaryRow(
+          "Website design & development",
+          fmtUpfrontRange(),
+          "One-time — includes SEO & analytics. Exact quote confirmed after review."
+        );
+        html += summaryRow(
+          "Managed hosting",
+          state.hosting ? `${fmtPrice(PRICING.hosting)}/mo` : "Not included",
+          state.hosting
+            ? "Infrastructure, domain, SSL & monitoring"
+            : "You handle hosting yourself"
+        );
+        html += summaryRow(
+          "CMS access",
+          state.cms ? `${fmtPrice(PRICING.cms)}/mo` : "Not included",
+          state.cms ? "Edit your content anytime" : "Change requests via us"
+        );
+        html += summaryRow(
+          "Email",
+          "Free",
+          `${PRICING.email.freePerMonth.toLocaleString("en-US")}/mo included, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`
+        );
+        if (monthly > 0) {
+          html += `
+            <div class="flex items-center justify-between pt-4">
+              <p class="text-base font-semibold">Monthly total</p>
+              <p class="text-accent text-lg font-bold tabular-nums">${fmtPrice(monthly)}/mo</p>
+            </div>`;
+        }
+        rows.innerHTML = html;
+
+        const who = state.name
+          ? `Submitting as ${state.name}${state.business ? ` — ${state.business}` : ""} (${state.email}).`
+          : "";
+        const portalNote =
+          state.hosting || state.cms
+            ? " Your checkout email becomes your client portal login at portal.alisamadii.com — make sure to use the same email there."
+            : "";
+        document.getElementById("summaryNote").textContent = who + portalNote;
+      };
+
+      const render = () => {
+        renderProgress();
+        renderControls();
+        renderChoices();
+        if (STEPS[state.step] === "summary") renderSummary();
+      };
+
+      // ─── NAVIGATION ──────────────────────────────────────────────
+
+      const goToStep = (index) => {
+        if (animating || index < 0 || index >= STEPS.length) return;
+        const from = currentStepEl();
+        animating = true;
+
+        from.classList.remove("active");
+        from.classList.add("leaving");
+
+        setTimeout(() => {
+          from.classList.remove("leaving");
+          state.step = index;
+          saveState();
+          currentStepEl().classList.add("active");
+          render();
+          animating = false;
+          const firstInput = currentStepEl().querySelector("input, textarea");
+          if (firstInput) firstInput.focus();
+        }, 280);
+      };
+
+      const validateStep = () => {
+        const step = STEPS[state.step];
+        if (step === "about") {
+          if (!state.name.trim()) {
+            document.getElementById("fieldName").focus();
+            return false;
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email.trim())) {
+            document.getElementById("fieldEmail").focus();
+            return false;
+          }
+        }
+        if (step === "hosting" && state.hosting === null) return false;
+        if (step === "cms" && state.cms === null) return false;
+        return true;
+      };
+
+      const finish = async () => {
+        if (state.hosting || state.cms) {
+          const btn = document.getElementById("nextBtn");
+          const label = document.getElementById("nextBtnLabel");
+          btn.disabled = true;
+          label.textContent = "Redirecting…";
+          try {
+            await createCheckout({
+              plan: "upfront",
+              email: state.email,
+              name: state.name,
+              company: state.business || undefined,
+              project: state.project || undefined,
+              hosting: !!state.hosting,
+              cms: !!state.cms,
+            });
+          } catch (e) {
+            btn.disabled = false;
+            label.textContent = "Continue to Checkout";
+            alert("Something went wrong starting checkout. Please try again.");
+          }
+          return;
+        }
+        // No monthly add-ons selected — nothing to check out; send project by email
+        let body = `New Upfront Project\n${"=".repeat(40)}\n\n`;
+        body += `Name: ${state.name}\n`;
+        body += `Email: ${state.email}\n`;
+        if (state.business) body += `Business: ${state.business}\n`;
+        body += `\nProject:\n${state.project || "Not provided"}\n\n`;
+        body += `Website build: ${fmtUpfrontRange()} one-time\n`;
+        body += `Hosting: self-hosted\nCMS access: no\n`;
+        const subject = encodeURIComponent(
+          `Upfront Project — ${state.name}${state.business ? ` (${state.business})` : ""}`
+        );
+        window.location.href = `mailto:agency@alisamadii.com?subject=${subject}&body=${encodeURIComponent(body)}`;
+      };
+
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        if (!validateStep()) return;
+        if (STEPS[state.step] === "summary") {
+          finish();
+          return;
+        }
+        goToStep(state.step + 1);
+      });
+
+      document.getElementById("backBtn").addEventListener("click", () => {
+        goToStep(state.step - 1);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+          document.getElementById("nextBtn").click();
+        }
+      });
+
+      // ─── INPUT BINDING ───────────────────────────────────────────
+
+      const bindField = (id, key) => {
+        const el = document.getElementById(id);
+        el.value = state[key] || "";
+        el.addEventListener("input", (e) => {
+          state[key] = e.target.value;
+          saveState();
+        });
+      };
+
+      document.querySelectorAll(".choice-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          state[card.dataset.choice] = card.dataset.value === "yes";
+          saveState();
+          renderChoices();
+          renderControls();
+        });
+      });
+
+      // ─── INIT ────────────────────────────────────────────────────
+
+      loadState();
+      state.step = Math.min(Math.max(state.step, 0), STEPS.length - 1);
+      bindField("fieldName", "name");
+      bindField("fieldEmail", "email");
+      bindField("fieldBusiness", "business");
+      bindField("fieldProject", "project");
+      currentStepEl().classList.add("active");
+      render();
+    </script>
+  </body>
+</html>
