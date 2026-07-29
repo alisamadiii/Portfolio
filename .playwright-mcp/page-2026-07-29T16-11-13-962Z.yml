@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - heading "Login to your portal" [level=1] [ref=e7]
+      - paragraph [ref=e8]: Access your projects, files, and invoices in one place
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - group [ref=e12]:
+          - generic [ref=e13]: Email
+          - textbox "Email" [ref=e15]
+        - button "Send magic link" [ref=e16] [cursor=pointer]
+      - generic [ref=e17]: Or authorize with
+      - generic [ref=e21]:
+        - button "Password" [ref=e22] [cursor=pointer]
+        - button "Google" [ref=e23] [cursor=pointer]
+        - button "GitHub" [ref=e24] [cursor=pointer]
+      - paragraph [ref=e26]:
+        - text: Don't have an account?
+        - button "Sign up" [ref=e27] [cursor=pointer]
+  - region "Notifications alt+T"
+  - generic [ref=e32] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e33]
+    - generic [ref=e37]:
+      - button "Open issues overlay" [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: "0"
+          - generic [ref=e41]: "1"
+        - generic [ref=e42]: Issue
+      - button "Collapse issues badge" [ref=e43]
+  - alert [ref=e46]

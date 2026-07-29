@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot, Lock } from "lucide-react";
+import { Bot } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -23,7 +23,6 @@ import {
 import { Spinner } from "@workspace/ui/components/spinner";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 import { DataTable } from "@workspace/ui/custom/data-table";
-import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -50,11 +49,7 @@ export default function RequestsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const user = useCurrentUser();
-  const isClient = !!user.data?.user.isClient;
-  const tasksQuery = useQuery({
-    ...trpc.clickup.getTasks.queryOptions(),
-    enabled: isClient,
-  });
+  const tasksQuery = useQuery(trpc.clickup.getTasks.queryOptions());
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
@@ -111,34 +106,6 @@ export default function RequestsPage() {
     return (
       <div className="flex h-96 items-center justify-center">
         <Spinner />
-      </div>
-    );
-  }
-
-  if (user.data && !isClient) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-[27px] font-extrabold tracking-tight">
-          Request a Change
-        </h2>
-        <div className="rounded-lg border border-dashed px-6 py-14 text-center">
-          <div className="bg-muted text-muted-foreground mx-auto grid size-12.5 place-items-center rounded-[14px]">
-            <Lock className="size-6" />
-          </div>
-          <h3 className="mt-4.5 text-[22px] font-extrabold tracking-tight">
-            Available to active clients
-          </h3>
-          <p className="text-muted-foreground mx-auto mt-2 mb-5.5 max-w-[420px] text-[14.5px] leading-relaxed">
-            AI Requests lets you send website changes straight to our AI
-            assistant — bugs, copy edits, new features. It unlocks once you have
-            an active agency plan.
-          </p>
-          <RequestDialog>
-            <Button size="lg" className="rounded-full px-6">
-              Contact Support
-            </Button>
-          </RequestDialog>
-        </div>
       </div>
     );
   }

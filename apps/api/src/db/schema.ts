@@ -2,7 +2,7 @@
 // the shared schema (@workspace/drizzle). This module re-exports the API's
 // slice of it, plus the ApiUser view every route works with.
 //
-// Identity is Better Auth's `user` table (one row per client, isClient=true);
+// Identity is Better Auth's `user` table (one row per client);
 // API capabilities (bucket, email domain, origins) live in
 // `api_client_settings`. Null means the capability is off — routes return a
 // readable 403.

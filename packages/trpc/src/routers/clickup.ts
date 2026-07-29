@@ -7,13 +7,6 @@ const CLICKUP_API_BASE = "https://api.clickup.com/api/v2";
 
 export const clickupRouter = createTRPCRouter({
   getTasks: authenticatedProcedure.query(async ({ ctx }) => {
-    if (!ctx.session.user.isClient) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only clients can access requests",
-      });
-    }
-
     const apiKey = process.env.CLICKUP_API_TOKEN;
     if (!apiKey) {
       throw new TRPCError({
@@ -126,13 +119,6 @@ export const clickupRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.session.user.isClient) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only clients can access requests",
-        });
-      }
-
       const apiKey = process.env.CLICKUP_API_TOKEN;
       if (!apiKey) {
         throw new TRPCError({

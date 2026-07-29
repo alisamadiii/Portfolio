@@ -6,6 +6,5 @@ export interface User {
   emailVerified: boolean;
   role?: string | null;
   isAdmin?: boolean;
-  githubUsername?: string | null;
   accounts?: any[];
 }

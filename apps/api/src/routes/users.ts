@@ -198,15 +198,19 @@ users.post("/", async (c) => {
   try {
     let userRow;
     if (existing) {
-      [userRow] = await db
-        .update(usersTable)
-        .set({
-          isClient: true,
-          ...(type === "admin" ? { role: "admin" } : {}),
-          ...(data.name ? { name: data.name } : {}),
-        })
-        .where(eq(usersTable.id, existing.user.id))
-        .returning();
+      const updates = {
+        ...(type === "admin" ? { role: "admin" } : {}),
+        ...(data.name ? { name: data.name } : {}),
+      };
+      if (Object.keys(updates).length > 0) {
+        [userRow] = await db
+          .update(usersTable)
+          .set(updates)
+          .where(eq(usersTable.id, existing.user.id))
+          .returning();
+      } else {
+        userRow = existing.user;
+      }
     } else {
       [userRow] = await db
         .insert(usersTable)
@@ -215,7 +219,6 @@ users.post("/", async (c) => {
           email: data.email,
           name: data.name ?? data.email,
           role: type,
-          isClient: true,
         })
         .returning();
     }

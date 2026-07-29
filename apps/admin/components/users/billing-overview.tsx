@@ -90,21 +90,18 @@ export function BillingOverview() {
     trpc.users.get.queryOptions(id, { enabled: !!id })
   );
   const email = user?.email ?? "";
-  // Only clients have Stripe-managed billing — skip the calls otherwise to
-  // avoid burning through Stripe rate limits.
-  const isClient = !!user?.isClient;
 
   const { data: subs, isLoading: subsLoading } = useQuery(
     trpc.payments.adminGetStripeSubscriptions.queryOptions(
       { email },
-      { enabled: !!email && isClient, staleTime: 5 * 60 * 1000 }
+      { enabled: !!email, staleTime: 5 * 60 * 1000 }
     )
   );
 
   const { data: invoices, isLoading: invoicesLoading } = useQuery(
     trpc.payments.adminGetStripeInvoices.queryOptions(
       { email },
-      { enabled: !!email && isClient, staleTime: 5 * 60 * 1000 }
+      { enabled: !!email, staleTime: 5 * 60 * 1000 }
     )
   );
 
@@ -129,8 +126,7 @@ export function BillingOverview() {
 
   const loading = subsLoading || invoicesLoading;
 
-  // Non-clients have no Stripe billing — hide stat cards + Stripe tables.
-  if (!email || !isClient) return null;
+  if (!email) return null;
 
   return (
     <div className="space-y-6">

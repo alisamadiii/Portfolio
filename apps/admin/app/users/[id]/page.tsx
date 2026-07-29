@@ -2,10 +2,9 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, Loader, OctagonAlert } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { toast } from "sonner";
 
 import {
   Alert,
@@ -17,7 +16,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@workspace/ui/components/avatar";
-import { Switch } from "@workspace/ui/components/switch";
 import { TabLineAnimate } from "@workspace/ui/custom/tab-line-animate";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -53,21 +51,9 @@ export default function EachOrganization() {
   const { id } = useParams<{ id: string }>();
 
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const { data: user, isPending } = useQuery(
     trpc.users.get.queryOptions(id, {
       enabled: !!id,
-    })
-  );
-
-  const toggleClient = useMutation(
-    trpc.users.adminUpdate.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.users.get.queryKey(id),
-        });
-      },
-      onError: (error) => toast.error(error.message),
     })
   );
 
@@ -90,21 +76,6 @@ export default function EachOrganization() {
         <div>
           <p className="text-2xl">{user?.name}</p>
           <p className="text-muted-foreground text-xs">{user?.email}</p>
-        </div>
-        <div className="ml-auto flex items-center gap-2.5">
-          <div className="text-right">
-            <p className="text-sm leading-none font-medium">Client</p>
-            <p className="text-muted-foreground text-[11px]">
-              Unlock portal client features
-            </p>
-          </div>
-          <Switch
-            checked={!!user?.isClient}
-            disabled={!user || toggleClient.isPending}
-            onCheckedChange={(checked) =>
-              toggleClient.mutate({ id, isClient: checked })
-            }
-          />
         </div>
       </div>
       <TabLineAnimate

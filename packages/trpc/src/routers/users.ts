@@ -129,7 +129,7 @@ export const usersRouter = createTRPCRouter({
         limit: z.number().optional(),
         sortBy: z.enum(["email", "created", "banned"]).optional(),
         search: z.string().optional(),
-        filterBy: z.enum(["all", "admin", "client"]).optional(),
+        filterBy: z.enum(["all", "admin"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -153,10 +153,6 @@ export const usersRouter = createTRPCRouter({
           conditions.push(eq(user.role, "admin"));
         }
 
-        if (filterBy === "client") {
-          conditions.push(eq(user.isClient, true));
-        }
-
         const where = conditions.length > 0 ? and(...conditions) : undefined;
 
         const users = await db
@@ -175,7 +171,6 @@ export const usersRouter = createTRPCRouter({
             phone: user.phone,
             company: user.company,
             address: user.address,
-            isClient: user.isClient,
           })
           .from(user)
           .limit(limit)
@@ -204,7 +199,7 @@ export const usersRouter = createTRPCRouter({
     .input(
       z
         .object({
-          filterBy: z.enum(["all", "admin", "client"]).optional(),
+          filterBy: z.enum(["all", "admin"]).optional(),
         })
         .optional()
     )
@@ -213,11 +208,7 @@ export const usersRouter = createTRPCRouter({
         const filterBy = input?.filterBy;
 
         const where =
-          filterBy === "admin"
-            ? eq(user.role, "admin")
-            : filterBy === "client"
-              ? eq(user.isClient, true)
-              : undefined;
+          filterBy === "admin" ? eq(user.role, "admin") : undefined;
 
         const countResult = await db
           .select({ count: count() })
@@ -247,7 +238,6 @@ export const usersRouter = createTRPCRouter({
           banReason: z.string().optional(),
           role: z.enum(["user", "admin"]).optional(),
           emailVerified: z.boolean().optional(),
-          isClient: z.boolean().optional(),
         })
         .refine(
           (data) => {

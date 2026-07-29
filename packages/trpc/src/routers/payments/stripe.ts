@@ -1,4 +1,4 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
@@ -18,6 +18,7 @@ const getStripeCustomerIdsByEmail = async (
 ): Promise<string[]> => {
   "use cache";
   cacheLife("minutes");
+  cacheTag("stripe", `stripe-customers-${email}`);
   const customers = await stripe.customers.list({ email, limit: 100 });
   return customers.data.map((c) => c.id);
 };
@@ -42,6 +43,7 @@ const getStripeCustomerIdsForUser = async (
 const fetchSubscriptionsForCustomer = async (customerId: string) => {
   "use cache";
   cacheLife("minutes");
+  cacheTag("stripe", `stripe-subscriptions-${customerId}`);
   const subs = await stripe.subscriptions.list({
     customer: customerId,
     expand: ["data.default_payment_method"],
@@ -81,6 +83,9 @@ const fetchSubscriptionsForCustomer = async (customerId: string) => {
 const fetchSubscriptionStatusesForCustomer = async (customerId: string) => {
   "use cache";
   cacheLife("minutes");
+  // Same tag as the full subscription fetch — both derive from subscription
+  // state, so they revalidate together.
+  cacheTag("stripe", `stripe-subscriptions-${customerId}`);
   const subs = await stripe.subscriptions.list({
     customer: customerId,
     limit: 100,
@@ -94,6 +99,7 @@ const fetchSubscriptionStatusesForCustomer = async (customerId: string) => {
 const fetchInvoicesForCustomer = async (customerId: string) => {
   "use cache";
   cacheLife("minutes");
+  cacheTag("stripe", `stripe-invoices-${customerId}`);
   const invoices = await stripe.invoices.list({
     customer: customerId,
     limit: 50,

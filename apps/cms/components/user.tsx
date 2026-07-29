@@ -52,11 +52,7 @@ export function User({
           >
             <Avatar className="size-6">
               <AvatarImage
-                src={
-                  user?.githubUsername
-                    ? `https://github.com/${user.githubUsername}.png`
-                    : `https://unavatar.io/${user?.email}?fallback=false`
-                }
+                src={`https://unavatar.io/${user?.email}?fallback=false`}
                 alt={user?.name || user.email}
               />
               <AvatarFallback>
@@ -70,7 +66,7 @@ export function User({
         <DropdownMenuGroup>
           <DropdownMenuLabel>
             <div className="truncate text-sm font-medium">
-              {user.name || user.githubUsername || user.email}
+              {user.name || user.email}
             </div>
             <div className="text-muted-foreground truncate text-xs font-normal">
               {user.email}
