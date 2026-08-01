@@ -3,30 +3,9 @@ import type Stripe from "stripe";
 import { z } from "zod";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
+import { FEATURES, featureKeys, PRICE_IDS } from "@workspace/trpc/lib/features";
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { urls } from "@workspace/ui/lib/company";
-
-// ─── Stripe Price IDs — production vs sandbox ───────────────────
-// Edit these when prices change. Sandbox (test mode) IDs are used
-// everywhere except the production deployment.
-
-const IS_PROD = process.env.VERCEL_ENV === "production";
-
-const PRICE_IDS = IS_PROD
-  ? {
-      monthly: "price_1Tyd6g9sfDE02XZJuxFwcPEE", // $284/mo all-inclusive
-      hosting: "price_1Tyd6i9sfDE02XZJdfIqq1zE", // $20/mo managed hosting
-      cms: "price_1Tyd6l9sfDE02XZJd6PKJT1v", // $30/mo CMS access
-      upfrontBase: "price_1TzSCw9sfDE02XZJGMWUjnRt", // TODO: replace — agency_upfront_base ($500 one-time)
-      upfrontPage: "price_1TzSCw9sfDE02XZJPm94tRDX", // TODO: replace — agency_upfront_page ($200 one-time)
-    }
-  : {
-      monthly: "price_1Tyd3SG7Gvayjjm6jbNbcyMp",
-      hosting: "price_1Tyd2yG7Gvayjjm6l7mxEc9b",
-      cms: "price_1Tyd17G7Gvayjjm6n0EijMTm",
-      upfrontBase: "price_1TzPXlG7Gvayjjm6QCwM8VHK", // agency_upfront_base ($500 one-time)
-      upfrontPage: "price_1TzPYiG7Gvayjjm6nFI2d59S", // agency_upfront_page ($200 one-time)
-    };
 
 const AGENCY_URL = "https://agency.alisamadii.com";
 const PORTAL_URL = urls.portal; // localhost:3006 in dev
@@ -58,7 +37,8 @@ export async function OPTIONS(req: Request) {
 // ─── Checkout ───────────────────────────────────────────────────
 
 const bodySchema = z.object({
-  plan: z.enum(["monthly", "upfront"]),
+  // Feature keys ("cms", …) buy a single gated feature's subscription.
+  plan: z.enum(["monthly", "upfront", ...featureKeys]),
   email: z.email().optional(),
   name: z.string().max(200).optional(),
   company: z.string().max(200).optional(),
@@ -67,7 +47,23 @@ const bodySchema = z.object({
   hosting: z.boolean().optional(),
   cms: z.boolean().optional(),
   promotionCode: z.string().max(64).optional(),
+  // Feature purchases return the user to the page they were on.
+  returnUrl: z.url().max(2000).optional(),
 });
+
+const isFeaturePlan = (plan: string): plan is keyof typeof FEATURES =>
+  plan in FEATURES;
+
+// Only redirect back to our own apps.
+const validateReturnUrl = (returnUrl: string | undefined) => {
+  if (!returnUrl) return null;
+  try {
+    const origin = new URL(returnUrl).origin;
+    return allowedOrigins.includes(origin) ? returnUrl : null;
+  } catch {
+    return null;
+  }
+};
 
 export async function POST(req: Request) {
   const headers = corsHeaders(req);
@@ -89,10 +85,13 @@ export async function POST(req: Request) {
     hosting,
     cms,
     promotionCode,
+    returnUrl,
   } = parsed.data;
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-  if (plan === "monthly") {
+  if (isFeaturePlan(plan)) {
+    lineItems.push({ price: FEATURES[plan].price, quantity: 1 });
+  } else if (plan === "monthly") {
     lineItems.push({ price: PRICE_IDS.monthly, quantity: 1 });
   } else {
     const pageCount = pages ?? 1;
@@ -112,7 +111,8 @@ export async function POST(req: Request) {
 
   // Subscription mode when any recurring item is present; the one-time
   // upfront then rides the first invoice. Otherwise a plain payment.
-  const hasRecurring = plan === "monthly" || !!hosting || !!cms;
+  const hasRecurring =
+    plan === "monthly" || isFeaturePlan(plan) || !!hosting || !!cms;
   const mode: Stripe.Checkout.SessionCreateParams.Mode = hasRecurring
     ? "subscription"
     : "payment";
@@ -141,18 +141,29 @@ export async function POST(req: Request) {
     }
   }
 
+  // Feature purchases bounce back to the page the user was on (e.g. the CMS
+  // entry they tried to save); agency plans go through the portal welcome page.
+  const validReturnUrl = validateReturnUrl(returnUrl);
+  const featureBackUrl = validReturnUrl ?? urls.cms;
+  const featureSuccessUrl = `${featureBackUrl}${featureBackUrl.includes("?") ? "&" : "?"}purchase=success`;
+
   try {
     const params: Stripe.Checkout.SessionCreateParams = {
       mode,
       line_items: lineItems,
       customer_email: email,
       metadata,
-      success_url: `${PORTAL_URL}/agency/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${AGENCY_URL}/${plan === "monthly" ? "estimate" : "onboarding"}.html`,
+      success_url: isFeaturePlan(plan)
+        ? featureSuccessUrl
+        : `${PORTAL_URL}/agency/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: isFeaturePlan(plan)
+        ? featureBackUrl
+        : `${AGENCY_URL}/${plan === "monthly" ? "prizink" : "onboarding"}.html`,
       custom_text: {
         submit: {
-          message:
-            "Use the same email you'll use to sign in to your client portal at portal.alisamadii.com.",
+          message: isFeaturePlan(plan)
+            ? "Use the same email you sign in with — access is tied to it."
+            : "Use the same email you'll use to sign in to your client portal at portal.alisamadii.com.",
         },
       },
     };

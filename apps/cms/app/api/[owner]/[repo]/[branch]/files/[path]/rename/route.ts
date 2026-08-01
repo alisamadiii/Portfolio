@@ -10,6 +10,7 @@ import {
   setBranchHeadSha,
   updateFileCache,
 } from "@/lib/github-cache-file";
+import { requireFeatureAccess } from "@/lib/feature-access";
 import { isContentOperationAllowed } from "@/lib/operations";
 import { getSchemaByName } from "@/lib/schema";
 import { requireApiUserSession } from "@/lib/session-server";
@@ -41,6 +42,8 @@ export async function POST(
     const sessionResult = await requireApiUserSession();
     if ("response" in sessionResult) return sessionResult.response;
     const user = sessionResult.user;
+
+    await requireFeatureAccess(user, "cms");
 
     const { token } = await getToken(user, params.owner, params.repo, true);
     if (!token) throw new Error("Token not found");

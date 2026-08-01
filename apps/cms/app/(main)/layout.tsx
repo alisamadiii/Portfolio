@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { SubscriptionGateProvider } from "@/components/subscription/subscription-gate";
 import { UserProvider } from "@/contexts/user-context";
 
 import { User } from "@/types/user";
@@ -36,5 +37,9 @@ export default async function Layout({
     accounts,
   };
 
-  return <UserProvider user={userWithAccounts}>{children}</UserProvider>;
+  return (
+    <UserProvider user={userWithAccounts}>
+      <SubscriptionGateProvider>{children}</SubscriptionGateProvider>
+    </UserProvider>
+  );
 }

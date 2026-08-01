@@ -1,4 +1,4 @@
-import { cacheLife, cacheTag } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
@@ -9,7 +9,9 @@ import {
   authenticatedProcedure,
   baseProcedure,
   createTRPCRouter,
+  internalProcedure,
 } from "@workspace/trpc/init";
+import { FEATURES, featureKeys } from "@workspace/trpc/lib/features";
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import { user } from "@workspace/drizzle/schema";
@@ -126,6 +128,37 @@ const fetchSubscriptionStatusesForCustomer = async (customerId: string) => {
   }));
 };
 
+const fetchSubscriptionPriceStatuses = async (customerId: string) => {
+  "use cache";
+  cacheLife("minutes");
+  // Same tag as the full subscription fetch — both derive from subscription
+  // state, so they revalidate together.
+  cacheTag("stripe", `stripe-subscriptions-${customerId}`);
+  const subs = await stripe.subscriptions.list({
+    customer: customerId,
+    limit: 100,
+  });
+  return subs.data.map((s) => ({
+    status: s.status,
+    priceIds: s.items.data
+      .map((item) => item.price?.id)
+      .filter((id): id is string => Boolean(id)),
+  }));
+};
+
+// past_due keeps access: Stripe is still retrying the card, so the client
+// gets a grace period instead of an instant lockout on one failed payment.
+const ACCESS_STATUSES = ["active", "trialing", "past_due"];
+
+// Hard expiry ({ expire: 0 }), not stale-while-revalidate: the next read must
+// see the new subscription (read-your-own-writes after a purchase), not a
+// stale copy served while revalidating in the background.
+const revalidateStripeTagsForCustomer = (email: string, customerId: string) => {
+  revalidateTag(`stripe-customers-${email}`, { expire: 0 });
+  revalidateTag(`stripe-subscriptions-${customerId}`, { expire: 0 });
+  revalidateTag(`stripe-invoices-${customerId}`, { expire: 0 });
+};
+
 const fetchInvoicesForCustomer = async (customerId: string) => {
   "use cache";
   cacheLife("minutes");
@@ -175,6 +208,27 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
+      // A confirmed purchase means the cached Stripe data for this customer
+      // is stale — refresh it so billing UIs and feature gates see the new
+      // subscription immediately instead of after the cache TTL.
+      const paid =
+        session.status === "complete" &&
+        (session.payment_status === "paid" ||
+          session.payment_status === "no_payment_required");
+      const sessionEmail =
+        session.customer_details?.email ?? session.customer_email;
+      if (paid && sessionEmail) {
+        const customerId =
+          typeof session.customer === "string"
+            ? session.customer
+            : session.customer?.id;
+        if (customerId) {
+          revalidateStripeTagsForCustomer(sessionEmail, customerId);
+        } else {
+          revalidateTag(`stripe-customers-${sessionEmail}`, { expire: 0 });
+        }
+      }
+
       return {
         status: session.status,
         paymentStatus: session.payment_status,
@@ -199,6 +253,57 @@ export const stripeRouter = createTRPCRouter({
           interval: li.price?.recurring?.interval ?? null,
         })),
       };
+    }),
+
+  // Server-to-server feature gate (e.g. CMS save). `fresh: true` bypasses the
+  // minutes-TTL cache and revalidates it — used right after a purchase so the
+  // user is never blocked by a stale "no subscription" read.
+  internalHasFeatureAccess: internalProcedure
+    .input(
+      z.object({
+        email: z.email(),
+        feature: z.enum(featureKeys),
+        fresh: z.boolean().default(false),
+      })
+    )
+    .query(async ({ input }): Promise<{ hasAccess: boolean }> => {
+      const grantedBy: readonly string[] = FEATURES[input.feature].grantedBy;
+
+      if (input.fresh) {
+        const customers = await stripe.customers.list({
+          email: input.email,
+          limit: 100,
+        });
+        let hasAccess = false;
+        for (const customer of customers.data) {
+          revalidateStripeTagsForCustomer(input.email, customer.id);
+          if (hasAccess) continue;
+          const subs = await stripe.subscriptions.list({
+            customer: customer.id,
+            limit: 100,
+          });
+          hasAccess = subs.data.some(
+            (sub) =>
+              ACCESS_STATUSES.includes(sub.status) &&
+              sub.items.data.some(
+                (item) => item.price?.id && grantedBy.includes(item.price.id)
+              )
+          );
+        }
+        return { hasAccess };
+      }
+
+      const customerIds = await getStripeCustomerIdsByEmail(input.email);
+      for (const customerId of customerIds) {
+        const subs = await fetchSubscriptionPriceStatuses(customerId);
+        const hasAccess = subs.some(
+          (sub) =>
+            ACCESS_STATUSES.includes(sub.status) &&
+            sub.priceIds.some((priceId) => grantedBy.includes(priceId))
+        );
+        if (hasAccess) return { hasAccess: true };
+      }
+      return { hasAccess: false };
     }),
 
   getStripeSubscriptions: authenticatedProcedure.query(async ({ ctx }) => {
