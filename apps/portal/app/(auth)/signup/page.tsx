@@ -62,6 +62,7 @@ function Content() {
 
       <div className={magicSent ? "" : "mt-8"}>
         <SignUpForm
+          defaultEmail={searchParams.get("email") ?? undefined}
           onSuccess={(email) => {
             setIsOpen(true);
             setEmail(email);

@@ -52,6 +52,46 @@ const formatCurrency = (amount: number, currency: string = "usd") =>
     currency: currency.toUpperCase(),
   }).format(amount / 100);
 
+// Effective per-cycle charge. Exact for percent_off (applies cleanly per item);
+// amount_off keeps the list price (a fixed coupon is distributed across a
+// multi-item subscription in ways we can't replicate per card).
+const effectiveAmount = (sub: StripeSubscription) =>
+  sub.discount?.percentOff != null
+    ? Math.round(sub.amount * (1 - sub.discount.percentOff / 100))
+    : sub.amount;
+
+const discountLabel = (
+  discount: NonNullable<StripeSubscription["discount"]>,
+  currency: string
+) =>
+  discount.percentOff != null
+    ? `${discount.percentOff}% off`
+    : discount.amountOff != null
+      ? `${formatCurrency(discount.amountOff, discount.currency ?? currency)} off`
+      : "Discount";
+
+// The line that tells the customer whether the discount survives renewal —
+// so a "forever / free" coupon doesn't read like a first-month teaser.
+const discountNote = (sub: StripeSubscription): string | null => {
+  const d = sub.discount;
+  if (!d) return null;
+  const full = `${formatCurrency(sub.amount, sub.currency)}/${sub.interval ?? "month"}`;
+  switch (d.duration) {
+    case "forever":
+      return d.percentOff === 100
+        ? "Free — applies to every renewal"
+        : "Discount applies to every renewal";
+    case "once":
+      return `First ${sub.interval ?? "cycle"} only — then ${full}`;
+    case "repeating":
+      return d.durationInMonths
+        ? `For ${d.durationInMonths} month${d.durationInMonths > 1 ? "s" : ""} — then ${full}`
+        : `Limited time — then ${full}`;
+    default:
+      return null;
+  }
+};
+
 // ─── Shared bits ────────────────────────────────────────────────
 
 const StatusPill = ({ status }: { status: string }) => (
@@ -92,6 +132,9 @@ const SubscriptionCard = ({
   const { data: currentUser } = useCurrentUser();
   const isCanceling = sub.cancelAtPeriodEnd || !!sub.canceledAt;
   const renewal = new Date(sub.currentPeriodEnd * 1000);
+  const effective = effectiveAmount(sub);
+  const showEffective = effective !== sub.amount;
+  const note = discountNote(sub);
 
   return (
     <div className="bg-card overflow-hidden rounded-lg border">
@@ -108,14 +151,31 @@ const SubscriptionCard = ({
             {currentUser?.user.address ? ` · ${currentUser.user.address}` : ""}
           </p>
         </div>
-        <StatusPill status={isCanceling ? "canceling" : sub.status} />
+        <div className="flex items-center gap-2">
+          <StatusPill status={isCanceling ? "canceling" : sub.status} />
+          {sub.discount && (
+            <span className="bg-status-success-bg text-status-success rounded-full px-3 py-1 text-xs font-semibold">
+              {discountLabel(sub.discount, sub.currency)}
+            </span>
+          )}
+        </div>
         <div className="text-right">
+          {showEffective && (
+            <p className="text-muted-foreground text-[13px] font-semibold tracking-tight line-through">
+              {formatCurrency(sub.amount, sub.currency)}
+            </p>
+          )}
           <p className="text-[22px] font-extrabold tracking-tight">
-            {formatCurrency(sub.amount, sub.currency)}
+            {formatCurrency(effective, sub.currency)}
           </p>
           <p className="text-muted-foreground text-[12.5px]">
             per {sub.interval ?? "month"}
           </p>
+          {note && (
+            <p className="text-status-success mt-0.5 text-[12px] font-medium">
+              {note}
+            </p>
+          )}
         </div>
       </div>
 

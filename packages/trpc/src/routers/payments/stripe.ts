@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   adminProcedure,
   authenticatedProcedure,
+  baseProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { stripe } from "@workspace/trpc/lib/stripe";
@@ -46,12 +47,22 @@ const fetchSubscriptionsForCustomer = async (customerId: string) => {
   cacheTag("stripe", `stripe-subscriptions-${customerId}`);
   const subs = await stripe.subscriptions.list({
     customer: customerId,
-    expand: ["data.default_payment_method"],
+    expand: [
+      "data.default_payment_method",
+      "data.discounts.source.coupon",
+    ],
   });
 
+  // One checkout can bundle several recurring prices into a single Stripe
+  // subscription (multiple items.data[]), so emit one card per item rather
+  // than collapsing to items.data[0]. The discount is subscription-level, so
+  // it rides along on every item.
+  const pairs = subs.data.flatMap((sub) =>
+    sub.items.data.map((item) => ({ sub, item }))
+  );
+
   return Promise.all(
-    subs.data.map(async (sub) => {
-      const item = sub.items.data[0];
+    pairs.map(async ({ sub, item }) => {
       let productName: string | null = null;
 
       if (item?.price?.product) {
@@ -63,11 +74,20 @@ const fetchSubscriptionsForCustomer = async (customerId: string) => {
         productName = product.name;
       }
 
+      // API v22 nests the coupon under discount.source.coupon.
+      const coupon = sub.discounts?.reduce<Stripe.Coupon | null>((found, d) => {
+        if (found || typeof d !== "object") return found;
+        const c = d.source?.coupon;
+        return typeof c === "object" ? c : found;
+      }, null);
+
+      const quantity = item?.quantity ?? 1;
+
       return {
-        id: sub.id,
+        id: item?.id ?? sub.id,
         status: sub.status,
         productName,
-        amount: item?.price?.unit_amount ?? 0,
+        amount: (item?.price?.unit_amount ?? 0) * quantity,
         currency: sub.currency,
         interval: item?.price?.recurring?.interval ?? null,
         currentPeriodEnd: item?.current_period_end ?? sub.created,
@@ -75,6 +95,16 @@ const fetchSubscriptionsForCustomer = async (customerId: string) => {
         canceledAt: sub.canceled_at,
         trialEnd: sub.trial_end,
         created: sub.created,
+        discount: coupon
+          ? {
+              name: coupon.name ?? null,
+              percentOff: coupon.percent_off ?? null,
+              amountOff: coupon.amount_off ?? null,
+              currency: coupon.currency ?? null,
+              duration: coupon.duration,
+              durationInMonths: coupon.duration_in_months ?? null,
+            }
+          : null,
       };
     })
   );
@@ -127,6 +157,50 @@ const mapInvoice = (inv: Stripe.Invoice) => ({
 });
 
 export const stripeRouter = createTRPCRouter({
+  // Public: a Checkout Session id (cs_...) is an unguessable bearer token and
+  // brand-new agency clients don't have a portal account yet. Returns a
+  // minimal hand-picked shape, never the raw session.
+  verifyStripeCheckout: baseProcedure
+    .input(z.object({ sessionId: z.string().startsWith("cs_").max(200) }))
+    .query(async ({ input }) => {
+      let session: Stripe.Checkout.Session;
+      try {
+        session = await stripe.checkout.sessions.retrieve(input.sessionId, {
+          expand: ["line_items"],
+        });
+      } catch {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Checkout session not found",
+        });
+      }
+
+      return {
+        status: session.status,
+        paymentStatus: session.payment_status,
+        mode: session.mode,
+        currency: session.currency,
+        amountSubtotal: session.amount_subtotal,
+        amountDiscount: session.total_details?.amount_discount ?? 0,
+        amountTotal: session.amount_total,
+        customerEmail:
+          session.customer_details?.email ?? session.customer_email,
+        metadata: {
+          plan: session.metadata?.plan ?? null,
+          name: session.metadata?.name ?? "",
+          company: session.metadata?.company ?? "",
+          pages: session.metadata?.pages ?? "",
+        },
+        lineItems: (session.line_items?.data ?? []).map((li) => ({
+          name: li.description,
+          quantity: li.quantity,
+          amountTotal: li.amount_total,
+          // null ⇒ one-time
+          interval: li.price?.recurring?.interval ?? null,
+        })),
+      };
+    }),
+
   getStripeSubscriptions: authenticatedProcedure.query(async ({ ctx }) => {
     const customerIds = await getStripeCustomerIdsForUser(ctx.session.user.id);
     if (customerIds.length === 0) return [];

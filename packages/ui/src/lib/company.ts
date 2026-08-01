@@ -38,7 +38,7 @@ export const company = {
   myImage: "https://cdn.alisamadii.com/1780454258377-my-image.png",
 };
 
-export const urls: Record<Lowercase<ProjectType> | "portal", string> = {
+export const urls: Record<Lowercase<ProjectType> | "portal" | "api", string> = {
   portfolio:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
@@ -75,6 +75,10 @@ export const urls: Record<Lowercase<ProjectType> | "portal", string> = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173"
       : "https://saaskit.alisamadii.com",
+  api:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:8787"
+      : "https://api.alisamadii.com",
 };
 
 const ALLOWED_REDIRECT_ORIGINS = new Set(
@@ -154,7 +158,7 @@ export const logos = {
 };
 
 export const projectsData: {
-  name: ProjectType;
+  name: string;
   logo: string;
   description: string;
   soon?: boolean;
@@ -183,5 +187,40 @@ export const projectsData: {
     logo: logos.black,
     description: "A template for starting a new project",
     soon: true,
+  },
+  {
+    name: "SAASKIT",
+    logo: logos.green,
+    description: "A production-ready SaaS starter kit",
+    link: urls.saaskit,
+  },
+  {
+    name: "CMS",
+    logo: logos.purple,
+    description: "A Git-based CMS for your content",
+    link: urls.cms,
+  },
+  {
+    name: "ADMIN",
+    logo: logos.blue,
+    description: "Internal admin dashboard",
+  },
+  {
+    name: "PORTAL",
+    logo: logos.green,
+    description: "Client account & billing portal",
+    link: urls.portal,
+  },
+  {
+    name: "PORTFOLIO",
+    logo: logos.purple,
+    description: "My personal portfolio site",
+    link: urls.portfolio,
+  },
+  {
+    name: "API",
+    logo: logos.black,
+    description: "Agency API on Cloudflare Workers",
+    link: urls.api,
   },
 ];

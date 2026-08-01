@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/reset-password"];
 
+// Open to everyone, signed in or not — unlike PUBLIC_PATHS, signed-in users
+// are not bounced away from these.
+const OPEN_PATHS = ["/agency/success"];
+
 export async function proxy(request: Request) {
   const nextRequest = request as NextRequest;
   const pathname = nextRequest.nextUrl.pathname;
@@ -23,8 +27,11 @@ export async function proxy(request: Request) {
   const isPublicPath = PUBLIC_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
+  const isOpenPath = OPEN_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
 
-  if (!isPublicPath && !sessionToken) {
+  if (!isPublicPath && !isOpenPath && !sessionToken) {
     const loginUrl = new URL("/login", nextRequest.url);
     loginUrl.searchParams.set(
       "redirectUrl",

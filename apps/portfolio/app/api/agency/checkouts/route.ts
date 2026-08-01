@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { stripe } from "@workspace/trpc/lib/stripe";
+import { urls } from "@workspace/ui/lib/company";
 
 // ─── Stripe Price IDs — production vs sandbox ───────────────────
 // Edit these when prices change. Sandbox (test mode) IDs are used
@@ -28,7 +29,7 @@ const PRICE_IDS = IS_PROD
     };
 
 const AGENCY_URL = "https://agency.alisamadii.com";
-const PORTAL_URL = "https://portal.alisamadii.com";
+const PORTAL_URL = urls.portal; // localhost:3006 in dev
 
 // ─── CORS ───────────────────────────────────────────────────────
 // Live Server (static agency site during local dev) is not in the
@@ -146,7 +147,7 @@ export async function POST(req: Request) {
       line_items: lineItems,
       customer_email: email,
       metadata,
-      success_url: `${PORTAL_URL}/?checkout=success`,
+      success_url: `${PORTAL_URL}/agency/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${AGENCY_URL}/${plan === "monthly" ? "estimate" : "onboarding"}.html`,
       custom_text: {
         submit: {

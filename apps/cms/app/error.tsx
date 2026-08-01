@@ -27,13 +27,16 @@ export default function Error({
     <Empty className="absolute inset-0 rounded-none border-0">
       <EmptyHeader>
         <EmptyTitle>Something went wrong</EmptyTitle>
-        <EmptyDescription>{error.message}</EmptyDescription>
+        <EmptyDescription>
+          We hit a temporary problem loading this page. Try again in a moment —
+          if it keeps happening, contact your admin.
+        </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <Button variant="default" render={<Link href="/">Go home</Link>} />
         <Button variant="outline" onClick={reset}>
           Try again
         </Button>
+        <Button variant="default" render={<Link href="/">Go home</Link>} />
       </EmptyContent>
     </Empty>
   );

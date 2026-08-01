@@ -24,13 +24,23 @@ const getAccounts = async (user: User): Promise<Account[]> => {
     return [{ login: org, type: "org", repositorySelection: "all" }];
   }
 
-  const groupedRepos = await db
-    .selectDistinct({
-      owner: collaboratorTable.owner,
-      type: collaboratorTable.type,
-    })
-    .from(collaboratorTable)
-    .where(collaboratorMatchesUser(user));
+  // The CMS Neon WebSocket pool can drop a query on cold start; one retry
+  // keeps a transient blip from crashing the whole app on entry.
+  const runQuery = () =>
+    db
+      .selectDistinct({
+        owner: collaboratorTable.owner,
+        type: collaboratorTable.type,
+      })
+      .from(collaboratorTable)
+      .where(collaboratorMatchesUser(user));
+
+  let groupedRepos;
+  try {
+    groupedRepos = await runQuery();
+  } catch {
+    groupedRepos = await runQuery();
+  }
 
   return groupedRepos.map((collaborator) => ({
     login: collaborator.owner,

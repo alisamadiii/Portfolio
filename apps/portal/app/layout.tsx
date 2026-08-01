@@ -38,7 +38,8 @@ export const metadata: Metadata = {
     description: "Account dashboard, settings, and customer portal.",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "https://cdn.alisamadii.com/company/business-logo-soft-rounded.png",
+    apple: "https://cdn.alisamadii.com/company/business-logo-soft-rounded.png",
   },
 };
 

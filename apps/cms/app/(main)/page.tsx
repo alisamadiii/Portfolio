@@ -53,7 +53,7 @@ export default function Page() {
         ) : (
           <Empty className="absolute inset-0 rounded-none border-0">
             <EmptyHeader>
-              <EmptyTitle>No repositories yet</EmptyTitle>
+              <EmptyTitle>No projects yet</EmptyTitle>
               <EmptyDescription>
                 You need an invitation to a repository before you can
                 collaborate. Ask an admin to invite you.

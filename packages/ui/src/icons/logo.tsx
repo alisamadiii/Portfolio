@@ -24,3 +24,20 @@ export const Logo = (props: SVGProps) => {
     </svg>
   );
 };
+
+export const LogoV2 = (props: SVGProps) => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <rect width="24" height="24" rx="6" fill="currentColor" />
+    <path
+      d="M14.5794 16.5671H18.4727V19.1306H14.5794V16.5671ZM11.1432 4.86963L9.45758 7.85609H11.3678L8.68347 12.6123H12.9119L14.5794 9.65787V13.0967H6.50005L4.81445 16.0827H6.72468L5.00449 19.1306H9.23345L10.9536 16.0827H18.4727V4.86963H11.1432Z"
+      fill="white"
+    />
+  </svg>
+);

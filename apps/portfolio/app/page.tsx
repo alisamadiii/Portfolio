@@ -5,6 +5,7 @@ import { FileUser } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { LogoV2 } from "@workspace/ui/icons/logo";
 import {
   BetterAuth,
   Drizzle,
@@ -272,7 +273,7 @@ export default function Home() {
 
       <section>
         <h2 className="text-muted-foreground mb-8 text-sm font-normal tracking-[.3rem] uppercase">
-          Projects
+          Projects I&apos;m Building
         </h2>
 
         <ul className="relative grid grid-cols-2 items-center justify-items-center">
@@ -298,6 +299,14 @@ export default function Home() {
             className="border-t-none absolute right-0 h-[calc(100%+20rem)] w-px translate-x-0 border-l"
           />
         </ul>
+
+        {projectsData.length > 4 && (
+          <ul className="mt-4 grid grid-cols-2 border-t border-dashed [&>*]:border-b [&>*]:border-dashed [&>*:nth-child(odd)]:border-r">
+            {projectsData.slice(4).map((project) => (
+              <ProjectRow key={project.name} {...project} />
+            ))}
+          </ul>
+        )}
       </section>
 
       <section>
@@ -443,23 +452,14 @@ const Project = ({
   link,
   soon,
 }: {
-  name: (typeof projects)[number]["name"];
+  name: (typeof projectsData)[number]["name"];
   logo: string;
   description: string;
   link?: string;
   soon?: boolean;
 }) => {
-  return (
-    <Link
-      href={link ?? ""}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "relative flex w-full flex-1 flex-col items-center justify-center py-4 **:duration-300 md:items-center",
-        "hover:bg-muted/50 duration-200",
-        soon && "cursor-progress opacity-50"
-      )}
-    >
+  const content = (
+    <>
       <img src={logo} alt={name} className="size-16 rounded-full" />
       <div className="flex flex-col items-center justify-center p-4">
         <p className="text-sm font-bold">{name}</p>
@@ -467,6 +467,81 @@ const Project = ({
           {description}
         </p>
       </div>
+    </>
+  );
+
+  const baseClass =
+    "relative flex w-full flex-1 flex-col items-center justify-center py-4 **:duration-300 md:items-center";
+
+  // Private apps (e.g. Admin) ship no link — render a non-clickable card.
+  if (!link) {
+    return (
+      <div className={cn(baseClass, "cursor-default", soon && "opacity-50")}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        baseClass,
+        "hover:bg-muted/50 duration-200",
+        soon && "cursor-progress opacity-50"
+      )}
+    >
+      {content}
+    </Link>
+  );
+};
+
+// Compact text-only card for the overflow projects (no logo — the shared "A"
+// logo repeats, so only the first four cards show it).
+const ProjectRow = ({
+  name,
+  description,
+  link,
+  soon,
+}: {
+  name: (typeof projectsData)[number]["name"];
+  description: string;
+  link?: string;
+  soon?: boolean;
+}) => {
+  const content = (
+    <>
+      <p className="text-sm font-bold">{name}</p>
+      <p className="text-muted-foreground mt-1 max-w-56 text-xs">
+        {description}
+      </p>
+    </>
+  );
+
+  const baseClass = "flex flex-col justify-center p-6 transition-colors";
+
+  if (!link) {
+    return (
+      <div className={cn(baseClass, "cursor-default", soon && "opacity-50")}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        baseClass,
+        "hover:bg-muted/50 duration-200",
+        soon && "cursor-progress opacity-50"
+      )}
+    >
+      {content}
     </Link>
   );
 };

@@ -40,6 +40,7 @@ type SignUpFormProps = {
   onSignIn: () => void;
   socialRedirectUrl: string;
   onMagicSentChange?: (sent: boolean) => void;
+  defaultEmail?: string;
 };
 
 export function SignUpForm({
@@ -47,6 +48,7 @@ export function SignUpForm({
   onSignIn,
   socialRedirectUrl,
   onMagicSentChange,
+  defaultEmail,
 }: SignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<"magic" | "password">("magic");
@@ -54,12 +56,12 @@ export function SignUpForm({
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: { name: "", email: defaultEmail ?? "", password: "" },
   });
 
   const magicForm = useForm<z.infer<typeof magicSchema>>({
     resolver: zodResolver(magicSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: defaultEmail ?? "" },
   });
 
   const magicLink = useMagicLink();
