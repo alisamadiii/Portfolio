@@ -15,11 +15,11 @@
     <link
       rel="icon"
       type="image/png"
-      href="https://cdn.alisamadii.com/company/business-logo.png"
+      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
     />
     <link
       rel="apple-touch-icon"
-      href="https://cdn.alisamadii.com/company/business-logo.png"
+      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
     />
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -167,6 +167,159 @@
       .choice-card.selected .choice-dot::after {
         transform: scale(1);
       }
+
+      /* Promo pass — reveal choreography (replayed via .animate) */
+      .promo-badge.animate {
+        animation: badge-in 0.55s cubic-bezier(0.32, 0.72, 0, 1) both;
+      }
+      @keyframes badge-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.96);
+          filter: blur(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0);
+        }
+      }
+
+      /* Staged children cascade */
+      .promo-badge.animate [data-stage] {
+        animation: stage-in 0.5s cubic-bezier(0.32, 0.72, 0, 1) both;
+      }
+      .promo-badge.animate [data-stage="1"] { animation-delay: 0.1s; }
+      .promo-badge.animate [data-stage="2"] { animation-delay: 0.18s; }
+      .promo-badge.animate [data-stage="3"] { animation-delay: 0.26s; }
+      .promo-badge.animate [data-stage="4"] { animation-delay: 0.34s; }
+      @keyframes stage-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+          filter: blur(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+
+      /* Bottom band slides up into place */
+      .promo-badge.animate .promo-band {
+        animation: band-in 0.5s cubic-bezier(0.32, 0.72, 0, 1) 0.42s both;
+      }
+      @keyframes band-in {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      /* Checkmark draws itself */
+      .promo-badge.animate .promo-check path {
+        stroke-dasharray: 24;
+        stroke-dashoffset: 24;
+        animation: check-draw 0.35s ease-out 0.8s forwards;
+      }
+      @keyframes check-draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      /* Slow sunburst behind the pass */
+      .promo-rays {
+        position: absolute;
+        top: -110px;
+        left: 50%;
+        width: 340px;
+        height: 340px;
+        margin-left: -170px;
+        border-radius: 9999px;
+        background: repeating-conic-gradient(
+          from 0deg,
+          rgba(5, 150, 105, 0.07) 0deg 9deg,
+          transparent 9deg 24deg
+        );
+        -webkit-mask-image: radial-gradient(
+          closest-side,
+          black 30%,
+          transparent 72%
+        );
+        mask-image: radial-gradient(closest-side, black 30%, transparent 72%);
+        animation: rays-spin 70s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes rays-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* One-time shine sweep */
+      .promo-badge.animate .promo-shine {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+          105deg,
+          transparent 42%,
+          rgba(255, 255, 255, 0.5) 50%,
+          transparent 58%
+        );
+        transform: translateX(-130%);
+        animation: shine-sweep 0.9s ease-out 0.75s forwards;
+      }
+      @keyframes shine-sweep {
+        to {
+          transform: translateX(130%);
+        }
+      }
+      /* Centered overlay reveal (on Apply) */
+      .promo-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+      }
+      .promo-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #promoCardLift.lifted {
+        position: relative;
+        z-index: 95;
+      }
+      /* While the card is lifted, drop the step's finished entrance
+         animation — its retained filter creates a stacking context that
+         would trap the card underneath the overlay. Stays on until the
+         user leaves the step (re-adding the animation would replay it). */
+      .step.active.lift-host {
+        animation: none;
+      }
+      #promoCardLift.settling {
+        transition: transform 0.7s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .promo-badge.animate,
+        .promo-badge.animate [data-stage],
+        .promo-badge.animate .promo-band,
+        .promo-badge.animate .promo-check path,
+        .promo-badge.animate .promo-shine,
+        .promo-rays {
+          animation: none;
+        }
+      }
     </style>
   </head>
 
@@ -215,7 +368,7 @@
     </nav>
 
     <!-- ==================== WIZARD ==================== -->
-    <main class="flex flex-1 items-center px-4 py-12 md:px-8">
+    <main class="flex flex-1 items-center px-4 py-12 pb-48 md:px-8 md:pb-64">
       <div class="mx-auto w-full max-w-[640px]">
         <p
           id="stepCounter"
@@ -421,16 +574,179 @@
             Your <span class="text-accent">project</span>,<br />summed up.
           </h1>
           <p class="text-warmgray mt-4 text-base leading-relaxed">
-            We'll review your details and confirm the exact quote before any
-            work begins.
+            We'll review your details and confirm everything before any work
+            begins.
           </p>
+
+          <!-- Page count -->
           <div
-            class="bg-charcoal/[0.03] ring-charcoal/[0.04] mt-8 rounded-[18px] p-1.5 ring-1"
+            class="border-charcoal/[0.06] mt-8 flex items-center justify-between gap-4 rounded-2xl border bg-white p-5"
+          >
+            <div>
+              <p class="text-sm font-semibold">How many pages?</p>
+              <p class="text-warmgray mt-0.5 text-xs" id="pagesHint"></p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                id="pagesMinus"
+                type="button"
+                class="mag-btn border-charcoal/[0.12] grid h-9 w-9 place-items-center rounded-full border text-lg leading-none disabled:opacity-40"
+                aria-label="Remove a page"
+              >
+                −
+              </button>
+              <span
+                id="pagesValue"
+                class="w-6 text-center text-lg font-semibold tabular-nums"
+              ></span>
+              <button
+                id="pagesPlus"
+                type="button"
+                class="mag-btn border-charcoal/[0.12] grid h-9 w-9 place-items-center rounded-full border text-lg leading-none"
+                aria-label="Add a page"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="bg-charcoal/[0.03] ring-charcoal/[0.04] mt-4 rounded-[18px] p-1.5 ring-1"
           >
             <div class="rounded-[14px] bg-white p-6 md:p-8">
               <div id="summaryRows" class="space-y-0"></div>
             </div>
           </div>
+
+          <!-- What counts as a page -->
+          <div
+            class="border-charcoal/[0.06] mt-4 rounded-2xl border bg-white p-5"
+          >
+            <p class="text-sm font-semibold">What counts as a page?</p>
+            <p class="text-warmgray mt-1 text-xs leading-relaxed">
+              A page is anything with its own address — Home, About, Services,
+              Contact, and so on. A long scrolling page still counts as one.
+              Terms &amp; privacy pages are always free and don't count toward
+              your total. Need more later? We'll sort it out together.
+            </p>
+          </div>
+
+          <!-- Promo code -->
+          <div class="mt-4">
+            <label
+              class="text-warmgray mb-2 block text-xs font-medium tracking-[0.1em] uppercase"
+              >Promo code
+              <span class="text-muted normal-case">(optional)</span></label
+            >
+            <div id="promoInputRow" class="flex gap-2">
+              <input
+                id="promoInput"
+                type="text"
+                placeholder="Enter code"
+                class="border-charcoal/[0.08] focus:ring-accent/30 focus:border-accent/30 w-full rounded-xl border bg-white px-4 py-3 text-sm uppercase transition-all focus:ring-2 focus:outline-none"
+              />
+              <button
+                id="promoApply"
+                type="button"
+                class="mag-btn bg-charcoal text-cream hover:bg-accent shrink-0 rounded-xl px-5 py-3 text-sm font-medium disabled:opacity-60"
+              >
+                Apply
+              </button>
+            </div>
+            <div id="promoBadge" class="hidden">
+              <div id="promoCardLift">
+              <div
+                class="promo-badge ring-charcoal/[0.06] relative w-full max-w-[320px] overflow-hidden rounded-[18px] bg-white ring-1 shadow-[0_24px_48px_-20px_rgba(27,26,23,0.28)]"
+              >
+                <!-- rotating sunburst -->
+                <div class="promo-rays"></div>
+
+                <!-- lanyard slot -->
+                <div
+                  class="bg-charcoal/[0.08] relative mx-auto mt-4 h-2 w-12 rounded-full"
+                ></div>
+
+                <button
+                  id="promoRemove"
+                  type="button"
+                  aria-label="Remove promo code"
+                  class="mag-btn text-warmgray hover:text-charcoal hover:bg-charcoal/[0.05] absolute top-3 right-3 z-10 grid h-7 w-7 place-items-center rounded-full transition-colors"
+                >
+                  <svg
+                    class="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+
+                <div class="relative px-6 pt-5 pb-6 text-center">
+                  <div
+                    data-stage="1"
+                    class="bg-charcoal mx-auto flex h-10 w-10 items-center justify-center rounded-full"
+                  >
+                    <span class="text-cream text-sm font-bold">AS</span>
+                  </div>
+                  <p
+                    data-stage="2"
+                    class="text-warmgray mt-3 font-mono text-[10.5px] tracking-[0.2em] uppercase"
+                  >
+                    Promo pass
+                  </p>
+                  <p
+                    id="promoBadgeCode"
+                    data-stage="3"
+                    class="text-charcoal mt-1.5 font-mono text-[26px] font-bold tracking-[0.06em]"
+                  ></p>
+                  <p
+                    id="promoBadgeDiscount"
+                    data-stage="4"
+                    class="mt-1 text-sm font-semibold text-emerald-600"
+                  ></p>
+                  <p
+                    id="promoBadgeMessage"
+                    data-stage="4"
+                    class="text-charcoal/80 mt-3 hidden text-sm leading-relaxed italic"
+                  ></p>
+                </div>
+
+                <!-- role band -->
+                <div class="promo-band bg-emerald-600 py-2.5 text-center">
+                  <p
+                    class="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold tracking-[0.22em] text-white uppercase"
+                  >
+                    <svg
+                      class="promo-check h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="3"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Applied
+                  </p>
+                </div>
+
+                <div class="promo-shine"></div>
+              </div>
+              </div>
+              <p id="promoBadgeNote" class="text-muted mt-3 text-xs leading-relaxed"></p>
+            </div>
+            <p id="promoStatus" class="mt-2 text-xs leading-relaxed"></p>
+          </div>
+
           <p class="text-muted mt-4 text-xs leading-relaxed" id="summaryNote"></p>
         </section>
 
@@ -478,6 +794,9 @@
       </div>
     </main>
 
+    <!-- Promo reveal overlay -->
+    <div id="promoOverlay" class="promo-overlay"></div>
+
     <!-- ==================== JAVASCRIPT ==================== -->
     <script>
       // ─── STATE ───────────────────────────────────────────────────
@@ -493,6 +812,8 @@
         project: "",
         hosting: null, // true | false | null
         cms: null,
+        pages: PRICING.upfront.minPages,
+        promo: null, // { code, discount, appliesToAll, products } | null
       };
 
       const saveState = () =>
@@ -541,12 +862,7 @@
         backBtn.classList.toggle("flex", state.step !== 0);
 
         const isSummary = STEPS[state.step] === "summary";
-        const hasCheckout = isSummary && (state.hosting || state.cms);
-        nextLabel.textContent = isSummary
-          ? hasCheckout
-            ? "Continue to Checkout"
-            : "Send My Project"
-          : "Continue";
+        nextLabel.textContent = isSummary ? "Continue to Checkout" : "Continue";
       };
 
       const renderChoices = () => {
@@ -569,28 +885,100 @@
       const esc = (s) =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+      const fmtDiscount = (d) => {
+        if (!d) return "Applied";
+        let base = "Applied";
+        if (d.percentOff) base = `${d.percentOff}% off`;
+        else if (d.amountOff)
+          base = `${fmtPrice(Math.round(d.amountOff / 100))} off`;
+        if (d.duration === "forever") return `${base} forever`;
+        if (d.duration === "repeating" && d.durationInMonths)
+          return `${base} for ${d.durationInMonths} months`;
+        return base;
+      };
+
+      // Small suffix explaining how long a recurring discount lasts.
+      const durationNoteHtml = () => {
+        const d = state.promo?.discount;
+        if (!d || d.duration === "forever") return "";
+        const label =
+          d.duration === "repeating" && d.durationInMonths
+            ? `first ${d.durationInMonths} months`
+            : "first month";
+        return ` <span class="text-muted text-xs font-normal">${label}</span>`;
+      };
+
+      // ─── Promo-aware price display ───────────────────────────────
+
+      const promoFor = (key) =>
+        !!state.promo &&
+        (state.promo.appliesToAll ||
+          (state.promo.appliesTo || []).includes(key));
+
+      const discounted = (amount) => {
+        const d = state.promo?.discount;
+        if (!d) return amount;
+        if (d.percentOff)
+          return Math.max(0, Math.round(amount * (100 - d.percentOff)) / 100);
+        if (d.amountOff) return Math.max(0, amount - d.amountOff / 100);
+        return amount;
+      };
+
+      const money = (n) =>
+        "$" +
+        n.toLocaleString("en-US", {
+          minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
+          maximumFractionDigits: 2,
+        });
+
+      // Crossed-out original + green discounted price when the promo hits
+      // this row; plain price otherwise. Recurring rows note how long the
+      // discount lasts unless it's forever.
+      const priceHtml = (amount, key, suffix = "", recurring = false) => {
+        const after = promoFor(key) ? discounted(amount) : amount;
+        if (after >= amount) return `${money(amount)}${suffix}`;
+        return (
+          `<span class="text-muted mr-1.5 font-medium line-through">${money(amount)}</span>` +
+          `<span class="text-emerald-600">${after === 0 ? "Free" : money(after) + suffix}</span>` +
+          (recurring ? durationNoteHtml() : "")
+        );
+      };
+
       const renderSummary = () => {
         const rows = document.getElementById("summaryRows");
         let monthly = 0;
         if (state.hosting) monthly += PRICING.hosting;
         if (state.cms) monthly += PRICING.cms;
 
+        const extra = Math.max(0, state.pages - PRICING.upfront.basePages);
+        const pagesSub =
+          `${state.pages} page${state.pages === 1 ? "" : "s"} — ` +
+          `${fmtPrice(PRICING.upfront.basePrice)} first page` +
+          (extra > 0
+            ? ` + ${fmtPrice(PRICING.upfront.perExtraPage)} × ${extra}`
+            : "") +
+          ". Terms & privacy pages free.";
+
         let html = "";
         html += summaryRow(
           "Website design & development",
-          fmtUpfrontRange(),
-          "One-time — includes SEO & analytics. Exact quote confirmed after review."
+          priceHtml(upfrontTotal(state.pages), "upfront", " one-time"),
+          pagesSub
         );
         html += summaryRow(
           "Managed hosting",
-          state.hosting ? `${fmtPrice(PRICING.hosting)}/mo` : "Not included",
+          state.hosting
+            ? priceHtml(PRICING.hosting, "hosting", "/mo", true)
+            : "Not included",
           state.hosting
             ? "Infrastructure, domain, SSL & monitoring"
             : "You handle hosting yourself"
         );
         html += summaryRow(
           "CMS access",
-          state.cms ? `${fmtPrice(PRICING.cms)}/mo` : "Not included",
+          state.cms
+            ? priceHtml(PRICING.cms, "cms", "/mo", true)
+            : "Not included",
           state.cms ? "Edit your content anytime" : "Change requests via us"
         );
         html += summaryRow(
@@ -599,10 +987,27 @@
           `${PRICING.email.freePerMonth.toLocaleString("en-US")}/mo included, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`
         );
         if (monthly > 0) {
+          const monthlyAfter =
+            (state.hosting
+              ? promoFor("hosting")
+                ? discounted(PRICING.hosting)
+                : PRICING.hosting
+              : 0) +
+            (state.cms
+              ? promoFor("cms")
+                ? discounted(PRICING.cms)
+                : PRICING.cms
+              : 0);
+          const totalHtml =
+            monthlyAfter < monthly
+              ? `<span class="text-muted mr-1.5 text-base font-semibold line-through">${money(monthly)}/mo</span>` +
+                `<span class="text-emerald-600">${monthlyAfter === 0 ? "Free" : money(monthlyAfter) + "/mo"}</span>` +
+                durationNoteHtml()
+              : `${fmtPrice(monthly)}/mo`;
           html += `
             <div class="flex items-center justify-between pt-4">
               <p class="text-base font-semibold">Monthly total</p>
-              <p class="text-accent text-lg font-bold tabular-nums">${fmtPrice(monthly)}/mo</p>
+              <p class="${monthlyAfter < monthly ? "" : "text-accent "}text-lg font-bold tabular-nums">${totalHtml}</p>
             </div>`;
         }
         rows.innerHTML = html;
@@ -611,17 +1016,26 @@
           ? `Submitting as ${state.name}${state.business ? ` — ${state.business}` : ""} (${state.email}).`
           : "";
         const portalNote =
-          state.hosting || state.cms
-            ? " Your checkout email becomes your client portal login at portal.alisamadii.com — make sure to use the same email there."
-            : "";
+          " Your checkout email becomes your client portal login at portal.alisamadii.com — make sure to use the same email there.";
         document.getElementById("summaryNote").textContent = who + portalNote;
+      };
+
+      const renderPages = () => {
+        document.getElementById("pagesValue").textContent = state.pages;
+        document.getElementById("pagesHint").textContent =
+          `${fmtPrice(PRICING.upfront.basePrice)} first page, ${fmtPrice(PRICING.upfront.perExtraPage)} each after · Terms & privacy free`;
+        document.getElementById("pagesMinus").disabled =
+          state.pages <= PRICING.upfront.minPages;
       };
 
       const render = () => {
         renderProgress();
         renderControls();
         renderChoices();
-        if (STEPS[state.step] === "summary") renderSummary();
+        if (STEPS[state.step] === "summary") {
+          renderPages();
+          renderSummary();
+        }
       };
 
       // ─── NAVIGATION ──────────────────────────────────────────────
@@ -635,7 +1049,7 @@
         from.classList.add("leaving");
 
         setTimeout(() => {
-          from.classList.remove("leaving");
+          from.classList.remove("leaving", "lift-host");
           state.step = index;
           saveState();
           currentStepEl().classList.add("active");
@@ -664,40 +1078,27 @@
       };
 
       const finish = async () => {
-        if (state.hosting || state.cms) {
-          const btn = document.getElementById("nextBtn");
-          const label = document.getElementById("nextBtnLabel");
-          btn.disabled = true;
-          label.textContent = "Redirecting…";
-          try {
-            await createCheckout({
-              plan: "upfront",
-              email: state.email,
-              name: state.name,
-              company: state.business || undefined,
-              project: state.project || undefined,
-              hosting: !!state.hosting,
-              cms: !!state.cms,
-            });
-          } catch (e) {
-            btn.disabled = false;
-            label.textContent = "Continue to Checkout";
-            alert("Something went wrong starting checkout. Please try again.");
-          }
-          return;
+        const btn = document.getElementById("nextBtn");
+        const label = document.getElementById("nextBtnLabel");
+        btn.disabled = true;
+        label.textContent = "Redirecting…";
+        try {
+          await createCheckout({
+            plan: "upfront",
+            email: state.email,
+            name: state.name,
+            company: state.business || undefined,
+            project: state.project || undefined,
+            pages: state.pages,
+            hosting: !!state.hosting,
+            cms: !!state.cms,
+            promotionCode: state.promo?.code || undefined,
+          });
+        } catch (e) {
+          btn.disabled = false;
+          label.textContent = "Continue to Checkout";
+          alert("Something went wrong starting checkout. Please try again.");
         }
-        // No monthly add-ons selected — nothing to check out; send project by email
-        let body = `New Upfront Project\n${"=".repeat(40)}\n\n`;
-        body += `Name: ${state.name}\n`;
-        body += `Email: ${state.email}\n`;
-        if (state.business) body += `Business: ${state.business}\n`;
-        body += `\nProject:\n${state.project || "Not provided"}\n\n`;
-        body += `Website build: ${fmtUpfrontRange()} one-time\n`;
-        body += `Hosting: self-hosted\nCMS access: no\n`;
-        const subject = encodeURIComponent(
-          `Upfront Project — ${state.name}${state.business ? ` (${state.business})` : ""}`
-        );
-        window.location.href = `mailto:agency@alisamadii.com?subject=${subject}&body=${encodeURIComponent(body)}`;
       };
 
       document.getElementById("nextBtn").addEventListener("click", () => {
@@ -714,7 +1115,11 @@
       });
 
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+        if (
+          e.key === "Enter" &&
+          e.target.tagName !== "TEXTAREA" &&
+          e.target.id !== "promoInput"
+        ) {
           document.getElementById("nextBtn").click();
         }
       });
@@ -739,14 +1144,196 @@
         });
       });
 
+      // ─── PAGE STEPPER ────────────────────────────────────────────
+
+      const setPages = (n) => {
+        state.pages = Math.max(PRICING.upfront.minPages, n);
+        saveState();
+        renderPages();
+        renderSummary();
+      };
+      document
+        .getElementById("pagesMinus")
+        .addEventListener("click", () => setPages(state.pages - 1));
+      document
+        .getElementById("pagesPlus")
+        .addEventListener("click", () => setPages(state.pages + 1));
+
+      // ─── PROMO CODE ──────────────────────────────────────────────
+
+      const promoInput = document.getElementById("promoInput");
+      const promoStatus = document.getElementById("promoStatus");
+      const promoApplyBtn = document.getElementById("promoApply");
+
+      const setPromoStatus = (text, tone) => {
+        const tones = {
+          info: "text-warmgray",
+          ok: "text-emerald-600",
+          error: "text-red-500",
+        };
+        promoStatus.textContent = text;
+        promoStatus.className = `mt-2 text-xs leading-relaxed ${tones[tone] || tones.info}`;
+      };
+
+      // Applied state: swap the input row for the badge (and back).
+      const renderPromoUI = () => {
+        const inputRow = document.getElementById("promoInputRow");
+        const badge = document.getElementById("promoBadge");
+        const applied = !!state.promo;
+        inputRow.classList.toggle("hidden", applied);
+        badge.classList.toggle("hidden", !applied);
+        if (!applied) return;
+        document.getElementById("promoBadgeCode").textContent =
+          state.promo.code;
+        document.getElementById("promoBadgeDiscount").textContent =
+          fmtDiscount(state.promo.discount);
+        const msgEl = document.getElementById("promoBadgeMessage");
+        msgEl.classList.toggle("hidden", !state.promo.message);
+        msgEl.textContent = state.promo.message
+          ? `“${state.promo.message}”`
+          : "";
+        document.getElementById("promoBadgeNote").textContent =
+          (state.promo.appliesToAll
+            ? "Applied to your whole order."
+            : `Applies to ${(state.promo.products || []).join(", ") || "selected items"}.`) +
+          " Final price confirmed at checkout.";
+      };
+
+      // ─── Centered overlay reveal (only on a successful Apply) ────
+
+      const promoReveal = { timers: [] };
+
+      // Note: .lift-host stays on the step after the sequence — removing it
+      // would restart the step's entrance animation and "refresh" the page.
+      // goToStep() clears it when the user navigates away.
+      const cancelPromoReveal = () => {
+        promoReveal.timers.forEach(clearTimeout);
+        promoReveal.timers = [];
+        const lift = document.getElementById("promoCardLift");
+        const overlay = document.getElementById("promoOverlay");
+        lift.classList.remove("lifted", "settling");
+        lift.style.transform = "";
+        overlay.classList.remove("visible");
+      };
+
+      const settlePromoCard = () => {
+        promoReveal.timers.forEach(clearTimeout);
+        promoReveal.timers = [];
+        const lift = document.getElementById("promoCardLift");
+        const overlay = document.getElementById("promoOverlay");
+        lift.classList.add("settling");
+        lift.style.transform = "";
+        overlay.classList.remove("visible");
+        promoReveal.timers.push(
+          setTimeout(() => {
+            lift.classList.remove("lifted", "settling");
+          }, 750)
+        );
+      };
+
+      const revealPromoCard = () => {
+        cancelPromoReveal();
+        const lift = document.getElementById("promoCardLift");
+        const overlay = document.getElementById("promoOverlay");
+        const card = lift.querySelector(".promo-badge");
+
+        // Replay the card's own choreography.
+        card.classList.remove("animate");
+        void card.offsetWidth;
+        card.classList.add("animate");
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+          return;
+
+        // FLIP: measure the card's natural spot, jump it to screen center.
+        // Only the card lifts — the note below it stays in place.
+        const rect = card.getBoundingClientRect();
+        const dx = window.innerWidth / 2 - (rect.left + rect.width / 2);
+        const dy = window.innerHeight / 2 - (rect.top + rect.height / 2);
+        currentStepEl().classList.add("lift-host");
+        lift.classList.add("lifted");
+        lift.style.transform = `translate(${dx}px, ${dy}px) scale(1.06)`;
+        overlay.classList.add("visible");
+
+        // Hold while the choreography plays, then glide home.
+        promoReveal.timers.push(setTimeout(settlePromoCard, 1700));
+      };
+
+      document
+        .getElementById("promoOverlay")
+        .addEventListener("click", settlePromoCard);
+
+      const applyPromo = async () => {
+        const code = promoInput.value.trim().toUpperCase();
+        if (!code) {
+          state.promo = null;
+          saveState();
+          setPromoStatus("", "info");
+          renderSummary();
+          return;
+        }
+        promoApplyBtn.disabled = true;
+        setPromoStatus("Checking…", "info");
+        try {
+          const result = await validatePromo(code);
+          if (result && result.valid) {
+            state.promo = {
+              code: result.code || code,
+              discount: result.discount || null,
+              appliesToAll: !!result.appliesToAll,
+              appliesTo: result.appliesTo || [],
+              products: result.products || [],
+              message: result.message || null,
+            };
+            saveState();
+            setPromoStatus("", "info");
+            renderPromoUI();
+            revealPromoCard();
+          } else {
+            state.promo = null;
+            saveState();
+            setPromoStatus("That code isn't valid.", "error");
+          }
+          renderSummary();
+        } catch (e) {
+          setPromoStatus("Couldn't check that code. Please try again.", "error");
+        } finally {
+          promoApplyBtn.disabled = false;
+        }
+      };
+
+      promoApplyBtn.addEventListener("click", applyPromo);
+      promoInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          applyPromo();
+        }
+      });
+      document.getElementById("promoRemove").addEventListener("click", () => {
+        cancelPromoReveal();
+        promoInput.value = state.promo?.code || "";
+        state.promo = null;
+        saveState();
+        setPromoStatus("", "info");
+        renderPromoUI();
+        renderSummary();
+        promoInput.focus();
+      });
+
       // ─── INIT ────────────────────────────────────────────────────
 
       loadState();
       state.step = Math.min(Math.max(state.step, 0), STEPS.length - 1);
+      state.pages = Math.max(
+        PRICING.upfront.minPages,
+        state.pages || PRICING.upfront.minPages
+      );
       bindField("fieldName", "name");
       bindField("fieldEmail", "email");
       bindField("fieldBusiness", "business");
       bindField("fieldProject", "project");
+      renderPromoUI();
       currentStepEl().classList.add("active");
       render();
     </script>

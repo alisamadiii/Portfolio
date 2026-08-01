@@ -15,11 +15,11 @@
     <link
       rel="icon"
       type="image/png"
-      href="https://cdn.alisamadii.com/company/business-logo.png"
+      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
     />
     <link
       rel="apple-touch-icon"
-      href="https://cdn.alisamadii.com/company/business-logo.png"
+      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
     />
 
     <!-- Open Graph -->
@@ -504,16 +504,19 @@
                   Upfront
                 </h3>
                 <div class="mt-3">
+                  <span class="text-warmgray text-xs">from</span>
                   <span
                     class="price-upfront text-3xl font-bold tracking-tight"
                   ></span>
                   <span class="text-warmgray ml-1 text-xs">one-time</span>
                 </div>
+                <p class="price-upfront-extra text-warmgray mt-1 text-xs"></p>
                 <p
                   class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
                 >
                   Pay once for your website — design, development, and SEO
-                  included. Keep it running with light monthly add-ons.
+                  included. Add pages anytime. Keep it running with light
+                  monthly add-ons.
                 </p>
                 <ul class="text-warmgray mt-6 space-y-3 text-sm">
                   <li class="flex items-start gap-3">
@@ -531,6 +534,27 @@
                       />
                     </svg>
                     Custom design &amp; development
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      class="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span
+                      >1 page included — add more anytime
+                      <span class="text-muted block text-xs"
+                        >Terms &amp; privacy pages free</span
+                      ></span
+                    >
                   </li>
                   <li class="flex items-start gap-3">
                     <svg
@@ -774,7 +798,10 @@
         el.textContent = fmtPrice(PRICING.monthly);
       });
       document.querySelectorAll(".price-upfront").forEach((el) => {
-        el.textContent = fmtUpfrontRange();
+        el.textContent = fmtPrice(PRICING.upfront.basePrice);
+      });
+      document.querySelectorAll(".price-upfront-extra").forEach((el) => {
+        el.textContent = `+ ${fmtPrice(PRICING.upfront.perExtraPage)} per extra page`;
       });
       document.querySelectorAll(".price-hosting-note").forEach((el) => {
         el.textContent = `— ${fmtPrice(PRICING.hosting)}/mo`;
@@ -834,7 +861,7 @@
             max-width: 20ch;
           "
         >
-          Upfront pricing is a range,<br />not a final quote.
+          You pay per page.<br />$500 base, $200 each after.
         </h2>
         <p
           style="
@@ -845,10 +872,11 @@
             max-width: 45ch;
           "
         >
-          The upfront build lands between the shown range depending on your
-          content volume, page complexity, and specific feature requirements.
-          After you start, we review your project details and confirm an exact
-          quote before any work begins.
+          A page is anything with its own address — Home, About, Contact, and so
+          on; a long scrolling page still counts as one. Your first page is
+          $500, and each page after that is $200. Terms &amp; privacy pages are
+          always free and don't count. You confirm the final page count at
+          checkout before any work begins.
         </p>
         <button id="disclaimerBtn" class="disclaimer-btn">
           <div id="disclaimerFill" class="disclaimer-btn-fill"></div>
