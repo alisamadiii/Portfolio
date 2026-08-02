@@ -38,6 +38,8 @@ const sendSchema = z.object({
   subject: z.string().min(1),
   html: z.string().min(1),
   text: z.string().optional(),
+  // Free-form category stored on the log row (e.g. "newsletter", "receipt").
+  type: z.string().trim().min(1).max(50).optional(),
 });
 
 const contactSchema = z.object({
@@ -136,7 +138,7 @@ emails.post("/contact", contactLimiter, requireAuth, async (c) => {
   c.executionCtx.waitUntil(
     logEmail(c, {
       user,
-      kind: "contact",
+      type: "contact",
       from,
       to: [user.email],
       subject,
@@ -194,7 +196,7 @@ emails.post("/send", requireAuth, async (c) => {
   c.executionCtx.waitUntil(
     logEmail(c, {
       user,
-      kind: "send",
+      type: data.type ?? "send",
       from: data.from,
       to: recipients,
       subject: data.subject,
@@ -225,7 +227,7 @@ emails.get("/", requireAuth, async (c) => {
   const rows = await createDb(c.env)
     .select({
       id: emailLogs.id,
-      kind: emailLogs.kind,
+      type: emailLogs.type,
       from: emailLogs.fromAddress,
       to: emailLogs.to,
       subject: emailLogs.subject,

@@ -12,6 +12,7 @@ import {
   HelpCircle,
   House,
   LogOut,
+  Mail,
   PenLine,
   Settings,
 } from "lucide-react";
@@ -55,6 +56,11 @@ const accountPages = [
     title: "Billing",
     url: "/billing",
     icon: CreditCard,
+  },
+  {
+    title: "Emails",
+    url: "/emails",
+    icon: Mail,
   },
 ];
 

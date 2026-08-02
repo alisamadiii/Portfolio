@@ -1,6 +1,6 @@
 {
   "name": "@alisamadiillc/agency-api",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "TypeScript client for the agency API — emails and uploads.",
   "type": "module",
   "main": "./dist/index.cjs",

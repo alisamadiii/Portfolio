@@ -44,6 +44,31 @@ const StatCard = ({
   </CardAgency.Card>
 );
 
+// Known types get their own label/icon/color; custom types fall back to the
+// raw value with a neutral style.
+const TYPE_TILE: Record<
+  string,
+  { label: string; icon: React.ElementType; iconColor: string }
+> = {
+  send: {
+    label: "API Sends",
+    icon: Send,
+    iconColor: "bg-violet-500/10 text-violet-500",
+  },
+  contact: {
+    label: "Contact Forms",
+    icon: MessageSquare,
+    iconColor: "bg-amber-500/10 text-amber-500",
+  },
+};
+
+const tileFor = (type: string) =>
+  TYPE_TILE[type] ?? {
+    label: type.charAt(0).toUpperCase() + type.slice(1),
+    icon: Mail,
+    iconColor: "bg-slate-500/10 text-slate-500",
+  };
+
 export function EmailUsage() {
   const { id } = useParams<{ id: string }>();
 
@@ -95,18 +120,18 @@ export function EmailUsage() {
           icon={TrendingUp}
           iconColor="bg-blue-500/10 text-blue-500"
         />
-        <StatCard
-          label="API Sends"
-          value={isLoading ? "--" : String(stats?.send ?? 0)}
-          icon={Send}
-          iconColor="bg-violet-500/10 text-violet-500"
-        />
-        <StatCard
-          label="Contact Forms"
-          value={isLoading ? "--" : String(stats?.contact ?? 0)}
-          icon={MessageSquare}
-          iconColor="bg-amber-500/10 text-amber-500"
-        />
+        {Object.entries(stats?.byType ?? {}).map(([type, count]) => {
+          const tile = tileFor(type);
+          return (
+            <StatCard
+              key={type}
+              label={tile.label}
+              value={String(count)}
+              icon={tile.icon}
+              iconColor={tile.iconColor}
+            />
+          );
+        })}
       </div>
 
       <CardAgency.Card>
@@ -129,7 +154,7 @@ export function EmailUsage() {
                   <th className="px-4 py-3 font-medium">Subject</th>
                   <th className="px-4 py-3 font-medium">From</th>
                   <th className="px-4 py-3 font-medium">To</th>
-                  <th className="px-4 py-3 font-medium">Kind</th>
+                  <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">Date</th>
                   <th className="px-4 py-3 font-medium" />
                 </tr>
@@ -147,16 +172,22 @@ export function EmailUsage() {
                       {log.fromAddress}
                     </td>
                     <td className="text-muted-foreground max-w-40 truncate px-4 py-3 text-xs">
-                      {log.kind === "contact" && log.visitorEmail
+                      {log.type === "contact" && log.visitorEmail
                         ? `${log.visitorEmail} (visitor)`
                         : log.to.join(", ")}
                     </td>
                     <td className="px-4 py-3">
                       <Badge
-                        variant={log.kind === "send" ? "default" : "secondary"}
+                        variant={
+                          log.type === "send"
+                            ? "default"
+                            : log.type === "contact"
+                              ? "secondary"
+                              : "outline"
+                        }
                         className="text-[10px] capitalize"
                       >
-                        {log.kind}
+                        {log.type}
                       </Badge>
                     </td>
                     <td className="text-muted-foreground px-4 py-3 text-xs">

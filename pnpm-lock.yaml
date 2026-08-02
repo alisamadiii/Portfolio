@@ -274,6 +274,9 @@ importers:
       '@react-email/render':
         specifier: ^2.0.4
         version: 2.1.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@react-pdf/renderer':
+        specifier: ^4.3.2
+        version: 4.5.1(react@19.2.7)
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.101.4(react@19.2.7)

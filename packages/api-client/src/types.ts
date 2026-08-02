@@ -14,6 +14,11 @@ export interface SendEmailRequest {
   subject: string;
   html: string;
   text?: string;
+  /**
+   * Free-form category stored on the log row, e.g. "newsletter", "receipt".
+   * @default "send"
+   */
+  type?: string;
 }
 
 export interface SendEmailResponse {
@@ -121,8 +126,8 @@ export interface ListObjectsResponse {
 
 export interface EmailLogEntry {
   id: string;
-  /** "send" = transactional send, "contact" = contact-form delivery. */
-  kind: "send" | "contact";
+  /** Free-form category: "send" (default), "contact", or a custom value. */
+  type: string;
   from: string;
   to: string[];
   subject: string;
@@ -292,17 +297,15 @@ export interface LookupUserResponse extends AgencyUser {
 export interface EmailStats {
   total: number;
   thisMonth: number;
-  /** Transactional sends (POST /v1/emails/send). */
-  send: number;
-  /** Contact-form deliveries. */
-  contact: number;
+  /** Per-type counts, e.g. { send: 12, contact: 3, newsletter: 4 }. */
+  byType: Record<string, number>;
   /** ISO timestamp. */
   lastSentAt: string | null;
 }
 
 export interface AdminEmailLogEntry {
   id: string;
-  kind: "send" | "contact";
+  type: string;
   fromAddress: string;
   to: string[];
   subject: string;

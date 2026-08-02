@@ -14,7 +14,7 @@ export class EmailsResource {
 
   /**
    * Send an email. Non-admin keys must send from their configured email
-   * domain.
+   * domain. Pass `type` to categorize the log entry (defaults to "send").
    */
   send(params: SendEmailRequest): Promise<Result<SendEmailResponse>> {
     return this.client.request("POST", "/v1/emails/send", { body: params });

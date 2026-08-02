@@ -31,7 +31,7 @@ beforeEach(() => {
 
 const logRow = (over: Record<string, unknown> = {}) => ({
   id: "log-1",
-  kind: "send",
+  type: "send",
   fromAddress: "hi@acme.com",
   to: ["someone@example.com"],
   subject: "Hello",
@@ -42,14 +42,14 @@ const logRow = (over: Record<string, unknown> = {}) => ({
 });
 
 // The handler awaits four chains inside one Promise.all, so the queue pops in
-// array order: byKind groups, thisMonth count, latest max, rows.
+// array order: byType groups, thisMonth count, latest max, rows.
 function seedLogs({
-  byKind = [] as { kind: string; count: number }[],
+  byType = [] as { type: string; count: number }[],
   thisMonth = 0,
   lastSentAt = null as Date | null,
   rows = [] as unknown[],
 } = {}) {
-  dbQueue.push(byKind);
+  dbQueue.push(byType);
   dbQueue.push([{ count: thisMonth }]);
   dbQueue.push([{ lastSentAt }]);
   dbQueue.push(rows);
@@ -74,22 +74,23 @@ describe("GET /v1/admin/email-logs", () => {
     const auth = await admin();
     const lastSentAt = new Date("2026-07-20T12:00:00Z");
     seedLogs({
-      byKind: [
-        { kind: "send", count: 2 },
-        { kind: "contact", count: 1 },
+      byType: [
+        { type: "send", count: 2 },
+        { type: "contact", count: 1 },
+        // Custom types must be counted too — the old shape silently dropped them.
+        { type: "newsletter", count: 4 },
       ],
       thisMonth: 2,
       lastSentAt,
-      rows: [logRow(), logRow({ id: "log-2", kind: "contact" })],
+      rows: [logRow(), logRow({ id: "log-2", type: "contact" })],
     });
     const res = await req("/v1/admin/email-logs?userId=user-1", auth);
     expect(res.status).toBe(200);
     const body = await json(res);
     expect(body.stats).toEqual({
-      total: 3,
+      total: 7,
       thisMonth: 2,
-      send: 2,
-      contact: 1,
+      byType: { send: 2, contact: 1, newsletter: 4 },
       lastSentAt: lastSentAt.toISOString(),
     });
     expect(body.emails).toHaveLength(2);
@@ -107,8 +108,7 @@ describe("GET /v1/admin/email-logs", () => {
     expect(body.stats).toEqual({
       total: 0,
       thisMonth: 0,
-      send: 0,
-      contact: 0,
+      byType: {},
       lastSentAt: null,
     });
     expect(body.emails).toEqual([]);

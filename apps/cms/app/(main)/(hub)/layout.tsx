@@ -4,6 +4,7 @@ import {
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar";
 
+import { HubContainer } from "@/components/hub-container";
 import { HubSidebar } from "@/components/hub-sidebar";
 
 export default function HubLayout({
@@ -21,7 +22,7 @@ export default function HubLayout({
           <SidebarTrigger />
         </header>
         <main className="w-full flex-1">
-          <div className="max-w-[860px] p-6 md:p-10">{children}</div>
+          <HubContainer>{children}</HubContainer>
         </main>
       </SidebarInset>
     </SidebarProvider>

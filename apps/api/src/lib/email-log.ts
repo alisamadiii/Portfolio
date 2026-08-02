@@ -18,7 +18,7 @@ export async function logEmail(
   c: Context<AppEnv>,
   args: {
     user: ApiUser;
-    kind: "send" | "contact";
+    type: string;
     from: string;
     to: string[];
     subject: string;
@@ -42,7 +42,7 @@ export async function logEmail(
     await createDb(c.env).insert(emailLogs).values({
       id,
       userId: args.user.id,
-      kind: args.kind,
+      type: args.type,
       fromAddress: args.from,
       to: args.to,
       subject: args.subject,

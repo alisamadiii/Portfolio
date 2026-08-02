@@ -5,6 +5,7 @@ import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
 import { cmsRouter } from "./cms";
 import { contactRouter } from "./contact";
+import { emailsRouter } from "./emails";
 import { paymentsRouter } from "./payments";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   clickup: clickupRouter,
   uploads: uploadsRouter,
   contact: contactRouter,
+  emails: emailsRouter,
   cms: cmsRouter,
   websites: websitesRouter,
 });

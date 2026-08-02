@@ -77,7 +77,9 @@ export const emailLogs = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    kind: text("kind", { enum: ["send", "contact"] }).notNull(),
+    // Free-form category: "send" (direct API send), "contact" (contact form),
+    // or any custom value the client passes when sending.
+    type: text("type").notNull(),
     fromAddress: text("from_address").notNull(),
     to: text("to").array().notNull(),
     subject: text("subject").notNull(),

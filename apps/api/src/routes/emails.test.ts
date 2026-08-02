@@ -105,7 +105,7 @@ describe("POST /v1/emails/send", () => {
     expect(res.status).toBe(202);
   });
 
-  it("202 sends and logs the email with kind send", async () => {
+  it("202 sends and logs the email with type send", async () => {
     const auth = await seedAuth(domainUser());
     const res = await req("/v1/emails/send", auth, {
       method: "POST",
@@ -115,9 +115,31 @@ describe("POST /v1/emails/send", () => {
     expect((await json(res)).id).toBe("ses-message-id");
     expect(logEmail).toHaveBeenCalledTimes(1);
     const args = logEmail.mock.calls[0][1] as Record<string, unknown>;
-    expect(args.kind).toBe("send");
+    expect(args.type).toBe("send");
     expect(args.messageId).toBe("ses-message-id");
     expect(args.to).toEqual(["someone@example.com"]);
+  });
+
+  it("202 logs a custom type when the caller passes one", async () => {
+    const auth = await seedAuth(domainUser());
+    const res = await req("/v1/emails/send", auth, {
+      method: "POST",
+      json: { ...body, type: "newsletter" },
+    });
+    expect(res.status).toBe(202);
+    const args = logEmail.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.type).toBe("newsletter");
+  });
+
+  it("400 VALIDATION_FAILED for an empty type", async () => {
+    const auth = await seedAuth(domainUser());
+    const res = await req("/v1/emails/send", auth, {
+      method: "POST",
+      json: { ...body, type: "" },
+    });
+    expect(res.status).toBe(400);
+    expect((await json(res)).error.code).toBe("VALIDATION_FAILED");
+    expect(sendViaSes).not.toHaveBeenCalled();
   });
 });
 
@@ -136,7 +158,7 @@ describe("POST /v1/emails/contact", () => {
     expect((await json(res)).error.code).toBe("EMAIL_DOMAIN_NOT_CONFIGURED");
   });
 
-  it("202 delivers to the account owner and logs kind contact", async () => {
+  it("202 delivers to the account owner and logs type contact", async () => {
     const user = domainUser();
     const auth = await seedAuth(user);
     const res = await req("/v1/emails/contact", auth, {
@@ -149,7 +171,7 @@ describe("POST /v1/emails/contact", () => {
     expect(sesArgs.to).toEqual([user.email]);
     expect(sesArgs.replyTo).toBe("jane@example.com");
     const logArgs = logEmail.mock.calls[0][1] as Record<string, unknown>;
-    expect(logArgs.kind).toBe("contact");
+    expect(logArgs.type).toBe("contact");
     expect(logArgs.visitorEmail).toBe("jane@example.com");
   });
 });
@@ -158,7 +180,7 @@ describe("GET /v1/emails", () => {
   it("returns the caller's history", async () => {
     const auth = await seedAuth(domainUser());
     dbQueue.push([
-      { id: "log-1", kind: "send", subject: "Hi", to: ["a@b.com"] },
+      { id: "log-1", type: "send", subject: "Hi", to: ["a@b.com"] },
     ]);
     const res = await req("/v1/emails", auth);
     expect(res.status).toBe(200);

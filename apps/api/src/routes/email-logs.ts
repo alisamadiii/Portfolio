@@ -37,12 +37,12 @@ emailLogsRoute.get("/", async (c) => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [byKind, [thisMonth], [latest], rows] = await Promise.all([
+  const [byTypeRows, [thisMonth], [latest], rows] = await Promise.all([
     db
-      .select({ kind: emailLogs.kind, count: count() })
+      .select({ type: emailLogs.type, count: count() })
       .from(emailLogs)
       .where(eq(emailLogs.userId, userId))
-      .groupBy(emailLogs.kind),
+      .groupBy(emailLogs.type),
     db
       .select({ count: count() })
       .from(emailLogs)
@@ -56,7 +56,7 @@ emailLogsRoute.get("/", async (c) => {
     db
       .select({
         id: emailLogs.id,
-        kind: emailLogs.kind,
+        type: emailLogs.type,
         fromAddress: emailLogs.fromAddress,
         to: emailLogs.to,
         subject: emailLogs.subject,
@@ -70,15 +70,14 @@ emailLogsRoute.get("/", async (c) => {
       .limit(limit),
   ]);
 
-  const send = byKind.find((r) => r.kind === "send")?.count ?? 0;
-  const contact = byKind.find((r) => r.kind === "contact")?.count ?? 0;
+  const byType = Object.fromEntries(byTypeRows.map((r) => [r.type, r.count]));
+  const total = byTypeRows.reduce((sum, r) => sum + r.count, 0);
 
   return c.json({
     stats: {
-      total: send + contact,
+      total,
       thisMonth: thisMonth?.count ?? 0,
-      send,
-      contact,
+      byType,
       lastSentAt: latest?.lastSentAt ?? null,
     },
     emails: rows,
