@@ -39,6 +39,22 @@ const useCreateUser = () => {
   });
 };
 
+const useImpersonateUser = () => {
+  return useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { data, error } = await authClient.admin.impersonateUser({
+        userId,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+  });
+};
+
 const useUpdateAdminUser = () => {
   const trpc = useTRPC();
   return useMutation(
@@ -52,4 +68,4 @@ const useUpdateAdminUser = () => {
   );
 };
 
-export { useCreateUser, useUpdateAdminUser };
+export { useCreateUser, useImpersonateUser, useUpdateAdminUser };

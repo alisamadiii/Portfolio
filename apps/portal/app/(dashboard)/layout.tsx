@@ -1,5 +1,6 @@
 import { SidebarProvider } from "@workspace/ui/components/sidebar";
 
+import { ImpersonationBanner } from "@workspace/auth/components/impersonation-banner";
 import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -14,6 +15,7 @@ export default function DashboardLayout({
   return (
     <ProtectRoute>
       <SessionRefreshProvider>
+        <ImpersonationBanner />
         <SidebarProvider
           style={{ "--sidebar-width": "18.5rem" } as React.CSSProperties}
         >

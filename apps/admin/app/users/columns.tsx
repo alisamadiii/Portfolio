@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { format, parseISO } from "date-fns";
-import { Ban, CircleUserRound, MoreHorizontal, Trash } from "lucide-react";
+import {
+  Ban,
+  CircleUserRound,
+  MoreHorizontal,
+  Trash,
+  VenetianMask,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -33,9 +40,15 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 import { ReadyConfirmDialog } from "@workspace/ui/custom/confirm-alert-dialog";
 
+import { urls } from "@workspace/ui/lib/company";
+
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { useUpdateAdminUser } from "@workspace/auth/hooks/use-admin";
+import {
+  useImpersonateUser,
+  useUpdateAdminUser,
+} from "@workspace/auth/hooks/use-admin";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 type UserFromAPI = RouterOutputs["users"]["list"][number];
 
@@ -103,6 +116,29 @@ export const columns: ColumnDef<UserFromAPI>[] = [
       const [banOpen, setBanOpen] = useState(false);
       const [deleteOpen, setDeleteOpen] = useState(false);
       const updateAdminUser = useUpdateAdminUser();
+      const impersonate = useImpersonateUser();
+      const { data: currentUser } = useCurrentUser();
+      const isSelf = currentUser?.user.id === row.original.id;
+
+      const handleImpersonate = (event: React.MouseEvent) => {
+        // Keep the row's onRowClick from navigating to the user page.
+        event.stopPropagation();
+        // Open the tab synchronously so popup blockers don't eat it.
+        const tab = window.open("", "_blank");
+        impersonate.mutate(
+          { userId: row.original.id },
+          {
+            onSuccess: () => {
+              if (tab) tab.location.href = urls.cms;
+            },
+            onError: (error) => {
+              tab?.close();
+              toast.error(error.message);
+            },
+          }
+        );
+        setIsOpen(false);
+      };
       const deleteAccount = useMutation(
         useTRPC().users.delete.mutationOptions({
           onSuccess: () => {
@@ -125,7 +161,10 @@ export const columns: ColumnDef<UserFromAPI>[] = [
       /* eslint-enable */
 
       return (
-        <div className="flex justify-end">
+        <div
+          className="flex justify-end"
+          onClick={(e) => e.stopPropagation()}
+        >
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
               <MoreHorizontal />
@@ -143,6 +182,11 @@ export const columns: ColumnDef<UserFromAPI>[] = [
                 >
                   <CircleUserRound /> View profile
                 </DropdownMenuItem>
+                {!isSelf && (
+                  <DropdownMenuItem onClick={handleImpersonate}>
+                    <VenetianMask /> Impersonate
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"

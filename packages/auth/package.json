@@ -9,7 +9,8 @@
     "./hooks/use-admin": "./src/hooks/use-admin.tsx",
     "./hooks/use-functions": "./src/hooks/use-functions.tsx",
     "./hooks/use-payments": "./src/hooks/use-payments.tsx",
-    "./providers/session-refresh-provider": "./src/providers/session-refresh-provider.tsx"
+    "./providers/session-refresh-provider": "./src/providers/session-refresh-provider.tsx",
+    "./components/impersonation-banner": "./src/components/impersonation-banner.tsx"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
