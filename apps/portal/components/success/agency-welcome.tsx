@@ -189,21 +189,21 @@ export const AgencyWelcome = () => {
 
   const links = [
     {
-      title: "Portal dashboard",
+      title: "Billing",
       body: "Track your project, invoices, and subscription.",
-      href: "/agency",
-      external: false,
+      href: `${urls.cms}/billing`,
+      external: true,
     },
     {
       title: "Support",
       body: "Questions or change requests — we're one message away.",
-      href: "/agency/support",
-      external: false,
+      href: `${urls.cms}/billing/support`,
+      external: true,
     },
     ...(boughtCms
       ? [
           {
-            title: "CMS",
+            title: "Client Hub",
             body: "Edit your site's content yourself once it's live.",
             href: urls.cms,
             external: true,

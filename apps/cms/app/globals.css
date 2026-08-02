@@ -1,4 +1,5 @@
 @import "@workspace/ui/globals.css";
+@import "./hub-theme.css";
 
 /*
  * CMS theme overrides. The shared @workspace/ui package ships a neutral theme;

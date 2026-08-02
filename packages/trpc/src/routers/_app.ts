@@ -10,6 +10,7 @@ import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
 import { uploadsRouter } from "./uploads";
 import { usersRouter } from "./users";
+import { websitesRouter } from "./stripe/websites";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   uploads: uploadsRouter,
   contact: contactRouter,
   cms: cmsRouter,
+  websites: websitesRouter,
 });
 
 // export type definition of API

@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookText, EllipsisVertical, Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,7 +64,7 @@ import {
   handleRemoveCollaborator,
   handleResendCollaboratorInvite,
 } from "@/lib/actions/collaborator";
-import { requireApiSuccess } from "@/lib/api-client";
+import { apiQueryOptions } from "@/lib/query";
 
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { SubmitButton } from "@/components/submit-button";
@@ -178,7 +179,37 @@ export function Collaborators({
   repo: string;
   branch?: string;
 }) {
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const queryClient = useQueryClient();
+  const collaboratorsUrl = `/api/collaborators/${owner}/${repo}`;
+  const collaboratorsKey = [collaboratorsUrl, branch ?? ""];
+
+  const collaboratorsQuery = useQuery({
+    ...apiQueryOptions<{
+      status: string;
+      data: Collaborator[];
+      message?: string;
+    }>(collaboratorsUrl),
+    queryKey: collaboratorsKey,
+    select: (payload) => payload.data,
+  });
+  const collaborators = collaboratorsQuery.data ?? [];
+  const isLoading = collaboratorsQuery.isPending;
+  const error = collaboratorsQuery.error?.message;
+
+  const setCollaborators = useCallback(
+    (updater: (prev: Collaborator[]) => Collaborator[]) => {
+      queryClient.setQueryData<{
+        status: string;
+        data: Collaborator[];
+        message?: string;
+      }>(collaboratorsKey, (prev) =>
+        prev ? { ...prev, data: updater(prev.data) } : prev
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queryClient, collaboratorsUrl, branch]
+  );
+
   const [addCollaboratorState, addCollaboratorAction] = useActionState<
     AddCollaboratorState,
     FormData
@@ -188,57 +219,21 @@ export function Collaborators({
   const [removing, setRemoving] = useState<number[]>([]);
   const [resending, setResending] = useState<number[]>([]);
   const [pendingRemoveId, setPendingRemoveId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | undefined | null>(null);
 
-  const addNewCollaborator = useCallback((newCollaborators: Collaborator[]) => {
-    setCollaborators((prevCollaborators) => {
-      const seenIds = new Set(
-        prevCollaborators.map((collaborator) => collaborator.id)
-      );
-      const uniqueCollaborators = newCollaborators.filter(
-        (collaborator) => !seenIds.has(collaborator.id)
-      );
-      return [...prevCollaborators, ...uniqueCollaborators];
-    });
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function fetchCollaborators() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/collaborators/${owner}/${repo}`, {
-          signal: controller.signal,
-        });
-        const data = await requireApiSuccess<{
-          status: string;
-          data: Collaborator[];
-          message?: string;
-        }>(response, "Failed to fetch collaborators");
-
-        setCollaborators(data.data);
-      } catch (err: unknown) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        console.error(err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch collaborators"
+  const addNewCollaborator = useCallback(
+    (newCollaborators: Collaborator[]) => {
+      setCollaborators((prevCollaborators) => {
+        const seenIds = new Set(
+          prevCollaborators.map((collaborator) => collaborator.id)
         );
-      } finally {
-        // In React Strict Mode, an aborted first pass can race with the active request.
-        // Keep the loading state until the non-aborted request finishes.
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    fetchCollaborators();
-
-    return () => controller.abort();
-  }, [owner, repo, branch]);
+        const uniqueCollaborators = newCollaborators.filter(
+          (collaborator) => !seenIds.has(collaborator.id)
+        );
+        return [...prevCollaborators, ...uniqueCollaborators];
+      });
+    },
+    [setCollaborators]
+  );
 
   useEffect(() => {
     if (addCollaboratorState?.message) {

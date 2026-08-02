@@ -52,7 +52,7 @@ export const InviteEmailTemplate = ({
                 src={`${baseUrl}/images/email-logo.png`}
                 width="42"
                 height="42"
-                alt="Pages CMS"
+                alt="Client Hub"
                 className="mx-auto my-0"
               />
             </Section>
@@ -60,7 +60,7 @@ export const InviteEmailTemplate = ({
               className="mx-0 my-[30px] p-0 text-center text-[24px] font-semibold tracking-tight"
               style={{ color: emailTheme.foreground }}
             >
-              Join &quot;{repoName}&quot; on Pages CMS
+              Join &quot;{repoName}&quot; on Client Hub
             </Heading>
             <Text
               className="text-[16px] leading-[24px]"

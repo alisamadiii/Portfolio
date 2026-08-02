@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,49 +44,49 @@ export function MediaProviderSettings({
   repo,
 }: MediaProviderSettingsProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const settingsUrl = `/api/${owner}/${repo}/media-settings`;
   const [provider, setProvider] = useState<MediaProviderId>(
     DEFAULT_MEDIA_PROVIDER
   );
   const [config, setConfig] = useState<Record<string, string>>({});
   const [secretsSet, setSecretsSet] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+
+  // The form below is an edit buffer, so the query must never refetch and
+  // clobber unsaved edits — it loads once per mount only.
+  const settingsQuery = useQuery({
+    queryKey: [settingsUrl],
+    queryFn: async ({ signal }) => {
+      const response = await fetch(settingsUrl, { signal });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.message || "Failed to load media settings.");
+      }
+      return payload;
+    },
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+  const isLoading = settingsQuery.isPending;
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const response = await fetch(`/api/${owner}/${repo}/media-settings`);
-        const payload = await response.json().catch(() => null);
-        if (!response.ok) {
-          throw new Error(
-            payload?.message || "Failed to load media settings."
-          );
-        }
-        if (active) {
-          const loadedProvider = payload?.data?.provider;
-          setProvider(
-            isMediaProviderId(loadedProvider)
-              ? loadedProvider
-              : DEFAULT_MEDIA_PROVIDER
-          );
-          setConfig(payload?.data?.config ?? {});
-          setSecretsSet(payload?.data?.secretsSet ?? []);
-        }
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load media settings.";
-        if (active) toast.error(message);
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [owner, repo]);
+    const payload = settingsQuery.data;
+    if (!payload) return;
+    const loadedProvider = payload?.data?.provider;
+    setProvider(
+      isMediaProviderId(loadedProvider) ? loadedProvider : DEFAULT_MEDIA_PROVIDER
+    );
+    setConfig(payload?.data?.config ?? {});
+    setSecretsSet(payload?.data?.secretsSet ?? []);
+  }, [settingsQuery.data]);
+
+  useEffect(() => {
+    if (settingsQuery.error) {
+      toast.error(
+        settingsQuery.error.message || "Failed to load media settings."
+      );
+    }
+  }, [settingsQuery.error]);
 
   const providerDef = getMediaProvider(provider);
 
@@ -100,12 +101,9 @@ export function MediaProviderSettings({
     [providerDef, config, secretsSet]
   );
 
-  const canSave = !isLoading && !isSaving && !missingRequired;
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/${owner}/${repo}/media-settings`, {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(settingsUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider, config }),
@@ -114,7 +112,9 @@ export function MediaProviderSettings({
       if (!response.ok) {
         throw new Error(payload?.message || "Failed to update media settings.");
       }
-
+      return payload;
+    },
+    onSuccess: (payload) => {
       setConfig(payload?.data?.config ?? {});
       // Secrets that were just submitted are now stored.
       setSecretsSet(
@@ -126,18 +126,18 @@ export function MediaProviderSettings({
           )
           .map((field) => field.key)
       );
+      queryClient.setQueryData([settingsUrl], payload);
       toast.success("Media settings updated.");
       router.refresh();
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to update media settings.";
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update media settings.");
+    },
+  });
+  const isSaving = saveMutation.isPending;
+  const canSave = !isLoading && !isSaving && !missingRequired;
+
+  const handleSave = () => saveMutation.mutate();
 
   return (
     <Card className="bg-background shadow-xs mb-6 gap-4 rounded-xl border py-5 ring-0 md:py-6">

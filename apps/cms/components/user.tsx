@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
 import { ArrowUpRight } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -91,6 +92,8 @@ export function User({
           </DropdownMenuRadioGroup>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/">Home</Link>} />
+        <DropdownMenuItem render={<Link href="/billing">Billing</Link>} />
         <DropdownMenuItem
           render={
             <a href={urls.portal} target="_blank" rel="noreferrer">

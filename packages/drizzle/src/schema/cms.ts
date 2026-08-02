@@ -14,7 +14,7 @@ import {
 
 import { user } from "./auth";
 
-// CMS (cms.alisamadii.com) — GitHub-backed content management
+// Client Hub CMS (hub.alisamadii.com) — GitHub-backed content management
 
 export const cmsCollaborator = pgTable(
   "cms_collaborator",

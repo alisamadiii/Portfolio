@@ -25,7 +25,7 @@ import {
   House,
   Upload,
 } from "lucide-react";
-import useSWR, { useSWRConfig } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { FileSaveData, MediaItem } from "@/types/api";
 
@@ -62,6 +62,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils";
 
 import { requireApiSuccess } from "@/lib/api-client";
+import { invalidateUrlKeys } from "@/lib/query";
 import {
   extensionCategories,
   getFileName,
@@ -258,7 +259,7 @@ const MediaView = ({
 }) => {
   const { config } = useConfig();
   if (!config) throw new Error(`Configuration not found.`);
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const mediaConfig = useMemo(() => {
     if (!media) return config.object.media[0];
@@ -297,7 +298,6 @@ const MediaView = ({
 
   const filesGridRef = useRef<HTMLDivElement | null>(null);
 
-  const [error, setError] = useState<string | null | undefined>(null);
   const [selected, setSelected] = useState(initialSelected || []);
 
   useEffect(() => {
@@ -315,18 +315,6 @@ const MediaView = ({
     );
     return mediaConfig.input;
   });
-  const [data, setData] = useState<MediaItem[] | undefined>(undefined);
-
-  // Filter the data based on filteredExtensions when displaying
-  const filteredData = useMemo(() => {
-    if (!data) return undefined;
-    if (filteredExtensionsSet.size === 0) return data;
-    return data.filter(
-      (item) =>
-        item.type === "dir" ||
-        filteredExtensionsSet.has(item.extension?.toLowerCase())
-    );
-  }, [data, filteredExtensionsSet]);
 
   const sortMediaItems = useCallback((items: MediaItem[]) => {
     return [...items].sort((a, b) => {
@@ -346,8 +334,8 @@ const MediaView = ({
     [buildMediaApiUrl, path]
   );
   const fetchMediaByUrl = useCallback(
-    async (apiUrl: string): Promise<MediaItem[]> => {
-      const response = await fetch(apiUrl);
+    async (apiUrl: string, signal?: AbortSignal): Promise<MediaItem[]> => {
+      const response = await fetch(apiUrl, { signal });
       const payload = await requireApiSuccess<any>(
         response,
         "Failed to fetch media"
@@ -357,32 +345,49 @@ const MediaView = ({
     []
   );
 
-  const {
-    data: swrMediaData,
-    error: swrMediaError,
-    isLoading: swrMediaLoading,
-  } = useSWR<MediaItem[]>(mediaKey, fetchMediaByUrl, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000,
+  // placeholderData keeps the previous folder's items visible while a new
+  // folder loads, matching the old local-state behavior.
+  const mediaQuery = useQuery({
+    queryKey: [mediaKey],
+    queryFn: ({ signal }) => fetchMediaByUrl(mediaKey, signal),
+    staleTime: 2_000,
+    placeholderData: (previous) => previous,
   });
+  const data = mediaQuery.data;
+  const error = mediaQuery.error
+    ? mediaQuery.error instanceof Error
+      ? mediaQuery.error.message
+      : "Failed to fetch media."
+    : null;
+  const isLoading = mediaQuery.isPending;
 
-  useEffect(() => {
-    if (!swrMediaData) return;
-    setData(swrMediaData);
-    setError(null);
-  }, [swrMediaData]);
+  // Filter the data based on filteredExtensions when displaying
+  const filteredData = useMemo(() => {
+    if (!data) return undefined;
+    if (filteredExtensionsSet.size === 0) return data;
+    return data.filter(
+      (item) =>
+        item.type === "dir" ||
+        filteredExtensionsSet.has(item.extension?.toLowerCase())
+    );
+  }, [data, filteredExtensionsSet]);
 
-  useEffect(() => {
-    if (!swrMediaError) return;
-    const message =
-      swrMediaError instanceof Error
-        ? swrMediaError.message
-        : "Failed to fetch media.";
-    setError(message);
-  }, [swrMediaError]);
+  const setMediaData = useCallback(
+    (updater: (prev: MediaItem[] | undefined) => MediaItem[] | undefined) => {
+      queryClient.setQueryData<MediaItem[]>([mediaKey], (prev) =>
+        updater(prev)
+      );
+    },
+    [queryClient, mediaKey]
+  );
 
-  const isLoading = swrMediaLoading && !data;
+  const broadcastMediaInvalidate = useCallback(
+    () =>
+      invalidateUrlKeys(queryClient, (url) =>
+        url.includes(`/media/${encodeURIComponent(mediaConfig.name)}/`)
+      ),
+    [queryClient, mediaConfig.name]
+  );
 
   const handleUpload = useCallback(
     (entry: FileSaveData) => {
@@ -397,7 +402,7 @@ const MediaView = ({
         url: entry.url,
       };
 
-      setData((prevData) => {
+      setMediaData((prevData) => {
         if (!prevData) return [mediaEntry];
 
         const existingIndex = prevData.findIndex(
@@ -411,35 +416,27 @@ const MediaView = ({
 
         return sortMediaItems([...prevData, mediaEntry]);
       });
-      void mutate(
-        (key) =>
-          typeof key === "string" &&
-          key.includes(`/media/${encodeURIComponent(mediaConfig.name)}/`)
-      );
+      void broadcastMediaInvalidate();
       onUpload?.(entry);
     },
-    [mediaConfig.name, mutate, onUpload, sortMediaItems]
+    [broadcastMediaInvalidate, onUpload, setMediaData, sortMediaItems]
   );
 
   const handleDelete = useCallback(
     (deletedPath: string) => {
-      setData((prevData) => {
+      setMediaData((prevData) => {
         if (!prevData) return prevData;
         const next = prevData.filter((item) => item.path !== deletedPath);
         return next.length === prevData.length ? prevData : next;
       });
-      void mutate(
-        (key) =>
-          typeof key === "string" &&
-          key.includes(`/media/${encodeURIComponent(mediaConfig.name)}/`)
-      );
+      void broadcastMediaInvalidate();
     },
-    [mediaConfig.name, mutate]
+    [broadcastMediaInvalidate, setMediaData]
   );
 
   const handleRename = useCallback(
     (oldPath: string, newPath: string) => {
-      setData((prevData) => {
+      setMediaData((prevData) => {
         if (!prevData || oldPath === newPath) return prevData;
 
         if (
@@ -458,13 +455,9 @@ const MediaView = ({
         const next = prevData.filter((item) => item.path !== oldPath);
         return next.length === prevData.length ? prevData : next;
       });
-      void mutate(
-        (key) =>
-          typeof key === "string" &&
-          key.includes(`/media/${encodeURIComponent(mediaConfig.name)}/`)
-      );
+      void broadcastMediaInvalidate();
     },
-    [mediaConfig.name, mutate, sortMediaItems]
+    [broadcastMediaInvalidate, setMediaData, sortMediaItems]
   );
 
   const handleFolderCreate = useCallback(
@@ -489,7 +482,7 @@ const MediaView = ({
         url: null,
       };
 
-      setData((prevData) => {
+      setMediaData((prevData) => {
         if (!prevData) return [parent];
         if (
           prevData.some(
@@ -500,13 +493,9 @@ const MediaView = ({
         }
         return sortMediaItems([...prevData, parent]);
       });
-      void mutate(
-        (key) =>
-          typeof key === "string" &&
-          key.includes(`/media/${encodeURIComponent(mediaConfig.name)}/`)
-      );
+      void broadcastMediaInvalidate();
     },
-    [mediaConfig.name, mutate, sortMediaItems]
+    [broadcastMediaInvalidate, setMediaData, sortMediaItems]
   );
 
   const handleNavigate = useCallback(

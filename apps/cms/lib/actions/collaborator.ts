@@ -190,7 +190,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
           );
           await sendEmail({
             to: normalizedEmail,
-            subject: `Join "${owner}/${repo}" on Pages CMS`,
+            subject: `Join "${owner}/${repo}" on Client Hub`,
             html,
           });
         } catch (error: any) {
@@ -214,7 +214,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
           );
           await sendEmail({
             to: normalizedEmail,
-            subject: `You were added to "${owner}/${repo}" on Pages CMS`,
+            subject: `You were added to "${owner}/${repo}" on Client Hub`,
             html,
           });
         } catch (error: any) {
@@ -369,7 +369,7 @@ const handleResendCollaboratorInvite = async (
 
     await sendEmail({
       to: collaborator.email,
-      subject: `Join "${owner}/${repo}" on Pages CMS`,
+      subject: `Join "${owner}/${repo}" on Client Hub`,
       html,
     });
 

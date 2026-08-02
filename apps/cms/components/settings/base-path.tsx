@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,45 +25,45 @@ type BasePathProps = {
 
 export function BasePath({ owner, repo }: BasePathProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const basePathUrl = `/api/${owner}/${repo}/base-path`;
   const [basePath, setBasePath] = useState("");
   const [initialBasePath, setInitialBasePath] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+
+  // Edit buffer — the query must not refetch and clobber unsaved edits.
+  const basePathQuery = useQuery({
+    queryKey: [basePathUrl],
+    queryFn: async ({ signal }) => {
+      const response = await fetch(basePathUrl, { signal });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.message || "Failed to load base path.");
+      }
+      return payload;
+    },
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+  const isLoading = basePathQuery.isPending;
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const response = await fetch(`/api/${owner}/${repo}/base-path`);
-        const payload = await response.json().catch(() => null);
-        if (!response.ok) {
-          throw new Error(payload?.message || "Failed to load base path.");
-        }
-        if (active) {
-          const value = payload?.data?.basePath ?? "";
-          setBasePath(value);
-          setInitialBasePath(value);
-        }
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load base path.";
-        if (active) toast.error(message);
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [owner, repo]);
+    if (basePathQuery.data === undefined) return;
+    const value = basePathQuery.data?.data?.basePath ?? "";
+    setBasePath(value);
+    setInitialBasePath(value);
+  }, [basePathQuery.data]);
+
+  useEffect(() => {
+    if (basePathQuery.error) {
+      toast.error(basePathQuery.error.message || "Failed to load base path.");
+    }
+  }, [basePathQuery.error]);
 
   const normalized = basePath.trim().replace(/^\/+|\/+$/g, "");
-  const canSave = !isLoading && !isSaving && normalized !== initialBasePath;
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/${owner}/${repo}/base-path`, {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(basePathUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ basePath: normalized }),
@@ -71,27 +72,31 @@ export function BasePath({ owner, repo }: BasePathProps) {
       if (!response.ok) {
         throw new Error(payload?.message || "Failed to update base path.");
       }
-
+      return payload;
+    },
+    onSuccess: (payload) => {
       const value = payload?.data?.basePath ?? "";
       setBasePath(value);
       setInitialBasePath(value);
+      queryClient.setQueryData([basePathUrl], payload);
       toast.success("Base path updated.");
       router.refresh();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update base path.";
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update base path.");
+    },
+  });
+  const isSaving = saveMutation.isPending;
+  const canSave = !isLoading && !isSaving && normalized !== initialBasePath;
+
+  const handleSave = () => saveMutation.mutate();
 
   return (
     <Card className="bg-background shadow-xs mb-6 gap-4 rounded-xl border py-5 ring-0 md:py-6">
       <CardHeader className="px-5 md:px-6">
         <CardTitle className="text-sm font-semibold">Base path</CardTitle>
         <CardDescription>
-          For monorepos, point Pages CMS at the subfolder that holds your{" "}
+          For monorepos, point Client Hub at the subfolder that holds your{" "}
           <code>.pages.yml</code> and content (e.g. <code>frontend</code>). All
           collection and media paths in your configuration are resolved relative
           to it. Leave empty to use the repository root.

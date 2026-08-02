@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { EllipsisVertical, Lock, LockOpen, Save } from "lucide-react";
 import { toast } from "sonner";
-import useSWR, { useSWRConfig } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ApiSuccess, EntryData } from "@/types/api";
 
@@ -66,6 +66,7 @@ import {
 } from "@workspace/ui/components/tooltip";
 
 import { requireApiSuccess } from "@/lib/api-client";
+import { invalidateUrlKeys } from "@/lib/query";
 import { parseAndValidateConfig } from "@/lib/config";
 import { resolveContentOperations } from "@/lib/operations";
 import { getPreviewUrl } from "@/lib/preview";
@@ -150,7 +151,7 @@ export function Entry({
   const [saveEduAcked, setSaveEduAcked] = useState(readSaveEduAck);
   const [saveEduOpen, setSaveEduOpen] = useState(false);
   const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const router = useRouter();
 
@@ -277,8 +278,8 @@ export function Entry({
   );
 
   const fetchEntryByUrl = useCallback(
-    async (apiUrl: string): Promise<EntryData> => {
-      const response = await fetch(apiUrl);
+    async (apiUrl: string, signal?: AbortSignal): Promise<EntryData> => {
+      const response = await fetch(apiUrl, { signal });
       const data = await requireApiSuccess<any>(
         response,
         "Failed to fetch entry"
@@ -288,21 +289,20 @@ export function Entry({
     []
   );
 
-  const {
-    data: swrEntryData,
-    error: swrEntryError,
-    isLoading: swrEntryLoading,
-    mutate: mutateEntry,
-  } = useSWR<EntryData>(entryApiUrl, fetchEntryByUrl, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000,
+  const entryQuery = useQuery({
+    queryKey: [entryApiUrl ?? ""],
+    queryFn: ({ signal }) => fetchEntryByUrl(entryApiUrl!, signal),
+    enabled: !!entryApiUrl,
+    staleTime: 2_000,
   });
+  // isLoading, not isPending: a disabled query (no path) must not read as loading.
+  const swrEntryData = entryQuery.data;
+  const swrEntryError = entryQuery.error;
 
   useEffect(() => {
     if (!path) return;
-    setIsLoading(swrEntryLoading);
-  }, [path, swrEntryLoading]);
+    setIsLoading(entryQuery.isLoading);
+  }, [path, entryQuery.isLoading]);
 
   useEffect(() => {
     if (!swrEntryData || !path) return;
@@ -419,9 +419,8 @@ export function Entry({
             );
 
             const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-            void mutate(
-              (key) =>
-                typeof key === "string" && key.startsWith(collectionKeyPrefix)
+            void invalidateUrlKeys(queryClient, (url) =>
+              url.startsWith(collectionKeyPrefix)
             );
           }
 
@@ -457,9 +456,8 @@ export function Entry({
             );
           if (schemaType === "collection") {
             const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-            void mutate(
-              (key) =>
-                typeof key === "string" && key.startsWith(collectionKeyPrefix)
+            void invalidateUrlKeys(queryClient, (url) =>
+              url.startsWith(collectionKeyPrefix)
             );
           }
 
@@ -550,20 +548,18 @@ export function Entry({
       // TODO: disable save button or freeze form while deleting?
       if (schemaType === "collection") {
         const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void mutate(
-          (key) =>
-            typeof key === "string" && key.startsWith(collectionKeyPrefix)
+        void invalidateUrlKeys(queryClient, (url) =>
+          url.startsWith(collectionKeyPrefix)
         );
       }
       if (schemaType === "collection") {
         router.push(
           `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}`
         );
-      } else {
-        if (entryApiUrl) {
-          void mutate(entryApiUrl, undefined, { revalidate: true });
-        }
-        void mutateEntry();
+      } else if (entryApiUrl) {
+        // Clear the cached entry and refetch — the 404 flips the view to the
+        // "Not found" empty state, same as SWR's revalidate did.
+        void queryClient.resetQueries({ queryKey: [entryApiUrl] });
       }
     },
     [
@@ -571,9 +567,8 @@ export function Entry({
       config.owner,
       config.repo,
       entryApiUrl,
-      mutate,
-      mutateEntry,
       name,
+      queryClient,
       router,
       schemaType,
     ]
@@ -583,13 +578,14 @@ export function Entry({
     (oldPath: string, newPath: string) => {
       if (schemaType === "collection") {
         const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void mutate(
-          (key) =>
-            typeof key === "string" && key.startsWith(collectionKeyPrefix)
+        void invalidateUrlKeys(queryClient, (url) =>
+          url.startsWith(collectionKeyPrefix)
         );
       }
       if (entryApiUrl) {
-        void mutate(entryApiUrl, undefined, { revalidate: false });
+        // Drop the stale cache for the old path — the observer is about to
+        // switch keys via setPath, so no refetch is needed.
+        queryClient.removeQueries({ queryKey: [entryApiUrl] });
       }
       setPath(newPath);
       router.replace(
@@ -601,8 +597,8 @@ export function Entry({
       config.owner,
       config.repo,
       entryApiUrl,
-      mutate,
       name,
+      queryClient,
       router,
       schemaType,
     ]

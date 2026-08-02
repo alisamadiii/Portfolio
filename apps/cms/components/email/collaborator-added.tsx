@@ -35,7 +35,7 @@ export const CollaboratorAddedEmailTemplate = ({
   return (
     <Html>
       <Head />
-      <Preview>You were added to &quot;{repoName}&quot; on Pages CMS</Preview>
+      <Preview>You were added to &quot;{repoName}&quot; on Client Hub</Preview>
       <Tailwind>
         <Body
           className="mx-auto my-auto px-2 font-sans antialiased"
@@ -50,7 +50,7 @@ export const CollaboratorAddedEmailTemplate = ({
                 src={`${baseUrl}/images/email-logo.png`}
                 width="42"
                 height="42"
-                alt="Pages CMS"
+                alt="Client Hub"
                 className="mx-auto my-0"
               />
             </Section>
@@ -71,7 +71,7 @@ export const CollaboratorAddedEmailTemplate = ({
               >
                 {invitedByName}
               </Link>{" "}
-              added you to the &quot;{repoName}&quot; project on Pages CMS. You
+              added you to the &quot;{repoName}&quot; project on Client Hub. You
               already have access, so there is nothing to accept.
             </Text>
             <Section className="mt-[24px] mb-[24px] text-center">

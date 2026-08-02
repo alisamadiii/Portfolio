@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronsUpDown, LockKeyhole, RefreshCw, Search } from "lucide-react";
 import { useDebounce } from "use-debounce";
@@ -26,8 +27,8 @@ import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { requireApiSuccess } from "@/lib/api-client";
 import { isAdminUser } from "@/lib/authz-shared";
+import { apiFetch, apiQueryOptions, invalidateUrlKeys } from "@/lib/query";
 
 export function RepoSelect({
   onAccountSelect,
@@ -47,12 +48,26 @@ export function RepoSelect({
     selectedAccount?.repositorySelection === "all" ? keyword : "",
     500
   );
-  const [results, setResults] = useState<any[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [refreshIndex, setRefreshIndex] = useState(0);
+  const queryClient = useQueryClient();
 
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const reposUrl = useMemo(() => {
+    if (!selectedAccount) return null;
+    const params = new URLSearchParams({
+      type: selectedAccount.type,
+      keyword: debouncedKeyword,
+      repository_selection: selectedAccount.repositorySelection,
+    });
+    return `/api/repos/${selectedAccount.login}?${params.toString()}`;
+  }, [selectedAccount, debouncedKeyword]);
+
+  const reposQuery = useQuery({
+    ...apiQueryOptions<{ status: string; data: any[]; message?: string }>(
+      reposUrl ?? ""
+    ),
+    enabled: !!reposUrl,
+    select: (payload) => payload.data,
+  });
+  const results = reposQuery.isError ? [] : (reposQuery.data ?? null);
 
   const searchResults = useMemo(() => {
     if (!results) return [];
@@ -64,61 +79,13 @@ export function RepoSelect({
     return results;
   }, [results, keyword, selectedAccount]);
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      if (!selectedAccount) return;
-
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      setIsLoading(true);
-      try {
-        const params = new URLSearchParams({
-          type: selectedAccount.type,
-          keyword: debouncedKeyword,
-          repository_selection: selectedAccount.repositorySelection,
-        });
-
-        const response = await fetch(
-          `/api/repos/${selectedAccount.login}?${params.toString()}`,
-          { signal: abortControllerRef.current.signal }
-        );
-        const data = await requireApiSuccess<{
-          status: string;
-          data: any[];
-          message?: string;
-        }>(response, "Failed to fetch repos");
-
-        setResults(data.data);
-      } catch (error: any) {
-        if (error.name !== "AbortError") {
-          console.error(error);
-          setResults([]);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchResults();
-
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, [debouncedKeyword, selectedAccount, refreshIndex]);
-
-  const handleRefresh = async () => {
-    setIsSyncing(true);
-    try {
-      const response = await fetch("/api/repos/sync", { method: "POST" });
-      await requireApiSuccess(response, "Failed to refresh repos");
-      setRefreshIndex((index) => index + 1);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
+  const syncMutation = useMutation({
+    mutationFn: () => apiFetch("/api/repos/sync", { method: "POST" }),
+    onSuccess: () =>
+      invalidateUrlKeys(queryClient, (url) => url.startsWith("/api/repos/")),
+    onError: (error) => console.error(error),
+  });
+  const isSyncing = syncMutation.isPending;
 
   const resultsLoadingSkeleton = useMemo(
     () => (
@@ -205,7 +172,7 @@ export function RepoSelect({
           <Button
             variant="outline"
             size="icon"
-            onClick={handleRefresh}
+            onClick={() => syncMutation.mutate()}
             disabled={isSyncing}
             title="Refresh repositories from GitHub"
           >
@@ -213,7 +180,7 @@ export function RepoSelect({
           </Button>
         )}
       </div>
-      {isLoading || results === null ? (
+      {reposQuery.isFetching || results === null ? (
         resultsLoadingSkeleton
       ) : searchResults.length > 0 ? (
         <ul>

@@ -1,7 +1,7 @@
 /**
  * Per-repository settings: the monorepo "base path" and the media provider.
  *
- * The base path lets Pages CMS operate inside a subfolder of the repository
+ * The base path lets Client Hub operate inside a subfolder of the repository
  * (e.g. `frontend`) for monorepos. When set:
  * - `.pages.yml` is loaded from `{basePath}/.pages.yml`.
  * - Every collection `path` and media `input` in the config is resolved

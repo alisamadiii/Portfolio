@@ -15,7 +15,7 @@ import { useConfig } from "@/contexts/config-context";
 import { viewComponents } from "@/fields/registry";
 import { EllipsisVertical, FolderPlus, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
-import useSWR, { useSWRConfig } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   AlertDialog,
@@ -63,6 +63,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils";
 
 import { requireApiSuccess } from "@/lib/api-client";
+import { invalidateUrlKeys } from "@/lib/query";
 import { resolveContentOperations } from "@/lib/operations";
 import {
   getFieldByPath,
@@ -204,10 +205,9 @@ const withFieldValue = (
 
 export function Collection({ name, path }: { name: string; path?: string }) {
   const [tableSearch, setTableSearch] = useState("");
-  const [data, setData] = useState<Record<string, any>[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
-  const { cache, mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -319,8 +319,11 @@ export function Collection({ name, path }: { name: string; path?: string }) {
   );
 
   const fetchCollectionByUrl = useCallback(
-    async (apiUrl: string): Promise<Record<string, any>[]> => {
-      const response = await fetch(apiUrl);
+    async (
+      apiUrl: string,
+      signal?: AbortSignal
+    ): Promise<Record<string, any>[]> => {
+      const response = await fetch(apiUrl, { signal });
       const result = await requireApiSuccess<any>(response, "Fetch failed");
 
       if (result.data.errors?.length) {
@@ -347,50 +350,51 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     [buildCollectionApiUrl, collectionPath]
   );
 
-  const { data: swrCollectionData, error: swrCollectionError } = useSWR<
-    Record<string, any>[]
-  >(rootCollectionKey, fetchCollectionByUrl, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000,
+  const collectionQuery = useQuery({
+    queryKey: [rootCollectionKey],
+    queryFn: ({ signal }) => fetchCollectionByUrl(rootCollectionKey, signal),
+    staleTime: 2_000,
   });
+  const data = collectionQuery.data ?? [];
+  const error =
+    localError ??
+    (collectionQuery.error
+      ? collectionQuery.error instanceof Error
+        ? collectionQuery.error.message
+        : "Fetch failed"
+      : null);
 
   useEffect(() => {
-    setData([]);
-    setError(null);
+    setLocalError(null);
   }, [rootCollectionKey]);
 
-  useEffect(() => {
-    if (!swrCollectionData) return;
-    setData(swrCollectionData);
-    setError(null);
-  }, [swrCollectionData]);
-
-  useEffect(() => {
-    if (!swrCollectionError) return;
-    setError(
-      swrCollectionError instanceof Error
-        ? swrCollectionError.message
-        : "Fetch failed"
-    );
-  }, [swrCollectionError]);
+  const setCollectionData = useCallback(
+    (
+      updater: (prev: Record<string, any>[]) => Record<string, any>[]
+    ) => {
+      queryClient.setQueryData<Record<string, any>[]>(
+        [rootCollectionKey],
+        (prev) => updater(prev ?? [])
+      );
+    },
+    [queryClient, rootCollectionKey]
+  );
 
   const fetchCollectionData = useCallback(
     async (fetchPath: string): Promise<Record<string, any>[] | undefined> => {
       const apiUrl = buildCollectionApiUrl(fetchPath);
-      const cachedValue = cache.get(apiUrl) as
-        | { data?: Record<string, any>[] }
-        | undefined;
-      if (cachedValue?.data) return cachedValue.data;
-
       try {
-        const rows = await fetchCollectionByUrl(apiUrl);
-        await mutate(apiUrl, rows, { revalidate: false });
-        return rows;
+        // ensureQueryData returns cached rows regardless of staleness,
+        // otherwise fetches and stores — the old "cache or fetch" behavior.
+        return await queryClient.ensureQueryData({
+          queryKey: [apiUrl],
+          queryFn: ({ signal }) => fetchCollectionByUrl(apiUrl, signal),
+          staleTime: Infinity,
+        });
       } catch (err: any) {
         console.error(`Fetch failed for path ${fetchPath}:`, err);
         if (fetchPath === (path || schema.path)) {
-          setError(err.message);
+          setLocalError(err.message);
         } else {
           toast.error(
             `Could not load items inside ${getFileName(fetchPath)}: ${err.message}`
@@ -399,22 +403,21 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         return undefined;
       }
     },
-    [
-      buildCollectionApiUrl,
-      cache,
-      fetchCollectionByUrl,
-      mutate,
-      path,
-      schema.path,
-    ]
+    [buildCollectionApiUrl, fetchCollectionByUrl, path, queryClient, schema.path]
   );
 
-  const handleDelete = useCallback((path: string) => {
-    setData((prevData) => prevData?.filter((item: any) => item.path !== path));
-  }, []);
+  const handleDelete = useCallback(
+    (path: string) => {
+      setCollectionData((prevData) =>
+        prevData.filter((item: any) => item.path !== path)
+      );
+    },
+    [setCollectionData]
+  );
 
-  const handleRename = useCallback((path: string, newPath: string) => {
-    setData((prevData: any) => {
+  const handleRename = useCallback(
+    (path: string, newPath: string) => {
+    setCollectionData((prevData: any) => {
       if (!prevData) return prevData;
 
       const updateNestedData = (items: any[]): any[] => {
@@ -465,23 +468,28 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       // For items renamed within the same folder, update the item
       return sortFiles(updateNestedData(prevData));
     });
-  }, []);
+    },
+    [setCollectionData]
+  );
 
-  const handleFolderCreate = useCallback((entry: any) => {
-    const parentPath = getParentPath(entry.path);
-    const parent = {
-      type: "dir",
-      name: getFileName(parentPath),
-      path: parentPath,
-      size: 0,
-      url: null,
-    };
+  const handleFolderCreate = useCallback(
+    (entry: any) => {
+      const parentPath = getParentPath(entry.path);
+      const parent = {
+        type: "dir",
+        name: getFileName(parentPath),
+        path: parentPath,
+        size: 0,
+        url: null,
+      };
 
-    setData((prevData) => {
-      if (!prevData) return [parent];
-      return sortFiles([...prevData, parent]);
-    });
-  }, []);
+      setCollectionData((prevData) => {
+        if (!prevData) return [parent];
+        return sortFiles([...prevData, parent]);
+      });
+    },
+    [setCollectionData]
+  );
 
   const handleConfirmRenameNode = useCallback(
     (path: string, newPath: string) => {
@@ -791,7 +799,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
       setIsReordering(true);
       // Optimistic: rows re-sort instantly since the table sorts by orderField.
-      setData((current) =>
+      setCollectionData((current) =>
         current.map((item: any) =>
           indexByPath.has(item.path)
             ? {
@@ -824,7 +832,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           result.data?.updated ?? [];
         if (updated.length > 0) {
           const shaByPath = new Map(updated.map((u) => [u.path, u.sha]));
-          setData((current) =>
+          setCollectionData((current) =>
             current.map((item: any) =>
               shaByPath.has(item.path)
                 ? { ...item, sha: shaByPath.get(item.path) ?? item.sha }
@@ -834,12 +842,11 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         }
 
         const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void mutate(
-          (key) =>
-            typeof key === "string" && key.startsWith(collectionKeyPrefix)
+        void invalidateUrlKeys(queryClient, (url) =>
+          url.startsWith(collectionKeyPrefix)
         );
       } catch (error: any) {
-        setData(prevData);
+        setCollectionData(() => prevData);
         toast.error(error?.message ?? "Failed to save the new order");
       } finally {
         setIsReordering(false);
@@ -851,9 +858,10 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       config.owner,
       config.repo,
       data,
-      mutate,
       name,
       orderField,
+      queryClient,
+      setCollectionData,
     ]
   );
 
@@ -873,7 +881,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         row.isNode ? row.parentPath : row.path
       );
       if (subRows !== undefined) {
-        setData((currentData: any[]) => {
+        setCollectionData((currentData: any[]) => {
           const updateNestedData = (items: any[]): any[] => {
             return items.map((item: any) => {
               if (item.path === row.path) return { ...item, subRows };
@@ -891,7 +899,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         });
       }
     },
-    [fetchCollectionData]
+    [fetchCollectionData, setCollectionData]
   );
 
   const loadingSkeleton = useMemo(
@@ -1143,8 +1151,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     header: headerNode,
   });
 
-  const isLoading =
-    !swrCollectionData && !swrCollectionError && data.length === 0;
+  const isLoading = collectionQuery.isPending;
 
   const contentNode = isLoading ? (
     loadingSkeleton

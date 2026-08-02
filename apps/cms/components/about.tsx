@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 
 import { Badge } from "@workspace/ui/components/badge";
@@ -34,35 +35,23 @@ const UPDATE_DOCS_URL = "https://pagescms.org/docs";
 
 export function About() {
   const [open, setOpen] = useState(false);
-  const [latestVersion, setLatestVersion] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-
-    let cancelled = false;
-
-    const loadLatestVersion = async () => {
+  // No envelope on this endpoint; failures resolve to null instead of throwing.
+  const { data: latestVersion = null } = useQuery({
+    queryKey: ["/api/app/version"],
+    queryFn: async ({ signal }): Promise<string | null> => {
       try {
-        const response = await fetch("/api/app/version");
-        if (!response.ok) return;
-
+        const response = await fetch("/api/app/version", { signal });
+        if (!response.ok) return null;
         const data = (await response.json()) as { latest?: string | null };
-        if (!cancelled) {
-          setLatestVersion(
-            typeof data.latest === "string" ? data.latest : null
-          );
-        }
+        return typeof data.latest === "string" ? data.latest : null;
       } catch {
-        if (!cancelled) setLatestVersion(null);
+        return null;
       }
-    };
-
-    loadLatestVersion();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
+    },
+    enabled: open,
+    staleTime: 5 * 60_000,
+  });
 
   const updateAvailable = useMemo(() => {
     if (!latestVersion) return false;
@@ -88,13 +77,13 @@ export function About() {
                         <path d="M0 4.8C0 2.14903 2.14903 0 4.8 0H12.0118C13.2848 0 14.5057 0.505713 15.4059 1.40589L22.5941 8.59411C23.4943 9.49429 24 10.7152 24 11.9882V19.2C24 21.851 21.851 24 19.2 24H4.8C2.14903 24 0 21.851 0 19.2V4.8Z"></path>
                       </svg>
                     </span>
-                    <span className="sr-only">About Pages CMS</span>
+                    <span className="sr-only">About Client Hub</span>
                   </Button>
                 }
               />
             }
           />
-          <TooltipContent>About Pages CMS</TooltipContent>
+          <TooltipContent>About Client Hub</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <DialogContent className="w-[20rem] max-w-[calc(100vw-2rem)]">
@@ -110,7 +99,7 @@ export function About() {
             </svg>
           </div>
           <DialogTitle className="text-base font-semibold">
-            Pages CMS
+            Client Hub
           </DialogTitle>
           <DialogDescription>
             Open source CMS for static sites. Edit directly on GitHub with a

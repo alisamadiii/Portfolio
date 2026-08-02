@@ -4,17 +4,15 @@
  * Runs client-side with some temporary caching.
  */
 
-import { requireApiSuccess } from "@/lib/api-client";
+import { queryClient } from "@workspace/trpc/client";
+
+import { apiFetch } from "@/lib/query";
 import {
   decodePathSafely,
   getFileName,
   getParentPath,
   normalizePath,
 } from "@/lib/utils/file";
-
-const ttl = 30000; // TTL for the cache (30 seconds)
-const cache: { [key: string]: any } = {};
-const requests: { [key: string]: Promise<any> | undefined } = {};
 
 const canonicalizeFileName = (input: string) => {
   return decodePathSafely(getFileName(input || ""));
@@ -66,69 +64,31 @@ const getRawUrl = async (
     if (!filename) return null;
     const parentPath = getParentPath(normalizedInputPath);
 
-    const parentFullPath = `${owner}/${repo}/${encodeURIComponent(branch)}/${parentPath}`;
+    const dirApiUrl = `/api/${owner}/${repo}/${encodeURIComponent(branch)}/media/${encodeURIComponent(name)}/${encodeURIComponent(parentPath)}?nocache=true`;
 
-    if (requests[parentFullPath]) {
-      try {
-        await requests[parentFullPath];
-      } finally {
-        delete requests[parentFullPath];
-      }
-      return cache[parentFullPath]?.files?.[filename];
-    }
+    // The QueryClient dedupes concurrent in-flight requests and serves
+    // cached data within staleTime — replaces the old hand-rolled TTL cache.
+    // The client binding is assigned when the provider first renders; this
+    // code only runs post-mount, but fall back to a direct fetch just in case.
+    const response = queryClient
+      ? await queryClient.fetchQuery({
+          queryKey: [dirApiUrl],
+          queryFn: ({ signal }) => apiFetch<any>(dirApiUrl, { signal }),
+          staleTime: 30_000,
+        })
+      : await apiFetch<any>(dirApiUrl);
 
-    const cacheExists = cache[parentFullPath]?.files?.[filename];
-    const cacheExpired =
-      !cache[parentFullPath]?.time ||
-      Date.now() - cache[parentFullPath].time > ttl;
+    const files: Record<string, string> = {};
+    response.data.forEach((file: any) => {
+      const canonicalName = canonicalizeFileName(
+        typeof file?.path === "string" && file.path
+          ? file.path
+          : file?.name || ""
+      );
+      if (canonicalName) files[canonicalName] = file.url;
+    });
 
-    if (cacheExists && !cacheExpired) {
-      return cacheExists;
-    }
-
-    if (cacheExpired || !cacheExists) {
-      delete cache[parentFullPath];
-
-      if (!requests[parentFullPath]) {
-        requests[parentFullPath] = fetch(
-          `/api/${owner}/${repo}/${encodeURIComponent(branch)}/media/${encodeURIComponent(name)}/${encodeURIComponent(parentPath)}?nocache=true`
-        )
-          .then((response) =>
-            requireApiSuccess<any>(response, "Failed to fetch media")
-          )
-          .catch((err) => {
-            delete requests[parentFullPath];
-            throw err;
-          });
-      }
-
-      let response;
-      try {
-        response = await requests[parentFullPath];
-      } finally {
-        delete requests[parentFullPath];
-      }
-
-      if (!cache[parentFullPath] && response.status === "success") {
-        cache[parentFullPath] = {
-          time: Date.now(),
-          files: {},
-        };
-        response.data.forEach((file: any) => {
-          const canonicalName = canonicalizeFileName(
-            typeof file?.path === "string" && file.path
-              ? file.path
-              : file?.name || ""
-          );
-          if (canonicalName)
-            cache[parentFullPath].files[canonicalName] = file.url;
-        });
-      } else if (response.status === "error") {
-        throw new Error(response.message);
-      }
-    }
-
-    return cache[parentFullPath]?.files?.[filename];
+    return files[filename];
   } else {
     return `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${encodeURI(normalizedInputPath)}`;
   }

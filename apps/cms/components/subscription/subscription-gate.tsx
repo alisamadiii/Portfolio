@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@/contexts/user-context";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -14,7 +15,8 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 
-import { requireApiSuccess, SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/api-client";
+import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/api-client";
+import { apiFetch } from "@/lib/query";
 import { FEATURES, type FeatureKey } from "@workspace/trpc/lib/features";
 
 /**
@@ -32,41 +34,30 @@ export function SubscriptionGateProvider({
   const [open, setOpen] = useState(false);
   const [feature, setFeature] = useState<FeatureKey>("cms");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const verifiedOnReturnRef = useRef(false);
 
-  const verifyAccess = useCallback(
-    async (featureKey: FeatureKey) => {
-      setIsVerifying(true);
-      try {
-        const result = await requireApiSuccess<{
-          data: { hasAccess: boolean };
-        }>(
-          await fetch(`/api/subscription/${featureKey}/refresh`, {
-            method: "POST",
-          }),
-          "Failed to verify subscription"
-        );
-        if (result.data.hasAccess) {
-          toast.success("Subscription active — you're all set. Save again.");
-          setOpen(false);
-        } else {
-          toast.error(
-            `No active subscription found for ${user?.email ?? "your account"} yet.`
-          );
-        }
-      } catch (error) {
+  const verifyMutation = useMutation({
+    mutationFn: (featureKey: FeatureKey) =>
+      apiFetch<{ data: { hasAccess: boolean } }>(
+        `/api/subscription/${featureKey}/refresh`,
+        { method: "POST" }
+      ),
+    onSuccess: (result) => {
+      if (result.data.hasAccess) {
+        toast.success("Subscription active — you're all set. Save again.");
+        setOpen(false);
+      } else {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to verify subscription."
+          `No active subscription found for ${user?.email ?? "your account"} yet.`
         );
-      } finally {
-        setIsVerifying(false);
       }
     },
-    [user?.email]
-  );
+    onError: (error) => {
+      toast.error(error.message || "Failed to verify subscription.");
+    },
+  });
+  const isVerifying = verifyMutation.isPending;
+  const verifyAccess = verifyMutation.mutate;
 
   useEffect(() => {
     const handleRequired = (event: Event) => {
@@ -90,7 +81,7 @@ export function SubscriptionGateProvider({
     verifiedOnReturnRef.current = true;
     url.searchParams.delete("purchase");
     window.history.replaceState(null, "", url.toString());
-    void verifyAccess("cms");
+    verifyAccess("cms");
   }, [verifyAccess]);
 
   const handleSubscribe = async () => {
@@ -157,7 +148,7 @@ export function SubscriptionGateProvider({
             <Button
               variant="outline"
               disabled={isVerifying || isCheckingOut}
-              onClick={() => void verifyAccess(feature)}
+              onClick={() => verifyAccess(feature)}
             >
               {isVerifying ? "Checking…" : "I already subscribed"}
             </Button>

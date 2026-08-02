@@ -21,4 +21,5 @@ export const ALLOWED_ORIGINS = [
   "https://agency.alisamadii.com",
   "https://portal.alisamadii.com",
   "https://cms.alisamadii.com",
+  "https://hub.alisamadii.com",
 ];

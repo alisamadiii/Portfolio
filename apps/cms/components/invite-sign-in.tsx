@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
@@ -29,31 +30,29 @@ type InviteState =
     };
 
 export function InviteSignIn({ token }: { token: string }) {
-  const [state, setState] = useState<InviteState>({ status: "loading" });
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  // One-shot load — a focus refetch could flip state after acceptance,
+  // so refetching is disabled. Endpoint returns the state union as JSON
+  // regardless of HTTP status (current behavior preserved).
+  const inviteQuery = useQuery({
+    queryKey: [`/api/collaborator-invites/${encodeURIComponent(token)}`],
+    queryFn: async ({ signal }) => {
+      const response = await fetch(
+        `/api/collaborator-invites/${encodeURIComponent(token)}`,
+        { signal }
+      );
+      return (await response.json()) as InviteState;
+    },
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
 
-    async function loadInvite() {
-      setState({ status: "loading" });
-      try {
-        const response = await fetch(
-          `/api/collaborator-invites/${encodeURIComponent(token)}`
-        );
-        const next = (await response.json()) as InviteState;
-        if (!cancelled) setState(next);
-      } catch {
-        if (!cancelled) setState({ status: "unavailable" });
-      }
-    }
-
-    void loadInvite();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
+  const state: InviteState = inviteQuery.isPending
+    ? { status: "loading" }
+    : inviteQuery.isError
+      ? { status: "unavailable" }
+      : inviteQuery.data;
 
   useEffect(() => {
     if (state.status === "ready") {

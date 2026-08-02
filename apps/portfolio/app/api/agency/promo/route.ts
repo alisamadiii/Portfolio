@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     };
 
     // Resolve human-readable product names (same pattern as
-    // packages/trpc/src/routers/payments/stripe.ts fetchSubscriptionsForCustomer).
+    // packages/trpc/src/routers/stripe/payments.ts fetchSubscriptionsForCustomer).
     const products = appliesToAll
       ? []
       : (

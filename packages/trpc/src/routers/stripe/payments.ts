@@ -11,7 +11,7 @@ import {
   createTRPCRouter,
   internalProcedure,
 } from "@workspace/trpc/init";
-import { FEATURES, featureKeys } from "@workspace/trpc/lib/features";
+import { featureKeys, FEATURES } from "@workspace/trpc/lib/features";
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import { user } from "@workspace/drizzle/schema";
@@ -49,10 +49,7 @@ const fetchSubscriptionsForCustomer = async (customerId: string) => {
   cacheTag("stripe", `stripe-subscriptions-${customerId}`);
   const subs = await stripe.subscriptions.list({
     customer: customerId,
-    expand: [
-      "data.default_payment_method",
-      "data.discounts.source.coupon",
-    ],
+    expand: ["data.default_payment_method", "data.discounts.source.coupon"],
   });
 
   // One checkout can bundle several recurring prices into a single Stripe

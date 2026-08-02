@@ -70,7 +70,7 @@ export const urls: Record<Lowercase<ProjectType> | "portal" | "api", string> = {
   cms:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3007"
-      : "https://cms.alisamadii.com",
+      : "https://hub.alisamadii.com",
   saaskit:
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173"
@@ -113,7 +113,7 @@ export function resolveRedirectUrl(
 
 /** Prettier labels for keys where naive capitalization reads wrong. */
 const appDisplayNames: Partial<Record<string, string>> = {
-  cms: "CMS",
+  cms: "Client Hub",
   saaskit: "SaaS Kit",
 };
 

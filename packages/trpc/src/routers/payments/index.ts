@@ -21,7 +21,7 @@ import {
   subscriptions,
 } from "@workspace/drizzle/schema";
 
-import { stripeRouter } from "./stripe";
+import { stripeRouter } from "../stripe/payments";
 
 export const paymentsRouter = createTRPCRouter({
   getProducts: baseProcedure.query(async () => {

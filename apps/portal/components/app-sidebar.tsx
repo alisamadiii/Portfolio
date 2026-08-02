@@ -3,9 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
-  Bot,
-  Building2,
   CreditCard,
+  Globe,
   HelpCircle,
   LogOut,
   Settings,
@@ -25,6 +24,7 @@ import {
   SidebarRail,
 } from "@workspace/ui/components/sidebar";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
+import { logos, urls } from "@workspace/ui/lib/company";
 
 import { useLogout } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -41,19 +41,6 @@ const accountPages = [
     title: "Billing",
     url: "/billing",
     icon: CreditCard,
-  },
-];
-
-const agencyPages = [
-  {
-    title: "Agency",
-    url: "/agency",
-    icon: Building2,
-  },
-  {
-    title: "AI Requests",
-    url: "/requests",
-    icon: Bot,
   },
 ];
 
@@ -76,9 +63,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar {...props}>
       <SidebarHeader className="px-5 pt-6 pb-5">
         <div className="flex items-center gap-3.5">
-          <div className="bg-sidebar-primary text-sidebar-primary-foreground grid size-11.5 shrink-0 place-items-center rounded-full text-[26px] leading-none font-extrabold italic">
-            A
-          </div>
+          <img
+            src={logos.default}
+            alt="Ali Samadi"
+            className="size-11.5 shrink-0 rounded-full object-cover"
+          />
           <div>
             <p className="text-sidebar-accent-foreground text-xl leading-none font-extrabold tracking-tight">
               Portal
@@ -92,7 +81,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="px-1.5">
         <NavPages label="Account" pages={accountPages} />
-        <NavPages label="Agency" pages={agencyPages} />
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel className="text-sidebar-foreground/60 px-3 text-[11px] font-semibold tracking-[0.06em] uppercase">
+            Agency
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={menuButtonClass}
+                render={<a href={urls.cms} />}
+              >
+                <Globe />
+                <span>Go to Hub</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel className="text-sidebar-foreground/60 px-3 text-[11px] font-semibold tracking-[0.06em] uppercase">
             Support

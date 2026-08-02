@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const APP_TITLE = "Pages CMS";
+const APP_TITLE = "Client Hub";
 
 export const formatDocumentTitle = (title?: string | null) =>
   title ? `${title} | ${APP_TITLE}` : APP_TITLE;

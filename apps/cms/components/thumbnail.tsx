@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
+import { useQuery } from "@tanstack/react-query";
 import { Ban, ImageOff, Loader } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
@@ -22,57 +23,35 @@ export function Thumbnail({
   className?: string;
   imgClassName?: string;
 }) {
-  const [rawUrl, setRawUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Track load failures per-URL so a path change naturally clears the error.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   const { owner, repo, isPrivate } = useRepo();
 
   const { config } = useConfig();
   const branch = config?.branch!;
 
-  useEffect(() => {
-    setError(null);
-    setRawUrl(null);
+  // CDN / external / data URLs render directly — never resolved via GitHub.
+  const isAbsolute = !!path && isAbsoluteMediaUrl(path);
 
-    if (!path) return;
+  const rawUrlQuery = useQuery({
+    queryKey: ["raw-url", owner, repo, branch, name ?? "", path ?? ""],
+    queryFn: () => getRawUrl(owner, repo, branch, name!, path!, isPrivate),
+    enabled: !!path && !isAbsolute && !!name,
+    staleTime: 30_000,
+    retry: false,
+  });
 
-    // CDN / external / data URLs render directly — never resolved via GitHub.
-    if (isAbsoluteMediaUrl(path)) {
-      setRawUrl(path);
-      return;
-    }
-
-    // Repo-relative paths need the `.pages.yml` media name to resolve.
-    if (!name) {
-      setError("Image could not be resolved");
-      return;
-    }
-
-    let cancelled = false;
-    const fetchRawUrl = async () => {
-      try {
-        const url = await getRawUrl(owner, repo, branch, name, path, isPrivate);
-        if (cancelled) return;
-        if (url) {
-          setRawUrl(url);
-        } else {
-          setError("Image could not be resolved");
-        }
-      } catch (err: any) {
-        if (cancelled) return;
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error";
-        console.warn(errorMessage);
-        setError(errorMessage);
-      }
-    };
-
-    fetchRawUrl();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [path, owner, repo, branch, isPrivate, name]);
+  const rawUrl = isAbsolute ? path : (rawUrlQuery.data ?? null);
+  const error = rawUrl && failedUrl === rawUrl
+    ? "Image failed to load"
+    : rawUrlQuery.error
+      ? rawUrlQuery.error instanceof Error
+        ? rawUrlQuery.error.message
+        : "Unknown error"
+      : path && !isAbsolute && (!name || (rawUrlQuery.isSuccess && !rawUrlQuery.data))
+        ? "Image could not be resolved"
+        : null;
 
   return (
     <div
@@ -94,7 +73,7 @@ export function Thumbnail({
             src={rawUrl}
             alt={path.split("/").pop() || "thumbnail"}
             loading="lazy"
-            onError={() => setError("Image failed to load")}
+            onError={() => setFailedUrl(rawUrl)}
             className={cn(
               "absolute inset-0 h-full w-full object-cover",
               imgClassName

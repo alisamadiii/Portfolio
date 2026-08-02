@@ -1,0 +1,106 @@
+/*
+ * Hub pages theme. Status tokens + card utilities shared with the portal's
+ * design language, adapted for CMS's class-based light/dark themes.
+ */
+
+:root,
+.light {
+  /* status pills — keeps badges design-accurate without arbitrary colors */
+  --status-success: #15803d;
+  --status-success-bg: #e9f7ee;
+  --status-review: #7c3aed;
+  --status-review-bg: #efeafe;
+  --status-info: #2563eb;
+  --status-info-bg: #eaf1ff;
+  --status-warning: #b45309;
+  --status-warning-bg: #fdf1de;
+  --status-danger: #dc2626;
+  --status-danger-bg: #fdeaea;
+  --status-neutral: #78767b;
+  --status-neutral-bg: #f1f0ee;
+
+  /* subtle inner divider between rows inside a card */
+  --rule: oklch(0.94 0.002 48);
+}
+
+.dark {
+  --status-success: #4ade80;
+  --status-success-bg: oklch(0.32 0.06 152);
+  --status-review: #a78bfa;
+  --status-review-bg: oklch(0.32 0.08 294);
+  --status-info: #60a5fa;
+  --status-info-bg: oklch(0.32 0.07 259);
+  --status-warning: #fbbf24;
+  --status-warning-bg: oklch(0.32 0.06 70);
+  --status-danger: #f87171;
+  --status-danger-bg: oklch(0.32 0.08 25);
+  --status-neutral: #a8a6ab;
+  --status-neutral-bg: oklch(0.28 0.006 56);
+
+  --rule: oklch(1 0 0 / 8%);
+}
+
+@theme inline {
+  --color-status-success: var(--status-success);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-review: var(--status-review);
+  --color-status-review-bg: var(--status-review-bg);
+  --color-status-info: var(--status-info);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-danger: var(--status-danger);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-rule: var(--rule);
+}
+
+/* gentle breathing pulse for the loading-screen logo */
+@keyframes logo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.92);
+    opacity: 0.75;
+  }
+}
+
+@utility animate-logo-breathe {
+  animation: logo-breathe 1.8s ease-in-out infinite;
+}
+
+/* the footer action strip on a settings card */
+@utility card-band {
+  border-top: 1px solid var(--rule);
+  background: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.875rem;
+  padding: 0.875rem 1.375rem;
+}
+
+/* the full table shell: card surface, uppercase header strip.
+   TableBody ships with bg-background, so it needs overriding too. */
+@utility table-card {
+  background: var(--card);
+  border-radius: var(--radius);
+
+  & tbody {
+    background: var(--card);
+  }
+
+  & thead tr {
+    background: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}

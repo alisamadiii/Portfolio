@@ -22,6 +22,8 @@ import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { DocumentTitle } from "@/components/document-title";
+
 // ─── Types ──────────────────────────────────────────────────────
 
 type StripeSubscription =
@@ -106,7 +108,10 @@ const StatusPill = ({ status }: { status: string }) => (
 );
 
 const PageHeading = () => (
-  <h2 className="text-[27px] font-extrabold tracking-tight">Agency</h2>
+  <>
+    <DocumentTitle title="Billing" />
+    <h2 className="text-[27px] font-extrabold tracking-tight">Billing</h2>
+  </>
 );
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
@@ -245,7 +250,7 @@ const InvoiceDetailsPanel = ({ invoice }: { invoice: StripeInvoice }) => (
 
 // ─── Page ───────────────────────────────────────────────────────
 
-export default function AgencyPage() {
+export default function BillingPage() {
   const trpc = useTRPC();
   const { data: currentUser } = useCurrentUser();
   const [expandedInvRows, setExpandedInvRows] = useState<Set<string>>(

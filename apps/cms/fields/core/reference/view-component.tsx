@@ -1,7 +1,7 @@
 "use client";
 
 import { useConfig } from "@/contexts/config-context";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 
 import { Field } from "@/types/field";
 
@@ -24,8 +24,8 @@ const normalizeValue = (item: unknown): string => {
   return "";
 };
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
+const fetcher = async (url: string, signal?: AbortSignal) => {
+  const response = await fetch(url, { signal });
   if (!response.ok) throw new Error("Failed to load references");
   const json = await response.json();
   return Array.isArray(json?.data?.options) ? json.data.options : [];
@@ -65,12 +65,19 @@ const ViewComponent = ({ value, field }: { value: unknown; field: Field }) => {
     : null;
   selectedValues.forEach((item) => params?.append("value", item));
 
-  const { data } = useSWR(
+  const referencesUrl =
     config && collection && selectedValues.length > 0
       ? `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/references/${collectionName}?${params?.toString()}`
-      : null,
-    fetcher
-  );
+      : null;
+
+  // URL-as-key dedupes identical cells; labels are stable, so a longer
+  // staleTime avoids refetch storms in large tables.
+  const { data } = useQuery({
+    queryKey: [referencesUrl ?? ""],
+    queryFn: ({ signal }) => fetcher(referencesUrl!, signal),
+    enabled: !!referencesUrl,
+    staleTime: 60_000,
+  });
 
   const labelsByValue = new Map<string, string>();
   data?.forEach((item: Record<string, unknown>) => {

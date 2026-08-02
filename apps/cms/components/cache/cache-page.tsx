@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { BookText, RefreshCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -34,7 +35,7 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { requireApiSuccess } from "@/lib/api-client";
+import { apiFetch, apiQueryOptions } from "@/lib/query";
 
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
@@ -189,55 +190,47 @@ export function CachePage({
   repo: string;
   branch: string;
 }) {
-  const [data, setData] = useState<CacheStatusPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const cacheUrl = `/api/${owner}/${repo}/${encodeURIComponent(branch)}/cache`;
 
-  const fetchStatus = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/${owner}/${repo}/${encodeURIComponent(branch)}/cache`
-      );
-      const payload = await requireApiSuccess<{
-        status: string;
-        data: CacheStatusPayload;
-      }>(response, "Failed to fetch cache status");
-      setData(payload.data);
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to fetch cache status");
-    } finally {
-      setLoading(false);
-    }
-  }, [branch, owner, repo]);
+  const statusQuery = useQuery({
+    ...apiQueryOptions<{ status: string; data: CacheStatusPayload }>(cacheUrl),
+    select: (payload) => payload.data,
+  });
+  const data = statusQuery.data ?? null;
+  const loading = statusQuery.isPending;
 
   useEffect(() => {
-    void fetchStatus();
-  }, [fetchStatus]);
+    if (statusQuery.error) {
+      toast.error(statusQuery.error.message || "Failed to fetch cache status");
+    }
+  }, [statusQuery.error]);
+
+  const actionMutation = useMutation({
+    mutationFn: ({ action }: { action: string; successMessage: string }) =>
+      apiFetch(cacheUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      }),
+  });
+  const actionLoading = actionMutation.isPending
+    ? (actionMutation.variables?.action ?? null)
+    : null;
 
   const runAction = useCallback(
     async (action: string, successMessage: string) => {
-      setActionLoading(action);
       const loadingId = toast.loading("Updating cache...");
       try {
-        const response = await fetch(
-          `/api/${owner}/${repo}/${encodeURIComponent(branch)}/cache`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action }),
-          }
-        );
-        await requireApiSuccess(response, "Failed cache action");
+        await actionMutation.mutateAsync({ action, successMessage });
         toast.success(successMessage, { id: loadingId });
-        await fetchStatus();
+        await queryClient.invalidateQueries({ queryKey: [cacheUrl] });
       } catch (error: any) {
         toast.error(error?.message || "Failed cache action", { id: loadingId });
-      } finally {
-        setActionLoading(null);
       }
     },
-    [branch, fetchStatus, owner, repo]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cacheUrl, queryClient]
   );
 
   const headerNode = useMemo(

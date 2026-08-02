@@ -19,7 +19,7 @@ import { getBaseUrl } from "@/lib/base-url";
 export const LoginEmailTemplate = ({
   email,
   otp,
-  preview = "Sign in to Pages CMS",
+  preview = "Sign in to Client Hub",
 }: {
   email: string;
   otp: string;
@@ -45,7 +45,7 @@ export const LoginEmailTemplate = ({
                 src={`${baseUrl}/images/email-logo.png`}
                 width="42"
                 height="42"
-                alt="Pages CMS"
+                alt="Client Hub"
                 className="mx-auto my-0"
               />
             </Section>
@@ -53,7 +53,7 @@ export const LoginEmailTemplate = ({
               className="mx-0 my-[30px] p-0 text-center text-[24px] font-semibold tracking-tight"
               style={{ color: emailTheme.foreground }}
             >
-              Sign in to Pages CMS
+              Sign in to Client Hub
             </Heading>
             <Text
               className="text-[16px] leading-[24px]"
