@@ -40,10 +40,7 @@ export function ExportEmailsPdfButton({
         rows: items.map((email) => ({
           date: format(new Date(email.createdAt), "MMM d, yyyy h:mm a"),
           subject: email.subject,
-          recipient:
-            email.type === "contact" && email.visitorEmail
-              ? email.visitorEmail
-              : email.to.join(", "),
+          recipient: email.to.join(", "),
           kind:
             email.type === "contact"
               ? "Contact form"

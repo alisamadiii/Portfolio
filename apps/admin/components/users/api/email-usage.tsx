@@ -172,9 +172,7 @@ export function EmailUsage() {
                       {log.fromAddress}
                     </td>
                     <td className="text-muted-foreground max-w-40 truncate px-4 py-3 text-xs">
-                      {log.type === "contact" && log.visitorEmail
-                        ? `${log.visitorEmail} (visitor)`
-                        : log.to.join(", ")}
+                      {log.to.join(", ")}
                     </td>
                     <td className="px-4 py-3">
                       <Badge

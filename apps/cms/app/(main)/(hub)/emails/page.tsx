@@ -28,15 +28,12 @@ import { DataTable } from "@workspace/ui/custom/data-table";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
-import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { DocumentTitle } from "@/components/document-title";
 import { ExportEmailsPdfButton } from "@/components/emails/export-pdf-button";
 
 const PAGE_SIZE = 10;
-
-type EmailLog = RouterOutputs["emails"]["list"]["items"][number];
 
 const TYPE_PILL: Record<string, { label: string; className: string }> = {
   send: { label: "Sent", className: "bg-status-success-bg text-status-success" },
@@ -49,11 +46,6 @@ const TYPE_PILL: Record<string, { label: string; className: string }> = {
 // Types are free-form — unknown values get a neutral pill with the raw label.
 const pillFor = (type: string) =>
   TYPE_PILL[type] ?? { label: type, className: "bg-muted text-muted-foreground" };
-
-const recipientOf = (email: EmailLog) =>
-  email.type === "contact" && email.visitorEmail
-    ? email.visitorEmail
-    : email.to.join(", ");
 
 const PageHeading = () => (
   <>
@@ -239,9 +231,16 @@ export default function EmailsPage() {
                     <div className="bg-status-success-bg text-status-success grid size-9 shrink-0 place-items-center rounded-[10px] border">
                       <Mail className="size-4" />
                     </div>
-                    <span className="max-w-[240px] truncate text-sm font-medium">
-                      {recipientOf(row.original)}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="block max-w-[240px] truncate text-sm font-medium">
+                        {row.original.to.join(", ")}
+                      </span>
+                      {row.original.visitorEmail && (
+                        <span className="text-muted-foreground block max-w-[240px] truncate text-xs">
+                          from {row.original.visitorEmail}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ),
               },

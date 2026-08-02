@@ -148,10 +148,7 @@ export default function EmailDetailPage() {
     );
   }
 
-  const recipient =
-    email.type === "contact" && email.visitorEmail
-      ? email.visitorEmail
-      : email.to.join(", ");
+  const recipient = email.to.join(", ");
 
   return (
     <div className="space-y-6">
