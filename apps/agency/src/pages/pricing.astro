@@ -2,6 +2,69 @@
 import Layout from "../layouts/Layout.astro";
 import BackNav from "../components/BackNav.astro";
 import SimpleFooter from "../components/SimpleFooter.astro";
+import { PRICING, fmtPrice } from "../data/pricing";
+
+// Prices are rendered into the HTML at build time so crawlers/LLMs see real
+// numbers. public/pricing.js still mirrors these for runtime checkout.
+const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
+
+const SITE = "https://agency.alisamadii.com";
+// Page-specific structured data — prices sourced from src/data/pricing.ts so
+// the schema can never drift from the visible page or from Stripe.
+const pricingSchema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${SITE}/pricing#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Pricing",
+        item: `${SITE}/pricing`,
+      },
+    ],
+  },
+  {
+    "@type": "Service",
+    "@id": `${SITE}/pricing#service`,
+    name: "Website Design & Development",
+    provider: { "@id": `${SITE}/#organization` },
+    areaServed: "US",
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Pricing Plans",
+      itemListElement: [
+        {
+          "@type": "Offer",
+          name: "Monthly (All-Inclusive)",
+          description:
+            "Design, development, CMS, email, SEO, and hosting — fully managed.",
+          price: String(PRICING.monthly),
+          priceCurrency: "USD",
+          priceSpecification: {
+            "@type": "UnitPriceSpecification",
+            price: String(PRICING.monthly),
+            priceCurrency: "USD",
+            unitCode: "MON",
+          },
+        },
+        {
+          "@type": "Offer",
+          name: "Upfront (One-Time Build)",
+          description: `First page ${fmtPrice(PRICING.upfront.basePrice)}, each additional page ${fmtPrice(PRICING.upfront.perExtraPage)}. Design, development, and SEO included.`,
+          price: String(PRICING.upfront.basePrice),
+          priceCurrency: "USD",
+        },
+        {
+          "@type": "Offer",
+          name: "Custom",
+          description: "Fully custom-scoped project — contact for a quote.",
+        },
+      ],
+    },
+  },
+];
 ---
 
 <Layout
@@ -16,6 +79,7 @@ import SimpleFooter from "../components/SimpleFooter.astro";
     twitterDescription:
       "Simple, transparent pricing. All-inclusive monthly, upfront build, or fully custom.",
   }}
+  schema={pricingSchema}
   bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
 >
   <BackNav backHref="/" backLabel="Back to Home" fixed />
@@ -30,7 +94,7 @@ import SimpleFooter from "../components/SimpleFooter.astro";
         >
       </div>
       <h1
-        class="reveal text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
       >
         Build Your<br />
         <span class="text-accent">Project</span>
@@ -113,7 +177,8 @@ import SimpleFooter from "../components/SimpleFooter.astro";
               <h3 class="text-2xl font-semibold tracking-[-0.02em]">Monthly</h3>
               <div class="mt-3">
                 <span class="price-monthly text-3xl font-bold tracking-tight"
-                ></span>
+                  >{fmtPrice(PRICING.monthly)}</span
+                >
                 <span class="text-warmgray text-base font-normal">/mo</span>
               </div>
               <p
@@ -246,10 +311,13 @@ import SimpleFooter from "../components/SimpleFooter.astro";
               <div class="mt-3">
                 <span class="text-warmgray text-xs">from</span>
                 <span class="price-upfront text-3xl font-bold tracking-tight"
-                ></span>
+                  >{fmtPrice(PRICING.upfront.basePrice)}</span
+                >
                 <span class="text-warmgray ml-1 text-xs">one-time</span>
               </div>
-              <p class="price-upfront-extra text-warmgray mt-1 text-xs"></p>
+              <p class="price-upfront-extra text-warmgray mt-1 text-xs">
+                + {fmtPrice(PRICING.upfront.perExtraPage)} per extra page
+              </p>
               <p
                 class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
               >
@@ -257,6 +325,20 @@ import SimpleFooter from "../components/SimpleFooter.astro";
                 included. Add pages anytime. Keep it running with light monthly
                 add-ons.
               </p>
+              <div
+                class="border-charcoal/[0.06] bg-charcoal/[0.02] mt-4 rounded-xl border p-3.5"
+              >
+                <p class="text-warmgray text-xs leading-relaxed">
+                  <span class="text-charcoal font-medium"
+                    >You pay per page.</span
+                  > A page is anything with its own address — Home, About, Contact
+                  — and a long scrolling page still counts as one. Your first page
+                  is {fmtPrice(PRICING.upfront.basePrice)}, each page after is {
+                    fmtPrice(PRICING.upfront.perExtraPage)
+                  }. Terms &amp; privacy pages are always free. You confirm the final
+                  page count at checkout before any work begins.
+                </p>
+              </div>
               <ul class="text-warmgray mt-6 space-y-3 text-sm">
                 <li class="flex items-start gap-3">
                   <svg
@@ -328,8 +410,9 @@ import SimpleFooter from "../components/SimpleFooter.astro";
                   <span
                     >Managed hosting
                     <span class="price-hosting-note text-charcoal font-medium"
+                      >— {fmtPrice(PRICING.hosting)}/mo</span
                     ></span
-                  ></span>
+                  >
                 </li>
                 <li class="flex items-start gap-3">
                   <svg
@@ -348,8 +431,9 @@ import SimpleFooter from "../components/SimpleFooter.astro";
                   <span
                     >Optional CMS access
                     <span class="price-cms-note text-charcoal font-medium"
+                      >— {fmtPrice(PRICING.cms)}/mo</span
                     ></span
-                  ></span>
+                  >
                 </li>
                 <li class="flex items-start gap-3">
                   <svg
@@ -365,7 +449,7 @@ import SimpleFooter from "../components/SimpleFooter.astro";
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  <span class="email-note"></span>
+                  <span class="email-note">{emailNote}</span>
                 </li>
               </ul>
               <div class="mt-auto pt-8">
@@ -517,26 +601,8 @@ import SimpleFooter from "../components/SimpleFooter.astro";
        leaking top-level consts into the persistent global scope. -->
   <script is:inline data-astro-rerun>
     (() => {
-    // ─── PRICE INJECTION (from pricing.js) ───────────────────────
-
-    document.querySelectorAll(".price-monthly").forEach((el) => {
-      el.textContent = fmtPrice(PRICING.monthly);
-    });
-    document.querySelectorAll(".price-upfront").forEach((el) => {
-      el.textContent = fmtPrice(PRICING.upfront.basePrice);
-    });
-    document.querySelectorAll(".price-upfront-extra").forEach((el) => {
-      el.textContent = `+ ${fmtPrice(PRICING.upfront.perExtraPage)} per extra page`;
-    });
-    document.querySelectorAll(".price-hosting-note").forEach((el) => {
-      el.textContent = `— ${fmtPrice(PRICING.hosting)}/mo`;
-    });
-    document.querySelectorAll(".price-cms-note").forEach((el) => {
-      el.textContent = `— ${fmtPrice(PRICING.cms)}/mo`;
-    });
-    document.querySelectorAll(".email-note").forEach((el) => {
-      el.textContent = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
-    });
+    // Prices are server-rendered from src/data/pricing.ts — no runtime price
+    // injection needed. This block only wires the checkout action + reveals.
 
     // ─── ACTIONS ─────────────────────────────────────────────────
 
@@ -575,75 +641,6 @@ import SimpleFooter from "../components/SimpleFooter.astro";
     })();
   </script>
 
-  <!-- Disclaimer Dialog -->
-  <div id="disclaimerBackdrop" class="disclaimer-backdrop hidden">
-    <div class="disclaimer-dialog">
-      <h2
-        style="
-          font-size: 1.875rem;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-          color: #1a1a1a;
-          max-width: 20ch;
-        "
-      >
-        You pay per page.<br />$500 base, $200 each after.
-      </h2>
-      <p
-        style="
-          margin-top: 1rem;
-          font-size: 0.875rem;
-          line-height: 1.7;
-          color: #8a8577;
-          max-width: 45ch;
-        "
-      >
-        A page is anything with its own address — Home, About, Contact, and so
-        on; a long scrolling page still counts as one. Your first page is $500,
-        and each page after that is $200. Terms &amp; privacy pages are always
-        free and don't count. You confirm the final page count at checkout
-        before any work begins.
-      </p>
-      <button id="disclaimerBtn" class="disclaimer-btn">
-        <div id="disclaimerFill" class="disclaimer-btn-fill"></div>
-        <span class="disclaimer-btn-label">I understand</span>
-      </button>
-    </div>
-  </div>
-
-  <script is:inline data-astro-rerun>
-    (function () {
-      if (localStorage.getItem("estimate_disclaimer_seen")) return;
-
-      const backdrop = document.getElementById("disclaimerBackdrop");
-      const btn = document.getElementById("disclaimerBtn");
-      const fill = document.getElementById("disclaimerFill");
-
-      setTimeout(() => {
-        backdrop.classList.remove("hidden");
-        backdrop.offsetHeight;
-        backdrop.classList.add("visible");
-        fill.classList.add("animate");
-
-        // Enable button after fill animation (2s)
-        setTimeout(() => {
-          btn.classList.add("ready");
-        }, 2000);
-      }, 2000);
-
-      function dismiss() {
-        if (!btn.classList.contains("ready")) return;
-        backdrop.classList.remove("visible");
-        setTimeout(() => {
-          backdrop.classList.add("hidden");
-        }, 600);
-        localStorage.setItem("estimate_disclaimer_seen", "true");
-      }
-
-      btn.addEventListener("click", dismiss);
-    })();
-  </script>
 </Layout>
 
 <style is:global>
@@ -682,93 +679,5 @@ import SimpleFooter from "../components/SimpleFooter.astro";
   }
   .package-card:hover {
     transform: translateY(-2px);
-  }
-
-  /* Estimate disclaimer dialog */
-  .disclaimer-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    opacity: 0;
-    transition: opacity 0.6s ease;
-  }
-  .disclaimer-backdrop.visible {
-    opacity: 1;
-  }
-  .disclaimer-backdrop.hidden {
-    pointer-events: none;
-    display: none;
-  }
-  .disclaimer-dialog {
-    max-width: 480px;
-    width: calc(100% - 2rem);
-    background: white;
-    border-radius: 1.25rem;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    padding: 2rem;
-    position: relative;
-    transform: scale(0.96) translateY(10px);
-    transition: transform 0.7s cubic-bezier(0.32, 0.72, 0, 1);
-  }
-  .disclaimer-backdrop.visible .disclaimer-dialog {
-    transform: scale(1) translateY(0);
-  }
-  .disclaimer-btn {
-    position: relative;
-    width: 100%;
-    height: 48px;
-    margin-top: 1.5rem;
-    border-radius: 9999px;
-    border: none;
-    background: rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-    cursor: not-allowed;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.4s ease;
-  }
-  .disclaimer-btn.ready {
-    cursor: pointer;
-    background: #fc8464;
-  }
-  .disclaimer-btn.ready:hover {
-    background: #e0734f;
-  }
-  .disclaimer-btn-label {
-    position: relative;
-    z-index: 1;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    opacity: 0.4;
-    transition: opacity 0.3s ease;
-  }
-  .disclaimer-btn.ready .disclaimer-btn-label {
-    opacity: 1;
-    color: white;
-  }
-  .disclaimer-btn-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 0;
-    background: rgba(0, 0, 0, 0.06);
-    border-radius: 9999px;
-  }
-  .disclaimer-btn-fill.animate {
-    animation: slide-fill 2s linear forwards;
-  }
-  @keyframes slide-fill {
-    to {
-      width: 100%;
-    }
   }
 </style>

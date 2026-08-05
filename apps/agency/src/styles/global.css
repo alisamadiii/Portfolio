@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Geist", system-ui, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-sans: "Geist Variable", "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
   --color-cream: #f6f5f3;
   --color-charcoal: #1b1a17;
   --color-warmgray: #6f6a63;
@@ -68,4 +68,17 @@
   opacity: 1;
   transform: translateY(0);
   filter: blur(0);
+}
+
+/* Respect reduced-motion: show reveal content immediately, no transition. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

@@ -1,0 +1,126 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BackNav from "../components/BackNav.astro";
+import SimpleFooter from "../components/SimpleFooter.astro";
+
+const updated = "August 2025";
+---
+
+<Layout
+  title="Terms of Service — Ali Samadi Agency"
+  description="The terms that govern your use of the Ali Samadi Agency website and the design and development services we provide."
+  canonical="https://agency.alisamadii.com/terms"
+  og={{
+    title: "Terms of Service — Ali Samadi Agency",
+    description:
+      "The terms that govern your use of the Ali Samadi Agency website and our services.",
+    url: "https://agency.alisamadii.com/terms",
+    twitterDescription:
+      "The terms that govern your use of the Ali Samadi Agency website and our services.",
+  }}
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <section class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28">
+    <div class="mx-auto max-w-[720px]">
+      <span
+        class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+        >Legal</span
+      >
+      <h1
+        class="text-[clamp(34px,5vw,56px)] leading-[1.05] font-semibold tracking-[-0.03em]"
+      >
+        Terms of Service
+      </h1>
+      <p class="text-muted mt-4 font-mono text-[12.5px]">
+        Last updated: {updated}
+      </p>
+
+      <div class="text-warmgray mt-10 space-y-8 text-[15px] leading-[1.7]">
+        <p>
+          These terms govern your use of <strong>agency.alisamadii.com</strong>
+          and the design and development services provided by Ali Samadi Agency
+          ("we", "us", "our"). By using our site or engaging our services, you
+          agree to these terms.
+        </p>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Services &amp; scope
+          </h2>
+          <p class="mt-4">
+            We provide website design, development, and related services. The
+            specific deliverables, timeline, and price for your project are
+            confirmed in writing before any work begins. For our per-page
+            upfront build, the final page count is confirmed at checkout, and
+            terms and privacy pages are always included at no charge.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Payments
+          </h2>
+          <p class="mt-4">
+            Payments are processed securely through Stripe. Monthly plans renew
+            until cancelled; one-time builds are billed upfront as agreed.
+            Applicable taxes may be added at checkout. Unless required by law or
+            stated otherwise in your agreement, payments for completed work are
+            non-refundable.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Intellectual property
+          </h2>
+          <p class="mt-4">
+            Once a project is paid in full, you own the final deliverables for
+            your website. We may retain the right to display the completed work
+            in our portfolio unless you ask us not to. Third-party assets (fonts,
+            libraries, stock media) remain subject to their own licenses.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Your responsibilities
+          </h2>
+          <p class="mt-4">
+            You agree to provide content and feedback in a timely manner and to
+            hold the rights to any materials you supply to us. Delays in
+            providing what we need may affect agreed timelines.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Liability
+          </h2>
+          <p class="mt-4">
+            Our services are provided with reasonable skill and care. To the
+            extent permitted by law, our total liability for any claim relating
+            to a project is limited to the amount you paid us for that project.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Contact
+          </h2>
+          <p class="mt-4">
+            Questions about these terms? Reach us at
+            <a
+              href="mailto:agency@alisamadii.com"
+              class="text-charcoal underline decoration-accent/40 underline-offset-2"
+              >agency@alisamadii.com</a
+            >, Ali Samadi Agency, Portland, OR, USA.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <SimpleFooter />
+</Layout>

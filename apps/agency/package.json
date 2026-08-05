@@ -9,6 +9,8 @@
     "preview": "astro preview --port 3004"
   },
   "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "astro": "^5.17.3"
   },
   "devDependencies": {

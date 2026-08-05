@@ -1,0 +1,129 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BackNav from "../components/BackNav.astro";
+import SimpleFooter from "../components/SimpleFooter.astro";
+
+const updated = "August 2025";
+---
+
+<Layout
+  title="Privacy Policy — Ali Samadi Agency"
+  description="How Ali Samadi Agency collects, uses, and protects the personal information you share through our website, contact forms, and checkout."
+  canonical="https://agency.alisamadii.com/privacy"
+  og={{
+    title: "Privacy Policy — Ali Samadi Agency",
+    description:
+      "How Ali Samadi Agency collects, uses, and protects your personal information.",
+    url: "https://agency.alisamadii.com/privacy",
+    twitterDescription:
+      "How Ali Samadi Agency collects, uses, and protects your personal information.",
+  }}
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <section class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28">
+    <div class="mx-auto max-w-[720px]">
+      <span
+        class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+        >Legal</span
+      >
+      <h1
+        class="text-[clamp(34px,5vw,56px)] leading-[1.05] font-semibold tracking-[-0.03em]"
+      >
+        Privacy Policy
+      </h1>
+      <p class="text-muted mt-4 font-mono text-[12.5px]">
+        Last updated: {updated}
+      </p>
+
+      <div
+        class="prose-legal text-warmgray mt-10 space-y-8 text-[15px] leading-[1.7]"
+      >
+        <p>
+          Ali Samadi Agency ("we", "us", "our") operates
+          <strong>agency.alisamadii.com</strong>. This policy explains what
+          personal information we collect, why we collect it, and how you can
+          control it. We keep data collection to the minimum needed to respond
+          to you and deliver our services.
+        </p>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Information we collect
+          </h2>
+          <ul class="mt-4 list-disc space-y-2 pl-5">
+            <li>
+              <strong>Contact details</strong> you submit through our contact or
+              onboarding forms — such as your name, email address, and message.
+            </li>
+            <li>
+              <strong>Billing information</strong> when you start a project.
+              Payments are processed by Stripe; we never see or store your full
+              card details.
+            </li>
+            <li>
+              <strong>Basic usage data</strong> (e.g. pages visited) collected by
+              privacy-respecting analytics to help us improve the site.
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            How we use your information
+          </h2>
+          <p class="mt-4">
+            We use your information to reply to enquiries, prepare quotes,
+            deliver and support projects, process payments, and meet our legal
+            and accounting obligations. We do not sell your personal
+            information, and we do not use it for advertising.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Third-party services
+          </h2>
+          <p class="mt-4">
+            We rely on a small number of trusted providers to run our business —
+            including <strong>Stripe</strong> for payments and our hosting and
+            email providers for delivering the site and communicating with you.
+            Each processes data only as needed to provide their service.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Your rights
+          </h2>
+          <p class="mt-4">
+            You can ask us to access, correct, or delete the personal
+            information we hold about you at any time. To make a request, email
+            <a
+              href="mailto:agency@alisamadii.com"
+              class="text-charcoal underline decoration-accent/40 underline-offset-2"
+              >agency@alisamadii.com</a
+            > and we'll respond promptly.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-charcoal text-xl font-semibold tracking-[-0.01em]">
+            Contact
+          </h2>
+          <p class="mt-4">
+            Questions about this policy? Reach us at
+            <a
+              href="mailto:agency@alisamadii.com"
+              class="text-charcoal underline decoration-accent/40 underline-offset-2"
+              >agency@alisamadii.com</a
+            >, Ali Samadi Agency, Portland, OR, USA.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <SimpleFooter />
+</Layout>

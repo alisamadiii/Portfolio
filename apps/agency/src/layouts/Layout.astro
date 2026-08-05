@@ -1,4 +1,6 @@
 ---
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
 
@@ -14,13 +16,26 @@ interface Props {
     url?: string;
     twitterDescription: string;
   };
+  /** Extra JSON-LD @graph nodes for a page (e.g. BreadcrumbList, Service). */
+  schema?: Record<string, unknown>[];
   bodyClass: string;
 }
 
-const { title, description, robots = "index, follow", canonical, og, bodyClass } = Astro.props;
+const {
+  title,
+  description,
+  robots = "index, follow",
+  canonical,
+  og,
+  schema = [],
+  bodyClass,
+} = Astro.props;
 
 const SITE = "https://agency.alisamadii.com";
 const OG_IMAGE = `${SITE}/og-image.png`;
+
+// The page's own URL/@id — falls back to SITE for the home page.
+const pageUrl = canonical ?? SITE;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -30,7 +45,12 @@ const jsonLd = {
       "@id": `${SITE}/#organization`,
       name: "Ali Samadi Agency",
       url: SITE,
-      logo: `${SITE}/icon-512.png`,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE}/icon-512.png`,
+        width: 512,
+        height: 512,
+      },
       description:
         "Creative agency specializing in brand identity, web development, and digital strategy.",
       email: "agency@alisamadii.com",
@@ -41,6 +61,14 @@ const jsonLd = {
         addressRegion: "OR",
         addressCountry: "US",
       },
+      founder: { "@id": `${SITE}/#person-ali` },
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE}/#person-ali`,
+      name: "Ali Samadi",
+      jobTitle: "Founder",
+      worksFor: { "@id": `${SITE}/#organization` },
       sameAs: [
         "https://x.com/alisamadii_",
         "https://github.com/alisamadiii",
@@ -54,6 +82,15 @@ const jsonLd = {
       name: "Ali Samadi Agency",
       publisher: { "@id": `${SITE}/#organization` },
     },
+    {
+      "@type": "WebPage",
+      "@id": `${pageUrl}#webpage`,
+      url: pageUrl,
+      name: title,
+      description,
+      isPartOf: { "@id": `${SITE}/#website` },
+    },
+    ...schema,
   ],
 };
 ---
@@ -101,12 +138,8 @@ const jsonLd = {
 
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Geist / Geist Mono are self-hosted via @fontsource-variable (imported
+         in the frontmatter) — no render-blocking Google Fonts request. -->
 
     <ClientRouter />
     <!-- Loaded on every page: ClientRouter runs swapped-in external scripts

@@ -15,6 +15,8 @@ export default defineConfig({
     sitemap({
       // onboarding is noindex — keep it out of the sitemap.
       filter: (page) => !page.includes("/onboarding"),
+      // Emit a build-date lastmod so crawlers get a real freshness signal.
+      serialize: (item) => ({ ...item, lastmod: new Date().toISOString() }),
     }),
   ],
   vite: { plugins: [tailwindcss()] },

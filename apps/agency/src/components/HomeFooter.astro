@@ -1,3 +1,7 @@
+---
+const year = new Date().getFullYear();
+---
+
 <footer class="mx-auto max-w-[1200px] px-6 pt-9 pb-14 md:px-10">
   <div class="grid grid-cols-2 gap-10 md:grid-cols-4">
     <!-- Brand -->
@@ -160,7 +164,16 @@
   <div
     class="border-charcoal/[0.08] text-muted mt-12 flex flex-wrap items-center justify-between gap-4 border-t pt-7 font-mono text-[12.5px]"
   >
-    <span>&copy; 2026 Ali Samadi Agency</span>
-    <span>Portland, OR</span>
+    <span>&copy; {year} Ali Samadi Agency</span>
+    <div class="flex items-center gap-5">
+      <a
+        href="/privacy"
+        class="hover:text-accent transition-colors duration-300">Privacy</a
+      >
+      <a href="/terms" class="hover:text-accent transition-colors duration-300"
+        >Terms</a
+      >
+      <span>Portland, OR</span>
+    </div>
   </div>
 </footer>

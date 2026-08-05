@@ -1,12 +1,15 @@
 /**
- * Sync agency prices from Stripe → apps/agency/public/pricing.js
+ * Sync agency prices from Stripe → agency pricing sources
  *
  *   pnpm sync:agency-prices        (from repo root)
  *   tsx packages/trpc/scripts/sync-agency-prices.ts
  *
  * Reads the live/test prices by their stable `lookup_key`, then rewrites the
- * numeric values inside the `// <auto:prices> … // </auto:prices>` block in
- * pricing.js. Non-Stripe fields (basePages, minPages, email) are left alone.
+ * numeric values inside the `<auto:prices> … </auto:prices>` block in BOTH
+ * pricing sources, keeping them in sync:
+ *   - apps/agency/src/data/pricing.ts  (build-time — server-rendered prices)
+ *   - apps/agency/public/pricing.js    (runtime — checkout + onboarding estimator)
+ * Non-Stripe fields (basePages, minPages, email) are left alone.
  *
  * The Stripe account (test vs live) is whichever STRIPE_SECRET_KEY resolves to
  * in apps/portfolio/.env. Price IDs are printed so you can paste them into
@@ -63,8 +66,11 @@ async function main() {
     if (price.lookup_key) byKey.set(price.lookup_key, price);
   }
 
-  const pricingPath = resolve(repoRoot, "apps/agency/public/pricing.js");
-  let source = readFileSync(pricingPath, "utf8");
+  // Both files carry an identical `<auto:prices>` block — keep them in sync.
+  const pricingPaths = [
+    resolve(repoRoot, "apps/agency/src/data/pricing.ts"),
+    resolve(repoRoot, "apps/agency/public/pricing.js"),
+  ];
 
   const missing: string[] = [];
   const idLog: string[] = [];
@@ -75,16 +81,9 @@ async function main() {
       missing.push(key);
       continue;
     }
-    const dollars = Math.round(price.unit_amount / 100);
-    const field = FIELD_BY_KEY[key];
-    // Replace `field: <number>` (the first occurrence in the block).
-    const re = new RegExp(`(\\b${field}:\\s*)\\d+`);
-    if (!re.test(source)) {
-      console.warn(`Could not find "${field}:" in pricing.js — skipped ${key}`);
-      continue;
-    }
-    source = source.replace(re, `$1${dollars}`);
-    idLog.push(`  ${key.padEnd(20)} $${dollars}  ${price.id}`);
+    idLog.push(
+      `  ${key.padEnd(20)} $${Math.round(price.unit_amount / 100)}  ${price.id}`
+    );
   }
 
   if (missing.length) {
@@ -93,9 +92,29 @@ async function main() {
     );
   }
 
-  writeFileSync(pricingPath, source);
+  for (const pricingPath of pricingPaths) {
+    let source = readFileSync(pricingPath, "utf8");
+    for (const key of LOOKUP_KEYS) {
+      const price = byKey.get(key);
+      if (!price || price.unit_amount == null) continue;
+      const dollars = Math.round(price.unit_amount / 100);
+      const field = FIELD_BY_KEY[key];
+      // Replace `field: <number>` (the first occurrence in the block).
+      const re = new RegExp(`(\\b${field}:\\s*)\\d+`);
+      if (!re.test(source)) {
+        console.warn(
+          `Could not find "${field}:" in ${pricingPath} — skipped ${key}`
+        );
+        continue;
+      }
+      source = source.replace(re, `$1${dollars}`);
+    }
+    writeFileSync(pricingPath, source);
+  }
 
-  console.log("\nUpdated apps/agency/public/pricing.js from Stripe:");
+  console.log(
+    "\nUpdated apps/agency/src/data/pricing.ts + public/pricing.js from Stripe:"
+  );
   console.log(idLog.join("\n"));
   console.log(
     "\nPaste the one-time price IDs into checkouts/route.ts PRICE_IDS " +

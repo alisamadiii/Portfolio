@@ -41,7 +41,7 @@ import HomeFooter from "../components/HomeFooter.astro";
         <span class="bg-accent h-px w-[26px]"></span>01 &mdash; Creative Agency
       </div>
       <h1
-        class="reveal max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
+        class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
       >
         We build digital
         <span class="text-accent" id="scrambleTarget">experiences</span><span
@@ -103,9 +103,9 @@ import HomeFooter from "../components/HomeFooter.astro";
       </div>
       <div class="reveal py-2">
         <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          99<span class="text-accent">%</span>
+          100<span class="text-accent">%</span>
         </div>
-        <div class="text-warmgray mt-2.5 text-sm">Client Satisfaction</div>
+        <div class="text-warmgray mt-2.5 text-sm">Custom-Built, No Templates</div>
       </div>
       <div class="reveal py-2">
         <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
@@ -142,9 +142,13 @@ import HomeFooter from "../components/HomeFooter.astro";
         <span class="text-accent">love</span> to use
       </h2>
       <p class="reveal text-warmgray text-[17px] leading-[1.6]">
-        Founded with a passion for pixel-perfect design and clean code, we help
-        brands transform their digital presence. Our approach blends creativity
-        with data-driven strategy to deliver experiences that matter.
+        Ali Samadi Agency is a small, focused studio building websites and web
+        apps for startups and small businesses. We design and develop every
+        project from scratch on a modern stack — Next.js, React, and
+        Postgres — so your site is fast, custom, and genuinely yours, never a
+        recycled template. From brand and UI design through development, SEO,
+        and hosting, one team owns the whole build, which keeps the work
+        consistent and the timeline short.
       </p>
     </div>
   </section>
@@ -242,7 +246,8 @@ import HomeFooter from "../components/HomeFooter.astro";
           <p
             class="text-warmgray mt-2.5 max-w-[38ch] text-[15px] leading-[1.55]"
           >
-            Clean, fast landing pages for local businesses &mdash; everything a
+            Clean, fast websites built on Next.js, React, and Postgres &mdash;
+            production-grade code, not page-builder templates. Everything a
             simple site needs, nothing it doesn't.
           </p>
         </div>
@@ -613,6 +618,8 @@ import HomeFooter from "../components/HomeFooter.astro";
           <img
             src="/meridian.webp"
             alt="Meridian Studio project"
+            width="1120"
+            height="700"
             class="h-full w-full object-cover"
             loading="lazy"
           />
@@ -647,6 +654,8 @@ import HomeFooter from "../components/HomeFooter.astro";
           <img
             src="/clearwater.webp"
             alt="Clearwater Revenue Partners project"
+            width="1120"
+            height="700"
             class="h-full w-full object-cover"
             loading="lazy"
           />
@@ -681,6 +690,8 @@ import HomeFooter from "../components/HomeFooter.astro";
           <img
             src="/pinnacle.webp"
             alt="Pinnacle Tax Group project"
+            width="1120"
+            height="700"
             class="h-full w-full object-cover"
             loading="lazy"
           />
@@ -715,6 +726,8 @@ import HomeFooter from "../components/HomeFooter.astro";
           <img
             src="/aether.webp"
             alt="Aether Properties project"
+            width="1120"
+            height="700"
             class="h-full w-full object-cover"
             loading="lazy"
           />
@@ -749,6 +762,154 @@ import HomeFooter from "../components/HomeFooter.astro";
     </div>
   </section>
 
+  <!-- ==================== CLIENT WORK ==================== -->
+  <!--
+    Real client projects (distinct from the demo concepts in "Our Work" above).
+    TODO(Ali): replace the 3 placeholder cards + testimonial with real details —
+    client/project name, sector, one-line outcome, live URL, and the review
+    quote + attribution. Keep this section; it's the site's first-hand proof.
+  -->
+  <section
+    id="clients"
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+  >
+    <div
+      class="reveal text-muted mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+    >
+      <span class="bg-accent h-px w-[26px]"></span>06 &mdash; Client Work
+    </div>
+    <div
+      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+    >
+      <h2
+        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Real projects, real clients
+      </h2>
+      <p class="reveal text-warmgray text-[15.5px] leading-[1.6]">
+        A selection of live websites we've designed and built for real
+        businesses &mdash; each one shipped, launched, and in use today.
+      </p>
+    </div>
+
+    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-3">
+      <!-- Client project 1 -->
+      <a
+        href="https://www.hazaraoregon.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="reveal border-charcoal/[0.08] group block rounded-[18px] border bg-white p-6"
+      >
+        <div
+          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+        >
+          Nonprofit &middot; Community
+        </div>
+        <div class="mt-2.5 flex items-center justify-between gap-4">
+          <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
+            Hazara Community of Oregon
+          </h3>
+          <span class="text-accent">&#8599;</span>
+        </div>
+        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+          Website with donations, programs, and membership for an Afghan-immigrant
+          community nonprofit.
+        </p>
+      </a>
+
+      <!-- Client project 2 -->
+      <a
+        href="https://www.empowerher-initiative.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="reveal border-charcoal/[0.08] group block rounded-[18px] border bg-white p-6"
+      >
+        <div
+          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+        >
+          Nonprofit &middot; Women's Empowerment
+        </div>
+        <div class="mt-2.5 flex items-center justify-between gap-4">
+          <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
+            EmpowerHer Initiative
+          </h3>
+          <span class="text-accent">&#8599;</span>
+        </div>
+        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+          Advocacy site for a women's empowerment initiative — programs,
+          resources, and ways to get involved.
+        </p>
+      </a>
+
+      <!-- Client project 3 -->
+      <a
+        href="https://mohammadsamadi.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="reveal border-charcoal/[0.08] group block rounded-[18px] border bg-white p-6"
+      >
+        <div
+          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+        >
+          Home Services &middot; Remodeling
+        </div>
+        <div class="mt-2.5 flex items-center justify-between gap-4">
+          <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
+            Mohammad Samadi
+          </h3>
+          <span class="text-accent">&#8599;</span>
+        </div>
+        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+          Portfolio site for a Florida remodeling &amp; handyman contractor —
+          services and before/after gallery.
+        </p>
+      </a>
+    </div>
+
+    <!-- Testimonial — verified Trustpilot review (Alitech, for mohammadsamadi.com) -->
+    <figure
+      class="reveal border-charcoal/[0.09] mt-8 rounded-[22px] border bg-white p-8 md:p-11"
+    >
+      <!-- 5-star rating -->
+      <div class="text-accent mb-5 flex gap-1" aria-label="5 out of 5 stars">
+        {
+          Array.from({ length: 5 }).map(() => (
+            <svg
+              class="size-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.42 4.38a1 1 0 0 0 .95.69h4.6c.97 0 1.37 1.24.59 1.81l-3.72 2.7a1 1 0 0 0-.36 1.12l1.42 4.37c.3.93-.76 1.7-1.54 1.12l-3.72-2.7a1 1 0 0 0-1.18 0l-3.72 2.7c-.78.58-1.84-.19-1.54-1.12l1.42-4.37a1 1 0 0 0-.36-1.12l-3.72-2.7c-.78-.57-.38-1.81.59-1.81h4.6a1 1 0 0 0 .95-.69L9.05 2.93Z"
+              />
+            </svg>
+          ))
+        }
+      </div>
+      <blockquote
+        class="text-[clamp(19px,2.2vw,26px)] leading-[1.45] font-medium tracking-[-0.01em]"
+      >
+        &ldquo;Ali did an amazing job with creating our website. He paid
+        attention to details and got us the website we wanted &mdash;
+        professional, modern, and eye-catching. Highly recommend him!&rdquo;
+      </blockquote>
+      <figcaption
+        class="text-warmgray mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14.5px]"
+      >
+        <span class="text-charcoal font-semibold">Alitech</span>
+        <span class="text-muted">&middot;</span>
+        <a
+          href="https://www.trustpilot.com/reviews/6a7339e03bac99e9e36c465f"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-charcoal underline decoration-charcoal/20 underline-offset-2 transition-colors duration-300"
+          >Verified Trustpilot review</a
+        >
+      </figcaption>
+    </figure>
+  </section>
+
   <!-- ==================== PRICING ==================== -->
   <section
     id="pricing"
@@ -757,7 +918,7 @@ import HomeFooter from "../components/HomeFooter.astro";
     <div
       class="reveal text-muted mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
     >
-      <span class="bg-accent h-px w-[26px]"></span>06 &mdash; Pricing
+      <span class="bg-accent h-px w-[26px]"></span>07 &mdash; Pricing
     </div>
 
     <div
@@ -921,11 +1082,14 @@ import HomeFooter from "../components/HomeFooter.astro";
     id="welcomeVideo"
     class="border-charcoal/[0.08] fixed right-4 bottom-4 z-40 w-[180px] translate-y-[130%] overflow-hidden rounded-[18px] border opacity-0 shadow-[0_20px_50px_rgba(27,26,23,0.18)] md:w-[240px]"
   >
+    <!-- preload="none": nothing downloads until the reveal calls video.play()
+         at 800ms, keeping the ~9.6MB clip off the initial-load critical path.
+         TODO(Ali): re-encode welcome-video.mp4 on the CDN to <=1-2MB. -->
     <video
       src="https://cdn.alisamadii.com/media/welcome-video.mp4"
       muted
       playsinline
-      preload="auto"
+      preload="none"
       class="block h-full w-full object-cover"></video>
   </div>
 
