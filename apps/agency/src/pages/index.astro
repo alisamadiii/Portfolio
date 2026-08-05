@@ -2,19 +2,24 @@
 import Layout from "../layouts/Layout.astro";
 import HomeNav from "../components/HomeNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
+import home from "../data/home.json";
+
+// One marquee run = the word list twice, "  /  "-separated, with a trailing
+// separator — matches the original hand-written banner text exactly.
+const marqueeSep = "  /  ";
+const marqueeText =
+  [...home.marquee.words, ...home.marquee.words].join(marqueeSep) + marqueeSep;
 ---
 
 <Layout
-  title="Ali Samadi — Creative Agency | Web Design & Development"
-  description="Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results."
+  title={home.seo.title}
+  description={home.seo.description}
   canonical="https://agency.alisamadii.com"
   og={{
-    title: "Ali Samadi — Creative Agency",
-    description:
-      "Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results.",
+    title: home.seo.title,
+    description: home.seo.description,
     url: "https://agency.alisamadii.com",
-    twitterDescription:
-      "Creative agency specializing in brand identity, web development, and digital strategy.",
+    twitterDescription: home.seo.description,
   }}
   bodyClass="noise bg-cream text-charcoal selection:bg-accent/25 font-sans"
 >
@@ -37,42 +42,52 @@ import HomeFooter from "../components/HomeFooter.astro";
     <div class="stagger">
       <div
         class="reveal text-muted mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+        data-cms-field="hero.eyebrow"
       >
-        <span class="bg-accent h-px w-[26px]"></span>01 &mdash; Creative Agency
+        <span class="bg-accent h-px w-[26px]"></span>{home.hero.eyebrow}
       </div>
       <h1
         class="reveal max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
+        data-cms-field="hero.heading"
       >
-        We build digital
-        <span class="text-accent" id="scrambleTarget">experiences</span><span
-          class="scramble-cursor"></span>
+        {home.hero.heading}
+        <span
+          class="text-accent"
+          id="scrambleTarget"
+          data-cms-field="hero.scrambleWords"
+          data-words={JSON.stringify(home.hero.scrambleWords)}
+          >{home.hero.scrambleWords[0]}</span
+        ><span class="scramble-cursor"></span>
       </h1>
       <p
         class="reveal text-warmgray mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] md:text-[19px]"
+        data-cms-field="hero.text"
       >
-        A creative agency specializing in brand identity, web development, and
-        digital strategy that drives real, measurable results.
+        {home.hero.text}
       </p>
       <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
         <a
-          href="https://cal.com/alisamadii"
+          href={home.hero.primaryCta.href}
           target="_blank"
           class="mag-btn bg-accent hover:bg-charcoal inline-flex items-center gap-2.5 rounded-[11px] px-6 py-3.5 text-[15.5px] font-medium text-white shadow-[0_8px_24px_rgba(252,132,100,0.32)]"
+          data-cms-field="hero.primaryCta"
         >
-          Start a Project
+          {home.hero.primaryCta.label}
           <span>&#8599;</span>
         </a>
         <a
-          href="/prizink"
+          href={home.hero.secondaryCta.href}
           class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center gap-2.5 rounded-[11px] border px-6 py-3.5 text-[15.5px] font-medium"
+          data-cms-field="hero.secondaryCta"
         >
-          Pricing
+          {home.hero.secondaryCta.label}
         </a>
         <a
-          href="https://portal.alisamadii.com/agency"
+          href={home.hero.tertiaryCta.href}
           target="_blank"
           class="mag-btn text-warmgray hover:text-charcoal px-2 py-3.5 text-[15px]"
-          >I am a customer</a
+          data-cms-field="hero.tertiaryCta"
+          >{home.hero.tertiaryCta.label}</a
         >
       </div>
     </div>
@@ -83,11 +98,14 @@ import HomeFooter from "../components/HomeFooter.astro";
     class="border-charcoal/[0.08] overflow-hidden border-y bg-[#f1efec] py-[18px]"
   >
     <div class="marquee-track flex w-max whitespace-nowrap">
-      <span class="font-mono text-[15px] tracking-[0.02em] text-[#a49d94]">
-        Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
+      <span
+        class="font-mono text-[15px] tracking-[0.02em] text-[#a49d94]"
+        data-cms-field="marquee.words"
+      >
+        {marqueeText}
       </span>
       <span class="font-mono text-[15px] tracking-[0.02em] text-[#a49d94]">
-        Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
+        {marqueeText}
       </span>
     </div>
   </div>
@@ -95,30 +113,25 @@ import HomeFooter from "../components/HomeFooter.astro";
   <!-- ==================== STATS ==================== -->
   <section class="mx-auto max-w-[1200px] px-6 py-14 md:px-10">
     <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          8<span class="text-accent">+</span>
-        </div>
-        <div class="text-warmgray mt-2.5 text-sm">Projects Delivered</div>
-      </div>
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          99<span class="text-accent">%</span>
-        </div>
-        <div class="text-warmgray mt-2.5 text-sm">Client Satisfaction</div>
-      </div>
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          5<span class="text-accent">+</span>
-        </div>
-        <div class="text-warmgray mt-2.5 text-sm">Years Experience</div>
-      </div>
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          1
-        </div>
-        <div class="text-warmgray mt-2.5 text-sm">Focused Team</div>
-      </div>
+      {
+        home.stats.map((stat, i) => (
+          <div class="reveal py-2" data-cms-field={`stats.${i}`}>
+            <div
+              class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
+              data-cms-field={`stats.${i}.value`}
+            >
+              {stat.value}
+              {stat.suffix && <span class="text-accent">{stat.suffix}</span>}
+            </div>
+            <div
+              class="text-warmgray mt-2.5 text-sm"
+              data-cms-field={`stats.${i}.label`}
+            >
+              {stat.label}
+            </div>
+          </div>
+        ))
+      }
     </div>
   </section>
 
@@ -129,22 +142,28 @@ import HomeFooter from "../components/HomeFooter.astro";
   >
     <div
       class="reveal text-muted mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+      data-cms-field="about.eyebrow"
     >
-      <span class="bg-accent h-px w-[26px]"></span>02 &mdash; About Us
+      <span class="bg-accent h-px w-[26px]"></span>{home.about.eyebrow}
     </div>
     <div
       class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.2fr_1fr] md:gap-14"
     >
       <h2
         class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        data-cms-field="about.heading"
       >
-        We craft digital products that people
-        <span class="text-accent">love</span> to use
+        {home.about.heading}
+        <span class="text-accent" data-cms-field="about.headingAccent"
+          >{home.about.headingAccent}</span
+        >
+        <span data-cms-field="about.headingEnd">{home.about.headingEnd}</span>
       </h2>
-      <p class="reveal text-warmgray text-[17px] leading-[1.6]">
-        Founded with a passion for pixel-perfect design and clean code, we help
-        brands transform their digital presence. Our approach blends creativity
-        with data-driven strategy to deliver experiences that matter.
+      <p
+        class="reveal text-warmgray text-[17px] leading-[1.6]"
+        data-cms-field="about.text"
+      >
+        {home.about.text}
       </p>
     </div>
   </section>
@@ -156,8 +175,9 @@ import HomeFooter from "../components/HomeFooter.astro";
   >
     <div
       class="reveal text-muted mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+      data-cms-field="services.eyebrow"
     >
-      <span class="bg-accent h-px w-[26px]"></span>03 &mdash; Our Services
+      <span class="bg-accent h-px w-[26px]"></span>{home.services.eyebrow}
     </div>
 
     <div
@@ -196,14 +216,17 @@ import HomeFooter from "../components/HomeFooter.astro";
               ></path>
             </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]">
-            Brand Identity
+          <h3
+            class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]"
+            data-cms-field="services.brandIdentity.title"
+          >
+            {home.services.brandIdentity.title}
           </h3>
           <p
             class="text-warmgray mt-2.5 max-w-[38ch] text-[15px] leading-[1.55]"
+            data-cms-field="services.brandIdentity.text"
           >
-            Crafting distinctive visual identities that resonate with your
-            audience and set you apart from the competition.
+            {home.services.brandIdentity.text}
           </p>
         </div>
       </div>
@@ -236,14 +259,17 @@ import HomeFooter from "../components/HomeFooter.astro";
               <path d="m8 6-6 6 6 6"></path>
             </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]">
-            Web Development
+          <h3
+            class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]"
+            data-cms-field="services.webDevelopment.title"
+          >
+            {home.services.webDevelopment.title}
           </h3>
           <p
             class="text-warmgray mt-2.5 max-w-[38ch] text-[15px] leading-[1.55]"
+            data-cms-field="services.webDevelopment.text"
           >
-            Clean, fast landing pages for local businesses &mdash; everything a
-            simple site needs, nothing it doesn't.
+            {home.services.webDevelopment.text}
           </p>
         </div>
       </div>
@@ -278,12 +304,17 @@ import HomeFooter from "../components/HomeFooter.astro";
               <circle cx="11" cy="11" r="2"></circle>
             </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
-            UI/UX Design
+          <h3
+            class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]"
+            data-cms-field="services.uiUxDesign.title"
+          >
+            {home.services.uiUxDesign.title}
           </h3>
-          <p class="text-warmgray mt-2.5 text-[14.5px] leading-[1.55]">
-            Intuitive, user-centered interfaces that drive engagement and
-            conversions.
+          <p
+            class="text-warmgray mt-2.5 text-[14.5px] leading-[1.55]"
+            data-cms-field="services.uiUxDesign.text"
+          >
+            {home.services.uiUxDesign.text}
           </p>
         </div>
       </div>
@@ -316,12 +347,17 @@ import HomeFooter from "../components/HomeFooter.astro";
               <path d="m19 9-5 5-4-4-3 3"></path>
             </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
-            SEO &amp; Analytics
+          <h3
+            class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]"
+            data-cms-field="services.seoAnalytics.title"
+          >
+            {home.services.seoAnalytics.title}
           </h3>
-          <p class="text-warmgray mt-2.5 text-[14.5px] leading-[1.55]">
-            Data-driven optimization to boost visibility, traffic and meaningful
-            engagement.
+          <p
+            class="text-warmgray mt-2.5 text-[14.5px] leading-[1.55]"
+            data-cms-field="services.seoAnalytics.text"
+          >
+            {home.services.seoAnalytics.text}
           </p>
         </div>
       </div>
@@ -356,12 +392,17 @@ import HomeFooter from "../components/HomeFooter.astro";
               <path d="m15 5 4 4"></path>
             </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
-            Edit Your Own Site
+          <h3
+            class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]"
+            data-cms-field="services.editYourSite.title"
+          >
+            {home.services.editYourSite.title}
           </h3>
-          <p class="text-warmgray mt-2.5 text-[14.5px] leading-[1.55]">
-            CMS access plus a GitHub collaborator invite &mdash; update text,
-            images, and pages yourself, anytime.
+          <p
+            class="text-warmgray mt-2.5 text-[14.5px] leading-[1.55]"
+            data-cms-field="services.editYourSite.text"
+          >
+            {home.services.editYourSite.text}
           </p>
         </div>
       </div>
@@ -402,36 +443,36 @@ import HomeFooter from "../components/HomeFooter.astro";
                 ></path>
               </svg>
             </div>
-            <h3 class="mt-[18px] text-[26px] font-semibold tracking-[-0.02em]">
-              Need Something Custom?
+            <h3
+              class="mt-[18px] text-[26px] font-semibold tracking-[-0.02em]"
+              data-cms-field="services.custom.title"
+            >
+              {home.services.custom.title}
             </h3>
-            <p class="mt-2.5 text-[15.5px] leading-[1.6] text-[#b8b2a9]">
-              Looking for more than a landing page? We also build fully custom
-              websites — authentication, databases, admin dashboards, web apps —
-              scoped and priced per project.
+            <p
+              class="mt-2.5 text-[15.5px] leading-[1.6] text-[#b8b2a9]"
+              data-cms-field="services.custom.text"
+            >
+              {home.services.custom.text}
               <a
-                href="#contact"
+                href={home.services.custom.link.href}
                 class="text-accent transition-colors duration-300 hover:text-white"
-                >Get in touch &rarr;</a
+                data-cms-field="services.custom.link"
+                >{home.services.custom.link.label} &rarr;</a
               >
             </p>
           </div>
           <div class="flex max-w-[280px] flex-wrap gap-2.5">
-            <span
-              class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
-            >
-              Authentication
-            </span>
-            <span
-              class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
-            >
-              Database
-            </span>
-            <span
-              class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
-            >
-              Admin Panel
-            </span>
+            {
+              home.services.custom.tags.map((tag, i) => (
+                <span
+                  class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
+                  data-cms-field={`services.custom.tags.${i}`}
+                >
+                  {tag}
+                </span>
+              ))
+            }
           </div>
         </div>
       </div>
@@ -444,109 +485,44 @@ import HomeFooter from "../components/HomeFooter.astro";
   >
     <div
       class="reveal text-muted mb-11 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+      data-cms-field="process.eyebrow"
     >
-      <span class="bg-accent h-px w-[26px]"></span>04 &mdash; Our Process
+      <span class="bg-accent h-px w-[26px]"></span>{home.process.eyebrow}
     </div>
 
     <div
       class="stagger grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-4"
     >
-      <!-- Step 1 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap border-charcoal/[0.08] relative aspect-[4/3] overflow-hidden rounded-[14px] border"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/discovery.png"
-            alt="Discovery phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >01</span
-          >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Discovery
-        </h3>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Understanding your goals, audience, and competitive landscape through
-          deep research.
-        </p>
-      </div>
-      <!-- Step 2 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap border-charcoal/[0.08] relative aspect-[4/3] overflow-hidden rounded-[14px] border"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/strategy.png"
-            alt="Strategy phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >02</span
-          >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Strategy
-        </h3>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Defining the roadmap, architecture, and creative direction for maximum
-          impact.
-        </p>
-      </div>
-      <!-- Step 3 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap border-charcoal/[0.08] relative aspect-[4/3] overflow-hidden rounded-[14px] border"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/execution.png"
-            alt="Execution phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >03</span
-          >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Execution
-        </h3>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Bringing the vision to life with meticulous design and robust
-          engineering.
-        </p>
-      </div>
-      <!-- Step 4 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap border-charcoal/[0.08] relative aspect-[4/3] overflow-hidden rounded-[14px] border"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/launch-scale.png"
-            alt="Launch phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >04</span
-          >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Launch &amp; Scale
-        </h3>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Deploying, monitoring, and iterating to ensure sustained growth and
-          performance.
-        </p>
-      </div>
+      {
+        home.process.steps.map((step, i) => (
+          <div class="reveal flex flex-col" data-cms-field={`process.steps.${i}`}>
+            <div class="img-wrap border-charcoal/[0.08] relative aspect-[4/3] overflow-hidden rounded-[14px] border">
+              <img
+                src={step.image}
+                alt={`${step.title} phase illustration`}
+                class="h-full w-full object-cover"
+                loading="lazy"
+                data-cms-field={`process.steps.${i}.image`}
+              />
+              <span class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            </div>
+            <h3
+              class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]"
+              data-cms-field={`process.steps.${i}.title`}
+            >
+              {step.title}
+            </h3>
+            <p
+              class="text-warmgray mt-2 text-[14.5px] leading-[1.55]"
+              data-cms-field={`process.steps.${i}.text`}
+            >
+              {step.text}
+            </p>
+          </div>
+        ))
+      }
     </div>
   </section>
 
@@ -557,22 +533,25 @@ import HomeFooter from "../components/HomeFooter.astro";
   >
     <div
       class="reveal text-muted mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+      data-cms-field="work.eyebrow"
     >
-      <span class="bg-accent h-px w-[26px]"></span>05 &mdash; Our Work
+      <span class="bg-accent h-px w-[26px]"></span>{home.work.eyebrow}
     </div>
     <div
       class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
     >
       <h2
         class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        data-cms-field="work.heading"
       >
-        Selected projects
+        {home.work.heading}
       </h2>
       <div class="reveal">
-        <p class="text-warmgray text-[15.5px] leading-[1.6]">
-          Every project is built from scratch — no templates, no shortcuts.
-          These mock-ups showcase our capabilities; your project will be fully
-          custom to your brand and goals.
+        <p
+          class="text-warmgray text-[15.5px] leading-[1.6]"
+          data-cms-field="work.text"
+        >
+          {home.work.text}
         </p>
         <div
           class="mt-5 inline-flex items-center gap-3 rounded-full border border-emerald-200/60 bg-emerald-50 px-4 py-2"
@@ -590,160 +569,73 @@ import HomeFooter from "../components/HomeFooter.astro";
               d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
             ></path>
           </svg>
-          <span class="text-[13.5px] font-medium text-emerald-800"
-            >1-Day Delivery</span
+          <span
+            class="text-[13.5px] font-medium text-emerald-800"
+            data-cms-field="work.badge.label">{home.work.badge.label}</span
           >
-          <span class="font-mono text-[11.5px] text-emerald-600/80"
-            >concept &rarr; launch</span
+          <span
+            class="font-mono text-[11.5px] text-emerald-600/80"
+            data-cms-field="work.badge.note">{home.work.badge.note}</span
           >
         </div>
       </div>
     </div>
 
     <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
-      <!-- Project 1 -->
-      <a
-        href="https://demo-booking-gray.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/meridian.webp"
-            alt="Meridian Studio project"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+      {
+        home.work.projects.map((project, i) => (
+          <a
+            href={project.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-tilt
+            class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
+            data-cms-field={`work.projects.${i}`}
           >
-            Creative &middot; Brand &amp; Web
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Meridian Studio
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Brand identity &amp; web platform for a boutique design studio.
-          </p>
-        </div>
-      </a>
-
-      <!-- Project 2 -->
-      <a
-        href="https://clearwater-revenue-partners.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/clearwater.webp"
-            alt="Clearwater Revenue Partners project"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-          >
-            Hospitality &middot; Revenue Strategy
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Clearwater Revenue Partners
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Strategy platform for hotel revenue management &amp; partnerships.
-          </p>
-        </div>
-      </a>
-
-      <!-- Project 3 -->
-      <a
-        href="https://tax-preparer.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/pinnacle.webp"
-            alt="Pinnacle Tax Group project"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-          >
-            Finance &middot; Tax Services
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Pinnacle Tax Group
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Professional website for a tax preparation &amp; consulting firm.
-          </p>
-        </div>
-      </a>
-
-      <!-- Project 4 -->
-      <a
-        href="https://real-state-rho-sand.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/aether.webp"
-            alt="Aether Properties project"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-          >
-            Real Estate &middot; Property Listings
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Aether Properties
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Architectural real estate platform for luxury property listings.
-          </p>
-        </div>
-      </a>
+            <div class="aspect-[16/10] overflow-hidden">
+              <img
+                src={project.image}
+                alt={`${project.title} project`}
+                class="h-full w-full object-cover"
+                loading="lazy"
+                data-cms-field={`work.projects.${i}.image`}
+              />
+            </div>
+            <div class="p-6">
+              <div
+                class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+                data-cms-field={`work.projects.${i}.category`}
+              >
+                {project.category}
+              </div>
+              <div class="mt-2.5 flex items-center justify-between gap-4">
+                <h3
+                  class="text-[22px] font-semibold tracking-[-0.02em]"
+                  data-cms-field={`work.projects.${i}.title`}
+                >
+                  {project.title}
+                </h3>
+                <span class="text-accent">&#8599;</span>
+              </div>
+              <p
+                class="text-warmgray mt-2 text-[14.5px] leading-[1.55]"
+                data-cms-field={`work.projects.${i}.text`}
+              >
+                {project.text}
+              </p>
+            </div>
+          </a>
+        ))
+      }
     </div>
 
     <div class="reveal mt-9 text-center">
       <a
-        href="#contact"
+        href={home.work.cta.href}
         class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center gap-2.5 rounded-[11px] border px-6 py-3.5 text-[15px] font-medium"
+        data-cms-field="work.cta"
       >
-        Have a project in mind?
+        {home.work.cta.label}
         <span class="text-accent">&#8599;</span>
       </a>
     </div>
@@ -756,67 +648,57 @@ import HomeFooter from "../components/HomeFooter.astro";
   >
     <div
       class="reveal text-muted mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+      data-cms-field="pricing.eyebrow"
     >
-      <span class="bg-accent h-px w-[26px]"></span>06 &mdash; Pricing
+      <span class="bg-accent h-px w-[26px]"></span>{home.pricing.eyebrow}
     </div>
 
     <div
       class="reveal border-charcoal/[0.09] grid grid-cols-1 gap-10 rounded-[22px] border bg-white p-8 md:grid-cols-[1fr_1.2fr] md:gap-14 md:p-11"
     >
       <div>
-        <h2 class="text-[38px] font-semibold tracking-[-0.03em]">Let's talk</h2>
-        <p class="text-warmgray mt-3.5 max-w-[34ch] text-base leading-[1.6]">
-          Every project is unique. Tell us what you need and we'll craft a plan
-          that fits.
+        <h2
+          class="text-[38px] font-semibold tracking-[-0.03em]"
+          data-cms-field="pricing.heading"
+        >
+          {home.pricing.heading}
+        </h2>
+        <p
+          class="text-warmgray mt-3.5 max-w-[34ch] text-base leading-[1.6]"
+          data-cms-field="pricing.text"
+        >
+          {home.pricing.text}
         </p>
         <div class="mt-7 flex flex-wrap gap-3">
           <a
-            href="#contact"
+            href={home.pricing.primaryCta.href}
             class="mag-btn bg-accent hover:bg-charcoal inline-flex items-center gap-2 rounded-[11px] px-[22px] py-3.5 text-[15px] font-medium text-white shadow-[0_8px_24px_rgba(252,132,100,0.3)]"
+            data-cms-field="pricing.primaryCta"
           >
-            Get in Touch
+            {home.pricing.primaryCta.label}
             <span>&#8599;</span>
           </a>
           <a
-            href="/prizink"
+            href={home.pricing.secondaryCta.href}
             class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center rounded-[11px] border px-[22px] py-3.5 text-[15px] font-medium"
+            data-cms-field="pricing.secondaryCta"
           >
-            View Pricing
+            {home.pricing.secondaryCta.label}
           </a>
         </div>
       </div>
       <div class="grid grid-cols-1 gap-x-7 gap-y-3.5 sm:grid-cols-2">
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Website design &amp;
-          development
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Managed hosting &amp;
-          domains
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>CMS content editing
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>GitHub collaborator
-          access
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Custom builds
-          available
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Email &amp; contact
-          forms
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>SEO, analytics &amp;
-          priority support
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Light &amp; dark theme
-          included
-        </div>
+        {
+          home.pricing.features.map((feature, i) => (
+            <div
+              class="flex items-start gap-3 text-[15px] text-[#3a362f]"
+              data-cms-field={`pricing.features.${i}`}
+            >
+              <span class="text-accent mt-0.5">&#10003;</span>
+              {feature}
+            </div>
+          ))
+        }
       </div>
     </div>
   </section>
@@ -830,26 +712,32 @@ import HomeFooter from "../components/HomeFooter.astro";
       <div class="stagger">
         <div
           class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-[#c9a08d] uppercase"
+          data-cms-field="contact.eyebrow"
         >
-          <span class="bg-accent h-px w-[26px]"></span>Get in Touch
+          <span class="bg-accent h-px w-[26px]"></span>{home.contact.eyebrow}
         </div>
         <h2
           class="reveal max-w-[16ch] text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+          data-cms-field="contact.heading"
         >
-          Let's create something <span class="text-accent">amazing</span>
+          {home.contact.heading}
+          <span class="text-accent" data-cms-field="contact.headingAccent"
+            >{home.contact.headingAccent}</span
+          >
         </h2>
         <p
           class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-[#b8b2a9] md:text-lg"
+          data-cms-field="contact.text"
         >
-          Ready to elevate your digital presence? We'd love to hear about your
-          project and explore how we can help.
+          {home.contact.text}
         </p>
         <div class="reveal mt-9">
           <a
-            href="mailto:agency@alisamadii.com"
+            href={home.contact.cta.href}
             class="mag-btn bg-accent hover:text-charcoal inline-flex items-center gap-2.5 rounded-xl px-[26px] py-[15px] text-base font-medium text-white shadow-[0_10px_30px_rgba(252,132,100,0.35)] hover:bg-white"
+            data-cms-field="contact.cta"
           >
-            Start a Conversation
+            {home.contact.cta.label}
             <span>&#8599;</span>
           </a>
         </div>
@@ -858,56 +746,78 @@ import HomeFooter from "../components/HomeFooter.astro";
       <div
         class="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-9 md:grid-cols-4"
       >
-        <a href="mailto:agency@alisamadii.com" class="group block">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
-          >
-            Email
-          </div>
-          <div
-            class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
-          >
-            agency@alisamadii.com
-          </div>
-        </a>
-        <a href="https://cal.com/alisamadii" target="_blank" class="group block">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
-          >
-            Schedule
-          </div>
-          <div
-            class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
-          >
-            Book a Meeting
-          </div>
-        </a>
-        <a href="tel:+19713828969" class="group block">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
-          >
-            Phone
-          </div>
-          <div
-            class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
-          >
-            +1 (971) 382-8969
-          </div>
-        </a>
         <a
-          href="https://maps.google.com/?q=Portland,+OR"
-          target="_blank"
+          href={`mailto:${home.contact.email.address}`}
           class="group block"
+          data-cms-field="contact.email"
         >
           <div
             class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            data-cms-field="contact.email.label"
           >
-            Location
+            {home.contact.email.label}
           </div>
           <div
             class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
+            data-cms-field="contact.email.address"
           >
-            Portland, OR
+            {home.contact.email.address}
+          </div>
+        </a>
+        <a
+          href={home.contact.schedule.href}
+          target="_blank"
+          class="group block"
+          data-cms-field="contact.schedule"
+        >
+          <div
+            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            data-cms-field="contact.schedule.label"
+          >
+            {home.contact.schedule.label}
+          </div>
+          <div
+            class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
+            data-cms-field="contact.schedule.linkLabel"
+          >
+            {home.contact.schedule.linkLabel}
+          </div>
+        </a>
+        <a
+          href={home.contact.phone.href}
+          class="group block"
+          data-cms-field="contact.phone"
+        >
+          <div
+            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            data-cms-field="contact.phone.label"
+          >
+            {home.contact.phone.label}
+          </div>
+          <div
+            class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
+            data-cms-field="contact.phone.display"
+          >
+            {home.contact.phone.display}
+          </div>
+        </a>
+        <a
+          href={home.contact.location.href}
+          target="_blank"
+          class="group block"
+          data-cms-field="contact.location"
+        >
+          <div
+            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            data-cms-field="contact.location.label"
+          >
+            {home.contact.location.label}
+          </div>
+          <div
+            class="text-cream group-hover:text-accent mt-2 text-[15.5px] transition-colors duration-300"
+            data-cms-field="contact.location.display"
+          >
+            {home.contact.location.display}
           </div>
         </a>
       </div>
@@ -989,15 +899,9 @@ import HomeFooter from "../components/HomeFooter.astro";
       });
     });
 
-    // Text scramble effect
+    // Text scramble effect — words come from the CMS (data-words attribute)
     const scrambleEl = document.getElementById("scrambleTarget");
-    const words = [
-      "experiences",
-      "brands",
-      "products",
-      "platforms",
-      "identities",
-    ];
+    const words = JSON.parse(scrambleEl?.dataset.words || "[]");
     const chars = "abcdefghijklmnopqrstuvwxyz";
     let wordIndex = 0;
 
@@ -1029,10 +933,12 @@ import HomeFooter from "../components/HomeFooter.astro";
       update();
     }
 
-    setInterval(() => {
-      wordIndex = (wordIndex + 1) % words.length;
-      scrambleTo(words[wordIndex]);
-    }, 5000);
+    if (scrambleEl && words.length > 1) {
+      setInterval(() => {
+        wordIndex = (wordIndex + 1) % words.length;
+        scrambleTo(words[wordIndex]);
+      }, 5000);
+    }
 
     // Mobile menu
     const menuToggle = document.getElementById("menuToggle");

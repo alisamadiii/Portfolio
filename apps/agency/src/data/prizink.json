@@ -1,0 +1,79 @@
+{
+  "seo": {
+    "title": "Pricing — Ali Samadi | Creative Agency",
+    "description": "Simple, transparent pricing. Choose an all-inclusive monthly plan, a one-time upfront build, or a fully custom project — web design, hosting, CMS, and more."
+  },
+  "backNav": {
+    "brandInitials": "AS",
+    "brandName": "Ali Samadi",
+    "backLabel": "Back to Home"
+  },
+  "hero": {
+    "badge": "Pricing",
+    "heading": "Build Your",
+    "headingAccent": "Project",
+    "text": "Pick the plan that fits — an all-inclusive monthly plan, a one-time upfront build with light monthly add-ons, or a fully custom project scoped together.",
+    "delivery": {
+      "label": "1-Day Delivery",
+      "note": "once your project is confirmed"
+    }
+  },
+  "plans": {
+    "badge": "Choose Your Path",
+    "headingLine1": "How Would You Like",
+    "headingLine2": "to",
+    "headingAccent": "Get Started",
+    "text": "Go all-inclusive with a managed monthly plan, own your build with a one-time payment, or reach out for something fully custom."
+  },
+  "monthly": {
+    "badge": "Recommended",
+    "title": "Monthly",
+    "description": "Everything included, one flat price — design, development, CMS, email, SEO, and hosting. Fully managed for you.",
+    "features": [
+      "Custom design & development",
+      "Full CMS access — edit anything",
+      "Email & contact forms included",
+      "SEO & analytics setup",
+      "Managed hosting & maintenance"
+    ],
+    "ctaLabel": "Start"
+  },
+  "upfront": {
+    "badge": "One-time",
+    "title": "Upfront",
+    "pricePrefix": "from",
+    "priceSuffix": "one-time",
+    "description": "Pay once for your website — design, development, and SEO included. Add pages anytime. Keep it running with light monthly add-ons.",
+    "featureDesign": "Custom design & development",
+    "featurePages": "1 page included — add more anytime",
+    "featurePagesNote": "Terms & privacy pages free",
+    "featureSeo": "SEO & analytics included",
+    "featureHosting": "Managed hosting",
+    "featureCms": "Optional CMS access",
+    "ctaLabel": "Start"
+  },
+  "custom": {
+    "badge": "Tailored",
+    "title": "Custom",
+    "price": "Let's talk",
+    "description": "Bigger scope? Admin panels, user accounts, databases, or something unique — we scope it together and quote it fairly.",
+    "features": [
+      "Fully bespoke scope",
+      "Admin panel, auth & database available",
+      "One-time and recurring options",
+      "Personal quote, no surprises"
+    ],
+    "ctaLabel": "Contact Us",
+    "ctaHref": "/#contact"
+  },
+  "disclaimer": {
+    "headingLine1": "You pay per page.",
+    "headingLine2": "$500 base, $200 each after.",
+    "text": "A page is anything with its own address — Home, About, Contact, and so on; a long scrolling page still counts as one. Your first page is $500, and each page after that is $200. Terms & privacy pages are always free and don't count. You confirm the final page count at checkout before any work begins.",
+    "buttonLabel": "I understand"
+  },
+  "footer": {
+    "copyright": "© 2025 Ali Samadi. All rights reserved.",
+    "backLabel": "Back to Home"
+  }
+}

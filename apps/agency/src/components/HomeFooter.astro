@@ -1,3 +1,9 @@
+---
+import home from "../data/home.json";
+
+const { footer } = home;
+---
+
 <footer class="mx-auto max-w-[1200px] px-6 pt-9 pb-14 md:px-10">
   <div class="grid grid-cols-2 gap-10 md:grid-cols-4">
     <!-- Brand -->
@@ -8,31 +14,27 @@
           alt="alisamadii logo"
           class="h-[22px] w-[22px]"
         />
-        alisamadii
+        <span data-cms-field="footer.brand">{footer.brand}</span>
       </div>
-      <p class="text-warmgray mt-4 max-w-[35ch] text-[13.5px] leading-[1.6]">
-        A creative agency focused on building exceptional digital experiences
-        that drive real results.
+      <p
+        class="text-warmgray mt-4 max-w-[35ch] text-[13.5px] leading-[1.6]"
+        data-cms-field="footer.blurb"
+      >
+        {footer.blurb}
       </p>
       <div class="text-warmgray mt-5 flex gap-5 text-[13.5px]">
-        <a
-          href="https://x.com/alisamadii_"
-          target="_blank"
-          class="hover:text-accent transition-colors duration-300"
-          >Twitter</a
-        >
-        <a
-          href="https://github.com/alisamadiii"
-          target="_blank"
-          class="hover:text-accent transition-colors duration-300"
-          >GitHub</a
-        >
-        <a
-          href="https://www.linkedin.com/in/alireza17/"
-          target="_blank"
-          class="hover:text-accent transition-colors duration-300"
-          >LinkedIn</a
-        >
+        {
+          footer.socials.map((social, i) => (
+            <a
+              href={social.href}
+              target="_blank"
+              class="hover:text-accent transition-colors duration-300"
+              data-cms-field={`footer.socials.${i}`}
+            >
+              {social.label}
+            </a>
+          ))
+        }
       </div>
 
       <!-- TrustBox widget - Review Collector -->
@@ -59,41 +61,24 @@
     <div>
       <h4
         class="text-muted mb-3.5 font-mono text-[11.5px] tracking-[0.08em] uppercase"
+        data-cms-field="footer.navHeading"
       >
-        Navigation
+        {footer.navHeading}
       </h4>
       <ul class="text-warmgray space-y-2.5 text-[13.5px]">
-        <li>
-          <a href="#hero" class="hover:text-accent transition-colors duration-300"
-            >Home</a
-          >
-        </li>
-        <li>
-          <a
-            href="#services"
-            class="hover:text-accent transition-colors duration-300"
-            >Services</a
-          >
-        </li>
-        <li>
-          <a
-            href="#about"
-            class="hover:text-accent transition-colors duration-300"
-            >About</a
-          >
-        </li>
-        <li>
-          <a href="#work" class="hover:text-accent transition-colors duration-300"
-            >Work</a
-          >
-        </li>
-        <li>
-          <a
-            href="#contact"
-            class="hover:text-accent transition-colors duration-300"
-            >Contact</a
-          >
-        </li>
+        {
+          footer.navLinks.map((link, i) => (
+            <li>
+              <a
+                href={link.href}
+                class="hover:text-accent transition-colors duration-300"
+                data-cms-field={`footer.navLinks.${i}`}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </div>
 
@@ -101,38 +86,24 @@
     <div>
       <h4
         class="text-muted mb-3.5 font-mono text-[11.5px] tracking-[0.08em] uppercase"
+        data-cms-field="footer.servicesHeading"
       >
-        Services
+        {footer.servicesHeading}
       </h4>
       <ul class="text-warmgray space-y-2.5 text-[13.5px]">
-        <li>
-          <a
-            href="#services"
-            class="hover:text-accent transition-colors duration-300"
-            >Web Development</a
-          >
-        </li>
-        <li>
-          <a
-            href="#services"
-            class="hover:text-accent transition-colors duration-300"
-            >UI/UX Design</a
-          >
-        </li>
-        <li>
-          <a
-            href="#services"
-            class="hover:text-accent transition-colors duration-300"
-            >Brand Identity</a
-          >
-        </li>
-        <li>
-          <a
-            href="#services"
-            class="hover:text-accent transition-colors duration-300"
-            >SEO &amp; Analytics</a
-          >
-        </li>
+        {
+          footer.serviceLinks.map((link, i) => (
+            <li>
+              <a
+                href={link.href}
+                class="hover:text-accent transition-colors duration-300"
+                data-cms-field={`footer.serviceLinks.${i}`}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </div>
 
@@ -140,17 +111,22 @@
     <div>
       <h4
         class="text-muted mb-3.5 font-mono text-[11.5px] tracking-[0.08em] uppercase"
+        data-cms-field="footer.availabilityHeading"
       >
-        Availability
+        {footer.availabilityHeading}
       </h4>
-      <p class="text-warmgray mb-4 text-[13.5px] leading-[1.6]">
-        Currently accepting new projects. Reach out to discuss your ideas.
+      <p
+        class="text-warmgray mb-4 text-[13.5px] leading-[1.6]"
+        data-cms-field="footer.availabilityText"
+      >
+        {footer.availabilityText}
       </p>
       <a
-        href="mailto:agency@alisamadii.com"
+        href={footer.availabilityCta.href}
         class="mag-btn bg-charcoal hover:bg-accent inline-flex items-center gap-2 rounded-[9px] px-[17px] py-[9px] text-[13.5px] font-medium text-white"
+        data-cms-field="footer.availabilityCta"
       >
-        Get in Touch
+        {footer.availabilityCta.label}
         <span class="text-[12px]">&#8599;</span>
       </a>
     </div>
@@ -160,7 +136,7 @@
   <div
     class="border-charcoal/[0.08] text-muted mt-12 flex flex-wrap items-center justify-between gap-4 border-t pt-7 font-mono text-[12.5px]"
   >
-    <span>&copy; 2026 Ali Samadi Agency</span>
-    <span>Portland, OR</span>
+    <span data-cms-field="footer.copyright">{footer.copyright}</span>
+    <span data-cms-field="footer.location">{footer.location}</span>
   </div>
 </footer>

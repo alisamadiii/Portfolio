@@ -1,3 +1,9 @@
+---
+import home from "../data/home.json";
+
+const { nav } = home;
+---
+
 <nav
   class="border-charcoal/[0.07] bg-cream/70 fixed top-0 left-0 z-40 w-full border-b px-6 py-4 backdrop-blur-[14px] md:px-10"
 >
@@ -11,37 +17,35 @@
         alt="alisamadii logo"
         class="h-[26px] w-[26px]"
       />
-      alisamadii
+      <span data-cms-field="nav.brand">{nav.brand}</span>
     </a>
     <div class="text-warmgray hidden items-center gap-8 text-[14.5px] md:flex">
-      <a href="#services" class="hover:text-accent transition-colors duration-300"
-        >Services</a
-      >
-      <a href="#about" class="hover:text-accent transition-colors duration-300"
-        >About</a
-      >
-      <a href="#work" class="hover:text-accent transition-colors duration-300"
-        >Work</a
-      >
-      <a href="#pricing" class="hover:text-accent transition-colors duration-300"
-        >Pricing</a
-      >
-      <a href="#contact" class="hover:text-accent transition-colors duration-300"
-        >Contact</a
-      >
+      {
+        nav.links.map((link, i) => (
+          <a
+            href={link.href}
+            class="hover:text-accent transition-colors duration-300"
+            data-cms-field={`nav.links.${i}`}
+          >
+            {link.label}
+          </a>
+        ))
+      }
     </div>
     <div class="hidden items-center gap-4 md:flex">
       <a
-        href="https://portal.alisamadii.com/agency"
+        href={nav.customer.href}
         target="_blank"
         class="text-warmgray hover:text-charcoal text-sm transition-colors duration-300"
-        >I am a customer &rarr;</a
+        data-cms-field="nav.customer"
+        >{nav.customer.label} &rarr;</a
       >
       <a
-        href="#contact"
+        href={nav.cta.href}
         class="mag-btn bg-charcoal hover:bg-accent inline-flex items-center gap-2 rounded-[9px] px-[17px] py-[9px] text-sm font-medium text-white"
+        data-cms-field="nav.cta"
       >
-        Start a Project
+        {nav.cta.label}
         <span class="text-[13px]">&#8599;</span>
       </a>
     </div>
@@ -67,41 +71,24 @@
   class="menu-overlay bg-cream/95 fixed inset-0 z-30 flex flex-col items-start justify-center px-8 backdrop-blur-2xl"
 >
   <div class="stagger space-y-5">
+    {
+      nav.links.map((link, i) => (
+        <a
+          href={link.href}
+          class={`reveal ${i === nav.links.length - 1 ? "text-accent" : "text-charcoal"} block text-4xl font-semibold tracking-[-0.03em]`}
+          onclick="closeMenu()"
+          data-cms-field={`nav.links.${i}`}
+        >
+          {link.label}
+        </a>
+      ))
+    }
     <a
-      href="#services"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Services</a
-    >
-    <a
-      href="#about"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >About</a
-    >
-    <a
-      href="#work"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Work</a
-    >
-    <a
-      href="#pricing"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Pricing</a
-    >
-    <a
-      href="#contact"
-      class="reveal text-accent block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Contact</a
-    >
-    <a
-      href="https://portal.alisamadii.com/agency"
+      href={nav.customer.href}
       class="reveal text-warmgray mt-4 block text-lg"
       onclick="closeMenu()"
-      >I am a customer &rarr;</a
+      data-cms-field="nav.customer"
+      >{nav.customer.label} &rarr;</a
     >
   </div>
 </div>

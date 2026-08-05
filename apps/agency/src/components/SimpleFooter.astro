@@ -1,14 +1,35 @@
+---
+import { cmsField } from "../lib/cms";
+
+interface Props {
+  copyright?: string;
+  backLabel?: string;
+  /** CMS section key — set only by pages whose footer is CMS-driven. */
+  cmsPath?: string;
+}
+
+const {
+  copyright = "© 2025 Ali Samadi. All rights reserved.",
+  backLabel = "Back to Home",
+  cmsPath,
+} = Astro.props;
+---
+
 <footer class="border-charcoal/[0.06] border-t px-4 py-12 md:px-8">
   <div
     class="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 md:flex-row"
   >
-    <p class="text-warmgray text-sm">
-      &copy; 2025 Ali Samadi. All rights reserved.
+    <p
+      class="text-warmgray text-sm"
+      data-cms-field={cmsField(cmsPath, "copyright")}
+    >
+      {copyright}
     </p>
     <a
       href="/"
       class="text-warmgray hover:text-charcoal text-sm transition-colors duration-300"
-      >Back to Home</a
+      data-cms-field={cmsField(cmsPath, "backLabel")}
+      >{backLabel}</a
     >
   </div>
 </footer>

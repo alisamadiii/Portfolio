@@ -1,0 +1,221 @@
+{
+  "seo": {
+    "title": "Ali Samadi — Creative Agency | Web Design & Development",
+    "description": "Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results."
+  },
+  "nav": {
+    "brand": "alisamadii",
+    "links": [
+      { "label": "Services", "href": "#services" },
+      { "label": "About", "href": "#about" },
+      { "label": "Work", "href": "#work" },
+      { "label": "Pricing", "href": "#pricing" },
+      { "label": "Contact", "href": "#contact" }
+    ],
+    "customer": {
+      "label": "I am a customer",
+      "href": "https://portal.alisamadii.com/agency"
+    },
+    "cta": { "label": "Start a Project", "href": "#contact" }
+  },
+  "hero": {
+    "eyebrow": "01 — Creative Agency",
+    "heading": "We build digital",
+    "scrambleWords": [
+      "experiences",
+      "brands",
+      "products",
+      "platforms",
+      "identities"
+    ],
+    "text": "A creative agency specializing in brand identity, web development, and digital strategy that drives real, measurable results.",
+    "primaryCta": { "label": "Start a Project", "href": "https://cal.com/alisamadii" },
+    "secondaryCta": { "label": "Pricing", "href": "/prizink" },
+    "tertiaryCta": {
+      "label": "I am a customer",
+      "href": "https://portal.alisamadii.com/agency"
+    }
+  },
+  "marquee": {
+    "words": ["Design", "Develop", "Deliver", "Brand", "Strategy", "Innovate"]
+  },
+  "stats": [
+    { "value": "8", "suffix": "+", "label": "Projects Delivered" },
+    { "value": "99", "suffix": "%", "label": "Client Satisfaction" },
+    { "value": "5", "suffix": "+", "label": "Years Experience" },
+    { "value": "1", "suffix": "", "label": "Focused Team" }
+  ],
+  "about": {
+    "eyebrow": "02 — About Us",
+    "heading": "We craft digital products that people",
+    "headingAccent": "love",
+    "headingEnd": "to use",
+    "text": "Founded with a passion for pixel-perfect design and clean code, we help brands transform their digital presence. Our approach blends creativity with data-driven strategy to deliver experiences that matter."
+  },
+  "services": {
+    "eyebrow": "03 — Our Services",
+    "brandIdentity": {
+      "title": "Brand Identity",
+      "text": "Crafting distinctive visual identities that resonate with your audience and set you apart from the competition."
+    },
+    "webDevelopment": {
+      "title": "Web Development",
+      "text": "Clean, fast landing pages for local businesses — everything a simple site needs, nothing it doesn't."
+    },
+    "uiUxDesign": {
+      "title": "UI/UX Design",
+      "text": "Intuitive, user-centered interfaces that drive engagement and conversions."
+    },
+    "seoAnalytics": {
+      "title": "SEO & Analytics",
+      "text": "Data-driven optimization to boost visibility, traffic and meaningful engagement."
+    },
+    "editYourSite": {
+      "title": "Edit Your Own Site",
+      "text": "CMS access plus a GitHub collaborator invite — update text, images, and pages yourself, anytime."
+    },
+    "custom": {
+      "title": "Need Something Custom?",
+      "text": "Looking for more than a landing page? We also build fully custom websites — authentication, databases, admin dashboards, web apps — scoped and priced per project.",
+      "link": { "label": "Get in touch", "href": "#contact" },
+      "tags": ["Authentication", "Database", "Admin Panel"]
+    }
+  },
+  "process": {
+    "eyebrow": "04 — Our Process",
+    "steps": [
+      {
+        "image": "/media/discovery.png",
+        "title": "Discovery",
+        "text": "Understanding your goals, audience, and competitive landscape through deep research."
+      },
+      {
+        "image": "/media/strategy.png",
+        "title": "Strategy",
+        "text": "Defining the roadmap, architecture, and creative direction for maximum impact."
+      },
+      {
+        "image": "/media/execution.png",
+        "title": "Execution",
+        "text": "Bringing the vision to life with meticulous design and robust engineering."
+      },
+      {
+        "image": "/media/launch-scale.png",
+        "title": "Launch & Scale",
+        "text": "Deploying, monitoring, and iterating to ensure sustained growth and performance."
+      }
+    ]
+  },
+  "work": {
+    "eyebrow": "05 — Our Work",
+    "heading": "Selected projects",
+    "text": "Every project is built from scratch — no templates, no shortcuts. These mock-ups showcase our capabilities; your project will be fully custom to your brand and goals.",
+    "badge": { "label": "1-Day Delivery", "note": "concept → launch" },
+    "projects": [
+      {
+        "image": "/media/meridian.webp",
+        "category": "Creative · Brand & Web",
+        "title": "Meridian Studio",
+        "text": "Brand identity & web platform for a boutique design studio.",
+        "href": "https://demo-booking-gray.vercel.app/"
+      },
+      {
+        "image": "/media/clearwater.webp",
+        "category": "Hospitality · Revenue Strategy",
+        "title": "Clearwater Revenue Partners",
+        "text": "Strategy platform for hotel revenue management & partnerships.",
+        "href": "https://clearwater-revenue-partners.vercel.app/"
+      },
+      {
+        "image": "/media/pinnacle.webp",
+        "category": "Finance · Tax Services",
+        "title": "Pinnacle Tax Group",
+        "text": "Professional website for a tax preparation & consulting firm.",
+        "href": "https://tax-preparer.vercel.app/"
+      },
+      {
+        "image": "/media/aether.webp",
+        "category": "Real Estate · Property Listings",
+        "title": "Aether Properties",
+        "text": "Architectural real estate platform for luxury property listings.",
+        "href": "https://real-state-rho-sand.vercel.app/"
+      }
+    ],
+    "cta": { "label": "Have a project in mind?", "href": "#contact" }
+  },
+  "pricing": {
+    "eyebrow": "06 — Pricing",
+    "heading": "Let's talk",
+    "text": "Every project is unique. Tell us what you need and we'll craft a plan that fits.",
+    "primaryCta": { "label": "Get in Touch", "href": "#contact" },
+    "secondaryCta": { "label": "View Pricing", "href": "/prizink" },
+    "features": [
+      "Website design & development",
+      "Managed hosting & domains",
+      "CMS content editing",
+      "GitHub collaborator access",
+      "Custom builds available",
+      "Email & contact forms",
+      "SEO, analytics & priority support",
+      "Light & dark theme included"
+    ]
+  },
+  "contact": {
+    "eyebrow": "Get in Touch",
+    "heading": "Let's create something",
+    "headingAccent": "amazing",
+    "text": "Ready to elevate your digital presence? We'd love to hear about your project and explore how we can help.",
+    "cta": {
+      "label": "Start a Conversation",
+      "href": "mailto:agency@alisamadii.com"
+    },
+    "email": { "label": "Email", "address": "agency@alisamadii.com" },
+    "schedule": {
+      "label": "Schedule",
+      "linkLabel": "Book a Meeting",
+      "href": "https://cal.com/alisamadii"
+    },
+    "phone": {
+      "label": "Phone",
+      "display": "+1 (971) 382-8969",
+      "href": "tel:+19713828969"
+    },
+    "location": {
+      "label": "Location",
+      "display": "Jacksonville, FL",
+      "href": "https://maps.google.com/?q=Jacksonville,+FL"
+    }
+  },
+  "footer": {
+    "brand": "alisamadii",
+    "blurb": "A creative agency focused on building exceptional digital experiences that drive real results.",
+    "socials": [
+      { "label": "Twitter", "href": "https://x.com/alisamadii_" },
+      { "label": "GitHub", "href": "https://github.com/alisamadiii" },
+      { "label": "LinkedIn", "href": "https://www.linkedin.com/in/alireza17/" }
+    ],
+    "navHeading": "Navigation",
+    "navLinks": [
+      { "label": "Home", "href": "#hero" },
+      { "label": "Services", "href": "#services" },
+      { "label": "About", "href": "#about" },
+      { "label": "Work", "href": "#work" },
+      { "label": "Contact", "href": "#contact" }
+    ],
+    "servicesHeading": "Services",
+    "serviceLinks": [
+      { "label": "Web Development", "href": "#services" },
+      { "label": "UI/UX Design", "href": "#services" },
+      { "label": "Brand Identity", "href": "#services" },
+      { "label": "SEO & Analytics", "href": "#services" }
+    ],
+    "availabilityHeading": "Availability",
+    "availabilityText": "Currently accepting new projects. Reach out to discuss your ideas.",
+    "availabilityCta": {
+      "label": "Get in Touch",
+      "href": "mailto:agency@alisamadii.com"
+    },
+    "copyright": "© 2026 Ali Samadi Agency",
+    "location": "Jacksonville, FL"
+  }
+}

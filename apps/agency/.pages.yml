@@ -1,0 +1,402 @@
+# Pages CMS config for the agency site. Conventions: docs/pages-cms.md.
+# The CMS repo setting "base path" must be `apps/agency` — all paths here are
+# relative to that folder.
+
+media:
+  input: public/media
+  output: /media
+
+settings:
+  baseUrl: https://agency.alisamadii.com
+  preview:
+    paths:
+      home: /
+      prizink: /prizink
+
+components:
+  link:
+    type: object
+    fields:
+      - { name: label, label: Label, type: string }
+      - { name: href, label: Link, type: string, options: { type: url } }
+
+content:
+  - name: home
+    label: Home
+    description: The main landing page
+    type: file
+    path: src/data/home.json
+    format: json
+    fields:
+      - name: seo
+        label: SEO
+        type: object
+        fields:
+          - name: title
+            label: Title
+            type: string
+            required: true
+            description: Shown as the page title in Google results and the browser tab.
+          - name: description
+            label: Description
+            type: text
+            description: Short summary shown under the title in Google results.
+
+      - name: nav
+        label: Navigation bar
+        type: object
+        fields:
+          - { name: brand, label: Brand name, type: string, required: true }
+          - name: links
+            label: Menu links
+            type: object
+            list: { collapsible: { summary: "{fields.label}" } }
+            fields:
+              - { name: label, label: Label, type: string, required: true }
+              - { name: href, label: Link, type: string, options: { type: url } }
+          - name: customer
+            label: Customer link
+            component: link
+          - name: cta
+            label: Button
+            component: link
+
+      - name: hero
+        label: Hero
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label above the heading, type: string }
+          - { name: heading, label: Heading, type: string, required: true }
+          - name: scrambleWords
+            label: Rotating words
+            type: string
+            list: { min: 1 }
+            description: The orange word cycles through these. The first one shows on page load.
+          - { name: text, label: Intro text, type: text }
+          - { name: primaryCta, label: Main button, component: link }
+          - { name: secondaryCta, label: Second button, component: link }
+          - { name: tertiaryCta, label: Text link, component: link }
+
+      - name: marquee
+        label: Scrolling banner
+        type: object
+        fields:
+          - { name: words, label: Words, type: string, list: { min: 1 } }
+
+      - name: stats
+        label: Stats
+        type: object
+        list: { min: 1, max: 4, collapsible: { summary: "{fields.label}" } }
+        fields:
+          - { name: value, label: Number, type: string, required: true }
+          - name: suffix
+            label: Suffix
+            type: string
+            description: Optional orange symbol after the number (+ or %). Leave empty for none.
+          - { name: label, label: Label, type: string, required: true }
+
+      - name: about
+        label: About
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - { name: heading, label: Heading (start), type: string }
+          - { name: headingAccent, label: Heading (orange word), type: string }
+          - { name: headingEnd, label: Heading (end), type: string }
+          - { name: text, label: Text, type: text }
+
+      - name: services
+        label: Services
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - name: brandIdentity
+            label: Card — Brand Identity
+            type: object
+            fields:
+              - { name: title, label: Title, type: string }
+              - { name: text, label: Text, type: text }
+          - name: webDevelopment
+            label: Card — Web Development
+            type: object
+            fields:
+              - { name: title, label: Title, type: string }
+              - { name: text, label: Text, type: text }
+          - name: uiUxDesign
+            label: Card — UI/UX Design
+            type: object
+            fields:
+              - { name: title, label: Title, type: string }
+              - { name: text, label: Text, type: text }
+          - name: seoAnalytics
+            label: Card — SEO & Analytics
+            type: object
+            fields:
+              - { name: title, label: Title, type: string }
+              - { name: text, label: Text, type: text }
+          - name: editYourSite
+            label: Card — Edit Your Own Site
+            type: object
+            fields:
+              - { name: title, label: Title, type: string }
+              - { name: text, label: Text, type: text }
+          - name: custom
+            label: Card — Custom (dark)
+            type: object
+            fields:
+              - { name: title, label: Title, type: string }
+              - { name: text, label: Text, type: text }
+              - { name: link, label: Inline link, component: link }
+              - { name: tags, label: Tag pills, type: string, list: true }
+
+      - name: process
+        label: Process
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - name: steps
+            label: Steps
+            type: object
+            list: { min: 1, collapsible: { summary: "{fields.title}" } }
+            fields:
+              - { name: image, label: Image, type: image }
+              - { name: title, label: Title, type: string, required: true }
+              - { name: text, label: Text, type: text }
+
+      - name: work
+        label: Work
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - { name: heading, label: Heading, type: string }
+          - { name: text, label: Intro text, type: text }
+          - name: badge
+            label: Green badge
+            type: object
+            fields:
+              - { name: label, label: Label, type: string }
+              - { name: note, label: Note, type: string }
+          - name: projects
+            label: Projects
+            type: object
+            list: { min: 1, collapsible: { summary: "{fields.title}" } }
+            fields:
+              - { name: image, label: Screenshot, type: image }
+              - { name: category, label: Category line, type: string }
+              - { name: title, label: Title, type: string, required: true }
+              - { name: text, label: Text, type: text }
+              - { name: href, label: Link, type: string, options: { type: url } }
+          - { name: cta, label: Bottom button, component: link }
+
+      - name: pricing
+        label: Pricing teaser
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - { name: heading, label: Heading, type: string }
+          - { name: text, label: Text, type: text }
+          - { name: primaryCta, label: Main button, component: link }
+          - { name: secondaryCta, label: Second button, component: link }
+          - { name: features, label: Checklist items, type: string, list: true }
+
+      - name: contact
+        label: Contact
+        type: object
+        fields:
+          - { name: eyebrow, label: Small label, type: string }
+          - { name: heading, label: Heading, type: string }
+          - { name: headingAccent, label: Heading (orange word), type: string }
+          - { name: text, label: Text, type: text }
+          - { name: cta, label: Button, component: link }
+          - name: email
+            label: Email card
+            type: object
+            fields:
+              - { name: label, label: Card label, type: string }
+              - { name: address, label: Email address, type: string, options: { type: email } }
+          - name: schedule
+            label: Schedule card
+            type: object
+            fields:
+              - { name: label, label: Card label, type: string }
+              - { name: linkLabel, label: Link text, type: string }
+              - { name: href, label: Link, type: string, options: { type: url } }
+          - name: phone
+            label: Phone card
+            type: object
+            fields:
+              - { name: label, label: Card label, type: string }
+              - { name: display, label: Displayed number, type: string }
+              - name: href
+                label: Dial link
+                type: string
+                options: { type: tel }
+                description: "Format: tel:+19713828969"
+          - name: location
+            label: Location card
+            type: object
+            fields:
+              - { name: label, label: Card label, type: string }
+              - { name: display, label: Displayed location, type: string }
+              - { name: href, label: Map link, type: string, options: { type: url } }
+
+      - name: footer
+        label: Footer
+        type: object
+        fields:
+          - { name: brand, label: Brand name, type: string }
+          - { name: blurb, label: Blurb, type: text }
+          - name: socials
+            label: Social links
+            type: object
+            list: { collapsible: { summary: "{fields.label}" } }
+            fields:
+              - { name: label, label: Label, type: string }
+              - { name: href, label: Link, type: string, options: { type: url } }
+          - { name: navHeading, label: Navigation column heading, type: string }
+          - name: navLinks
+            label: Navigation links
+            type: object
+            list: { collapsible: { summary: "{fields.label}" } }
+            fields:
+              - { name: label, label: Label, type: string }
+              - { name: href, label: Link, type: string, options: { type: url } }
+          - { name: servicesHeading, label: Services column heading, type: string }
+          - name: serviceLinks
+            label: Services links
+            type: object
+            list: { collapsible: { summary: "{fields.label}" } }
+            fields:
+              - { name: label, label: Label, type: string }
+              - { name: href, label: Link, type: string, options: { type: url } }
+          - { name: availabilityHeading, label: Availability heading, type: string }
+          - { name: availabilityText, label: Availability text, type: text }
+          - name: availabilityCta
+            label: Availability button
+            type: object
+            fields:
+              - { name: label, label: Label, type: string }
+              - name: href
+                label: Link
+                type: string
+                options: { type: url }
+                description: "Format: mailto:you@example.com"
+          - { name: copyright, label: Copyright line, type: string }
+          - { name: location, label: Location line, type: string }
+
+  - name: prizink
+    label: Pricing page
+    description: Plans and pricing. Prices themselves come from Stripe automatically.
+    type: file
+    path: src/data/prizink.json
+    format: json
+    fields:
+      - name: seo
+        label: SEO
+        type: object
+        fields:
+          - name: title
+            label: Title
+            type: string
+            required: true
+            description: Shown as the page title in Google results and the browser tab.
+          - name: description
+            label: Description
+            type: text
+            description: Short summary shown under the title in Google results.
+
+      - name: backNav
+        label: Top bar
+        type: object
+        fields:
+          - { name: brandInitials, label: Logo initials, type: string }
+          - { name: brandName, label: Name, type: string }
+          - { name: backLabel, label: Back link label, type: string }
+
+      - name: hero
+        label: Hero
+        type: object
+        fields:
+          - { name: badge, label: Badge, type: string }
+          - { name: heading, label: Heading (line 1), type: string }
+          - { name: headingAccent, label: Heading (orange line), type: string }
+          - { name: text, label: Intro text, type: text }
+          - name: delivery
+            label: Delivery badge
+            type: object
+            fields:
+              - { name: label, label: Label, type: string }
+              - { name: note, label: Note, type: string }
+
+      - name: plans
+        label: Plans intro
+        type: object
+        fields:
+          - { name: badge, label: Badge, type: string }
+          - { name: headingLine1, label: Heading (line 1), type: string }
+          - { name: headingLine2, label: Heading (line 2 start), type: string }
+          - { name: headingAccent, label: Heading (orange words), type: string }
+          - { name: text, label: Text, type: text }
+
+      - name: monthly
+        label: Monthly plan card
+        type: object
+        description: The monthly price is filled in automatically from Stripe.
+        fields:
+          - { name: badge, label: Badge, type: string }
+          - { name: title, label: Title, type: string }
+          - { name: description, label: Description, type: text }
+          - { name: features, label: Feature bullets, type: string, list: true }
+          - { name: ctaLabel, label: Button label, type: string }
+
+      - name: upfront
+        label: Upfront plan card
+        type: object
+        description: Prices on this card are filled in automatically from Stripe.
+        fields:
+          - { name: badge, label: Badge, type: string }
+          - { name: title, label: Title, type: string }
+          - { name: pricePrefix, label: Text before price, type: string }
+          - { name: priceSuffix, label: Text after price, type: string }
+          - { name: description, label: Description, type: text }
+          - { name: featureDesign, label: Bullet — design, type: string }
+          - { name: featurePages, label: Bullet — pages, type: string }
+          - { name: featurePagesNote, label: Bullet — pages sub-note, type: string }
+          - { name: featureSeo, label: Bullet — SEO, type: string }
+          - name: featureHosting
+            label: Bullet — hosting
+            type: string
+            description: The monthly price is added automatically after this text.
+          - name: featureCms
+            label: Bullet — CMS
+            type: string
+            description: The monthly price is added automatically after this text.
+          - { name: ctaLabel, label: Button label, type: string }
+
+      - name: custom
+        label: Custom plan card
+        type: object
+        fields:
+          - { name: badge, label: Badge, type: string }
+          - { name: title, label: Title, type: string }
+          - { name: price, label: Price line, type: string }
+          - { name: description, label: Description, type: text }
+          - { name: features, label: Feature bullets, type: string, list: true }
+          - { name: ctaLabel, label: Button label, type: string }
+          - { name: ctaHref, label: Button link, type: string, options: { type: url } }
+
+      - name: disclaimer
+        label: Price disclaimer popup
+        type: object
+        fields:
+          - { name: headingLine1, label: Heading (line 1), type: string }
+          - { name: headingLine2, label: Heading (line 2), type: string }
+          - { name: text, label: Text, type: text }
+          - { name: buttonLabel, label: Button label, type: string }
+
+      - name: footer
+        label: Footer
+        type: object
+        fields:
+          - { name: copyright, label: Copyright line, type: string }
+          - { name: backLabel, label: Back link label, type: string }

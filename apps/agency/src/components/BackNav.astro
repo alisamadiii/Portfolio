@@ -1,12 +1,25 @@
 ---
+import { cmsField } from "../lib/cms";
+
 interface Props {
   backHref: string;
   backLabel: string;
   /** prizink's nav is fixed; onboarding's sits in the flow. */
   fixed?: boolean;
+  brandInitials?: string;
+  brandName?: string;
+  /** CMS section key — set only by pages whose nav is CMS-driven. */
+  cmsPath?: string;
 }
 
-const { backHref, backLabel, fixed = false } = Astro.props;
+const {
+  backHref,
+  backLabel,
+  fixed = false,
+  brandInitials = "AS",
+  brandName = "Ali Samadi",
+  cmsPath,
+} = Astro.props;
 ---
 
 <nav class={fixed ? "fixed top-0 right-0 left-0 z-40 px-4 py-5 md:px-8" : "px-4 py-5 md:px-8"}>
@@ -15,16 +28,21 @@ const { backHref, backLabel, fixed = false } = Astro.props;
       <div
         class="bg-charcoal flex h-10 w-10 items-center justify-center rounded-full"
       >
-        <span class="text-cream text-sm font-bold">AS</span>
+        <span
+          class="text-cream text-sm font-bold"
+          data-cms-field={cmsField(cmsPath, "brandInitials")}
+          >{brandInitials}</span
+        >
       </div>
       <span
         class="text-warmgray group-hover:text-charcoal text-sm font-medium transition-colors duration-300"
-        >Ali Samadi</span
+        data-cms-field={cmsField(cmsPath, "brandName")}>{brandName}</span
       >
     </a>
     <a
       href={backHref}
       class="mag-btn text-warmgray hover:text-charcoal flex items-center gap-2 text-sm transition-colors duration-300"
+      data-cms-field={cmsField(cmsPath, "backLabel")}
     >
       <svg
         class="h-4 w-4"
