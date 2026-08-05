@@ -1,5 +1,8 @@
 {
   "framework": "astro",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/prizink", "destination": "/pricing", "permanent": true }
+  ]
 }

@@ -6,7 +6,7 @@ export default defineConfig({
   site: "https://agency.alisamadii.com",
   output: "static",
   trailingSlash: "never",
-  // Flat dist/prizink.html etc. so Vercel clean URLs serve /prizink exactly
+  // Flat dist/pricing.html etc. so Vercel clean URLs serve /pricing exactly
   // like the old static-directory deploy did (no trailing-slash change).
   build: { format: "file" },
   integrations: [
