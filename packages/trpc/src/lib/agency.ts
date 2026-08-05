@@ -12,7 +12,11 @@ export const agency = () => {
       throw new Error("Missing AGENCY_API_KEY in environment variables");
     }
 
-    client = new AgencyClient(apiKey);
+    // AGENCY_API_URL points local dev at `wrangler dev` (http://localhost:8787);
+    // unset in production, where the client's default deployed URL applies.
+    client = new AgencyClient(apiKey, {
+      baseUrl: process.env.AGENCY_API_URL || undefined,
+    });
   }
   return client;
 };

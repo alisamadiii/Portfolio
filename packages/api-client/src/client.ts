@@ -1,6 +1,7 @@
 import { AgencyError, fail, ok, type Result } from "./error.js";
 import { AdminResource } from "./resources/admin.js";
 import { EmailsResource } from "./resources/emails.js";
+import { MarketingResource } from "./resources/marketing.js";
 import { MeResource } from "./resources/me.js";
 import { UploadsResource } from "./resources/uploads.js";
 
@@ -18,6 +19,7 @@ interface RequestOptions {
 
 export class AgencyClient {
   readonly emails: EmailsResource;
+  readonly marketing: MarketingResource;
   readonly uploads: UploadsResource;
   readonly me: MeResource;
   /** /v1/admin/* — requires a key whose user has type "admin". */
@@ -35,6 +37,7 @@ export class AgencyClient {
     this.#apiKey = apiKey;
     this.#baseUrl = (options?.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
     this.emails = new EmailsResource(this);
+    this.marketing = new MarketingResource(this);
     this.uploads = new UploadsResource(this);
     this.me = new MeResource(this);
     this.admin = new AdminResource(this);

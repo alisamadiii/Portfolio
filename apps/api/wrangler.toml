@@ -22,6 +22,16 @@ id = "5fbe475b09dc41719ffadd7d2428d815"
 #   AWS_SECRET_KEY_VALUE   SES secret access key
 #   AWS_BUCKET_ORIGIN      SES region (e.g. us-east-1); optional, defaults us-east-1
 #   EMAIL_FROM             default sender address; optional
+#   MARKETING_UNSUB_SECRET signs per-contact unsubscribe tokens (any random string)
+#   MARKETING_SNS_SECRET   random path segment for the SES bounce/complaint webhook
+#   MARKETING_PUBLIC_URL   public base for unsubscribe links; optional, defaults
+#                          to https://api.alisamadii.com
+
+# Durable bulk-send loop for marketing campaigns (one instance per campaign).
+[[workflows]]
+name = "send-campaign"
+binding = "SEND_CAMPAIGN"
+class_name = "SendCampaignWorkflow"
 
 # Health cron (src/scheduled.ts): deep-checks DB/KV/SES/R2 every 10 minutes,
 # stores the result in KV for GET /health, alerts once per incident.

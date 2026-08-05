@@ -64,6 +64,9 @@ export function SubscriptionGateProvider({
       const detail = (event as CustomEvent<{ feature?: FeatureKey }>).detail;
       if (detail?.feature && detail.feature in FEATURES) {
         setFeature(detail.feature);
+        // Survives the round-trip to Stripe so the post-checkout refresh
+        // verifies the feature that was actually purchased.
+        sessionStorage.setItem("subscription-gate:feature", detail.feature);
       }
       setOpen(true);
     };
@@ -81,7 +84,8 @@ export function SubscriptionGateProvider({
     verifiedOnReturnRef.current = true;
     url.searchParams.delete("purchase");
     window.history.replaceState(null, "", url.toString());
-    verifyAccess("cms");
+    const stored = sessionStorage.getItem("subscription-gate:feature");
+    verifyAccess(stored && stored in FEATURES ? (stored as FeatureKey) : "cms");
   }, [verifyAccess]);
 
   const handleSubscribe = async () => {

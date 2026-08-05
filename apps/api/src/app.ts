@@ -13,6 +13,7 @@ import { emails } from "./routes/emails.js";
 import { envs } from "./routes/envs.js";
 import { health } from "./routes/health.js";
 import { keys } from "./routes/keys.js";
+import { marketing } from "./routes/marketing.js";
 import { me } from "./routes/me.js";
 import { ses } from "./routes/ses.js";
 import { uploads } from "./routes/uploads.js";
@@ -79,6 +80,7 @@ const v1 = new Hono<AppEnv>();
 v1.route("/me", me);
 v1.route("/uploads", uploads);
 v1.route("/emails", emails);
+v1.route("/marketing", marketing);
 
 // Admin: one guard on the whole group — routes inside stay guard-free.
 const admin = new Hono<AppEnv>();

@@ -22,4 +22,14 @@ export type Env = {
 
   // KV namespace backing the contact-form rate limiter (hono-rate-limiter).
   RATE_LIMIT_KV: KVNamespace;
+
+  // Marketing Emails. UNSUB secret signs per-contact unsubscribe tokens
+  // (HMAC-SHA256); SNS secret is the random path segment on the SNS webhook.
+  MARKETING_UNSUB_SECRET: string;
+  MARKETING_SNS_SECRET: string;
+  // Public base URL for unsubscribe links; defaults to the deployed domain.
+  MARKETING_PUBLIC_URL?: string;
+
+  // Durable bulk-send loop (one instance per campaign).
+  SEND_CAMPAIGN: Workflow;
 };

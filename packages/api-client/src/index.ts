@@ -7,6 +7,10 @@ export {
   AdminKeysResource,
   AdminUsersResource,
 } from "./resources/admin.js";
+export {
+  AdminMarketingResource,
+  MarketingResource,
+} from "./resources/marketing.js";
 export type {
   SendEmailRequest,
   SendEmailResponse,
@@ -47,4 +51,10 @@ export type {
   UpdateEnvFileRequest,
   SesHealth,
   AdminHealthResult,
+  MarketingActRequest,
+  MarketingSendResponse,
+  MarketingSubscribeRequest,
+  MarketingSubscribeResponse,
+  MarketingTestResponse,
+  MarketingTransitionResponse,
 } from "./types.js";

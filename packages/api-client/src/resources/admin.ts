@@ -1,5 +1,6 @@
 import type { AgencyClient } from "../client.js";
 import type { Result } from "../error.js";
+import { AdminMarketingResource } from "./marketing.js";
 import type {
   AdminApiKeyWithOwner,
   AdminEmailLogsParams,
@@ -187,12 +188,14 @@ export class AdminResource {
   readonly users: AdminUsersResource;
   readonly emailLogs: AdminEmailLogsResource;
   readonly envs: AdminEnvsResource;
+  readonly marketing: AdminMarketingResource;
 
   constructor(private readonly client: AgencyClient) {
     this.keys = new AdminKeysResource(client);
     this.users = new AdminUsersResource(client);
     this.emailLogs = new AdminEmailLogsResource(client);
     this.envs = new AdminEnvsResource(client);
+    this.marketing = new AdminMarketingResource(client);
   }
 
   /** SES account/identity/DKIM health and 2-week send statistics. */

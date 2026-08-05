@@ -52,6 +52,15 @@ export type AgencyErrorCode =
   | "STORAGE_DELETE_FAILED"
   | "STORAGE_LIST_FAILED"
   | "URL_NOT_YOUR_BUCKET"
+  // marketing
+  | "CAMPAIGN_NOT_FOUND"
+  | "CAMPAIGN_NOT_DRAFT"
+  | "CAMPAIGN_EMPTY"
+  | "MARKETING_SETTINGS_INCOMPLETE"
+  | "NO_RECIPIENTS"
+  | "INVALID_CAMPAIGN_STATE"
+  | "NO_WORKFLOW"
+  | "ARCHIVE_FAILED"
   // generic fallbacks (plain HTTPExceptions, unknown routes)
   | "ROUTE_NOT_FOUND"
   | "BAD_REQUEST"

@@ -9,6 +9,7 @@ export const PRICE_IDS = IS_PROD
       monthly: "price_1Tyd6g9sfDE02XZJuxFwcPEE", // $284/mo all-inclusive
       hosting: "price_1Tyd6i9sfDE02XZJdfIqq1zE", // $20/mo managed hosting
       cms: "price_1Tyd6l9sfDE02XZJd6PKJT1v", // $30/mo CMS access
+      marketing: "price_TODO_marketing_prod", // TODO: create $20/mo Marketing Emails price in Stripe (live mode)
       upfrontBase: "price_1TzSCw9sfDE02XZJGMWUjnRt", // TODO: replace — agency_upfront_base ($500 one-time)
       upfrontPage: "price_1TzSCw9sfDE02XZJPm94tRDX", // TODO: replace — agency_upfront_page ($200 one-time)
     }
@@ -16,6 +17,7 @@ export const PRICE_IDS = IS_PROD
       monthly: "price_1Tyd3SG7Gvayjjm6jbNbcyMp",
       hosting: "price_1Tyd2yG7Gvayjjm6l7mxEc9b",
       cms: "price_1Tyd17G7Gvayjjm6n0EijMTm",
+      marketing: "price_TODO_marketing_sandbox", // TODO: create $20/mo Marketing Emails price in Stripe (test mode)
       upfrontBase: "price_1TzPXlG7Gvayjjm6QCwM8VHK", // agency_upfront_base ($500 one-time)
       upfrontPage: "price_1TzPYiG7Gvayjjm6nFI2d59S", // agency_upfront_page ($200 one-time)
     };
@@ -32,6 +34,12 @@ export const FEATURES = {
     priceLabel: "$30/mo",
     price: PRICE_IDS.cms,
     grantedBy: [PRICE_IDS.cms, PRICE_IDS.monthly],
+  },
+  marketing: {
+    label: "Marketing Emails",
+    priceLabel: "$20/mo",
+    price: PRICE_IDS.marketing,
+    grantedBy: [PRICE_IDS.marketing, PRICE_IDS.monthly],
   },
 } as const;
 

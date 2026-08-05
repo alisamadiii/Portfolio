@@ -1,3 +1,5 @@
+# Neon Postgres — the merged portfolio DB (same DATABASE_URL as apps/cms),
+# NOT the old standalone agency DB.
 DATABASE_URL=
 
 R2_ENDPOINT=
@@ -11,3 +13,12 @@ AWS_SECRET_KEY_VALUE=
 AWS_BUCKET_ORIGIN=
 
 POSTHOG_API_KEY=
+
+# Marketing Emails. Generate both secrets yourself (openssl rand -hex 32) and
+# keep them stable — UNSUB_SECRET signs unsubscribe links in already-sent
+# emails, SNS_SECRET is the path segment of the SES bounce/complaint webhook.
+MARKETING_UNSUB_SECRET=
+MARKETING_SNS_SECRET=
+# Base URL for unsubscribe links. http://localhost:8787 in dev; leave empty in
+# production (defaults to https://api.alisamadii.com).
+MARKETING_PUBLIC_URL=

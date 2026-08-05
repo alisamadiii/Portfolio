@@ -1,6 +1,8 @@
 type ApiResponseLike = {
   status?: string;
   message?: string;
+  /** 402 responses may name the gated feature so the dialog sells the right one. */
+  feature?: string;
 };
 
 const parseJsonSafely = async <T = unknown>(
@@ -30,7 +32,11 @@ const requireApiSuccess = async <T = any>(
       payload?.message ||
       `${fallbackMessage}: ${response.status} ${response.statusText}`;
     if (response.status === 402 && typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(SUBSCRIPTION_REQUIRED_EVENT));
+      window.dispatchEvent(
+        new CustomEvent(SUBSCRIPTION_REQUIRED_EVENT, {
+          detail: payload?.feature ? { feature: payload.feature } : undefined,
+        })
+      );
     }
     throw new Error(message);
   }

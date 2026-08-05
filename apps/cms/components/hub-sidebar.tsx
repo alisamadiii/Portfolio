@@ -13,6 +13,7 @@ import {
   House,
   LogOut,
   Mail,
+  Megaphone,
   PenLine,
   Settings,
 } from "lucide-react";
@@ -61,6 +62,16 @@ const accountPages = [
     title: "Emails",
     url: "/emails",
     icon: Mail,
+  },
+  {
+    title: "Marketing",
+    url: "/marketing",
+    icon: Megaphone,
+    badge: (
+      <span className="bg-status-warning-bg text-status-warning rounded-full px-2 py-0.5 text-[10.5px] font-semibold">
+        Soon
+      </span>
+    ),
   },
 ];
 

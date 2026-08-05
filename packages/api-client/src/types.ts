@@ -387,3 +387,40 @@ export interface AdminHealthResult {
   timestamp: string;
   checks: Record<string, { ok: boolean; latencyMs: number; error?: string }>;
 }
+
+// ---- marketing ----
+
+export interface MarketingActRequest {
+  /** Admin keys only: act on behalf of this user (the campaign owner). */
+  userId?: string;
+}
+
+export interface MarketingSendResponse {
+  /** Campaign id (also the workflow instance id). */
+  id: string;
+  /** Snapshotted recipient count (includes pre-suppressed rows). */
+  recipients: number;
+}
+
+export interface MarketingTestResponse {
+  /** Provider message id of the test send. */
+  id: string;
+}
+
+export interface MarketingTransitionResponse {
+  id: string;
+  status: "paused" | "sending" | "canceled";
+}
+
+export interface MarketingSubscribeRequest {
+  /** Visitor's email address. */
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface MarketingSubscribeResponse {
+  /** Contact id in the owner's marketing list. */
+  id: string;
+  status: "subscribed";
+}
