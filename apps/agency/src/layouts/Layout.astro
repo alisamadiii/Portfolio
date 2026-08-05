@@ -17,6 +17,44 @@ interface Props {
 }
 
 const { title, description, robots = "index, follow", canonical, og, bodyClass } = Astro.props;
+
+const SITE = "https://agency.alisamadii.com";
+const OG_IMAGE = `${SITE}/og-image.png`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE}/#organization`,
+      name: "Ali Samadi Agency",
+      url: SITE,
+      logo: `${SITE}/icon-512.png`,
+      description:
+        "Creative agency specializing in brand identity, web development, and digital strategy.",
+      email: "agency@alisamadii.com",
+      telephone: "+19713828969",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Portland",
+        addressRegion: "OR",
+        addressCountry: "US",
+      },
+      sameAs: [
+        "https://x.com/alisamadii_",
+        "https://github.com/alisamadiii",
+        "https://www.linkedin.com/in/alireza17/",
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#website`,
+      url: SITE,
+      name: "Ali Samadi Agency",
+      publisher: { "@id": `${SITE}/#organization` },
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -29,16 +67,12 @@ const { title, description, robots = "index, follow", canonical, og, bodyClass }
     <meta name="author" content="Ali Samadi" />
     <meta name="robots" content={robots} />
 
-    <!-- Favicon -->
-    <link
-      rel="icon"
-      type="image/png"
-      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
-    />
+    <!-- Favicon / app icons -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#f6f5f3" />
 
     {
       og && (
@@ -47,25 +81,24 @@ const { title, description, robots = "index, follow", canonical, og, bodyClass }
           <meta property="og:title" content={og.title} />
           <meta property="og:description" content={og.description} />
           {og.url && <meta property="og:url" content={og.url} />}
-          <meta
-            property="og:image"
-            content="https://cdn.alisamadii.com/company/business-logo.png"
-          />
+          <meta property="og:image" content={OG_IMAGE} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content="Ali Samadi Agency logo" />
           <meta property="og:site_name" content="Ali Samadi Agency" />
 
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content={og.title} />
           <meta name="twitter:description" content={og.twitterDescription} />
-          <meta
-            name="twitter:image"
-            content="https://cdn.alisamadii.com/company/business-logo.png"
-          />
+          <meta name="twitter:image" content={OG_IMAGE} />
           <meta name="twitter:creator" content="@alisamadii_" />
         </>
       )
     }
 
     {canonical && <link rel="canonical" href={canonical} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

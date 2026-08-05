@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://agency.alisamadii.com/sitemap-index.xml

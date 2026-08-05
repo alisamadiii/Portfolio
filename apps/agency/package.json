@@ -12,7 +12,10 @@
     "astro": "^5.17.3"
   },
   "devDependencies": {
+    "@astrojs/sitemap": "^3.7.3",
     "@tailwindcss/vite": "^4.1.18",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.18"
   }
 }
