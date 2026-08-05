@@ -15,6 +15,8 @@ interface Props {
     description: string;
     url?: string;
     twitterDescription: string;
+    /** Per-page social image (absolute path); falls back to the site OG image. */
+    image?: string;
   };
   /** Extra JSON-LD @graph nodes for a page (e.g. BreadcrumbList, Service). */
   schema?: Record<string, unknown>[];
@@ -57,8 +59,8 @@ const jsonLd = {
       telephone: "+19713828969",
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Portland",
-        addressRegion: "OR",
+        addressLocality: "Jacksonville",
+        addressRegion: "FL",
         addressCountry: "US",
       },
       founder: { "@id": `${SITE}/#person-ali` },
@@ -119,16 +121,22 @@ const jsonLd = {
           <meta property="og:title" content={og.title} />
           <meta property="og:description" content={og.description} />
           {og.url && <meta property="og:url" content={og.url} />}
-          <meta property="og:image" content={OG_IMAGE} />
+          <meta
+            property="og:image"
+            content={og.image ? `${SITE}${og.image}` : OG_IMAGE}
+          />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
-          <meta property="og:image:alt" content="Ali Samadi Agency logo" />
+          <meta property="og:image:alt" content={og.title} />
           <meta property="og:site_name" content="Ali Samadi Agency" />
 
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content={og.title} />
           <meta name="twitter:description" content={og.twitterDescription} />
-          <meta name="twitter:image" content={OG_IMAGE} />
+          <meta
+            name="twitter:image"
+            content={og.image ? `${SITE}${og.image}` : OG_IMAGE}
+          />
           <meta name="twitter:creator" content="@alisamadii_" />
         </>
       )

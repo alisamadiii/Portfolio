@@ -1,0 +1,22 @@
+{
+  "process-hero": {
+    "name": "Negative Space",
+    "url": "https://www.pexels.com/@negativespace",
+    "pexelsUrl": "https://www.pexels.com/photo/iphone-dark-notebook-pen-34140/"
+  },
+  "discovery": {
+    "name": "Jakub Zerdzicki",
+    "url": "https://www.pexels.com/@jakubzerdzicki",
+    "pexelsUrl": "https://www.pexels.com/photo/creative-brainstorming-session-with-sticky-notes-29521529/"
+  },
+  "execution": {
+    "name": "Seraphfim Gallery",
+    "url": "https://www.pexels.com/@seraphfim",
+    "pexelsUrl": "https://www.pexels.com/photo/line-of-code-on-laptop-screen-27427258/"
+  },
+  "launch": {
+    "name": "Vlad Bagacian",
+    "url": "https://www.pexels.com/@vladbagacian",
+    "pexelsUrl": "https://www.pexels.com/photo/man-in-front-of-laptop-1604024/"
+  }
+}

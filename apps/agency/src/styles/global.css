@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --font-sans: "Geist Variable", "Geist", system-ui, sans-serif;
@@ -81,4 +82,50 @@
   html {
     scroll-behavior: auto;
   }
+}
+
+/* ── Blog prose (markdown post bodies) ──────────────────────────────
+   On-brand overrides for @tailwindcss/typography. */
+.prose {
+  --tw-prose-body: var(--color-warmgray);
+  --tw-prose-headings: var(--color-charcoal);
+  --tw-prose-lead: var(--color-warmgray);
+  --tw-prose-links: var(--color-charcoal);
+  --tw-prose-bold: var(--color-charcoal);
+  --tw-prose-counters: var(--color-muted);
+  --tw-prose-bullets: var(--color-accent);
+  --tw-prose-hr: rgba(27, 26, 23, 0.1);
+  --tw-prose-quotes: var(--color-charcoal);
+  --tw-prose-quote-borders: var(--color-accent);
+  --tw-prose-captions: var(--color-muted);
+  --tw-prose-code: var(--color-charcoal);
+  --tw-prose-pre-bg: var(--color-ink);
+  --tw-prose-pre-code: var(--color-cream);
+}
+.prose {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.prose h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 2.4em;
+}
+.prose h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.prose a {
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+.prose a:hover {
+  color: var(--color-accent);
+}
+.prose img {
+  border-radius: 16px;
+  border: 1px solid rgba(27, 26, 23, 0.08);
+  margin-top: 2.2em;
+  margin-bottom: 2.2em;
 }

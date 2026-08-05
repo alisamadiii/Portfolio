@@ -1,0 +1,32 @@
+{
+  "brand-identity": {
+    "name": "Leeloo The First",
+    "url": "https://www.pexels.com/@leeloothefirst",
+    "pexelsUrl": "https://www.pexels.com/photo/pictures-of-brand-strategy-and-design-7598019/"
+  },
+  "web-development": {
+    "name": "Lukas Blazek",
+    "url": "https://www.pexels.com/@goumbik",
+    "pexelsUrl": "https://www.pexels.com/photo/person-using-macbook-pro-574077/"
+  },
+  "ui-ux-design": {
+    "name": "picjumbo.com",
+    "url": "https://www.pexels.com/@picjumbo-com-55570",
+    "pexelsUrl": "https://www.pexels.com/photo/notebook-beside-the-iphone-on-table-196644/"
+  },
+  "seo-analytics": {
+    "name": "Negative Space",
+    "url": "https://www.pexels.com/@negativespace",
+    "pexelsUrl": "https://www.pexels.com/photo/blue-and-green-pie-chart-97080/"
+  },
+  "website-management": {
+    "name": "Julien Bachelet",
+    "url": "https://www.pexels.com/@julienblt",
+    "pexelsUrl": "https://www.pexels.com/photo/person-using-macbook-pro-891141/"
+  },
+  "custom-web-apps": {
+    "name": "ThisIsEngineering",
+    "url": "https://www.pexels.com/@thisisengineering",
+    "pexelsUrl": "https://www.pexels.com/photo/engineers-designing-app-3912478/"
+  }
+}
