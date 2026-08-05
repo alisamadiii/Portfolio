@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
   title: string;
@@ -106,6 +107,23 @@ const jsonLd = {
       href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+
+    <ClientRouter />
+    <!-- Loaded on every page: ClientRouter runs swapped-in external scripts
+         async, so a per-page include races the rerun inline scripts that
+         read PRICING/fmtPrice. Loading it here guarantees the globals exist
+         before any client-side navigation. -->
+    <script is:inline src="/pricing.js"></script>
+    <script is:inline>
+      // scroll-smooth would animate ClientRouter's scroll reset on every
+      // navigation — strip it during the swap, restore after.
+      document.addEventListener("astro:before-swap", (e) => {
+        e.newDocument.documentElement.classList.remove("scroll-smooth");
+      });
+      document.addEventListener("astro:page-load", () => {
+        document.documentElement.classList.add("scroll-smooth");
+      });
+    </script>
 
     <slot name="head" />
   </head>

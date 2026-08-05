@@ -9,6 +9,8 @@ export default defineConfig({
   // Flat dist/pricing.html etc. so Vercel clean URLs serve /pricing exactly
   // like the old static-directory deploy did (no trailing-slash change).
   build: { format: "file" },
+  // Next.js-Link-style speed: prefetch every internal link on hover.
+  prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   integrations: [
     sitemap({
       // onboarding is noindex — keep it out of the sitemap.

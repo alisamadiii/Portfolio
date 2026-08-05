@@ -930,7 +930,10 @@ import HomeFooter from "../components/HomeFooter.astro";
   </div>
 
   <!-- ==================== SCRIPTS ==================== -->
-  <script is:inline>
+  <!-- data-astro-rerun + IIFE: re-runs after every ClientRouter swap without
+       leaking top-level consts into the persistent global scope. -->
+  <script is:inline data-astro-rerun>
+    (() => {
     // Scroll reveal via IntersectionObserver
     function initReveals() {
       const observer = new IntersectionObserver(
@@ -1029,7 +1032,9 @@ import HomeFooter from "../components/HomeFooter.astro";
       update();
     }
 
-    setInterval(() => {
+    // Clear the previous visit's timer — it holds a detached element.
+    if (window.__scrambleTimer) clearInterval(window.__scrambleTimer);
+    window.__scrambleTimer = setInterval(() => {
       wordIndex = (wordIndex + 1) % words.length;
       scrambleTo(words[wordIndex]);
     }, 5000);
@@ -1114,6 +1119,7 @@ import HomeFooter from "../components/HomeFooter.astro";
           played.catch(() => wrap.remove());
         }
       }, 800);
+    })();
     })();
   </script>
 </Layout>

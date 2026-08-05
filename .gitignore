@@ -52,3 +52,4 @@ apps/motion/animations
 .dev.vars
 
 .playwright-mcp
+output

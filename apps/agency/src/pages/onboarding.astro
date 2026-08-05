@@ -9,7 +9,6 @@ import BackNav from "../components/BackNav.astro";
   robots="noindex, follow"
   bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent flex min-h-screen flex-col font-sans"
 >
-  <script is:inline src="/pricing.js" slot="head"></script>
 
   <!-- ==================== PROGRESS ==================== -->
   <div class="bg-charcoal/[0.06] fixed top-0 right-0 left-0 z-40 h-[3px]">
@@ -453,7 +452,10 @@ import BackNav from "../components/BackNav.astro";
   <div id="promoOverlay" class="promo-overlay"></div>
 
   <!-- ==================== JAVASCRIPT ==================== -->
-  <script is:inline>
+  <!-- data-astro-rerun + IIFE: re-runs after every ClientRouter swap without
+       leaking top-level consts into the persistent global scope. -->
+  <script is:inline data-astro-rerun>
+    (() => {
     // ─── STATE ───────────────────────────────────────────────────
 
     const STORAGE_KEY = "agency-onboarding";
@@ -766,15 +768,21 @@ import BackNav from "../components/BackNav.astro";
       goToStep(state.step - 1);
     });
 
-    document.addEventListener("keydown", (e) => {
+    // document survives ClientRouter swaps — drop the previous visit's
+    // handler or Enter fires once per visit.
+    if (window.__onboardingKeydown)
+      document.removeEventListener("keydown", window.__onboardingKeydown);
+    window.__onboardingKeydown = (e) => {
       if (
         e.key === "Enter" &&
         e.target.tagName !== "TEXTAREA" &&
         e.target.id !== "promoInput"
       ) {
-        document.getElementById("nextBtn").click();
+        const nextBtn = document.getElementById("nextBtn");
+        if (nextBtn) nextBtn.click();
       }
-    });
+    };
+    document.addEventListener("keydown", window.__onboardingKeydown);
 
     // ─── INPUT BINDING ───────────────────────────────────────────
 
@@ -988,6 +996,7 @@ import BackNav from "../components/BackNav.astro";
     renderPromoUI();
     currentStepEl().classList.add("active");
     render();
+    })();
   </script>
 </Layout>
 
