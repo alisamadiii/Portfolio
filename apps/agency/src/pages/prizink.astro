@@ -1,0 +1,768 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BackNav from "../components/BackNav.astro";
+import SimpleFooter from "../components/SimpleFooter.astro";
+---
+
+<Layout
+  title="Pricing — Ali Samadi | Creative Agency"
+  description="Simple, transparent pricing. Choose an all-inclusive monthly plan, a one-time upfront build, or a fully custom project — web design, hosting, CMS, and more."
+  og={{
+    title: "Pricing — Ali Samadi",
+    description:
+      "Simple, transparent pricing. Choose an all-inclusive monthly plan, a one-time upfront build, or a fully custom project.",
+    url: "https://agency.alisamadii.com/prizink",
+    twitterDescription:
+      "Simple, transparent pricing. All-inclusive monthly, upfront build, or fully custom.",
+  }}
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <script is:inline src="/pricing.js" slot="head"></script>
+
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <!-- ==================== HERO ==================== -->
+  <section id="heroSection" class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28">
+    <div class="stagger mx-auto max-w-[1400px]">
+      <div class="reveal">
+        <span
+          class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+          >Pricing</span
+        >
+      </div>
+      <h1
+        class="reveal text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+      >
+        Build Your<br />
+        <span class="text-accent">Project</span>
+      </h1>
+      <p
+        class="reveal text-warmgray mt-6 max-w-[55ch] text-base leading-relaxed md:text-lg"
+      >
+        Pick the plan that fits — an all-inclusive monthly plan, a one-time
+        upfront build with light monthly add-ons, or a fully custom project
+        scoped together.
+      </p>
+      <div class="reveal mt-8">
+        <div
+          class="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-5 py-2.5 ring-1 ring-emerald-200/60"
+        >
+          <svg
+            class="h-5 w-5 shrink-0 text-emerald-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+            />
+          </svg>
+          <span class="text-sm font-semibold text-emerald-800"
+            >1-Day Delivery</span
+          >
+          <span class="text-xs text-emerald-600/80"
+            >once your project is confirmed</span
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PLANS ==================== -->
+  <section
+    id="packageSelection"
+    class="border-charcoal/[0.06] border-t px-4 py-20 md:px-8 md:py-28"
+  >
+    <div class="mx-auto max-w-[1400px]">
+      <div class="stagger mb-12">
+        <div class="reveal">
+          <span
+            class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+            >Choose Your Path</span
+          >
+        </div>
+        <h2
+          class="reveal mt-2 text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          How Would You Like<br />to
+          <span class="text-accent">Get Started</span>?
+        </h2>
+        <p
+          class="reveal text-warmgray mt-4 max-w-[55ch] text-base leading-relaxed"
+        >
+          Go all-inclusive with a managed monthly plan, own your build with a
+          one-time payment, or reach out for something fully custom.
+        </p>
+      </div>
+
+      <div class="stagger grid grid-cols-1 gap-6 md:grid-cols-3">
+        <!-- Monthly Card -->
+        <div class="reveal">
+          <div
+            class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
+          >
+            <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+              <div class="mb-6 flex items-center gap-3">
+                <span
+                  class="bg-accent inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-white uppercase"
+                  >Recommended</span
+                >
+              </div>
+              <h3 class="text-2xl font-semibold tracking-[-0.02em]">Monthly</h3>
+              <div class="mt-3">
+                <span class="price-monthly text-3xl font-bold tracking-tight"
+                ></span>
+                <span class="text-warmgray text-base font-normal">/mo</span>
+              </div>
+              <p
+                class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
+              >
+                Everything included, one flat price — design, development, CMS,
+                email, SEO, and hosting. Fully managed for you.
+              </p>
+              <ul class="text-warmgray mt-6 space-y-3 text-sm">
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Custom design &amp; development
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Full CMS access — edit anything
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Email &amp; contact forms included
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  SEO &amp; analytics setup
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Managed hosting &amp; maintenance
+                </li>
+              </ul>
+              <div class="mt-auto pt-8">
+                <button
+                  id="monthlyStartBtn"
+                  onclick="startMonthly()"
+                  class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span id="monthlyStartLabel">Start</span>
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upfront Card -->
+        <div class="reveal">
+          <div
+            class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
+          >
+            <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+              <div class="mb-6 flex items-center gap-3">
+                <span
+                  class="bg-charcoal/5 text-warmgray inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+                  >One-time</span
+                >
+              </div>
+              <h3 class="text-2xl font-semibold tracking-[-0.02em]">Upfront</h3>
+              <div class="mt-3">
+                <span class="text-warmgray text-xs">from</span>
+                <span class="price-upfront text-3xl font-bold tracking-tight"
+                ></span>
+                <span class="text-warmgray ml-1 text-xs">one-time</span>
+              </div>
+              <p class="price-upfront-extra text-warmgray mt-1 text-xs"></p>
+              <p
+                class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
+              >
+                Pay once for your website — design, development, and SEO
+                included. Add pages anytime. Keep it running with light monthly
+                add-ons.
+              </p>
+              <ul class="text-warmgray mt-6 space-y-3 text-sm">
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Custom design &amp; development
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span
+                    >1 page included — add more anytime
+                    <span class="text-muted block text-xs"
+                      >Terms &amp; privacy pages free</span
+                    ></span
+                  >
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  SEO &amp; analytics included
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span
+                    >Managed hosting
+                    <span class="price-hosting-note text-charcoal font-medium"
+                    ></span
+                  ></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span
+                    >Optional CMS access
+                    <span class="price-cms-note text-charcoal font-medium"
+                    ></span
+                  ></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span class="email-note"></span>
+                </li>
+              </ul>
+              <div class="mt-auto pt-8">
+                <a
+                  href="/onboarding"
+                  class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300"
+                >
+                  Start
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Card -->
+        <div class="reveal">
+          <div
+            class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
+          >
+            <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+              <div class="mb-6 flex items-center gap-3">
+                <span
+                  class="bg-charcoal/5 text-warmgray inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+                  >Tailored</span
+                >
+              </div>
+              <h3 class="text-2xl font-semibold tracking-[-0.02em]">Custom</h3>
+              <div class="mt-3">
+                <span class="text-3xl font-bold tracking-tight">Let's talk</span
+                >
+              </div>
+              <p
+                class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed"
+              >
+                Bigger scope? Admin panels, user accounts, databases, or
+                something unique — we scope it together and quote it fairly.
+              </p>
+              <ul class="text-warmgray mt-6 space-y-3 text-sm">
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Fully bespoke scope
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Admin panel, auth &amp; database available
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  One-time and recurring options
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="text-accent mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Personal quote, no surprises
+                </li>
+              </ul>
+              <div class="mt-auto pt-8">
+                <a
+                  href="/#contact"
+                  class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300"
+                >
+                  Contact Us
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <SimpleFooter />
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script is:inline>
+    // ─── PRICE INJECTION (from pricing.js) ───────────────────────
+
+    document.querySelectorAll(".price-monthly").forEach((el) => {
+      el.textContent = fmtPrice(PRICING.monthly);
+    });
+    document.querySelectorAll(".price-upfront").forEach((el) => {
+      el.textContent = fmtPrice(PRICING.upfront.basePrice);
+    });
+    document.querySelectorAll(".price-upfront-extra").forEach((el) => {
+      el.textContent = `+ ${fmtPrice(PRICING.upfront.perExtraPage)} per extra page`;
+    });
+    document.querySelectorAll(".price-hosting-note").forEach((el) => {
+      el.textContent = `— ${fmtPrice(PRICING.hosting)}/mo`;
+    });
+    document.querySelectorAll(".price-cms-note").forEach((el) => {
+      el.textContent = `— ${fmtPrice(PRICING.cms)}/mo`;
+    });
+    document.querySelectorAll(".email-note").forEach((el) => {
+      el.textContent = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
+    });
+
+    // ─── ACTIONS ─────────────────────────────────────────────────
+
+    const startMonthly = async () => {
+      const btn = document.getElementById("monthlyStartBtn");
+      const label = document.getElementById("monthlyStartLabel");
+      btn.disabled = true;
+      label.textContent = "Redirecting…";
+      try {
+        await createCheckout({ plan: "monthly" });
+      } catch (e) {
+        btn.disabled = false;
+        label.textContent = "Start";
+        alert("Something went wrong starting checkout. Please try again.");
+      }
+    };
+
+    // ─── SCROLL REVEAL OBSERVER ──────────────────────────────────
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-60px" }
+    );
+
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  </script>
+
+  <!-- Disclaimer Dialog -->
+  <div id="disclaimerBackdrop" class="disclaimer-backdrop hidden">
+    <div class="disclaimer-dialog">
+      <h2
+        style="
+          font-size: 1.875rem;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+          color: #1a1a1a;
+          max-width: 20ch;
+        "
+      >
+        You pay per page.<br />$500 base, $200 each after.
+      </h2>
+      <p
+        style="
+          margin-top: 1rem;
+          font-size: 0.875rem;
+          line-height: 1.7;
+          color: #8a8577;
+          max-width: 45ch;
+        "
+      >
+        A page is anything with its own address — Home, About, Contact, and so
+        on; a long scrolling page still counts as one. Your first page is $500,
+        and each page after that is $200. Terms &amp; privacy pages are always
+        free and don't count. You confirm the final page count at checkout
+        before any work begins.
+      </p>
+      <button id="disclaimerBtn" class="disclaimer-btn">
+        <div id="disclaimerFill" class="disclaimer-btn-fill"></div>
+        <span class="disclaimer-btn-label">I understand</span>
+      </button>
+    </div>
+  </div>
+
+  <script is:inline>
+    (function () {
+      if (localStorage.getItem("estimate_disclaimer_seen")) return;
+
+      const backdrop = document.getElementById("disclaimerBackdrop");
+      const btn = document.getElementById("disclaimerBtn");
+      const fill = document.getElementById("disclaimerFill");
+
+      setTimeout(() => {
+        backdrop.classList.remove("hidden");
+        backdrop.offsetHeight;
+        backdrop.classList.add("visible");
+        fill.classList.add("animate");
+
+        // Enable button after fill animation (2s)
+        setTimeout(() => {
+          btn.classList.add("ready");
+        }, 2000);
+      }, 2000);
+
+      function dismiss() {
+        if (!btn.classList.contains("ready")) return;
+        backdrop.classList.remove("visible");
+        setTimeout(() => {
+          backdrop.classList.add("hidden");
+        }, 600);
+        localStorage.setItem("estimate_disclaimer_seen", "true");
+      }
+
+      btn.addEventListener("click", dismiss);
+    })();
+  </script>
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  /* Stagger children */
+  .stagger > .reveal:nth-child(1) {
+    transition-delay: 0ms;
+  }
+  .stagger > .reveal:nth-child(2) {
+    transition-delay: 120ms;
+  }
+  .stagger > .reveal:nth-child(3) {
+    transition-delay: 240ms;
+  }
+  .stagger > .reveal:nth-child(4) {
+    transition-delay: 360ms;
+  }
+  .stagger > .reveal:nth-child(5) {
+    transition-delay: 480ms;
+  }
+
+  /* Magnetic button */
+  .mag-btn {
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .mag-btn:active {
+    transform: scale(0.97);
+  }
+
+  /* Package cards */
+  .package-card {
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .package-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Estimate disclaimer dialog */
+  .disclaimer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .disclaimer-backdrop.visible {
+    opacity: 1;
+  }
+  .disclaimer-backdrop.hidden {
+    pointer-events: none;
+    display: none;
+  }
+  .disclaimer-dialog {
+    max-width: 480px;
+    width: calc(100% - 2rem);
+    background: white;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 2rem;
+    position: relative;
+    transform: scale(0.96) translateY(10px);
+    transition: transform 0.7s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .disclaimer-backdrop.visible .disclaimer-dialog {
+    transform: scale(1) translateY(0);
+  }
+  .disclaimer-btn {
+    position: relative;
+    width: 100%;
+    height: 48px;
+    margin-top: 1.5rem;
+    border-radius: 9999px;
+    border: none;
+    background: rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.4s ease;
+  }
+  .disclaimer-btn.ready {
+    cursor: pointer;
+    background: #fc8464;
+  }
+  .disclaimer-btn.ready:hover {
+    background: #e0734f;
+  }
+  .disclaimer-btn-label {
+    position: relative;
+    z-index: 1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    opacity: 0.4;
+    transition: opacity 0.3s ease;
+  }
+  .disclaimer-btn.ready .disclaimer-btn-label {
+    opacity: 1;
+    color: white;
+  }
+  .disclaimer-btn-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 9999px;
+  }
+  .disclaimer-btn-fill.animate {
+    animation: slide-fill 2s linear forwards;
+  }
+  @keyframes slide-fill {
+    to {
+      width: 100%;
+    }
+  }
+</style>

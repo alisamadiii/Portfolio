@@ -1,0 +1,5 @@
+{
+  "framework": "astro",
+  "cleanUrls": true,
+  "trailingSlash": false
+}

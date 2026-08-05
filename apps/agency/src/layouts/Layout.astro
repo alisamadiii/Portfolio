@@ -1,0 +1,83 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  robots?: string;
+  canonical?: string;
+  /** Rendered only when set — onboarding has no OG/Twitter block. */
+  og?: {
+    title: string;
+    description: string;
+    url?: string;
+    twitterDescription: string;
+  };
+  bodyClass: string;
+}
+
+const { title, description, robots = "index, follow", canonical, og, bodyClass } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Ali Samadi" />
+    <meta name="robots" content={robots} />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
+    />
+
+    {
+      og && (
+        <>
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={og.title} />
+          <meta property="og:description" content={og.description} />
+          {og.url && <meta property="og:url" content={og.url} />}
+          <meta
+            property="og:image"
+            content="https://cdn.alisamadii.com/company/business-logo.png"
+          />
+          <meta property="og:site_name" content="Ali Samadi Agency" />
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={og.title} />
+          <meta name="twitter:description" content={og.twitterDescription} />
+          <meta
+            name="twitter:image"
+            content="https://cdn.alisamadii.com/company/business-logo.png"
+          />
+          <meta name="twitter:creator" content="@alisamadii_" />
+        </>
+      )
+    }
+
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <slot name="head" />
+  </head>
+
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>

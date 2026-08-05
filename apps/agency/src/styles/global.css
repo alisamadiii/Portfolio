@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --color-cream: #f6f5f3;
+  --color-charcoal: #1b1a17;
+  --color-warmgray: #6f6a63;
+  --color-muted: #8a847c;
+  --color-ink: #171512;
+  --color-accent: #fc8464;
+}
+
+/* Fire hover styles on touch devices too, like Tailwind v3 did — the pages
+   were built against the Play CDN (v3 engine). */
+@custom-variant hover (&:hover);
+
+/* ── Tailwind v3 (Play CDN) parity ──────────────────────────────────
+   The markup was written against v3 defaults; v4 changed these. */
+@layer base {
+  /* v3 default border color (v4 defaults to currentColor). */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+  /* v3 gave buttons a pointer cursor (v4 defaults to cursor: default). */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* v3 placeholder color (v4 uses currentColor at 50% opacity). */
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+}
+
+/* ── Shared page CSS (identical in every page's old inline <style>) ── */
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Noise overlay */
+.noise::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Scroll reveal (index + prizink; onboarding has no .reveal elements) */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  filter: blur(8px);
+  transition: all 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}

@@ -1,5 +1,5 @@
 /**
- * Sync agency prices from Stripe → apps/agency/pricing.js
+ * Sync agency prices from Stripe → apps/agency/public/pricing.js
  *
  *   pnpm sync:agency-prices        (from repo root)
  *   tsx packages/trpc/scripts/sync-agency-prices.ts
@@ -63,7 +63,7 @@ async function main() {
     if (price.lookup_key) byKey.set(price.lookup_key, price);
   }
 
-  const pricingPath = resolve(repoRoot, "apps/agency/pricing.js");
+  const pricingPath = resolve(repoRoot, "apps/agency/public/pricing.js");
   let source = readFileSync(pricingPath, "utf8");
 
   const missing: string[] = [];
@@ -95,7 +95,7 @@ async function main() {
 
   writeFileSync(pricingPath, source);
 
-  console.log("\nUpdated apps/agency/pricing.js from Stripe:");
+  console.log("\nUpdated apps/agency/public/pricing.js from Stripe:");
   console.log(idLog.join("\n"));
   console.log(
     "\nPaste the one-time price IDs into checkouts/route.ts PRICE_IDS " +
