@@ -36,8 +36,8 @@ const jsonLd = {
       telephone: "+19713828969",
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Jacksonville",
-        addressRegion: "FL",
+        addressLocality: "Portland",
+        addressRegion: "OR",
         addressCountry: "US",
       },
       sameAs: [
@@ -112,14 +112,5 @@ const jsonLd = {
 
   <body class={bodyClass}>
     <slot />
-    <!-- CMS live-preview bridge — fetched only inside the CMS preview iframe.
-         Gate client-side: static pages have no query params at render time. -->
-    <script is:inline>
-      if (new URLSearchParams(location.search).has("cms-preview")) {
-        var s = document.createElement("script");
-        s.src = "/cms-preview.js";
-        document.head.appendChild(s);
-      }
-    </script>
   </body>
 </html>
