@@ -9,6 +9,11 @@
     "url": "https://www.pexels.com/@jakubzerdzicki",
     "pexelsUrl": "https://www.pexels.com/photo/creative-brainstorming-session-with-sticky-notes-29521529/"
   },
+  "strategy": {
+    "name": "picjumbo.com",
+    "url": "https://www.pexels.com/@picjumbo-com-55570",
+    "pexelsUrl": "https://www.pexels.com/photo/white-printer-paper-196645/"
+  },
   "execution": {
     "name": "Seraphfim Gallery",
     "url": "https://www.pexels.com/@seraphfim",
@@ -18,5 +23,10 @@
     "name": "Vlad Bagacian",
     "url": "https://www.pexels.com/@vladbagacian",
     "pexelsUrl": "https://www.pexels.com/photo/man-in-front-of-laptop-1604024/"
+  },
+  "timeline": {
+    "name": "Michaela",
+    "url": "https://www.pexels.com/@michaela-87369",
+    "pexelsUrl": "https://www.pexels.com/photo/flat-lay-photography-of-unfold-book-beside-macbook-295826/"
   }
 }

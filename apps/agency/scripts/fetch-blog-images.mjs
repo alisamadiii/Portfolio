@@ -29,8 +29,10 @@ if (!KEY) {
 const QUERIES = {
   "process-hero": "web designer workspace desk laptop",
   discovery: "planning notes sticky notes strategy meeting",
+  strategy: "wireframe sketch ux design planning paper",
   execution: "programmer code editor screen closeup",
   launch: "person using laptop website happy office",
+  timeline: "calendar clock deadline planning desk",
 };
 
 await mkdir(resolve(appRoot, "public/blog"), { recursive: true });
