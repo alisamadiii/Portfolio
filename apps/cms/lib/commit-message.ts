@@ -116,4 +116,52 @@ const resolveCommitMessage = ({
     .slice(0, 200);
 };
 
-export { buildCommitTokens, resolveCommitIdentity, resolveCommitMessage };
+const resolveBatchCommitMessage = ({
+  configObject,
+  files,
+  owner,
+  repo,
+  branch,
+  user,
+  userName,
+  userEmail,
+}: {
+  configObject?: Record<string, any>;
+  files: Array<{ path: string; isNew?: boolean; contentName?: string }>;
+  owner: string;
+  repo: string;
+  branch: string;
+  user?: string;
+  userName?: string;
+  userEmail?: string;
+}): string => {
+  if (files.length === 1) {
+    const file = files[0];
+    return resolveCommitMessage({
+      configObject,
+      action: file.isNew ? "create" : "update",
+      tokens: buildCommitTokens({
+        action: file.isNew ? "create" : "update",
+        owner,
+        repo,
+        branch,
+        path: file.path,
+        contentName: file.contentName,
+        user,
+        userName,
+        userEmail,
+      }),
+    });
+  }
+
+  const title = `Publish ${files.length} files (via Pages CMS)`;
+  const body = files.map((file) => `- ${normalizePath(file.path)}`).join("\n");
+  return `${title}\n\n${body}`;
+};
+
+export {
+  buildCommitTokens,
+  resolveCommitIdentity,
+  resolveCommitMessage,
+  resolveBatchCommitMessage,
+};

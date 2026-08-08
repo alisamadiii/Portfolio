@@ -12,12 +12,27 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { EllipsisVertical, Lock, LockOpen, Save } from "lucide-react";
-import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import {
+  EllipsisVertical,
+  FileClock,
+  Lock,
+  LockOpen,
+  Save,
+  TriangleAlert,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import type { ApiSuccess, EntryData } from "@/types/api";
+import type { Field } from "@/types/field";
 
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,16 +81,23 @@ import {
 } from "@workspace/ui/components/tooltip";
 
 import { requireApiSuccess } from "@/lib/api-client";
-import { invalidateUrlKeys } from "@/lib/query";
 import { parseAndValidateConfig } from "@/lib/config";
+import { computeEntryDiff } from "@/lib/entry-diff";
 import { resolveContentOperations } from "@/lib/operations";
 import { getPreviewUrl } from "@/lib/preview";
+import { invalidateUrlKeys } from "@/lib/query";
 import {
   generateFilename,
   getPrimaryField,
   getSchemaByName,
   safeAccess,
 } from "@/lib/schema";
+import {
+  draftKey,
+  listDraftEntries,
+  saveDraftOrThrow,
+  useDraftsStore,
+} from "@/lib/store/drafts";
 import {
   getFileExtension,
   getFileName,
@@ -84,20 +106,28 @@ import {
   joinPathSegments,
   normalizePath,
 } from "@/lib/utils/file";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
 import { MediaLibraryProvider } from "@/components/media/media-library-panel";
+import { PublishButton } from "@/components/publish/publish-button";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
+import {
+  ChangedFieldsProvider,
+  type ChangedFieldsMap,
+} from "./changed-fields-context";
 import { EntryForm } from "./entry-form";
 import { PreviewPanel } from "./preview-panel";
 
-// Shown once per browser the first time a user saves — see the save gate below.
-const SAVE_EDU_KEY = "cms:save-education-ack";
+// Shown once per browser the first time a user saves a draft — see the save
+// gate below. Replaces the old "cms:save-education-ack" so existing users see
+// the new draft model explained once.
+const DRAFT_EDU_KEY = "cms:draft-education-ack";
 function readSaveEduAck() {
   if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(SAVE_EDU_KEY) === "1";
+  return window.localStorage.getItem(DRAFT_EDU_KEY) === "1";
 }
 
 type LintView = {
@@ -146,6 +176,17 @@ export function Entry({
   const [hasRegisteredChanges, setHasRegisteredChanges] = useState(false);
   const [error, setError] = useState<string | undefined | null>(null);
   const changeVersionRef = useRef(0);
+  // Bumped after a successful draft save so EntryForm can mark itself clean.
+  const [formResetSignal, setFormResetSignal] = useState(0);
+  // For new entries: draft path is fixed on first save and reused after.
+  const [newEntryDraftPath, setNewEntryDraftPath] = useState<
+    string | undefined
+  >();
+  // Drafts live in localStorage — only read them after hydration.
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
+
+  const isSettings = path === ".pages.yml" || initialPath === ".pages.yml";
 
   // First-save education dialog (once per browser).
   const [saveEduAcked, setSaveEduAcked] = useState(readSaveEduAck);
@@ -241,7 +282,60 @@ export function Entry({
     [config, name, path, entry]
   );
 
+  const drafts = useDraftsStore((state) => state.drafts);
+  const deleteDraft = useDraftsStore((state) => state.deleteDraft);
+
+  // The draft shown for this editor: the entry's own path, or — on /new —
+  // the path fixed at first save, falling back to the most recent unpublished
+  // new-entry draft for this collection (restore offer).
+  const activeDraftPath = useMemo(() => {
+    if (isSettings || !isMounted) return undefined;
+    if (path) return path;
+    if (newEntryDraftPath) return newEntryDraftPath;
+    if (schemaType !== "collection" || !schema) return undefined;
+    const basePath = parent ?? schema.path;
+    if (basePath == null) return undefined;
+    const normalizedBase = normalizePath(basePath);
+    const candidates = listDraftEntries(
+      drafts,
+      config.owner,
+      config.repo,
+      config.branch
+    ).filter(
+      ([, draft]) =>
+        draft.isNew &&
+        draft.schemaName === name &&
+        normalizePath(getParentPath(draft.path)) === normalizedBase
+    );
+    return candidates[0]?.[1].path;
+  }, [
+    config.branch,
+    config.owner,
+    config.repo,
+    drafts,
+    isMounted,
+    isSettings,
+    name,
+    newEntryDraftPath,
+    parent,
+    path,
+    schema,
+    schemaType,
+  ]);
+
+  const activeDraftKey = activeDraftPath
+    ? draftKey(config.owner, config.repo, config.branch, activeDraftPath)
+    : undefined;
+  const activeDraft = activeDraftKey ? drafts[activeDraftKey] : undefined;
+
   const entryContentObject = useMemo(() => {
+    // A local draft takes precedence over the published content; discarding
+    // it (deleteDraft) flips this memo back to the server side.
+    if (activeDraft) {
+      return schema?.list === true
+        ? { listWrapper: activeDraft.values as unknown }
+        : (activeDraft.values as Record<string, unknown>);
+    }
     return path
       ? schema?.list === true
         ? { listWrapper: entry?.contentObject }
@@ -249,7 +343,39 @@ export function Entry({
       : schema?.list === true
         ? { listWrapper: [] }
         : { ...(initialValues ?? {}) };
-  }, [schema, entry, path, initialValues]);
+  }, [activeDraft, schema, entry, path, initialValues]);
+
+  // Field paths changed by the restored draft vs the published content —
+  // drives the amber per-field indicators inside the form.
+  const changedFieldsMap = useMemo<ChangedFieldsMap | null>(() => {
+    if (!activeDraft || isSettings) return null;
+    if (path && !entry) return null;
+    const serverSide = path
+      ? schema?.list === true
+        ? { listWrapper: entry?.contentObject }
+        : ((entry?.contentObject ?? {}) as Record<string, unknown>)
+      : schema?.list === true
+        ? { listWrapper: [] }
+        : { ...(initialValues ?? {}) };
+    const draftSide =
+      schema?.list === true
+        ? { listWrapper: activeDraft.values as unknown }
+        : (activeDraft.values as Record<string, unknown>);
+    const rows = computeEntryDiff(
+      entryFields as Field[],
+      serverSide as Record<string, unknown>,
+      draftSide as Record<string, unknown>
+    );
+    return new Map(rows.map((row) => [row.fieldPath, { old: row.old }]));
+  }, [
+    activeDraft,
+    entry,
+    entryFields,
+    initialValues,
+    isSettings,
+    path,
+    schema,
+  ]);
 
   useEffect(() => {
     if (!showFilenameField || schemaType !== "collection" || !schema) return;
@@ -349,6 +475,34 @@ export function Entry({
     filenameValue.trim().length > 0 &&
     filenameValue.trim() !== currentFilename;
 
+  // Move a draft to a new path after a rename (renames commit immediately).
+  const rekeyDraft = useCallback(
+    (oldPath: string, newPath: string) => {
+      const store = useDraftsStore.getState();
+      const oldKey = draftKey(
+        config.owner,
+        config.repo,
+        config.branch,
+        oldPath
+      );
+      const existing = store.drafts[oldKey];
+      if (!existing) return;
+      store.deleteDraft(oldKey);
+      store.setDraft(
+        draftKey(config.owner, config.repo, config.branch, newPath),
+        { ...existing, path: newPath }
+      );
+    },
+    [config.branch, config.owner, config.repo]
+  );
+
+  const discardDraft = useCallback(() => {
+    if (!activeDraftKey) return;
+    deleteDraft(activeDraftKey);
+    if (!path) setNewEntryDraftPath(undefined);
+  }, [activeDraftKey, deleteDraft, path]);
+
+  // Direct-commit save — settings (.pages.yml) only; content goes to drafts.
   const performSave = async (contentObject: Record<string, unknown>) => {
     setIsSaving(true);
     const submitStartChangeVersion = changeVersionRef.current;
@@ -482,6 +636,8 @@ export function Entry({
       await savePromise;
       if (submitStartChangeVersion === changeVersionRef.current) {
         setHasRegisteredChanges(false);
+        // Mark the form clean so the unsaved-changes guard stands down.
+        setFormResetSignal((prev) => prev + 1);
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -494,19 +650,166 @@ export function Entry({
     }
   };
 
+  // Local draft save — replaces the network save for all content entries.
+  const performSaveDraft = async (contentObject: Record<string, unknown>) => {
+    setIsSaving(true);
+    const submitStartChangeVersion = changeVersionRef.current;
+
+    try {
+      let savePath =
+        path ??
+        newEntryDraftPath ??
+        (activeDraft?.isNew ? activeDraft.path : undefined);
+      const trimmedFilename = filenameValue.trim();
+      const normalizedFilename =
+        normalizePath(trimmedFilename).split("/").pop() || "";
+
+      if (showFilenameField && !normalizedFilename) {
+        throw new Error("Filename is required.");
+      }
+
+      if (!path) {
+        // New entry: draft only, no navigation — the file doesn't exist on
+        // GitHub yet. The generated path is fixed on first save and reused.
+        if (!schema) throw new Error("Cannot create entry without schema.");
+        if (!canCreate)
+          throw new Error(
+            "Creating entries in this content item isn't allowed."
+          );
+        const basePath = parent ?? schema.path;
+        if (basePath == null)
+          throw new Error("Cannot create entry without a target path.");
+        const previousDraftPath = savePath;
+        if (showFilenameField) {
+          savePath = joinPathSegments([basePath, normalizedFilename]);
+        } else if (!savePath) {
+          savePath = joinPathSegments([
+            basePath,
+            generateFilename(schema.filename, schema, contentObject),
+          ]);
+        }
+        if (previousDraftPath && previousDraftPath !== savePath) {
+          // Filename edited between draft saves — move the draft.
+          deleteDraft(
+            draftKey(
+              config.owner,
+              config.repo,
+              config.branch,
+              previousDraftPath
+            )
+          );
+        }
+      } else if (filenameChanged && !canRename && schemaType === "collection") {
+        throw new Error("Renaming this entry isn't allowed.");
+      } else if (
+        showFilenameField &&
+        filenameFieldMode === "enabled" &&
+        isFilenameUnlocked &&
+        filenameChanged &&
+        schemaType === "collection"
+      ) {
+        // Renames stay immediate (existing route); the draft is re-keyed.
+        const newPath = joinPathSegments([
+          getParentPath(savePath!),
+          normalizedFilename,
+        ]);
+        const renameResponse = await fetch(
+          `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(savePath!)}/rename`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "content",
+              name,
+              newPath,
+            }),
+          }
+        );
+        await requireApiSuccess<any>(renameResponse, "Failed to rename file");
+        rekeyDraft(savePath!, newPath);
+        savePath = newPath;
+        setPath(newPath);
+        setIsFilenameUnlocked(false);
+        router.replace(
+          `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
+        );
+
+        const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
+        void invalidateUrlKeys(queryClient, (url) =>
+          url.startsWith(collectionKeyPrefix)
+        );
+      }
+
+      if (!savePath) throw new Error("Cannot resolve a path for this draft.");
+
+      // Exactly what the files POST sends as `content` (list-unwrapped), so
+      // the publish payload matches single-file save semantics.
+      const values = (
+        schema?.list === true ? contentObject.listWrapper : contentObject
+      ) as Record<string, unknown>;
+
+      let draftTitle: string | undefined;
+      if (schema && schema.type === "collection" && schema.list !== true) {
+        const primaryField = getPrimaryField(schema);
+        const primaryValue = primaryField
+          ? safeAccess(contentObject, primaryField)
+          : undefined;
+        if (typeof primaryValue === "string" && primaryValue !== "") {
+          draftTitle = primaryValue;
+        }
+      }
+
+      saveDraftOrThrow(
+        draftKey(config.owner, config.repo, config.branch, savePath),
+        {
+          v: 1,
+          path: savePath,
+          schemaName: name,
+          sha: sha ?? null,
+          isNew: !path,
+          values,
+          savedAt: Date.now(),
+          title: draftTitle,
+        }
+      );
+
+      if (!path) setNewEntryDraftPath(savePath);
+
+      toast.success("Draft saved on this device");
+
+      if (submitStartChangeVersion === changeVersionRef.current) {
+        setHasRegisteredChanges(false);
+        setFormResetSignal((prev) => prev + 1);
+      }
+    } catch (error: unknown) {
+      // Quota or validation error: keep the form dirty so nothing is lost.
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save draft."
+      );
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // First save in this browser: educate before saving. RHF has already validated
   // by the time this runs, so the captured values are safe to save later verbatim.
   const onSubmit = async (contentObject: Record<string, unknown>) => {
+    if (isSettings) {
+      // Settings drive app config — they keep the direct-commit path.
+      await performSave(contentObject);
+      return;
+    }
     if (!saveEduAcked) {
       pendingSaveRef.current = contentObject;
       setSaveEduOpen(true);
       return;
     }
-    await performSave(contentObject);
+    await performSaveDraft(contentObject);
   };
 
   const ackSaveEdu = () => {
-    window.localStorage.setItem(SAVE_EDU_KEY, "1");
+    window.localStorage.setItem(DRAFT_EDU_KEY, "1");
     setSaveEduAcked(true);
   };
   const confirmSaveEdu = () => {
@@ -514,7 +817,7 @@ export function Entry({
     setSaveEduOpen(false);
     const pending = pendingSaveRef.current;
     pendingSaveRef.current = null;
-    if (pending) void performSave(pending);
+    if (pending) void performSaveDraft(pending);
   };
   const dismissSaveEdu = () => {
     ackSaveEdu();
@@ -542,6 +845,9 @@ export function Entry({
     window.addEventListener("keydown", handleSaveShortcut);
     return () => window.removeEventListener("keydown", handleSaveShortcut);
   }, [isBusy]);
+
+  // Guard only unsaved edits — a saved-but-unpublished draft must not guard.
+  useUnsavedChangesGuard(isFormDirty || hasRegisteredChanges);
 
   const handleDelete = useCallback(
     (path: string) => {
@@ -587,6 +893,7 @@ export function Entry({
         // switch keys via setPath, so no refetch is needed.
         queryClient.removeQueries({ queryKey: [entryApiUrl] });
       }
+      rekeyDraft(oldPath, newPath);
       setPath(newPath);
       router.replace(
         `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
@@ -599,6 +906,7 @@ export function Entry({
       entryApiUrl,
       name,
       queryClient,
+      rekeyDraft,
       router,
       schemaType,
     ]
@@ -824,6 +1132,7 @@ export function Entry({
               <Save className="size-4 sm:hidden" />
               <span className="hidden sm:inline">Save</span>
             </Button>
+            <PublishButton />
             {path && (
               <ButtonGroup>
                 {sha ? (
@@ -1049,11 +1358,59 @@ export function Entry({
         changeVersionRef.current += 1;
         setHasRegisteredChanges(true);
       }}
+      resetSignal={formResetSignal}
     />
   );
 
+  const isDraftStale = Boolean(
+    activeDraft &&
+    path &&
+    entry &&
+    (activeDraft.sha ?? null) !== (entry.sha ?? null)
+  );
+
+  const draftBannerNode =
+    activeDraft && !isLoading ? (
+      <div className="mx-auto w-full max-w-screen-md px-5 pt-5 md:px-6 md:pt-6">
+        <Alert
+          className={
+            isDraftStale
+              ? "border-amber-500/50 *:[svg]:text-amber-500"
+              : undefined
+          }
+        >
+          {isDraftStale ? (
+            <TriangleAlert className="size-4" />
+          ) : (
+            <FileClock className="size-4" />
+          )}
+          <AlertTitle>Draft restored from this device</AlertTitle>
+          <AlertDescription>
+            Saved{" "}
+            {formatDistanceToNow(new Date(activeDraft.savedAt), {
+              addSuffix: true,
+            })}
+            .
+            {isDraftStale &&
+              " The published version changed since this draft was saved."}
+          </AlertDescription>
+          <AlertAction>
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              onClick={discardDraft}
+            >
+              Discard draft
+            </Button>
+          </AlertAction>
+        </Alert>
+      </div>
+    ) : null;
+
   const formNode = (
-    <>
+    <ChangedFieldsProvider value={changedFieldsMap}>
+      {draftBannerNode}
       {entryBody}
       <AlertDialog
         open={saveEduOpen}
@@ -1065,20 +1422,21 @@ export function Entry({
           <AlertDialogHeader>
             <AlertDialogTitle>Before you save</AlertDialogTitle>
             <AlertDialogDescription>
-              Save publishes this page&apos;s changes. Finish all your edits on
-              this page first, then click Save.
+              Save keeps your changes as a draft on this device — nothing goes
+              live yet.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <ul className="text-muted-foreground list-disc space-y-1.5 pl-5 text-sm">
             <li>
               <span className="text-foreground font-medium">
-                Unsaved edits are lost if you switch to another page.
+                Drafts stay on this device only.
               </span>{" "}
-              Each page saves on its own — always Save before leaving.
+              Teammates and the live site can&apos;t see them, and they&apos;re
+              lost if your browser data is cleared.
             </li>
             <li>
-              After you save, your changes go live on the site in about 10–20
-              seconds.
+              When you&apos;re ready, Publish reviews all your drafts and pushes
+              them live in one update.
             </li>
             <li>You&apos;ll only see this message once.</li>
           </ul>
@@ -1087,12 +1445,12 @@ export function Entry({
               Not now
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmSaveEdu}>
-              Got it — save
+              Got it — save draft
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </ChangedFieldsProvider>
   );
 
   // Live preview only makes sense for an existing content entry with a page.

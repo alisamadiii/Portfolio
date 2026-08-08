@@ -1,9 +1,12 @@
 import { type NextRequest } from "next/server";
-import { writeFns } from "@/fields/registry";
 import mergeWith from "lodash.mergewith";
 
 import { createHttpError, toErrorResponse } from "@/lib/api-error";
 import { assertAdminUser } from "@/lib/authz-shared";
+import {
+  stringifyContentEntry,
+  validateContentEntry,
+} from "@/lib/content-file";
 import {
   buildCommitTokens,
   resolveCommitIdentity,
@@ -19,13 +22,8 @@ import {
   rebaseConfigObject,
   resolveConfigFilePath,
 } from "@/lib/repo-settings";
-import {
-  deepMap,
-  generateZodSchema,
-  getSchemaByName,
-  sanitizeObject,
-} from "@/lib/schema";
-import { parse, stringify } from "@/lib/serialization";
+import { getSchemaByName } from "@/lib/schema";
+import { parse } from "@/lib/serialization";
 import { requireApiUserSession } from "@/lib/session-server";
 import { getToken } from "@/lib/token";
 import {
@@ -33,7 +31,6 @@ import {
   getFileName,
   getParentPath,
   normalizePath,
-  serializedTypes,
 } from "@/lib/utils/file";
 import { createOctokitInstance } from "@/lib/utils/octokit";
 
@@ -88,158 +85,71 @@ export async function POST(
     let schemaCommitIdentity: "app" | "user" | undefined;
 
     switch (data.type) {
-      case "content":
-        if (!data.name) throw new Error(`"name" is required for content.`);
-
-        schema = getSchemaByName(config?.object, data.name);
-        if (!schema)
-          throw new Error(`Content schema not found for ${data.name}.`);
-        if (!data.sha && !isContentOperationAllowed("create", { schema })) {
-          throw createHttpError(
-            `Creating entries isn't allowed for "${data.name}".`,
-            403
-          );
-        }
+      case "content": {
+        const validated = validateContentEntry({
+          config,
+          name: data.name,
+          path: normalizedPath,
+          content: data.content,
+          isCreate: !data.sha,
+        });
+        schema = validated.schema;
         schemaCommitTemplates = schema?.commit?.templates;
         schemaCommitIdentity = schema?.commit?.identity;
 
-        if (!normalizedPath.startsWith(schema.path))
-          throw new Error(
-            `Invalid path "${params.path}" for ${data.type} "${data.name}".`
-          );
-
-        if (
-          schema.subfolders === false &&
-          getParentPath(normalizedPath) !== schema.path
-        ) {
-          throw new Error(
-            `Subfolders are not allowed for collection "${data.name}".`
-          );
-        }
-
-        if (getFileName(normalizedPath) === ".gitkeep") {
-          // Folder creation
+        if (validated.mode === "gitkeep") {
           contentBase64 = "";
+        } else if (validated.mode === "body") {
+          contentBase64 = Buffer.from(validated.body).toString("base64");
         } else {
-          if (getFileExtension(normalizedPath) !== (schema.extension ?? ""))
-            throw new Error(
-              `Invalid extension "${getFileExtension(normalizedPath)}" for ${data.type} "${data.name}".`
-            );
+          let finalContentObject = validated.contentObject;
 
-          if (serializedTypes.includes(schema.format) && schema.fields) {
-            let contentFields;
-            let contentObject;
+          if (
+            config?.object?.settings?.content?.merge &&
+            data.sha &&
+            !schema.list
+          ) {
+            const octokit = createOctokitInstance(token);
+            const response = await octokit.rest.repos.getContent({
+              owner: params.owner,
+              repo: params.repo,
+              path: normalizedPath,
+              ref: params.branch,
+            });
 
-            // Wrapping things in listWrapper to deal with lists at the root
-            if (schema.list) {
-              contentObject = { listWrapper: data.content };
-              contentFields = [
-                {
-                  name: "listWrapper",
-                  type: "object",
-                  list: true,
-                  fields: schema.fields,
-                },
-              ];
-            } else {
-              contentObject = data.content;
-              contentFields = schema.fields;
+            if (Array.isArray(response.data)) {
+              throw new Error("Expected a file but found a directory");
+            } else if (response.data.type !== "file") {
+              throw new Error("Invalid response type");
             }
 
-            // Use mapBlocks to convert config blocks array to a map
-            const zodSchema = generateZodSchema(contentFields);
-            const zodValidation = zodSchema.safeParse(contentObject);
-
-            if (zodValidation.success === false) {
-              const errorMessages = zodValidation.error.errors.map(
-                (error: any) => {
-                  let message = error.message;
-                  if (error.path.length > 0)
-                    message = `${message} at ${error.path.join(".")}`;
-                  return message;
-                }
-              );
-              throw new Error(
-                `Content validation failed: ${errorMessages.join(", ")}`
-              );
-            }
-
-            const validatedContentObject = deepMap(
-              zodValidation.data,
-              contentFields,
-              (value, field) => {
-                const fieldType = field.type as string;
-                return writeFns[fieldType]
-                  ? writeFns[fieldType](value, field, config || {})
-                  : value;
-              }
-            );
-
-            const unwrappedContentObject = schema.list
-              ? validatedContentObject.listWrapper
-              : validatedContentObject;
-
-            let finalContentObject = JSON.parse(
-              JSON.stringify(unwrappedContentObject)
-            );
-
-            if (
-              config?.object?.settings?.content?.merge &&
-              data.sha &&
-              !schema.list
-            ) {
-              const octokit = createOctokitInstance(token);
-              const response = await octokit.rest.repos.getContent({
-                owner: params.owner,
-                repo: params.repo,
-                path: normalizedPath,
-                ref: params.branch,
-              });
-
-              if (Array.isArray(response.data)) {
-                throw new Error("Expected a file but found a directory");
-              } else if (response.data.type !== "file") {
-                throw new Error("Invalid response type");
-              }
-
-              const existingContent = Buffer.from(
-                response.data.content,
-                "base64"
-              ).toString();
-              const existingContentObject = parse(existingContent, {
-                format: schema.format,
-                delimiters: schema.delimiters,
-              });
-
-              finalContentObject = mergeWith(
-                {},
-                existingContentObject,
-                unwrappedContentObject,
-                (objValue: any, srcValue: any) => {
-                  if (Array.isArray(srcValue)) {
-                    return srcValue;
-                  }
-                }
-              );
-            }
-
-            const stringifiedContentObject = stringify(
-              sanitizeObject(finalContentObject),
-              {
-                format: schema.format,
-                delimiters: schema.delimiters,
-              }
-            );
-            contentBase64 = Buffer.from(stringifiedContentObject).toString(
+            const existingContent = Buffer.from(
+              response.data.content,
               "base64"
-            );
-          } else {
-            contentBase64 = Buffer.from(data.content.body ?? "").toString(
-              "base64"
+            ).toString();
+            const existingContentObject = parse(existingContent, {
+              format: schema.format,
+              delimiters: schema.delimiters,
+            });
+
+            finalContentObject = mergeWith(
+              {},
+              existingContentObject,
+              validated.contentObject,
+              (objValue: any, srcValue: any) => {
+                if (Array.isArray(srcValue)) {
+                  return srcValue;
+                }
+              }
             );
           }
+
+          contentBase64 = Buffer.from(
+            stringifyContentEntry(schema, finalContentObject)
+          ).toString("base64");
         }
         break;
+      }
       case "media":
         if (!data.name) throw new Error(`"name" is required for media.`);
 

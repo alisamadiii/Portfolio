@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpRight,
+  BookOpen,
   Bot,
   CreditCard,
   Globe,
@@ -61,6 +62,11 @@ const accountPages = [
     title: "Emails",
     url: "/emails",
     icon: Mail,
+  },
+  {
+    title: "Guide",
+    url: "/guide",
+    icon: BookOpen,
   },
 ];
 

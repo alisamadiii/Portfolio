@@ -16,6 +16,7 @@ import { useUser } from "@/contexts/user-context";
 import {
   ArrowLeft,
   ArrowUpRight,
+  BookOpen,
   ChevronRight,
   ChevronsUpDown,
   Database,
@@ -82,6 +83,7 @@ import {
 import { getVisits } from "@/lib/tracker";
 
 import { About } from "@/components/about";
+import { SidebarPublishButton } from "@/components/publish/publish-button";
 import { RepoBranches } from "@/components/repo/repo-branches";
 import { RepoCommandPalette } from "@/components/repo/repo-command-palette";
 import { User } from "@/components/user";
@@ -650,6 +652,14 @@ export function RepoSidebar() {
         adminItems={adminItems}
       />
       <SidebarFooter className="border-t">
+        <SidebarPublishButton />
+        <Link
+          href="/guide"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium"
+        >
+          <BookOpen className="size-4" />
+          Guide
+        </Link>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <User align="start" />

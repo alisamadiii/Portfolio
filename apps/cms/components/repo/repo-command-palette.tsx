@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Search, TextCursorInput } from "lucide-react";
 
 import {
   Dialog,
@@ -14,6 +14,11 @@ import { Input } from "@workspace/ui/components/input";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useConfig } from "@/contexts/config-context";
+import {
+  buildFieldSearchIndex,
+  filterFieldIndex,
+  type FieldSearchItem,
+} from "@/lib/config-search";
 import {
   flattenNavLeaves,
   getContentNavigation,
@@ -72,16 +77,42 @@ export function RepoCommandPalette({
     return [...content, ...media, ...admin];
   }, [config, adminItems]);
 
+  // Field/section index from the config schema — matches deep-link into the
+  // entry editor (?focus=fieldPath) instead of just opening a page.
+  const fieldIndex = useMemo(
+    () => buildFieldSearchIndex(config?.object),
+    [config]
+  );
+
+  const fieldResults = useMemo<CommandItem[]>(() => {
+    if (!config) return [];
+    const base = `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}`;
+    return filterFieldIndex(fieldIndex, query).map(
+      (item: FieldSearchItem) => ({
+        key: `field-${item.schemaName}-${item.fieldPath}`,
+        label: item.label,
+        href:
+          item.schemaType === "file"
+            ? `${base}/file/${encodeURIComponent(item.schemaName)}?focus=${encodeURIComponent(item.fieldPath)}`
+            : `${base}/collection/${encodeURIComponent(item.schemaName)}`,
+        icon: <TextCursorInput className="size-4" />,
+        breadcrumb: item.breadcrumb,
+        section: "Fields",
+      })
+    );
+  }, [config, fieldIndex, query]);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return items;
-    return items.filter((item) => {
+    const navMatches = items.filter((item) => {
       const haystack = [item.label, ...item.breadcrumb, item.section]
         .join(" ")
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [items, query]);
+    return [...navMatches, ...fieldResults];
+  }, [items, fieldResults, query]);
 
   // Reset state whenever the palette opens or the query changes.
   useEffect(() => {

@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { editComponents } from "@/fields/registry";
 import {
   closestCenter,
@@ -85,6 +86,7 @@ import {
 } from "@workspace/ui/components/tooltip";
 import { cn } from "@workspace/ui/lib/utils";
 
+import { formatDiffValue } from "@/lib/entry-diff";
 import {
   generateZodSchema,
   getDefaultValue,
@@ -93,6 +95,7 @@ import {
   sanitizeObject,
 } from "@/lib/schema";
 
+import { useChangedField } from "./changed-fields-context";
 import { usePreview } from "./preview-context";
 
 type BeforeSubmitHook = () => void | Promise<void>;
@@ -169,6 +172,20 @@ const hasCollapsibleSummary = (field: Field) =>
 const hasExplicitReadonly = (field: Field) =>
   Boolean(field.readonly) &&
   !(field as FieldWithReadonlyMeta).__inheritedReadonly;
+
+// Amber frame around a field's input when a restored draft changed it, with
+// the previous published value shown underneath.
+const changedFieldFrameClass =
+  "rounded-lg border border-amber-400 bg-amber-400/10 p-1 dark:border-amber-500/60 dark:bg-amber-400/5";
+
+const ChangedFieldNote = ({ old }: { old: unknown }) => (
+  <p className="text-muted-foreground text-xs">
+    <span className="font-medium text-amber-600 dark:text-amber-500">
+      Previous:
+    </span>{" "}
+    {formatDiffValue(old, 200)}
+  </p>
+);
 
 const SortableItem = ({
   id,
@@ -324,6 +341,11 @@ const ListField = ({
 }) => {
   const supportsItemCollapse =
     field.type === "object" || field.type === "block";
+  // Scalar lists have no per-item labels, so the whole list block gets the
+  // changed-draft frame; object/block lists highlight their own leaf fields.
+  const isScalarList = !supportsItemCollapse;
+  const changedMatch = useChangedField(fieldName, true);
+  const showListChangedFrame = isScalarList && !!changedMatch;
   const isCollapsible = !!(
     supportsItemCollapse &&
     field.list &&
@@ -480,7 +502,10 @@ const ListField = ({
     <FormField
       name={fieldName}
       render={() => (
-        <FormItem>
+        <FormItem
+          data-field-path={fieldName}
+          className={cn(showListChangedFrame && changedFieldFrameClass)}
+        >
           {shouldShowListHeader && (
             <div className="flex h-5 items-center gap-x-2">
               {field.label !== false && (
@@ -914,7 +939,9 @@ const SeoPreview = ({ fieldName }: { fieldName: string }) => {
       <p
         className={cn(
           "text-sm",
-          description ? "text-muted-foreground" : "text-muted-foreground/70 italic"
+          description
+            ? "text-muted-foreground"
+            : "text-muted-foreground/70 italic"
         )}
       >
         {description
@@ -953,6 +980,7 @@ const SingleField = ({
     formState: { errors },
   } = useFormContext();
   const { focusField } = usePreview();
+  const changedMatch = useChangedField(fieldName);
   const isRichTextField = field.type === "rich-text";
   const showLabelSlot = isRichTextField && field.options?.switcher !== false;
   const shouldShowFieldMeta =
@@ -974,7 +1002,7 @@ const SingleField = ({
     const isSeoSection = field.name === "seo" && !fieldName.includes(".");
 
     return (
-      <FormItem key={fieldName}>
+      <FormItem key={fieldName} data-field-path={fieldName}>
         {shouldShowFieldMeta && (
           <div className="flex min-h-5 items-center gap-x-2">
             {field.label !== false && (
@@ -1037,7 +1065,7 @@ const SingleField = ({
         name={fieldName}
         control={control}
         render={({ field: rhfManagedFieldProps }) => (
-          <FormItem>
+          <FormItem data-field-path={fieldName}>
             {shouldShowFieldMeta && (
               <div className="flex min-h-6 items-center justify-between gap-x-2">
                 <div className="flex min-w-0 items-center gap-x-2">
@@ -1066,26 +1094,38 @@ const SingleField = ({
                 {showLabelSlot && <div id={labelSlotId} className="shrink-0" />}
               </div>
             )}
-            <FormControl>
-              {(() => {
-                const sharedProps = {
-                  ...rhfManagedFieldProps,
-                  field,
-                  onFocusCapture: () => focusField(fieldName),
-                };
-                if (field.type === "rich-text") {
-                  return (
-                    <FieldComponent
-                      {...sharedProps}
-                      labelSlotId={showLabelSlot ? labelSlotId : undefined}
-                      registerBeforeSubmitHook={registerBeforeSubmitHook}
-                      onChangeRegistered={onChangeRegistered}
-                    />
-                  );
-                }
-                return <FieldComponent {...sharedProps} />;
-              })()}
-            </FormControl>
+            {(() => {
+              const controlNode = (
+                <FormControl>
+                  {(() => {
+                    const sharedProps = {
+                      ...rhfManagedFieldProps,
+                      field,
+                      onFocusCapture: () => focusField(fieldName),
+                    };
+                    if (field.type === "rich-text") {
+                      return (
+                        <FieldComponent
+                          {...sharedProps}
+                          labelSlotId={showLabelSlot ? labelSlotId : undefined}
+                          registerBeforeSubmitHook={registerBeforeSubmitHook}
+                          onChangeRegistered={onChangeRegistered}
+                        />
+                      );
+                    }
+                    return <FieldComponent {...sharedProps} />;
+                  })()}
+                </FormControl>
+              );
+              return changedMatch ? (
+                <div className={changedFieldFrameClass}>{controlNode}</div>
+              ) : (
+                controlNode
+              );
+            })()}
+            {changedMatch && changedMatch.kind !== "descendant" && (
+              <ChangedFieldNote old={changedMatch.old} />
+            )}
             {field.description && (
               <FormDescription>{field.description}</FormDescription>
             )}
@@ -1106,6 +1146,7 @@ const EntryForm = ({
   filePath,
   onDirtyChange,
   onChangeRegistered,
+  resetSignal,
 }: {
   fields: Field[];
   contentObject?: Record<string, unknown>;
@@ -1113,6 +1154,8 @@ const EntryForm = ({
   filePath?: React.ReactNode;
   onDirtyChange?: (isDirty: boolean) => void;
   onChangeRegistered?: () => void;
+  /** Bump to mark the form clean, keeping the current values (draft saved). */
+  resetSignal?: number;
 }) => {
   const zodSchema = useMemo(() => {
     return generateZodSchema(fields);
@@ -1137,8 +1180,52 @@ const EntryForm = ({
   }, [defaultValues, form]);
 
   useEffect(() => {
+    if (!resetSignal) return;
+    // Draft saved — keep the current values, clear the dirty state.
+    form.reset(form.getValues());
+  }, [form, resetSignal]);
+
+  useEffect(() => {
     onDirtyChange?.(form.formState.isDirty);
   }, [form.formState.isDirty, onDirtyChange]);
+
+  // Deep-link from the command palette: ?focus=fieldPath scrolls to the field
+  // and flashes it. List indices are ignored when matching ("sections.heading"
+  // finds "sections.0.heading").
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const focusParam = searchParams.get("focus");
+  useEffect(() => {
+    if (!focusParam) return;
+    const normalize = (path: string) => path.replace(/\.\d+(?=\.|$)/g, "");
+    const target = normalize(focusParam);
+    let tries = 0;
+    const interval = window.setInterval(() => {
+      tries += 1;
+      const nodes = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-field-path]")
+      );
+      const match =
+        nodes.find((node) => node.dataset.fieldPath === focusParam) ??
+        nodes.find((node) => normalize(node.dataset.fieldPath ?? "") === target);
+      if (match) {
+        window.clearInterval(interval);
+        match.scrollIntoView({ block: "center", behavior: "smooth" });
+        const flashClasses = ["rounded-lg", "ring-2", "ring-amber-400"];
+        match.classList.add(...flashClasses);
+        window.setTimeout(
+          () => match.classList.remove(...flashClasses),
+          2500
+        );
+        router.replace(pathname, { scroll: false });
+      } else if (tries > 20) {
+        window.clearInterval(interval);
+        router.replace(pathname, { scroll: false });
+      }
+    }, 150);
+    return () => window.clearInterval(interval);
+  }, [focusParam, pathname, router]);
 
   const beforeSubmitHooksRef = useRef<Map<string, BeforeSubmitHook>>(new Map());
 

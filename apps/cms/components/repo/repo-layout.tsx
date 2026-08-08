@@ -12,6 +12,7 @@ import {
 
 import { trackVisit } from "@/lib/tracker";
 
+import { PublishProvider } from "@/components/publish/publish-context";
 import {
   RepoHeaderProvider,
   useRepoHeaderState,
@@ -49,13 +50,15 @@ export function RepoLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <RepoHeaderProvider>
-        <RepoSidebar />
-        <SidebarInset className="bg-shell min-h-screen">
-          <RepoHeader />
-          <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
-            {children}
-          </main>
-        </SidebarInset>
+        <PublishProvider>
+          <RepoSidebar />
+          <SidebarInset className="bg-shell min-h-screen">
+            <RepoHeader />
+            <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
+              {children}
+            </main>
+          </SidebarInset>
+        </PublishProvider>
       </RepoHeaderProvider>
     </SidebarProvider>
   );

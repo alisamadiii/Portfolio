@@ -13,7 +13,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { viewComponents } from "@/fields/registry";
-import { EllipsisVertical, FolderPlus, Plus, Search } from "lucide-react";
+import { EllipsisVertical, FolderPlus, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -65,6 +65,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { requireApiSuccess } from "@/lib/api-client";
 import { invalidateUrlKeys } from "@/lib/query";
 import { resolveContentOperations } from "@/lib/operations";
+import { useDrafts, useDraftsStore } from "@/lib/store/drafts";
 import {
   getFieldByPath,
   getPrimaryField,
@@ -85,7 +86,10 @@ import { FileOptions } from "@/components/file/file-options";
 import { FolderCreate } from "@/components/folder-create";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
+import { Badge } from "@workspace/ui/components/badge";
+
 import { CollectionTable } from "./collection-table";
+import { EntryDialog, type EntryDialogDraft } from "./entry-dialog";
 
 type GroupTrailItem = {
   name: string;
@@ -93,7 +97,7 @@ type GroupTrailItem = {
 };
 
 const CollectionHeaderActions = memo(function CollectionHeaderActions({
-  addEntryHref,
+  onAddEntry,
   actionNode,
   collectionPath,
   name,
@@ -102,7 +106,7 @@ const CollectionHeaderActions = memo(function CollectionHeaderActions({
   onFolderCreate,
   onSearchChange,
 }: {
-  addEntryHref: string;
+  onAddEntry: () => void;
   actionNode?: ReactNode;
   collectionPath: string;
   name: string;
@@ -158,21 +162,16 @@ const CollectionHeaderActions = memo(function CollectionHeaderActions({
       )}
       {showAddEntry && (
         <>
-          <Link
-            className={cn(buttonVariants(), "hidden sm:flex")}
-            href={addEntryHref}
-          >
-            Add an entry
-          </Link>
-          <Link
-            className={cn(
-              buttonVariants({ size: "icon" }),
-              "shrink-0 sm:hidden"
-            )}
-            href={addEntryHref}
+          <Button className="hidden sm:flex" onClick={() => onAddEntry()}>
+            New entry
+          </Button>
+          <Button
+            size="icon"
+            className="shrink-0 sm:hidden"
+            onClick={() => onAddEntry()}
           >
             <Plus className="size-4" />
-          </Link>
+          </Button>
         </>
       )}
     </div>
@@ -356,6 +355,68 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     staleTime: 2_000,
   });
   const data = collectionQuery.data ?? [];
+
+  // Local drafts for this collection. Gated on mount so the zustand-persist
+  // localStorage hydration can't cause an SSR/client mismatch.
+  const [draftsMounted, setDraftsMounted] = useState(false);
+  useEffect(() => setDraftsMounted(true), []);
+  const allDrafts = useDrafts(config.owner, config.repo, config.branch);
+  const deleteDraft = useDraftsStore((state) => state.deleteDraft);
+  const collectionDrafts = useMemo(
+    () =>
+      draftsMounted
+        ? allDrafts.filter(([, draft]) => draft.schemaName === name)
+        : [],
+    [allDrafts, draftsMounted, name]
+  );
+  // Any row (existing or new) with a pending draft, keyed by path.
+  const draftInfo = useMemo(
+    () =>
+      new Map(
+        collectionDrafts.map(([key, draft]) => [
+          draft.path,
+          { isNew: draft.isNew, key, draft },
+        ])
+      ),
+    [collectionDrafts]
+  );
+  // New-entry drafts in the current folder become synthetic table rows.
+  const draftRows = useMemo(() => {
+    const normalizedFolder = normalizePath(collectionPath);
+    return collectionDrafts
+      .filter(
+        ([, draft]) =>
+          draft.isNew &&
+          normalizePath(getParentPath(draft.path)) === normalizedFolder &&
+          !data.some((row: any) => row.path === draft.path)
+      )
+      .map(([key, draft]) => ({
+        sha: "",
+        name: getFileName(draft.path),
+        parentPath: getParentPath(draft.path),
+        path: draft.path,
+        fields: draft.values,
+        type: "file",
+        isDraft: true,
+        draftKey: key,
+      }));
+  }, [collectionDrafts, collectionPath, data]);
+  const tableData = useMemo(
+    () => (draftRows.length > 0 ? [...data, ...draftRows] : data),
+    [data, draftRows]
+  );
+
+  const [entryDialog, setEntryDialog] = useState<{
+    open: boolean;
+    parent?: string;
+    draft?: EntryDialogDraft;
+  }>({ open: false });
+  const openNewEntry = useCallback((parentOverride?: string) => {
+    setEntryDialog({ open: true, parent: parentOverride });
+  }, []);
+  const openDraft = useCallback((draft: EntryDialogDraft) => {
+    setEntryDialog({ open: true, draft });
+  }, []);
   const error =
     localError ??
     (collectionQuery.error
@@ -571,13 +632,38 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                 cellValue
               );
               if (path === primaryField) {
+                const rowDraft = draftInfo.get(row.original.path);
+                const draftBadge = rowDraft ? (
+                  <Badge className="ml-2 shrink-0 border-amber-400 bg-amber-400/10 text-amber-700 dark:text-amber-400">
+                    Draft
+                  </Badge>
+                ) : null;
+                // New-entry drafts have no file on GitHub — they open back in
+                // the entry dialog instead of the full editor.
+                if (rowDraft?.isNew) {
+                  return (
+                    <button
+                      type="button"
+                      className="flex min-w-0 items-center text-left"
+                      onClick={() =>
+                        openDraft({ key: rowDraft.key, draft: rowDraft.draft })
+                      }
+                    >
+                      <span className="truncate font-medium">{CellView}</span>
+                      {draftBadge}
+                    </button>
+                  );
+                }
                 return (
-                  <Link
-                    className="truncate font-medium"
-                    href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
-                  >
-                    {CellView}
-                  </Link>
+                  <span className="flex min-w-0 items-center">
+                    <Link
+                      className="truncate font-medium"
+                      href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
+                    >
+                      {CellView}
+                    </Link>
+                    {draftBadge}
+                  </span>
                 );
               }
               return (
@@ -611,32 +697,63 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       header: "Actions",
       cell: ({ row }: { row: any }) => (
         <div className="flex justify-end gap-1">
-          {row.original.type === "file" && (
-            <ButtonGroup>
-              <Link
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" })
-                )}
-                href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
-              >
-                Edit
-              </Link>
-              <FileOptions
-                path={row.original.path}
-                sha={row.original.sha}
-                type="collection"
-                name={name}
-                canDelete={canDelete}
-                canRename={canRename}
-                onDelete={handleDelete}
-                onRename={handleRename}
-              >
-                <Button variant="outline" size="icon-sm">
-                  <EllipsisVertical />
+          {row.original.type === "file" &&
+            (draftInfo.get(row.original.path)?.isNew ? (
+              <ButtonGroup>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const rowDraft = draftInfo.get(row.original.path)!;
+                    openDraft({ key: rowDraft.key, draft: rowDraft.draft });
+                  }}
+                >
+                  Edit
                 </Button>
-              </FileOptions>
-            </ButtonGroup>
-          )}
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => {
+                          deleteDraft(row.original.draftKey);
+                          toast.success("Draft discarded");
+                        }}
+                      >
+                        <Trash2 />
+                      </Button>
+                    }
+                  />
+                  <TooltipContent>Discard draft</TooltipContent>
+                </Tooltip>
+              </ButtonGroup>
+            ) : (
+              <ButtonGroup>
+                <Link
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" })
+                  )}
+                  href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
+                >
+                  Edit
+                </Link>
+                <FileOptions
+                  path={row.original.path}
+                  sha={row.original.sha}
+                  type="collection"
+                  name={name}
+                  canDelete={canDelete}
+                  canRename={canRename}
+                  onDelete={handleDelete}
+                  onRename={handleRename}
+                >
+                  <Button variant="outline" size="icon-sm">
+                    <EllipsisVertical />
+                  </Button>
+                </FileOptions>
+              </ButtonGroup>
+            ))}
           {canCreate &&
             schema.view?.layout === "tree" &&
             (row.original.type === "file" &&
@@ -703,21 +820,20 @@ export function Collection({ name, path }: { name: string; path?: string }) {
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <Link
-                      className={cn(
-                        buttonVariants({ variant: "outline", size: "icon-sm" }),
-                        "h-8 w-8"
-                      )}
-                      href={
-                        row.original.isNode
-                          ? `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.parentPath)}`
-                          : row.original.type === "dir"
-                            ? `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.path)}`
-                            : `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(row.original.path)}`
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      className="h-8 w-8"
+                      onClick={() =>
+                        openNewEntry(
+                          row.original.isNode
+                            ? row.original.parentPath
+                            : row.original.path
+                        )
                       }
                     >
                       <Plus className="size-4" />
-                    </Link>
+                    </Button>
                   }
                 />
                 <TooltipContent>Add children entry</TooltipContent>
@@ -748,6 +864,10 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     canRename,
     orderEnabled,
     orderField,
+    draftInfo,
+    openDraft,
+    openNewEntry,
+    deleteDraft,
   ]);
 
   const initialState = useMemo(() => {
@@ -965,35 +1085,33 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     [schema.view?.layout]
   );
 
-  const addEntryHref = useMemo(() => {
-    const params = new URLSearchParams();
-    if (schema.view?.layout !== "tree" && path && path !== schema.path)
-      params.set("parent", path);
-    if (orderEnabled && orderField) {
-      // Default a new entry's order to max + 1 so it lands at the bottom.
-      const values = data
-        .filter((item: any) => item.type === "file")
-        .map((item: any) => Number(safeAccess(item.fields ?? {}, orderField)))
-        .filter((value) => Number.isFinite(value));
-      params.set(
-        "order",
-        String(values.length > 0 ? Math.max(...values) + 1 : 0)
-      );
-    }
-    const query = params.toString();
-    return `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new${query ? `?${query}` : ""}`;
-  }, [
-    config.branch,
-    config.owner,
-    config.repo,
-    data,
-    name,
-    orderEnabled,
-    orderField,
-    path,
-    schema.path,
-    schema.view?.layout,
-  ]);
+  // Seeds for the new-entry dialog: current subfolder + manual-order position.
+  const newEntryParent = useMemo(
+    () =>
+      schema.view?.layout !== "tree" && path && path !== schema.path
+        ? path
+        : undefined,
+    [path, schema.path, schema.view?.layout]
+  );
+  const newEntryInitialValues = useMemo(() => {
+    if (!orderEnabled || !orderField) return undefined;
+    // Default a new entry's order to max + 1 so it lands at the bottom.
+    const values = data
+      .filter((item: any) => item.type === "file")
+      .map((item: any) => Number(safeAccess(item.fields ?? {}, orderField)))
+      .filter((value) => Number.isFinite(value));
+    return {
+      [orderField]: values.length > 0 ? Math.max(...values) + 1 : 0,
+    };
+  }, [data, orderEnabled, orderField]);
+  const takenPaths = useMemo(
+    () =>
+      new Set<string>([
+        ...data.map((row: any) => row.path as string),
+        ...collectionDrafts.map(([, draft]) => draft.path),
+      ]),
+    [data, collectionDrafts]
+  );
 
   const breadcrumbNode = useMemo(() => {
     const groupTrail: GroupTrailItem[] = Array.isArray(schema.groupTrail)
@@ -1118,7 +1236,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 truncate">{breadcrumbNode}</div>
         <CollectionHeaderActions
-          addEntryHref={addEntryHref}
+          onAddEntry={openNewEntry}
           collectionPath={collectionPath}
           name={name}
           showAddEntry={canCreate}
@@ -1129,7 +1247,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       </div>
     ),
     [
-      addEntryHref,
+      openNewEntry,
       breadcrumbNode,
       collectionPath,
       config.branch,
@@ -1191,7 +1309,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
   ) : (
     <CollectionTable
       columns={columns}
-      data={data}
+      data={tableData}
       search={tableSearch}
       setSearch={setTableSearch}
       initialState={initialState}
@@ -1206,5 +1324,20 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     />
   );
 
-  return <div className="flex min-w-0 flex-col space-y-6">{contentNode}</div>;
+  return (
+    <div className="flex min-w-0 flex-col space-y-6">
+      {contentNode}
+      <EntryDialog
+        open={entryDialog.open}
+        onOpenChange={(open) =>
+          setEntryDialog((state) => ({ ...state, open }))
+        }
+        schemaName={name}
+        parent={entryDialog.parent ?? newEntryParent}
+        initialValues={newEntryInitialValues}
+        draft={entryDialog.draft}
+        takenPaths={takenPaths}
+      />
+    </div>
+  );
 }
