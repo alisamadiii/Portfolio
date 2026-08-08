@@ -112,9 +112,14 @@ describe("POST /v1/emails/send", () => {
       json: body,
     });
     expect(res.status).toBe(202);
-    expect((await json(res)).id).toBe("ses-message-id");
+    const bodyOut = await json(res);
     expect(logEmail).toHaveBeenCalledTimes(1);
     const args = logEmail.mock.calls[0][1] as Record<string, unknown>;
+    // id = the DB row id (matches the id logEmail persists); messageId = SES.
+    expect(bodyOut.id).toBe(args.id);
+    expect(bodyOut.messageId).toBe("ses-message-id");
+    expect(typeof bodyOut.id).toBe("string");
+    expect(bodyOut.id).not.toBe("ses-message-id");
     expect(args.type).toBe("send");
     expect(args.messageId).toBe("ses-message-id");
     expect(args.to).toEqual(["someone@example.com"]);
@@ -215,6 +220,9 @@ describe("POST /v1/emails/contact", () => {
     const logArgs = logEmail.mock.calls[0][1] as Record<string, unknown>;
     expect(logArgs.type).toBe("contact");
     expect(logArgs.visitorEmail).toBe("jane@example.com");
+    const bodyOut = await json(res);
+    expect(bodyOut.id).toBe(logArgs.id);
+    expect(bodyOut.messageId).toBe("ses-message-id");
   });
 });
 

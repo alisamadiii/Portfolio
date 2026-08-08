@@ -157,7 +157,8 @@ emails.post("/contact", contactLimiter, requireAuth, async (c) => {
     metadata: data.metadata,
   });
 
-  const id = await sendViaSes(c.env, {
+  const rowId = crypto.randomUUID();
+  const messageId = await sendViaSes(c.env, {
     from,
     to: [user.email],
     subject,
@@ -168,18 +169,20 @@ emails.post("/contact", contactLimiter, requireAuth, async (c) => {
   // Audit trail (DB row + HTML copy in R2) written after the response.
   c.executionCtx.waitUntil(
     logEmail(c, {
+      id: rowId,
       user,
       type: "contact",
       from,
       to: [user.email],
       subject,
-      messageId: id,
+      messageId,
       html,
       visitorEmail: data.email,
       source,
     })
   );
-  return c.json({ id }, 202);
+  // id = database row id (matches GET /v1/emails); messageId = SES message id.
+  return c.json({ id: rowId, messageId }, 202);
 });
 
 // Send a transactional email (caller supplies rendered HTML). The sender must
@@ -217,7 +220,8 @@ emails.post("/send", requireAuth, async (c) => {
 
   // Send failures reach PostHog as $exception via onError, which already
   // attaches the request body. Successes are logged to email_logs below.
-  const id = await sendViaSes(c.env, {
+  const rowId = crypto.randomUUID();
+  const messageId = await sendViaSes(c.env, {
     from: data.from,
     to: recipients,
     subject: data.subject,
@@ -227,16 +231,18 @@ emails.post("/send", requireAuth, async (c) => {
   });
   c.executionCtx.waitUntil(
     logEmail(c, {
+      id: rowId,
       user,
       type: data.type ?? "send",
       from: data.from,
       to: recipients,
       subject: data.subject,
-      messageId: id,
+      messageId,
       html: data.html,
     })
   );
-  return c.json({ id }, 202);
+  // id = database row id (matches GET /v1/emails); messageId = SES message id.
+  return c.json({ id: rowId, messageId }, 202);
 });
 
 // The caller's own email history, newest first. `before` (ISO date) pages
