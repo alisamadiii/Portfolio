@@ -90,8 +90,16 @@ const schema = [
               />
             </div>
             <div class="p-7">
-              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
-                {s.eyebrow}
+              <div class="flex items-center justify-between gap-4">
+                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
+                  {s.eyebrow}
+                </div>
+                {s.experimenting && (
+                  <span class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase">
+                    <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
+                    Experimenting
+                  </span>
+                )}
               </div>
               <div class="mt-2.5 flex items-center justify-between gap-4">
                 <h2 class="text-[22px] font-semibold tracking-[-0.02em]">

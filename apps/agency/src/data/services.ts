@@ -25,8 +25,12 @@ export interface Service {
   h1: string;
   heroSub: string;
   intro: string;
+  /** Honest-signal flag: service offered while we build deep experience in it.
+      Renders an "Experimenting" badge + banner on the service page and cards. */
+  experimenting?: boolean;
   benefits: { title: string; text: string }[];
   process?: { title: string; text: string }[];
+  processCta?: { label: string; href: string };
   faqs: { q: string; a: string }[];
   externalLinks: ServiceLink[];
   related: string[];
@@ -51,54 +55,58 @@ export const services: Service[] = [
     name: "Brand Identity",
     eyebrow: "Design",
     keyword: "brand identity design",
-    seoTitle: "Brand Identity Design for Small Businesses — Ali Samadi Agency",
+    seoTitle: "Brand Identity Design Built From Your Logo — Ali Samadi Agency",
     metaDescription:
-      "Brand identity design that makes your business recognizable — logo, color, typography, and a consistent visual system, built alongside your website.",
-    h1: "Brand identity design that makes you recognizable",
+      "Brand identity design that starts with your logo — you pick the mark you love, and we turn its colors and character into your buttons, forms, and entire website theme.",
+    h1: "Brand identity design that starts with your logo",
     heroSub:
-      "Logo, color, typography, and a visual system that carries through your website, socials, and everything you print.",
+      "Pick a logo you love, and we design everything else from it — the colors, typography, buttons, and forms of your website all carry its theme.",
     intro:
-      "Ali Samadi Agency designs brand identities for startups and small businesses — the logo, color palette, typography, and visual rules that make your company look consistent and credible everywhere it appears. A strong brand identity isn't decoration: it's the difference between a business people remember and one they scroll past. We design identity and website together, so what you approve in the style guide is exactly what ships on your site.",
+      "Ali Samadi Agency approaches brand identity design with one rule: the logo comes first. We generate a range of logo concepts, you choose the one that feels like your business, and that mark becomes the source of truth for everything we design. Its colors and character flow into your buttons, forms, headings, and every page of your website — so nothing looks bolted on, and everything looks like it came from the same brand. You're not approving abstract swatches; you're watching your logo become a website.",
     benefits: [
       {
-        title: "One system, everywhere",
-        text: "Colors, type, and spacing defined once and applied consistently across your site, social profiles, and documents — no more mismatched materials.",
+        title: "Your logo leads",
+        text: "The logo is the source of truth. We pull its colors and personality into a theme, and every part of your site inherits it — no guesswork, no mismatched styles.",
       },
       {
-        title: "Built with your website",
-        text: "Because we build the site too, your identity is designed for the web first — real buttons, real headings, real pages, not just a logo file.",
+        title: "You choose, we build",
+        text: "Instead of endless abstract revisions, you pick from a range of logo concepts. The one you choose is the one we design your entire site around.",
+      },
+      {
+        title: "Everything matches",
+        text: "Buttons, forms, headings, and pages all themed from the same mark — your site looks like one brand made it, because one logo drove all of it.",
       },
       {
         title: "Assets you own",
         text: "You get the full package: logo files in every format, color codes, font choices, and a simple usage guide. No lock-in, no per-use fees.",
       },
-      {
-        title: "Distinct on purpose",
-        text: "We study your competitors before we design, so your identity separates you from them instead of blending in.",
-      },
     ],
     process: [
       {
-        title: "Discovery",
-        text: "We learn your business, audience, and competitors — what should this brand say, and to whom?",
+        title: "Logo concepts",
+        text: "We generate a range of logo directions and you pick the one that feels like your business. That choice sets the theme for everything that follows.",
       },
       {
-        title: "Concepts",
-        text: "You get distinct identity directions — logo, palette, and type in realistic mockups, not abstract swatches.",
+        title: "Realistic mockups",
+        text: "We design website mockups straight from your logo — real buttons, forms, and pages carrying its colors and character, so you see the brand as it will actually look.",
       },
       {
         title: "Refinement",
-        text: "We iterate on your chosen direction until it's right, then lock the system.",
+        text: "We iterate on the mockups until it's right, then lock the system.",
       },
       {
         title: "Delivery",
-        text: "Final files in every format plus a usage guide, applied live to your website.",
+        text: "Final files in every format plus a usage guide, with the theme applied live to your website.",
       },
     ],
+    processCta: {
+      label: "Read the full process on the blog",
+      href: "/blog/web-design-process",
+    },
     faqs: [
       {
         q: "What does brand identity design include?",
-        a: "Logo design (with variations for different sizes and backgrounds), a color palette with exact codes, typography choices, and a short usage guide. If we're building your website, the identity is applied there directly.",
+        a: "A logo you choose from a range of concepts (with variations for different sizes and backgrounds), a color palette pulled from it with exact codes, typography choices, and a short usage guide. If we're building your website, the whole theme is applied there directly.",
       },
       {
         q: "How long does a brand identity take?",
@@ -106,11 +114,11 @@ export const services: Service[] = [
       },
       {
         q: "I already have a logo — can you build the rest?",
-        a: "Yes. We can keep your existing logo and design the surrounding system — colors, typography, and web application — so everything finally matches.",
+        a: "Perfect — that's exactly how we work. Send it over and we design everything from it: colors, typography, buttons, and forms all take their theme from your logo, so everything finally matches.",
       },
       {
         q: "Do I own the final files?",
-        a: "Completely. Once paid, all logo files, fonts choices, and guidelines are yours, delivered in standard formats (SVG, PNG, PDF).",
+        a: "Completely. Once paid, all logo files, font choices, and guidelines are yours, delivered in standard formats (SVG, PNG, PDF).",
       },
     ],
     externalLinks: [
@@ -126,7 +134,7 @@ export const services: Service[] = [
     related: ["web-development", "ui-ux-design"],
     image: img(
       "brand-identity",
-      "Brand designer arranging a color palette and moodboard"
+      "Handwritten branding notes — identity, logo, design, strategy, marketing"
     ),
     cta: { label: "Start your brand", href: "/pricing" },
   },
@@ -138,26 +146,26 @@ export const services: Service[] = [
     eyebrow: "Engineering",
     keyword: "web development agency",
     seoTitle:
-      "Next.js Web Development Agency — Custom Websites | Ali Samadi Agency",
+      "Astro Web Development Agency — Fast Local Business Sites | Ali Samadi Agency",
     metaDescription:
-      "Web development agency building fast, custom websites on Next.js, React, and Postgres. Production-grade code, 1-day delivery for simple sites, from $500.",
-    h1: "A web development agency that ships production-grade code",
+      "Web development agency building fast, static websites on Astro — instant page loads, SEO built in, and content you edit yourself. Custom Next.js builds available. From $500.",
+    h1: "A web development agency that builds fast Astro websites",
     heroSub:
-      "Custom websites built on Next.js, React, and Postgres — fast, SEO-ready, and genuinely yours. Never a page-builder template.",
+      "Local-business websites built on Astro — pre-rendered static pages, instant navigation, and SEO baked in. Custom projects get Next.js, React, and Postgres.",
     intro:
-      "Ali Samadi Agency is a web development agency that builds every site from scratch on a modern stack: Next.js, React, and Postgres. That means real, production-grade code — fast to load, easy for Google to index, and free of the bloat that page builders bundle in. Simple sites launch in as little as one day once the project is confirmed, starting at $500 for the first page. You own the code, the content, and the domain.",
+      "Ali Samadi Agency is a web development agency that builds local-business websites on Astro — and there's a reason for that choice. Astro ships almost no JavaScript: every page is pre-rendered to plain HTML and served from a global CDN, so it loads instantly and Google indexes clean markup instead of waiting on scripts. Navigation between pages is smooth and app-like, and every build generates your sitemap, structured data, and an llms.txt file so AI search engines can read your site too. You edit content through a simple dashboard, and every save goes live automatically. And when a project needs more — accounts, dashboards, a database — we build custom on Next.js, React, and Postgres.",
     benefits: [
       {
-        title: "Modern stack, not templates",
-        text: "Next.js and React are the same technologies used by Netflix, TikTok, and Nike — production-grade engineering scaled down to small-business budgets.",
-      },
-      {
-        title: "Fast by default",
-        text: "Static-first pages served from a global CDN. Core Web Vitals are treated as a launch requirement, not an afterthought.",
+        title: "Fast because it's static",
+        text: "Astro pre-renders every page to plain HTML with near-zero JavaScript, served from a global CDN. Core Web Vitals are treated as a launch requirement, not an afterthought.",
       },
       {
         title: "SEO built in",
-        text: "Clean semantic HTML, structured data, sitemaps, and meta tags ship with every build — the technical SEO groundwork is included, not an upsell.",
+        text: "Clean semantic HTML, full meta and social tags, structured data that auto-upgrades to LocalBusiness for local companies, an auto-generated sitemap, and an llms.txt for AI engines — included, not an upsell.",
+      },
+      {
+        title: "Edit it yourself",
+        text: "Your content lives in a simple git-based CMS: change text and images from a dashboard, and every save deploys the site automatically. No developer needed for updates.",
       },
       {
         title: "You own everything",
@@ -188,20 +196,24 @@ export const services: Service[] = [
         a: "Our upfront build starts at $500 for the first page and $200 per additional page, with optional hosting at $20/mo and CMS access at $30/mo. There's also an all-inclusive monthly plan — see the pricing page for current numbers.",
       },
       {
-        q: "Why Next.js instead of WordPress or Wix?",
-        a: "Speed, security, and ownership. Next.js sites are pre-rendered static files — no plugins to hack, no database to slow down, and Google gets clean HTML instantly. Page builders trade long-term performance for short-term convenience.",
+        q: "Why Astro instead of WordPress or Wix?",
+        a: "Speed, security, and ownership. Astro sites are pre-rendered static files with almost no JavaScript — no plugins to hack, no database to slow down, and Google gets clean HTML instantly. Page builders trade long-term performance for short-term convenience.",
       },
       {
         q: "Can I edit the site myself after launch?",
-        a: "Yes — with the CMS add-on you edit text, images, and pages from a simple dashboard, and every change goes live automatically. See our Website Management service.",
+        a: "Yes — with the CMS add-on you edit text, images, and pages from a simple dashboard, and every save goes live automatically. See our Website Management service.",
       },
       {
         q: "How fast can you launch?",
         a: "Simple sites ship in one day once the project is confirmed and content is in hand. Larger builds are scoped with a timeline before we start.",
       },
+      {
+        q: "What if I need more than a website?",
+        a: "When a project needs accounts, dashboards, payments, or a database, we build it custom on Next.js, React, and Postgres — the same stack used by Netflix and TikTok. See our Custom Web Apps service for how that works.",
+      },
     ],
     externalLinks: [
-      { label: "Next.js — official documentation", url: "https://nextjs.org/docs" },
+      { label: "Astro — official documentation", url: "https://docs.astro.build" },
       {
         label: "web.dev — why page speed matters",
         url: "https://web.dev/learn/performance",
@@ -258,7 +270,7 @@ export const services: Service[] = [
       },
       {
         q: "Will the design work on phones?",
-        a: "Mobile isn't an afterthought — most small-business traffic is mobile, so we design the phone experience first and scale up to desktop.",
+        a: "Yes — most small-business traffic is mobile, so every design is built responsive and tested on real phone screens before launch. Layout, text, and buttons all adapt so the site feels just as polished on a phone as on desktop.",
       },
     ],
     externalLinks: [
@@ -294,6 +306,7 @@ export const services: Service[] = [
       "Technical SEO, structured data, fast Core Web Vitals, and clean analytics — shipped with your site from day one.",
     intro:
       "Ali Samadi Agency provides small business SEO services as part of every website we build. Most SEO problems are built into a site at launch — slow pages, missing meta tags, no structured data — and cost more to fix later than to avoid. We ship the technical groundwork from day one: clean HTML, schema markup, sitemaps, fast Core Web Vitals, and content structured so both Google and AI search engines like ChatGPT can find and cite you. Then analytics show you what's actually working.",
+    experimenting: true,
     benefits: [
       {
         title: "Technical SEO from day one",

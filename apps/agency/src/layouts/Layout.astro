@@ -20,6 +20,8 @@ interface Props {
   };
   /** Extra JSON-LD @graph nodes for a page (e.g. BreadcrumbList, Service). */
   schema?: Record<string, unknown>[];
+  /** Schema.org type of the page's WebPage node. */
+  pageType?: "WebPage" | "AboutPage" | "CollectionPage" | "ContactPage";
   bodyClass: string;
 }
 
@@ -30,6 +32,7 @@ const {
   canonical,
   og,
   schema = [],
+  pageType = "WebPage",
   bodyClass,
 } = Astro.props;
 
@@ -85,7 +88,7 @@ const jsonLd = {
       publisher: { "@id": `${SITE}/#organization` },
     },
     {
-      "@type": "WebPage",
+      "@type": pageType,
       "@id": `${pageUrl}#webpage`,
       url: pageUrl,
       name: title,

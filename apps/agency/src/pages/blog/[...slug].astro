@@ -13,8 +13,11 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const { data } = post;
+
+// TOC from h2/h3 (Astro auto-generates the slug IDs on the rendered headings).
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
 const SITE = "https://agency.alisamadii.com";
 const pageUrl = `${SITE}/blog/${post.id}`;
@@ -135,6 +138,32 @@ const schema = [
       }
     </figure>
 
+    <!-- Table of contents -->
+    {
+      toc.length > 2 && (
+        <nav
+          aria-label="Table of contents"
+          class="border-charcoal/[0.08] mx-auto mt-12 max-w-[760px] rounded-[16px] border p-6 md:p-7"
+        >
+          <p class="text-muted font-mono text-[11.5px] tracking-[0.1em] uppercase">
+            On this page
+          </p>
+          <ul class="mt-4 space-y-2.5">
+            {toc.map((h) => (
+              <li class={h.depth === 3 ? "pl-4" : ""}>
+                <a
+                  href={`#${h.slug}`}
+                  class="text-warmgray hover:text-accent text-[15px] leading-snug transition-colors duration-200"
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+
     <!-- Body -->
     <div class="prose mx-auto mt-12 max-w-[760px]">
       <Content />
@@ -192,6 +221,11 @@ const schema = [
 <style is:global>
   html {
     scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+  }
+  /* Anchor targets clear the fixed BackNav on jump. */
+  .prose :is(h2, h3) {
+    scroll-margin-top: 6rem;
   }
   .mag-btn {
     transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);

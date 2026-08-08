@@ -1,0 +1,446 @@
+---
+// The three plan cards (Monthly / Upfront / Custom) — single source of truth,
+// rendered on /pricing and the homepage #pricing section. Prices come from
+// src/data/pricing.ts at build time; the checkout handler script below ships
+// with the component so any page using it gets a working Start button.
+import { PRICING, fmtPrice } from "../data/pricing";
+
+const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
+---
+
+<div class="stagger grid grid-cols-1 gap-6 md:grid-cols-3">
+  <!-- Monthly Card -->
+  <div class="reveal">
+    <div
+      class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
+    >
+      <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+        <div class="mb-6 flex items-center gap-3">
+          <span
+            class="bg-accent inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-white uppercase"
+            >Recommended</span
+          >
+        </div>
+        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Monthly</h3>
+        <div class="mt-3">
+          <span class="price-monthly text-3xl font-bold tracking-tight"
+            >{fmtPrice(PRICING.monthly)}</span
+          >
+          <span class="text-warmgray text-base font-normal">/mo</span>
+        </div>
+        <p class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed">
+          Everything included, one flat price — design, development, CMS,
+          email, SEO, and hosting. Fully managed for you.
+        </p>
+        <ul class="text-warmgray mt-6 space-y-3 text-sm">
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Custom design &amp; development
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Full CMS access — edit anything
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Email &amp; contact forms included
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            SEO &amp; analytics setup
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Managed hosting &amp; maintenance
+          </li>
+        </ul>
+        <div class="mt-auto pt-8">
+          <button
+            id="monthlyStartBtn"
+            onclick="startMonthly()"
+            class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span id="monthlyStartLabel">Start</span>
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upfront Card -->
+  <div class="reveal">
+    <div
+      class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
+    >
+      <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+        <div class="mb-6 flex items-center gap-3">
+          <span
+            class="bg-charcoal/5 text-warmgray inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+            >One-time</span
+          >
+        </div>
+        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Upfront</h3>
+        <div class="mt-3">
+          <span class="text-warmgray text-xs">from</span>
+          <span class="price-upfront text-3xl font-bold tracking-tight"
+            >{fmtPrice(PRICING.upfront.basePrice)}</span
+          >
+          <span class="text-warmgray ml-1 text-xs">one-time</span>
+        </div>
+        <p class="price-upfront-extra text-warmgray mt-1 text-xs">
+          + {fmtPrice(PRICING.upfront.perExtraPage)} per extra page
+        </p>
+        <p class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed">
+          Pay once for your website — design, development, and SEO
+          included. Add pages anytime. Keep it running with light monthly
+          add-ons.
+        </p>
+        <div
+          class="border-charcoal/[0.06] bg-charcoal/[0.02] mt-4 rounded-xl border p-3.5"
+        >
+          <p class="text-warmgray text-xs leading-relaxed">
+            <span class="text-charcoal font-medium">You pay per page.</span> A page
+            is anything with its own address — Home, About, Contact — and a long
+            scrolling page still counts as one. Your first page is {
+              fmtPrice(PRICING.upfront.basePrice)
+            }, each page after is {fmtPrice(PRICING.upfront.perExtraPage)}. Terms
+            &amp; privacy pages are always free. You confirm the final page count
+            at checkout before any work begins.
+          </p>
+        </div>
+        <ul class="text-warmgray mt-6 space-y-3 text-sm">
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Custom design &amp; development
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span
+              >1 page included — add more anytime
+              <span class="text-muted block text-xs"
+                >Terms &amp; privacy pages free</span
+              ></span
+            >
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            SEO &amp; analytics included
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span
+              >Managed hosting
+              <span class="price-hosting-note text-charcoal font-medium"
+                >— {fmtPrice(PRICING.hosting)}/mo</span
+              ></span
+            >
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span
+              >Optional CMS access
+              <span class="price-cms-note text-charcoal font-medium"
+                >— {fmtPrice(PRICING.cms)}/mo</span
+              ></span
+            >
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="email-note">{emailNote}</span>
+          </li>
+        </ul>
+        <div class="mt-auto pt-8">
+          <a
+            href="/onboarding"
+            class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300"
+          >
+            Start
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Card -->
+  <div class="reveal">
+    <div
+      class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
+    >
+      <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+        <div class="mb-6 flex items-center gap-3">
+          <span
+            class="bg-charcoal/5 text-warmgray inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+            >Tailored</span
+          >
+        </div>
+        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Custom</h3>
+        <div class="mt-3">
+          <span class="text-3xl font-bold tracking-tight">Let's talk</span>
+        </div>
+        <p class="text-warmgray mt-3 max-w-[40ch] text-sm leading-relaxed">
+          Bigger scope? Admin panels, user accounts, databases, or something
+          unique — we scope it together and quote it fairly.
+        </p>
+        <ul class="text-warmgray mt-6 space-y-3 text-sm">
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Fully bespoke scope
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Admin panel, auth &amp; database available
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            One-time and recurring options
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="text-accent mt-0.5 h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Personal quote, no surprises
+          </li>
+        </ul>
+        <div class="mt-auto pt-8">
+          <a
+            href="/#contact"
+            class="mag-btn bg-charcoal/5 text-charcoal hover:bg-charcoal hover:text-cream inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300"
+          >
+            Contact Us
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout wiring for the Monthly card. createCheckout comes from
+     /pricing.js, loaded globally in Layout. data-astro-rerun + IIFE so it
+     re-binds after every ClientRouter swap. -->
+<script is:inline data-astro-rerun>
+  (() => {
+    const startMonthly = async () => {
+      const btn = document.getElementById("monthlyStartBtn");
+      const label = document.getElementById("monthlyStartLabel");
+      btn.disabled = true;
+      label.textContent = "Redirecting…";
+      try {
+        await createCheckout({ plan: "monthly" });
+      } catch (e) {
+        btn.disabled = false;
+        label.textContent = "Start";
+        alert("Something went wrong starting checkout. Please try again.");
+      }
+    };
+    // onclick="startMonthly()" in the markup needs the global.
+    window.startMonthly = startMonthly;
+  })();
+</script>
+
+<style is:global>
+  .package-card {
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .package-card:hover {
+    transform: translateY(-2px);
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+// Verified Trustpilot review (Alitech, for mohammadsamadi.com) — shown on the
+// homepage client-work section and on /work.
+---
+
+<figure
+  class="reveal border-charcoal/[0.09] mt-8 rounded-[22px] border bg-white p-8 md:p-11"
+>
+  <!-- 5-star rating -->
+  <div class="text-accent mb-5 flex gap-1" aria-label="5 out of 5 stars">
+    {
+      Array.from({ length: 5 }).map(() => (
+        <svg
+          class="size-5"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.42 4.38a1 1 0 0 0 .95.69h4.6c.97 0 1.37 1.24.59 1.81l-3.72 2.7a1 1 0 0 0-.36 1.12l1.42 4.37c.3.93-.76 1.7-1.54 1.12l-3.72-2.7a1 1 0 0 0-1.18 0l-3.72 2.7c-.78.58-1.84-.19-1.54-1.12l1.42-4.37a1 1 0 0 0-.36-1.12l-3.72-2.7c-.78-.57-.38-1.81.59-1.81h4.6a1 1 0 0 0 .95-.69L9.05 2.93Z" />
+        </svg>
+      ))
+    }
+  </div>
+  <blockquote
+    class="text-[clamp(19px,2.2vw,26px)] leading-[1.45] font-medium tracking-[-0.01em]"
+  >
+    &ldquo;Ali did an amazing job with creating our website. He paid attention
+    to details and got us the website we wanted &mdash; professional, modern,
+    and eye-catching. Highly recommend him!&rdquo;
+  </blockquote>
+  <figcaption
+    class="text-warmgray mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14.5px]"
+  >
+    <span class="text-charcoal font-semibold">Alitech</span>
+    <span class="text-muted">&middot;</span>
+    <a
+      href="https://www.trustpilot.com/reviews/6a7339e03bac99e9e36c465f"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="hover:text-charcoal underline decoration-charcoal/20 underline-offset-2 transition-colors duration-300"
+      >Verified Trustpilot review</a
+    >
+  </figcaption>
+</figure>

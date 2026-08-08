@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview --port 3004",
     "services:images": "node scripts/fetch-service-images.mjs",
-    "blog:images": "node scripts/fetch-blog-images.mjs"
+    "blog:images": "node scripts/fetch-blog-images.mjs",
+    "clients:screenshots": "node --experimental-strip-types scripts/fetch-client-screenshots.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
@@ -19,6 +20,7 @@
     "@astrojs/sitemap": "^3.7.3",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.1.18",
+    "playwright": "^1.62.1",
     "png-to-ico": "^3.0.2",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.1.18"

@@ -120,6 +120,22 @@ So what actually decides where you land on that scale?
 
 The short version: the design isn't usually the bottleneck. The bottleneck is decisions. Make them quickly and the whole thing flies.
 
+## The one-day fast track (for small businesses that just need to look good)
+
+Here's the part I don't advertise enough: not every business needs all four steps.
+
+If you're a small business, you don't have a website yet, and you're not trying to build the next Airbnb — you need a clean, fast, professional site that makes you look legit and tells people how to hire you. That's it. And for that, spending two weeks in Discovery workshops mapping out user personas would be like hiring a surveyor to hang a picture. Nice thoroughness. Completely the wrong tool.
+
+So for the simple ones, I compress the process. We have a short, honest conversation about what you do and who you're for — call it Discovery-lite, twenty minutes, not two weeks — and then I go straight to build. Because I write real code with AI doing the repetitive lifting, a well-scoped small-business site can be **live in about a day.** Not a template with your logo dropped on top. A real, custom, tested site that happens to not need a committee to ship.
+
+What you skip: the heavy Strategy phase, the endless wireframe rounds, the discovery deck nobody reads twice. What you keep — because these aren't negotiable — is the part that matters:
+
+- **A proper build.** Real code, tested on phones and every browser, fast everywhere. Speed and quality don't get cut just because the timeline is short.
+- **Launch & Scale, same as everyone.** Your site goes live on a global CDN, and you get the CMS. Change your text, swap your images, add a page — all yourself, no ticket, no developer, no waiting.
+- **You own it.** Same as the big builds. It's your site, not a rental you keep paying to touch.
+
+The trade is simple: less process, less cost, live in a day — in exchange for a smaller scope. When your business grows and the site needs to do more, we add the missing steps then. You don't pay for Strategy you don't need yet.
+
 ## When you should not hire me
 
 I'm going to do the thing agencies never do and talk you *out* of a sale, because it saves us both a headache.
@@ -151,6 +167,9 @@ Discovery — figuring out what the site needs to do and who it's for, ideally w
 
 **How long does it take?**
 Six to twelve weeks for a typical custom site, and as little as a day for a simple, well-scoped one built the way I build. The variable that moves the timeline most isn't the design — it's how quickly you supply content and feedback.
+
+**Do I always need all four steps?**
+No. Big builds with a real job to do get the full process. But a small business that just needs a clean, professional site to look legit and take enquiries doesn't need two weeks of Discovery and Strategy — I compress those to a short conversation and go straight to build, so a well-scoped site can be live in about a day. You still get a proper tested build, the CMS, and full ownership. When the business grows and the site needs to do more, we add the missing steps then.
 
 **What's the difference between web design and web development?**
 Design is how it looks and how a visitor moves through it — layout, typography, the journey. Development is the code that makes it actually work in a browser. Some people split those across two hires. I do both, which is part of why the timeline is shorter — nothing gets lost in the handoff between a designer who can't code and a developer who's never met the client.

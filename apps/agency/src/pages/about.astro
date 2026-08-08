@@ -1,0 +1,333 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BackNav from "../components/BackNav.astro";
+import SimpleFooter from "../components/SimpleFooter.astro";
+
+const SITE = "https://agency.alisamadii.com";
+const pageUrl = `${SITE}/about`;
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "About", item: pageUrl },
+    ],
+  },
+];
+
+const stats = [
+  { value: "8", suffix: "+", label: "Projects Delivered" },
+  { value: "100", suffix: "%", label: "Custom-Built, No Templates" },
+  { value: "5", suffix: "+", label: "Years Experience" },
+  { value: "1", suffix: "", label: "Focused Team" },
+];
+
+const values = [
+  {
+    title: "Custom code, not templates",
+    text: "Every site is designed and developed from scratch on Next.js, React, and Postgres. Nothing is dragged from a theme marketplace — your website is genuinely yours.",
+  },
+  {
+    title: "One team owns everything",
+    text: "Brand, design, development, SEO, and hosting are handled by the same small team. No hand-offs between vendors, no details lost in translation.",
+  },
+  {
+    title: "Fast without cutting corners",
+    text: "A focused team on a modern stack moves quickly — most projects go from confirmed concept to launch in a single day.",
+  },
+  {
+    title: "Long-term partnership",
+    text: "We stay after launch: hosting, content updates, SEO, and new features under one roof, so your site keeps improving instead of going stale.",
+  },
+];
+
+const steps = [
+  {
+    title: "Discover",
+    text: "We learn your business, your customers, and what the site needs to achieve before anything is designed.",
+  },
+  {
+    title: "Design",
+    text: "Brand and UI take shape — real pages, real content, reviewed with you before development starts.",
+  },
+  {
+    title: "Develop",
+    text: "The approved design is built on Next.js with SEO, analytics, and a CMS wired in from the start.",
+  },
+  {
+    title: "Deliver",
+    text: "Launch, hosting, and ongoing management — we keep the site fast, secure, and up to date.",
+  },
+];
+---
+
+<Layout
+  title="About Us — Ali Samadi Agency | Custom Web Design Studio"
+  description="Ali Samadi Agency is a founder-led web design studio in Jacksonville, FL building custom Next.js websites for startups and small businesses — no templates."
+  canonical={pageUrl}
+  og={{
+    title: "About Us — Ali Samadi Agency",
+    description:
+      "A founder-led web design studio in Jacksonville, FL building custom Next.js websites for startups and small businesses — no templates.",
+    url: pageUrl,
+    twitterDescription:
+      "Founder-led web design studio building custom Next.js websites — no templates.",
+  }}
+  schema={schema}
+  pageType="AboutPage"
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <!-- ==================== HERO ==================== -->
+  <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
+    <div class="mx-auto max-w-[1200px]">
+      <div
+        class="text-muted mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+      >
+        <span class="bg-accent h-px w-[26px]"></span>About Us
+      </div>
+      <h1
+        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+      >
+        A small studio that builds like a
+        <span class="text-accent">big one</span>
+      </h1>
+      <p
+        class="text-warmgray mt-6 max-w-[58ch] text-[17px] leading-[1.6] md:text-[18px]"
+      >
+        Ali Samadi Agency is a founder-led web design and development studio
+        based in Jacksonville, Florida. We build websites and web apps for
+        startups and small businesses — every project designed and developed
+        from scratch on a modern stack, never a recycled template.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== STATS ==================== -->
+  <section
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-14 md:px-10"
+  >
+    <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
+      {
+        stats.map((s) => (
+          <div class="reveal py-2">
+            <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
+              {s.value}
+              {s.suffix && <span class="text-accent">{s.suffix}</span>}
+            </div>
+            <div class="text-warmgray mt-2.5 text-sm">{s.label}</div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ==================== STORY ==================== -->
+  <section
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+  >
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.4fr] md:gap-14">
+      <h2
+        class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        Why the studio exists
+      </h2>
+      <div class="text-warmgray space-y-5 text-[16.5px] leading-[1.65]">
+        <p class="reveal">
+          Most small businesses get one of two things: an expensive agency that
+          treats them as a small account, or a cheap template that looks like
+          everyone else's website. We started Ali Samadi Agency to close that
+          gap — agency-quality design and engineering, sized and priced for
+          startups and small businesses.
+        </p>
+        <p class="reveal">
+          Because the studio is founder-led, the person you talk to is the
+          person who designs and builds your site. From brand identity and UI
+          design through development, SEO, and hosting, one team owns the whole
+          build — which keeps the work consistent and the timeline short.
+        </p>
+        <p class="reveal">
+          Everything ships on the stack we'd choose for our own products:
+          Next.js, React, and Postgres, with a CMS so you can edit your own
+          content. Fast, custom, and genuinely yours.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOUNDER ==================== -->
+  <section
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+  >
+    <div
+      class="reveal border-charcoal/[0.09] grid grid-cols-1 gap-8 rounded-[22px] border bg-white p-8 md:grid-cols-[1fr_1.6fr] md:gap-12 md:p-11"
+    >
+      <div>
+        <div
+          class="text-muted mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+        >
+          <span class="bg-accent h-px w-[26px]"></span>Founder
+        </div>
+        <h2 class="text-[28px] font-semibold tracking-[-0.02em]">Ali Samadi</h2>
+        <p class="text-warmgray mt-1 text-[15px]">Founder &amp; Developer</p>
+        <div class="mt-5 flex flex-wrap gap-4 text-[14.5px]">
+          <a
+            href="https://x.com/alisamadii_"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-accent text-warmgray transition-colors duration-300"
+            >X / Twitter</a
+          >
+          <a
+            href="https://github.com/alisamadiii"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-accent text-warmgray transition-colors duration-300"
+            >GitHub</a
+          >
+          <a
+            href="https://www.linkedin.com/in/alireza17/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-accent text-warmgray transition-colors duration-300"
+            >LinkedIn</a
+          >
+        </div>
+      </div>
+      <p class="text-warmgray text-[16px] leading-[1.65]">
+        Ali is a full-stack developer and designer with 5+ years of experience
+        building for the web — from open-source animation work used by
+        thousands of developers to production apps for real businesses. He
+        leads every project personally: scoping, design, code, and the
+        follow-through after launch.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== HOW WE WORK ==================== -->
+  <section
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+  >
+    <h2
+      class="reveal mb-10 text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    >
+      How we work
+    </h2>
+    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-4">
+      {
+        steps.map((step, i) => (
+          <div
+            class="reveal border-charcoal/[0.08] rounded-[18px] border bg-white p-6"
+          >
+            <div class="text-accent font-mono text-[13px] tracking-[0.08em]">
+              0{i + 1}
+            </div>
+            <h3 class="mt-3 text-[18px] font-semibold tracking-[-0.02em]">
+              {step.title}
+            </h3>
+            <p class="text-warmgray mt-2 text-[14.5px] leading-[1.6]">
+              {step.text}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="reveal text-warmgray mt-8 text-[15px]">
+      See everything we offer on the
+      <a href="/services" class="text-accent hover:underline">services page</a>.
+    </p>
+  </section>
+
+  <!-- ==================== VALUES ==================== -->
+  <section
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+  >
+    <h2
+      class="reveal mb-10 text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    >
+      What makes us different
+    </h2>
+    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
+      {
+        values.map((v) => (
+          <div
+            class="reveal border-charcoal/[0.08] rounded-[18px] border bg-white p-7"
+          >
+            <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
+              {v.title}
+            </h3>
+            <p class="text-warmgray mt-2.5 text-[15px] leading-[1.6]">
+              {v.text}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section
+    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] text-center md:px-10"
+  >
+    <h2
+      class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    >
+      Want to see it in practice?
+    </h2>
+    <div class="reveal mt-8 flex flex-wrap justify-center gap-3.5">
+      <a
+        href="/work"
+        class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300"
+      >
+        See our work
+        <span>&#8599;</span>
+      </a>
+      <a
+        href="/pricing"
+        class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center rounded-full border px-6 py-3.5 text-[15px] font-medium"
+      >
+        View pricing
+      </a>
+      <a
+        href="/contact"
+        class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center rounded-full border px-6 py-3.5 text-[15px] font-medium"
+      >
+        Get in touch
+      </a>
+    </div>
+  </section>
+
+  <SimpleFooter />
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-gutter: stable;
+  }
+  .mag-btn {
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .mag-btn:active {
+    transform: scale(0.97);
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-60px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  })();
+</script>

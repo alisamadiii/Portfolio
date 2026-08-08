@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
-import { PRICING, fmtPrice } from "../data/pricing";
+
+import { fmtPrice, PRICING } from "../data/pricing";
 
 // Plain-markdown summary for LLMs / answer engines. Prices come from
 // src/data/pricing.ts so this never drifts from the site.
@@ -25,8 +26,11 @@ export const GET: APIRoute = async () => {
 ## Pages
 
 - [Home](https://agency.alisamadii.com/): services, process, work, and about.
+- [About](https://agency.alisamadii.com/about): who we are, how we work, the founder.
+- [Work](https://agency.alisamadii.com/work): live client sites and concept projects.
 - [Services](https://agency.alisamadii.com/services): everything we offer.
 - [Pricing](https://agency.alisamadii.com/pricing): plans and how pricing works.
+- [Contact](https://agency.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://agency.alisamadii.com/blog): articles on how websites get built.
 
 ## Services

@@ -2,6 +2,9 @@
 import Layout from "../layouts/Layout.astro";
 import HomeNav from "../components/HomeNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
+import PricingCards from "../components/PricingCards.astro";
+import Testimonial from "../components/Testimonial.astro";
+import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
 ---
 
 <Layout
@@ -141,15 +144,24 @@ import HomeFooter from "../components/HomeFooter.astro";
         We craft digital products that people
         <span class="text-accent">love</span> to use
       </h2>
-      <p class="reveal text-warmgray text-[17px] leading-[1.6]">
-        Ali Samadi Agency is a small, focused studio building websites and web
-        apps for startups and small businesses. We design and develop every
-        project from scratch on a modern stack — Next.js, React, and
-        Postgres — so your site is fast, custom, and genuinely yours, never a
-        recycled template. From brand and UI design through development, SEO,
-        and hosting, one team owns the whole build, which keeps the work
-        consistent and the timeline short.
-      </p>
+      <div>
+        <p class="reveal text-warmgray text-[17px] leading-[1.6]">
+          Ali Samadi Agency is a small, focused studio building websites and web
+          apps for startups and small businesses. We design and develop every
+          project from scratch on a modern stack — Next.js, React, and
+          Postgres — so your site is fast, custom, and genuinely yours, never a
+          recycled template. From brand and UI design through development, SEO,
+          and hosting, one team owns the whole build, which keeps the work
+          consistent and the timeline short.
+        </p>
+        <a
+          href="/about"
+          class="reveal hover:text-accent mt-5 inline-flex items-center gap-2 text-[15px] font-medium transition-colors duration-300"
+        >
+          More about the studio
+          <span class="text-accent">&#8599;</span>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -319,22 +331,31 @@ import HomeFooter from "../components/HomeFooter.astro";
         >
         </div>
         <div class="relative flex h-full flex-col">
-          <div
-            class="bg-accent/[0.12] text-accent inline-flex size-[42px] items-center justify-center rounded-xl"
-          >
-            <svg
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="flex items-start justify-between gap-4">
+            <div
+              class="bg-accent/[0.12] text-accent inline-flex size-[42px] items-center justify-center rounded-xl"
             >
-              <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
-              <path d="m19 9-5 5-4-4-3 3"></path>
-            </svg>
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                <path d="m19 9-5 5-4-4-3 3"></path>
+              </svg>
+            </div>
+            <span
+              class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase"
+            >
+              <span class="size-1.5 animate-pulse rounded-full bg-amber-500"
+              ></span>
+              Experimenting
+            </span>
           </div>
           <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
             SEO &amp; Analytics
@@ -583,6 +604,38 @@ import HomeFooter from "../components/HomeFooter.astro";
         </p>
       </div>
     </div>
+
+    <div class="reveal mt-7">
+      <a
+        href="/blog/web-design-process"
+        class="text-accent hover:text-charcoal inline-flex items-center gap-1.5 text-[14.5px] font-medium transition-colors duration-300"
+      >
+        Read the full process on the blog <span>&#8594;</span>
+      </a>
+    </div>
+
+    <!-- Fast-track callout -->
+    <div
+      class="reveal border-charcoal/[0.08] bg-charcoal/[0.02] mt-[22px] rounded-[14px] border px-6 py-6 md:flex md:items-center md:justify-between md:gap-8 md:px-8"
+    >
+      <div class="max-w-[720px]">
+        <h3 class="text-[18px] font-semibold tracking-[-0.02em]">
+          Just need a simple site?
+        </h3>
+        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+          Small business, no website yet, nothing huge? We skip Discovery and
+          Strategy and go straight to build &mdash; a beautiful, custom site live
+          in about a day. You edit the text and images yourself through the CMS,
+          no developer required.
+        </p>
+      </div>
+      <a
+        href="/pricing"
+        class="text-accent hover:text-charcoal mt-4 inline-flex shrink-0 items-center gap-1.5 text-[14px] font-medium transition-colors duration-300 md:mt-0"
+      >
+        See pricing <span class="text-accent">&#8594;</span>
+      </a>
+    </div>
   </section>
 
   <!-- ==================== WORK ==================== -->
@@ -636,149 +689,42 @@ import HomeFooter from "../components/HomeFooter.astro";
     </div>
 
     <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
-      <!-- Project 1 -->
-      <a
-        href="https://demo-booking-gray.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/meridian.webp"
-            alt="Meridian Studio project"
-            width="1120"
-            height="700"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+      {
+        CONCEPT_PROJECTS.map((project) => (
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-tilt
+            class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
           >
-            Creative &middot; Brand &amp; Web
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Meridian Studio
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Brand identity &amp; web platform for a boutique design studio.
-          </p>
-        </div>
-      </a>
-
-      <!-- Project 2 -->
-      <a
-        href="https://clearwater-revenue-partners.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/clearwater.webp"
-            alt="Clearwater Revenue Partners project"
-            width="1120"
-            height="700"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-          >
-            Hospitality &middot; Revenue Strategy
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Clearwater Revenue Partners
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Strategy platform for hotel revenue management &amp; partnerships.
-          </p>
-        </div>
-      </a>
-
-      <!-- Project 3 -->
-      <a
-        href="https://tax-preparer.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/pinnacle.webp"
-            alt="Pinnacle Tax Group project"
-            width="1120"
-            height="700"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-          >
-            Finance &middot; Tax Services
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Pinnacle Tax Group
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Professional website for a tax preparation &amp; consulting firm.
-          </p>
-        </div>
-      </a>
-
-      <!-- Project 4 -->
-      <a
-        href="https://real-state-rho-sand.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-tilt
-        class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
-      >
-        <div class="aspect-[16/10] overflow-hidden">
-          <img
-            src="/aether.webp"
-            alt="Aether Properties project"
-            width="1120"
-            height="700"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-        <div class="p-6">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-          >
-            Real Estate &middot; Property Listings
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-4">
-            <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-              Aether Properties
-            </h3>
-            <span class="text-accent">&#8599;</span>
-          </div>
-          <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-            Architectural real estate platform for luxury property listings.
-          </p>
-        </div>
-      </a>
+            <div class="aspect-[16/10] overflow-hidden">
+              <img
+                src={project.image!.src}
+                alt={project.image!.alt}
+                width="1120"
+                height="700"
+                class="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div class="p-6">
+              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
+                {project.category}
+              </div>
+              <div class="mt-2.5 flex items-center justify-between gap-4">
+                <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
+                  {project.name}
+                </h3>
+                <span class="text-accent">&#8599;</span>
+              </div>
+              <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+                {project.description}
+              </p>
+            </div>
+          </a>
+        ))
+      }
     </div>
 
     <div class="reveal mt-9 text-center">
@@ -793,12 +739,9 @@ import HomeFooter from "../components/HomeFooter.astro";
   </section>
 
   <!-- ==================== CLIENT WORK ==================== -->
-  <!--
-    Real client projects (distinct from the demo concepts in "Our Work" above).
-    TODO(Ali): replace the 3 placeholder cards + testimonial with real details —
-    client/project name, sector, one-line outcome, live URL, and the review
-    quote + attribution. Keep this section; it's the site's first-hand proof.
-  -->
+  <!-- Real client projects (distinct from the demo concepts in "Our Work"
+       above). Cards are driven by CLIENT_PROJECTS in src/data/projects.ts;
+       screenshots come from scripts/fetch-client-screenshots.mjs. -->
   <section
     id="clients"
     class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
@@ -823,121 +766,54 @@ import HomeFooter from "../components/HomeFooter.astro";
     </div>
 
     <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-3">
-      <!-- Client project 1 -->
-      <a
-        href="https://www.hazaraoregon.org/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="reveal border-charcoal/[0.08] group block rounded-[18px] border bg-white p-6"
-      >
-        <div
-          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-        >
-          Nonprofit &middot; Community
-        </div>
-        <div class="mt-2.5 flex items-center justify-between gap-4">
-          <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-            Hazara Community of Oregon
-          </h3>
-          <span class="text-accent">&#8599;</span>
-        </div>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Website with donations, programs, and membership for an Afghan-immigrant
-          community nonprofit.
-        </p>
-      </a>
-
-      <!-- Client project 2 -->
-      <a
-        href="https://www.empowerher-initiative.org/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="reveal border-charcoal/[0.08] group block rounded-[18px] border bg-white p-6"
-      >
-        <div
-          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-        >
-          Nonprofit &middot; Women's Empowerment
-        </div>
-        <div class="mt-2.5 flex items-center justify-between gap-4">
-          <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-            EmpowerHer Initiative
-          </h3>
-          <span class="text-accent">&#8599;</span>
-        </div>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Advocacy site for a women's empowerment initiative — programs,
-          resources, and ways to get involved.
-        </p>
-      </a>
-
-      <!-- Client project 3 -->
-      <a
-        href="https://mohammadsamadi.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="reveal border-charcoal/[0.08] group block rounded-[18px] border bg-white p-6"
-      >
-        <div
-          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-        >
-          Home Services &middot; Remodeling
-        </div>
-        <div class="mt-2.5 flex items-center justify-between gap-4">
-          <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-            Mohammad Samadi
-          </h3>
-          <span class="text-accent">&#8599;</span>
-        </div>
-        <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
-          Portfolio site for a Florida remodeling &amp; handyman contractor —
-          services and before/after gallery.
-        </p>
-      </a>
+      {
+        CLIENT_PROJECTS.map((project) => (
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
+          >
+            <div class="aspect-[16/10] overflow-hidden">
+              <img
+                src={project.image!.src}
+                alt={project.image!.alt}
+                width="1120"
+                height="700"
+                class="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div class="p-6">
+              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
+                {project.category}
+              </div>
+              <div class="mt-2.5 flex items-center justify-between gap-4">
+                <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
+                  {project.name}
+                </h3>
+                <span class="text-accent">&#8599;</span>
+              </div>
+              <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+                {project.description}
+              </p>
+            </div>
+          </a>
+        ))
+      }
     </div>
 
-    <!-- Testimonial — verified Trustpilot review (Alitech, for mohammadsamadi.com) -->
-    <figure
-      class="reveal border-charcoal/[0.09] mt-8 rounded-[22px] border bg-white p-8 md:p-11"
-    >
-      <!-- 5-star rating -->
-      <div class="text-accent mb-5 flex gap-1" aria-label="5 out of 5 stars">
-        {
-          Array.from({ length: 5 }).map(() => (
-            <svg
-              class="size-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.42 4.38a1 1 0 0 0 .95.69h4.6c.97 0 1.37 1.24.59 1.81l-3.72 2.7a1 1 0 0 0-.36 1.12l1.42 4.37c.3.93-.76 1.7-1.54 1.12l-3.72-2.7a1 1 0 0 0-1.18 0l-3.72 2.7c-.78.58-1.84-.19-1.54-1.12l1.42-4.37a1 1 0 0 0-.36-1.12l-3.72-2.7c-.78-.57-.38-1.81.59-1.81h4.6a1 1 0 0 0 .95-.69L9.05 2.93Z"
-              />
-            </svg>
-          ))
-        }
-      </div>
-      <blockquote
-        class="text-[clamp(19px,2.2vw,26px)] leading-[1.45] font-medium tracking-[-0.01em]"
+    <Testimonial />
+
+    <div class="reveal mt-9 text-center">
+      <a
+        href="/work"
+        class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center gap-2.5 rounded-[11px] border px-6 py-3.5 text-[15px] font-medium"
       >
-        &ldquo;Ali did an amazing job with creating our website. He paid
-        attention to details and got us the website we wanted &mdash;
-        professional, modern, and eye-catching. Highly recommend him!&rdquo;
-      </blockquote>
-      <figcaption
-        class="text-warmgray mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14.5px]"
-      >
-        <span class="text-charcoal font-semibold">Alitech</span>
-        <span class="text-muted">&middot;</span>
-        <a
-          href="https://www.trustpilot.com/reviews/6a7339e03bac99e9e36c465f"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:text-charcoal underline decoration-charcoal/20 underline-offset-2 transition-colors duration-300"
-          >Verified Trustpilot review</a
-        >
-      </figcaption>
-    </figure>
+        See all work
+        <span class="text-accent">&#8599;</span>
+      </a>
+    </div>
   </section>
 
   <!-- ==================== PRICING ==================== -->
@@ -952,63 +828,29 @@ import HomeFooter from "../components/HomeFooter.astro";
     </div>
 
     <div
-      class="reveal border-charcoal/[0.09] grid grid-cols-1 gap-10 rounded-[22px] border bg-white p-8 md:grid-cols-[1fr_1.2fr] md:gap-14 md:p-11"
+      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
     >
-      <div>
-        <h2 class="text-[38px] font-semibold tracking-[-0.03em]">Let's talk</h2>
-        <p class="text-warmgray mt-3.5 max-w-[34ch] text-base leading-[1.6]">
-          Every project is unique. Tell us what you need and we'll craft a plan
-          that fits.
-        </p>
-        <div class="mt-7 flex flex-wrap gap-3">
-          <a
-            href="#contact"
-            class="mag-btn bg-accent hover:bg-charcoal inline-flex items-center gap-2 rounded-[11px] px-[22px] py-3.5 text-[15px] font-medium text-white shadow-[0_8px_24px_rgba(252,132,100,0.3)]"
-          >
-            Get in Touch
-            <span>&#8599;</span>
-          </a>
-          <a
-            href="/pricing"
-            class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center rounded-[11px] border px-[22px] py-3.5 text-[15px] font-medium"
-          >
-            View Pricing
-          </a>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 gap-x-7 gap-y-3.5 sm:grid-cols-2">
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Website design &amp;
-          development
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Managed hosting &amp;
-          domains
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>CMS content editing
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>GitHub collaborator
-          access
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Custom builds
-          available
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Email &amp; contact
-          forms
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>SEO, analytics &amp;
-          priority support
-        </div>
-        <div class="flex items-start gap-3 text-[15px] text-[#3a362f]">
-          <span class="text-accent mt-0.5">&#10003;</span>Light &amp; dark theme
-          included
-        </div>
-      </div>
+      <h2
+        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Simple, transparent pricing
+      </h2>
+      <p class="reveal text-warmgray text-[15.5px] leading-[1.6]">
+        One all-inclusive monthly plan, a one-time upfront build, or a fully
+        custom project — no hidden fees, cancel anytime.
+      </p>
+    </div>
+
+    <PricingCards />
+
+    <div class="reveal mt-8 text-center">
+      <a
+        href="/pricing"
+        class="hover:text-accent text-warmgray inline-flex items-center gap-2 text-[15px] font-medium transition-colors duration-300"
+      >
+        Compare plans in detail
+        <span class="text-accent">&#8599;</span>
+      </a>
     </div>
   </section>
 
