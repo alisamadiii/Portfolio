@@ -1,0 +1,63 @@
+---
+// Opens the site search palette (SearchPalette.astro, rendered in Layout).
+// No script of its own — the palette's document-level click handler listens
+// for [data-search-open], so triggers survive ClientRouter swaps for free.
+interface Props {
+  variant?: "home" | "back" | "mobile";
+}
+
+const { variant = "back" } = Astro.props;
+---
+
+{
+  variant === "mobile" ? (
+    <button
+      type="button"
+      data-search-open
+      aria-label="Search site"
+      class="flex size-11 items-center justify-center text-charcoal"
+    >
+      <svg
+        class="h-[22px] w-[22px]"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
+        />
+      </svg>
+    </button>
+  ) : (
+    <button
+      type="button"
+      data-search-open
+      aria-label="Search site"
+      class="inline-flex items-center gap-2 rounded-[9px] border border-charcoal/[0.1] bg-white/60 px-3 py-[7px] text-sm text-warmgray transition-colors duration-300 hover:border-charcoal/[0.2] hover:text-charcoal"
+    >
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
+        />
+      </svg>
+      Search
+      <kbd
+        data-kbd-hint
+        class="hidden rounded-[5px] border border-charcoal/[0.1] px-1.5 py-px font-mono text-[11px] text-muted lg:inline"
+      >
+        &#8984;K
+      </kbd>
+    </button>
+  )
+}

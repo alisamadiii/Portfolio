@@ -53,5 +53,20 @@
     "name": "https://kaboompics.com/",
     "url": "https://www.pexels.com/@karola-g",
     "pexelsUrl": "https://www.pexels.com/photo/close-up-of-sketches-in-a-notepad-lying-on-a-desk-8546649/"
+  },
+  "domain-hero": {
+    "name": "Markus Winkler",
+    "url": "https://www.pexels.com/@markus-winkler-1430818",
+    "pexelsUrl": "https://www.pexels.com/photo/close-up-shot-of-a-typewriter-4160089/"
+  },
+  "domain-keys": {
+    "name": "RDNE Stock project",
+    "url": "https://www.pexels.com/@rdne",
+    "pexelsUrl": "https://www.pexels.com/photo/house-key-on-the-people-s-hand-while-standing-next-to-each-other-8293771/"
+  },
+  "dns-setup": {
+    "name": "cottonbro studio",
+    "url": "https://www.pexels.com/@cottonbro",
+    "pexelsUrl": "https://www.pexels.com/photo/man-and-woman-video-call-on-laptop-6321231/"
   }
 }

@@ -1,0 +1,419 @@
+---
+// Site-wide search palette (⌘K). Rendered once in Layout.astro so it exists
+// on every page. The script is a bundled module — it executes once per
+// browser session while ClientRouter swaps the DOM on every navigation, so
+// every listener is delegated on `document` and palette elements are looked
+// up lazily inside handlers. The index is a build-time endpoint
+// (src/pages/search-index.json.ts), fetched on first open and cached.
+---
+
+<dialog
+  id="search-palette"
+  class="mx-auto mt-[10vh] w-[min(640px,calc(100vw-2rem))] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-0 text-charcoal shadow-[0_24px_80px_-24px_rgba(27,26,23,0.35)] backdrop:bg-transparent"
+>
+  <div
+    class="flex items-center gap-3 border-b border-charcoal/[0.08] px-4 py-3.5"
+  >
+    <svg
+      class="h-[18px] w-[18px] shrink-0 text-muted"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="1.5"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
+      ></path>
+    </svg>
+    <input
+      id="search-input"
+      type="text"
+      placeholder="Search pages, services, work, blog…"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      class="w-full bg-transparent text-[15px] text-charcoal outline-none placeholder:text-muted"
+    />
+    <kbd
+      class="hidden shrink-0 rounded-[5px] border border-charcoal/[0.1] px-1.5 py-px font-mono text-[11px] text-muted sm:inline"
+      >esc</kbd
+    >
+  </div>
+
+  <div
+    id="search-results"
+    role="listbox"
+    aria-label="Search results"
+    class="max-h-[min(52vh,420px)] overflow-y-auto overscroll-contain pb-2"
+  >
+  </div>
+
+  <div
+    class="hidden items-center gap-4 border-t border-charcoal/[0.08] px-4 py-2.5 font-mono text-[11px] tracking-[0.06em] text-muted sm:flex"
+  >
+    <span>&#8593;&#8595; navigate</span>
+    <span>&#8629; open</span>
+    <span>esc close</span>
+  </div>
+</dialog>
+
+<style>
+  #search-palette::backdrop {
+    background: rgba(246, 245, 243, 0.8);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  #search-palette[open] {
+    animation: search-pop 0.18s ease;
+  }
+  @keyframes search-pop {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #search-palette[open] {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import MiniSearch from "minisearch";
+
+  type SearchDoc = {
+    id: string;
+    type: "page" | "service" | "project" | "blog";
+    title: string;
+    description: string;
+    url: string;
+    image?: string;
+    external?: boolean;
+    keywords: string[];
+  };
+
+  const GROUPS: { type: SearchDoc["type"]; label: string }[] = [
+    { type: "page", label: "Pages" },
+    { type: "service", label: "Services" },
+    { type: "project", label: "Work" },
+    { type: "blog", label: "Blog" },
+  ];
+
+  const ICONS: Record<SearchDoc["type"], string> = {
+    page: "M3.75 6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6zM3.75 9h16.5",
+    service:
+      "M11.42 15.17L17.25 21A2.65 2.65 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085",
+    project:
+      "M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25",
+    blog: "M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125",
+  };
+
+  let mini: MiniSearch<SearchDoc> | null = null;
+  let docs: SearchDoc[] | null = null;
+  let loading: Promise<void> | null = null;
+  let activeIndex = 0;
+  let lastFocused: HTMLElement | null = null;
+  let debounceTimer: number | undefined;
+
+  const dialog = () =>
+    document.getElementById("search-palette") as HTMLDialogElement | null;
+  const input = () =>
+    document.getElementById("search-input") as HTMLInputElement | null;
+  const resultsBox = () => document.getElementById("search-results");
+
+  function loadIndex(): Promise<void> {
+    if (docs) return Promise.resolve();
+    loading ??= fetch("/search-index.json")
+      .then((r) => r.json())
+      .then((data: SearchDoc[]) => {
+        docs = data;
+        mini = new MiniSearch<SearchDoc>({
+          fields: ["title", "keywords", "description"],
+          storeFields: [
+            "type",
+            "title",
+            "description",
+            "url",
+            "image",
+            "external",
+          ],
+          extractField: (doc, field) => {
+            const v = doc[field as keyof SearchDoc];
+            return Array.isArray(v) ? v.join(" ") : String(v ?? "");
+          },
+          searchOptions: {
+            prefix: true,
+            fuzzy: 0.25,
+            boost: { title: 3, keywords: 2.5, description: 1 },
+            combineWith: "OR",
+          },
+        });
+        mini.addAll(docs);
+      })
+      .catch(() => {
+        loading = null;
+      });
+    return loading;
+  }
+
+  function search(query: string): SearchDoc[] {
+    if (!mini) return [];
+    let hits = mini.search(query);
+    // Typo-rescue pass: nothing matched, loosen the edit-distance budget.
+    if (hits.length === 0) hits = mini.search(query, { fuzzy: 0.4 });
+    return hits as unknown as SearchDoc[];
+  }
+
+  // ── Rendering (createElement only — result text is never injected as HTML) ──
+
+  function el<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className: string,
+    text?: string
+  ): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function iconTile(type: SearchDoc["type"]): HTMLElement {
+    const tile = el(
+      "span",
+      "flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-charcoal/[0.04] text-warmgray"
+    );
+    tile.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="${ICONS[type]}"></path></svg>`;
+    return tile;
+  }
+
+  function resultRow(doc: SearchDoc): HTMLAnchorElement {
+    const a = el(
+      "a",
+      "search-result flex items-center gap-3.5 px-4 py-2.5 transition-colors duration-150 aria-selected:bg-charcoal/[0.04]"
+    );
+    a.href = doc.url;
+    a.setAttribute("role", "option");
+    a.setAttribute("aria-selected", "false");
+    if (doc.external) {
+      a.target = "_blank";
+      a.rel = "noopener";
+    }
+
+    if (doc.image) {
+      const img = el(
+        "img",
+        "h-12 w-12 shrink-0 rounded-[10px] border border-charcoal/[0.06] object-cover"
+      );
+      img.src = doc.image;
+      img.alt = "";
+      img.loading = "lazy";
+      a.appendChild(img);
+    } else {
+      a.appendChild(iconTile(doc.type));
+    }
+
+    const text = el("span", "min-w-0 flex-1");
+    const title = el(
+      "span",
+      "block truncate text-[14.5px] font-medium text-charcoal",
+      doc.title
+    );
+    if (doc.external) {
+      title.appendChild(el("span", "ml-1.5 text-[12px] text-accent", "↗"));
+    }
+    text.appendChild(title);
+    text.appendChild(
+      el("span", "block truncate text-[13px] text-warmgray", doc.description)
+    );
+    a.appendChild(text);
+    return a;
+  }
+
+  function groupLabel(label: string): HTMLElement {
+    return el(
+      "div",
+      "px-4 pt-3.5 pb-1 font-mono text-[11px] tracking-[0.14em] text-muted uppercase",
+      label
+    );
+  }
+
+  function renderGroups(box: HTMLElement, results: SearchDoc[], perGroup = 4) {
+    for (const group of GROUPS) {
+      const items = results
+        .filter((r) => r.type === group.type)
+        .slice(0, perGroup);
+      if (items.length === 0) continue;
+      box.appendChild(groupLabel(group.label));
+      for (const item of items) box.appendChild(resultRow(item));
+    }
+  }
+
+  function renderDefault(box: HTMLElement) {
+    box.textContent = "";
+    if (!docs) return;
+    box.appendChild(groupLabel("Quick links"));
+    const pages = docs.filter(
+      (d) => d.type === "page" && !["/terms", "/privacy", "/"].includes(d.url)
+    );
+    for (const page of pages.slice(0, 5)) box.appendChild(resultRow(page));
+    const posts = docs.filter((d) => d.type === "blog").slice(0, 3);
+    if (posts.length > 0) {
+      box.appendChild(groupLabel("Latest from the blog"));
+      for (const post of posts) box.appendChild(resultRow(post));
+    }
+    setActive(0);
+  }
+
+  function renderResults(query: string) {
+    const box = resultsBox();
+    if (!box) return;
+    if (!query.trim()) {
+      renderDefault(box);
+      return;
+    }
+    const results = search(query.trim());
+    box.textContent = "";
+    if (results.length === 0) {
+      const empty = el("div", "px-4 py-8 text-center");
+      empty.appendChild(
+        el("p", "text-[14px] text-warmgray", `No results for “${query.trim()}”`)
+      );
+      empty.appendChild(
+        el(
+          "p",
+          "mt-1 font-mono text-[11px] tracking-[0.06em] text-muted uppercase",
+          "Try a different word"
+        )
+      );
+      box.appendChild(empty);
+      renderDefault(box);
+      // renderDefault cleared the box — rebuild with the message on top.
+      box.prepend(empty);
+      return;
+    }
+    renderGroups(box, results);
+    setActive(0);
+  }
+
+  // ── Keyboard selection ──
+
+  function rows(): HTMLAnchorElement[] {
+    return Array.from(
+      resultsBox()?.querySelectorAll<HTMLAnchorElement>(".search-result") ?? []
+    );
+  }
+
+  function setActive(index: number) {
+    const all = rows();
+    if (all.length === 0) return;
+    activeIndex = (index + all.length) % all.length;
+    all.forEach((row, i) =>
+      row.setAttribute("aria-selected", String(i === activeIndex))
+    );
+    all[activeIndex].scrollIntoView({ block: "nearest" });
+  }
+
+  // ── Open / close ──
+
+  function openPalette() {
+    const d = dialog();
+    if (!d || d.open) return;
+    lastFocused = document.activeElement as HTMLElement | null;
+    d.showModal();
+    document.documentElement.style.overflow = "hidden";
+    const field = input();
+    if (field) {
+      field.value = "";
+      field.focus();
+    }
+    loadIndex().then(() => {
+      const box = resultsBox();
+      if (box && dialog()?.open) renderDefault(box);
+    });
+  }
+
+  function closePalette() {
+    const d = dialog();
+    if (d?.open) d.close();
+  }
+
+  // ── Document-level delegation (bound once per session) ──
+
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-search-open]")) {
+      e.preventDefault();
+      openPalette();
+      return;
+    }
+    const d = dialog();
+    if (d?.open) {
+      // Click on the backdrop lands on the <dialog> element itself.
+      if (target === d) closePalette();
+      else if (target.closest(".search-result")) closePalette();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      dialog()?.open ? closePalette() : openPalette();
+      return;
+    }
+    const d = dialog();
+    if (!d?.open) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive(activeIndex + 1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(activeIndex - 1);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      rows()[activeIndex]?.click();
+    }
+  });
+
+  document.addEventListener("input", (e) => {
+    if ((e.target as HTMLElement).id !== "search-input") return;
+    const value = (e.target as HTMLInputElement).value;
+    window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(() => renderResults(value), 80);
+  });
+
+  // `close` doesn't bubble — capture phase still sees it.
+  document.addEventListener(
+    "close",
+    (e) => {
+      if ((e.target as HTMLElement).id !== "search-palette") return;
+      document.documentElement.style.overflow = "";
+      lastFocused?.focus?.();
+      lastFocused = null;
+    },
+    true
+  );
+
+  document.addEventListener("astro:before-swap", () => {
+    closePalette();
+    document.documentElement.style.overflow = "";
+  });
+
+  // Non-Mac: show "Ctrl K" in trigger hints (re-run per swap — triggers are
+  // re-created by ClientRouter on every navigation).
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+  function updateHints() {
+    if (isMac) return;
+    document
+      .querySelectorAll("[data-kbd-hint]")
+      .forEach((kbd) => (kbd.textContent = "Ctrl K"));
+  }
+  updateHints();
+  document.addEventListener("astro:page-load", updateHints);
+</script>

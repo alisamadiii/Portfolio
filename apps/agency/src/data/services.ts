@@ -20,6 +20,8 @@ export interface Service {
   name: string;
   eyebrow: string;
   keyword: string;
+  /** Extra synonyms/misspellable terms surfaced only by site search. */
+  searchKeywords?: string[];
   seoTitle: string;
   metaDescription: string;
   h1: string;
@@ -67,6 +69,14 @@ export const services: Service[] = [
     name: "Brand Identity",
     eyebrow: "Design",
     keyword: "brand identity design",
+    searchKeywords: [
+      "logo",
+      "branding",
+      "colors",
+      "typography",
+      "visual identity",
+      "brand colors",
+    ],
     seoTitle: "Brand Identity Design Built From Your Logo — Ali Samadi Agency",
     metaDescription:
       "Brand identity design that starts with your logo — you pick the mark you love, and we turn its colors and character into your buttons, forms, and entire website theme.",
@@ -157,6 +167,15 @@ export const services: Service[] = [
     name: "Web Development",
     eyebrow: "Engineering",
     keyword: "web development agency",
+    searchKeywords: [
+      "website",
+      "web design",
+      "build a site",
+      "nextjs",
+      "react",
+      "landing page",
+      "developer",
+    ],
     seoTitle:
       "Astro Web Development Agency — Fast Local Business Sites | Ali Samadi Agency",
     metaDescription:
@@ -248,6 +267,14 @@ export const services: Service[] = [
     name: "UI/UX Design",
     eyebrow: "Design",
     keyword: "ui/ux design services",
+    searchKeywords: [
+      "design",
+      "interface",
+      "figma",
+      "user experience",
+      "mockup",
+      "redesign",
+    ],
     seoTitle: "UI/UX Design Services That Convert — Ali Samadi Agency",
     metaDescription:
       "UI/UX design services for websites and web apps — clear layouts, accessible interfaces, and user journeys designed to turn visitors into customers.",
@@ -312,6 +339,15 @@ export const services: Service[] = [
     name: "SEO & Analytics",
     eyebrow: "Growth",
     keyword: "small business seo services",
+    searchKeywords: [
+      "google ranking",
+      "search engine",
+      "analytics",
+      "traffic",
+      "rank higher",
+      "google search",
+      "seo",
+    ],
     seoTitle:
       "Small Business SEO Services & Analytics Setup — Ali Samadi Agency",
     metaDescription:
@@ -382,6 +418,14 @@ export const services: Service[] = [
     name: "Website Management",
     eyebrow: "Client Hub & Care",
     keyword: "edit your own website",
+    searchKeywords: [
+      "hosting",
+      "maintenance",
+      "cms",
+      "updates",
+      "content editing",
+      "manage website",
+    ],
     seoTitle:
       "Edit Your Own Website — Client Hub Dashboard & Managed Care | Ali Samadi Agency",
     metaDescription:
@@ -528,6 +572,15 @@ export const services: Service[] = [
     name: "Custom Web Apps",
     eyebrow: "Engineering",
     keyword: "custom web app development",
+    searchKeywords: [
+      "dashboard",
+      "app",
+      "database",
+      "auth",
+      "admin panel",
+      "saas",
+      "user accounts",
+    ],
     seoTitle:
       "Custom Web App Development — Dashboards, Auth, Databases | Ali Samadi Agency",
     metaDescription:

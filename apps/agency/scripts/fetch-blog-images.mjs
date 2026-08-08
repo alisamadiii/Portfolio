@@ -38,6 +38,14 @@ const QUERIES = {
   "color-rule": "paint color palette cards fan deck",
   "website-buttons": "website ui design colorful screen closeup",
   "logo-concepts": "graphic designer sketching logo ideas notebook",
+  "domain-hero": "person typing laptop website browser address bar",
+  "domain-keys": "handing over house keys hands closeup",
+  "dns-setup": "video call screen share laptop help support",
+};
+
+// key → exact Pexels photo id. Overrides the search query for that key.
+const PINNED = {
+  "domain-hero": 4160089,
 };
 
 await mkdir(resolve(appRoot, "public/blog"), { recursive: true });
@@ -45,21 +53,32 @@ await mkdir(resolve(appRoot, "public/blog"), { recursive: true });
 const credits = {};
 
 for (const [key, query] of Object.entries(QUERIES)) {
-  const res = await fetch(
-    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=landscape&per_page=5`,
-    { headers: { Authorization: KEY } }
-  );
-  if (!res.ok) {
-    console.error(`Pexels search failed for ${key}: HTTP ${res.status}`);
-    process.exit(1);
+  let photo;
+  if (PINNED[key]) {
+    const res = await fetch(`https://api.pexels.com/v1/photos/${PINNED[key]}`, {
+      headers: { Authorization: KEY },
+    });
+    if (!res.ok) {
+      console.error(`Pexels photo ${PINNED[key]} failed for ${key}: HTTP ${res.status}`);
+      process.exit(1);
+    }
+    photo = await res.json();
+  } else {
+    const res = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=landscape&per_page=5`,
+      { headers: { Authorization: KEY } }
+    );
+    if (!res.ok) {
+      console.error(`Pexels search failed for ${key}: HTTP ${res.status}`);
+      process.exit(1);
+    }
+    const { photos } = await res.json();
+    if (!photos?.length) {
+      console.error(`No Pexels results for ${key} ("${query}")`);
+      process.exit(1);
+    }
+    photo = photos[0];
   }
-  const { photos } = await res.json();
-  if (!photos?.length) {
-    console.error(`No Pexels results for ${key} ("${query}")`);
-    process.exit(1);
-  }
-
-  const photo = photos[0];
   const img = await fetch(photo.src.large2x ?? photo.src.original);
   const buf = Buffer.from(await img.arrayBuffer());
 

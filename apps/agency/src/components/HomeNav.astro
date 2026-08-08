@@ -1,3 +1,7 @@
+---
+import SearchTrigger from "./SearchTrigger.astro";
+---
+
 <nav
   class="fixed top-0 left-0 z-40 w-full border-b border-charcoal/[0.07] bg-cream/70 px-6 py-4 backdrop-blur-[14px] md:px-10"
 >
@@ -37,6 +41,7 @@
       >
     </div>
     <div class="hidden items-center gap-4 md:flex">
+      <SearchTrigger />
       <a
         href="https://portal.alisamadii.com"
         target="_blank"
@@ -51,19 +56,22 @@
         <span class="text-[13px]">&#8599;</span>
       </a>
     </div>
-    <!-- Mobile hamburger -->
-    <button
-      id="menuToggle"
-      aria-label="Toggle menu"
-      class="z-50 flex size-11 flex-col items-center justify-center gap-1.5 md:hidden"
-    >
-      <span
-        class="block h-[1.5px] w-6 origin-center bg-charcoal transition-all duration-300"
-        id="line1"></span>
-      <span
-        class="block h-[1.5px] w-6 origin-center bg-charcoal transition-all duration-300"
-        id="line2"></span>
-    </button>
+    <!-- Mobile search + hamburger -->
+    <div class="flex items-center md:hidden">
+      <SearchTrigger variant="mobile" />
+      <button
+        id="menuToggle"
+        aria-label="Toggle menu"
+        class="z-50 flex size-11 flex-col items-center justify-center gap-1.5"
+      >
+        <span
+          class="block h-[1.5px] w-6 origin-center bg-charcoal transition-all duration-300"
+          id="line1"></span>
+        <span
+          class="block h-[1.5px] w-6 origin-center bg-charcoal transition-all duration-300"
+          id="line2"></span>
+      </button>
+    </div>
   </div>
 </nav>
 

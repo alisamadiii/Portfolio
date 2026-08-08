@@ -90,6 +90,24 @@ When building a cluster for a new page:
 
 ---
 
+### 5. `who should own your domain name` → agency blog
+
+- **Primary source:** `(invented)` — no active CSV for the agency site; picked from SERP research (real query; top results: rynoss.com ownership guide ~2,000w, montereypremier.com domain guide ~1,900w, southtowndesigns.com ownership rights ~2,000w)
+- **Used on page:** `/blog/who-should-own-your-domain-name`
+- **Cluster:**
+
+| Secondary keyword | Source |
+|-------------------|--------|
+| does my web designer own my website | `(invented — confirmed PAA)` |
+| should my web designer buy my domain | `(invented)` |
+| what happens if my web designer owns my domain | `(invented)` |
+| how do web agencies host client websites | `(invented)` |
+| how to check who owns my domain | `(invented)` |
+
+*CSV audit: no agency keyword CSV exists. Primary and secondaries validated against live SERP + People-Also-Ask instead.*
+
+---
+
 ## Workflow for the next post
 
 1. Open the active keyword CSV

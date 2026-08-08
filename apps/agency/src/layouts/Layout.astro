@@ -4,6 +4,8 @@ import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
 
+import SearchPalette from "../components/SearchPalette.astro";
+
 interface Props {
   title: string;
   description: string;
@@ -174,5 +176,6 @@ const jsonLd = {
 
   <body class={bodyClass}>
     <slot />
+    <SearchPalette />
   </body>
 </html>
