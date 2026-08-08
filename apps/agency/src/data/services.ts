@@ -31,6 +31,18 @@ export interface Service {
   benefits: { title: string; text: string }[];
   process?: { title: string; text: string }[];
   processCta?: { label: string; href: string };
+  /** Product screenshot walkthrough — alternating image + explanation rows. */
+  showcase?: {
+    heading: string;
+    sub?: string;
+    items: {
+      title: string;
+      text: string;
+      image: { src: string; alt: string };
+    }[];
+  };
+  /** Prominent amber notice banner (e.g. purchase requirements). */
+  notice?: { label: string; title: string; text: string };
   faqs: { q: string; a: string }[];
   externalLinks: ServiceLink[];
   related: string[];
@@ -365,39 +377,108 @@ export const services: Service[] = [
   {
     slug: "website-management",
     name: "Website Management",
-    eyebrow: "CMS & Care",
+    eyebrow: "Client Hub & Care",
     keyword: "edit your own website",
     seoTitle:
-      "Edit Your Own Website — CMS Access & Managed Care | Ali Samadi Agency",
+      "Edit Your Own Website — Client Hub Dashboard & Managed Care | Ali Samadi Agency",
     metaDescription:
-      "Edit your own website without a developer: CMS access for text, images, and pages, plus managed hosting that keeps your site fast, secure, and backed up.",
+      "Edit your own website from one dashboard: change text, images, and pages, monitor your site's uptime, and see every email it sends — no developer needed.",
     h1: "Edit your own website — no developer needed",
     heroSub:
-      "CMS access for your text, images, and pages, plus managed hosting that keeps everything fast, secure, and backed up.",
+      "Client Hub gives you one dashboard to edit your content, monitor your site, and see every email it sends — while managed hosting keeps everything fast, secure, and backed up.",
     intro:
-      "Ali Samadi Agency sets every client up to edit their own website. Through a simple CMS dashboard you change text, swap images, and add pages yourself — every save goes live automatically, no developer round-trips, no hourly fees for a typo fix. Prefer hands-off? Our managed hosting keeps the site fast, secure, and backed up while you run your business. You also get a GitHub collaborator invite, so the code is never locked away from you.",
+      "Ali Samadi Agency sets every client up to edit their own website through Client Hub, our client dashboard at hub.alisamadii.com. It's more than a CMS: from one place you change text, swap images, and add pages, watch your site's uptime and response time, and browse a log of every email your website sends — receipts, notifications, contact-form messages. Every content save goes live automatically in about a minute, with no developer round-trips and no hourly fees for a typo fix. Your images live in your own free ImageKit account, your code sits in a repository you're invited to, and more features — like email marketing — are on the way. Prefer hands-off? Managed hosting keeps the site fast, secure, and backed up while you run your business.",
     benefits: [
       {
         title: "Change anything, anytime",
-        text: "Text, images, and pages editable from a clean dashboard. Every save commits and deploys automatically — live in about a minute.",
+        text: "Text, images, and pages editable from a clean, form-based dashboard. Every save commits and deploys automatically — live in about a minute.",
       },
       {
-        title: "No hostage code",
-        text: "You're invited as a collaborator on the repository. Your site's code is visible, portable, and yours — switch developers anytime.",
+        title: "Your files stay yours",
+        text: "Images and files live in your own ImageKit account — free for most use cases — connected right inside the dashboard. We never hold your media hostage; you keep full control even if we part ways.",
       },
       {
-        title: "Managed and monitored",
-        text: "Hosting, SSL, backups, and updates handled for a flat monthly fee. If something breaks, fixing it is our job, not yours.",
+        title: "More than a CMS",
+        text: "Client Hub also shows whether your site is live and how fast it responds, plus a searchable log of every email it sends. Email marketing is coming next.",
       },
       {
         title: "Impossible to break",
-        text: "Editors can change content, not code or layout. You can't accidentally take the site down from the CMS.",
+        text: "The editor only exposes content — never code or layout. Every change is version-controlled, so anything can be rolled back. You also get a GitHub collaborator invite, so the code is never locked away from you.",
       },
     ],
+    process: [
+      {
+        title: "Purchase CMS access",
+        text: "Subscribe with the email you want on the project. That exact email is the one we invite — it's your key to the dashboard.",
+      },
+      {
+        title: "Get invited",
+        text: "We send an invite to your purchase email. Sign in at hub.alisamadii.com and your website project is waiting for you.",
+      },
+      {
+        title: "Edit your content",
+        text: "Change text, swap images, add pages — all through simple forms. Connect your own ImageKit account for full control of your files.",
+      },
+      {
+        title: "Save and it's live",
+        text: "Every save is version-controlled and deploys automatically. Your change is on the live site in about a minute.",
+      },
+    ],
+    showcase: {
+      heading: "A tour of your dashboard",
+      sub: "This is Client Hub — what you actually see when you sign in at hub.alisamadii.com.",
+      items: [
+        {
+          title: "Home — your whole website at a glance",
+          text: "One screen shows your site's live status, your content projects, your billing, and your latest change requests. No hunting through tools — everything about your website lives in one place.",
+          image: {
+            src: "/services/hub/hub-home.webp",
+            alt: "Client Hub home dashboard showing website status, content, billing, and recent requests cards",
+          },
+        },
+        {
+          title: "Content editor — edit like filling in a form",
+          text: "Your pages are organized into collections. Open an entry and every piece of content is a labeled field — headlines, paragraphs, images, dates. Rich text works like a familiar document editor. You can't touch code or layout, so you can't break the site.",
+          image: {
+            src: "/services/hub/hub-editor.webp",
+            alt: "Client Hub content editor with form-based fields and rich text editing",
+          },
+        },
+        {
+          title: "Media — your images, your ImageKit account",
+          text: "Connect your own free ImageKit account and manage every image and file from inside the dashboard. We never store your credentials, and the files belong to your account — not ours. You keep full control, always.",
+          image: {
+            src: "/services/hub/hub-media.webp",
+            alt: "Client Hub media library with ImageKit integration for managing images",
+          },
+        },
+        {
+          title: "Website — know your site is up",
+          text: "See at a glance whether your site is live, whether HTTPS is healthy, and how fast it responds — with the last check timestamped. If something's wrong, you see it the same moment we do.",
+          image: {
+            src: "/services/hub/hub-website.webp",
+            alt: "Client Hub website monitoring page showing live status and response time",
+          },
+        },
+        {
+          title: "Emails — every message, logged",
+          text: "Every email your website sends — receipts, notifications, contact-form messages — lands in a searchable log. Filter by type or date range and export the whole thing as a PDF for your records.",
+          image: {
+            src: "/services/hub/hub-emails.webp",
+            alt: "Client Hub email log with search, filters, and PDF export",
+          },
+        },
+      ],
+    },
+    notice: {
+      label: "Before you subscribe",
+      title: "One account. Your purchase email.",
+      text: "CMS access must be purchased with the same account that gets invited to your project. We only invite the email address used at purchase — no additional emails. Without an active subscription you can still browse the dashboard, but saving content is locked: your edits stay in the editor until you subscribe, then save again.",
+    },
     faqs: [
       {
         q: "Do I need technical skills to edit my site?",
-        a: "No. The CMS is a form-based dashboard — if you can fill in a form and upload a photo, you can edit your site. Changes go live automatically.",
+        a: "No. Client Hub is a form-based dashboard — if you can fill in a form and upload a photo, you can edit your site. Changes go live automatically.",
       },
       {
         q: "What does website management cost?",
@@ -405,17 +486,25 @@ export const services: Service[] = [
       },
       {
         q: "What if I break something?",
-        a: "You can't — the CMS only exposes content, not code. And because every change is version-controlled, anything can be rolled back to a previous state.",
+        a: "You can't — the dashboard only exposes content, not code. And because every change is version-controlled, anything can be rolled back to a previous state.",
       },
       {
         q: "Can my team have accounts too?",
-        a: "Yes. Collaborators can be invited by email with content-only access — no GitHub account required for editors.",
+        a: "Access is one account per project: the email used to purchase CMS access is the only email we invite, and the only one that can save content. Keep that in mind when choosing which email to subscribe with.",
+      },
+      {
+        q: "Who controls my images and files?",
+        a: "You do. Media is managed through your own ImageKit account — free for the majority of use cases — connected inside the dashboard. Your files live in your account, not ours, so you're never tied to us.",
+      },
+      {
+        q: "What happens if my subscription lapses?",
+        a: "You can still sign in and browse, but saving is disabled until the subscription is active again. Nothing is deleted — your content and site keep running.",
       },
     ],
     externalLinks: [
       {
-        label: "Pages CMS — how git-based editing works",
-        url: "https://pagescms.org/docs/",
+        label: "ImageKit — free media management for your files",
+        url: "https://imagekit.io/plans/",
       },
       {
         label: "GitHub — repository collaborators explained",
@@ -425,7 +514,7 @@ export const services: Service[] = [
     related: ["web-development", "seo-analytics"],
     image: img(
       "website-management",
-      "Person updating their website content on a laptop"
+      "Business owner happily updating their own website from a laptop at a cafe"
     ),
     cta: { label: "See pricing", href: "/pricing" },
   },

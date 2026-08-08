@@ -33,6 +33,11 @@ const QUERIES = {
   execution: "programmer code editor screen closeup",
   launch: "person using laptop website happy office",
   timeline: "calendar clock deadline planning desk",
+  "logo-colors-hero": "logo design color swatches branding moodboard",
+  "logo-hex": "color swatches palette samples designer hand",
+  "color-rule": "paint color palette cards fan deck",
+  "website-buttons": "website ui design colorful screen closeup",
+  "logo-concepts": "graphic designer sketching logo ideas notebook",
 };
 
 await mkdir(resolve(appRoot, "public/blog"), { recursive: true });

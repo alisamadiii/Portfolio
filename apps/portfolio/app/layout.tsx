@@ -10,6 +10,9 @@ import { BgPattern } from "@workspace/ui/components/bg-pattern";
 import { Footer } from "@workspace/ui/components/footer";
 import { Providers } from "@workspace/ui/providers";
 
+import { JsonLd } from "@/components/json-ld";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+
 const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -27,24 +30,38 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://alisamadii.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Ali Samadi - Portfolio",
     template: "%s | Ali Samadi",
   },
-  description: "A collection of my projects and experiences.",
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: "./",
+  },
   openGraph: {
+    siteName: SITE_NAME,
     title: "Ali Samadi - Portfolio",
-    description: "A collection of my projects and experiences.",
+    description: SITE_DESCRIPTION,
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} logo`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ali Samadi - Portfolio",
-    description: "A collection of my projects and experiences.",
+    description: SITE_DESCRIPTION,
+    images: ["/og-image.png"],
   },
   icons: {
     icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -58,6 +75,7 @@ export default async function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
+        <JsonLd />
         <Providers>
           <Suspense>
             {/* <BgPattern lessVisibleOn={["/client/", "/blog/how-i-build"]} /> */}

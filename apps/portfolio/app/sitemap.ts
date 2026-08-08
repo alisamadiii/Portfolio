@@ -2,11 +2,10 @@ import { MetadataRoute } from "next";
 import { allPosts } from "content-collections";
 
 import { clientProjects } from "@/lib/clients";
+import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Use Vercel production URL if available, otherwise fallback to localhost
-  const baseUrl =
-    process.env.VERCEL_PROJECT_PRODUCTION_URL || "http://localhost:3000";
+  const baseUrl = SITE_URL;
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [

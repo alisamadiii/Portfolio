@@ -19,7 +19,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
-  return { title: client.name };
+  const description = `Client work for ${client.name} — product videos and highlights from the project.`;
+
+  return {
+    title: client.name,
+    description,
+    alternates: {
+      canonical: `/client/${slug}`,
+    },
+    openGraph: {
+      title: client.name,
+      description,
+      url: `/client/${slug}`,
+    },
+  };
 }
 
 export default async function ClientPage({ params }: Props) {

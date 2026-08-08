@@ -72,6 +72,24 @@ When building a cluster for a new page:
 
 ---
 
+### 4. `how to match website colors to your logo` → agency blog
+
+- **Primary source:** `(invented)` — no active CSV for the agency site; picked from SERP research (real query, top results: getfoundquick.com Q&A ~300w, uxmovement.com guide ~1,800w, LinkedIn Pulse tips ~1,100w)
+- **Used on page:** `/blog/match-website-colors-to-logo`
+- **Cluster:**
+
+| Secondary keyword | Source |
+|-------------------|--------|
+| website color scheme from logo | `(invented)` |
+| how to find the exact colors in my logo | `(invented)` |
+| how many colors should a website have | `(invented)` |
+| 60-30-10 rule website design | `(invented)` |
+| should my website match my logo | `(invented)` |
+
+*CSV audit: no agency keyword CSV exists. Primary and secondaries validated against live SERP instead.*
+
+---
+
 ## Workflow for the next post
 
 1. Open the active keyword CSV

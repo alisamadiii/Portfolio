@@ -190,6 +190,26 @@ const relatedServices = service.related
     </p>
   </section>
 
+  <!-- ==================== NOTICE (prominent amber banner) ==================== -->
+  {
+    service.notice && (
+      <section class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[60px] md:px-10">
+        <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
+          <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
+            <span class="h-px w-[26px] bg-amber-500" />
+            {service.notice.label}
+          </div>
+          <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
+            {service.notice.title}
+          </h2>
+          <p class="text-warmgray mt-5 max-w-[68ch] text-[16.5px] leading-[1.65]">
+            {service.notice.text}
+          </p>
+        </div>
+      </section>
+    )
+  }
+
   <!-- ==================== BENEFITS ==================== -->
   <section
     class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
@@ -214,6 +234,53 @@ const relatedServices = service.related
       }
     </div>
   </section>
+
+  <!-- ==================== SHOWCASE (product screenshots, optional) ==================== -->
+  {
+    service.showcase && (
+      <section class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10">
+        <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
+          {service.showcase.heading}
+        </h2>
+        {service.showcase.sub && (
+          <p class="text-warmgray reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65]">
+            {service.showcase.sub}
+          </p>
+        )}
+        <div class="mt-12 space-y-16 md:space-y-20">
+          {service.showcase.items.map((item, i) => (
+            <div
+              class={`reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-14 ${
+                i % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""
+              }`}
+            >
+              <div>
+                <div class="text-accent font-mono text-[13px] tracking-[0.08em]">
+                  0{i + 1}
+                </div>
+                <h3 class="mt-2 text-[21px] font-semibold tracking-[-0.02em]">
+                  {item.title}
+                </h3>
+                <p class="text-warmgray mt-3 max-w-[48ch] text-[15.5px] leading-[1.65]">
+                  {item.text}
+                </p>
+              </div>
+              <div class="img-wrap border-charcoal/[0.08] aspect-[16/10] overflow-hidden rounded-[18px] border bg-white">
+                <img
+                  src={item.image.src}
+                  alt={item.image.alt}
+                  width="1600"
+                  height="1000"
+                  loading="lazy"
+                  class="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   <!-- ==================== PROCESS (optional) ==================== -->
   {

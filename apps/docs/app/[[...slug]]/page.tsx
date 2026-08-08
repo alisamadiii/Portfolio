@@ -20,13 +20,26 @@ export default async function Page(props: PageProps<"/[[...slug]]">) {
 
   const MDX = page.data.body;
   const gitConfig = {
-    user: "username",
-    repo: "repo",
+    user: "alisamadiii",
+    repo: "Portfolio",
     branch: "main",
+  };
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: page.data.title,
+    ...(page.data.description && { description: page.data.description }),
+    url: `https://docs.alisamadii.com${page.url === "/" ? "" : page.url}`,
+    author: { "@type": "Person", name: "Ali Samadi", url: "https://www.alisamadii.com" },
   };
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">
         {page.data.description}
@@ -35,8 +48,7 @@ export default async function Page(props: PageProps<"/[[...slug]]">) {
         <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
         <ViewOptions
           markdownUrl={`${page.url}.mdx`}
-          // update it to match your repo
-          githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/docs/content/docs/${page.path}`}
+          githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/apps/docs/content/${page.path}`}
         />
       </div>
       <DocsBody>
@@ -65,7 +77,13 @@ export async function generateMetadata(
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: {
+      canonical: page.url,
+    },
     openGraph: {
+      title: page.data.title,
+      description: page.data.description,
+      url: page.url,
       images: getPageImage(page).url,
     },
   };

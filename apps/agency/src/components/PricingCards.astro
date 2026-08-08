@@ -5,10 +5,21 @@
 // with the component so any page using it gets a working Start button.
 import { PRICING, fmtPrice } from "../data/pricing";
 
+interface Props {
+  cols?: 2 | 3;
+}
+
+const { cols = 3 } = Astro.props;
+
 const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
 ---
 
-<div class="stagger grid grid-cols-1 gap-6 md:grid-cols-3">
+<div
+  class:list={[
+    "stagger grid grid-cols-1 gap-6",
+    cols === 2 ? "md:grid-cols-2" : "md:grid-cols-3",
+  ]}
+>
   <!-- Monthly Card -->
   <div class="reveal">
     <div
@@ -307,7 +318,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
   </div>
 
   <!-- Custom Card -->
-  <div class="reveal">
+  <div class:list={["reveal", cols === 2 && "md:col-span-2"]}>
     <div
       class="package-card ring-charcoal/[0.04] bg-charcoal/[0.03] flex h-full flex-col rounded-[18px] p-1.5 ring-1"
     >
