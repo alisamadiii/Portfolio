@@ -30,7 +30,7 @@ To match your website colors to your logo, you need three things: the logo's exa
 
 A hex code is a six-character label for a color — `#1a73e8` is a specific blue, forever, on every screen. It sounds like witchcraft, and technically it is the only kind where the spell is six characters and the ritual is clicking.
 
-"Close enough" is the enemy here. The eye is terrible at matching color from memory but excellent at noticing when two blues *almost* match. Almost-matching reads as a mistake.
+"Close enough" is the enemy here. The eye is terrible at matching color from memory but excellent at noticing when two blues _almost_ match. Almost-matching reads as a mistake.
 
 Getting the codes takes about two minutes:
 
@@ -73,7 +73,7 @@ Two checks before you ship:
 
 If you don't have a logo, resist the urge to design the website first and bolt a logo on later. That's how you end up with a green logo on a blue site, visually filing for divorce on day one.
 
-This is exactly how I work with new businesses: logo first, everything else derived from it. You pick a mark you love from a range of concepts — a logo platform like [design.com](https://design.com) is a good place to browse until something feels like your business — then I pull its colors and character into a theme, and the buttons, forms, and headings all inherit it. The site can't clash with the logo, because the site came *from* the logo — the full workflow is on the [brand identity service page](/services/brand-identity).
+This is exactly how I work with new businesses: logo first, everything else derived from it. You pick a mark you love from a range of concepts — a logo platform like [design.com](https://design.com) is a good place to browse until something feels like your business — then I pull its colors and character into a theme, and the buttons, forms, and headings all inherit it. The site can't clash with the logo, because the site came _from_ the logo — the full workflow is on the [brand identity service page](/services/brand-identity).
 
 The order matters. A logo is the hardest thing to change later; a website theme takes an afternoon to re-skin. Decide the permanent thing first and let the easy things follow it.
 
@@ -86,7 +86,7 @@ Call me when the problem is bigger than a hex code: the logo, the colors, and th
 ## Straight answers
 
 **Should my website be the same color as my logo?**
-It should *use* the logo's colors, not be drenched in them. Follow 60-30-10: neutral base, calm support color, and the logo's strongest color as a small accent on buttons and links.
+It should _use_ the logo's colors, not be drenched in them. Follow 60-30-10: neutral base, calm support color, and the logo's strongest color as a small accent on buttons and links.
 
 **How do I find the exact colors in my logo?**
 Ask your designer for the hex codes, or upload the original PNG or SVG to a free extraction tool like Adobe Color or Coolors and click each color. Screenshots shift the values — use the real file.

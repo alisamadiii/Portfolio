@@ -63,9 +63,9 @@ const schema = [
   <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
     <div class="mx-auto max-w-[1200px]">
       <div
-        class="text-muted mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="bg-accent h-px w-[26px]"></span>Blog
+        <span class="h-px w-[26px] bg-accent"></span>Blog
       </div>
       <h1
         class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
@@ -73,7 +73,7 @@ const schema = [
         Notes on building <span class="text-accent">better websites</span>
       </h1>
       <p
-        class="text-warmgray mt-6 max-w-[58ch] text-[17px] leading-[1.6] md:text-[18px]"
+        class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
       >
         How websites actually get built — process, development, SEO, and how to
         run your own site once it's live. Written from real projects, no fluff.
@@ -82,7 +82,7 @@ const schema = [
   </section>
 
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
     {
       posts.length === 0 ? (
@@ -92,7 +92,7 @@ const schema = [
           {posts.map((post) => (
             <a
               href={`/blog/${post.id}`}
-              class="img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
+              class="img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
             >
               <div class="aspect-[16/9] overflow-hidden">
                 <img
@@ -105,16 +105,16 @@ const schema = [
                 />
               </div>
               <div class="p-7">
-                <div class="text-muted font-mono text-[11.5px] tracking-[0.08em] uppercase">
+                <div class="font-mono text-[11.5px] tracking-[0.08em] text-muted uppercase">
                   {dateFmt(post.data.publishDate)}
                 </div>
                 <div class="mt-2.5 flex items-start justify-between gap-4">
                   <h2 class="text-[22px] leading-[1.2] font-semibold tracking-[-0.02em]">
                     {post.data.title}
                   </h2>
-                  <span class="text-accent shrink-0">&#8599;</span>
+                  <span class="shrink-0 text-accent">&#8599;</span>
                 </div>
-                <p class="text-warmgray mt-2.5 text-[14.5px] leading-[1.6]">
+                <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
                   {post.data.description}
                 </p>
               </div>

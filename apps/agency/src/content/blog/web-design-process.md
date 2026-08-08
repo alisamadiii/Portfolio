@@ -16,7 +16,7 @@ Most people think building a website starts with picking a colour. It doesn't. I
 
 So here's how I actually work, minus the mystery.
 
-> **The short version:** The web design process is the set of stages a website goes through from first idea to live site. Mine has four: **Discovery, Strategy, Execution, and Launch & Scale.** Discovery figures out what the site is *for*. Strategy decides its shape. Execution builds it in real code. Launch puts it live and hands you the keys.
+> **The short version:** The web design process is the set of stages a website goes through from first idea to live site. Mine has four: **Discovery, Strategy, Execution, and Launch & Scale.** Discovery figures out what the site is _for_. Strategy decides its shape. Execution builds it in real code. Launch puts it live and hands you the keys.
 
 That's the whole map. The rest of this post is the detail — including how long it really takes, where AI fits in, and the one thing I do differently from almost every agency: I hand you a site you can edit yourself, no developer required, no ransom notes.
 
@@ -26,11 +26,11 @@ Let's get into it.
 
 ## Step 1: Discovery — the part everyone wants to skip
 
-Every project starts with understanding, not design. Before I open a code editor or draw a single layout, I need to know what the website is actually *for*. Not "a website." What job it's being hired to do.
+Every project starts with understanding, not design. Before I open a code editor or draw a single layout, I need to know what the website is actually _for_. Not "a website." What job it's being hired to do.
 
 Discovery is a focused conversation about three things.
 
-- **Your goals.** What should this site *do* — book calls, sell a service, collect leads, prove you're not a guy running a business out of a Gmail address? A site built to book appointments looks nothing like one built to sell products. If we don't agree on the job first, we're just decorating.
+- **Your goals.** What should this site _do_ — book calls, sell a service, collect leads, prove you're not a guy running a business out of a Gmail address? A site built to book appointments looks nothing like one built to sell products. If we don't agree on the job first, we're just decorating.
 - **Your audience.** Who's landing on the page, and what do they need in the first ten seconds? Someone comparing three quotes needs different things than someone who already trusts you and just wants the "book now" button. Ten seconds, by the way, is generous. Most people decide in about three, which is roughly the time it takes to regret opening a website that autoplays music.
 - **Your competition.** I look at what similar businesses are doing — what works, what's cluttered, and where there's a gap for you to look like the obvious choice instead of the fourth tab someone forgot they opened.
 
@@ -54,7 +54,7 @@ Strategy covers four things.
 
 **The creative direction.** The overall feel — typography, colour, tone — gets set here so the whole site holds together instead of turning into a patchwork of nice-looking pieces that clearly don't belong on the same website. Consistency is what makes a site feel designed instead of assembled.
 
-There's also a quiet third partner in this step that nobody likes talking about: **content.** Words are part of the design, not a thing you pour in at the end like petrol into a car that's already on the highway. If we know roughly what each page needs to *say* during Strategy, the design gets built around real messaging instead of "lorem ipsum" placeholder that everyone forgets to replace until it's live and a customer emails you asking what "dolor sit amet" means.
+There's also a quiet third partner in this step that nobody likes talking about: **content.** Words are part of the design, not a thing you pour in at the end like petrol into a car that's already on the highway. If we know roughly what each page needs to _say_ during Strategy, the design gets built around real messaging instead of "lorem ipsum" placeholder that everyone forgets to replace until it's live and a customer emails you asking what "dolor sit amet" means.
 
 Good strategy is the difference between a website that looks nice and one that earns its keep. Decoration versus design. One gets compliments. The other gets you customers.
 
@@ -76,7 +76,7 @@ During Execution, you're not left guessing either. You review real, working page
 
 Before anything goes live, I test it. This is the least glamorous part of the whole process and the one that separates a real build from a "looks great on my laptop" build.
 
-- **Every screen size.** Your site gets checked on phones, tablets, and desktops. More than half your visitors are on a phone, and a site that only looks good on a big monitor is a site that only looks good to *you*.
+- **Every screen size.** Your site gets checked on phones, tablets, and desktops. More than half your visitors are on a phone, and a site that only looks good on a big monitor is a site that only looks good to _you_.
 - **Every major browser.** Chrome, Safari, Firefox, Edge. Safari in particular has opinions, and it likes to share them at the worst possible moment.
 - **Speed.** A slow site loses people before they've read a word — every extra second of load time drops conversions, and Google notices too. Fast isn't a nice-to-have, it's the whole first impression.
 - **The actual buttons.** Forms submit. Links go somewhere. The "contact" button contacts someone. You'd be amazed how often that last one isn't true on sites that "worked fine."
@@ -97,11 +97,11 @@ Then comes the part I'm actually proudest of: **the handoff.** I set every clien
 - **Swap images and add pages** without touching a single line of code.
 - **Publish instantly.** Every change you save goes live automatically, usually inside a minute.
 
-Here's the safety net: because the CMS only exposes content and not code, you *can't* accidentally break the site. Poke around all you like — the worst you can do is fix a typo. And because everything's version-controlled behind the scenes, any change can be rolled back. You get the control of a big platform with none of the fragility.
+Here's the safety net: because the CMS only exposes content and not code, you _can't_ accidentally break the site. Poke around all you like — the worst you can do is fix a typo. And because everything's version-controlled behind the scenes, any change can be rolled back. You get the control of a big platform with none of the fragility.
 
 This is the bit most agencies quietly hate, because "you need us to change a word" is a nice little recurring invoice. I'd rather you own your site. If you'd genuinely rather stay hands-off, managed hosting keeps everything fast, secure, and backed up while you go run your business. Your call — not a trap.
 
-And "Scale" isn't just a word I added to make the step sound bigger. A launched site isn't finished, it's *started*. You watch what pages people actually visit, you tweak the ones that underperform, you add a service page when you add a service. The process doesn't end at launch. Launch is where the useful part begins.
+And "Scale" isn't just a word I added to make the step sound bigger. A launched site isn't finished, it's _started_. You watch what pages people actually visit, you tweak the ones that underperform, you add a service page when you add a service. The process doesn't end at launch. Launch is where the useful part begins.
 
 ![A calendar and clock on a desk, planning a project timeline](/blog/timeline.webp)
 
@@ -138,13 +138,13 @@ The trade is simple: less process, less cost, live in a day — in exchange for 
 
 ## When you should not hire me
 
-I'm going to do the thing agencies never do and talk you *out* of a sale, because it saves us both a headache.
+I'm going to do the thing agencies never do and talk you _out_ of a sale, because it saves us both a headache.
 
 If you need a single-page "here's my phone number and hours" site, and you're comfortable with tech, you don't need me. A good template on Squarespace or a Framer starter and an afternoon will do it for the price of a lunch. Paying for a custom build there is like hiring a chef to make toast. It'll be excellent toast. It's still toast.
 
-You *should* call me when the site has a real job to do — when it needs to rank, convert, load fast, handle real traffic, or grow with the business, and you want to actually own it instead of renting it forever. That's where custom code and a proper process earn their keep. Below that line, I'll happily point you at the cheaper option and we'll both get on with our day.
+You _should_ call me when the site has a real job to do — when it needs to rank, convert, load fast, handle real traffic, or grow with the business, and you want to actually own it instead of renting it forever. That's where custom code and a proper process earn their keep. Below that line, I'll happily point you at the cheaper option and we'll both get on with our day.
 
-Telling you when *not* to hire me is, frankly, the fastest way to trust me when you do.
+Telling you when _not_ to hire me is, frankly, the fastest way to trust me when you do.
 
 ## The whole point of a process
 

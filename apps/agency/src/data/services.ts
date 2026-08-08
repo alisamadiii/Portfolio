@@ -225,7 +225,10 @@ export const services: Service[] = [
       },
     ],
     externalLinks: [
-      { label: "Astro — official documentation", url: "https://docs.astro.build" },
+      {
+        label: "Astro — official documentation",
+        url: "https://docs.astro.build",
+      },
       {
         label: "web.dev — why page speed matters",
         url: "https://web.dev/learn/performance",
@@ -589,7 +592,10 @@ export const services: Service[] = [
       },
     ],
     externalLinks: [
-      { label: "Next.js — official documentation", url: "https://nextjs.org/docs" },
+      {
+        label: "Next.js — official documentation",
+        url: "https://nextjs.org/docs",
+      },
       {
         label: "PostgreSQL — about the database",
         url: "https://www.postgresql.org/about/",

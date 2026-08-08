@@ -3,11 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import BackNav from "../components/BackNav.astro";
 import SimpleFooter from "../components/SimpleFooter.astro";
 import Testimonial from "../components/Testimonial.astro";
-import {
-  PROJECTS,
-  CLIENT_PROJECTS,
-  CONCEPT_PROJECTS,
-} from "../data/projects";
+import { PROJECTS, CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
 
 const SITE = "https://agency.alisamadii.com";
 const pageUrl = `${SITE}/work`;
@@ -57,9 +53,9 @@ const schema = [
   <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
     <div class="mx-auto max-w-[1200px]">
       <div
-        class="text-muted mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="bg-accent h-px w-[26px]"></span>Our Work
+        <span class="h-px w-[26px] bg-accent"></span>Our Work
       </div>
       <h1
         class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
@@ -67,18 +63,51 @@ const schema = [
         Work that's <span class="text-accent">live</span> and in use
       </h1>
       <p
-        class="text-warmgray mt-6 max-w-[58ch] text-[17px] leading-[1.6] md:text-[18px]"
+        class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
       >
-        Real websites we've designed and built for real businesses, plus
-        concept projects that show our range. Every one is custom-coded from
-        scratch — no templates, no page builders.
+        Real websites we've designed and built for real businesses, plus concept
+        projects that show our range. Every one is custom-coded from scratch —
+        no templates, no page builders.
       </p>
+    </div>
+  </section>
+
+  <!-- ==================== FAST-TRACK BANNER ==================== -->
+  <section class="px-4 pb-16 md:px-8 md:pb-20">
+    <div
+      class="reveal mx-auto max-w-[1200px] rounded-[22px] bg-accent px-7 py-12 text-cream md:px-14 md:py-16"
+    >
+      <div
+        class="mb-5 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-cream/80 uppercase"
+      >
+        <span class="h-px w-[26px] bg-cream"></span>Fast Track
+      </div>
+      <h2
+        class="max-w-[24ch] text-[clamp(28px,3.8vw,52px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Small business? Skip the process.
+      </h2>
+      <p
+        class="mt-5 max-w-[62ch] text-[16px] leading-[1.65] text-cream/90 md:text-[17px]"
+      >
+        If you're a small business looking for a fast landing page with a
+        great design, we don't need to go through all four steps &mdash;
+        Discovery, Strategy, Execution, Launch. Tell us what you do, and we'll
+        ship a clean, custom-coded page fast.
+      </p>
+      <a
+        href="/pricing"
+        class="mag-btn mt-8 inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-cream hover:text-charcoal"
+      >
+        Get a fast landing page
+        <span>&#8599;</span>
+      </a>
     </div>
   </section>
 
   <!-- ==================== CLIENT WORK ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
     <div
       class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -88,7 +117,7 @@ const schema = [
       >
         Real projects, real clients
       </h2>
-      <p class="reveal text-warmgray text-[15.5px] leading-[1.6]">
+      <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
         A selection of live websites we've designed and built for real
         businesses &mdash; each one shipped, launched, and in use today.
       </p>
@@ -101,7 +130,7 @@ const schema = [
             href={project.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
+            class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
           >
             <div class="aspect-[16/10] overflow-hidden">
               <img
@@ -123,7 +152,7 @@ const schema = [
                 </h3>
                 <span class="text-accent">&#8599;</span>
               </div>
-              <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+              <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
                 {project.description}
               </p>
             </div>
@@ -137,7 +166,7 @@ const schema = [
 
   <!-- ==================== CONCEPT PROJECTS ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
     <div
       class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -148,7 +177,7 @@ const schema = [
         Concept projects
       </h2>
       <div class="reveal">
-        <p class="text-warmgray text-[15.5px] leading-[1.6]">
+        <p class="text-[15.5px] leading-[1.6] text-warmgray">
           Every project is built from scratch — no templates, no shortcuts.
           These mock-ups showcase our capabilities; your project will be fully
           custom to your brand and goals.
@@ -186,7 +215,7 @@ const schema = [
             href={project.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="reveal img-wrap border-charcoal/[0.08] group block overflow-hidden rounded-[18px] border bg-white"
+            class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
           >
             <div class="aspect-[16/10] overflow-hidden">
               <img
@@ -208,7 +237,7 @@ const schema = [
                 </h3>
                 <span class="text-accent">&#8599;</span>
               </div>
-              <p class="text-warmgray mt-2 text-[14.5px] leading-[1.55]">
+              <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
                 {project.description}
               </p>
             </div>
@@ -220,7 +249,7 @@ const schema = [
 
   <!-- ==================== CTA ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] text-center md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] text-center md:px-10"
   >
     <h2
       class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
@@ -230,14 +259,14 @@ const schema = [
     <div class="reveal mt-8 flex flex-wrap justify-center gap-3.5">
       <a
         href="/pricing"
-        class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300"
+        class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
       >
         View pricing
         <span>&#8599;</span>
       </a>
       <a
         href="/contact"
-        class="mag-btn border-charcoal/[0.16] hover:border-accent hover:text-accent inline-flex items-center rounded-full border px-6 py-3.5 text-[15px] font-medium"
+        class="mag-btn inline-flex items-center rounded-full border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
       >
         Get in touch
       </a>

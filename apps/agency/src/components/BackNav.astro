@@ -9,22 +9,26 @@ interface Props {
 const { backHref, backLabel, fixed = false } = Astro.props;
 ---
 
-<nav class={fixed ? "fixed top-0 right-0 left-0 z-40 px-4 py-5 md:px-8" : "px-4 py-5 md:px-8"}>
+<nav
+  class={fixed
+    ? "fixed top-0 right-0 left-0 z-40 px-4 py-5 md:px-8"
+    : "px-4 py-5 md:px-8"}
+>
   <div class="mx-auto flex max-w-[1400px] items-center justify-between">
     <a href="/" class="group flex items-center gap-3">
       <div
-        class="bg-charcoal flex h-10 w-10 items-center justify-center rounded-full"
+        class="flex h-10 w-10 items-center justify-center rounded-full bg-charcoal"
       >
-        <span class="text-cream text-sm font-bold">AS</span>
+        <span class="text-sm font-bold text-cream">AS</span>
       </div>
       <span
-        class="text-warmgray group-hover:text-charcoal text-sm font-medium transition-colors duration-300"
+        class="text-sm font-medium text-warmgray transition-colors duration-300 group-hover:text-charcoal"
         >Ali Samadi</span
       >
     </a>
     <a
       href={backHref}
-      class="mag-btn text-warmgray hover:text-charcoal -my-2 flex min-h-11 items-center gap-2 py-2 text-sm transition-colors duration-300"
+      class="mag-btn -my-2 flex min-h-11 items-center gap-2 py-2 text-sm text-warmgray transition-colors duration-300 hover:text-charcoal"
     >
       <svg
         class="h-4 w-4"
@@ -36,8 +40,7 @@ const { backHref, backLabel, fixed = false } = Astro.props;
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
-          d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-        />
+          d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
       </svg>
       {backLabel}
     </a>

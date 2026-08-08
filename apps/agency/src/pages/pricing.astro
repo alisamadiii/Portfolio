@@ -88,7 +88,7 @@ const pricingSchema = [
     <div class="stagger mx-auto max-w-[1400px]">
       <div class="reveal">
         <span
-          class="bg-charcoal/5 text-warmgray mb-6 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+          class="mb-6 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
           >Pricing</span
         >
       </div>
@@ -99,7 +99,7 @@ const pricingSchema = [
         <span class="text-accent">Project</span>
       </h1>
       <p
-        class="reveal text-warmgray mt-6 max-w-[55ch] text-base leading-relaxed md:text-lg"
+        class="reveal mt-6 max-w-[55ch] text-base leading-relaxed text-warmgray md:text-lg"
       >
         Pick the plan that fits — an all-inclusive monthly plan, a one-time
         upfront build with light monthly add-ons, or a fully custom project
@@ -120,7 +120,7 @@ const pricingSchema = [
               stroke-linecap="round"
               stroke-linejoin="round"
               d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-            />
+            ></path>
           </svg>
           <span class="text-sm font-semibold text-emerald-800"
             >1-Day Delivery</span
@@ -136,13 +136,13 @@ const pricingSchema = [
   <!-- ==================== PLANS ==================== -->
   <section
     id="packageSelection"
-    class="border-charcoal/[0.06] border-t px-4 py-20 md:px-8 md:py-28"
+    class="border-t border-charcoal/[0.06] px-4 py-20 md:px-8 md:py-28"
   >
     <div class="mx-auto max-w-[1400px]">
       <div class="stagger mb-12">
         <div class="reveal">
           <span
-            class="bg-charcoal/5 text-warmgray mb-4 inline-block rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] uppercase"
+            class="mb-4 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
             >Choose Your Path</span
           >
         </div>
@@ -153,7 +153,7 @@ const pricingSchema = [
           <span class="text-accent">Get Started</span>?
         </h2>
         <p
-          class="reveal text-warmgray mt-4 max-w-[55ch] text-base leading-relaxed"
+          class="reveal mt-4 max-w-[55ch] text-base leading-relaxed text-warmgray"
         >
           Go all-inclusive with a managed monthly plan, own your build with a
           one-time payment, or reach out for something fully custom.
@@ -171,25 +171,26 @@ const pricingSchema = [
        leaking top-level consts into the persistent global scope. -->
   <script is:inline data-astro-rerun>
     (() => {
-    // Prices are server-rendered from src/data/pricing.ts and the checkout
-    // action ships with <PricingCards /> — this block only wires reveals.
+      // Prices are server-rendered from src/data/pricing.ts and the checkout
+      // action ships with <PricingCards /> — this block only wires reveals.
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "-60px" }
-    );
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "-60px" }
+      );
 
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+      document
+        .querySelectorAll(".reveal")
+        .forEach((el) => observer.observe(el));
     })();
   </script>
-
 </Layout>
 
 <style is:global>

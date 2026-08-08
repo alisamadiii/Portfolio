@@ -2,21 +2,23 @@
 const year = new Date().getFullYear();
 ---
 
-<footer class="border-charcoal/[0.06] border-t px-4 py-12 md:px-8">
+<footer class="border-t border-charcoal/[0.06] px-4 py-12 md:px-8">
   <div
     class="mx-auto flex max-w-[1400px] flex-col items-center justify-center gap-x-6 gap-y-3 text-center md:flex-row md:justify-between"
   >
-    <p class="text-warmgray text-sm">
+    <p class="text-sm text-warmgray">
       &copy; {year} Ali Samadi Agency. All rights reserved.
     </p>
-    <nav class="text-warmgray flex items-center gap-5 text-sm">
-      <a href="/privacy" class="hover:text-charcoal transition-colors duration-300"
-        >Privacy</a
+    <nav class="flex items-center gap-5 text-sm text-warmgray">
+      <a
+        href="/privacy"
+        class="transition-colors duration-300 hover:text-charcoal">Privacy</a
       >
-      <a href="/terms" class="hover:text-charcoal transition-colors duration-300"
-        >Terms</a
+      <a
+        href="/terms"
+        class="transition-colors duration-300 hover:text-charcoal">Terms</a
       >
-      <a href="/" class="hover:text-charcoal transition-colors duration-300"
+      <a href="/" class="transition-colors duration-300 hover:text-charcoal"
         >Back to Home</a
       >
     </nav>

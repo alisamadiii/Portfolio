@@ -116,7 +116,11 @@
   letter-spacing: -0.01em;
 }
 .prose a {
-  text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--color-accent) 45%,
+    transparent
+  );
   text-underline-offset: 3px;
   transition: color 0.2s ease;
 }

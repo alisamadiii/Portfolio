@@ -1,5 +1,5 @@
 <nav
-  class="border-charcoal/[0.07] bg-cream/70 fixed top-0 left-0 z-40 w-full border-b px-6 py-4 backdrop-blur-[14px] md:px-10"
+  class="fixed top-0 left-0 z-40 w-full border-b border-charcoal/[0.07] bg-cream/70 px-6 py-4 backdrop-blur-[14px] md:px-10"
 >
   <div class="mx-auto flex max-w-[1200px] items-center justify-between">
     <a
@@ -13,36 +13,39 @@
       />
       alisamadii
     </a>
-    <div class="text-warmgray hidden items-center gap-8 text-[14.5px] md:flex">
-      <a href="/services" class="hover:text-accent transition-colors duration-300"
-        >Services</a
+    <div class="hidden items-center gap-8 text-[14.5px] text-warmgray md:flex">
+      <a
+        href="/services"
+        class="transition-colors duration-300 hover:text-accent">Services</a
       >
-      <a href="/about" class="hover:text-accent transition-colors duration-300"
+      <a href="/about" class="transition-colors duration-300 hover:text-accent"
         >About</a
       >
-      <a href="/work" class="hover:text-accent transition-colors duration-300"
+      <a href="/work" class="transition-colors duration-300 hover:text-accent"
         >Work</a
       >
-      <a href="/blog" class="hover:text-accent transition-colors duration-300"
+      <a href="/blog" class="transition-colors duration-300 hover:text-accent"
         >Blog</a
       >
-      <a href="#pricing" class="hover:text-accent transition-colors duration-300"
-        >Pricing</a
+      <a
+        href="#pricing"
+        class="transition-colors duration-300 hover:text-accent">Pricing</a
       >
-      <a href="#contact" class="hover:text-accent transition-colors duration-300"
-        >Contact</a
+      <a
+        href="#contact"
+        class="transition-colors duration-300 hover:text-accent">Contact</a
       >
     </div>
     <div class="hidden items-center gap-4 md:flex">
       <a
         href="https://portal.alisamadii.com"
         target="_blank"
-        class="text-warmgray hover:text-charcoal text-sm transition-colors duration-300"
+        class="text-sm text-warmgray transition-colors duration-300 hover:text-charcoal"
         >I am a customer &rarr;</a
       >
       <a
         href="#contact"
-        class="mag-btn bg-charcoal hover:bg-accent inline-flex items-center gap-2 rounded-[9px] px-[17px] py-[9px] text-sm font-medium text-white"
+        class="mag-btn inline-flex items-center gap-2 rounded-[9px] bg-charcoal px-[17px] py-[9px] text-sm font-medium text-white hover:bg-accent"
       >
         Start a Project
         <span class="text-[13px]">&#8599;</span>
@@ -55,10 +58,10 @@
       class="z-50 flex size-11 flex-col items-center justify-center gap-1.5 md:hidden"
     >
       <span
-        class="bg-charcoal block h-[1.5px] w-6 origin-center transition-all duration-300"
+        class="block h-[1.5px] w-6 origin-center bg-charcoal transition-all duration-300"
         id="line1"></span>
       <span
-        class="bg-charcoal block h-[1.5px] w-6 origin-center transition-all duration-300"
+        class="block h-[1.5px] w-6 origin-center bg-charcoal transition-all duration-300"
         id="line2"></span>
     </button>
   </div>
@@ -67,50 +70,43 @@
 <!-- Mobile menu overlay -->
 <div
   id="menuOverlay"
-  class="menu-overlay bg-cream/95 fixed inset-0 z-30 flex flex-col items-start justify-center px-8 backdrop-blur-2xl"
+  class="menu-overlay fixed inset-0 z-30 flex flex-col items-start justify-center bg-cream/95 px-8 backdrop-blur-2xl"
 >
   <div class="stagger space-y-5">
     <a
       href="/services"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Services</a
+      class="reveal block text-4xl font-semibold tracking-[-0.03em] text-charcoal"
+      onclick="closeMenu()">Services</a
     >
     <a
       href="/about"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >About</a
+      class="reveal block text-4xl font-semibold tracking-[-0.03em] text-charcoal"
+      onclick="closeMenu()">About</a
     >
     <a
       href="/work"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Work</a
+      class="reveal block text-4xl font-semibold tracking-[-0.03em] text-charcoal"
+      onclick="closeMenu()">Work</a
     >
     <a
       href="/blog"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Blog</a
+      class="reveal block text-4xl font-semibold tracking-[-0.03em] text-charcoal"
+      onclick="closeMenu()">Blog</a
     >
     <a
       href="#pricing"
-      class="reveal text-charcoal block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Pricing</a
+      class="reveal block text-4xl font-semibold tracking-[-0.03em] text-charcoal"
+      onclick="closeMenu()">Pricing</a
     >
     <a
       href="#contact"
-      class="reveal text-accent block text-4xl font-semibold tracking-[-0.03em]"
-      onclick="closeMenu()"
-      >Contact</a
+      class="reveal block text-4xl font-semibold tracking-[-0.03em] text-accent"
+      onclick="closeMenu()">Contact</a
     >
     <a
       href="https://portal.alisamadii.com"
-      class="reveal text-warmgray mt-4 block text-lg"
-      onclick="closeMenu()"
-      >I am a customer &rarr;</a
+      class="reveal mt-4 block text-lg text-warmgray"
+      onclick="closeMenu()">I am a customer &rarr;</a
     >
   </div>
 </div>

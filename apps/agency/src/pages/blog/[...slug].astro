@@ -79,7 +79,7 @@ const schema = [
     <div class="mx-auto max-w-[760px]">
       <!-- Meta -->
       <div
-        class="text-muted mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12.5px] tracking-[0.08em] uppercase"
+        class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12.5px] tracking-[0.08em] text-muted uppercase"
       >
         <time datetime={data.publishDate.toISOString()}
           >{dateFmt(data.publishDate)}</time
@@ -93,7 +93,7 @@ const schema = [
       >
         {data.title}
       </h1>
-      <p class="text-warmgray mt-5 text-[18px] leading-[1.55]">
+      <p class="mt-5 text-[18px] leading-[1.55] text-warmgray">
         {data.description}
       </p>
     </div>
@@ -101,7 +101,7 @@ const schema = [
     <!-- Hero image -->
     <figure class="mx-auto mt-10 max-w-[980px]">
       <div
-        class="border-charcoal/[0.08] aspect-[16/9] overflow-hidden rounded-[20px] border"
+        class="aspect-[16/9] overflow-hidden rounded-[20px] border border-charcoal/[0.08]"
       >
         <img
           src={data.heroImage}
@@ -114,13 +114,13 @@ const schema = [
       </div>
       {
         data.heroCredit && (
-          <figcaption class="text-muted mt-2 text-right text-[11.5px]">
+          <figcaption class="mt-2 text-right text-[11.5px] text-muted">
             Photo by{" "}
             <a
               href={data.heroCredit.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-charcoal underline underline-offset-2"
+              class="underline underline-offset-2 hover:text-charcoal"
             >
               {data.heroCredit.name}
             </a>{" "}
@@ -129,7 +129,7 @@ const schema = [
               href={data.heroCredit.pexelsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-charcoal underline underline-offset-2"
+              class="underline underline-offset-2 hover:text-charcoal"
             >
               Pexels
             </a>
@@ -143,9 +143,9 @@ const schema = [
       toc.length > 2 && (
         <nav
           aria-label="Table of contents"
-          class="border-charcoal/[0.08] mx-auto mt-12 max-w-[760px] rounded-[16px] border p-6 md:p-7"
+          class="mx-auto mt-12 max-w-[760px] rounded-[16px] border border-charcoal/[0.08] p-6 md:p-7"
         >
-          <p class="text-muted font-mono text-[11.5px] tracking-[0.1em] uppercase">
+          <p class="font-mono text-[11.5px] tracking-[0.1em] text-muted uppercase">
             On this page
           </p>
           <ul class="mt-4 space-y-2.5">
@@ -153,7 +153,7 @@ const schema = [
               <li class={h.depth === 3 ? "pl-4" : ""}>
                 <a
                   href={`#${h.slug}`}
-                  class="text-warmgray hover:text-accent text-[15px] leading-snug transition-colors duration-200"
+                  class="text-[15px] leading-snug text-warmgray transition-colors duration-200 hover:text-accent"
                 >
                   {h.text}
                 </a>
@@ -165,7 +165,7 @@ const schema = [
     }
 
     <!-- Body -->
-    <div class="prose mx-auto mt-12 max-w-[760px]">
+    <div class="mx-auto prose mt-12 max-w-[760px]">
       <Content />
     </div>
 
@@ -174,7 +174,7 @@ const schema = [
       data.tags.length > 0 && (
         <div class="mx-auto mt-12 flex max-w-[760px] flex-wrap gap-2">
           {data.tags.map((tag) => (
-            <span class="bg-charcoal/5 text-warmgray rounded-full px-3 py-1 font-mono text-[11.5px] tracking-[0.06em] uppercase">
+            <span class="rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.06em] text-warmgray uppercase">
               {tag}
             </span>
           ))}
@@ -185,16 +185,16 @@ const schema = [
 
   <!-- CTA -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
-    <div class="bg-ink text-cream rounded-[22px] p-9 text-center md:p-14">
+    <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
       <h2
         class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
       >
         Want a website built this way?
       </h2>
       <p
-        class="text-cream/70 mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6]"
+        class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
       >
         Simple, transparent pricing — and a real person on the other end. Simple
         sites ship in one day once your project is confirmed.
@@ -202,13 +202,13 @@ const schema = [
       <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
         <a
           href="/pricing"
-          class="mag-btn bg-accent hover:bg-cream hover:text-charcoal inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300 hover:bg-cream hover:text-charcoal"
         >
           See pricing
         </a>
         <a
           href="/#contact"
-          class="text-cream/80 hover:text-cream inline-flex min-h-11 items-center text-[15px] font-medium transition-colors duration-300"
+          class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
           >Start a project</a
         >
       </div>

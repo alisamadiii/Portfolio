@@ -67,13 +67,15 @@ const relatedServices = service.related
   <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
     <div class="mx-auto max-w-[1200px]">
       <div
-        class="text-muted mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
+        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="bg-accent h-px w-[26px]"></span>{service.eyebrow} &mdash; {
+        <span class="h-px w-[26px] bg-accent"></span>{service.eyebrow} &mdash; {
           service.name
         }
       </div>
-      <div class="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14">
+      <div
+        class="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14"
+      >
         <div>
           {
             service.experimenting && (
@@ -89,14 +91,14 @@ const relatedServices = service.related
             {service.h1}
           </h1>
           <p
-            class="text-warmgray mt-6 max-w-[52ch] text-[17px] leading-[1.6] md:text-[18px]"
+            class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
           >
             {service.heroSub}
           </p>
           <div class="mt-8 flex flex-wrap items-center gap-4">
             <a
               href={service.cta.href}
-              class="mag-btn bg-charcoal text-cream hover:bg-accent inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300"
+              class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
             >
               {service.cta.label}
               <svg
@@ -114,14 +116,14 @@ const relatedServices = service.related
             </a>
             <a
               href="/pricing"
-              class="text-warmgray hover:text-charcoal inline-flex min-h-11 items-center text-[15px] font-medium transition-colors duration-300"
+              class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
               >View pricing</a
             >
           </div>
         </div>
         <figure>
           <div
-            class="img-wrap border-charcoal/[0.08] aspect-[16/10] overflow-hidden rounded-[18px] border"
+            class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08]"
           >
             <img
               src={service.image.src}
@@ -132,13 +134,13 @@ const relatedServices = service.related
               fetchpriority="high"
             />
           </div>
-          <figcaption class="text-muted mt-2 text-right text-[11.5px]">
+          <figcaption class="mt-2 text-right text-[11.5px] text-muted">
             Photo by
             <a
               href={service.image.credit.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-charcoal underline underline-offset-2 transition-colors duration-300"
+              class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
               >{service.image.credit.name}</a
             >
             on
@@ -146,7 +148,7 @@ const relatedServices = service.related
               href={service.image.credit.pexelsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-charcoal underline underline-offset-2 transition-colors duration-300"
+              class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
               >Pexels</a
             >
           </figcaption>
@@ -158,7 +160,7 @@ const relatedServices = service.related
   <!-- ==================== EXPERIMENTING (honest-signal banner) ==================== -->
   {
     service.experimenting && (
-      <section class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[60px] md:px-10">
+      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
         <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
           <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
             <span class="h-px w-[26px] bg-amber-500" />
@@ -167,9 +169,9 @@ const relatedServices = service.related
           <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
             Experimenting
           </h2>
-          <p class="text-warmgray mt-5 max-w-[68ch] text-[16.5px] leading-[1.65]">
-            Honest note: analytics is a solid part of our workflow, but SEO is
-            a craft we're still building deep experience in. We're actively
+          <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
+            Honest note: analytics is a solid part of our workflow, but SEO is a
+            craft we're still building deep experience in. We're actively
             running SEO for local-business clients right now — measuring what
             moves rankings, keeping what works, and dropping what doesn't. You
             get real effort and real data, not overpromises.
@@ -181,10 +183,10 @@ const relatedServices = service.related
 
   <!-- ==================== INTRO ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[60px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
   >
     <p
-      class="text-warmgray max-w-[70ch] text-[17px] leading-[1.7] md:text-[18px]"
+      class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
     >
       {service.intro}
     </p>
@@ -193,7 +195,7 @@ const relatedServices = service.related
   <!-- ==================== NOTICE (prominent amber banner) ==================== -->
   {
     service.notice && (
-      <section class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[60px] md:px-10">
+      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
         <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
           <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
             <span class="h-px w-[26px] bg-amber-500" />
@@ -202,7 +204,7 @@ const relatedServices = service.related
           <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
             {service.notice.title}
           </h2>
-          <p class="text-warmgray mt-5 max-w-[68ch] text-[16.5px] leading-[1.65]">
+          <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
             {service.notice.text}
           </p>
         </div>
@@ -212,7 +214,7 @@ const relatedServices = service.related
 
   <!-- ==================== BENEFITS ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
     <h2
       class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
@@ -222,11 +224,11 @@ const relatedServices = service.related
     <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
       {
         service.benefits.map((b) => (
-          <div class="reveal border-charcoal/[0.08] rounded-[18px] border bg-white p-7">
+          <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
             <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
               {b.title}
             </h3>
-            <p class="text-warmgray mt-2.5 text-[15px] leading-[1.6]">
+            <p class="mt-2.5 text-[15px] leading-[1.6] text-warmgray">
               {b.text}
             </p>
           </div>
@@ -238,12 +240,12 @@ const relatedServices = service.related
   <!-- ==================== SHOWCASE (product screenshots, optional) ==================== -->
   {
     service.showcase && (
-      <section class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10">
+      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
         <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
           {service.showcase.heading}
         </h2>
         {service.showcase.sub && (
-          <p class="text-warmgray reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65]">
+          <p class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray">
             {service.showcase.sub}
           </p>
         )}
@@ -255,17 +257,17 @@ const relatedServices = service.related
               }`}
             >
               <div>
-                <div class="text-accent font-mono text-[13px] tracking-[0.08em]">
+                <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
                   0{i + 1}
                 </div>
                 <h3 class="mt-2 text-[21px] font-semibold tracking-[-0.02em]">
                   {item.title}
                 </h3>
-                <p class="text-warmgray mt-3 max-w-[48ch] text-[15.5px] leading-[1.65]">
+                <p class="mt-3 max-w-[48ch] text-[15.5px] leading-[1.65] text-warmgray">
                   {item.text}
                 </p>
               </div>
-              <div class="img-wrap border-charcoal/[0.08] aspect-[16/10] overflow-hidden rounded-[18px] border bg-white">
+              <div class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white">
                 <img
                   src={item.image.src}
                   alt={item.image.alt}
@@ -285,20 +287,20 @@ const relatedServices = service.related
   <!-- ==================== PROCESS (optional) ==================== -->
   {
     service.process && (
-      <section class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10">
+      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
         <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
           How it works
         </h2>
         <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-4">
           {service.process.map((step, i) => (
             <div class="reveal">
-              <div class="text-accent font-mono text-[13px] tracking-[0.08em]">
+              <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
                 0{i + 1}
               </div>
               <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
                 {step.title}
               </h3>
-              <p class="text-warmgray mt-2 text-[14.5px] leading-[1.6]">
+              <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
                 {step.text}
               </p>
             </div>
@@ -307,7 +309,7 @@ const relatedServices = service.related
         {service.processCta && (
           <a
             href={service.processCta.href}
-            class="text-accent hover:text-charcoal reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium transition-colors duration-300"
+            class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
           >
             {service.processCta.label}
             <svg
@@ -331,7 +333,7 @@ const relatedServices = service.related
 
   <!-- ==================== FAQ ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
     <h2
       class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
@@ -345,7 +347,7 @@ const relatedServices = service.related
             <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
               {faq.q}
             </h3>
-            <p class="text-warmgray mt-2.5 text-[15px] leading-[1.65]">
+            <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
               {faq.a}
             </p>
           </div>
@@ -356,12 +358,12 @@ const relatedServices = service.related
 
   <!-- ==================== RESOURCES + RELATED ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[60px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
   >
     <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
       <div>
         <h2
-          class="text-muted font-mono text-[12.5px] tracking-[0.12em] uppercase"
+          class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
         >
           Helpful resources
         </h2>
@@ -373,10 +375,10 @@ const relatedServices = service.related
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-warmgray hover:text-accent inline-flex min-h-8 items-center gap-2 text-[15px] transition-colors duration-300"
+                  class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
                 >
                   {link.label}
-                  <span class="text-accent text-[12px]">&#8599;</span>
+                  <span class="text-[12px] text-accent">&#8599;</span>
                 </a>
               </li>
             ))
@@ -385,7 +387,7 @@ const relatedServices = service.related
       </div>
       <div>
         <h2
-          class="text-muted font-mono text-[12.5px] tracking-[0.12em] uppercase"
+          class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
         >
           Related services
         </h2>
@@ -395,10 +397,10 @@ const relatedServices = service.related
               <li>
                 <a
                   href={`/services/${rel.slug}`}
-                  class="text-warmgray hover:text-accent inline-flex min-h-8 items-center gap-2 text-[15px] transition-colors duration-300"
+                  class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
                 >
                   {rel.name}
-                  <span class="text-accent text-[12px]">&rarr;</span>
+                  <span class="text-[12px] text-accent">&rarr;</span>
                 </a>
               </li>
             ))
@@ -406,10 +408,10 @@ const relatedServices = service.related
           <li>
             <a
               href="/pricing"
-              class="text-warmgray hover:text-accent inline-flex min-h-8 items-center gap-2 text-[15px] transition-colors duration-300"
+              class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
             >
               Pricing
-              <span class="text-accent text-[12px]">&rarr;</span>
+              <span class="text-[12px] text-accent">&rarr;</span>
             </a>
           </li>
         </ul>
@@ -419,30 +421,30 @@ const relatedServices = service.related
 
   <!-- ==================== FINAL CTA ==================== -->
   <section
-    class="border-charcoal/[0.08] mx-auto max-w-[1200px] border-t px-6 py-[70px] md:px-10"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
   >
-    <div
-      class="bg-ink text-cream rounded-[22px] p-9 text-center md:p-14"
-    >
+    <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
       <h2
         class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
       >
         Ready to get started?
       </h2>
-      <p class="text-cream/70 mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6]">
-        Simple, transparent pricing — and a real person on the other end.
-        Simple sites ship in one day once your project is confirmed.
+      <p
+        class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
+      >
+        Simple, transparent pricing — and a real person on the other end. Simple
+        sites ship in one day once your project is confirmed.
       </p>
       <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
         <a
           href={service.cta.href}
-          class="mag-btn bg-accent hover:bg-cream hover:text-charcoal inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300 hover:bg-cream hover:text-charcoal"
         >
           {service.cta.label}
         </a>
         <a
           href="/#contact"
-          class="text-cream/80 hover:text-cream inline-flex min-h-11 items-center text-[15px] font-medium transition-colors duration-300"
+          class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
           >Ask a question</a
         >
       </div>
