@@ -32,6 +32,19 @@ const fromField = z
       "Invalid email — use 'user@domain.com' or 'Name <user@domain.com>'",
   });
 
+// Combined attachment size limit: 1 MB (1 MiB).
+const MAX_ATTACHMENTS_BYTES = 1_048_576;
+
+// Decoded byte length of a base64 string, without allocating the bytes.
+const decodedLen = (b64: string): number => {
+  const len = b64.length;
+  if (len === 0) return 0;
+  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+  return Math.floor((len * 3) / 4) - padding;
+};
+
+const base64Re = /^[A-Za-z0-9+/]+={0,2}$/;
+
 const sendSchema = z.object({
   from: fromField,
   to: z.union([z.string().email(), z.array(z.string().email()).min(1)]),
@@ -40,6 +53,24 @@ const sendSchema = z.object({
   text: z.string().optional(),
   // Free-form category stored on the log row (e.g. "newsletter", "receipt").
   type: z.string().trim().min(1).max(50).optional(),
+  // Optional file attachments; content is base64. Combined decoded size must
+  // stay under 1 MB (checked below); the SDK enforces the same limit up front.
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string().min(1).max(255),
+        content: z.string().min(1).regex(base64Re, "content must be base64"),
+        contentType: z.string().min(1).max(150).optional(),
+      })
+    )
+    .max(20)
+    .optional()
+    .refine(
+      (a) =>
+        !a ||
+        a.reduce((n, f) => n + decodedLen(f.content), 0) < MAX_ATTACHMENTS_BYTES,
+      { message: "attachments combined size must be under 1 MB" }
+    ),
 });
 
 const contactSchema = z.object({
@@ -192,6 +223,7 @@ emails.post("/send", requireAuth, async (c) => {
     subject: data.subject,
     html: data.html,
     text: data.text,
+    attachments: data.attachments,
   });
   c.executionCtx.waitUntil(
     logEmail(c, {

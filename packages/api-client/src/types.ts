@@ -6,6 +6,27 @@
 
 // ---- emails ----
 
+/** A file attachment as it crosses the wire — content is base64-encoded. */
+export interface EmailAttachment {
+  /** File name shown to the recipient, e.g. "invoice.pdf". */
+  filename: string;
+  /** File bytes, base64-encoded. */
+  content: string;
+  /** MIME type; defaults to "application/octet-stream". */
+  contentType?: string;
+}
+
+/**
+ * A file attachment as accepted by `send()`. `content` may be raw bytes
+ * (`Uint8Array`/`ArrayBuffer`) — the SDK base64-encodes it for you — or a
+ * string already in base64.
+ */
+export interface EmailAttachmentInput {
+  filename: string;
+  content: string | Uint8Array | ArrayBuffer;
+  contentType?: string;
+}
+
 export interface SendEmailRequest {
   /** Sender address. Must be on your configured email domain (non-admin keys). */
   from: string;
@@ -19,6 +40,11 @@ export interface SendEmailRequest {
    * @default "send"
    */
   type?: string;
+  /**
+   * Optional file attachments. Combined size must be under 1 MB or `send()`
+   * throws `AttachmentTooLargeError` before the request is made.
+   */
+  attachments?: EmailAttachmentInput[];
 }
 
 export interface SendEmailResponse {

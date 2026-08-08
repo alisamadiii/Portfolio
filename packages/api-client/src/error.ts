@@ -74,6 +74,26 @@ export type AgencyErrorCode =
   // future codes the API may add before this package updates
   | (string & {});
 
+/**
+ * Thrown synchronously by `emails.send()` when the combined size of all
+ * attachments reaches the 1 MB limit — a caller mistake, distinct from the
+ * `Result` envelope used for API/network outcomes.
+ */
+export class AttachmentTooLargeError extends Error {
+  override readonly name = "AttachmentTooLargeError";
+
+  constructor(
+    /** Combined decoded size of the attachments, in bytes. */
+    readonly totalBytes: number,
+    /** The limit that was exceeded, in bytes (1,048,576 = 1 MB). */
+    readonly limitBytes: number
+  ) {
+    super(
+      `Attachments total ${totalBytes} bytes, which reaches the ${limitBytes}-byte (1 MB) limit.`
+    );
+  }
+}
+
 export class AgencyError extends Error {
   override readonly name = "AgencyError";
 

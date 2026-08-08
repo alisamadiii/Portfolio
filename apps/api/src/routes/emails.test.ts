@@ -141,6 +141,48 @@ describe("POST /v1/emails/send", () => {
     expect((await json(res)).error.code).toBe("VALIDATION_FAILED");
     expect(sendViaSes).not.toHaveBeenCalled();
   });
+
+  it("202 forwards attachments to the sender", async () => {
+    const auth = await seedAuth(domainUser());
+    const attachments = [
+      { filename: "a.txt", content: "aGVsbG8=", contentType: "text/plain" },
+    ];
+    const res = await req("/v1/emails/send", auth, {
+      method: "POST",
+      json: { ...body, attachments },
+    });
+    expect(res.status).toBe(202);
+    const sesArgs = sendViaSes.mock.calls[0][1] as Record<string, unknown>;
+    expect(sesArgs.attachments).toEqual(attachments);
+  });
+
+  it("400 VALIDATION_FAILED when attachments exceed 1 MB combined", async () => {
+    const auth = await seedAuth(domainUser());
+    // ~1.5 MB of base64 → ~1.1 MB decoded, over the limit. Rejected by the
+    // schema refine, so sendViaSes is never called (no MIME allocation).
+    const content = "A".repeat(1_500_000);
+    const res = await req("/v1/emails/send", auth, {
+      method: "POST",
+      json: { ...body, attachments: [{ filename: "big.bin", content }] },
+    });
+    expect(res.status).toBe(400);
+    expect((await json(res)).error.code).toBe("VALIDATION_FAILED");
+    expect(sendViaSes).not.toHaveBeenCalled();
+  });
+
+  it("400 VALIDATION_FAILED for non-base64 attachment content", async () => {
+    const auth = await seedAuth(domainUser());
+    const res = await req("/v1/emails/send", auth, {
+      method: "POST",
+      json: {
+        ...body,
+        attachments: [{ filename: "a.txt", content: "not base64!!" }],
+      },
+    });
+    expect(res.status).toBe(400);
+    expect((await json(res)).error.code).toBe("VALIDATION_FAILED");
+    expect(sendViaSes).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /v1/emails/contact", () => {

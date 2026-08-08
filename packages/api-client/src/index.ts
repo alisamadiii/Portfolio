@@ -1,5 +1,10 @@
 export { AgencyClient, type AgencyClientOptions } from "./client.js";
-export { AgencyError, type AgencyErrorCode, type Result } from "./error.js";
+export {
+  AgencyError,
+  AttachmentTooLargeError,
+  type AgencyErrorCode,
+  type Result,
+} from "./error.js";
 export {
   AdminResource,
   AdminEmailLogsResource,
@@ -8,6 +13,8 @@ export {
   AdminUsersResource,
 } from "./resources/admin.js";
 export type {
+  EmailAttachment,
+  EmailAttachmentInput,
   SendEmailRequest,
   SendEmailResponse,
   SendContactRequest,
