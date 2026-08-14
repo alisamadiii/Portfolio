@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 
-import { Config } from "@/types/config";
+import { Config } from "@workspace/cms-core/types/config";
 
 interface ConfigContextType {
   config: Config | null;

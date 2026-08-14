@@ -1,0 +1,26 @@
+{
+  "name": "@workspace/cms-core",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@workspace/drizzle": "workspace:*",
+    "date-fns": "^3.6.0",
+    "lodash.mergewith": "^4.6.2",
+    "slugify": "^1.6.6",
+    "yaml": "^2.4.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/lodash.mergewith": "^4.6.9",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}

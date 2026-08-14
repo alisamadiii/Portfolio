@@ -12,9 +12,9 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
-import { getConfig } from "@/lib/config-store";
+import type { Config } from "@workspace/cms-core/types/config";
+import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { getServerSession } from "@/lib/session-server";
-import { getToken } from "@/lib/token";
 
 import { RepoLayout } from "@/components/repo/repo-layout";
 
@@ -38,7 +38,7 @@ export default async function Layout({
 
   const decodedBranch = decodeURIComponent(branch);
 
-  let config = {
+  let config: Config = {
     owner: owner.toLowerCase(),
     repo: repo.toLowerCase(),
     branch: decodedBranch,
@@ -50,17 +50,27 @@ export default async function Layout({
   let errorMessage = null;
 
   try {
-    const { token } = await getToken(user, owner, repo);
-    const syncedConfig = await getConfig(owner, repo, decodedBranch, {
-      getToken: async () => token,
+    const caller = createHttpCaller(requestHeaders);
+    const syncedConfig = await caller.cms.settings.getConfig.query({
+      owner,
+      repo,
+      branch: decodedBranch,
     });
 
     if (syncedConfig) {
-      config = syncedConfig;
+      config = {
+        ...syncedConfig,
+        // Dates don't survive JSON serialization over tRPC.
+        lastCheckedAt: syncedConfig.lastCheckedAt
+          ? new Date(syncedConfig.lastCheckedAt)
+          : undefined,
+      };
     }
   } catch (error: any) {
-    if (error.status === 404) {
-      if (error.response?.data?.message === "Not Found") {
+    // tRPC surfaces engine HttpErrors as TRPCClientError with `data.code`
+    // (404 → NOT_FOUND, 403 → FORBIDDEN); the original message is preserved.
+    if (error?.data?.code === "NOT_FOUND") {
+      if (error.message === "Not Found") {
         // Let downstream pages (especially /configuration via Entry) handle missing .pages.yml.
       } else {
         // We assume the branch is not valid
@@ -81,7 +91,7 @@ export default async function Layout({
           </Empty>
         );
       }
-    } else if (error.status === 403) {
+    } else if (error?.data?.code === "FORBIDDEN") {
       errorMessage = (
         <Empty className="absolute inset-0 rounded-none border-0">
           <EmptyHeader>

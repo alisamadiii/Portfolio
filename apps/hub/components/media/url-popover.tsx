@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
 
-import { isAbsoluteMediaUrl } from "@/lib/utils/file";
+import { isAbsoluteMediaUrl } from "@workspace/cms-core/utils/file";
 
 /**
  * "Link" button + popover to add media by absolute URL. Uncontrolled by

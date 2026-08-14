@@ -9,8 +9,8 @@ import { UserProvider } from "@/contexts/user-context";
 import { User } from "@/types/user";
 
 import { getAccounts } from "@/lib/accounts";
-import { hasAdminAccess } from "@/lib/admin";
-import { bindCollaboratorInvitesToUser } from "@/lib/collaborator-access";
+import { hasAdminAccess } from "@workspace/trpc/lib/cms/admin";
+import { bindCollaboratorInvitesToUser } from "@workspace/trpc/lib/cms/collaborator-access";
 import { getServerSession } from "@/lib/session-server";
 
 export default async function Layout({

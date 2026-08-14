@@ -2,7 +2,7 @@
 
 import { marked } from "marked";
 
-import { Field } from "@/types/field";
+import { Field } from "@workspace/cms-core/types/field";
 
 const stripHtml = (text: string) =>
   text

@@ -8,13 +8,13 @@ import { z } from "zod";
 import { db } from "@/db";
 import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
 
-import { requireAdminRepoAccess } from "@/lib/authz-server";
+import { requireAdminRepoAccess } from "@workspace/trpc/lib/cms/authz";
 import { getBaseUrl } from "@/lib/base-url";
 import { getServerUser } from "@/lib/session-server";
 import {
   findVerifiedUserByEmail,
   normalizeEmail,
-} from "@/lib/collaborator-access";
+} from "@workspace/trpc/lib/cms/collaborator-access";
 import { sendEmail } from "@/lib/mailer";
 
 import { CollaboratorAddedEmailTemplate } from "@/components/email/collaborator-added";

@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { toast } from "sonner";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 
 import type { EntryData } from "@/types/api";
-import type { Field } from "@/types/field";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -22,55 +23,25 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import {
-  requireApiSuccess,
-  SUBSCRIPTION_REQUIRED_EVENT,
-} from "@/lib/api-client";
-import {
   computeEntryDiff,
   formatDiffValue,
   type EntryDiffRow,
 } from "@/lib/entry-diff";
-import { invalidateUrlKeys } from "@/lib/query";
-import { getSchemaByName } from "@/lib/schema";
-import { useDrafts, useDraftsStore, type Draft } from "@/lib/store/drafts";
-import { getFileName, normalizePath } from "@/lib/utils/file";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { getSchemaByName } from "@workspace/cms-core/schema";
+import {
+  draftKey,
+  useDrafts,
+  useDraftsStore,
+  type Draft,
+} from "@/lib/store/drafts";
+import { getFileName, normalizePath } from "@workspace/cms-core/utils/file";
 
-/** Thrown when a non-new draft's file is gone upstream — treated as stale. */
-class EntryNotFoundError extends Error {}
-
-type PublishErrorData = {
-  stalePaths?: string[];
-  conflictPaths?: string[];
-  retry?: boolean;
-};
-
-class PublishError extends Error {
-  status: number;
-  data?: PublishErrorData;
-
-  constructor(message: string, status: number, data?: PublishErrorData) {
-    super(message);
-    this.status = status;
-    this.data = data;
-  }
-}
-
-// Same URL + success shape as the editor's entry query, so both share one
-// React Query cache entry (URL-string keys, see lib/query.ts).
-const fetchPublishedEntry = async (
-  url: string,
-  signal?: AbortSignal
-): Promise<EntryData> => {
-  const response = await fetch(url, { signal });
-  if (response.status === 404) {
-    throw new EntryNotFoundError("This entry no longer exists on GitHub.");
-  }
-  const data = await requireApiSuccess<{ data: EntryData }>(
-    response,
-    "Failed to fetch entry"
-  );
-  return data.data;
-};
+/** A non-new draft's file is gone upstream (404) — treated as stale. */
+const isEntryNotFound = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { data?: { code?: string } }).data?.code === "NOT_FOUND";
 
 // Mirrors entryFields in entry.tsx: file-editor fallback ("body") and
 // schema.list wrapping under a synthetic listWrapper object field.
@@ -121,30 +92,29 @@ export function PublishDialog({
 }) {
   const { config } = useConfig();
   const queryClient = useQueryClient();
+  const trpc = useTRPC();
   const [forceOverwrite, setForceOverwrite] = useState(false);
-  // Paths the publish API flagged as stale/conflicting on a 409.
+  // Paths the publish API flagged as stale/conflicting on a conflict result.
   const [serverFlaggedPaths, setServerFlaggedPaths] = useState<string[]>([]);
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
   const branch = config?.branch ?? "";
-  const apiBase = `/api/${owner}/${repo}/${encodeURIComponent(branch)}`;
 
   const drafts = useDrafts(owner, repo, branch);
 
   const entryQueries = useQueries({
-    queries: drafts.map(([, draft]) => {
-      const url = `${apiBase}/entries/${encodeURIComponent(draft.path)}?name=${encodeURIComponent(draft.schemaName)}`;
-      return {
-        queryKey: [url],
-        queryFn: ({ signal }: { signal?: AbortSignal }) =>
-          fetchPublishedEntry(url, signal),
-        enabled: open && !draft.isNew,
-        staleTime: 2_000,
-        retry: (failureCount: number, error: unknown) =>
-          !(error instanceof EntryNotFoundError) && failureCount < 2,
-      };
-    }),
+    queries: drafts.map(([, draft]) =>
+      trpc.cms.entries.get.queryOptions(
+        { owner, repo, branch, path: draft.path, name: draft.schemaName },
+        {
+          enabled: open && !draft.isNew,
+          staleTime: 2_000,
+          retry: (failureCount, error) =>
+            !isEntryNotFound(error) && failureCount < 2,
+        }
+      )
+    ),
   });
 
   const reviews = useMemo<EntryReview[]>(() => {
@@ -169,7 +139,7 @@ export function PublishDialog({
           };
         }
         if (query.isError) {
-          if (query.error instanceof EntryNotFoundError) {
+          if (isEntryNotFound(query.error)) {
             deletedUpstream = true;
             isStale = true;
           } else {
@@ -187,8 +157,9 @@ export function PublishDialog({
             };
           }
         } else if (query.data) {
-          oldContent = query.data.contentObject;
-          if (query.data.sha !== draft.sha) isStale = true;
+          const entryData = query.data as EntryData;
+          oldContent = entryData.contentObject;
+          if (entryData.sha !== draft.sha) isStale = true;
         }
       }
 
@@ -221,80 +192,53 @@ export function PublishDialog({
     }
   };
 
-  const publishMutation = useMutation({
-    mutationFn: async ({ force }: { force: boolean }) => {
-      const response = await fetch(`${apiBase}/publish`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          files: drafts.map(([, draft]) => ({
-            path: draft.path,
-            name: draft.schemaName,
-            content: draft.values,
-            sha: draft.sha,
-            isNew: draft.isNew,
-          })),
-          force: force || undefined,
-        }),
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok || payload?.status !== "success") {
-        if (response.status === 402 && typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent(SUBSCRIPTION_REQUIRED_EVENT));
-        }
-        throw new PublishError(
-          payload?.message ||
-            `Failed to publish: ${response.status} ${response.statusText}`,
-          response.status,
-          payload?.data
-        );
-      }
-      return { data: payload.data, keys: drafts.map(([key]) => key) };
-    },
-    onSuccess: ({ keys }) => {
-      useDraftsStore.getState().deleteMany(keys);
-      // Same URL-prefix invalidation entry.tsx uses after save.
-      void invalidateUrlKeys(
-        queryClient,
-        (url) =>
-          url.startsWith(`${apiBase}/entries/`) ||
-          url.startsWith(`${apiBase}/collections/`)
-      );
-      toast.success(
-        `Published ${keys.length} ${keys.length === 1 ? "change" : "changes"}`
-      );
-      setForceOverwrite(false);
-      setServerFlaggedPaths([]);
-      onOpenChange(false);
-    },
-    onError: (error: unknown) => {
-      if (error instanceof PublishError && error.status === 409) {
-        if (error.data?.retry) {
-          toast.error("Branch was updated while publishing — please retry.");
-          return;
-        }
-        const flagged = [
-          ...(error.data?.stalePaths ?? []),
-          ...(error.data?.conflictPaths ?? []),
-        ];
-        if (flagged.length > 0) {
+  const publishMutation = useMutation(
+    trpc.cms.publish.publish.mutationOptions({
+      onSuccess: (result, variables) => {
+        if (result.status === "conflict") {
+          // Stale/conflicting drafts come back as a result (not a 409 throw):
+          // flag them so the review cards show the amber badges.
+          const flagged = [...result.stalePaths, ...result.conflictPaths];
           setServerFlaggedPaths(flagged);
           // Refetch current content so stale badges reflect the latest state.
-          void invalidateUrlKeys(queryClient, (url) =>
-            url.startsWith(`${apiBase}/entries/`)
-          );
+          void queryClient.invalidateQueries({
+            queryKey: trpc.cms.entries.get.queryKey({ owner, repo, branch }),
+          });
           toast.error(
-            error.message ||
-              "Some entries changed on GitHub — review before publishing."
+            "Some entries changed on GitHub — review before publishing."
           );
           return;
         }
-      }
-      toast.error(
-        error instanceof Error ? error.message : "Failed to publish."
-      );
-    },
-  });
+
+        const keys = variables.files.map((file) =>
+          draftKey(owner, repo, branch, file.path)
+        );
+        useDraftsStore.getState().deleteMany(keys);
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.entries.get.queryKey({ owner, repo, branch }),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.collections.list.queryKey({
+            owner,
+            repo,
+            branch,
+          }),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.cache.status.queryKey({ owner, repo, branch }),
+        });
+        toast.success(
+          `Published ${keys.length} ${keys.length === 1 ? "change" : "changes"}`
+        );
+        setForceOverwrite(false);
+        setServerFlaggedPaths([]);
+        onOpenChange(false);
+      },
+      onError: (error: unknown) => {
+        toast.error(handleCmsError(error, "Failed to publish."));
+      },
+    })
+  );
 
   const canPublish =
     drafts.length > 0 &&
@@ -364,7 +308,19 @@ export function PublishDialog({
               disabled={!canPublish}
               isLoading={publishMutation.isPending}
               onClick={() =>
-                publishMutation.mutate({ force: hasStale && forceOverwrite })
+                publishMutation.mutate({
+                  owner,
+                  repo,
+                  branch,
+                  files: drafts.map(([, draft]) => ({
+                    path: draft.path,
+                    name: draft.schemaName,
+                    content: draft.values,
+                    sha: draft.sha,
+                    isNew: draft.isNew,
+                  })),
+                  force: (hasStale && forceOverwrite) || undefined,
+                })
               }
             >
               Publish {drafts.length}{" "}

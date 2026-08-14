@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { Loader as LucideLoader } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { getSchemaByName, initializeState } from "@/lib/schema";
-import { normalizePath } from "@/lib/utils/file";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { getSchemaByName, initializeState } from "@workspace/cms-core/schema";
+import { normalizePath } from "@workspace/cms-core/utils/file";
 
 const EmptyCreate = ({
   children,
@@ -27,6 +29,9 @@ const EmptyCreate = ({
   if (!config) throw new Error(`Configuration not found.`);
 
   const router = useRouter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const saveFileMutation = useMutation(trpc.cms.files.save.mutationOptions());
   const [isCreating, setIsCreating] = useState(false);
 
   let path = "";
@@ -73,38 +78,55 @@ const EmptyCreate = ({
     setIsCreating(true);
     const toastId = toast.loading(`Creating ${toCreate}...`);
 
+    const normalizedPath = normalizePath(path);
     try {
-      const response = await fetch(
-        `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizePath(path))}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type,
+      await saveFileMutation.mutateAsync({
+        owner: config.owner,
+        repo: config.repo,
+        branch: config.branch,
+        path: normalizedPath,
+        type,
+        name,
+        content,
+        ...(path.endsWith("/.gitkeep")
+          ? { onConflict: "error" as const }
+          : {}),
+      });
+
+      if (type === "media") {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.media.list.queryKey(),
+        });
+      } else if (type === "content" && name) {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.collections.list.queryKey({
+            owner: config.owner,
+            repo: config.repo,
+            branch: config.branch,
             name,
-            content,
-            ...(path.endsWith("/.gitkeep") ? { onConflict: "error" } : {}),
           }),
-        }
-      );
-      await requireApiSuccess<any>(response, `Failed to create ${toCreate}`);
+        });
+      }
+      void queryClient.invalidateQueries({
+        queryKey: trpc.cms.entries.get.queryKey({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: normalizedPath,
+        }),
+      });
 
       toast.loading(`Opening ${toCreate}...`, { id: toastId });
-      onCreate?.(normalizePath(path));
+      onCreate?.(normalizedPath);
       // Navigate immediately so destination route can render its loading skeleton.
       router.push(`${redirectTo}?empty-created`);
       router.refresh();
       toast.success(`Created ${toCreate}. Opening...`, { id: toastId });
     } catch (error) {
       setIsCreating(false);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : `Failed to create ${toCreate}.`,
-        {
-          id: toastId,
-        }
-      );
+      toast.error(handleCmsError(error, `Failed to create ${toCreate}.`), {
+        id: toastId,
+      });
     }
   };
 

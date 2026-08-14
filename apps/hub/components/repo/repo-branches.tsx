@@ -4,23 +4,25 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { requireApiSuccess } from "@/lib/api-client";
+import { useTRPC } from "@workspace/trpc/client";
 
 export function RepoBranches() {
   const { owner, repo, branches, setBranches } = useRepo();
   const { config } = useConfig();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [filteredBranches, setFilteredBranches] = useState<
     string[] | undefined
   >([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setFilteredBranches(
@@ -37,37 +39,37 @@ export function RepoBranches() {
     return validBranchRegex.test(name);
   }, []);
 
-  const handleCreateBranch = async () => {
+  const createBranchMutation = useMutation(
+    trpc.cms.branches.create.mutationOptions({
+      onSuccess: (_data, variables) => {
+        const newBranch = variables.name;
+        if (branches) {
+          setBranches([...branches, newBranch]);
+        } else {
+          setBranches([newBranch]);
+        }
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.repos.getSnapshot.queryKey({ owner, repo }),
+        });
+      },
+      onError: (error) => {
+        console.error("Error creating branch:", error);
+        // TODO: display an error?
+      },
+    })
+  );
+  const isSubmitting = createBranchMutation.isPending;
+
+  const handleCreateBranch = () => {
     if (config) {
       // TODO: do we ask the user to confirm?
       if (search || isValidBranchName(search)) {
-        setIsSubmitting(true);
-        try {
-          const newBranch = search;
-
-          const response = await fetch(
-            `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/branches`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                name: newBranch,
-              }),
-            }
-          );
-          await requireApiSuccess<any>(response, "Failed to create branch");
-
-          if (branches) {
-            setBranches([...branches, newBranch]);
-          } else {
-            setBranches([newBranch]);
-          }
-        } catch (error) {
-          console.error("Error creating branch:", error);
-          // TODO: display an error?
-        } finally {
-          setIsSubmitting(false);
-        }
+        createBranchMutation.mutate({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          name: search,
+        });
       }
     }
   };

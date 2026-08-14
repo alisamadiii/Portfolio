@@ -1,6 +1,6 @@
-import type { Field } from "@/types/field";
+import type { Field } from "@workspace/cms-core/types/field";
 
-import { initializeState, sanitizeObject } from "@/lib/schema";
+import { initializeState, sanitizeObject } from "@workspace/cms-core/schema";
 
 /**
  * Field-level diff between two content objects, driven by the collection

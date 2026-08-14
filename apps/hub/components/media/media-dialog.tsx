@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 
 import { MediaView } from "@/components/media/media-view";
 

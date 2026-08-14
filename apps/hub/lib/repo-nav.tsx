@@ -1,6 +1,6 @@
 import { FileStack, FileText, FolderOpen } from "lucide-react";
 
-import { Config } from "@/types/config";
+import { Config } from "@workspace/cms-core/types/config";
 
 export type NavigationNode = {
   type: "group" | "file" | "collection" | "media";

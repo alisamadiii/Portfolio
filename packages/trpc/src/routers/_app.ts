@@ -3,7 +3,7 @@ import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { createTRPCRouter } from "../init";
 import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
-import { cmsRouter } from "./cms";
+import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { emailsRouter } from "./emails";
 import { paymentsRouter } from "./payments";

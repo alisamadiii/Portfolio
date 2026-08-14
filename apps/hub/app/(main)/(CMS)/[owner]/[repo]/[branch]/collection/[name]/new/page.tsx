@@ -4,7 +4,7 @@ import { use } from "react";
 import { useSearchParams } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 
 import {
   DocumentTitle,

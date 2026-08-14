@@ -5,7 +5,7 @@ import { FolderOpen } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 
-import { isAbsoluteMediaUrl } from "@/lib/utils/file";
+import { isAbsoluteMediaUrl } from "@workspace/cms-core/utils/file";
 
 import { ImageKitLibraryDialog } from "@/components/media/imagekit-widget";
 import { useMediaLibrary } from "@/components/media/media-library-context";

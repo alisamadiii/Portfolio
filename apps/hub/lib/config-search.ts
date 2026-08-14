@@ -1,4 +1,4 @@
-import type { Field } from "@/types/field";
+import type { Field } from "@workspace/cms-core/types/field";
 
 /**
  * Config-driven field search for the command palette. The index is built

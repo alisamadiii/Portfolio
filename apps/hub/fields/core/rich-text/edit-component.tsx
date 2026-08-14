@@ -10,11 +10,12 @@ import {
 } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
+import { useMutation } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { createPortal } from "react-dom";
 import { useFormContext } from "react-hook-form";
 
-import type { ApiResponse, FileSaveData } from "@/types/api";
-import type { Field } from "@/types/field";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Textarea } from "@workspace/ui/components/textarea";
@@ -28,7 +29,8 @@ import {
   relativeToRawUrls,
   swapPrefix,
 } from "@/lib/github-image";
-import { getSchemaByName } from "@/lib/schema";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 import {
   decodePathSafely,
   extensionCategories,
@@ -37,7 +39,7 @@ import {
   joinPathSegments,
   normalizeMediaPath,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 import { Editor, type ImagePickerContext } from "@/components/ui/editor";
 import {
@@ -325,6 +327,9 @@ const EditComponent = forwardRef(
   (props: EditProps, ref: React.Ref<HTMLDivElement>) => {
     const { config } = useConfig();
     const { isPrivate } = useRepo();
+    const trpc = useTRPC();
+    const saveFile = useMutation(trpc.cms.files.save.mutationOptions());
+    const saveFileAsync = saveFile.mutateAsync;
 
     const {
       value,
@@ -799,27 +804,19 @@ const EditComponent = forwardRef(
           uploadFilename,
         ]);
 
-        const response = await fetch(
-          `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(targetPath)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "media",
-              name: mediaConfig.name,
-              content,
-            }),
-          }
-        );
-        if (!response.ok) {
-          throw new Error(
-            `Failed to upload file: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const payload = (await response.json()) as ApiResponse<FileSaveData>;
-        if (payload.status !== "success") {
-          throw new Error(payload.message);
+        let payload;
+        try {
+          payload = await saveFileAsync({
+            owner: config.owner,
+            repo: config.repo,
+            branch: config.branch,
+            path: targetPath,
+            type: "media",
+            name: mediaConfig.name,
+            content,
+          });
+        } catch (error) {
+          throw new Error(handleCmsError(error, "Failed to upload file"));
         }
 
         const uploadedPath = payload.data.path || targetPath;
@@ -835,6 +832,7 @@ const EditComponent = forwardRef(
         mediaConfig,
         options.rename,
         rootPath,
+        saveFileAsync,
         toDisplayImageUrl,
       ]
     );

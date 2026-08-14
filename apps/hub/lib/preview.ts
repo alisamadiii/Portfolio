@@ -1,4 +1,4 @@
-import { Config } from "@/types/config";
+import { Config } from "@workspace/cms-core/types/config";
 
 export type PreviewTarget = {
   /** Full iframe URL including the `?cms-preview=1` flag. */

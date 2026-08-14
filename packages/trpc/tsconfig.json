@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@workspace/trpc/*": ["./src/*"],
+      "@workspace/cms-core/*": ["../../packages/cms-core/src/*"],
       "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
       "@workspace/ui/*": ["../../packages/ui/src/*"],
       "@workspace/auth/*": ["../../packages/auth/src/*"],

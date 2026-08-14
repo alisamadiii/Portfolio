@@ -12,7 +12,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { formatDistanceToNow } from "date-fns";
 import {
   EllipsisVertical,
@@ -24,8 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { ApiSuccess, EntryData } from "@/types/api";
-import type { Field } from "@/types/field";
+import type { EntryData, FileSaveData } from "@/types/api";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import {
   Alert,
@@ -80,18 +81,17 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { parseAndValidateConfig } from "@/lib/config";
+import { parseAndValidateConfig } from "@workspace/cms-core/config";
 import { computeEntryDiff } from "@/lib/entry-diff";
-import { resolveContentOperations } from "@/lib/operations";
+import { resolveContentOperations } from "@workspace/cms-core/operations";
 import { getPreviewUrl } from "@/lib/preview";
-import { invalidateUrlKeys } from "@/lib/query";
+import { handleCmsError } from "@/lib/trpc-errors";
 import {
   generateFilename,
   getPrimaryField,
   getSchemaByName,
   safeAccess,
-} from "@/lib/schema";
+} from "@workspace/cms-core/schema";
 import {
   draftKey,
   listDraftEntries,
@@ -105,7 +105,7 @@ import {
   getRelativePath,
   joinPathSegments,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 
 import { EmptyCreate } from "@/components/empty-create";
@@ -193,6 +193,7 @@ export function Entry({
   const [saveEduOpen, setSaveEduOpen] = useState(false);
   const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
   const queryClient = useQueryClient();
+  const trpc = useTRPC();
 
   const router = useRouter();
 
@@ -395,34 +396,41 @@ export function Entry({
     setIsFilenameUnlocked(true);
   }, [entryContentObject, path, schema, schemaType, showFilenameField]);
 
-  const entryApiUrl = useMemo(
-    () =>
-      path
-        ? `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/entries/${encodeURIComponent(path)}?name=${encodeURIComponent(name)}`
-        : null,
+  const saveFileMutation = useMutation(trpc.cms.files.save.mutationOptions());
+  const renameFileMutation = useMutation(
+    trpc.cms.files.rename.mutationOptions()
+  );
+
+  const invalidateCollectionList = useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: trpc.cms.collections.list.queryKey({
+        owner: config.owner,
+        repo: config.repo,
+        branch: config.branch,
+        name,
+      }),
+    });
+  }, [config.branch, config.owner, config.repo, name, queryClient, trpc]);
+
+  const entryQueryInput = useMemo(
+    () => ({
+      owner: config.owner,
+      repo: config.repo,
+      branch: config.branch,
+      path: path ?? "",
+      name: name || undefined,
+    }),
     [config.branch, config.owner, config.repo, name, path]
   );
 
-  const fetchEntryByUrl = useCallback(
-    async (apiUrl: string, signal?: AbortSignal): Promise<EntryData> => {
-      const response = await fetch(apiUrl, { signal });
-      const data = await requireApiSuccess<any>(
-        response,
-        "Failed to fetch entry"
-      );
-      return data.data as EntryData;
-    },
-    []
+  const entryQuery = useQuery(
+    trpc.cms.entries.get.queryOptions(entryQueryInput, {
+      enabled: !!path,
+      staleTime: 2_000,
+    })
   );
-
-  const entryQuery = useQuery({
-    queryKey: [entryApiUrl ?? ""],
-    queryFn: ({ signal }) => fetchEntryByUrl(entryApiUrl!, signal),
-    enabled: !!entryApiUrl,
-    staleTime: 2_000,
-  });
   // isLoading, not isPending: a disabled query (no path) must not read as loading.
-  const swrEntryData = entryQuery.data;
+  const swrEntryData = entryQuery.data as EntryData | undefined;
   const swrEntryError = entryQuery.error;
 
   useEffect(() => {
@@ -507,7 +515,11 @@ export function Entry({
     setIsSaving(true);
     const submitStartChangeVersion = changeVersionRef.current;
 
-    const savePromise = new Promise<ApiSuccess<EntryData>>(
+    const savePromise = new Promise<{
+      status: "success";
+      message: string;
+      data: FileSaveData;
+    }>(
       async (resolve, reject) => {
         try {
           let savePath = path;
@@ -549,22 +561,15 @@ export function Entry({
               getParentPath(savePath),
               normalizedFilename,
             ]);
-            const renameResponse = await fetch(
-              `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(savePath)}/rename`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  type: "content",
-                  name,
-                  newPath,
-                }),
-              }
-            );
-            await requireApiSuccess<any>(
-              renameResponse,
-              "Failed to rename file"
-            );
+            await renameFileMutation.mutateAsync({
+              owner: config.owner,
+              repo: config.repo,
+              branch: config.branch,
+              path: savePath,
+              type: "content",
+              name,
+              newPath,
+            });
             savePath = newPath;
             setPath(newPath);
             setIsFilenameUnlocked(false);
@@ -572,32 +577,22 @@ export function Entry({
               `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
             );
 
-            const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-            void invalidateUrlKeys(queryClient, (url) =>
-              url.startsWith(collectionKeyPrefix)
-            );
+            invalidateCollectionList();
           }
 
-          const response = await fetch(
-            `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(savePath)}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: path === ".pages.yml" ? "settings" : "content",
-                name,
-                content:
-                  schema?.list === true
-                    ? contentObject.listWrapper
-                    : contentObject,
-                sha: sha,
-              }),
-            }
-          );
-          const data = await requireApiSuccess<any>(
-            response,
-            "Failed to save file"
-          );
+          const data = await saveFileMutation.mutateAsync({
+            owner: config.owner,
+            repo: config.repo,
+            branch: config.branch,
+            path: savePath,
+            type: path === ".pages.yml" ? "settings" : "content",
+            name: name || undefined,
+            content:
+              schema?.list === true
+                ? contentObject.listWrapper
+                : contentObject,
+            sha: sha,
+          });
 
           if (data.data.sha !== sha) setSha(data.data.sha);
           if (submitStartChangeVersion === changeVersionRef.current) {
@@ -606,13 +601,10 @@ export function Entry({
 
           if (!path && schemaType === "collection")
             router.push(
-              `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(data.data.path)}`
+              `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(data.data.path ?? savePath)}`
             );
           if (schemaType === "collection") {
-            const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-            void invalidateUrlKeys(queryClient, (url) =>
-              url.startsWith(collectionKeyPrefix)
-            );
+            invalidateCollectionList();
           }
 
           resolve(data);
@@ -624,12 +616,11 @@ export function Entry({
 
     toast.promise(savePromise, {
       loading: "Saving your file",
-      success: (response: ApiSuccess<EntryData>) => {
+      success: (response) => {
         if (onSave) onSave(response.data);
         return response.message;
       },
-      error: (error: unknown) =>
-        error instanceof Error ? error.message : "Failed to save file.",
+      error: (error: unknown) => handleCmsError(error, "Failed to save file."),
     });
 
     try {
@@ -708,24 +699,20 @@ export function Entry({
         filenameChanged &&
         schemaType === "collection"
       ) {
-        // Renames stay immediate (existing route); the draft is re-keyed.
+        // Renames stay immediate (existing procedure); the draft is re-keyed.
         const newPath = joinPathSegments([
           getParentPath(savePath!),
           normalizedFilename,
         ]);
-        const renameResponse = await fetch(
-          `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(savePath!)}/rename`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "content",
-              name,
-              newPath,
-            }),
-          }
-        );
-        await requireApiSuccess<any>(renameResponse, "Failed to rename file");
+        await renameFileMutation.mutateAsync({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: savePath!,
+          type: "content",
+          name,
+          newPath,
+        });
         rekeyDraft(savePath!, newPath);
         savePath = newPath;
         setPath(newPath);
@@ -734,10 +721,7 @@ export function Entry({
           `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
         );
 
-        const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void invalidateUrlKeys(queryClient, (url) =>
-          url.startsWith(collectionKeyPrefix)
-        );
+        invalidateCollectionList();
       }
 
       if (!savePath) throw new Error("Cannot resolve a path for this draft.");
@@ -783,9 +767,7 @@ export function Entry({
       }
     } catch (error: unknown) {
       // Quota or validation error: keep the form dirty so nothing is lost.
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save draft."
-      );
+      toast.error(handleCmsError(error, "Failed to save draft."));
       console.error(error);
     } finally {
       setIsSaving(false);
@@ -853,46 +835,51 @@ export function Entry({
     (path: string) => {
       // TODO: disable save button or freeze form while deleting?
       if (schemaType === "collection") {
-        const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void invalidateUrlKeys(queryClient, (url) =>
-          url.startsWith(collectionKeyPrefix)
-        );
-      }
-      if (schemaType === "collection") {
+        invalidateCollectionList();
         router.push(
           `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}`
         );
-      } else if (entryApiUrl) {
+      } else {
         // Clear the cached entry and refetch — the 404 flips the view to the
         // "Not found" empty state, same as SWR's revalidate did.
-        void queryClient.resetQueries({ queryKey: [entryApiUrl] });
+        void queryClient.resetQueries({
+          queryKey: trpc.cms.entries.get.queryKey({
+            owner: config.owner,
+            repo: config.repo,
+            branch: config.branch,
+            path,
+          }),
+        });
       }
     },
     [
       config.branch,
       config.owner,
       config.repo,
-      entryApiUrl,
+      invalidateCollectionList,
       name,
       queryClient,
       router,
       schemaType,
+      trpc,
     ]
   );
 
   const handleRename = useCallback(
     (oldPath: string, newPath: string) => {
       if (schemaType === "collection") {
-        const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void invalidateUrlKeys(queryClient, (url) =>
-          url.startsWith(collectionKeyPrefix)
-        );
+        invalidateCollectionList();
       }
-      if (entryApiUrl) {
-        // Drop the stale cache for the old path — the observer is about to
-        // switch keys via setPath, so no refetch is needed.
-        queryClient.removeQueries({ queryKey: [entryApiUrl] });
-      }
+      // Drop the stale cache for the old path — the observer is about to
+      // switch keys via setPath, so no refetch is needed.
+      queryClient.removeQueries({
+        queryKey: trpc.cms.entries.get.queryKey({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: oldPath,
+        }),
+      });
       rekeyDraft(oldPath, newPath);
       setPath(newPath);
       router.replace(
@@ -903,12 +890,13 @@ export function Entry({
       config.branch,
       config.owner,
       config.repo,
-      entryApiUrl,
+      invalidateCollectionList,
       name,
       queryClient,
       rekeyDraft,
       router,
       schemaType,
+      trpc,
     ]
   );
 

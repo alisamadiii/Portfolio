@@ -22,8 +22,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { ArrowUpRight, FolderOpen, Trash2, Upload } from "lucide-react";
 
 import type { FileSaveData } from "@/types/api";
-import type { Config } from "@/types/config";
-import type { Field } from "@/types/field";
+import type { Config } from "@workspace/cms-core/types/config";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
@@ -33,12 +33,12 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 import {
   isAbsoluteMediaUrl,
   normalizeMediaPath,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 import { HostedMediaControls } from "@/components/media/hosted-media-controls";
 import { MediaDialog } from "@/components/media/media-dialog";
@@ -46,7 +46,7 @@ import { MediaUpload } from "@/components/media/media-upload";
 import { UrlPopover } from "@/components/media/url-popover";
 import { Thumbnail } from "@/components/thumbnail";
 
-import { getAllowedExtensions } from "./index";
+import { getAllowedExtensions } from "@workspace/cms-core/fields/core/image";
 
 const generateId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 8);
 

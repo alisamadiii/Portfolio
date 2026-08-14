@@ -37,8 +37,8 @@ import {
 } from "lucide-react";
 
 import type { FileSaveData } from "@/types/api";
-import type { Config } from "@/types/config";
-import type { Field } from "@/types/field";
+import type { Config } from "@workspace/cms-core/types/config";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
@@ -48,7 +48,7 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 import {
   extensionCategories,
   getFileExtension,
@@ -56,7 +56,7 @@ import {
   isAbsoluteMediaUrl,
   normalizeMediaPath,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 import { HostedMediaControls } from "@/components/media/hosted-media-controls";
 import { MediaDialog } from "@/components/media/media-dialog";

@@ -11,7 +11,7 @@ import {
 } from "@workspace/ui/components/empty";
 
 import { isAdminUser } from "@/lib/authz-shared";
-import { isCacheEnabled } from "@/lib/config";
+import { isCacheEnabled } from "@workspace/cms-core/config";
 
 import { CachePage } from "@/components/cache/cache-page";
 import {

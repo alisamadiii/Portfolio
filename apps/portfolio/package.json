@@ -17,6 +17,7 @@
     "@trpc/server": "^11.11.0",
     "@alisamadiillc/devtools": "workspace:*",
     "@workspace/auth": "workspace:*",
+    "@workspace/cms-core": "workspace:*",
     "@workspace/drizzle": "workspace:*",
     "@workspace/email": "workspace:*",
     "@workspace/trpc": "workspace:*",

@@ -71,7 +71,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils";
 
 import { isAdminUser } from "@/lib/authz-shared";
-import { isCacheEnabled, isConfigEnabled } from "@/lib/config";
+import { isCacheEnabled, isConfigEnabled } from "@workspace/cms-core/config";
 import {
   countLeaves,
   getContentNavigation,

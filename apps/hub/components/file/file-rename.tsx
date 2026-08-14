@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
@@ -16,13 +18,13 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { getSchemaByName } from "@/lib/schema";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 import {
   getRelativePath,
   joinPathSegments,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 export function FileRename({
   isOpen,
@@ -46,6 +48,12 @@ export function FileRename({
 
   if (!name) throw new Error("Name is required for FileRename");
 
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const renameFileMutation = useMutation(
+    trpc.cms.files.rename.mutationOptions()
+  );
+
   const schema = getSchemaByName(config.object, name, type);
   if (!schema) throw new Error(`Schema not found for ${name}.`);
 
@@ -68,39 +76,53 @@ export function FileRename({
         normalizePath(newRelativePath),
       ]);
 
-      const renamePromise = new Promise(async (resolve, reject) => {
-        try {
-          const response = await fetch(
-            `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizedPath)}/rename`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type:
-                  type === "collection" || type === "file" ? "content" : type,
+      const renamePromise = renameFileMutation
+        .mutateAsync({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: normalizedPath,
+          type: type === "media" ? "media" : "content",
+          name,
+          newPath,
+        })
+        .then((data) => {
+          if (type === "media") {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.cms.media.list.queryKey(),
+            });
+          } else {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.cms.collections.list.queryKey({
+                owner: config.owner,
+                repo: config.repo,
+                branch: config.branch,
                 name,
-                newPath,
               }),
-            }
-          );
-          const data = await requireApiSuccess<any>(
-            response,
-            "Failed to rename file"
-          );
-
-          resolve(data);
-        } catch (error) {
-          reject(error);
-        }
-      });
+            });
+          }
+          // Mark stale only — onRename swaps the observer to the new path
+          // (and drops the old key), so an eager refetch here would 404.
+          void queryClient.invalidateQueries({
+            queryKey: trpc.cms.entries.get.queryKey({
+              owner: config.owner,
+              repo: config.repo,
+              branch: config.branch,
+              path: normalizedPath,
+            }),
+            refetchType: "none",
+          });
+          return data;
+        });
 
       toast.promise(renamePromise, {
         loading: `Renaming "${path}" to "${newPath}"`,
-        success: (data: any) => {
+        success: (data) => {
           if (onRename) onRename(path, newPath);
           return data.message;
         },
-        error: (error: any) => error.message,
+        error: (error: unknown) =>
+          handleCmsError(error, "Failed to rename file"),
       });
     } catch (error) {
       console.error(error);

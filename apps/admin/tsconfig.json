@@ -8,6 +8,7 @@
       "@workspace/auth/*": ["../../packages/auth/*"],
       "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
       "@workspace/trpc/*": ["../../packages/trpc/src/*"],
+      "@workspace/cms-core/*": ["../../packages/cms-core/src/*"],
       "@workspace/email/*": ["../../packages/email/emails/*"]
     },
     "plugins": [

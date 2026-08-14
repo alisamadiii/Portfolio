@@ -9,7 +9,7 @@ import { Ban, ImageOff, Loader } from "lucide-react";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { getRawUrl } from "@/lib/github-image";
-import { isAbsoluteMediaUrl } from "@/lib/utils/file";
+import { isAbsoluteMediaUrl } from "@workspace/cms-core/utils/file";
 
 export function Thumbnail({
   name,

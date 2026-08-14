@@ -6,6 +6,7 @@
       "@/*": ["./*"],
       "@workspace/ui/*": ["../../packages/ui/src/*"],
       "@workspace/trpc/*": ["../../packages/trpc/src/*"],
+      "@workspace/cms-core/*": ["../../packages/cms-core/src/*"],
       "@workspace/auth/*": ["../../packages/auth/src/*"],
       "@workspace/drizzle/*": ["../../packages/drizzle/src/*"],
       "@workspace/email/*": ["../../packages/email/src/*"]

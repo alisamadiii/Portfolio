@@ -22,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
+import { useTRPC } from "@workspace/trpc/client";
+
 import packageJson from "../package.json";
 
 const releaseRef = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
@@ -34,24 +36,17 @@ const version =
 const UPDATE_DOCS_URL = "https://pagescms.org/docs";
 
 export function About() {
+  const trpc = useTRPC();
   const [open, setOpen] = useState(false);
 
-  // No envelope on this endpoint; failures resolve to null instead of throwing.
-  const { data: latestVersion = null } = useQuery({
-    queryKey: ["/api/app/version"],
-    queryFn: async ({ signal }): Promise<string | null> => {
-      try {
-        const response = await fetch("/api/app/version", { signal });
-        if (!response.ok) return null;
-        const data = (await response.json()) as { latest?: string | null };
-        return typeof data.latest === "string" ? data.latest : null;
-      } catch {
-        return null;
-      }
-    },
-    enabled: open,
-    staleTime: 5 * 60_000,
-  });
+  // Failures stay silent: no data just means no update badge.
+  const { data: versionInfo } = useQuery(
+    trpc.cms.version.get.queryOptions(undefined, {
+      enabled: open,
+      staleTime: 5 * 60_000,
+    })
+  );
+  const latestVersion = versionInfo?.latest ?? null;
 
   const updateAvailable = useMemo(() => {
     if (!latestVersion) return false;

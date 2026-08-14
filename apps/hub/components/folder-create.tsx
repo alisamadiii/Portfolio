@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useConfig } from "@/contexts/config-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
@@ -17,7 +19,8 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 
-import { joinPathSegments, normalizePath } from "@/lib/utils/file";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";
 
 type FolderCreateResult = {
   path: string;
@@ -40,6 +43,10 @@ const FolderCreate = ({
   const { config } = useConfig();
   if (!config) throw new Error(`Configuration not found.`);
 
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const saveFileMutation = useMutation(trpc.cms.files.save.mutationOptions());
+
   const [open, setOpen] = useState(false);
   const [folderPath, setFolderPath] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,38 +65,44 @@ const FolderCreate = ({
 
     setIsSubmitting(true);
     try {
-      const createPromise: Promise<{
-        status: string;
-        message?: string;
-        data: FolderCreateResult;
-      }> = fetch(
-        `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(fullNewPath + "/.gitkeep")}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type,
-            name,
-            content: "",
-            onConflict: "error",
-          }),
-        }
-      ).then(async (response) => {
-        const payload = await response.json().catch(() => null);
-        if (!response.ok) {
-          if (response.status === 409) {
+      const createPromise = saveFileMutation
+        .mutateAsync({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: `${fullNewPath}/.gitkeep`,
+          type,
+          name,
+          content: "",
+          onConflict: "error",
+        })
+        .then((result) => {
+          if (type === "media") {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.cms.media.list.queryKey(),
+            });
+          } else if (name) {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.cms.collections.list.queryKey({
+                owner: config.owner,
+                repo: config.repo,
+                branch: config.branch,
+                name,
+              }),
+            });
+          }
+          return result;
+        })
+        .catch((error: unknown) => {
+          const code =
+            typeof error === "object" && error !== null
+              ? (error as { data?: { code?: string } }).data?.code
+              : undefined;
+          if (code === "CONFLICT") {
             throw new Error(`Folder \"${fullNewPath}\" already exists.`);
           }
-
-          throw new Error(payload?.message || "Failed to create folder");
-        }
-
-        if (!payload || payload.status !== "success") {
-          throw new Error(payload?.message || "Failed to create folder");
-        }
-
-        return payload;
-      });
+          throw new Error(handleCmsError(error, "Failed to create folder"));
+        });
 
       await toast.promise(createPromise, {
         loading: `Creating folder "${fullNewPath}"`,
@@ -98,7 +111,7 @@ const FolderCreate = ({
       });
 
       const result = await createPromise;
-      if (onCreate) onCreate(result.data);
+      if (onCreate) onCreate(result.data as FolderCreateResult);
       setFolderPath("");
       setOpen(false);
     } catch (error) {

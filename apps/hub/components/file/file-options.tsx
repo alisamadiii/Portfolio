@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,14 +26,14 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { getSchemaByName } from "@/lib/schema";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 import {
   getParentPath,
   getRelativePath,
   joinPathSegments,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 import { FileRename } from "@/components/file/file-rename";
 
@@ -59,6 +61,12 @@ export function FileOptions({
   const { config } = useConfig();
   if (!config) throw new Error(`Configuration not found.`);
 
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const deleteFileMutation = useMutation(
+    trpc.cms.files.delete.mutationOptions()
+  );
+
   const normalizedPath = useMemo(() => normalizePath(path), [path]);
   const rootPath = useMemo(() => {
     if (type === "media" && name) {
@@ -85,39 +93,53 @@ export function FileOptions({
 
   const handleConfirmDelete = async () => {
     try {
-      const deletePromise = new Promise(async (resolve, reject) => {
-        try {
-          const params = new URLSearchParams({
-            sha,
-            type: type === "collection" || type === "file" ? "content" : type,
+      const deletePromise = deleteFileMutation
+        .mutateAsync({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: normalizedPath,
+          sha,
+          type: type === "media" ? "media" : "content",
+          name,
+        })
+        .then((data) => {
+          if (type === "media") {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.cms.media.list.queryKey(),
+            });
+          } else {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.cms.collections.list.queryKey({
+                owner: config.owner,
+                repo: config.repo,
+                branch: config.branch,
+                ...(name ? { name } : {}),
+              }),
+            });
+          }
+          // Mark stale only — the delete flow (onDelete) drives the refetch
+          // or navigation, so an eager refetch here would 404 mid-transition.
+          void queryClient.invalidateQueries({
+            queryKey: trpc.cms.entries.get.queryKey({
+              owner: config.owner,
+              repo: config.repo,
+              branch: config.branch,
+              path: normalizedPath,
+            }),
+            refetchType: "none",
           });
-          if (name) params.set("name", name);
-
-          const response = await fetch(
-            `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizedPath)}?${params.toString()}`,
-            {
-              method: "DELETE",
-            }
-          );
-
-          const data = await requireApiSuccess<any>(
-            response,
-            "Failed to delete file"
-          );
-
-          resolve(data);
-        } catch (error) {
-          reject(error);
-        }
-      });
+          return data;
+        });
 
       toast.promise(deletePromise, {
         loading: `Deleting ${path}`,
-        success: (data: any) => {
+        success: (data) => {
           if (onDelete) onDelete(path);
           return data.message;
         },
-        error: (error: any) => error.message,
+        error: (error: unknown) =>
+          handleCmsError(error, "Failed to delete file"),
       });
     } catch (error) {
       console.error(error);

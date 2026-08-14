@@ -4,6 +4,10 @@ import { createTRPCContext } from "@workspace/trpc/init";
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { appRouter } from "@workspace/trpc/routers/_app";
 
+// Some procedures (fresh Stripe feature checks, bulk sends) can exceed the
+// default function timeout.
+export const maxDuration = 60;
+
 // Get allowed origins from environment variables and defaults
 function getAllowedOrigins(): string[] {
   const origins: string[] = ALLOWED_ORIGINS;
@@ -35,6 +39,9 @@ const handler = (req: Request) =>
     req,
     router: appRouter,
     createContext: createTRPCContext,
+    // Lets clients send queries as POST (httpBatchLink methodOverride) so
+    // batched query URLs can't blow past URL length limits.
+    allowMethodOverride: true,
     responseMeta() {
       const origin = req.headers.get("origin");
       const allowedOrigins = getAllowedOrigins();

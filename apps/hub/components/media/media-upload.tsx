@@ -10,15 +10,17 @@ import {
   useState,
 } from "react";
 import { useConfig } from "@/contexts/config-context";
+import { useMutation } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { toast } from "sonner";
 
 import type { FileSaveData } from "@/types/api";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { getSchemaByName } from "@/lib/schema";
-import { getUploadFileName, joinPathSegments } from "@/lib/utils/file";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { getSchemaByName } from "@workspace/cms-core/schema";
+import { getUploadFileName, joinPathSegments } from "@workspace/cms-core/utils/file";
 
 interface MediaUploadContextValue {
   handleFiles: (files: File[]) => Promise<void>;
@@ -61,6 +63,9 @@ function MediaUploadRoot({
 }: MediaUploadProps) {
   const { config } = useConfig();
   if (!config) throw new Error(`Configuration not found.`);
+  const trpc = useTRPC();
+  const saveFile = useMutation(trpc.cms.files.save.mutationOptions());
+  const saveFileAsync = saveFile.mutateAsync;
 
   const configMedia = useMemo(
     () =>
@@ -108,25 +113,17 @@ function MediaUploadRoot({
             });
 
             const fullPath = joinPathSegments([path ?? "", uploadFilename]);
-            const response = await fetch(
-              `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(fullPath)}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  type: "media",
-                  name: configMedia.name,
-                  content,
-                }),
-              }
-            );
+            const response = await saveFileAsync({
+              owner: config.owner,
+              repo: config.repo,
+              branch: config.branch,
+              path: fullPath,
+              type: "media",
+              name: configMedia.name,
+              content,
+            });
 
-            const data = await requireApiSuccess<any>(
-              response,
-              "Failed to upload file"
-            );
-
-            return data.data as FileSaveData;
+            return response.data as FileSaveData;
           })();
 
           await toast.promise(uploadPromise, {
@@ -135,15 +132,22 @@ function MediaUploadRoot({
               onUpload?.(savedEntry);
               return `Uploaded ${file.name}`;
             },
-            error: (error: unknown) =>
-              error instanceof Error ? error.message : "Upload failed",
+            error: (error: unknown) => handleCmsError(error, "Upload failed"),
           });
         }
       } catch (error) {
         console.error(error);
       }
     },
-    [config, path, configMedia?.name, configMedia?.rename, onUpload, rename]
+    [
+      config,
+      path,
+      configMedia?.name,
+      configMedia?.rename,
+      onUpload,
+      rename,
+      saveFileAsync,
+    ]
   );
 
   const contextValue = useMemo(

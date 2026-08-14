@@ -59,12 +59,13 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
+import { useTRPC } from "@workspace/trpc/client";
+
 import {
   handleAddCollaborator,
   handleRemoveCollaborator,
   handleResendCollaboratorInvite,
 } from "@/lib/actions/collaborator";
-import { apiQueryOptions } from "@/lib/query";
 
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { SubmitButton } from "@/components/submit-button";
@@ -173,41 +174,29 @@ function InviteCollaboratorsDialog({
 export function Collaborators({
   owner,
   repo,
-  branch,
 }: {
   owner: string;
   repo: string;
   branch?: string;
 }) {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const collaboratorsUrl = `/api/collaborators/${owner}/${repo}`;
-  const collaboratorsKey = [collaboratorsUrl, branch ?? ""];
 
-  const collaboratorsQuery = useQuery({
-    ...apiQueryOptions<{
-      status: string;
-      data: Collaborator[];
-      message?: string;
-    }>(collaboratorsUrl),
-    queryKey: collaboratorsKey,
-    select: (payload) => payload.data,
-  });
+  const collaboratorsQuery = useQuery(
+    trpc.cms.collaborators.list.queryOptions({ owner, repo })
+  );
   const collaborators = collaboratorsQuery.data ?? [];
   const isLoading = collaboratorsQuery.isPending;
   const error = collaboratorsQuery.error?.message;
 
   const setCollaborators = useCallback(
     (updater: (prev: Collaborator[]) => Collaborator[]) => {
-      queryClient.setQueryData<{
-        status: string;
-        data: Collaborator[];
-        message?: string;
-      }>(collaboratorsKey, (prev) =>
-        prev ? { ...prev, data: updater(prev.data) } : prev
+      queryClient.setQueryData<Collaborator[]>(
+        trpc.cms.collaborators.list.queryKey({ owner, repo }),
+        (prev) => (prev ? updater(prev) : prev)
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queryClient, collaboratorsUrl, branch]
+    [queryClient, trpc, owner, repo]
   );
 
   const [addCollaboratorState, addCollaboratorAction] = useActionState<

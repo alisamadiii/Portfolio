@@ -25,8 +25,8 @@ import {
   getPrimaryField,
   getSchemaByName,
   safeAccess,
-} from "@/lib/schema";
-import { joinPathSegments, normalizePath } from "@/lib/utils/file";
+} from "@workspace/cms-core/schema";
+import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";
 
 import { EntryForm } from "@/components/entry/entry-form";
 import { MediaLibraryProvider } from "@/components/media/media-library-panel";

@@ -10,7 +10,7 @@ import { FileStack, FileText, FolderOpen, Settings, Users } from "lucide-react";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { isAdminUser } from "@/lib/authz-shared";
-import { isConfigEnabled } from "@/lib/config";
+import { isConfigEnabled } from "@workspace/cms-core/config";
 
 const RepoNavItem = ({
   children,

@@ -1,10 +1,2 @@
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  image?: string | null;
-  emailVerified: boolean;
-  role?: string | null;
-  isAdmin?: boolean;
-  accounts?: any[];
-}
+// The CMS engine (packages/trpc/src/lib/cms) owns this type now.
+export type { User } from "@workspace/trpc/lib/cms/types";

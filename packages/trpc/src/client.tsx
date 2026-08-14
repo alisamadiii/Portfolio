@@ -1,7 +1,6 @@
 "use client";
 
 // ^-- to make sure we can mount the Provider from a server component
-import { useEffect, useState } from "react";
 import {
   defaultShouldDehydrateQuery,
   MutationCache,
@@ -10,7 +9,10 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
+import {
+  createTRPCContext,
+  createTRPCOptionsProxy,
+} from "@trpc/tanstack-react-query";
 
 // import superjson from 'superjson';
 
@@ -78,10 +80,35 @@ function getUrl() {
   })();
   return `${base}/api/trpc`;
 }
-// Export raw tRPC client for direct client-side calls (not through React Query)
-export let trpcClient:
-  | ReturnType<typeof createTRPCClient<AppRouter>>
-  | undefined;
+// Raw tRPC client for direct calls (not through React Query). Module-level
+// singleton so imperative code can use it without mounting the provider.
+export const trpcClient = createTRPCClient<AppRouter>({
+  links: [
+    httpBatchLink({
+      // transformer: superjson, <-- if you use a data transformer
+      url: getUrl(),
+      // Always POST (queries included) so batched query URLs can't blow
+      // past URL length limits; requires allowMethodOverride on the server.
+      methodOverride: "POST",
+      // Include credentials (cookies) in cross-origin requests
+      fetch(url, options) {
+        return fetch(url, {
+          ...options,
+          credentials: "include", // Important: sends cookies with requests
+        });
+      },
+    }),
+  ],
+});
+
+// tRPC options proxy for imperative (non-hook) usage, e.g.
+// queryClient.fetchQuery(trpcProxy.x.y.queryOptions(...)).
+// queryClient is passed as a getter: server gets a fresh client per call,
+// browser reuses the singleton.
+export const trpcProxy = createTRPCOptionsProxy<AppRouter>({
+  client: trpcClient,
+  queryClient: getQueryClient,
+});
 
 export function TRPCReactProvider(
   props: Readonly<{
@@ -93,32 +120,10 @@ export function TRPCReactProvider(
   //       suspend because React will throw away the client on the initial
   //       render if it suspends and there is no boundary
   const queryClient = getQueryClient();
-  const [client] = useState(() => {
-    const client = createTRPCClient<AppRouter>({
-      links: [
-        httpBatchLink({
-          // transformer: superjson, <-- if you use a data transformer
-          url: getUrl(),
-          // Include credentials (cookies) in cross-origin requests
-          fetch(url, options) {
-            return fetch(url, {
-              ...options,
-              credentials: "include", // Important: sends cookies with requests
-            });
-          },
-        }),
-      ],
-    });
-    // Store the raw client for direct calls
-    if (typeof window !== "undefined") {
-      trpcClient = client;
-    }
-    return client;
-  });
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TRPCProvider trpcClient={client} queryClient={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
         {props.children}
         <ReactQueryDevtools />
       </TRPCProvider>

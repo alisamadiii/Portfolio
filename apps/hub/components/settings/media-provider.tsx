@@ -32,7 +32,8 @@ import {
   MEDIA_PROVIDERS,
   mediaProviderValues,
   type MediaProviderId,
-} from "@/lib/media-providers";
+} from "@workspace/cms-core/media-providers";
+import { useTRPC } from "@workspace/trpc/client";
 
 type MediaProviderSettingsProps = {
   owner: string;
@@ -44,8 +45,8 @@ export function MediaProviderSettings({
   repo,
 }: MediaProviderSettingsProps) {
   const router = useRouter();
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const settingsUrl = `/api/${owner}/${repo}/media-settings`;
   const [provider, setProvider] = useState<MediaProviderId>(
     DEFAULT_MEDIA_PROVIDER
   );
@@ -54,30 +55,23 @@ export function MediaProviderSettings({
 
   // The form below is an edit buffer, so the query must never refetch and
   // clobber unsaved edits — it loads once per mount only.
-  const settingsQuery = useQuery({
-    queryKey: [settingsUrl],
-    queryFn: async ({ signal }) => {
-      const response = await fetch(settingsUrl, { signal });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(payload?.message || "Failed to load media settings.");
-      }
-      return payload;
-    },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  });
+  const settingsQuery = useQuery(
+    trpc.cms.settings.getMediaSettings.queryOptions(
+      { owner, repo },
+      { staleTime: Infinity, refetchOnWindowFocus: false }
+    )
+  );
   const isLoading = settingsQuery.isPending;
 
   useEffect(() => {
     const payload = settingsQuery.data;
     if (!payload) return;
-    const loadedProvider = payload?.data?.provider;
+    const loadedProvider = payload.provider;
     setProvider(
       isMediaProviderId(loadedProvider) ? loadedProvider : DEFAULT_MEDIA_PROVIDER
     );
-    setConfig(payload?.data?.config ?? {});
-    setSecretsSet(payload?.data?.secretsSet ?? []);
+    setConfig(payload.config ?? {});
+    setSecretsSet(payload.secretsSet ?? []);
   }, [settingsQuery.data]);
 
   useEffect(() => {
@@ -101,43 +95,39 @@ export function MediaProviderSettings({
     [providerDef, config, secretsSet]
   );
 
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch(settingsUrl, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, config }),
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(payload?.message || "Failed to update media settings.");
-      }
-      return payload;
-    },
-    onSuccess: (payload) => {
-      setConfig(payload?.data?.config ?? {});
-      // Secrets that were just submitted are now stored.
-      setSecretsSet(
-        providerDef.configFields
+  const saveMutation = useMutation(
+    trpc.cms.settings.setMediaSettings.mutationOptions({
+      onSuccess: (payload) => {
+        setConfig(payload.config ?? {});
+        // Secrets that were just submitted are now stored.
+        const storedSecrets = providerDef.configFields
           .filter(
             (field) =>
               !field.public &&
               (config[field.key]?.trim() || secretsSet.includes(field.key))
           )
-          .map((field) => field.key)
-      );
-      queryClient.setQueryData([settingsUrl], payload);
-      toast.success("Media settings updated.");
-      router.refresh();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update media settings.");
-    },
-  });
+          .map((field) => field.key);
+        setSecretsSet(storedSecrets);
+        queryClient.setQueryData(
+          trpc.cms.settings.getMediaSettings.queryKey({ owner, repo }),
+          {
+            provider: payload.provider,
+            config: payload.config,
+            secretsSet: storedSecrets,
+          }
+        );
+        toast.success("Media settings updated.");
+        router.refresh();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to update media settings.");
+      },
+    })
+  );
   const isSaving = saveMutation.isPending;
   const canSave = !isLoading && !isSaving && !missingRequired;
 
-  const handleSave = () => saveMutation.mutate();
+  const handleSave = () => saveMutation.mutate({ owner, repo, provider, config });
 
   return (
     <Card className="bg-background shadow-xs mb-6 gap-4 rounded-xl border py-5 ring-0 md:py-6">

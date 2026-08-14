@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
+import { queryClient, trpcProxy } from "@workspace/trpc/client";
 import { Loader } from "lucide-react";
 
 import {
@@ -19,7 +20,7 @@ import {
 } from "@workspace/ui/components/combobox";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 
 type Option = {
   value: string;
@@ -101,10 +102,9 @@ const EditComponent = (props: any) => {
     config && collectionName
       ? getSchemaByName(config.object, collectionName)?.path || null
       : null;
-  const url =
-    config && collectionName
-      ? `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/references/${collectionName}`
-      : null;
+  const owner = config?.owner ?? "";
+  const repo = config?.repo ?? "";
+  const branch = config?.branch ?? "";
   const searchFields =
     typeof field.options?.search === "string" ? field.options.search : "name";
   const valueTemplate =
@@ -118,27 +118,35 @@ const EditComponent = (props: any) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!url || !collectionPath) return;
+    if (!owner || !collectionName || !collectionPath) return;
 
     let cancelled = false;
     const timeoutId = window.setTimeout(async () => {
       if (!cancelled) setIsLoading(true);
 
-      const searchParams = new URLSearchParams({
-        query: searchTerm,
-        searchFields,
-        valueTemplate,
-        labelTemplate,
-      });
-
       try {
-        const response = await fetch(`${url}?${searchParams.toString()}`);
-        if (!response.ok) throw new Error("Fetch failed");
+        // fetchQuery dedupes in-flight identical searches and serves cached
+        // results within staleTime, like the old URL-keyed fetches did.
+        const result = await queryClient.fetchQuery(
+          trpcProxy.cms.references.search.queryOptions(
+            {
+              owner,
+              repo,
+              branch,
+              name: collectionName,
+              query: searchTerm,
+              searchFields: searchFields
+                .split(",")
+                .map((item: string) => item.trim())
+                .filter(Boolean),
+              valueTemplate,
+              labelTemplate,
+            },
+            { staleTime: 2_000 }
+          )
+        );
 
-        const json = await response.json();
-        const contents = Array.isArray(json?.data?.options)
-          ? json.data.options
-          : [];
+        const contents = Array.isArray(result?.options) ? result.options : [];
         if (cancelled) return;
 
         const nextOptions = contents.map((item: any) => ({
@@ -162,7 +170,10 @@ const EditComponent = (props: any) => {
       window.clearTimeout(timeoutId);
     };
   }, [
-    url,
+    owner,
+    repo,
+    branch,
+    collectionName,
     collectionPath,
     searchTerm,
     searchFields,
@@ -180,7 +191,7 @@ const EditComponent = (props: any) => {
   );
 
   useEffect(() => {
-    if (!url || !collectionPath) return;
+    if (!owner || !collectionName || !collectionPath) return;
     const selectedValuesForRequest = selectedValuesKey
       ? selectedValuesKey.split("\u0000")
       : [];
@@ -193,22 +204,23 @@ const EditComponent = (props: any) => {
     let cancelled = false;
 
     const loadSelectedOptions = async () => {
-      const searchParams = new URLSearchParams({
-        valueTemplate,
-        labelTemplate,
-      });
-      selectedValuesForRequest.forEach((selectedValue) => {
-        searchParams.append("value", selectedValue);
-      });
-
       try {
-        const response = await fetch(`${url}?${searchParams.toString()}`);
-        if (!response.ok) throw new Error("Fetch failed");
+        const result = await queryClient.fetchQuery(
+          trpcProxy.cms.references.search.queryOptions(
+            {
+              owner,
+              repo,
+              branch,
+              name: collectionName,
+              valueTemplate,
+              labelTemplate,
+              values: selectedValuesForRequest,
+            },
+            { staleTime: 2_000 }
+          )
+        );
 
-        const json = await response.json();
-        const contents = Array.isArray(json?.data?.options)
-          ? json.data.options
-          : [];
+        const contents = Array.isArray(result?.options) ? result.options : [];
         if (cancelled) return;
 
         const nextSelectedOptions = contents.map((item: any) => ({
@@ -232,7 +244,16 @@ const EditComponent = (props: any) => {
     return () => {
       cancelled = true;
     };
-  }, [url, collectionPath, selectedValuesKey, valueTemplate, labelTemplate]);
+  }, [
+    owner,
+    repo,
+    branch,
+    collectionName,
+    collectionPath,
+    selectedValuesKey,
+    valueTemplate,
+    labelTemplate,
+  ]);
 
   const mergedOptions = useMemo(() => {
     const byValue = new Map<string, Option>();

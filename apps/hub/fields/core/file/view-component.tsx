@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import { File } from "lucide-react";
 
-import { Field } from "@/types/field";
+import { Field } from "@workspace/cms-core/types/field";
 
-import { getFileName } from "@/lib/utils/file";
+import { getFileName } from "@workspace/cms-core/utils/file";
 
 const ViewComponent = ({ value, field }: { value: string; field: Field }) => {
   const extraValuesCount = value && Array.isArray(value) ? value.length - 1 : 0;

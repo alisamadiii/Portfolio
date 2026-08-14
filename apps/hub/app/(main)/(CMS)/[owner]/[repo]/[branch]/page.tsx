@@ -16,7 +16,7 @@ import {
 } from "@workspace/ui/components/empty";
 
 import { isAdminUser } from "@/lib/authz-shared";
-import { isConfigEnabled } from "@/lib/config";
+import { isConfigEnabled } from "@workspace/cms-core/config";
 
 export default function Page() {
   const { config } = useConfig();

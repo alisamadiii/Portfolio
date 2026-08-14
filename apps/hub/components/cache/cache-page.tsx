@@ -35,50 +35,36 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { apiFetch, apiQueryOptions } from "@/lib/query";
+import { useTRPC } from "@workspace/trpc/client";
 
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 
-type CacheStatusPayload = {
-  fileMeta: {
-    commitSha: string | null;
-    status: string;
-    error: string | null;
-    updatedAt: string;
-    lastCheckedAt: string;
-  } | null;
-  folderMeta: Array<{
-    path: string;
-    context: string;
-    status: string;
-    commitSha: string | null;
-    updatedAt: string;
-  }>;
-  fileCount: number;
-  permissionCount: number;
-  config: {
-    sha: string;
-    lastCheckedAt: string;
-    version: string;
-  } | null;
-  branchHeadSha: string;
-};
+type CacheAction =
+  | "reconcile-file-cache"
+  | "clear-file-cache"
+  | "refresh-config"
+  | "clear-config-cache"
+  | "clear-all-cache";
 
-function formatTimeAgo(value: string | null | undefined) {
+function formatTimeAgo(value: string | Date | null | undefined) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
-function fullDate(value: string | null | undefined) {
+function fullDate(value: string | Date | null | undefined) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString();
 }
 
-function TimeWithTooltip({ value }: { value: string | null | undefined }) {
+function TimeWithTooltip({
+  value,
+}: {
+  value: string | Date | null | undefined;
+}) {
   if (!value) return <span className="font-medium">-</span>;
   return (
     <Tooltip>
@@ -190,13 +176,12 @@ export function CachePage({
   repo: string;
   branch: string;
 }) {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const cacheUrl = `/api/${owner}/${repo}/${encodeURIComponent(branch)}/cache`;
 
-  const statusQuery = useQuery({
-    ...apiQueryOptions<{ status: string; data: CacheStatusPayload }>(cacheUrl),
-    select: (payload) => payload.data,
-  });
+  const statusQuery = useQuery(
+    trpc.cms.cache.status.queryOptions({ owner, repo, branch })
+  );
   const data = statusQuery.data ?? null;
   const loading = statusQuery.isPending;
 
@@ -206,31 +191,26 @@ export function CachePage({
     }
   }, [statusQuery.error]);
 
-  const actionMutation = useMutation({
-    mutationFn: ({ action }: { action: string; successMessage: string }) =>
-      apiFetch(cacheUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      }),
-  });
+  const actionMutation = useMutation(trpc.cms.cache.action.mutationOptions());
   const actionLoading = actionMutation.isPending
     ? (actionMutation.variables?.action ?? null)
     : null;
 
   const runAction = useCallback(
-    async (action: string, successMessage: string) => {
+    async (action: CacheAction, successMessage: string) => {
       const loadingId = toast.loading("Updating cache...");
       try {
-        await actionMutation.mutateAsync({ action, successMessage });
+        await actionMutation.mutateAsync({ owner, repo, branch, action });
         toast.success(successMessage, { id: loadingId });
-        await queryClient.invalidateQueries({ queryKey: [cacheUrl] });
+        await queryClient.invalidateQueries({
+          queryKey: trpc.cms.cache.status.queryKey({ owner, repo, branch }),
+        });
       } catch (error: any) {
         toast.error(error?.message || "Failed cache action", { id: loadingId });
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cacheUrl, queryClient]
+    [owner, repo, branch, queryClient]
   );
 
   const headerNode = useMemo(
@@ -264,7 +244,7 @@ export function CachePage({
         <ConfirmActionButton
           label="Clear all cache"
           title="Clear all cache?"
-          description="This will clear file, config, and permission cache for this repository/branch."
+          description="This will clear file and config cache for this repository/branch."
           confirmLabel="Clear all"
           variant="default"
           size="default"
@@ -396,28 +376,6 @@ export function CachePage({
                     <Trash2 className="size-4" />
                   </Button>
                 </div>
-              </CardFooter>
-            </Card>
-
-            <Card className="bg-background shadow-xs gap-4 rounded-xl border py-5 ring-0 md:py-6">
-              <CardHeader className="px-5 md:px-6">
-                <CardTitle className="text-sm font-semibold">Permissions</CardTitle>
-                <CardDescription>
-                  Cached repository permission checks.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 px-5 text-sm md:px-6">
-                <div className="divide-y rounded-md border">
-                  <div className="flex items-center justify-between gap-3 px-3 py-2">
-                    <span className="text-muted-foreground">Entries</span>
-                    <Skeleton className="h-4 w-10" />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="justify-end px-5 md:px-6">
-                <Button variant="outline" size="icon-sm" disabled>
-                  <Trash2 className="size-4" />
-                </Button>
               </CardFooter>
             </Card>
           </div>
@@ -588,43 +546,6 @@ export function CachePage({
                     }
                   />
                 </div>
-              </CardFooter>
-            </Card>
-
-            <Card className="bg-background shadow-xs gap-4 rounded-xl border py-5 ring-0 md:py-6">
-              <CardHeader className="px-5 md:px-6">
-                <CardTitle className="text-sm font-semibold">Permissions</CardTitle>
-                <CardDescription>
-                  Cached repository permission checks.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 px-5 text-sm md:px-6">
-                <div className="divide-y rounded-md border">
-                  <div className="flex items-center justify-between gap-3 px-3 py-2">
-                    <span className="text-muted-foreground">Entries</span>
-                    <span className="font-medium">{data.permissionCount}</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="justify-end px-5 md:px-6">
-                <ConfirmActionButton
-                  label="Clear cache"
-                  title="Clear permission cache?"
-                  description="This will remove cached permission entries for this repository."
-                  confirmLabel="Clear"
-                  variant="outline"
-                  size="icon-sm"
-                  iconOnly
-                  tooltip="Clear cache"
-                  icon={<Trash2 className="size-4" />}
-                  disabled={actionLoading != null}
-                  onConfirm={async () =>
-                    runAction(
-                      "clear-permission-cache",
-                      "Permission cache cleared"
-                    )
-                  }
-                />
               </CardFooter>
             </Card>
           </div>

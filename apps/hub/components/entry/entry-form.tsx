@@ -54,7 +54,7 @@ import {
 } from "react-hook-form";
 import { toast } from "sonner";
 
-import { Field } from "@/types/field";
+import { Field } from "@workspace/cms-core/types/field";
 
 import {
   AlertDialog,
@@ -93,7 +93,7 @@ import {
   initializeState,
   interpolate,
   sanitizeObject,
-} from "@/lib/schema";
+} from "@workspace/cms-core/schema";
 
 import { useChangedField } from "./changed-fields-context";
 import { usePreview } from "./preview-context";

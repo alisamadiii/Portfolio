@@ -1,0 +1,129 @@
+import { and, desc, ilike, sql } from "drizzle-orm";
+import z from "zod";
+
+import {
+  adminProcedure,
+  authenticatedProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
+import { db } from "@workspace/drizzle/index";
+import { cmsOrgRepo } from "@workspace/drizzle/schema";
+
+import { isAdminUser } from "@workspace/trpc/lib/cms/authz-shared";
+import { collaboratorMatchesUser } from "@workspace/trpc/lib/cms/collaborator-access";
+import { collaboratorTable, db as cmsDb } from "@workspace/trpc/lib/cms/db";
+import { createHttpError, runCms } from "@workspace/trpc/lib/cms/errors";
+import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
+import { syncOrgRepos } from "@workspace/trpc/lib/cms/org-repos";
+import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
+import { getToken } from "@workspace/trpc/lib/cms/token";
+
+// Org repo listing shared by `listRepos` (admin picker) and the admin path of
+// `listMine`. Seeds the table on first read after deploy so it's never empty.
+const listOrgRepos = async (keyword?: string) => {
+  const trimmed = keyword?.trim();
+
+  const selectRepos = () =>
+    db
+      .select()
+      .from(cmsOrgRepo)
+      .where(trimmed ? ilike(cmsOrgRepo.repo, `%${trimmed}%`) : undefined)
+      .orderBy(desc(cmsOrgRepo.githubUpdatedAt));
+
+  let rows = await selectRepos();
+
+  // Seed on first read after deploy so the picker is never empty.
+  if (rows.length === 0 && !trimmed) {
+    await syncOrgRepos();
+    rows = await selectRepos();
+  }
+
+  return rows.map((row) => ({
+    owner: row.owner,
+    repo: row.repo,
+    private: row.private,
+    defaultBranch: row.defaultBranch,
+    updatedAt: row.githubUpdatedAt.toISOString(),
+  }));
+};
+
+const listRepos = adminProcedure
+  .input(z.object({ keyword: z.string().optional() }).optional())
+  .query(async ({ input }) => listOrgRepos(input?.keyword));
+
+// Refresh button in the CMS repo picker.
+const syncRepos = adminProcedure.mutation(() => syncOrgRepos());
+
+/**
+ * Repositories visible to the current user (port of GET /api/repos/[owner]).
+ * Admins get the org repo list (when `owner` matches the org); everyone also
+ * sees repos they were invited to as collaborators, deduped by owner/repo.
+ */
+const listMine = authenticatedProcedure
+  .input(z.object({ owner: z.string(), keyword: z.string().optional() }))
+  .query(async ({ input, ctx }) =>
+    runCms(async () => {
+      const user = ctx.session.user;
+
+      let githubRepos: any[] = [];
+
+      const org = process.env.GITHUB_ORG;
+
+      if (
+        isAdminUser(user) &&
+        org &&
+        input.owner.toLowerCase() === org.toLowerCase()
+      ) {
+        githubRepos = await listOrgRepos(input.keyword);
+      }
+
+      const collaboratorRepos = await cmsDb.query.cmsCollaborator.findMany({
+        where: and(
+          collaboratorMatchesUser(user),
+          sql`lower(${collaboratorTable.owner}) = lower(${input.owner})`
+        ),
+      });
+
+      const reposByKey = new Map<string, any>();
+      for (const repo of githubRepos) {
+        reposByKey.set(
+          `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`,
+          repo
+        );
+      }
+      for (const repo of collaboratorRepos) {
+        const key = `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`;
+        if (!reposByKey.has(key)) {
+          reposByKey.set(key, repo);
+        }
+      }
+
+      return Array.from(reposByKey.values());
+    })
+  );
+
+/**
+ * Repo metadata + branch list (port of what the [owner]/[repo] layout resolved
+ * server-side: getToken + getRepoSnapshot). Access control = getToken.
+ */
+const getSnapshot = authenticatedProcedure
+  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .query(async ({ input, ctx }) =>
+    runCms(async () => {
+      const user = toCmsUser(ctx.session.user);
+
+      const { token } = await getToken(user, input.owner, input.repo);
+      if (!token) throw createHttpError("Token not found", 401);
+
+      return getRepoSnapshot(input.owner, input.repo, token);
+    })
+  );
+
+const reposRouter = createTRPCRouter({
+  listRepos,
+  syncRepos,
+  listMine,
+  getSnapshot,
+});
+
+export { reposRouter };

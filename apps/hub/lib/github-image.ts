@@ -2,48 +2,28 @@
  * Helper functions to translate relative paths into publicly accessible GitHub
  * raw.githubusercontent.com URLs (required for images in private repositories).
  * Runs client-side with some temporary caching.
+ *
+ * Pure (fetch-free) helpers live in `@workspace/cms-core/media-url` and are
+ * re-exported here for convenience; only the fetch-based parts are hub-local.
  */
 
-import { queryClient } from "@workspace/trpc/client";
+import { queryClient, trpcClient, trpcProxy } from "@workspace/trpc/client";
 
-import { apiFetch } from "@/lib/query";
+import {
+  canonicalizeFileName,
+  encodePath,
+  escapeRegex,
+  getImgSrcs,
+  getRelativeUrl,
+  htmlSwapPrefix,
+  normalizeImagePathInput,
+  rawToRelativeUrls,
+  swapPrefix,
+} from "@workspace/cms-core/media-url";
 import {
   decodePathSafely,
-  getFileName,
   getParentPath,
-  normalizePath,
-} from "@/lib/utils/file";
-
-const canonicalizeFileName = (input: string) => {
-  return decodePathSafely(getFileName(input || ""));
-};
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// Get the relative path for an image.
-const getRelativeUrl = (
-  owner: string,
-  repo: string,
-  branch: string,
-  path: string,
-  encode = true
-) => {
-  let relativePath = path;
-
-  if (path.startsWith("https://raw.githubusercontent.com/")) {
-    const pattern = new RegExp(
-      `^https://raw\\.githubusercontent\\.com/${owner}/${repo}/${encodeURIComponent(branch)}/`,
-      "i"
-    );
-    relativePath = path.replace(pattern, "");
-  }
-
-  relativePath = relativePath.split("#")[0]?.split("?")[0] || relativePath;
-  relativePath = decodePathSafely(relativePath);
-
-  return encode ? encodePath(relativePath) : relativePath;
-};
+} from "@workspace/cms-core/utils/file";
 
 // Get the raw.githubusercontent.com URL for an image.
 const getRawUrl = async (
@@ -64,22 +44,29 @@ const getRawUrl = async (
     if (!filename) return null;
     const parentPath = getParentPath(normalizedInputPath);
 
-    const dirApiUrl = `/api/${owner}/${repo}/${encodeURIComponent(branch)}/media/${encodeURIComponent(name)}/${encodeURIComponent(parentPath)}?nocache=true`;
+    const listInput = {
+      owner,
+      repo,
+      branch,
+      name,
+      path: parentPath,
+      nocache: true,
+    };
 
     // The QueryClient dedupes concurrent in-flight requests and serves
     // cached data within staleTime — replaces the old hand-rolled TTL cache.
     // The client binding is assigned when the provider first renders; this
-    // code only runs post-mount, but fall back to a direct fetch just in case.
-    const response = queryClient
-      ? await queryClient.fetchQuery({
-          queryKey: [dirApiUrl],
-          queryFn: ({ signal }) => apiFetch<any>(dirApiUrl, { signal }),
-          staleTime: 30_000,
-        })
-      : await apiFetch<any>(dirApiUrl);
+    // code only runs post-mount, but fall back to a direct call just in case.
+    const items = queryClient
+      ? await queryClient.fetchQuery(
+          trpcProxy.cms.media.list.queryOptions(listInput, {
+            staleTime: 30_000,
+          })
+        )
+      : await trpcClient.cms.media.list.query(listInput);
 
     const files: Record<string, string> = {};
-    response.data.forEach((file: any) => {
+    items.forEach((file: any) => {
       const canonicalName = canonicalizeFileName(
         typeof file?.path === "string" && file.path
           ? file.path
@@ -92,71 +79,6 @@ const getRawUrl = async (
   } else {
     return `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${encodeURI(normalizedInputPath)}`;
   }
-};
-
-const normalizeImagePathInput = (input: string) => {
-  if (!input) return null;
-  const value = decodePathSafely(input.trim());
-
-  const markdownMatch = value.match(/^\[.*?\]\((.+)\)$/);
-  const markdownLooseMatch = value.match(/^\[.*?\]\((.+)$/);
-  let path = (
-    markdownMatch?.[1] ||
-    markdownLooseMatch?.[1]?.replace(/\)$/, "") ||
-    value
-  ).trim();
-
-  path = path.split("#")[0]?.split("?")[0] || path;
-
-  // Ignore absolute URLs other than raw.githubusercontent (we only translate repo-relative media paths).
-  if (
-    /^https?:\/\//i.test(path) &&
-    !path.startsWith("https://raw.githubusercontent.com/")
-  ) {
-    return null;
-  }
-
-  return normalizePath(decodePathSafely(path));
-};
-
-// Convert all raw.githubusercontent.com URLs in a HTML string to relative paths.
-const rawToRelativeUrls = (
-  owner: string,
-  repo: string,
-  branch: string,
-  html: string,
-  encode = true
-) => {
-  const matches = getImgSrcs(html);
-  if (matches.length === 0) return html;
-
-  const replacements = new Map<string, string>();
-  const rawPrefix = new RegExp(
-    `https://raw\\.githubusercontent\\.com/${owner}/${repo}/${encodeURIComponent(branch)}/`,
-    "gi"
-  );
-
-  for (const match of matches) {
-    const src = match[1] || match[2];
-    if (!src.startsWith("https://raw.githubusercontent.com/")) continue;
-    if (replacements.has(src)) continue;
-
-    let relativePath = src.replace(rawPrefix, "");
-    relativePath = relativePath.split("?")[0];
-    if (!encode) relativePath = decodeURIComponent(relativePath);
-    replacements.set(src, relativePath);
-  }
-
-  let newHtml = html;
-  replacements.forEach((relativePath, src) => {
-    const srcRegex = new RegExp(
-      `(<img[^>]*\\ssrc=(["']))${escapeRegex(src)}(\\2)`,
-      "g"
-    );
-    newHtml = newHtml.replace(srcRegex, `$1${relativePath}$3`);
-  });
-
-  return newHtml;
 };
 
 // Convert all relative image paths in a HTML string to raw.githubusercontent.com URLs.
@@ -213,85 +135,6 @@ const relativeToRawUrls = async (
   }
 
   return newHtml;
-};
-
-// Swap the prefix of an image path (raw.githubusercontent.com url <> relative path)
-const swapPrefix = (
-  path: string,
-  from: string,
-  to: string,
-  relative = false
-) => {
-  if (
-    path == null ||
-    from == null ||
-    to == null ||
-    from === to ||
-    path.startsWith("//") ||
-    path.startsWith("http://") ||
-    path.startsWith("https://") ||
-    path.startsWith("data:image/") ||
-    !path.startsWith(from)
-  )
-    return path;
-
-  let newPath;
-
-  if (from === "" && to !== "/") {
-    newPath = `${to}/${path}`;
-  } else if (from === "" && to === "/") {
-    newPath = `/${path}`;
-  } else {
-    const remainingPath = path.slice(from.length);
-    newPath =
-      to === "/"
-        ? `/${remainingPath.replace(/^\//, "")}`
-        : `${to}/${remainingPath.replace(/^\//, "")}`;
-  }
-
-  if (newPath && newPath.startsWith("/") && relative)
-    newPath = newPath.substring(1);
-
-  return newPath;
-};
-
-// Swap the prefix of all images in a HTML string.
-const htmlSwapPrefix = (
-  html: string,
-  from: string,
-  to: string,
-  relative = false
-) => {
-  if (from === to || html == null || from == null || to == null) return html;
-
-  let newHtml = html;
-  const matches = getImgSrcs(newHtml);
-
-  matches.forEach((match) => {
-    const src = match[1] || match[2];
-    const quote = match[1] ? '"' : "'";
-
-    const newSrc = swapPrefix(src, from, to, relative);
-    if (newSrc !== src) {
-      // Use a regex with global flag to replace all occurrences
-      const escapedSrc = escapeRegex(src); // Escape special regex chars
-      const regex = new RegExp(`src=${quote}${escapedSrc}${quote}`, "g");
-      newHtml = newHtml.replace(regex, `src=${quote}${newSrc}${quote}`);
-    }
-  });
-
-  return newHtml;
-};
-
-// Encode a path for use in a URL.
-const encodePath = (path: string) => {
-  return path.split("/").map(encodeURIComponent).join("/");
-};
-
-// Get all image sources from an HTML string.
-const getImgSrcs = (html: string) => {
-  const regex = /<img [^>]*src=(?:"([^"]+)"|'([^']+)')[^>]*>/g;
-  return Array.from(html.matchAll(regex));
 };
 
 export {

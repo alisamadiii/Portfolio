@@ -26,6 +26,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 
 import type { FileSaveData, MediaItem } from "@/types/api";
 
@@ -61,8 +62,6 @@ import {
 } from "@workspace/ui/components/tooltip";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { invalidateUrlKeys } from "@/lib/query";
 import {
   extensionCategories,
   getFileName,
@@ -71,7 +70,7 @@ import {
   getRelativePath,
   joinPathSegments,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 import { FileOptions } from "@/components/file/file-options";
 import { FolderCreate } from "@/components/folder-create";
@@ -259,6 +258,7 @@ const MediaView = ({
 }) => {
   const { config } = useConfig();
   if (!config) throw new Error(`Configuration not found.`);
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const mediaConfig = useMemo(() => {
@@ -323,37 +323,26 @@ const MediaView = ({
     });
   }, []);
 
-  const buildMediaApiUrl = useCallback(
-    (targetPath: string): string =>
-      `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/${encodeURIComponent(mediaConfig.name)}/${encodeURIComponent(targetPath)}`,
-    [config.branch, config.owner, config.repo, mediaConfig.name]
-  );
-
-  const mediaKey = useMemo(
-    () => buildMediaApiUrl(path),
-    [buildMediaApiUrl, path]
-  );
-  const fetchMediaByUrl = useCallback(
-    async (apiUrl: string, signal?: AbortSignal): Promise<MediaItem[]> => {
-      const response = await fetch(apiUrl, { signal });
-      const payload = await requireApiSuccess<any>(
-        response,
-        "Failed to fetch media"
-      );
-      return payload.data as MediaItem[];
-    },
-    []
+  const mediaListInput = useMemo(
+    () => ({
+      owner: config.owner,
+      repo: config.repo,
+      branch: config.branch,
+      name: mediaConfig.name,
+      path,
+    }),
+    [config.branch, config.owner, config.repo, mediaConfig.name, path]
   );
 
   // placeholderData keeps the previous folder's items visible while a new
   // folder loads, matching the old local-state behavior.
-  const mediaQuery = useQuery({
-    queryKey: [mediaKey],
-    queryFn: ({ signal }) => fetchMediaByUrl(mediaKey, signal),
-    staleTime: 2_000,
-    placeholderData: (previous) => previous,
-  });
-  const data = mediaQuery.data;
+  const mediaQuery = useQuery(
+    trpc.cms.media.list.queryOptions(mediaListInput, {
+      staleTime: 2_000,
+      placeholderData: (previous) => previous,
+    })
+  );
+  const data = mediaQuery.data as MediaItem[] | undefined;
   const error = mediaQuery.error
     ? mediaQuery.error instanceof Error
       ? mediaQuery.error.message
@@ -374,19 +363,35 @@ const MediaView = ({
 
   const setMediaData = useCallback(
     (updater: (prev: MediaItem[] | undefined) => MediaItem[] | undefined) => {
-      queryClient.setQueryData<MediaItem[]>([mediaKey], (prev) =>
-        updater(prev)
+      queryClient.setQueryData<MediaItem[]>(
+        trpc.cms.media.list.queryKey(mediaListInput),
+        (prev) => updater(prev)
       );
     },
-    [queryClient, mediaKey]
+    [queryClient, trpc, mediaListInput]
   );
 
+  // The old URL-key invalidation matched every cached folder under this media
+  // name; the partial input key keeps that breadth (all paths, nocache
+  // variants included), now scoped to this repo/branch.
   const broadcastMediaInvalidate = useCallback(
     () =>
-      invalidateUrlKeys(queryClient, (url) =>
-        url.includes(`/media/${encodeURIComponent(mediaConfig.name)}/`)
-      ),
-    [queryClient, mediaConfig.name]
+      queryClient.invalidateQueries({
+        queryKey: trpc.cms.media.list.queryKey({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          name: mediaConfig.name,
+        }),
+      }),
+    [
+      queryClient,
+      trpc,
+      config.owner,
+      config.repo,
+      config.branch,
+      mediaConfig.name,
+    ]
   );
 
   const handleUpload = useCallback(

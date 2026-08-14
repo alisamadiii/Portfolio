@@ -2,12 +2,13 @@
 
 import { useConfig } from "@/contexts/config-context";
 import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 
-import { Field } from "@/types/field";
+import { Field } from "@workspace/cms-core/types/field";
 
 import { Badge } from "@workspace/ui/components/badge";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 
 const normalizeValue = (item: unknown): string => {
   if (item == null) return "";
@@ -24,13 +25,6 @@ const normalizeValue = (item: unknown): string => {
   return "";
 };
 
-const fetcher = async (url: string, signal?: AbortSignal) => {
-  const response = await fetch(url, { signal });
-  if (!response.ok) throw new Error("Failed to load references");
-  const json = await response.json();
-  return Array.isArray(json?.data?.options) ? json.data.options : [];
-};
-
 type ResolvedLabel = {
   label: string;
   resolved: boolean;
@@ -38,6 +32,7 @@ type ResolvedLabel = {
 
 const ViewComponent = ({ value, field }: { value: unknown; field: Field }) => {
   const { config } = useConfig();
+  const trpc = useTRPC();
   const collectionName =
     typeof field.options?.collection === "string"
       ? field.options.collection
@@ -57,30 +52,28 @@ const ViewComponent = ({ value, field }: { value: unknown; field: Field }) => {
   const labelTemplate =
     typeof field.options?.label === "string" ? field.options.label : "{name}";
   const selectedValues = values.map(normalizeValue).filter(Boolean);
-  const params = collection
-    ? new URLSearchParams({
+
+  const enabled = !!config && !!collection && selectedValues.length > 0;
+
+  // The input-derived query key dedupes identical cells; labels are stable,
+  // so a longer staleTime avoids refetch storms in large tables.
+  const { data } = useQuery(
+    trpc.cms.references.search.queryOptions(
+      {
+        owner: config?.owner ?? "",
+        repo: config?.repo ?? "",
+        branch: config?.branch ?? "",
+        name: collectionName ?? "",
         valueTemplate,
         labelTemplate,
-      })
-    : null;
-  selectedValues.forEach((item) => params?.append("value", item));
-
-  const referencesUrl =
-    config && collection && selectedValues.length > 0
-      ? `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/references/${collectionName}?${params?.toString()}`
-      : null;
-
-  // URL-as-key dedupes identical cells; labels are stable, so a longer
-  // staleTime avoids refetch storms in large tables.
-  const { data } = useQuery({
-    queryKey: [referencesUrl ?? ""],
-    queryFn: ({ signal }) => fetcher(referencesUrl!, signal),
-    enabled: !!referencesUrl,
-    staleTime: 60_000,
-  });
+        values: selectedValues,
+      },
+      { enabled, staleTime: 60_000 }
+    )
+  );
 
   const labelsByValue = new Map<string, string>();
-  data?.forEach((item: Record<string, unknown>) => {
+  data?.options.forEach((item: Record<string, unknown>) => {
     labelsByValue.set(
       String(item.value ?? ""),
       String(item.label ?? item.value ?? "")

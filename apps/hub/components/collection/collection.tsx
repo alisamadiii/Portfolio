@@ -15,7 +15,8 @@ import { useConfig } from "@/contexts/config-context";
 import { viewComponents } from "@/fields/registry";
 import { EllipsisVertical, FolderPlus, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 
 import {
   AlertDialog,
@@ -62,16 +63,15 @@ import {
 } from "@workspace/ui/components/tooltip";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { requireApiSuccess } from "@/lib/api-client";
-import { invalidateUrlKeys } from "@/lib/query";
-import { resolveContentOperations } from "@/lib/operations";
+import { handleCmsError } from "@/lib/trpc-errors";
+import { resolveContentOperations } from "@workspace/cms-core/operations";
 import { useDrafts, useDraftsStore } from "@/lib/store/drafts";
 import {
   getFieldByPath,
   getPrimaryField,
   getSchemaByName,
   safeAccess,
-} from "@/lib/schema";
+} from "@workspace/cms-core/schema";
 import {
   getFileName,
   getParentPath,
@@ -79,7 +79,7 @@ import {
   joinPathSegments,
   normalizePath,
   sortFiles,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
@@ -207,6 +207,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
   const [localError, setLocalError] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
   const queryClient = useQueryClient();
+  const trpc = useTRPC();
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -306,32 +307,10 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     setTableSearch(value);
   }, []);
 
-  const buildCollectionApiUrl = useCallback(
-    (fetchPath: string): string => {
-      const params = new URLSearchParams({
-        path: fetchPath,
-        fields: requestedFieldPaths.join(","),
-      });
-      return `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?${params.toString()}`;
-    },
-    [config.branch, config.owner, config.repo, name, requestedFieldPaths]
-  );
-
-  const fetchCollectionByUrl = useCallback(
-    async (
-      apiUrl: string,
-      signal?: AbortSignal
-    ): Promise<Record<string, any>[]> => {
-      const response = await fetch(apiUrl, { signal });
-      const result = await requireApiSuccess<any>(response, "Fetch failed");
-
-      if (result.data.errors?.length) {
-        result.data.errors.forEach((e: any) => toast.error(e));
-      }
-
-      const unsortedData = result.data.contents || [];
-      if (unsortedData.length === 0) return [];
-      return unsortedData.sort((a: any, b: any) => {
+  const sortContents = useCallback(
+    (contents: Record<string, any>[]): Record<string, any>[] => {
+      if (contents.length === 0) return [];
+      return [...contents].sort((a: any, b: any) => {
         if (a.type === "dir" && b.type === "file")
           return schema.view?.foldersFirst ? -1 : 1;
         if (a.type === "file" && b.type === "dir")
@@ -344,17 +323,44 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const collectionPath =
     schema.view?.layout === "tree" ? schema.path : path || schema.path;
+  const collectionListInput = useMemo(
+    () => ({
+      owner: config.owner,
+      repo: config.repo,
+      branch: config.branch,
+      name,
+      path: collectionPath,
+      fields: requestedFieldPaths,
+    }),
+    [
+      collectionPath,
+      config.branch,
+      config.owner,
+      config.repo,
+      name,
+      requestedFieldPaths,
+    ]
+  );
   const rootCollectionKey = useMemo(
-    () => buildCollectionApiUrl(collectionPath),
-    [buildCollectionApiUrl, collectionPath]
+    () => trpc.cms.collections.list.queryKey(collectionListInput),
+    [collectionListInput, trpc]
   );
 
-  const collectionQuery = useQuery({
-    queryKey: [rootCollectionKey],
-    queryFn: ({ signal }) => fetchCollectionByUrl(rootCollectionKey, signal),
-    staleTime: 2_000,
-  });
-  const data = collectionQuery.data ?? [];
+  const collectionQuery = useQuery(
+    trpc.cms.collections.list.queryOptions(collectionListInput, {
+      staleTime: 2_000,
+    })
+  );
+  const data = useMemo(
+    () => sortContents(collectionQuery.data?.contents ?? []),
+    [collectionQuery.data, sortContents]
+  );
+
+  // Parsing errors reported alongside the contents (was toasted per fetch).
+  const listErrors = collectionQuery.data?.errors;
+  useEffect(() => {
+    listErrors?.forEach((e) => toast.error(e));
+  }, [listErrors]);
 
   // Local drafts for this collection. Gated on mount so the zustand-persist
   // localStorage hydration can't cause an SSR/client mismatch.
@@ -433,25 +439,30 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     (
       updater: (prev: Record<string, any>[]) => Record<string, any>[]
     ) => {
-      queryClient.setQueryData<Record<string, any>[]>(
-        [rootCollectionKey],
-        (prev) => updater(prev ?? [])
-      );
+      queryClient.setQueryData(rootCollectionKey, (prev) => ({
+        errors: [] as string[],
+        ...(prev ?? {}),
+        contents: updater(prev?.contents ?? []),
+      }));
     },
     [queryClient, rootCollectionKey]
   );
 
   const fetchCollectionData = useCallback(
     async (fetchPath: string): Promise<Record<string, any>[] | undefined> => {
-      const apiUrl = buildCollectionApiUrl(fetchPath);
       try {
         // ensureQueryData returns cached rows regardless of staleness,
         // otherwise fetches and stores — the old "cache or fetch" behavior.
-        return await queryClient.ensureQueryData({
-          queryKey: [apiUrl],
-          queryFn: ({ signal }) => fetchCollectionByUrl(apiUrl, signal),
-          staleTime: Infinity,
-        });
+        const result = await queryClient.ensureQueryData(
+          trpc.cms.collections.list.queryOptions(
+            { ...collectionListInput, path: fetchPath },
+            { staleTime: Infinity }
+          )
+        );
+        if (result.errors?.length) {
+          result.errors.forEach((e: string) => toast.error(e));
+        }
+        return sortContents(result.contents ?? []);
       } catch (err: any) {
         console.error(`Fetch failed for path ${fetchPath}:`, err);
         if (fetchPath === (path || schema.path)) {
@@ -464,7 +475,21 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         return undefined;
       }
     },
-    [buildCollectionApiUrl, fetchCollectionByUrl, path, queryClient, schema.path]
+    [
+      collectionListInput,
+      path,
+      queryClient,
+      schema.path,
+      sortContents,
+      trpc,
+    ]
+  );
+
+  const renameFileMutation = useMutation(
+    trpc.cms.files.rename.mutationOptions()
+  );
+  const reorderMutation = useMutation(
+    trpc.cms.collections.reorder.mutationOptions()
   );
 
   const handleDelete = useCallback(
@@ -558,46 +583,39 @@ export function Collection({ name, path }: { name: string; path?: string }) {
         const normalizedPath = normalizePath(path);
         const normalizedNewPath = normalizePath(newPath);
 
-        const renamePromise = new Promise(async (resolve, reject) => {
-          try {
-            const response = await fetch(
-              `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/files/${encodeURIComponent(normalizedPath)}/rename`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  type: "content",
-                  name,
-                  newPath: normalizedNewPath,
-                }),
-              }
-            );
-            const data = await requireApiSuccess<any>(
-              response,
-              "Failed to rename file"
-            );
-
-            resolve(data);
-          } catch (error) {
-            reject(error);
-          }
+        const renamePromise = renameFileMutation.mutateAsync({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: normalizedPath,
+          type: "content",
+          name,
+          newPath: normalizedNewPath,
         });
 
         toast.promise(renamePromise, {
           loading: `Renaming "${path}" to "${newPath}"`,
-          success: (data: any) => {
+          success: (data) => {
             router.push(
               `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
             );
             return data.message;
           },
-          error: (error: any) => error.message,
+          error: (error: unknown) =>
+            handleCmsError(error, "Failed to rename file"),
         });
       } catch (error) {
         console.error(error);
       }
     },
-    [config.owner, config.repo, config.branch, name, router]
+    [
+      config.owner,
+      config.repo,
+      config.branch,
+      name,
+      renameFileMutation,
+      router,
+    ]
   );
 
   const columns = useMemo(() => {
@@ -935,21 +953,17 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       );
 
       try {
-        const response = await fetch(
-          `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}/reorder`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: collectionPath, items }),
-          }
-        );
-        const result = await requireApiSuccess<any>(
-          response,
-          "Failed to save the new order"
-        );
+        const result = await reorderMutation.mutateAsync({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          name,
+          path: collectionPath,
+          items,
+        });
 
         const updated: { path: string; sha: string | null }[] =
-          result.data?.updated ?? [];
+          result.updated ?? [];
         if (updated.length > 0) {
           const shaByPath = new Map(updated.map((u) => [u.path, u.sha]));
           setCollectionData((current) =>
@@ -961,13 +975,17 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           );
         }
 
-        const collectionKeyPrefix = `/api/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collections/${encodeURIComponent(name)}?`;
-        void invalidateUrlKeys(queryClient, (url) =>
-          url.startsWith(collectionKeyPrefix)
-        );
-      } catch (error: any) {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.collections.list.queryKey({
+            owner: config.owner,
+            repo: config.repo,
+            branch: config.branch,
+            name,
+          }),
+        });
+      } catch (error: unknown) {
         setCollectionData(() => prevData);
-        toast.error(error?.message ?? "Failed to save the new order");
+        toast.error(handleCmsError(error, "Failed to save the new order"));
       } finally {
         setIsReordering(false);
       }
@@ -981,7 +999,9 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       name,
       orderField,
       queryClient,
+      reorderMutation,
       setCollectionData,
+      trpc,
     ]
   );
 

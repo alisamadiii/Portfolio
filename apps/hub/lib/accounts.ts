@@ -8,7 +8,7 @@ import { db } from "@/db";
 import { collaboratorTable } from "@/db/schema";
 
 import { isAdminUser } from "@/lib/authz-shared";
-import { collaboratorMatchesUser } from "@/lib/collaborator-access";
+import { collaboratorMatchesUser } from "@workspace/trpc/lib/cms/collaborator-access";
 
 type Account = {
   login: string;

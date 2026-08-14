@@ -15,13 +15,14 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 
-import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/api-client";
-import { apiFetch } from "@/lib/query";
+import { useTRPC } from "@workspace/trpc/client";
 import { FEATURES, type FeatureKey } from "@workspace/trpc/lib/features";
+
+import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 
 /**
  * App-wide purchase dialog for subscription-gated features. Any mutation that
- * comes back 402 (dispatched by requireApiSuccess) opens it — no per-surface
+ * comes back PAYMENT_REQUIRED (dispatched by handleCmsError) opens it — no per-surface
  * wiring. After checkout, Stripe returns the user to the page they were on
  * with ?purchase=success, which triggers a fresh access check automatically.
  */
@@ -31,31 +32,29 @@ export function SubscriptionGateProvider({
   children: React.ReactNode;
 }) {
   const { user } = useUser();
+  const trpc = useTRPC();
   const [open, setOpen] = useState(false);
   const [feature, setFeature] = useState<FeatureKey>("cms");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const verifiedOnReturnRef = useRef(false);
 
-  const verifyMutation = useMutation({
-    mutationFn: (featureKey: FeatureKey) =>
-      apiFetch<{ data: { hasAccess: boolean } }>(
-        `/api/subscription/${featureKey}/refresh`,
-        { method: "POST" }
-      ),
-    onSuccess: (result) => {
-      if (result.data.hasAccess) {
-        toast.success("Subscription active — you're all set. Save again.");
-        setOpen(false);
-      } else {
-        toast.error(
-          `No active subscription found for ${user?.email ?? "your account"} yet.`
-        );
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to verify subscription.");
-    },
-  });
+  const verifyMutation = useMutation(
+    trpc.cms.subscription.refresh.mutationOptions({
+      onSuccess: (result) => {
+        if (result.hasAccess) {
+          toast.success("Subscription active — you're all set. Save again.");
+          setOpen(false);
+        } else {
+          toast.error(
+            `No active subscription found for ${user?.email ?? "your account"} yet.`
+          );
+        }
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to verify subscription.");
+      },
+    })
+  );
   const isVerifying = verifyMutation.isPending;
   const verifyAccess = verifyMutation.mutate;
 
@@ -81,7 +80,7 @@ export function SubscriptionGateProvider({
     verifiedOnReturnRef.current = true;
     url.searchParams.delete("purchase");
     window.history.replaceState(null, "", url.toString());
-    verifyAccess("cms");
+    verifyAccess({ feature: "cms" });
   }, [verifyAccess]);
 
   const handleSubscribe = async () => {
@@ -148,7 +147,7 @@ export function SubscriptionGateProvider({
             <Button
               variant="outline"
               disabled={isVerifying || isCheckingOut}
-              onClick={() => verifyAccess(feature)}
+              onClick={() => verifyAccess({ feature })}
             >
               {isVerifying ? "Checking…" : "I already subscribed"}
             </Button>

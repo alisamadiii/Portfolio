@@ -3,7 +3,7 @@
 import { format, isValid, parse } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
-import { Field } from "@/types/field";
+import { Field } from "@workspace/cms-core/types/field";
 
 import { Badge } from "@workspace/ui/components/badge";
 

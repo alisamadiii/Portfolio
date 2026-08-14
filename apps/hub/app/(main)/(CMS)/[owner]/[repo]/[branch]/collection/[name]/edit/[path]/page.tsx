@@ -3,7 +3,7 @@
 import { use, useMemo } from "react";
 import { useConfig } from "@/contexts/config-context";
 
-import { getSchemaByName } from "@/lib/schema";
+import { getSchemaByName } from "@workspace/cms-core/schema";
 
 import {
   DocumentTitle,

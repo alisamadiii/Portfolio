@@ -12,9 +12,8 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
-import { getRepoSnapshot } from "@/lib/github-cache-file";
+import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { getServerSession } from "@/lib/session-server";
-import { getToken } from "@/lib/token";
 
 export default async function Layout({
   children,
@@ -35,10 +34,8 @@ export default async function Layout({
   if (!user) return redirect(signInUrl);
 
   try {
-    const { token } = await getToken(user, owner, repo);
-    if (!token) throw new Error("Token not found");
-
-    const repoInfo = await getRepoSnapshot(owner, repo, token);
+    const caller = createHttpCaller(requestHeaders);
+    const repoInfo = await caller.cms.repos.getSnapshot.query({ owner, repo });
     const branchNames = repoInfo.branches ?? [];
 
     if (branchNames.length === 0) {
@@ -63,8 +60,12 @@ export default async function Layout({
 
     return <RepoProvider repo={repoInfo}>{children}</RepoProvider>;
   } catch (error: any) {
-    switch (error.status) {
-      case 404:
+    // tRPC surfaces engine HttpErrors as TRPCClientError with `data.code`
+    // (404 → NOT_FOUND, 403 → FORBIDDEN). Anything else — including
+    // UNAUTHORIZED (missing token, previously a plain rethrown Error) —
+    // rethrows to the error boundary, same as before.
+    switch (error?.data?.code) {
+      case "NOT_FOUND":
         // TODO: adjust as it may be the permissions as insufficient (suggest installing the app)
         return (
           <Empty className="absolute inset-0 rounded-none border-0">
@@ -82,7 +83,7 @@ export default async function Layout({
             </EmptyContent>
           </Empty>
         );
-      case 403:
+      case "FORBIDDEN":
         return (
           <Empty className="absolute inset-0 rounded-none border-0">
             <EmptyHeader>

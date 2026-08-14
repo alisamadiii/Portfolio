@@ -23,7 +23,7 @@ import {
   getRelativePath,
   joinPathSegments,
   normalizePath,
-} from "@/lib/utils/file";
+} from "@workspace/cms-core/utils/file";
 
 const PathBreadcrumb = ({
   path = "",

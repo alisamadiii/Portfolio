@@ -27,8 +27,9 @@ import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
+import { useTRPC } from "@workspace/trpc/client";
+
 import { isAdminUser } from "@/lib/authz-shared";
-import { apiFetch, apiQueryOptions, invalidateUrlKeys } from "@/lib/query";
 
 export function RepoSelect({
   onAccountSelect,
@@ -48,25 +49,18 @@ export function RepoSelect({
     selectedAccount?.repositorySelection === "all" ? keyword : "",
     500
   );
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const reposUrl = useMemo(() => {
-    if (!selectedAccount) return null;
-    const params = new URLSearchParams({
-      type: selectedAccount.type,
-      keyword: debouncedKeyword,
-      repository_selection: selectedAccount.repositorySelection,
-    });
-    return `/api/repos/${selectedAccount.login}?${params.toString()}`;
-  }, [selectedAccount, debouncedKeyword]);
-
-  const reposQuery = useQuery({
-    ...apiQueryOptions<{ status: string; data: any[]; message?: string }>(
-      reposUrl ?? ""
-    ),
-    enabled: !!reposUrl,
-    select: (payload) => payload.data,
-  });
+  const reposQuery = useQuery(
+    trpc.cms.repos.listMine.queryOptions(
+      {
+        owner: selectedAccount?.login ?? "",
+        keyword: debouncedKeyword,
+      },
+      { enabled: !!selectedAccount }
+    )
+  );
   const results = reposQuery.isError ? [] : (reposQuery.data ?? null);
 
   const searchResults = useMemo(() => {
@@ -79,12 +73,15 @@ export function RepoSelect({
     return results;
   }, [results, keyword, selectedAccount]);
 
-  const syncMutation = useMutation({
-    mutationFn: () => apiFetch("/api/repos/sync", { method: "POST" }),
-    onSuccess: () =>
-      invalidateUrlKeys(queryClient, (url) => url.startsWith("/api/repos/")),
-    onError: (error) => console.error(error),
-  });
+  const syncMutation = useMutation(
+    trpc.cms.repos.syncRepos.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: trpc.cms.repos.listMine.queryKey(),
+        }),
+      onError: (error) => console.error(error),
+    })
+  );
   const isSyncing = syncMutation.isPending;
 
   const resultsLoadingSkeleton = useMemo(

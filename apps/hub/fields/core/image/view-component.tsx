@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useConfig } from "@/contexts/config-context";
 
-import { Field } from "@/types/field";
+import { Field } from "@workspace/cms-core/types/field";
 
 import { Thumbnail } from "@/components/thumbnail";
 

@@ -6,6 +6,7 @@ const nextConfig = {
   transpilePackages: [
     "@workspace/ui",
     "@workspace/auth",
+    "@workspace/cms-core",
     "@workspace/drizzle",
     "@workspace/trpc",
     "@workspace/email",
