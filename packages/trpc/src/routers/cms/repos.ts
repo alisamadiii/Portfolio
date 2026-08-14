@@ -55,6 +55,48 @@ const listRepos = adminProcedure
 const syncRepos = adminProcedure.mutation(() => syncOrgRepos());
 
 /**
+ * GitHub accounts the current user can act as (port of hub's lib/accounts).
+ * Admins act as the org; collaborators get the distinct owners they were
+ * invited to. Keeps GITHUB_ORG out of the hub app entirely.
+ */
+const listAccounts = authenticatedProcedure.query(async ({ ctx }) =>
+  runCms(async () => {
+    const user = toCmsUser(ctx.session.user);
+
+    if (isAdminUser(user)) {
+      const org = process.env.GITHUB_ORG;
+      if (!org) throw createHttpError("Missing GITHUB_ORG.", 500);
+
+      return [{ login: org, type: "org", repositorySelection: "all" }];
+    }
+
+    // The CMS Neon WebSocket pool can drop a query on cold start; one retry
+    // keeps a transient blip from crashing the whole app on entry.
+    const runQuery = () =>
+      cmsDb
+        .selectDistinct({
+          owner: collaboratorTable.owner,
+          type: collaboratorTable.type,
+        })
+        .from(collaboratorTable)
+        .where(collaboratorMatchesUser(user));
+
+    let groupedRepos;
+    try {
+      groupedRepos = await runQuery();
+    } catch {
+      groupedRepos = await runQuery();
+    }
+
+    return groupedRepos.map((collaborator) => ({
+      login: collaborator.owner,
+      type: collaborator.type,
+      repositorySelection: "selected",
+    }));
+  })
+);
+
+/**
  * Repositories visible to the current user (port of GET /api/repos/[owner]).
  * Admins get the org repo list (when `owner` matches the org); everyone also
  * sees repos they were invited to as collaborators, deduped by owner/repo.
@@ -122,6 +164,7 @@ const getSnapshot = authenticatedProcedure
 const reposRouter = createTRPCRouter({
   listRepos,
   syncRepos,
+  listAccounts,
   listMine,
   getSnapshot,
 });

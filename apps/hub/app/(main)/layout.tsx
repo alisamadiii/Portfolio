@@ -8,7 +8,7 @@ import { UserProvider } from "@/contexts/user-context";
 
 import { User } from "@/types/user";
 
-import { getAccounts } from "@/lib/accounts";
+import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { hasAdminAccess } from "@workspace/trpc/lib/cms/admin";
 import { bindCollaboratorInvitesToUser } from "@workspace/trpc/lib/cms/collaborator-access";
 import { getServerSession } from "@/lib/session-server";
@@ -32,7 +32,9 @@ export default async function Layout({
   const sessionUser = session.user as User;
   await bindCollaboratorInvitesToUser(sessionUser).catch(() => {});
 
-  const accounts = await getAccounts(sessionUser);
+  const accounts = await createHttpCaller(
+    requestHeaders
+  ).cms.repos.listAccounts.query();
 
   const userWithAccounts = {
     ...session.user,
