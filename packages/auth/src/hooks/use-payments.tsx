@@ -63,14 +63,15 @@ export const useCheckout = () => {
       },
       onError: (error) => {
         if (error.data?.code === "UNAUTHORIZED") {
-          // Signup lives on the portal — the old portfolio /signup never existed.
-          // Inlined rather than imported from @workspace/ui: ui already depends
-          // on auth, and importing back would close the dependency cycle.
-          const portal =
+          // Signup lives on the Client Hub — the old portfolio /signup never
+          // existed. Inlined rather than imported from @workspace/ui: ui
+          // already depends on auth, and importing back would close the
+          // dependency cycle.
+          const hub =
             process.env.NODE_ENV === "development"
-              ? "http://localhost:3006"
-              : "https://portal.alisamadii.com";
-          window.location.href = `${portal}/signup?redirectUrl=${encodeURIComponent(window.location.href)}`;
+              ? "http://localhost:3007"
+              : "https://hub.alisamadii.com";
+          window.location.href = `${hub}/sign-up?redirectUrl=${encodeURIComponent(window.location.href)}`;
           return;
         }
         toast.error(error.message);

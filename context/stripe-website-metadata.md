@@ -1,8 +1,8 @@
 # Stripe Customer Metadata — Client Website
 
-Powers the portal `/website` page (`trpc.websites.getMine`). Set these on the
+Powers the Client Hub `/website` page (`trpc.websites.getMine`). Set these on the
 **Stripe customer** (Dashboard → Customers → select customer → Metadata → Edit).
-Matched to the portal user by email. Changes appear after the cache TTL (~minutes).
+Matched to the hub user by email. Changes appear after the cache TTL (~minutes).
 
 ## Keys (copy-paste)
 

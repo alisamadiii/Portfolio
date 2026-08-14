@@ -42,17 +42,17 @@ The monorepo powers three distinct revenue surfaces and one internal surface, al
 
 1. Visitor lands on the agency marketing site (hero, services, process, testimonials)
 2. Signs up / logs in
-3. Enters the customer portal (`/portal`) to browse product tiers
-4. Selects a plan and configures extra pages — real-time price calculation
-5. Checks out via Polar
-6. Returns to portal to manage subscription, view orders, contact support
+3. Checks out via Stripe (agency plans) — Polar covers Motion/SaaS-template purchases
+4. Lands in the Client Hub (`apps/hub`, hub.alisamadii.com) — the single client-facing app
+5. Manages everything from the hub: website CMS, AI requests, billing, emails, account, guide
 
-**Portal sections:**
+**Client Hub sections** (`apps/hub`, formerly separate portal + cms apps — merged 2026-08):
 
-- **Products** — tier selection and page count configurator
-- **Customer** — profile and account settings
-- **Orders** — order history
-- **Support** — support request form
+- **Website** — content CMS, website status, AI change requests
+- **Billing** — tabbed: Stripe (agency plans, default) + Polar "Purchases" (`?tab=purchases`)
+- **Account** — profile, linked accounts, danger zone (`/account`)
+- **Emails / Guide / Support** — activity log, client guide, support requests
+- **Auth** — hub owns all login UI (`/sign-in`, `/sign-up`, `/reset-password`)
 
 **Key details:**
 
@@ -153,7 +153,7 @@ A reusable SaaS landing page template that gets forked and deployed for new exte
 
 **Auth:** Better Auth with Drizzle adapter. Supports email/password, email OTP verification, password reset, OAuth (Google, GitHub), account linking, admin role. Cross-subdomain cookies enable SSO across all apps.
 
-**Payments:** Polar is the primary payment processor. Handles one-time purchases (motion library) and recurring subscriptions (agency portal). Webhooks sync order/subscription state into the local DB via `webhookEvents`. Stripe may also be integrated.
+**Payments:** Stripe handles agency client subscriptions and invoicing (the business focus). Polar handles one-time purchases and subscriptions for Motion and SaaS templates. Webhooks sync order/subscription state into the local DB via `webhookEvents`.
 
 ---
 
@@ -174,7 +174,7 @@ A reusable SaaS landing page template that gets forked and deployed for new exte
 ## Business goals
 
 1. **Motion library** — sell access to premium animation components to developers
-2. **Agency portal** — acquire and retain web development clients on recurring subscriptions
+2. **Agency / Client Hub** — acquire and retain web development clients on recurring subscriptions
 3. **Portfolio** — establish credibility, attract inbound leads, publish technical writing
 4. **Admin** — give Ali full operational visibility and control without relying on third-party dashboards
 5. **Template** — accelerate new client site deployments by forking a production-ready base

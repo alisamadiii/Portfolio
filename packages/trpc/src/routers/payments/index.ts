@@ -116,15 +116,15 @@ export const paymentsRouter = createTRPCRouter({
           });
         }
 
-        // Every checkout lands on the portal success page — it is the single
+        // Every checkout lands on the hub success page — it is the single
         // source of truth for purchase confirmation across all apps.
         const params = new URLSearchParams();
-        params.set("callbackUrl", resolveRedirectUrl(callbackUrl, urls.portal));
+        params.set("callbackUrl", resolveRedirectUrl(callbackUrl, urls.cms));
         if (project) params.set("project", project);
 
         // `{CHECKOUT_ID}` is a Polar placeholder and must stay unencoded, so it
         // is appended after URLSearchParams has done its escaping.
-        const base = urls.portal.replace(/\/$/, "");
+        const base = urls.cms.replace(/\/$/, "");
         const url = `${base}/success?${params.toString()}&checkout_id={CHECKOUT_ID}`;
 
         const response = await polarClient.checkouts.create({

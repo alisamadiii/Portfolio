@@ -1,10 +1,10 @@
 import { withContentCollections } from "@content-collections/next";
 
-const portalUrl =
+const hubUrl =
   // eslint-disable-next-line no-undef
   process.env.NODE_ENV === "development"
-    ? "http://localhost:3006"
-    : "https://portal.alisamadii.com";
+    ? "http://localhost:3007"
+    : "https://hub.alisamadii.com";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -24,12 +24,10 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: "/login", destination: `${portalUrl}/login`, permanent: true },
-      { source: "/signup", destination: `${portalUrl}/signup`, permanent: true },
-      { source: "/settings", destination: `${portalUrl}`, permanent: true },
-      { source: "/verify-email", destination: `${portalUrl}/verify-email`, permanent: true },
-      { source: "/reset-password", destination: `${portalUrl}/reset-password`, permanent: true },
-      { source: "/choose-plan", destination: `${portalUrl}/choose-plan`, permanent: true },
+      { source: "/login", destination: `${hubUrl}/sign-in`, permanent: true },
+      { source: "/signup", destination: `${hubUrl}/sign-up`, permanent: true },
+      { source: "/settings", destination: `${hubUrl}/account`, permanent: true },
+      { source: "/reset-password", destination: `${hubUrl}/reset-password`, permanent: true },
     ];
   },
 };

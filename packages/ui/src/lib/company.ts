@@ -38,7 +38,7 @@ export const company = {
   myImage: "https://cdn.alisamadii.com/1780454258377-my-image.png",
 };
 
-export const urls: Record<Lowercase<ProjectType> | "portal" | "api", string> = {
+export const urls: Record<Lowercase<ProjectType> | "api", string> = {
   portfolio:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
@@ -63,10 +63,6 @@ export const urls: Record<Lowercase<ProjectType> | "portal" | "api", string> = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:3005"
       : "https://template.alisamadii.com",
-  portal:
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3006"
-      : "https://portal.alisamadii.com",
   cms:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3007"
@@ -94,7 +90,7 @@ const ALLOWED_REDIRECT_ORIGINS = new Set(
  */
 export function resolveRedirectUrl(
   value?: string | null,
-  fallback: string = urls.portal
+  fallback: string = urls.cms
 ) {
   if (!value) return fallback;
 
@@ -138,14 +134,14 @@ export function resolveAppName(value?: string | null) {
   }
 }
 
-/** Portal login URL that returns the user to `returnTo` once authenticated. */
-export function portalLoginUrl(returnTo: string) {
-  return `${urls.portal}/login?redirectUrl=${returnTo}`;
+/** Client Hub login URL that returns the user to `returnTo` once authenticated. */
+export function hubLoginUrl(returnTo: string) {
+  return `${urls.cms}/sign-in?redirectUrl=${encodeURIComponent(returnTo)}`;
 }
 
-/** Portal signup URL that returns the user to `returnTo` once authenticated. */
-export function portalSignupUrl(returnTo: string) {
-  return `${urls.portal}/signup?redirectUrl=${returnTo}`;
+/** Client Hub signup URL that returns the user to `returnTo` once authenticated. */
+export function hubSignupUrl(returnTo: string) {
+  return `${urls.cms}/sign-up?redirectUrl=${encodeURIComponent(returnTo)}`;
 }
 
 export const logos = {
@@ -204,12 +200,6 @@ export const projectsData: {
     name: "ADMIN",
     logo: logos.blue,
     description: "Internal admin dashboard",
-  },
-  {
-    name: "PORTAL",
-    logo: logos.green,
-    description: "Client account & billing portal",
-    link: urls.portal,
   },
   {
     name: "PORTFOLIO",

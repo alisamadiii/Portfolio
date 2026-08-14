@@ -6,7 +6,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
-import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
+import { hubLoginUrl, urls } from "@workspace/ui/lib/company";
 import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
@@ -68,9 +68,9 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
   try {
     currentUser = await httpCaller.users.getSession.query();
   } catch (error) {
-    // Admin has no login UI of its own — the portal owns auth
+    // Admin has no login UI of its own — the Client Hub owns auth
     if (isUnauthorized(error)) {
-      redirect(portalLoginUrl(urls.admin));
+      redirect(hubLoginUrl(urls.admin));
     }
 
     console.error(error);

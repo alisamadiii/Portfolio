@@ -5,10 +5,10 @@ import { useMutation } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-// Auth is centralized on the portal app — it owns every login/signup screen
+// Auth is centralized on the Client Hub app — it owns every login/signup screen
 const SIGNUP_URL = import.meta.env.DEV
-  ? "http://localhost:3006/signup"
-  : "https://portal.alisamadii.com/signup";
+  ? "http://localhost:3007/sign-up"
+  : "https://hub.alisamadii.com/sign-up";
 
 function redirectToSignup() {
   const redirectUrl = encodeURIComponent(window.location.href);

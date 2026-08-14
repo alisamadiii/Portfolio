@@ -8,7 +8,7 @@ import {
 } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
 import { MotionPremium } from "@workspace/ui/icons";
-import { portalLoginUrl, urls } from "@workspace/ui/lib/company";
+import { hubLoginUrl, urls } from "@workspace/ui/lib/company";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
@@ -23,15 +23,15 @@ export const UserProfile = () => {
 
   return (
     <>
-      {/* Auth lives entirely on the portal — send the user there and back */}
+      {/* Auth lives entirely on the Client Hub — send the user there and back */}
       {!user && (
-        <Button size="lg" render={<Link href={portalLoginUrl(urls.motion)} />}>
+        <Button size="lg" render={<Link href={hubLoginUrl(urls.motion)} />}>
           Login
         </Button>
       )}
 
       {user && (
-        <Link href={urls.portal}>
+        <Link href={`${urls.cms}/account`}>
           <div className="relative flex items-center justify-center">
             <Avatar className="size-12 border">
               <AvatarImage src={user.user.image ?? ""} />

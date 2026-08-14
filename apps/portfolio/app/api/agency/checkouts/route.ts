@@ -8,7 +8,7 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 import { urls } from "@workspace/ui/lib/company";
 
 const AGENCY_URL = "https://agency.alisamadii.com";
-const PORTAL_URL = urls.portal; // localhost:3006 in dev
+const HUB_URL = urls.cms; // localhost:3007 in dev
 
 // ─── CORS ───────────────────────────────────────────────────────
 // Live Server (static agency site during local dev) is not in the
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
   }
 
   // Feature purchases bounce back to the page the user was on (e.g. the CMS
-  // entry they tried to save); agency plans go through the portal welcome page.
+  // entry they tried to save); agency plans go through the hub welcome page.
   const validReturnUrl = validateReturnUrl(returnUrl);
   const featureBackUrl = validReturnUrl ?? urls.cms;
   const featureSuccessUrl = `${featureBackUrl}${featureBackUrl.includes("?") ? "&" : "?"}purchase=success`;
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
       metadata,
       success_url: isFeaturePlan(plan)
         ? featureSuccessUrl
-        : `${PORTAL_URL}/agency/success?session_id={CHECKOUT_SESSION_ID}`,
+        : `${HUB_URL}/agency/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: isFeaturePlan(plan)
         ? featureBackUrl
         : `${AGENCY_URL}/${plan === "monthly" ? "prizink" : "onboarding"}.html`,
@@ -163,7 +163,7 @@ export async function POST(req: Request) {
         submit: {
           message: isFeaturePlan(plan)
             ? "Use the same email you sign in with — access is tied to it."
-            : "Use the same email you'll use to sign in to your client portal at portal.alisamadii.com.",
+            : "Use the same email you'll use to sign in to your client hub at hub.alisamadii.com.",
         },
       },
     };
