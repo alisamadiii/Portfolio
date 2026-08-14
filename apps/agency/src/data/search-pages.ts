@@ -92,6 +92,20 @@ export const SEARCH_PAGES: SearchPage[] = [
     keywords: ["what we do", "offerings", "capabilities", "help"],
   },
   {
+    title: "Locations",
+    description:
+      "Florida cities we serve — Jacksonville, Miami, Tampa, Orlando, and more.",
+    url: "/locations",
+    keywords: [
+      "florida",
+      "cities",
+      "near me",
+      "local",
+      "areas served",
+      "where",
+    ],
+  },
+  {
     title: "Blog",
     description:
       "Articles and guides on how websites get designed, built, and run.",

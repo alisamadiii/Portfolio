@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
+import { cities } from "../data/cities";
 import { PROJECTS } from "../data/projects";
 import { SEARCH_PAGES } from "../data/search-pages";
 import { services } from "../data/services";
@@ -11,7 +12,7 @@ import { services } from "../data/services";
 
 export interface SearchDoc {
   id: string;
-  type: "page" | "service" | "project" | "blog";
+  type: "page" | "service" | "project" | "blog" | "location";
   title: string;
   description: string;
   url: string;
@@ -59,6 +60,19 @@ export const GET: APIRoute = async () => {
         "work",
         "portfolio",
         ...p.category.split("·").map((c) => c.trim()),
+      ],
+    })),
+    ...cities.map((c): SearchDoc => ({
+      id: `location:${c.slug}`,
+      type: "location",
+      title: `${c.name}, FL`,
+      description: trim(c.heroSub),
+      url: `/locations/${c.slug}`,
+      keywords: [
+        c.name.toLowerCase(),
+        c.county.toLowerCase(),
+        "florida",
+        ...(c.searchKeywords ?? []),
       ],
     })),
     ...posts.map((p): SearchDoc => ({

@@ -13,8 +13,9 @@ export default defineConfig({
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   integrations: [
     sitemap({
-      // onboarding is noindex — keep it out of the sitemap.
-      filter: (page) => !page.includes("/onboarding"),
+      // onboarding + leave-a-review are noindex — keep them out of the sitemap.
+      filter: (page) =>
+        !page.includes("/onboarding") && !page.includes("/leave-a-review"),
       // Emit a build-date lastmod so crawlers get a real freshness signal.
       serialize: (item) => ({ ...item, lastmod: new Date().toISOString() }),
     }),

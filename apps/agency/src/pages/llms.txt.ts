@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
+import { cities } from "../data/cities";
 import { fmtPrice, PRICING } from "../data/pricing";
 
 // Plain-markdown summary for LLMs / answer engines. Prices come from
@@ -13,6 +14,12 @@ export const GET: APIRoute = async () => {
     .map(
       (p) =>
         `- [${p.data.title}](https://agency.alisamadii.com/blog/${p.id}) — ${p.data.description}`
+    )
+    .join("\n");
+  const locations = cities
+    .map(
+      (c) =>
+        `- [Web design in ${c.name}, FL](https://agency.alisamadii.com/locations/${c.slug})`
     )
     .join("\n");
 
@@ -49,6 +56,12 @@ export const GET: APIRoute = async () => {
 - Custom: fully scoped projects (admin panels, auth, databases) — contact for a quote.
 
 Terms and privacy pages are always included free.
+
+## Locations
+
+Headquartered in Jacksonville, FL; serving businesses across Florida remotely.
+
+${locations}
 
 ## Writing
 

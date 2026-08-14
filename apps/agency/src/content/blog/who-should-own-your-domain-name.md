@@ -32,7 +32,7 @@ That's the whole system. The rest of this post is why it's set up that way — a
 
 Your domain is the deed to your digital property. The website is the house — I can build it, rebuild it, move it, extend it. But the deed decides who actually owns the address, and you don't put the builder's name on the deed. No matter how good his concrete jokes are.
 
-When a domain is registered, the account it sits in controls it completely. Whoever holds that login can point the domain anywhere, transfer it, renew it — or quietly let it expire. That's why the domain goes in *your* account from day one. Your email. Your card. Your login.
+When a domain is registered, the account it sits in controls it completely. Whoever holds that login can point the domain anywhere, transfer it, renew it — or quietly let it expire. That's why the domain goes in _your_ account from day one. Your email. Your card. Your login.
 
 Plenty of agencies do the opposite. They register the client's domain inside the agency's own account, because it's "easier." And it is easier — right up until the relationship ends, the agency shuts down, or an invoice dispute turns your own business name into a bargaining chip. The industry even has a phrase for it: domain hostage. It's exactly as fun as it sounds, and untangling it can take months you don't have.
 
@@ -53,7 +53,7 @@ Here's the actual handoff:
 
 That's it. Whether you bought from Namecheap, GoDaddy, or a registrar I've never heard of, the screen looks roughly the same: a table where you add a record, paste a value, hit save.
 
-And if that paragraph still made your eyes glaze over — genuinely fine. Give me a call and we'll do it together on a screen share, you driving, me navigating. Ten minutes, done, and you'll never wonder what a DNS record is again. (You'll also never *need* to. It's a set-and-forget job.)
+And if that paragraph still made your eyes glaze over — genuinely fine. Give me a call and we'll do it together on a screen share, you driving, me navigating. Ten minutes, done, and you'll never wonder what a DNS record is again. (You'll also never _need_ to. It's a set-and-forget job.)
 
 Notice what this arrangement means: I never need your registrar password, and you never need to touch my hosting. Each of us holds our own keys. Which brings me to the part I actually care about.
 

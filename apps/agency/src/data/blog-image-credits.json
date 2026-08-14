@@ -68,5 +68,30 @@
     "name": "cottonbro studio",
     "url": "https://www.pexels.com/@cottonbro",
     "pexelsUrl": "https://www.pexels.com/photo/man-and-woman-video-call-on-laptop-6321231/"
+  },
+  "ses-hero": {
+    "name": "cottonbro studio",
+    "url": "https://www.pexels.com/@cottonbro",
+    "pexelsUrl": "https://www.pexels.com/photo/person-using-a-laptop-on-a-table-7439136/"
+  },
+  "email-pricing": {
+    "name": "Tara Winstead",
+    "url": "https://www.pexels.com/@tara-winstead",
+    "pexelsUrl": "https://www.pexels.com/photo/calculator-red-pen-and-coins-on-notepad-7111496/"
+  },
+  "email-setup": {
+    "name": "Brett Sayles",
+    "url": "https://www.pexels.com/@brett-sayles",
+    "pexelsUrl": "https://www.pexels.com/photo/patch-cables-plugged-in-patch-panel-4682189/"
+  },
+  "email-legit": {
+    "name": "Gustavo Fring",
+    "url": "https://www.pexels.com/@gustavo-fring",
+    "pexelsUrl": "https://www.pexels.com/photo/man-in-dress-shirt-holding-black-smartphone-3875650/"
+  },
+  "email-records": {
+    "name": "Zulfugar Karimov",
+    "url": "https://www.pexels.com/@zulfugarkarimov",
+    "pexelsUrl": "https://www.pexels.com/photo/organized-blue-office-binders-on-shelf-34293528/"
   }
 }

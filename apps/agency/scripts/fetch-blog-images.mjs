@@ -41,6 +41,11 @@ const QUERIES = {
   "domain-hero": "person typing laptop website browser address bar",
   "domain-keys": "handing over house keys hands closeup",
   "dns-setup": "video call screen share laptop help support",
+  "ses-hero": "laptop email inbox screen desk workspace",
+  "email-pricing": "calculator coins budget desk closeup",
+  "email-setup": "network cables server room closeup",
+  "email-legit": "person reading phone coffee cafe smiling",
+  "email-records": "organized files archive folders shelf",
 };
 
 // key → exact Pexels photo id. Overrides the search query for that key.
@@ -59,7 +64,9 @@ for (const [key, query] of Object.entries(QUERIES)) {
       headers: { Authorization: KEY },
     });
     if (!res.ok) {
-      console.error(`Pexels photo ${PINNED[key]} failed for ${key}: HTTP ${res.status}`);
+      console.error(
+        `Pexels photo ${PINNED[key]} failed for ${key}: HTTP ${res.status}`
+      );
       process.exit(1);
     }
     photo = await res.json();

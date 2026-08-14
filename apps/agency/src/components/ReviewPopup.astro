@@ -1,0 +1,109 @@
+---
+// Toast-style prompt nudging past clients to review the studio on Trustpilot.
+// Shows at most once every 2 days per browser (localStorage-throttled).
+---
+
+<div
+  id="reviewPopup"
+  class="pointer-events-none fixed right-4 bottom-4 left-4 z-50 translate-y-3 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] sm:left-auto sm:w-[360px]"
+  role="dialog"
+  aria-label="Leave a review"
+  aria-hidden="true"
+>
+  <div
+    class="rounded-[18px] border border-charcoal/[0.09] bg-white p-6 shadow-[0_12px_40px_rgba(27,26,23,0.12)]"
+  >
+    <button
+      id="reviewPopupClose"
+      type="button"
+      aria-label="Dismiss"
+      class="absolute top-3.5 right-3.5 flex h-7 w-7 items-center justify-center rounded-full text-warmgray transition-colors duration-300 hover:bg-charcoal/5 hover:text-charcoal"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+      >
+        <path d="M1 1l10 10M11 1L1 11"></path>
+      </svg>
+    </button>
+    <div
+      class="mb-3 inline-flex items-center gap-2.5 font-mono text-[11.5px] tracking-[0.12em] text-muted uppercase"
+    >
+      <span class="h-px w-[22px] bg-accent"></span>Worked with us?
+    </div>
+    <p class="text-[16px] leading-[1.5] font-semibold tracking-[-0.01em]">
+      Your honest review helps this studio grow.
+    </p>
+    <p class="mt-1.5 text-[13.5px] leading-[1.55] text-warmgray">
+      Three minutes, your own words — here's how.
+    </p>
+    <a
+      href="/leave-a-review"
+      class="mag-btn mt-4 inline-flex items-center gap-2 rounded-full bg-charcoal px-5 py-2.5 text-[13.5px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+    >
+      Leave a review
+      <span class="text-[12px]">&#8599;</span>
+    </a>
+  </div>
+</div>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const KEY = "review-popup-shown-at";
+    const INTERVAL = 2 * 24 * 60 * 60 * 1000; // 2 days
+    const popup = document.getElementById("reviewPopup");
+    if (!popup) return;
+
+    const last = Number(localStorage.getItem(KEY) || 0);
+    if (Date.now() - last < INTERVAL) return;
+
+    let observer = null;
+
+    const reveal = () => {
+      localStorage.setItem(KEY, String(Date.now()));
+      popup.classList.remove(
+        "pointer-events-none",
+        "translate-y-3",
+        "opacity-0"
+      );
+      popup.setAttribute("aria-hidden", "false");
+    };
+
+    // Welcome video owns the bottom-right corner — wait until it's gone.
+    const show = setTimeout(() => {
+      if (!document.getElementById("welcomeVideo")) {
+        reveal();
+        return;
+      }
+      observer = new MutationObserver(() => {
+        if (!document.getElementById("welcomeVideo")) {
+          observer.disconnect();
+          setTimeout(reveal, 600);
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }, 4000);
+
+    const hide = () => {
+      popup.classList.add("pointer-events-none", "translate-y-3", "opacity-0");
+      popup.setAttribute("aria-hidden", "true");
+    };
+
+    document
+      .getElementById("reviewPopupClose")
+      ?.addEventListener("click", hide);
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        clearTimeout(show);
+        observer?.disconnect();
+      },
+      { once: true }
+    );
+  })();
+</script>

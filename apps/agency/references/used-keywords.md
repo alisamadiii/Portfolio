@@ -108,6 +108,24 @@ When building a cluster for a new page:
 
 ---
 
+### 6. `amazon ses vs resend` → agency blog
+
+- **Primary source:** `(invented)` — no active CSV for the agency site; picked from SERP research (real query; top results: mailflowauthority.com comparison ~1,200w, dev.to cost-math post ~500w, forwardemail.net comparison ~3,500w incl. boilerplate)
+- **Used on page:** `/blog/amazon-ses-vs-resend`
+- **Cluster:**
+
+| Secondary keyword | Source |
+|-------------------|--------|
+| amazon ses pricing per email | `(invented)` |
+| cheapest way to send transactional email | `(invented)` |
+| resend pricing vs amazon ses | `(invented — confirmed SERP FAQ)` |
+| email sending for small business websites | `(invented)` |
+| contact form email without watermark | `(invented)` |
+
+*CSV audit: no agency keyword CSV exists. Primary and secondaries validated against live SERP + on-page FAQs of ranking comparisons.*
+
+---
+
 ## Workflow for the next post
 
 1. Open the active keyword CSV
