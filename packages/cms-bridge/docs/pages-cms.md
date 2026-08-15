@@ -750,6 +750,13 @@ the code.
 
 ## Collections — `cms/collections/*.yml`
 
+**Every client project should define its collections this way.** The hub's CMS
+view is collections-first: clients manage repeating content (blog posts, jobs,
+testimonials, newsletters…) through the CMS overlay, whose list comes straight
+from the `type: collection` entries in `.pages.yml`. A project without collection
+definitions gives the client an empty CMS. Page copy is edited on the canvas;
+anything that behaves like a table of records belongs in a collection.
+
 Define a collection ("database table" — newsletters, jobs, testimonials) as a file
 in the project, then sync it. The file body IS the `.pages.yml` entry body; `name`
 (from the filename) and `type: collection` are injected, defaults fill the rest.
