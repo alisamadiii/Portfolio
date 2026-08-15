@@ -9,6 +9,7 @@ import { emailsRouter } from "./emails";
 import { paymentsRouter } from "./payments";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
+import { statsRouter } from "./stats";
 import { uploadsRouter } from "./uploads";
 import { usersRouter } from "./users";
 import { websitesRouter } from "./stripe/websites";
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   products: productsRouter,
   payments: paymentsRouter,
   sources: sourcesRouter,
+  stats: statsRouter,
   clickup: clickupRouter,
   uploads: uploadsRouter,
   contact: contactRouter,

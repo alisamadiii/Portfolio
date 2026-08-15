@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useDebounce } from "@uidotdev/usehooks";
-import { ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+} from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
 import { Button } from "@workspace/ui/components/button";
@@ -20,18 +25,16 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@workspace/ui/components/input-group";
-import { Separator } from "@workspace/ui/components/separator";
-import { DataTable } from "@workspace/ui/custom/data-table";
-import { TabLineAnimate } from "@workspace/ui/custom/tab-line-animate";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
+import { AdminDataTable } from "@/components/admin-table";
 import { Content } from "@/components/content-admin";
 import { CreateUser } from "@/components/users/create-user";
 
-import { columns } from "./columns";
+import { columns, type UsersTableMeta } from "./columns";
 
 type UserFromAPI = RouterOutputs["users"]["list"][number];
 
@@ -43,12 +46,24 @@ interface FilterUsers {
   search?: string;
 }
 
-const sortByOptions: FilterUsers["sortBy"][] = ["email", "created", "banned"];
-
 const filterByOptions: { label: string; value: FilterUsers["filterBy"] }[] = [
   { label: "All Users", value: "all" },
   { label: "Admins", value: "admin" },
 ];
+
+/** Compact page list: 1 2 … n-1 n with a window around the current page. */
+const pageItems = (current: number, total: number): (number | "…")[] => {
+  if (total <= 7)
+    return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, 2, current - 1, current, current + 1, total - 1, total]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const items: (number | "…")[] = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1]! > 1) items.push("…");
+    items.push(p);
+  });
+  return items;
+};
 
 const UsersPage = () => {
   const [sortBy, setSortBy] = useQueryState(
@@ -112,143 +127,157 @@ const UsersPage = () => {
         pageSize: limit,
       },
     },
+    meta: {
+      sortBy,
+      toggleSort: (key) => {
+        setSortBy(key);
+        setPage(1);
+      },
+    } as UsersTableMeta,
   });
+
+  const total = usersCount?.[0]?.count ?? 0;
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <Content>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Users</h1>
-      <TabLineAnimate
-        tabs={[
-          { label: "All", value: "all" },
-          { label: "Invitations", value: "invitations" },
-        ]}
-        className="mb-8"
-      />
-      <div className="mb-4 flex items-center gap-2">
-        <InputGroup className="w-full max-w-48">
-          <InputGroupAddon>
-            <Search />
-          </InputGroupAddon>
-          <InputGroupInput
-            placeholder="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </InputGroup>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" className="font-medium" />}
-          >
-            Sort by:{" "}
-            <span className="capitalize">{sortBy?.replace("_", " ")}</span>{" "}
-            <ChevronDown data-arrow />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-40" align="start">
-            {sortByOptions.map((item) => (
-              <DropdownMenuItem
-                key={item}
-                onClick={() => {
-                  setSortBy(item as string);
-                }}
-                className="cursor-pointer text-sm font-medium"
-                data-checked={sortBy === item}
+      <div className="bg-card rounded-2xl border p-5">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="flex items-baseline gap-2.5">
+            <h1 className="text-base font-semibold">Users</h1>
+            <span className="text-num text-muted-foreground text-xs">
+              {total}
+            </span>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <InputGroup className="h-9 w-full max-w-56 rounded-lg">
+              <InputGroupAddon>
+                <Search className="size-3.5" />
+              </InputGroupAddon>
+              <InputGroupInput
+                placeholder="Search users…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </InputGroup>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="sm" className="h-9 rounded-lg" />
+                }
               >
-                <span className="capitalize">{item?.replace("_", " ")}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" className="font-medium" />}
-          >
-            Filter:{" "}
-            <span className="capitalize">
-              {filterByOptions.find((f) => f.value === filterBy)?.label ??
-                "All Users"}
-            </span>{" "}
-            <ChevronDown data-arrow />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-40" align="start">
-            {filterByOptions.map((item) => (
-              <DropdownMenuItem
-                key={item.value}
-                onClick={() => {
-                  setFilterBy(item.value as string);
-                  setPage(1);
-                }}
-                className="cursor-pointer text-sm font-medium"
-                data-checked={filterBy === item.value}
-              >
-                {item.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <CreateUser />
-      </div>
-      <DataTable
-        isLoading={isPending}
-        table={table}
-        error={error}
-        onRowClick={(row) => router.push(`/users/${row.original.id}`)}
-      />
-      <div
-        className={cn(
-          "bg-muted text-muted-foreground -mt-3 flex items-center justify-between rounded-b-xl p-4 pt-7 text-xs",
-          search.length > 0 && "hidden"
-        )}
-      >
-        <div className="flex items-center">
-          {page * limit - limit + 1}-
-          {Math.min(page * limit, usersCount?.[0]?.count ?? 0)} of{" "}
-          {usersCount?.[0]?.count ?? 0}{" "}
-          <Separator className="mx-2 h-5!" orientation="vertical" /> Results per
-          page{" "}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="outline" size="sm" className="ml-2" />}
-            >
-              {limit} <ChevronDown data-arrow />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="min-w-20">
-              {[10, 15, 20, 100].map((item) => (
-                <DropdownMenuItem
-                  key={item}
-                  onClick={() => {
-                    setLimit(item);
-                    setPage(1);
-                  }}
-                  data-checked={limit === item}
-                >
-                  {item}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <span className="text-muted-foreground">Filter</span>
+                <span className="capitalize">
+                  {filterByOptions.find((f) => f.value === filterBy)?.label ??
+                    "All Users"}
+                </span>{" "}
+                <ChevronDown data-arrow />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-40" align="end">
+                {filterByOptions.map((item) => (
+                  <DropdownMenuItem
+                    key={item.value}
+                    onClick={() => {
+                      setFilterBy(item.value as string);
+                      setPage(1);
+                    }}
+                    className="cursor-pointer text-sm font-medium"
+                    data-checked={filterBy === item.value}
+                  >
+                    {item.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <CreateUser />
+          </div>
         </div>
-        <div className="flex items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(page - 1)}
-            disabled={page === 1}
-          >
-            <ChevronLeft />
-          </Button>
-          <p className="mx-2 tabular-nums">
-            <span className="text-foreground">{page}</span> /{" "}
-            {Math.ceil((usersCount?.[0]?.count ?? 0) / limit)}
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(page + 1)}
-            disabled={page === Math.ceil((usersCount?.[0]?.count ?? 0) / limit)}
-          >
-            <ChevronRight />
-          </Button>
-        </div>
+        <AdminDataTable
+          isLoading={isPending}
+          table={table}
+          error={error}
+          rowClassName={() => "group/row"}
+          onRowClick={(row) => router.push(`/users/${row.original.id}`)}
+          footer={
+            search.length > 0 ? undefined : (
+              <>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-num">
+                    {total === 0 ? 0 : page * limit - limit + 1}–
+                    {Math.min(page * limit, total)} of {total}
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-num h-6 px-2 text-xs"
+                        />
+                      }
+                    >
+                      {limit} <ChevronDown data-arrow />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="min-w-20">
+                      {[10, 15, 20, 100].map((item) => (
+                        <DropdownMenuItem
+                          key={item}
+                          onClick={() => {
+                            setLimit(item);
+                            setPage(1);
+                          }}
+                          data-checked={limit === item}
+                        >
+                          {item}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="size-3.5" /> Prev
+                  </Button>
+                  {pageItems(page, Math.max(totalPages, 1)).map((item, i) =>
+                    item === "…" ? (
+                      <span key={`gap-${i}`} className="text-num px-1">
+                        …
+                      </span>
+                    ) : (
+                      <Button
+                        key={item}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "text-num size-7 p-0 text-xs",
+                          item === page && "bg-accent text-foreground"
+                        )}
+                        onClick={() => setPage(item)}
+                      >
+                        {item}
+                      </Button>
+                    )
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= totalPages}
+                  >
+                    Next <ChevronRight className="size-3.5" />
+                  </Button>
+                </div>
+              </>
+            )
+          }
+        />
       </div>
     </Content>
   );
