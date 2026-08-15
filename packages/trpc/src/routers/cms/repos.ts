@@ -149,15 +149,18 @@ const listMine = authenticatedProcedure
  * server-side: getToken + getRepoSnapshot). Access control = getToken.
  */
 const getSnapshot = authenticatedProcedure
-  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .input(z.object({ owner: z.string().optional(), repo: z.string() }))
   .query(async ({ input, ctx }) =>
     runCms(async () => {
+      const owner = input.owner ?? process.env.GITHUB_ORG;
+      if (!owner) throw createHttpError("Missing GITHUB_ORG.", 500);
+
       const user = toCmsUser(ctx.session.user);
 
-      const { token } = await getToken(user, input.owner, input.repo);
+      const { token } = await getToken(user, owner, input.repo);
       if (!token) throw createHttpError("Token not found", 401);
 
-      return getRepoSnapshot(input.owner, input.repo, token);
+      return getRepoSnapshot(owner, input.repo, token);
     })
   );
 

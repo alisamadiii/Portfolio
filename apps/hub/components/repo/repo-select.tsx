@@ -30,6 +30,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { isAdminUser } from "@/lib/authz-shared";
+import { repoPath } from "@/lib/paths";
 
 export function RepoSelect({
   onAccountSelect,
@@ -188,7 +189,7 @@ export function RepoSelect({
             >
               <Link
                 className="truncate font-medium hover:underline"
-                href={`/${result.owner}/${result.repo}/${result.defaultBranch ? encodeURIComponent(result.defaultBranch) : ""}`}
+                href={repoPath(result.repo)}
               >
                 {result.repo}
               </Link>
@@ -203,7 +204,7 @@ export function RepoSelect({
                   "ml-auto",
                   buttonVariants({ variant: "outline", size: "xs" })
                 )}
-                href={`/${result.owner}/${result.repo}/${result.defaultBranch ? encodeURIComponent(result.defaultBranch) : ""}`}
+                href={repoPath(result.repo)}
               >
                 Open
               </Link>

@@ -137,7 +137,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
     );
 
     const baseUrl = getBaseUrl();
-    const repoUrl = new URL(`/${owner}/${repo}`, baseUrl).toString();
+    const repoUrl = new URL(`/${repo}`, baseUrl).toString();
     const createdCollaborators: (typeof collaboratorTable.$inferSelect)[] = [];
     const errors: string[] = [];
     let immediateAccessCount = 0;

@@ -53,6 +53,7 @@ import {
   saveDraftOrThrow,
   useDrafts,
 } from "@/lib/store/drafts";
+import { repoPath } from "@/lib/paths";
 
 import { usePublish } from "@/components/publish/publish-context";
 import { SiteConfigSheet } from "@/components/canvas/site-config-sheet";
@@ -96,7 +97,7 @@ export function Canvas() {
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
   const branch = config?.branch ?? "";
-  const repoBase = `/${owner}/${repo}/${encodeURIComponent(branch)}`;
+  const repoBase = repoPath(repo);
 
   const pagesQuery = useQuery(
     trpc.cms.pages.list.queryOptions(

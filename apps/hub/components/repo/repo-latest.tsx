@@ -9,6 +9,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { getVisits } from "@/lib/tracker";
+import { repoPath } from "@/lib/paths";
 
 export function RepoLatest() {
   const [recentVisits, setRecentVisits] = useState<any[]>([]);
@@ -67,7 +68,7 @@ export function RepoLatest() {
           />
           <Link
             className="truncate font-medium hover:underline"
-            href={`/${visit.owner}/${visit.repo}/${encodeURIComponent(visit.branch)}`}
+            href={repoPath(visit.repo)}
           >
             {visit.repo}
           </Link>
@@ -79,7 +80,7 @@ export function RepoLatest() {
               "ml-auto",
               buttonVariants({ variant: "outline", size: "xs" })
             )}
-            href={`/${visit.owner}/${visit.repo}/${encodeURIComponent(visit.branch)}`}
+            href={repoPath(visit.repo)}
           >
             Open
           </Link>

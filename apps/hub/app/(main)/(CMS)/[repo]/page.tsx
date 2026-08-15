@@ -17,6 +17,13 @@ import {
 
 import { isAdminUser } from "@/lib/authz-shared";
 import { isConfigEnabled } from "@workspace/cms-core/config";
+import { repoPath } from "@/lib/paths";
+
+import {
+  DocumentTitle,
+  formatRepoBranchTitle,
+} from "@/components/document-title";
+import { Canvas } from "@/components/canvas/canvas";
 
 export default function Page() {
   const { config } = useConfig();
@@ -24,23 +31,48 @@ export default function Page() {
   const router = useRouter();
   const [error, setError] = useState(false);
 
+  // Canvas is the repo root when the site exposes a live preview URL.
+  const hasBaseUrl = Boolean((config?.object as any)?.settings?.baseUrl);
+
   useEffect(() => {
+    if (hasBaseUrl) return;
     if (config?.object.content?.[0]) {
       router.replace(
-        `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/${config.object.content[0].type}/${config.object.content[0].name}`
+        repoPath(
+          config.repo,
+          config.object.content[0].type,
+          config.object.content[0].name
+        )
       );
     } else if (config?.object.media) {
       router.replace(
-        `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/media/${config.object.media[0].name}`
+        repoPath(config.repo, "media", config.object.media[0].name)
       );
     } else if (isAdminUser(user) && isConfigEnabled(config?.object)) {
-      router.replace(
-        `/${config?.owner}/${config?.repo}/${encodeURIComponent(config!.branch)}/configuration`
-      );
+      router.replace(repoPath(config!.repo, "configuration"));
     } else {
       setError(true);
     }
-  }, [config, router, user]);
+  }, [config, router, user, hasBaseUrl]);
+
+  if (hasBaseUrl) {
+    return (
+      <>
+        <DocumentTitle
+          title={formatRepoBranchTitle(
+            "Canvas",
+            config?.owner ?? "",
+            config?.repo ?? "",
+            config?.branch ?? ""
+          )}
+        />
+        {/* Full-bleed: escape RepoLayout's main padding; own scroll surface. */}
+        <div className="-m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
+          <Canvas />
+        </div>
+      </>
+    );
+  }
 
   return error ? (
     isAdminUser(user) ? (

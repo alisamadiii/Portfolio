@@ -21,6 +21,7 @@ import {
 import { useTRPC } from "@workspace/trpc/client";
 
 import { getVisits } from "@/lib/tracker";
+import { repoPath } from "@/lib/paths";
 
 import { RepoLatest } from "@/components/repo/repo-latest";
 import { RepoSelect } from "@/components/repo/repo-select";
@@ -85,9 +86,7 @@ export function CmsProjectsDialog({
   const decide = (repos: any) => {
     if (repos?.length === 1) {
       const p = repos[0];
-      router.push(
-        `/${p.owner}/${p.repo}/${p.defaultBranch ? encodeURIComponent(p.defaultBranch) : ""}`
-      );
+      router.push(repoPath(p.repo));
     } else {
       setOpen(true);
     }

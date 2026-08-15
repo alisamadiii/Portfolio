@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
 import { useUser } from "@/contexts/user-context";
@@ -36,20 +36,11 @@ import {
   AvatarImage,
 } from "@workspace/ui/components/avatar";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@workspace/ui/components/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
@@ -83,9 +74,10 @@ import {
 } from "@/lib/repo-nav";
 import { getVisits } from "@/lib/tracker";
 
+import { repoPath } from "@/lib/paths";
+
 import { About } from "@/components/about";
 import { SidebarPublishButton } from "@/components/publish/publish-button";
-import { RepoBranches } from "@/components/repo/repo-branches";
 import { RepoCommandPalette } from "@/components/repo/repo-command-palette";
 import { User } from "@/components/user";
 
@@ -97,14 +89,7 @@ type NavItem = {
 };
 
 function RepoSwitcher() {
-  const router = useRouter();
-  const { owner, repo, branches = [] } = useRepo();
-  const { config } = useConfig();
-  const currentBranch = config?.branch ?? "";
-  const sortedBranches = useMemo(
-    () => [...branches].sort((a, b) => a.localeCompare(b)),
-    [branches]
-  );
+  const { owner, repo } = useRepo();
   const [recentRepos, setRecentRepos] = useState<
     Array<{ owner: string; repo: string; branch: string }>
   >([]);
@@ -153,124 +138,90 @@ function RepoSwitcher() {
     loadRecentRepos();
   }, [loadRecentRepos]);
 
-  const handleBranchChange = (branch: string) => {
-    router.push(`/${owner}/${repo}/${encodeURIComponent(branch)}`);
-  };
-
   return (
-    <Dialog>
-      <div ref={triggerWrapperRef}>
-        <DropdownMenu
-          onOpenChange={(open) => {
-            if (open) loadRecentRepos();
-          }}
+    <div ref={triggerWrapperRef}>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (open) loadRecentRepos();
+        }}
+      >
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton
+              size="lg"
+              className="rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Avatar className="h-8 w-8 rounded-md">
+                <AvatarImage
+                  src={`https://github.com/${owner}.png`}
+                  alt={owner}
+                />
+                <AvatarFallback>
+                  {owner.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{repo}</span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {owner}
+                </span>
+              </div>
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>
+          }
+        />
+        <DropdownMenuContent
+          className="rounded-lg"
+          align="start"
+          style={
+            menuWidth
+              ? { width: `${menuWidth}px`, minWidth: `${menuWidth}px` }
+              : undefined
+          }
         >
-          <DropdownMenuTrigger
+          <DropdownMenuItem
             render={
-              <SidebarMenuButton
-                size="lg"
-                className="rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              <a
+                href={`https://github.com/${owner}/${repo}`}
+                target="_blank"
+                rel="noreferrer"
               >
-                <Avatar className="h-8 w-8 rounded-md">
-                  <AvatarImage
-                    src={`https://github.com/${owner}.png`}
-                    alt={owner}
-                  />
-                  <AvatarFallback>
-                    {owner.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{repo}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {currentBranch || owner}
-                  </span>
-                </div>
-                <ChevronsUpDown className="ml-auto size-4" />
-              </SidebarMenuButton>
+                View on GitHub
+                <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
+              </a>
             }
           />
-          <DropdownMenuContent
-            className="rounded-lg"
-            align="start"
-            style={
-              menuWidth
-                ? { width: `${menuWidth}px`, minWidth: `${menuWidth}px` }
-                : undefined
-            }
-          >
-            <DropdownMenuItem
-              render={
-                <a
-                  href={`https://github.com/${owner}/${repo}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View on GitHub
-                  <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
-                </a>
-              }
-            />
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-muted-foreground text-xs">
-                Branches
-              </DropdownMenuLabel>
-              <DropdownMenuRadioGroup
-                value={currentBranch}
-                onValueChange={handleBranchChange}
-              >
-                {sortedBranches.map((branch) => (
-                  <DropdownMenuRadioItem key={branch} value={branch}>
-                    <span className="truncate">{branch}</span>
-                  </DropdownMenuRadioItem>
+          {recentRepos.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-muted-foreground text-xs">
+                  Recently visited
+                </DropdownMenuLabel>
+                {recentRepos.map((visit) => (
+                  <DropdownMenuItem
+                    key={`${visit.owner}/${visit.repo}/${visit.branch}`}
+                    render={
+                      <Link href={repoPath(visit.repo)}>
+                        <img
+                          src={`https://github.com/${visit.owner}.png`}
+                          alt={`${visit.owner}'s avatar`}
+                          loading="lazy"
+                          className="size-5 rounded"
+                        />
+                        <span className="truncate">{visit.repo}</span>
+                      </Link>
+                    }
+                  />
                 ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DialogTrigger
-              render={<DropdownMenuItem>Manage branches</DropdownMenuItem>}
-            />
-            {recentRepos.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-muted-foreground text-xs">
-                    Recently visited
-                  </DropdownMenuLabel>
-                  {recentRepos.map((visit) => (
-                    <DropdownMenuItem
-                      key={`${visit.owner}/${visit.repo}/${visit.branch}`}
-                      render={
-                        <Link
-                          href={`/${visit.owner}/${visit.repo}/${encodeURIComponent(visit.branch)}`}
-                        >
-                          <img
-                            src={`https://github.com/${visit.owner}.png`}
-                            alt={`${visit.owner}'s avatar`}
-                            loading="lazy"
-                            className="size-5 rounded"
-                          />
-                          <span className="truncate">{visit.repo}</span>
-                        </Link>
-                      }
-                    />
-                  ))}
-                </DropdownMenuGroup>
-              </>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/">All projects</Link>} />
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Manage branches</DialogTitle>
-        </DialogHeader>
-        <RepoBranches />
-      </DialogContent>
-    </Dialog>
+              </DropdownMenuGroup>
+            </>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem render={<Link href="/">All projects</Link>} />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
@@ -354,7 +305,7 @@ export function RepoSidebar() {
       {
         key: "view-canvas",
         label: "Canvas",
-        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/canvas`,
+        href: `/${config.repo}/canvas`,
         icon: <Frame className="size-4" />,
       },
     ];
@@ -372,7 +323,7 @@ export function RepoSidebar() {
       items.push({
         key: "admin-cache",
         label: "Cache",
-        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/cache`,
+        href: `/${config.repo}/cache`,
         icon: <Database className="size-4" />,
       });
     }
@@ -381,7 +332,7 @@ export function RepoSidebar() {
       items.push({
         key: "admin-configuration",
         label: "Configuration",
-        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/configuration`,
+        href: `/${config.repo}/configuration`,
         icon: <Settings className="size-4" />,
       });
     }
@@ -390,7 +341,7 @@ export function RepoSidebar() {
       items.push({
         key: "admin-collaborators",
         label: "Collaborators",
-        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collaborators`,
+        href: `/${config.repo}/collaborators`,
         icon: <Users className="size-4" />,
       });
     }
@@ -399,7 +350,7 @@ export function RepoSidebar() {
       items.push({
         key: "admin-settings",
         label: "Settings",
-        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/settings`,
+        href: `/${config.repo}/settings`,
         icon: <SlidersHorizontal className="size-4" />,
       });
     }

@@ -47,7 +47,7 @@ export function getMediaNavigation(config: Config | null): NavigationNode[] {
 
 export function getNodeHref(node: NavigationNode, config: Config | null): string {
   if (!config) return "#";
-  const base = `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}`;
+  const base = `/${config.repo}`;
   if (node.type === "media") {
     return `${base}/media/${encodeURIComponent(node.name)}`;
   }

@@ -620,7 +620,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           loading: `Renaming "${path}" to "${newPath}"`,
           success: (data) => {
             router.push(
-              `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
+              `/${config.repo}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
             );
             return data.message;
           },
@@ -699,7 +699,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                   <span className="flex min-w-0 items-center">
                     <Link
                       className="truncate font-medium"
-                      href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
+                      href={`/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
                     >
                       {CellView}
                     </Link>
@@ -775,7 +775,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                   className={cn(
                     buttonVariants({ variant: "outline", size: "sm" })
                   )}
-                  href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
+                  href={`/${config.repo}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
                 >
                   Edit
                 </Link>
@@ -1392,7 +1392,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
           ) : (
             <Link
               className={buttonVariants({ variant: "default" })}
-              href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/settings`}
+              href={`/${config.repo}/settings`}
             >
               Go to settings
             </Link>

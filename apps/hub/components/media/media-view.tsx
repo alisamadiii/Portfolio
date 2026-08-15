@@ -781,7 +781,7 @@ const MediaView = ({
         <EmptyContent>
           <Link
             className={buttonVariants({ variant: "default" })}
-            href={`/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/configuration`}
+            href={`/${config.repo}/configuration`}
           >
             Open configuration
           </Link>
