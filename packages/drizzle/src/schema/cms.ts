@@ -96,7 +96,7 @@ export const cmsConfig = pgTable(
 );
 
 // Where CMS media is stored/browsed for a repo. Add new providers here.
-export const mediaProviderValues = ["github", "imagekit"] as const;
+export const mediaProviderValues = ["imagekit"] as const;
 export const mediaProviderEnum = pgEnum("media_provider", mediaProviderValues);
 
 export type MediaProviderId = (typeof mediaProviderValues)[number];
@@ -110,7 +110,7 @@ export const cmsRepoSettings = pgTable(
     basePath: text("base_path").notNull().default(""),
     mediaProvider: mediaProviderEnum("media_provider")
       .notNull()
-      .default("github"),
+      .default("imagekit"),
     // Provider-specific config (e.g. ImageKit urlEndpoint/publicKey/privateKey/folder)
     mediaConfig: jsonb("media_config").$type<Record<string, string>>(),
     createdAt: timestamp("created_at").notNull().defaultNow(),

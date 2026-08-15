@@ -13,7 +13,11 @@ export type Config = {
    * Attached dynamically by `getConfig`, never persisted with the cached config.
    */
   mediaSettings?: {
-    provider: MediaProviderId;
+    // ImageKit is the only provider today. Kept wide (not the narrowed
+    // `MediaProviderId` union) so the legacy `provider !== "github"` guards in
+    // field/nav/media consumers remain valid dead code until that path is
+    // fully removed.
+    provider: MediaProviderId | (string & {});
     config: Record<string, string>;
   };
 };

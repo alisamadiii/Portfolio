@@ -94,11 +94,9 @@ const getMediaSettings = async (
     where: sql`lower(${repoSettingsTable.owner}) = lower(${owner}) and lower(${repoSettingsTable.repo}) = lower(${repo})`,
   });
 
-  const provider = isMediaProviderId(row?.mediaProvider)
-    ? row.mediaProvider
-    : DEFAULT_MEDIA_PROVIDER;
-
-  return { provider, config: row?.mediaConfig ?? {} };
+  // ImageKit is the sole media provider for every repo. Any legacy stored value
+  // (e.g. a "github" row) is ignored — media is always hosted.
+  return { provider: DEFAULT_MEDIA_PROVIDER, config: row?.mediaConfig ?? {} };
 };
 
 /** Media settings with secrets stripped — safe to send to the browser. */

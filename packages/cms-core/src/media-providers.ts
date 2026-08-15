@@ -47,12 +47,6 @@ export type MediaProviderDef = {
 };
 
 const MEDIA_PROVIDERS: Record<MediaProviderId, MediaProviderDef> = {
-  github: {
-    id: "github",
-    label: "GitHub repository",
-    supportsRepoUpload: true,
-    configFields: [],
-  },
   imagekit: {
     id: "imagekit",
     label: "ImageKit",
@@ -63,7 +57,7 @@ const MEDIA_PROVIDERS: Record<MediaProviderId, MediaProviderDef> = {
   },
 };
 
-const DEFAULT_MEDIA_PROVIDER: MediaProviderId = "github";
+const DEFAULT_MEDIA_PROVIDER: MediaProviderId = "imagekit";
 
 const isMediaProviderId = (value: unknown): value is MediaProviderId =>
   typeof value === "string" &&
