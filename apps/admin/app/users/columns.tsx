@@ -7,6 +7,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format, parseISO } from "date-fns";
 import {
   Ban,
+  ChevronDown,
+  ChevronUp,
   CircleUserRound,
   MoreHorizontal,
   Trash,
@@ -34,11 +36,11 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { ReadyConfirmDialog } from "@workspace/ui/custom/confirm-alert-dialog";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { urls } from "@workspace/ui/lib/company";
 
@@ -50,7 +52,43 @@ import {
 } from "@workspace/auth/hooks/use-admin";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { StatusBadge } from "@/components/status-badge";
+
 type UserFromAPI = RouterOutputs["users"]["list"][number];
+
+export type UsersTableMeta = {
+  sortBy: string;
+  toggleSort: (key: "email" | "created") => void;
+};
+
+/** Column header that drives the server-side sortBy via table meta. */
+const SortableHeader = ({
+  label,
+  sortKey,
+  meta,
+}: {
+  label: string;
+  sortKey: "email" | "created";
+  meta?: UsersTableMeta;
+}) => {
+  const active = meta?.sortBy === sortKey;
+  return (
+    <button
+      onClick={() => meta?.toggleSort(sortKey)}
+      className={cn(
+        "hover:text-foreground flex items-center gap-1 transition-colors",
+        active && "text-foreground"
+      )}
+    >
+      {label}
+      {active ? (
+        <ChevronUp className="size-3" />
+      ) : (
+        <ChevronDown className="size-3 opacity-40" />
+      )}
+    </button>
+  );
+};
 
 export const columnsLoading: ColumnDef<UserFromAPI>[] = [
   {
@@ -71,38 +109,64 @@ export const columnsLoading: ColumnDef<UserFromAPI>[] = [
 
 export const columns: ColumnDef<UserFromAPI>[] = [
   {
-    header: "User",
+    id: "user",
+    header: ({ table }) => (
+      <SortableHeader
+        label="User"
+        sortKey="email"
+        meta={table.options.meta as UsersTableMeta}
+      />
+    ),
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Avatar className="size-10">
+      <div className="flex items-center gap-2.5">
+        <Avatar className="size-7">
           <AvatarImage src={row.original.image ?? ""} />
-          <AvatarFallback>{row.original.name?.charAt(0)}</AvatarFallback>
+          <AvatarFallback className="text-[10px]">
+            {row.original.name?.charAt(0)}
+          </AvatarFallback>
         </Avatar>
-        <div className="flex flex-col -space-y-1 text-sm">
-          <div className="font-medium">{row.original.name}</div>
-          <div className="text-muted-foreground">{row.original.email}</div>
+        <div className="flex items-baseline gap-2 text-sm">
+          <span className="font-medium">{row.original.name}</span>
+          <span className="text-muted-foreground text-xs">
+            {row.original.email}
+          </span>
+          {row.original.role === "admin" && (
+            <StatusBadge tone="violet">Admin</StatusBadge>
+          )}
         </div>
-        <div className="ml-auto text-xs text-red-600">
-          {row.original.banned && <Ban size={14} />}
-        </div>
-        {/* {row.original.role === "admin" && (
-          <UserStar size={16} className="text-yellow-500" />
-        )} */}
       </div>
     ),
   },
   {
-    header: "Joined",
+    header: "Status",
+    cell: ({ row }) =>
+      row.original.banned ? (
+        <StatusBadge tone="red" dot>
+          Banned
+        </StatusBadge>
+      ) : (
+        <StatusBadge tone="green" dot>
+          Active
+        </StatusBadge>
+      ),
+  },
+  {
+    id: "joined",
+    header: ({ table }) => (
+      <SortableHeader
+        label="Joined"
+        sortKey="created"
+        meta={table.options.meta as UsersTableMeta}
+      />
+    ),
     cell: ({ row }) => (
-      <div>
+      <div className="text-num text-muted-foreground text-xs">
         {format(
           typeof row.original.createdAt === "string"
             ? parseISO(row.original.createdAt)
             : row.original.createdAt,
-          "MMMM d, yyyy"
+          "MMM d, yyyy"
         )}
-        {/* (
-        {formatDistanceToNow(row.original.createdAt, { addSuffix: true })}) */}
       </div>
     ),
   },
@@ -154,17 +218,34 @@ export const columns: ColumnDef<UserFromAPI>[] = [
         })
       );
 
-      console.log(deleteAccount.isError);
-      console.log(deleteAccount.error);
-
       const formRef = useRef<HTMLFormElement>(null);
       /* eslint-enable */
 
       return (
         <div
-          className="flex justify-end"
+          className="flex items-center justify-end gap-1"
           onClick={(e) => e.stopPropagation()}
         >
+          {!isSelf && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 opacity-0 transition-opacity group-hover/row:opacity-100 focus-visible:opacity-100"
+              title="Impersonate"
+              onClick={handleImpersonate}
+            >
+              <VenetianMask className="size-4" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 opacity-0 transition-opacity group-hover/row:opacity-100 focus-visible:opacity-100"
+            title="View profile"
+            onClick={() => router.push(`/users/${row.original.id}`)}
+          >
+            <CircleUserRound className="size-4" />
+          </Button>
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
               <MoreHorizontal />
@@ -175,19 +256,6 @@ export const columns: ColumnDef<UserFromAPI>[] = [
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => {
-                    router.push(`/users/${row.original.id}`);
-                  }}
-                >
-                  <CircleUserRound /> View profile
-                </DropdownMenuItem>
-                {!isSelf && (
-                  <DropdownMenuItem onClick={handleImpersonate}>
-                    <VenetianMask /> Impersonate
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => {
