@@ -4,7 +4,14 @@ import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { ArrowRight, Bot, Globe, PenLine, ReceiptText } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Globe,
+  Loader2,
+  PenLine,
+  ReceiptText,
+} from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
@@ -166,14 +173,22 @@ const CmsSection = () => {
       icon={PenLine}
       action={
         <CmsProjectsDialog>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground -mr-2 gap-1 text-[13px]"
-          >
-            Open
-            <ArrowRight className="size-3.5" />
-          </Button>
+          {({ onClick, loading }) => (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground -mr-2 gap-1 text-[13px]"
+              onClick={onClick}
+              disabled={loading}
+            >
+              Open
+              {loading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <ArrowRight className="size-3.5" />
+              )}
+            </Button>
+          )}
         </CmsProjectsDialog>
       }
     >
@@ -187,9 +202,17 @@ const CmsSection = () => {
           Edit your website's pages, posts and media in the CMS.
         </p>
         <CmsProjectsDialog>
-          <Button size="sm" className="mt-3.5 rounded-full px-4">
-            Open CMS
-          </Button>
+          {({ onClick, loading }) => (
+            <Button
+              size="sm"
+              className="mt-3.5 gap-1.5 rounded-full px-4"
+              onClick={onClick}
+              disabled={loading}
+            >
+              {loading && <Loader2 className="size-3.5 animate-spin" />}
+              Open CMS
+            </Button>
+          )}
         </CmsProjectsDialog>
       </div>
     </SectionCard>

@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/user-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@workspace/ui/components/dialog";
 import {
   Empty,
@@ -16,6 +17,8 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@workspace/ui/components/empty";
+
+import { useTRPC } from "@workspace/trpc/client";
 
 import { getVisits } from "@/lib/tracker";
 
@@ -67,11 +70,65 @@ function CmsProjects() {
 export function CmsProjectsDialog({
   children,
 }: {
-  children: React.ReactElement;
+  children: (props: {
+    onClick: () => void;
+    loading: boolean;
+  }) => React.ReactElement;
 }) {
+  const { user } = useUser();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const decide = (repos: any) => {
+    if (repos?.length === 1) {
+      const p = repos[0];
+      router.push(
+        `/${p.owner}/${p.repo}/${p.defaultBranch ? encodeURIComponent(p.defaultBranch) : ""}`
+      );
+    } else {
+      setOpen(true);
+    }
+  };
+
+  const handleClick = async () => {
+    const accounts = user?.accounts ?? [];
+    // Only a single-account user can auto-resolve to one project; anything else
+    // (multiple accounts, or none) falls through to the picker dialog.
+    if (accounts.length !== 1) {
+      setOpen(true);
+      return;
+    }
+
+    const opts = trpc.cms.repos.listMine.queryOptions(
+      { owner: accounts[0].login, keyword: "" },
+      { staleTime: 5 * 60 * 1000 }
+    );
+
+    // Cache hit → decide synchronously, no spinner, no network.
+    const cached = queryClient.getQueryData(opts.queryKey);
+    if (cached) {
+      decide(cached);
+      return;
+    }
+
+    // First click → spinner + fetch; result is cached for next time and reused
+    // by RepoSelect (same query key) when the dialog opens.
+    setLoading(true);
+    try {
+      decide(await queryClient.fetchQuery(opts));
+    } catch {
+      setOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Dialog>
-      <DialogTrigger render={children} />
+    <Dialog open={open} onOpenChange={setOpen}>
+      {children({ onClick: handleClick, loading })}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Projects</DialogTitle>

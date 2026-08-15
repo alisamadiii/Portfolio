@@ -65,7 +65,13 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { handleCmsError } from "@/lib/trpc-errors";
 import { resolveContentOperations } from "@workspace/cms-core/operations";
-import { useDrafts, useDraftsStore } from "@/lib/store/drafts";
+import {
+  draftKey,
+  getDraft,
+  saveDraftOrThrow,
+  useDrafts,
+  useDraftsStore,
+} from "@/lib/store/drafts";
 import {
   getFieldByPath,
   getPrimaryField,
@@ -351,11 +357,6 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       staleTime: 2_000,
     })
   );
-  const data = useMemo(
-    () => sortContents(collectionQuery.data?.contents ?? []),
-    [collectionQuery.data, sortContents]
-  );
-
   // Parsing errors reported alongside the contents (was toasted per fetch).
   const listErrors = collectionQuery.data?.errors;
   useEffect(() => {
@@ -386,6 +387,31 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       ),
     [collectionDrafts]
   );
+
+  const data = useMemo(() => {
+    const contents = collectionQuery.data?.contents ?? [];
+    // Overlay the order value from any pending (unpublished) draft so a reorder
+    // saved locally stays reflected in the list until it's published. The table
+    // sorts by orderField; without this, a background refetch reverts rows to the
+    // uncommitted server order and the reorder appears to be lost.
+    const overlaid =
+      orderEnabled && orderField && draftInfo.size > 0
+        ? contents.map((row: any) => {
+            const info = draftInfo.get(row.path);
+            if (info && !info.isNew) {
+              const orderValue = safeAccess(info.draft.values ?? {}, orderField);
+              if (typeof orderValue === "number") {
+                return {
+                  ...row,
+                  fields: withFieldValue(row.fields, orderField, orderValue),
+                };
+              }
+            }
+            return row;
+          })
+        : contents;
+    return sortContents(overlaid);
+  }, [collectionQuery.data, draftInfo, orderEnabled, orderField, sortContents]);
   // New-entry drafts in the current folder become synthetic table rows.
   const draftRows = useMemo(() => {
     const normalizedFolder = normalizePath(collectionPath);
@@ -487,9 +513,6 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const renameFileMutation = useMutation(
     trpc.cms.files.rename.mutationOptions()
-  );
-  const reorderMutation = useMutation(
-    trpc.cms.collections.reorder.mutationOptions()
   );
 
   const handleDelete = useCallback(
@@ -930,10 +953,17 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
       const prevData = data;
       const indexByPath = new Map(orderedPaths.map((p, i) => [p, i]));
-      const items = orderedPaths.map((itemPath, index) => {
-        const row: any = prevData.find((item: any) => item.path === itemPath);
-        return { path: itemPath, sha: row?.sha, value: index };
-      });
+
+      // Only entries whose order value actually changes need a draft.
+      const changed = orderedPaths
+        .map((itemPath, index) => {
+          const row: any = prevData.find((item: any) => item.path === itemPath);
+          const current = Number(safeAccess(row?.fields ?? {}, orderField));
+          return { path: itemPath, newOrder: index, changed: current !== index };
+        })
+        .filter((it) => it.changed);
+
+      if (changed.length === 0) return;
 
       setIsReordering(true);
       // Optimistic: rows re-sort instantly since the table sorts by orderField.
@@ -953,36 +983,81 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       );
 
       try {
-        const result = await reorderMutation.mutateAsync({
-          owner: config.owner,
-          repo: config.repo,
-          branch: config.branch,
-          name,
-          path: collectionPath,
-          items,
-        });
-
-        const updated: { path: string; sha: string | null }[] =
-          result.updated ?? [];
-        if (updated.length > 0) {
-          const shaByPath = new Map(updated.map((u) => [u.path, u.sha]));
-          setCollectionData((current) =>
-            current.map((item: any) =>
-              shaByPath.has(item.path)
-                ? { ...item, sha: shaByPath.get(item.path) ?? item.sha }
-                : item
-            )
+        // Route the new order through the same local-draft workflow as edits:
+        // nothing hits GitHub until Publish. Each changed entry becomes a draft
+        // whose full content matches its file with only the order field updated.
+        for (const it of changed) {
+          const key = draftKey(
+            config.owner,
+            config.repo,
+            config.branch,
+            it.path
           );
+          const existing = getDraft(
+            config.owner,
+            config.repo,
+            config.branch,
+            it.path
+          );
+
+          let baseValues: Record<string, unknown>;
+          let sha: string | null;
+          let isNew: boolean;
+          let title: string | undefined;
+
+          if (existing) {
+            // Merge the order change into the user's pending edit for this entry.
+            baseValues = existing.values;
+            sha = existing.sha;
+            isNew = existing.isNew;
+            title = existing.title;
+          } else {
+            // Publish rewrites the whole file, so the draft needs the entry's
+            // full current content — fetch it (same query the publish diff uses).
+            const entry = (await queryClient.fetchQuery(
+              trpc.cms.entries.get.queryOptions({
+                owner: config.owner,
+                repo: config.repo,
+                branch: config.branch,
+                path: it.path,
+                name,
+              })
+            )) as { sha: string; contentObject: Record<string, unknown> };
+            baseValues = entry.contentObject;
+            sha = entry.sha;
+            isNew = false;
+            const primaryField = getPrimaryField(schema);
+            const primaryValue = primaryField
+              ? safeAccess(baseValues, primaryField)
+              : undefined;
+            if (typeof primaryValue === "string" && primaryValue !== "") {
+              title = primaryValue;
+            }
+          }
+
+          const values = withFieldValue(
+            baseValues,
+            orderField,
+            it.newOrder
+          ) as Record<string, unknown>;
+
+          saveDraftOrThrow(key, {
+            v: 1,
+            path: it.path,
+            schemaName: name,
+            sha,
+            isNew,
+            values,
+            savedAt: Date.now(),
+            title,
+          });
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: trpc.cms.collections.list.queryKey({
-            owner: config.owner,
-            repo: config.repo,
-            branch: config.branch,
-            name,
-          }),
-        });
+        toast.success(
+          changed.length === 1
+            ? "Reorder saved as a draft — publish to go live"
+            : `Reorder saved as ${changed.length} drafts — publish to go live`
+        );
       } catch (error: unknown) {
         setCollectionData(() => prevData);
         toast.error(handleCmsError(error, "Failed to save the new order"));
@@ -991,7 +1066,6 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       }
     },
     [
-      collectionPath,
       config.branch,
       config.owner,
       config.repo,
@@ -999,7 +1073,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       name,
       orderField,
       queryClient,
-      reorderMutation,
+      schema,
       setCollectionData,
       trpc,
     ]

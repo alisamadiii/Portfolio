@@ -13,6 +13,7 @@ import {
   HelpCircle,
   House,
   LogOut,
+  Loader2,
   Mail,
   PenLine,
   Settings,
@@ -106,8 +107,9 @@ const productLinks = [
 ];
 
 // The Website group is hand-rolled (instead of NavPages) because the CMS item
-// is a dialog trigger, not a link — the project list must only mount, and
-// therefore only fetch, while the dialog is open.
+// is not a link — clicking it fetches the user's projects on demand to either
+// jump straight into a single project or open the picker dialog. Nothing
+// fetches until that click.
 const WebsiteGroup = () => {
   const pathname = usePathname();
 
@@ -129,10 +131,12 @@ const WebsiteGroup = () => {
       <SidebarMenu className="gap-0.5">
         <SidebarMenuItem>
           <CmsProjectsDialog>
-            <SidebarMenuButton className={menuButtonClass}>
-              <PenLine />
-              <span>Content (CMS)</span>
-            </SidebarMenuButton>
+            {({ onClick, loading }) => (
+              <SidebarMenuButton className={menuButtonClass} onClick={onClick}>
+                {loading ? <Loader2 className="animate-spin" /> : <PenLine />}
+                <span>Content (CMS)</span>
+              </SidebarMenuButton>
+            )}
           </CmsProjectsDialog>
         </SidebarMenuItem>
         <SidebarMenuItem>
