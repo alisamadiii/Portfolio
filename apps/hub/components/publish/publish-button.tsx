@@ -29,26 +29,3 @@ export function PublishButton() {
     </Button>
   );
 }
-
-/**
- * Compact sidebar-footer affordance ("N drafts — Publish") so publishing is
- * reachable from any page. Hidden while there are no drafts.
- */
-export function SidebarPublishButton() {
-  const { draftCount, openPublishDialog } = usePublish();
-
-  if (draftCount === 0) return null;
-
-  return (
-    <button
-      type="button"
-      onClick={openPublishDialog}
-      className="bg-sidebar-accent/50 hover:bg-sidebar-accent hover:text-foreground flex h-9 w-full items-center gap-2 rounded-lg border px-2.5 text-sm transition-colors"
-    >
-      <UploadCloud className="size-4 shrink-0" />
-      <span className="flex-1 truncate text-left">
-        {draftCount} {draftCount === 1 ? "draft" : "drafts"} — Publish
-      </span>
-    </button>
-  );
-}

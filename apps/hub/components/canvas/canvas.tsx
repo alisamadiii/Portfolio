@@ -7,12 +7,10 @@ import {
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import {
-  ArrowLeft,
   Frame,
   Image as ImageIcon,
   Link2,
@@ -20,8 +18,6 @@ import {
   Maximize,
   Minus,
   Plus,
-  Settings2,
-  UploadCloud,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +34,7 @@ import {
   classifyEditable,
   flattenTextValues,
   resolveFieldEntry,
+  schemaFieldAtPath,
   setValueAtPath,
   TEXT_FIELD_TYPES,
   type EntryRoute,
@@ -55,7 +52,11 @@ import {
 } from "@/lib/store/drafts";
 import { repoPath } from "@/lib/paths";
 
-import { usePublish } from "@/components/publish/publish-context";
+import {
+  CanvasChrome,
+  type CmsOverlayState,
+} from "@/components/chrome/canvas-chrome";
+import { SeoDialog } from "@/components/canvas/seo-dialog";
 import { SiteConfigSheet } from "@/components/canvas/site-config-sheet";
 import {
   CanvasFrame,
@@ -92,7 +93,6 @@ type WorkingCopy = {
 export function Canvas() {
   const { config } = useConfig();
   const trpc = useTRPC();
-  const { draftCount, openPublishDialog } = usePublish();
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
@@ -594,6 +594,58 @@ export function Canvas() {
   );
 
   // ------------------------------------------------------------------
+  // Per-page SEO editing (frame title-bar button → dialog on `seo`).
+  // ------------------------------------------------------------------
+  const [seoEditor, setSeoEditor] = useState<string | null>(null);
+  const [cmsOverlay, setCmsOverlay] = useState<CmsOverlayState>({
+    open: false,
+  });
+
+  /** Route entry (not globals) whose schema owns this page — for SEO. */
+  const seoEntryFor = useCallback(
+    (pagePath: string, entryName?: string) => {
+      const entry = entryName
+        ? entryMap.byName.get(entryName)
+        : entryMap.routes.find((candidate) => candidate.route === pagePath);
+      if (!entry) return null;
+      const seoField = schemaFieldAtPath(entry.schema.fields, "seo");
+      if (!seoField || seoField.type !== "object" || seoField.list === true)
+        return null;
+      return { entry, seoField };
+    },
+    [entryMap]
+  );
+
+  const handleSeoSave = useCallback(
+    (entryName: string, seoValues: Record<string, unknown>) => {
+      const entry = entryMap.byName.get(entryName);
+      const copy = copiesRef.current.get(entryName);
+      if (!entry || !copy) return;
+      copy.values = setValueAtPath(copy.values, "seo", seoValues);
+      dirtyRef.current.add(entryName);
+      try {
+        saveDraftOrThrow(draftKey(owner, repo, branch, entry.filePath), {
+          v: 1,
+          path: entry.filePath,
+          schemaName: entryName,
+          sha: copy.sha,
+          isNew: false,
+          values: copy.values,
+          savedAt: Date.now(),
+        });
+        toast.success("Draft saved on this device");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save draft."
+        );
+        return;
+      }
+      setCopiesVersion((version) => version + 1);
+    },
+    [entryMap, owner, repo, branch]
+  );
+
+  // ------------------------------------------------------------------
   // Toolbar helpers.
   // ------------------------------------------------------------------
   const stepZoom = useCallback(
@@ -632,22 +684,19 @@ export function Canvas() {
 
   return (
     <div className="bg-shell relative h-full w-full overflow-hidden">
-      {/* Toolbar */}
+      {/* Floating chrome: repo menu / CMS / admin / search / publish */}
+      <CanvasChrome
+        onOpenSiteSettings={globalEntry ? () => setSheetOpen(true) : undefined}
+        siteSettingsReady={Boolean(globalEntry && globalCopy)}
+        cms={cmsOverlay}
+        onCmsChange={setCmsOverlay}
+      />
+
+      {/* Zoom pill */}
       <div
         data-canvas-no-pan
-        className="bg-background/95 absolute top-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl border px-2 py-1.5 shadow-lg backdrop-blur"
+        className="bg-background/95 absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl border px-2 py-1.5 shadow-lg backdrop-blur"
       >
-        <Button
-          variant="ghost"
-          size="sm"
-          render={
-            <Link href={repoBase}>
-              <ArrowLeft className="size-4" />
-              Form view
-            </Link>
-          }
-        />
-        <div className="bg-border h-5 w-px" />
         <ButtonGroup>
           <Button
             variant="outline"
@@ -682,27 +731,6 @@ export function Canvas() {
           aria-label="Fit all"
         >
           <Maximize className="size-3.5" />
-        </Button>
-        <div className="bg-border h-5 w-px" />
-        {globalEntry && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSheetOpen(true)}
-            disabled={!globalCopy}
-          >
-            <Settings2 className="size-4" />
-            Site settings
-          </Button>
-        )}
-        <Button size="sm" onClick={openPublishDialog}>
-          <UploadCloud className="size-4" />
-          Publish
-          {draftCount > 0 && (
-            <span className="bg-primary-foreground/20 ml-1 rounded-full px-1.5 text-xs tabular-nums">
-              {draftCount}
-            </span>
-          )}
         </Button>
       </div>
 
@@ -762,6 +790,10 @@ export function Canvas() {
                 : mappedEntry
                   ? `${repoBase}/file/${encodeURIComponent(mappedEntry)}`
                   : null;
+            const seoInfo =
+              page.kind === "collection"
+                ? null
+                : seoEntryFor(page.path, mappedEntry);
             return (
               <CanvasFrame
                 key={page.path}
@@ -772,6 +804,13 @@ export function Canvas() {
                 selected={selectedKey === page.path}
                 editSrc={editSrc}
                 editHref={editHref}
+                seoAvailable={Boolean(
+                  seoInfo && copiesRef.current.has(seoInfo.entry.name)
+                )}
+                onOpenSeo={setSeoEditor}
+                onOpenCollection={(collection) =>
+                  setCmsOverlay({ open: true, collection })
+                }
                 onSelect={setSelectedKey}
                 onEngage={(path) => {
                   setSelectedKey(path);
@@ -803,6 +842,38 @@ export function Canvas() {
           onLiveChange={handleSiteConfigLiveChange}
         />
       )}
+
+      {/* Per-page SEO dialog */}
+      {seoEditor &&
+        (() => {
+          const page = pages.find(
+            (candidate) => candidate.path === seoEditor
+          );
+          if (!page) return null;
+          const mappedEntry =
+            page.entry ??
+            candidatesFor(entryMap, page.path).find(
+              (entry) => entry.route === page.path
+            )?.name;
+          const info = seoEntryFor(page.path, mappedEntry);
+          const copy = info ? copiesRef.current.get(info.entry.name) : null;
+          if (!info || !copy) return null;
+          const seoValues =
+            (copy.values.seo as Record<string, unknown> | undefined) ?? {};
+          return (
+            <SeoDialog
+              key={page.path}
+              open
+              onOpenChange={(next) => {
+                if (!next) setSeoEditor(null);
+              }}
+              pageTitle={page.title}
+              fields={(info.seoField.fields ?? []) as any}
+              values={seoValues}
+              onSave={(values) => handleSeoSave(info.entry.name, values)}
+            />
+          );
+        })()}
 
       {/* Link URL editor — opened when a link is clicked/focused on a page. */}
       {linkEditor && (

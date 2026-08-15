@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useRef } from "react";
-import { ArrowRight, FileText, PencilLine, Table2 } from "lucide-react";
+import { ArrowRight, FileText, Globe, PencilLine, Table2 } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -33,6 +33,9 @@ export const CanvasFrame = memo(function CanvasFrame({
   selected,
   editSrc,
   editHref,
+  seoAvailable,
+  onOpenSeo,
+  onOpenCollection,
   onSelect,
   onEngage,
   onLoad,
@@ -47,6 +50,11 @@ export const CanvasFrame = memo(function CanvasFrame({
   editSrc: string;
   /** Input-view editor route for the mapped entry (null = view-only page). */
   editHref: string | null;
+  /** The mapped entry has an editable `seo` object. */
+  seoAvailable?: boolean;
+  onOpenSeo?: (path: string) => void;
+  /** Open the CMS overlay on this page's collection (collection cards). */
+  onOpenCollection?: (collection: string) => void;
   onSelect: (path: string) => void;
   onEngage: (path: string) => void;
   onLoad: (path: string) => void;
@@ -63,6 +71,10 @@ export const CanvasFrame = memo(function CanvasFrame({
   );
 
   const isCollection = page.kind === "collection";
+  const openCollection =
+    isCollection && page.collection && onOpenCollection
+      ? () => onOpenCollection(page.collection!)
+      : null;
 
   return (
     <div
@@ -92,25 +104,50 @@ export const CanvasFrame = memo(function CanvasFrame({
             {page.path}
           </span>
         </span>
-        {editHref && (
-          <a
-            href={editHref}
-            data-canvas-no-pan
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-2xl"
-          >
-            {isCollection ? (
-              <>
-                Manage entries
-                <ArrowRight className="size-6" />
-              </>
-            ) : (
-              <>
-                <PencilLine className="size-6" />
-                Edit form
-              </>
-            )}
-          </a>
-        )}
+        <span className="flex shrink-0 items-center gap-5">
+          {seoAvailable && onOpenSeo && (
+            <button
+              type="button"
+              data-canvas-no-pan
+              onClick={() => onOpenSeo(page.path)}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-2xl"
+            >
+              <Globe className="size-6" />
+              SEO
+            </button>
+          )}
+          {openCollection ? (
+            <button
+              type="button"
+              onClick={openCollection}
+              data-canvas-no-pan
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-2xl"
+            >
+              Manage entries
+              <ArrowRight className="size-6" />
+            </button>
+          ) : (
+            editHref && (
+              <a
+                href={editHref}
+                data-canvas-no-pan
+                className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-2xl"
+              >
+                {isCollection ? (
+                  <>
+                    Manage entries
+                    <ArrowRight className="size-6" />
+                  </>
+                ) : (
+                  <>
+                    <PencilLine className="size-6" />
+                    Edit form
+                  </>
+                )}
+              </a>
+            )
+          )}
+        </span>
       </div>
 
       <div
@@ -124,27 +161,47 @@ export const CanvasFrame = memo(function CanvasFrame({
         )}
       >
         {isCollection ? (
-          /* Collection card: no iframe — this page is a CMS table, edited in
-             the collection view, not inline on the canvas. */
-          <a
-            href={editHref ?? undefined}
-            data-canvas-no-pan
-            className="bg-muted/20 hover:bg-muted/40 absolute inset-0 flex flex-col items-center justify-center gap-6 p-10 text-center transition-colors"
-          >
-            <Table2 className="text-muted-foreground size-24" />
-            <div className="flex flex-col gap-2">
-              <span className="text-foreground text-4xl font-medium">
-                Linked to a CMS table
-              </span>
-              <span className="text-muted-foreground text-2xl">
-                Entries live in the collection editor, not on the canvas.
-              </span>
-            </div>
-            <span className="text-primary inline-flex items-center gap-2 text-3xl font-medium">
-              Manage entries
-              <ArrowRight className="size-7" />
-            </span>
-          </a>
+          /* Collection card: no iframe — this page is a CMS table, opened in
+             the CMS overlay, not inline on the canvas. */
+          (() => {
+            const cardBody = (
+              <>
+                <Table2 className="text-muted-foreground size-24" />
+                <div className="flex flex-col gap-2">
+                  <span className="text-foreground text-4xl font-medium">
+                    Linked to a CMS table
+                  </span>
+                  <span className="text-muted-foreground text-2xl">
+                    Entries live in the CMS, not on the canvas.
+                  </span>
+                </div>
+                <span className="text-primary inline-flex items-center gap-2 text-3xl font-medium">
+                  Manage entries
+                  <ArrowRight className="size-7" />
+                </span>
+              </>
+            );
+            const cardClass =
+              "bg-muted/20 hover:bg-muted/40 absolute inset-0 flex flex-col items-center justify-center gap-6 p-10 text-center transition-colors";
+            return openCollection ? (
+              <button
+                type="button"
+                onClick={openCollection}
+                data-canvas-no-pan
+                className={cardClass}
+              >
+                {cardBody}
+              </button>
+            ) : (
+              <a
+                href={editHref ?? undefined}
+                data-canvas-no-pan
+                className={cardClass}
+              >
+                {cardBody}
+              </a>
+            );
+          })()
         ) : (
           <>
         {/* Placeholder card — always rendered so unloaded frames have shape. */}

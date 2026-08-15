@@ -1,25 +1,25 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
+import { ArrowLeft } from "lucide-react";
 
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@workspace/ui/components/sidebar";
+import { Button } from "@workspace/ui/components/button";
 
+import { repoPath } from "@/lib/paths";
 import { trackVisit } from "@/lib/tracker";
 
+import { CommandPaletteProvider } from "@/components/chrome/command-palette-provider";
 import { PublishProvider } from "@/components/publish/publish-context";
 import {
   RepoHeaderProvider,
   useRepoHeaderState,
 } from "@/components/repo/repo-header-context";
-import { RepoSidebar } from "@/components/repo/repo-sidebar";
 
 function RepoHeader() {
+  const { repo } = useRepo();
   const { header } = useRepoHeaderState();
   const hasHeaderContent =
     header !== null &&
@@ -31,7 +31,17 @@ function RepoHeader() {
 
   return (
     <header className="bg-background sticky top-0 z-30 flex h-14 shrink-0 items-center border-b px-4 md:px-6">
-      <SidebarTrigger className="mr-2 md:hidden" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mr-2 shrink-0"
+        render={
+          <Link href={repoPath(repo)}>
+            <ArrowLeft className="size-4" />
+            Canvas
+          </Link>
+        }
+      />
       <div className="min-w-0 flex-1">{header}</div>
     </header>
   );
@@ -48,18 +58,17 @@ export function RepoLayout({ children }: { children: React.ReactNode }) {
   }, [config, owner, repo]);
 
   return (
-    <SidebarProvider>
-      <RepoHeaderProvider>
-        <PublishProvider>
-          <RepoSidebar />
-          <SidebarInset className="bg-shell min-h-screen">
+    <RepoHeaderProvider>
+      <PublishProvider>
+        <CommandPaletteProvider>
+          <div className="bg-shell flex min-h-screen flex-col">
             <RepoHeader />
             <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
               {children}
             </main>
-          </SidebarInset>
-        </PublishProvider>
-      </RepoHeaderProvider>
-    </SidebarProvider>
+          </div>
+        </CommandPaletteProvider>
+      </PublishProvider>
+    </RepoHeaderProvider>
   );
 }

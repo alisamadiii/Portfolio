@@ -180,6 +180,7 @@ export function CollectionTable<TData extends TableData>({
   setSearch,
   onExpand,
   pathname,
+  onNavigateFolder,
   path,
   isTree = false,
   primaryField,
@@ -194,6 +195,8 @@ export function CollectionTable<TData extends TableData>({
   setSearch: (value: string) => void;
   onExpand: (row: any) => Promise<any>;
   pathname: string;
+  /** Embedded mode: folder rows call this instead of ?path= links. */
+  onNavigateFolder?: (path: string) => void;
   path: string;
   isTree?: boolean;
   primaryField?: string;
@@ -453,6 +456,15 @@ export function CollectionTable<TData extends TableData>({
                           ) : (
                             <Folder className="h-4 w-4" />
                           )}
+                          {row.original.name}
+                        </button>
+                      ) : onNavigateFolder ? (
+                        <button
+                          type="button"
+                          className="flex items-center gap-x-2 font-medium"
+                          onClick={() => onNavigateFolder(row.original.path)}
+                        >
+                          <Folder className="h-4 w-4" />
                           {row.original.name}
                         </button>
                       ) : (

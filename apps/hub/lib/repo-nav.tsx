@@ -66,6 +66,28 @@ export function countLeaves(node: NavigationNode): number {
   return (node.items || []).reduce((sum, child) => sum + countLeaves(child), 0);
 }
 
+export type CollectionLeaf = {
+  name: string;
+  label: string;
+  breadcrumb: string[];
+};
+
+// Collections only (for the CMS overlay's left rail), flattened out of groups.
+export function getCollectionLeaves(config: Config | null): CollectionLeaf[] {
+  const walk = (
+    nodes: NavigationNode[],
+    breadcrumb: string[]
+  ): CollectionLeaf[] =>
+    nodes.flatMap((node) => {
+      const label = node.label || node.name;
+      if (node.type === "group")
+        return walk(node.items || [], [...breadcrumb, label]);
+      if (node.type !== "collection") return [];
+      return [{ name: node.name, label, breadcrumb }];
+    });
+  return walk(getContentNavigation(config), []);
+}
+
 // Flatten a navigation tree into a searchable list of leaves, carrying the
 // group labels above each leaf as a breadcrumb (e.g. ["Programs", "HerVoice"]).
 export function flattenNavLeaves(

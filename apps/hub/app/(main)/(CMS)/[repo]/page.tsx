@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
 
@@ -17,43 +15,20 @@ import {
 
 import { isAdminUser } from "@/lib/authz-shared";
 import { isConfigEnabled } from "@workspace/cms-core/config";
-import { repoPath } from "@/lib/paths";
 
 import {
   DocumentTitle,
   formatRepoBranchTitle,
 } from "@/components/document-title";
 import { Canvas } from "@/components/canvas/canvas";
+import { CanvasChrome } from "@/components/chrome/canvas-chrome";
 
 export default function Page() {
   const { config } = useConfig();
   const { user } = useUser();
-  const router = useRouter();
-  const [error, setError] = useState(false);
 
   // Canvas is the repo root when the site exposes a live preview URL.
   const hasBaseUrl = Boolean((config?.object as any)?.settings?.baseUrl);
-
-  useEffect(() => {
-    if (hasBaseUrl) return;
-    if (config?.object.content?.[0]) {
-      router.replace(
-        repoPath(
-          config.repo,
-          config.object.content[0].type,
-          config.object.content[0].name
-        )
-      );
-    } else if (config?.object.media) {
-      router.replace(
-        repoPath(config.repo, "media", config.object.media[0].name)
-      );
-    } else if (isAdminUser(user) && isConfigEnabled(config?.object)) {
-      router.replace(repoPath(config!.repo, "configuration"));
-    } else {
-      setError(true);
-    }
-  }, [config, router, user, hasBaseUrl]);
 
   if (hasBaseUrl) {
     return (
@@ -74,40 +49,33 @@ export default function Page() {
     );
   }
 
-  return error ? (
-    isAdminUser(user) ? (
+  // No baseUrl: same fullscreen chrome, hint card instead of a canvas.
+  const canConfigure = isAdminUser(user) && isConfigEnabled(config?.object);
+
+  return (
+    <div className="bg-shell relative -m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
+      <CanvasChrome />
       <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
-          <EmptyTitle>Configuration unavailable</EmptyTitle>
+          <EmptyTitle>No site preview yet</EmptyTitle>
           <EmptyDescription>
-            This repository is not configured, and configuration access is
-            disabled here. Edit &quot;.pages.yml&quot; on GitHub if you think
-            this is a mistake.
+            Add &quot;settings.baseUrl&quot; to &quot;.pages.yml&quot; with your
+            site&apos;s live URL to see its pages on the canvas.
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Button
-            variant="default"
-            render={
-              <Link
-                href={`https://github.com/${config?.owner}/${config?.repo}/edit/${encodeURIComponent(config!.branch)}/.pages.yml`}
-              >
-                Edit configuration on GitHub
-              </Link>
-            }
-          />
-        </EmptyContent>
+        {canConfigure && (
+          <EmptyContent>
+            <Button
+              variant="default"
+              render={
+                <Link href={`/${config!.repo}/configuration`}>
+                  Open configuration
+                </Link>
+              }
+            />
+          </EmptyContent>
+        )}
       </Empty>
-    ) : (
-      <Empty className="absolute inset-0 rounded-none border-0">
-        <EmptyHeader>
-          <EmptyTitle>Repository not configured</EmptyTitle>
-          <EmptyDescription>
-            This repository does not have a &quot;.pages.yml&quot; file yet. Ask
-            a GitHub admin to initialize the configuration first.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    )
-  ) : null;
+    </div>
+  );
 }

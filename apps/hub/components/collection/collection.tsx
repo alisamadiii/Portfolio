@@ -208,7 +208,19 @@ const withFieldValue = (
   return clone;
 };
 
-export function Collection({ name, path }: { name: string; path?: string }) {
+export function Collection({
+  name,
+  path,
+  onOpenEntry,
+  onNavigateFolder,
+}: {
+  name: string;
+  path?: string;
+  /** Embedded mode (CMS overlay): open an entry in place instead of routing to /edit. */
+  onOpenEntry?: (path: string) => void;
+  /** Embedded mode: folder navigation via state instead of ?path= routing. */
+  onNavigateFolder?: (path: string) => void;
+}) {
   const [tableSearch, setTableSearch] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
@@ -697,12 +709,22 @@ export function Collection({ name, path }: { name: string; path?: string }) {
                 }
                 return (
                   <span className="flex min-w-0 items-center">
-                    <Link
-                      className="truncate font-medium"
-                      href={`/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
-                    >
-                      {CellView}
-                    </Link>
+                    {onOpenEntry ? (
+                      <button
+                        type="button"
+                        className="truncate text-left font-medium"
+                        onClick={() => onOpenEntry(row.original.path)}
+                      >
+                        {CellView}
+                      </button>
+                    ) : (
+                      <Link
+                        className="truncate font-medium"
+                        href={`/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
+                      >
+                        {CellView}
+                      </Link>
+                    )}
                     {draftBadge}
                   </span>
                 );
@@ -771,14 +793,24 @@ export function Collection({ name, path }: { name: string; path?: string }) {
               </ButtonGroup>
             ) : (
               <ButtonGroup>
-                <Link
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "sm" })
-                  )}
-                  href={`/${config.repo}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
-                >
-                  Edit
-                </Link>
+                {onOpenEntry ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenEntry(row.original.path)}
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  <Link
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" })
+                    )}
+                    href={`/${config.repo}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
+                  >
+                    Edit
+                  </Link>
+                )}
                 <FileOptions
                   path={row.original.path}
                   sha={row.original.sha}
@@ -909,6 +941,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
     openDraft,
     openNewEntry,
     deleteDraft,
+    onOpenEntry,
   ]);
 
   const initialState = useMemo(() => {
@@ -1081,11 +1114,15 @@ export function Collection({ name, path }: { name: string; path?: string }) {
 
   const handleNavigate = useCallback(
     (newPath: string) => {
+      if (onNavigateFolder) {
+        onNavigateFolder(newPath || schema.path);
+        return;
+      }
       const params = new URLSearchParams(Array.from(searchParams.entries()));
       params.set("path", newPath || schema.path);
       router.push(`${pathname}?${params.toString()}`);
     },
-    [pathname, router, schema.path, searchParams]
+    [onNavigateFolder, pathname, router, schema.path, searchParams]
   );
 
   const handleExpand = useCallback(
@@ -1409,6 +1446,7 @@ export function Collection({ name, path }: { name: string; path?: string }) {
       initialState={initialState}
       onExpand={handleExpand}
       pathname={pathname}
+      onNavigateFolder={onNavigateFolder ? handleNavigate : undefined}
       path={path || schema.path}
       isTree={schema.view?.layout === "tree"}
       primaryField={primaryField}

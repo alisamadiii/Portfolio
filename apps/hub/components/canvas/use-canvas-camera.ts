@@ -147,7 +147,7 @@ export function useCanvasCamera(initial: Camera = { x: 0, y: 0, scale: 0.15 }) {
       setGestureActive(true);
       if (event.ctrlKey || event.metaKey) {
         const next =
-          cameraRef.current.scale * Math.exp(-event.deltaY * 0.0015);
+          cameraRef.current.scale * Math.exp(-event.deltaY * 0.015);
         zoomAtPoint(next, event.clientX, event.clientY);
       } else {
         cameraRef.current = {

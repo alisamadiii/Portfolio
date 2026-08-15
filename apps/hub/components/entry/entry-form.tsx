@@ -1150,6 +1150,7 @@ const EntryForm = ({
   onChangeRegistered,
   onValuesChange,
   resetSignal,
+  formId = "entry-form",
 }: {
   fields: Field[];
   contentObject?: Record<string, unknown>;
@@ -1161,6 +1162,8 @@ const EntryForm = ({
   onValuesChange?: (values: Record<string, unknown>) => void;
   /** Bump to mark the form clean, keeping the current values (draft saved). */
   resetSignal?: number;
+  /** Override when several EntryForms can be mounted at once (default "entry-form"). */
+  formId?: string;
 }) => {
   const zodSchema = useMemo(() => {
     return generateZodSchema(fields);
@@ -1346,7 +1349,7 @@ const EntryForm = ({
   return (
     <Form {...form}>
       <form
-        id="entry-form"
+        id={formId}
         onSubmit={handleFormSubmit}
         className="mx-auto w-full max-w-screen-md"
       >
