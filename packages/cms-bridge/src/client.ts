@@ -11,7 +11,6 @@
  *    elements become contenteditable and edits are posted to the parent.
  *
  * The field path, the JSON key path, and the `data-cms-field` value are the
- * same string (e.g. `hero.heading`) — that alignment is the whole mapping.
  */
 
 import {
@@ -144,10 +143,7 @@ function armEditables(): void {
     const host = el as HTMLElement;
     if (host.hasAttribute(EDITABLE_ATTR)) continue;
     host.setAttribute(EDITABLE_ATTR, "");
-    host.setAttribute(
-      "contenteditable",
-      plaintext ? "plaintext-only" : "true"
-    );
+    host.setAttribute("contenteditable", plaintext ? "plaintext-only" : "true");
     host.setAttribute("spellcheck", "false");
   }
   injectStyle();
