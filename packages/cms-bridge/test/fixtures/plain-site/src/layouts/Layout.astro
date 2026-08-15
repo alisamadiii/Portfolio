@@ -1,0 +1,10 @@
+---
+const { title = "Fallback", description = "" } = Astro.props;
+---
+<html>
+  <head>
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body><slot /></body>
+</html>

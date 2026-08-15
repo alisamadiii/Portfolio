@@ -1,0 +1,36 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const perks = ["Fast delivery", "Fair prices", "Local team"];
+---
+
+<Layout title="Acme Plumbing — Springfield">
+  <main>
+    <section id="hero">
+      <p>Springfield, IL</p>
+      <h1>Reliable plumbing, day or night</h1>
+      <p>
+        Family-owned and operating since 1998. We fix leaks, unclog drains, and
+        install water heaters across the metro area.
+      </p>
+      <a href="/contact">Get a quote</a>
+      <img src="/media/hero.jpg" alt="A plumber fixing a sink" />
+    </section>
+
+    <section>
+      <h2>Why choose us</h2>
+      <p>Trusted by <strong>2,000+</strong> homeowners.</p>
+      <ul>
+        {perks.map((perk) => <li>{perk}</li>)}
+      </ul>
+    </section>
+
+    <section id="contact-form">
+      <form>
+        <label for="name">Name</label>
+        <input id="name" placeholder="Your name" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+</Layout>
