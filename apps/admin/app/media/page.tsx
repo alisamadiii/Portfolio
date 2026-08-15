@@ -47,7 +47,7 @@ import { Content } from "@/components/content-admin";
 export default function AdminMediaPage() {
   return (
     <Content>
-      <h1>Media</h1>
+      <h1 className="mb-5 text-xl font-semibold tracking-tight">Media</h1>
       <UploadSection />
       <BrowseSection />
     </Content>
@@ -133,17 +133,17 @@ const UploadSection = () => {
   });
 
   return (
-    <div className="mb-10">
+    <div className="mb-6">
       <div
         {...getRootProps()}
         className={cn(
-          "border-border hover:bg-muted/50 flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 transition-colors",
+          "border-border bg-card hover:bg-muted/50 flex cursor-pointer items-center justify-center gap-3 rounded-xl border border-dashed px-6 py-5 transition-colors",
           isDragActive && "bg-muted/50 border-primary"
         )}
       >
         <input {...getInputProps()} />
-        <CloudUploadIcon className="text-muted-foreground size-10" />
-        <p className="text-muted-foreground text-sm">
+        <CloudUploadIcon className="text-muted-foreground size-5" />
+        <p className="text-muted-foreground text-xs">
           Drag & drop, click to select, or paste an image
         </p>
       </div>
@@ -178,12 +178,12 @@ const UploadRow = ({ item }: { item: UploadItem }) => {
   };
 
   return (
-    <div className="bg-card border-border flex items-center gap-3 rounded-lg border px-4 py-3">
+    <div className="bg-card border-border flex h-9 items-center gap-3 rounded-md border px-3">
       <FileTypeIcon
         name={item.name}
-        className="text-muted-foreground size-4 shrink-0"
+        className="text-muted-foreground size-3.5 shrink-0"
       />
-      <span className="text-foreground min-w-0 flex-1 truncate text-sm">
+      <span className="text-num text-foreground min-w-0 flex-1 truncate text-xs">
         {item.name}
       </span>
 
@@ -195,7 +195,7 @@ const UploadRow = ({ item }: { item: UploadItem }) => {
               style={{ width: `${item.progress ?? 0}%` }}
             />
           </div>
-          <span className="text-muted-foreground text-xs">
+          <span className="text-num text-muted-foreground text-xs">
             {item.progress ?? 0}%
           </span>
         </div>
@@ -289,24 +289,26 @@ const BrowseSection = () => {
 
   return (
     <div>
-      <form onSubmit={handleSearch} className="mb-6 flex gap-2">
-        <InputGroup className="flex-1">
+      <form onSubmit={handleSearch} className="mb-4 flex gap-2">
+        <InputGroup className="h-8 flex-1">
           <InputGroupAddon>
-            <SearchIcon />
+            <SearchIcon className="size-3.5" />
           </InputGroupAddon>
           <InputGroupInput
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search by filename prefix..."
+            placeholder="Search by filename prefix…"
           />
         </InputGroup>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" size="sm" className="h-8">
           Search
         </Button>
         {search && (
           <Button
             type="button"
             variant="ghost"
+            size="sm"
+            className="h-8"
             onClick={() => {
               setSearch("");
               setSearchInput("");
@@ -319,9 +321,9 @@ const BrowseSection = () => {
       </form>
 
       {isPending ? (
-        <div className="flex flex-col gap-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-square w-full rounded-xl" />
           ))}
         </div>
       ) : error ? (
@@ -330,9 +332,9 @@ const BrowseSection = () => {
         <p className="text-muted-foreground text-sm">No files found.</p>
       ) : (
         <div>
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {data.files.map((file) => (
-              <FileRow
+              <FileTile
                 key={file.key}
                 file={file}
                 onDelete={() => deleteFile.mutate({ key: file.key })}
@@ -342,28 +344,28 @@ const BrowseSection = () => {
               />
             ))}
           </div>
-          <div className="bg-muted text-muted-foreground -mt-3 flex items-center justify-end rounded-b-xl p-4 pt-7 text-xs">
-            <div className="flex items-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPrevPage}
-                disabled={!hasPrevPage}
-              >
-                <ChevronLeft />
-              </Button>
-              <p className="mx-2 tabular-nums">
-                <span className="text-foreground">{pageNumber}</span>
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextPage}
-                disabled={!hasNextPage}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
+          <div className="text-muted-foreground mt-2 flex items-center justify-end gap-2 rounded-md border px-3 py-2 text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              className="size-6 p-0"
+              onClick={goToPrevPage}
+              disabled={!hasPrevPage}
+            >
+              <ChevronLeft className="size-3.5" />
+            </Button>
+            <p className="text-num mx-1">
+              <span className="text-foreground">{pageNumber}</span>
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="size-6 p-0"
+              onClick={goToNextPage}
+              disabled={!hasNextPage}
+            >
+              <ChevronRight className="size-3.5" />
+            </Button>
           </div>
         </div>
       )}
@@ -371,7 +373,7 @@ const BrowseSection = () => {
   );
 };
 
-type FileRowProps = {
+type FileTileProps = {
   file: {
     key: string;
     size: number;
@@ -382,7 +384,7 @@ type FileRowProps = {
   isDeleting: boolean;
 };
 
-const FileRow = ({ file, onDelete, isDeleting }: FileRowProps) => {
+const FileTile = ({ file, onDelete, isDeleting }: FileTileProps) => {
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -394,74 +396,82 @@ const FileRow = ({ file, onDelete, isDeleting }: FileRowProps) => {
   const isImage = /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(file.key);
 
   return (
-    <div className="bg-card border-border flex items-center gap-3 rounded-lg border px-4 py-3">
-      {isImage ? (
-        <img
-          src={file.publicUrl}
-          alt={file.key}
-          className="size-10 shrink-0 rounded object-cover"
-          loading="lazy"
-        />
-      ) : (
-        <FileTypeIcon
-          name={file.key}
-          className="text-muted-foreground size-5 shrink-0"
-        />
-      )}
-
-      <div className="min-w-0 flex-1">
-        <p className="text-foreground truncate text-sm">{file.key}</p>
-        <p className="text-muted-foreground text-xs">
+    <div className="group flex flex-col gap-1.5">
+      <div className="bg-card relative aspect-square overflow-hidden rounded-xl border">
+        {isImage ? (
+          <img
+            src={file.publicUrl}
+            alt={file.key}
+            className="size-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center">
+            <FileTypeIcon
+              name={file.key}
+              className="text-muted-foreground size-8"
+            />
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+          <Button
+            size="icon"
+            variant="secondary"
+            className="size-8"
+            onClick={copy}
+            title="Copy URL"
+          >
+            {copied ? (
+              <CheckIcon className="size-3.5" />
+            ) : (
+              <ClipboardIcon className="size-3.5" />
+            )}
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="text-destructive hover:text-destructive size-8"
+                  disabled={isDeleting}
+                />
+              }
+            >
+              {isDeleting ? (
+                <Spinner className="size-4" />
+              ) : (
+                <Trash2Icon className="size-4" />
+              )}
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete file?</AlertDialogTitle>
+                <AlertDialogDescription className="break-all">
+                  {file.key}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className={buttonVariants({ variant: "destructive" })}
+                  onClick={onDelete}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+      <div className="min-w-0 px-0.5">
+        <p className="text-num truncate text-xs">{file.key}</p>
+        <p className="text-num text-muted-foreground text-[11px]">
           {formatBytes(file.size)}
           {file.lastModified && (
             <> · {new Date(file.lastModified).toLocaleDateString()}</>
           )}
         </p>
-      </div>
-
-      <div className="flex items-center gap-1">
-        <Button size="icon" variant="ghost" className="size-8" onClick={copy}>
-          {copied ? (
-            <CheckIcon className="size-4" />
-          ) : (
-            <ClipboardIcon className="size-4" />
-          )}
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-destructive hover:text-destructive size-8"
-                disabled={isDeleting}
-              />
-            }
-          >
-            {isDeleting ? (
-              <Spinner className="size-4" />
-            ) : (
-              <Trash2Icon className="size-4" />
-            )}
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete file?</AlertDialogTitle>
-              <AlertDialogDescription className="break-all">
-                {file.key}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className={buttonVariants({ variant: "destructive" })}
-                onClick={onDelete}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );

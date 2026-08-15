@@ -1,0 +1,86 @@
+@import "@workspace/ui/globals.css";
+
+/*
+ * Admin theme — soft light SaaS dashboard (default) with a dark toggle.
+ * Layered after the shared globals so these win by cascade order.
+ * The shared @theme inline maps emit var() references, so overriding
+ * the raw custom properties here restyles every shared component
+ * without touching packages/ui.
+ */
+:root,
+.light {
+  --background: oklch(0.977 0.002 250);
+  --foreground: oklch(0.24 0.01 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.01 260);
+  --primary: oklch(0.64 0.15 162);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.955 0.003 250);
+  --secondary-foreground: oklch(0.3 0.01 260);
+  --muted: oklch(0.955 0.003 250);
+  --muted-foreground: oklch(0.52 0.01 260);
+  --accent: oklch(0.955 0.003 250);
+  --accent-foreground: oklch(0.24 0.01 260);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.93 0.002 250);
+  --input: oklch(0.91 0.002 250);
+  --ring: oklch(0.64 0.15 162 / 40%);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.4 0.01 260);
+  --sidebar-primary: oklch(0.64 0.15 162);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.955 0.003 250);
+  --sidebar-accent-foreground: oklch(0.2 0.01 260);
+  --sidebar-border: oklch(0.93 0.002 250);
+  --sidebar-ring: oklch(0.64 0.15 162 / 40%);
+}
+
+.dark {
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.16 0 0);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.93 0 0);
+  --primary: oklch(0.72 0.15 162);
+  --primary-foreground: oklch(0.15 0.02 162);
+  --secondary: oklch(0.21 0 0);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.19 0 0);
+  --muted-foreground: oklch(0.62 0 0);
+  --accent: oklch(0.21 0 0);
+  --accent-foreground: oklch(0.93 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.72 0.15 162 / 40%);
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.85 0 0);
+  --sidebar-primary: oklch(0.72 0.15 162);
+  --sidebar-primary-foreground: oklch(0.15 0.02 162);
+  --sidebar-accent: oklch(0.21 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.72 0.15 162 / 40%);
+}
+
+/* Monospace numerals for stats, amounts, dates, and ids */
+@utility text-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Diagonal-hatched fill for revenue chart bars */
+@utility bar-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklch, var(--color-teal-600) 55%, transparent) 0px,
+    color-mix(in oklch, var(--color-teal-600) 55%, transparent) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+  background-color: color-mix(in oklch, var(--color-teal-600) 8%, transparent);
+}

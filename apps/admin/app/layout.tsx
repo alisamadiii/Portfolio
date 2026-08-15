@@ -1,19 +1,19 @@
-import "@workspace/ui/globals.css";
+import "./globals.css";
 
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import { hubLoginUrl, urls } from "@workspace/ui/lib/company";
-import { Providers } from "@workspace/ui/providers";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
-import { NavbarAdmin } from "@/components/navbar-admin";
+import { AdminProviders } from "@/components/providers";
+import { AdminShell } from "@/components/shell/admin-shell";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -87,11 +87,22 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
     return notFound();
   }
 
+  const cookieStore = await cookies();
+  const defaultSidebarOpen =
+    cookieStore.get("sidebar_state")?.value !== "false";
+
   return (
-    <>
-      <NavbarAdmin />
-      <div className="pb-16">{children}</div>
-    </>
+    <AdminShell
+      user={{
+        id: currentUser.id,
+        name: currentUser.name ?? null,
+        email: currentUser.email,
+        image: currentUser.image ?? null,
+      }}
+      defaultSidebarOpen={defaultSidebarOpen}
+    >
+      {children}
+    </AdminShell>
   );
 }
 
@@ -102,13 +113,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <TRPCReactProvider>
-          <Providers>
+          <AdminProviders>
             <SessionRefreshProvider>
               <Suspense>
                 <AdminLayout>{children}</AdminLayout>
               </Suspense>
             </SessionRefreshProvider>
-          </Providers>
+          </AdminProviders>
         </TRPCReactProvider>
       </body>
     </html>
