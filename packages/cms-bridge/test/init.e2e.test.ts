@@ -53,9 +53,10 @@ describe("init on plain-site", () => {
     expect(index).toContain("{home.hero.heading}");
     // eyebrow: short text before the heading
     expect(index).toContain('data-cms-field="hero.eyebrow"');
-    // cta: label wrapped in span, href rewritten
+    // cta: label wrapped in span, href rewritten, anchor tagged for href editing
     expect(index).toContain('href={home.hero.cta.link}');
     expect(index).toContain('data-cms-field="hero.cta.label"');
+    expect(index).toContain('data-cms-field="hero.cta.link"');
     // image: src + alt migrated, field on src
     expect(index).toContain('src={home.hero.image}');
     expect(index).toContain('alt={home.hero.imageAlt}');
@@ -150,6 +151,14 @@ fields:
   - { name: quote, label: Quote, type: text }
 `
     );
+    fs.writeFileSync(
+      path.join(defDir, "stories.yml"),
+      `label: Stories
+route: /stories/{slug}
+fields:
+  - { name: title, label: Title, type: string, required: true }
+`
+    );
     const code = await collectionsCommand(root, {});
     expect(code).toBe(0);
     const yml = fs.readFileSync(path.join(root, ".pages.yml"), "utf8");
@@ -157,6 +166,10 @@ fields:
     expect(yml).toContain("type: collection");
     expect(yml).toContain("primary: title");
     expect(fs.existsSync(path.join(root, "src/data/testimonials/.gitkeep"))).toBe(true);
+    // A collection with a dynamic route maps into settings.preview.paths, and
+    // `route` never leaks into the entry body.
+    expect(yml).toContain("stories: /stories/{slug}");
+    expect(yml).not.toContain("route: /stories/{slug}");
   });
 
   it("re-sync is a no-op", async () => {
@@ -166,5 +179,59 @@ fields:
     for (const [file, content] of after) {
       expect(content, file).toBe(before.get(file));
     }
+  });
+});
+
+describe("init with a page/collection name clash", () => {
+  it("gives the page its own file entry instead of merging into the collection", async () => {
+    // A `blog` collection (dir src/data/blog/) …
+    fs.writeFileSync(
+      path.join(root, "cms", "collections", "blog.yml"),
+      `label: Blog
+route: /blog/{slug}
+fields:
+  - { name: title, label: Title, type: string, required: true }
+  - { name: body, label: Body, type: rich-text }
+`
+    );
+    expect(await collectionsCommand(root, {})).toBe(0);
+
+    // … next to a `/blog` index page backed by src/data/blog.json (same name).
+    fs.mkdirSync(path.join(root, "src/pages/blog"), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, "src/pages/blog/index.astro"),
+      `---
+import Layout from "../../layouts/Layout.astro";
+import blog from "../../data/blog.json";
+---
+<Layout title="Blog" description="Posts">
+  <h1>{blog.intro.heading}</h1>
+</Layout>
+`
+    );
+    fs.writeFileSync(
+      path.join(root, "src/data/blog.json"),
+      JSON.stringify({ intro: { heading: "The Blog" } }, null, 2)
+    );
+
+    expect(await initCommand(root, {})).toBe(0);
+
+    const yml = fs.readFileSync(path.join(root, ".pages.yml"), "utf8");
+    // The page got a distinct, non-colliding file entry mapped to /blog.
+    expect(yml).toContain("name: blogPage");
+    expect(yml).toContain("blogPage: /blog");
+    // The collection is untouched — still a collection, no page fields merged.
+    expect(yml).toContain("name: blog");
+    expect(yml).not.toContain("name: intro");
+
+    // The page's data import was repointed to the renamed entry's file.
+    const page = fs.readFileSync(
+      path.join(root, "src/pages/blog/index.astro"),
+      "utf8"
+    );
+    expect(page).toContain('data/blogPage.json');
+
+    const report = fs.readFileSync(path.join(root, "cms-report.md"), "utf8");
+    expect(report).toContain("R11");
   });
 });

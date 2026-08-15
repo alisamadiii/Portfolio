@@ -17,6 +17,7 @@ export type {
   ReadyMessage,
   FieldCommitMessage,
   FieldInputMessage,
+  FieldActivateMessage,
 } from "@alisamadiillc/cms-bridge";
 
 /**
@@ -80,4 +81,13 @@ export function postSet(
 ): void {
   if (values.length === 0) return;
   postToFrame(win, origin, { type: "set", values });
+}
+
+/** Tell a page which tagged fields are editable, and how (text / media / link). */
+export function postEditable(
+  win: Window | null | undefined,
+  origin: string,
+  editable: { arm: string[]; media: string[]; link: string[] }
+): void {
+  postToFrame(win, origin, { type: "editable", ...editable });
 }

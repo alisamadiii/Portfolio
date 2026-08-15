@@ -277,6 +277,16 @@ export async function transformPage(
         if (!el.hrefAttr || el.textStart === undefined || el.textValue === undefined)
           continue;
         splices.push(attrValueSplice(source, el.hrefAttr, `href={${ref}.link}`));
+        // Tag the anchor itself so the CMS canvas can edit the href (the inner
+        // span carries `.label` for the text).
+        splices.push(
+          attrInsertSplice(
+            source,
+            el.start,
+            el.name,
+            ` data-cms-field="${fieldPath}.link"`
+          )
+        );
         if (el.labelInSpan && el.spanStart !== undefined && el.spanName) {
           splices.push(
             attrInsertSplice(

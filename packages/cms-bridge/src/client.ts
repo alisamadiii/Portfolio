@@ -27,6 +27,8 @@ const HIGHLIGHT_CLASS = "cms-preview-highlight";
 const STYLE_ID = "cms-preview-style";
 const FIELD_ATTR = "data-cms-field";
 const EDITABLE_ATTR = "data-cms-editable";
+const MEDIA_ATTR = "data-cms-media";
+const LINK_ATTR = "data-cms-link";
 const INPUT_THROTTLE_MS = 150;
 
 /** Tags that never make sense as editable text hosts. */
@@ -43,6 +45,14 @@ const NON_TEXT_TAGS = new Set([
   "BUTTON",
   "SOURCE",
 ]);
+
+/**
+ * The CMS's editable whitelist (from the `editable` message). `null` until it
+ * arrives — until then every tagged leaf is armed (back-compat with CMS builds
+ * that never send it). Once set, a path in none of the sets stays inert.
+ */
+let editable: { arm: Set<string>; media: Set<string>; link: Set<string> } | null =
+  null;
 
 let booted = false;
 let mode: BridgeMode = "highlight";
@@ -75,7 +85,9 @@ function injectStyle(): void {
     `@keyframes cms-preview-pulse{0%{box-shadow:0 0 0 0 rgba(99,102,241,.5);}` +
     `100%{box-shadow:0 0 0 14px rgba(99,102,241,0);}}` +
     `[${EDITABLE_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.6);outline-offset:2px;cursor:text;}` +
-    `[${EDITABLE_ATTR}]:focus{outline:2px solid #6366f1;outline-offset:2px;border-radius:2px;}`;
+    `[${EDITABLE_ATTR}]:focus{outline:2px solid #6366f1;outline-offset:2px;border-radius:2px;}` +
+    `[${MEDIA_ATTR}]:hover{outline:2px dashed rgba(99,102,241,.7);outline-offset:2px;cursor:pointer;}` +
+    `[${LINK_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.5);outline-offset:3px;}`;
   document.head.appendChild(style);
 }
 
@@ -135,26 +147,66 @@ function isEditableCandidate(el: Element): boolean {
   return true;
 }
 
+type FieldKind = "text" | "media" | "link" | "none";
+
+/** What editor a tagged path gets. Without a whitelist, everything is text. */
+function kindForPath(path: string): FieldKind {
+  if (!editable) return "text";
+  if (editable.media.has(path)) return "media";
+  if (editable.link.has(path)) return "link";
+  if (editable.arm.has(path)) return "text";
+  return "none";
+}
+
+function armTextEditable(host: HTMLElement, plaintext: boolean): void {
+  if (host.hasAttribute(EDITABLE_ATTR)) return;
+  host.setAttribute(EDITABLE_ATTR, "");
+  host.setAttribute("contenteditable", plaintext ? "plaintext-only" : "true");
+  host.setAttribute("spellcheck", "false");
+}
+
 function armEditables(): void {
   const plaintext = supportsPlaintextOnly();
   const nodes = document.querySelectorAll(`[${FIELD_ATTR}]`);
   for (const el of Array.from(nodes)) {
-    if (!isEditableCandidate(el)) continue;
     const host = el as HTMLElement;
-    if (host.hasAttribute(EDITABLE_ATTR)) continue;
-    host.setAttribute(EDITABLE_ATTR, "");
-    host.setAttribute("contenteditable", plaintext ? "plaintext-only" : "true");
-    host.setAttribute("spellcheck", "false");
+    const path = host.getAttribute(FIELD_ATTR);
+    if (!path) continue;
+    switch (kindForPath(path)) {
+      case "none":
+        // Tagged in the markup but not a real CMS field — leave inert.
+        continue;
+      case "media":
+        // Images open the media picker on click (never contenteditable).
+        host.setAttribute(MEDIA_ATTR, "");
+        break;
+      case "link":
+        if (host.tagName === "A") {
+          // The anchor opens a URL popover; its inner label span arms as text
+          // on its own iteration.
+          host.setAttribute(LINK_ATTR, "");
+        } else if (isEditableCandidate(host)) {
+          // A standalone URL string with no anchor — edit it as plain text.
+          armTextEditable(host, plaintext);
+        }
+        break;
+      case "text":
+        if (isEditableCandidate(host)) armTextEditable(host, plaintext);
+        break;
+    }
   }
   injectStyle();
 }
 
 function disarmEditables(): void {
-  const nodes = document.querySelectorAll(`[${EDITABLE_ATTR}]`);
-  for (const el of Array.from(nodes)) {
+  for (const el of Array.from(document.querySelectorAll(`[${EDITABLE_ATTR}]`))) {
     el.removeAttribute("contenteditable");
     el.removeAttribute(EDITABLE_ATTR);
   }
+  for (const el of Array.from(document.querySelectorAll(`[${MEDIA_ATTR}]`)))
+    el.removeAttribute(MEDIA_ATTR);
+  for (const el of Array.from(document.querySelectorAll(`[${LINK_ATTR}]`)))
+    el.removeAttribute(LINK_ATTR);
 }
 
 function editableFrom(target: EventTarget | null): HTMLElement | null {
@@ -189,6 +241,19 @@ function commit(el: HTMLElement, path: string, original: string): void {
   post({ type: "field-commit", path, value });
 }
 
+/** Ask the CMS to open a non-text editor (media picker / link popover). */
+function activate(el: HTMLElement, kind: "media" | "link"): void {
+  const path = el.getAttribute(FIELD_ATTR);
+  if (!path) return;
+  const value =
+    kind === "media"
+      ? ((el as HTMLImageElement).currentSrc ??
+        (el as HTMLImageElement).src ??
+        "")
+      : ((el as HTMLAnchorElement).getAttribute("href") ?? "");
+  post({ type: "field-activate", path, kind, value });
+}
+
 function onFocusIn(event: FocusEvent): void {
   const el = editableFrom(event.target);
   if (!el) return;
@@ -196,6 +261,9 @@ function onFocusIn(event: FocusEvent): void {
   if (!path) return;
   focusSnapshot = { el, path, value: valueOf(el) };
   post({ type: "field-focus", path });
+  // Editing a link's label also surfaces its URL editor in the CMS.
+  const anchor = el.closest(`[${LINK_ATTR}]`);
+  if (anchor instanceof HTMLElement) activate(anchor, "link");
 }
 
 function onFocusOut(event: FocusEvent): void {
@@ -253,8 +321,27 @@ function onKeyDown(event: KeyboardEvent): void {
 }
 
 function onClick(event: MouseEvent): void {
-  // Editing text inside an <a> must not navigate away.
-  const el = editableFrom(event.target);
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  // Clicking an image opens the media picker.
+  const media = target.closest(`[${MEDIA_ATTR}]`);
+  if (media instanceof HTMLElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    activate(media, "media");
+    return;
+  }
+  // Clicking a link never navigates in edit mode. If the click landed on the
+  // editable label, let the caret drop (its focus opens the URL editor);
+  // otherwise (icon/padding) open the URL editor directly.
+  const link = target.closest(`[${LINK_ATTR}]`);
+  if (link instanceof HTMLElement) {
+    event.preventDefault();
+    if (!editableFrom(target)) activate(link, "link");
+    return;
+  }
+  // Editing text inside a plain <a> must not navigate away.
+  const el = editableFrom(target);
   if (el && el.closest("a")) event.preventDefault();
 }
 
@@ -267,7 +354,15 @@ function applySet(values: Array<{ path: string; value: string }>): void {
     const nodes = document.querySelectorAll(`[${FIELD_ATTR}="${esc(path)}"]`);
     for (const el of Array.from(nodes)) {
       if (el === document.activeElement) continue; // never stomp the caret
-      el.textContent = value;
+      // The kind of write is inferred from the element: images set src, anchors
+      // set href, everything else sets text.
+      if (el.tagName === "IMG") {
+        (el as HTMLImageElement).src = value;
+      } else if (el.tagName === "A") {
+        (el as HTMLAnchorElement).href = value;
+      } else {
+        el.textContent = value;
+      }
     }
   }
 }
@@ -307,6 +402,23 @@ function onMessage(event: MessageEvent): void {
     case "mode":
       setMode(msg.mode);
       break;
+    case "editable": {
+      // An all-empty whitelist means "no schema info" (e.g. a CMS bug or a
+      // legacy handshake echo), never "nothing is editable" — a page with zero
+      // real fields wouldn't be armed for editing at all. Treat it as absent
+      // so a bad message can't brick the page.
+      if (!msg.arm.length && !msg.media.length && !msg.link.length) break;
+      editable = {
+        arm: new Set(msg.arm),
+        media: new Set(msg.media),
+        link: new Set(msg.link),
+      };
+      if (mode === "edit") {
+        disarmEditables();
+        armEditables();
+      }
+      break;
+    }
   }
 }
 
@@ -331,7 +443,7 @@ function announce(): void {
     path: location.pathname,
     mode,
     fields: collectFields(),
-    caps: ["text"],
+    caps: ["text", "media", "link"],
   });
   // Legacy handshake for older CMS builds.
   if (window.parent && window.parent !== window) {

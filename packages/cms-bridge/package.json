@@ -1,6 +1,6 @@
 {
   "name": "@alisamadiillc/cms-bridge",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "CMS live-preview & in-page editing bridge for client sites — highlight fields from the CMS, edit text inline on the canvas",
   "private": false,
   "type": "module",

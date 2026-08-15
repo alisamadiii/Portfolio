@@ -12,8 +12,12 @@ export const PROTOCOL_VERSION = 2;
 
 export type BridgeMode = "highlight" | "edit";
 
-/** Capabilities the bridge declares in `ready`. v1 bridges only do "text". */
-export type BridgeCapability = "text";
+/**
+ * Capabilities the bridge declares in `ready`. v1 bridges only do "text";
+ * v3 adds "media" (click an image → CMS media picker) and "link" (edit an
+ * anchor's href).
+ */
+export type BridgeCapability = "text" | "media" | "link";
 
 // ---------------------------------------------------------------------------
 // Bridge → CMS
@@ -56,11 +60,26 @@ export interface FieldFocusMessage {
   path: string;
 }
 
+/**
+ * A non-text field was activated in edit mode — the CMS opens the matching
+ * editor (media picker for images, URL popover for links) rather than editing
+ * inline. `value` is the element's current src/href so the editor can seed it.
+ */
+export interface FieldActivateMessage {
+  cms: 1;
+  v: number;
+  type: "field-activate";
+  path: string;
+  kind: "media" | "link";
+  value: string;
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
   | FieldCommitMessage
-  | FieldFocusMessage;
+  | FieldFocusMessage
+  | FieldActivateMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge
@@ -87,7 +106,29 @@ export interface ModeMessage {
   mode: BridgeMode;
 }
 
-export type CmsToBridgeMessage = FocusMessage | SetMessage | ModeMessage;
+/**
+ * The CMS's whitelist of which tagged fields are actually editable, by kind.
+ * A `data-cms-field` absent from all three lists resolves to no CMS field and
+ * is left inert (not armed, no error). Sent after `ready`; until it arrives the
+ * bridge arms every tagged leaf (back-compat with CMS builds that never send it).
+ */
+export interface EditableMessage {
+  cms: 1;
+  v: number;
+  type: "editable";
+  /** Paths editable as inline text (string/text/number and other form fields). */
+  arm: string[];
+  /** Image paths — click opens the media picker. */
+  media: string[];
+  /** Link paths — the href is editable via a URL popover. */
+  link: string[];
+}
+
+export type CmsToBridgeMessage =
+  | FocusMessage
+  | SetMessage
+  | ModeMessage
+  | EditableMessage;
 
 // ---------------------------------------------------------------------------
 // Legacy (v1) shapes

@@ -104,6 +104,13 @@ export function findEntry(doc: PagesDoc, name: string): YAMLMap | undefined {
   return search(content as YAMLSeq);
 }
 
+/** The `type` of a content entry by name (e.g. "file" | "collection"), or undefined. */
+export function entryTypeOf(doc: PagesDoc, name: string): string | undefined {
+  const map = findEntry(doc, name);
+  const type = map?.get("type");
+  return typeof type === "string" ? type : undefined;
+}
+
 function ensureContentSeq(doc: PagesDoc): YAMLSeq {
   let content = doc.getIn(["content"], true);
   if (!isSeq(content)) {

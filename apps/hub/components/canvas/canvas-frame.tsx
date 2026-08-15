@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useRef } from "react";
-import { FileText, PencilLine } from "lucide-react";
+import { ArrowRight, FileText, PencilLine, Table2 } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -12,6 +12,8 @@ export type CanvasPageInfo = {
   url: string;
   title: string;
   entry?: string;
+  kind?: "page" | "collection";
+  collection?: string;
 };
 
 /**
@@ -60,6 +62,8 @@ export const CanvasFrame = memo(function CanvasFrame({
     [page.path, registerFrame]
   );
 
+  const isCollection = page.kind === "collection";
+
   return (
     <div
       className="absolute"
@@ -78,7 +82,11 @@ export const CanvasFrame = memo(function CanvasFrame({
             selected ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <FileText className="size-7 shrink-0" />
+          {isCollection ? (
+            <Table2 className="size-7 shrink-0" />
+          ) : (
+            <FileText className="size-7 shrink-0" />
+          )}
           {page.title}
           <span className="text-muted-foreground/50 truncate text-2xl">
             {page.path}
@@ -90,8 +98,17 @@ export const CanvasFrame = memo(function CanvasFrame({
             data-canvas-no-pan
             className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-2xl"
           >
-            <PencilLine className="size-6" />
-            Edit form
+            {isCollection ? (
+              <>
+                Manage entries
+                <ArrowRight className="size-6" />
+              </>
+            ) : (
+              <>
+                <PencilLine className="size-6" />
+                Edit form
+              </>
+            )}
           </a>
         )}
       </div>
@@ -106,6 +123,30 @@ export const CanvasFrame = memo(function CanvasFrame({
               : "ring-border"
         )}
       >
+        {isCollection ? (
+          /* Collection card: no iframe — this page is a CMS table, edited in
+             the collection view, not inline on the canvas. */
+          <a
+            href={editHref ?? undefined}
+            data-canvas-no-pan
+            className="bg-muted/20 hover:bg-muted/40 absolute inset-0 flex flex-col items-center justify-center gap-6 p-10 text-center transition-colors"
+          >
+            <Table2 className="text-muted-foreground size-24" />
+            <div className="flex flex-col gap-2">
+              <span className="text-foreground text-4xl font-medium">
+                Linked to a CMS table
+              </span>
+              <span className="text-muted-foreground text-2xl">
+                Entries live in the collection editor, not on the canvas.
+              </span>
+            </div>
+            <span className="text-primary inline-flex items-center gap-2 text-3xl font-medium">
+              Manage entries
+              <ArrowRight className="size-7" />
+            </span>
+          </a>
+        ) : (
+          <>
         {/* Placeholder card — always rendered so unloaded frames have shape. */}
         <div
           className="bg-muted/30 absolute inset-0 flex flex-col gap-6 p-10"
@@ -151,6 +192,8 @@ export const CanvasFrame = memo(function CanvasFrame({
           <span className="bg-foreground/80 text-background pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full px-5 py-2 text-2xl font-medium shadow-lg">
             Click any text to edit — Esc to exit
           </span>
+        )}
+          </>
         )}
       </div>
     </div>

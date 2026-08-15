@@ -24,7 +24,51 @@ export type CanvasPage = {
   title: string;
   /** Entry name when the page came from `settings.preview.paths`. */
   entry?: string;
+  /** "collection" for a table-linked card (no iframe); "page" otherwise. */
+  kind?: "page" | "collection";
+  /** Collection entry name — set only when `kind === "collection"`. */
+  collection?: string;
 };
+
+/** Flatten `content` (groups included) into leaf entries keyed by name. */
+function flattenEntries(content: unknown): Map<string, Record<string, any>> {
+  const out = new Map<string, Record<string, any>>();
+  const visit = (items: unknown) => {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      if (!item || typeof item !== "object") continue;
+      const node = item as Record<string, any>;
+      if (node.type === "group") {
+        visit(node.items);
+        continue;
+      }
+      if (typeof node.name === "string") out.set(node.name, node);
+    }
+  };
+  visit(content);
+  return out;
+}
+
+/** Drop the `{…}` token segment(s) from a route template → the parent list path. */
+function listPathFromTemplate(template: string): string {
+  const kept = template
+    .split("/")
+    .filter((segment) => segment.length === 0 || !segment.includes("{"));
+  return normalizePathname(kept.join("/") || "/");
+}
+
+/** Build an anchored regex matching a templated route (`{…}` → one path segment). */
+function templateToRegex(template: string): RegExp {
+  const body = normalizePathname(template)
+    .split("/")
+    .map((segment) =>
+      segment.includes("{")
+        ? "[^/]+"
+        : segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    )
+    .join("/");
+  return new RegExp(`^${body}$`);
+}
 
 function extractLocs(xml: string): string[] {
   const out: string[] = [];
@@ -115,6 +159,13 @@ export const pagesRouter = createTRPCRouter({
         }
 
         const byPath = new Map<string, CanvasPage>();
+        const entriesByName = flattenEntries(config.object?.content);
+        // Per-item collection route regexes — used to fold the many sitemap
+        // item URLs (e.g. /hervoice/<slug>) into the single collection card.
+        const collectionRegexes: RegExp[] = [];
+        // Explicit (non-templated) routes stay visible even if a collection
+        // regex would also match them (e.g. /hervoice/winners is its own page).
+        const explicitRoutes = new Set<string>();
 
         // Mapped entries first — they carry the entry name for editing.
         const previewPaths: Record<string, string> | undefined =
@@ -122,16 +173,42 @@ export const pagesRouter = createTRPCRouter({
             ? settings.preview?.paths
             : undefined;
         for (const [entry, template] of Object.entries(previewPaths ?? {})) {
-          if (template.includes("{")) continue; // per-entry collection routes: out of scope v1
+          const isCollection =
+            entriesByName.get(entry)?.type === "collection";
+          if (template.includes("{")) {
+            // Templated route. A collection collapses to one table card; any
+            // other templated entry stays out of scope (no single URL).
+            if (!isCollection) continue;
+            collectionRegexes.push(templateToRegex(template));
+            // The card's key is the template itself (e.g. /hervoice/{slug}) so
+            // it never collides with the collection's own list page, which is a
+            // separate `file` entry mapped to the parent path (/hervoice).
+            const key = normalizePathname(template);
+            const listPath = listPathFromTemplate(template);
+            if (!byPath.has(key)) {
+              byPath.set(key, {
+                path: key,
+                url: new URL(listPath, baseUrl).href,
+                title:
+                  entriesByName.get(entry)?.label ?? titleFromPath(listPath),
+                entry,
+                kind: "collection",
+                collection: entry,
+              });
+            }
+            continue;
+          }
           try {
             const url = new URL(template, baseUrl);
             const pathname = normalizePathname(url.pathname);
+            explicitRoutes.add(pathname);
             if (!byPath.has(pathname)) {
               byPath.set(pathname, {
                 path: pathname,
                 url: url.href,
                 title: pathname === "/" ? "Home" : titleFromPath(pathname),
                 entry,
+                kind: "page",
               });
             }
           } catch {
@@ -152,11 +229,20 @@ export const pagesRouter = createTRPCRouter({
           // from the configured baseUrl (which may be a localhost override).
           const pathname = normalizePathname(url.pathname);
           if (byPath.has(pathname)) continue;
+          // Fold collection item URLs into their one collection card, but never
+          // hide a URL that is its own mapped page.
+          if (
+            !explicitRoutes.has(pathname) &&
+            collectionRegexes.some((re) => re.test(pathname))
+          ) {
+            continue;
+          }
           if (byPath.size >= MAX_PAGES) break;
           byPath.set(pathname, {
             path: pathname,
             url: new URL(pathname, origin).href,
             title: pathname === "/" ? "Home" : titleFromPath(pathname),
+            kind: "page",
           });
         }
 

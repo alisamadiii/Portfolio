@@ -243,10 +243,35 @@ export function useCanvasCamera(initial: Camera = { x: 0, y: 0, scale: 0.15 }) {
     };
   }, [apply, scheduleCommit, cancelAnimation]);
 
+  // Re-apply the current camera whenever the hook (re)mounts: the world div
+  // renders without a `transform`, and a pending apply/animate rAF canceled by
+  // a previous unmount (StrictMode double-mount, fast route changes) would
+  // otherwise leave it at scale 1 while the committed state — and the zoom
+  // percentage — still hold the real camera.
+  useEffect(() => {
+    const { x, y, scale } = cameraRef.current;
+    const world = worldRef.current;
+    if (world) {
+      world.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    }
+  }, []);
+
   useEffect(
     () => () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      if (commitTimerRef.current) clearTimeout(commitTimerRef.current);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        // Reset, or `apply()` after a remount sees the stale id and no-ops
+        // forever — camera state keeps moving but the transform never updates.
+        rafRef.current = null;
+      }
+      if (commitTimerRef.current) {
+        clearTimeout(commitTimerRef.current);
+        commitTimerRef.current = null;
+      }
+      if (animRef.current !== null) {
+        cancelAnimationFrame(animRef.current);
+        animRef.current = null;
+      }
     },
     []
   );

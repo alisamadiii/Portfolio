@@ -33,6 +33,22 @@ Defaults when omitted:
 
 `view.primary` is the column shown as the table's title in the CMS.
 
+### Dynamic route (optional)
+
+If the collection is rendered through a dynamic Astro route (one URL per entry,
+e.g. `src/pages/blog/[slug].astro` → `/blog/<slug>`), add a `route` key with the
+item template:
+
+```yaml
+route: /blog/{slug}
+```
+
+Sync writes it into `settings.preview.paths`. The canvas uses it to collapse the
+many per-item URLs into a single card that links to the collection table (rather
+than showing one card per entry). `route` is bridge-only — it is not written into
+the collection entry body. Sibling static pages under the same prefix (e.g.
+`/blog/featured`, if mapped as their own `file` entry) stay as their own cards.
+
 ## Sync
 
 ```sh

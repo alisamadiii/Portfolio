@@ -33,6 +33,7 @@ import {
   ensureMedia,
   ensurePreviewGlobal,
   ensurePreviewPath,
+  entryTypeOf,
   loadPagesYml,
   savePagesYml,
 } from "../core/pages-yml.js";
@@ -71,6 +72,52 @@ export async function initCommand(
 
   const siteJson = readDataFile(root, "site");
   const siteKeys = new Set(Object.keys(siteJson));
+
+  // Resolve entry-name collisions before anything reads `page.entryName`. A
+  // page whose own data import shares a name with a collection (e.g. the
+  // `/blog` index backed by src/data/blog.json, alongside a `blog` collection
+  // at src/data/blog/) must get its OWN file entry — merging its fields into
+  // the collection leaves the page uneditable on the canvas (collections
+  // aren't route-mapped). Rename the page's file entry (blog → blogPage) and
+  // let the codemod repoint its data import to match.
+  const isDataDir = (name: string) => {
+    try {
+      return fs
+        .statSync(path.join(root, "src", "data", name))
+        .isDirectory();
+    } catch {
+      return false;
+    }
+  };
+  const usedEntryNames = new Set<string>();
+  for (const { page } of analyses) {
+    const name = page.entryName;
+    const clashes =
+      entryTypeOf(doc, name) === "collection" || isDataDir(name);
+    if (!clashes) {
+      usedEntryNames.add(name);
+      continue;
+    }
+    let candidate = `${name}Page`;
+    let suffix = 2;
+    while (
+      usedEntryNames.has(candidate) ||
+      entryTypeOf(doc, candidate) !== undefined ||
+      isDataDir(candidate) ||
+      fs.existsSync(path.join(root, "src", "data", `${candidate}.json`))
+    ) {
+      candidate = `${name}Page${suffix++}`;
+    }
+    page.entryName = candidate;
+    page.hasDataImport = false; // its data file doesn't exist yet under the new name
+    usedEntryNames.add(candidate);
+    extraReports.push({
+      code: "R11",
+      file: page.relPath,
+      line: 1,
+      excerpt: `Entry name "${name}" clashes with a collection — mapped to "${candidate}" instead.`,
+    });
+  }
 
   let filesChanged = 0;
   let fieldsExtracted = 0;

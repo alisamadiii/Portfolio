@@ -253,13 +253,25 @@ export default defineConfig({
 });
 \`\`\``,
   },
+  R11: {
+    title: "Page entry renamed to avoid a collection clash",
+    recipe: `A page's own JSON (e.g. \`src/data/blog.json\` behind the \`/blog\` index)
+shared a name with a collection (\`src/data/blog/\`). Two entries can't share
+one name, and merging the page's fields into the collection would leave the
+page uneditable on the canvas — collections aren't route-mapped. init gave the
+page its own file entry with a \`Page\` suffix (\`blog\` → \`blogPage\`) and
+repointed its data import.
+
+Nothing to do unless you want a different name: rename the file entry in
+\`.pages.yml\`, its \`src/data/<name>.json\`, and the page's import to match.`,
+  },
 };
 
 // ---------------------------------------------------------------------------
 // Writer
 // ---------------------------------------------------------------------------
 
-const ORDER: ReasonCode[] = ["R0", "R3", "R8", "R5", "R2", "R1", "R4", "R9", "R7", "R10", "R6"];
+const ORDER: ReasonCode[] = ["R0", "R3", "R8", "R5", "R2", "R1", "R4", "R9", "R7", "R11", "R10", "R6"];
 
 export function buildReport(
   analyses: PageAnalysis[],

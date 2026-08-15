@@ -153,6 +153,32 @@ export function resolveFieldEntry(
   return matches[0]!;
 }
 
+/**
+ * Sort the field paths a page reported (`data-cms-field` values) into the
+ * editable whitelist the bridge expects: `media` (images), `link` (url-typed
+ * strings — an anchor href), `arm` (everything else that resolves to a schema
+ * field, edited inline as text). Paths that resolve to NO field are dropped —
+ * the bridge leaves them inert (no phantom editable, no error).
+ */
+export function classifyEditable(
+  candidates: EntryRoute[],
+  fields: string[]
+): { arm: string[]; media: string[]; link: string[] } {
+  const arm: string[] = [];
+  const media: string[] = [];
+  const link: string[] = [];
+  for (const path of fields) {
+    const resolved = resolveFieldEntry(candidates, path);
+    if (!resolved) continue;
+    const field = resolved.field;
+    if (field.type === "image") media.push(path);
+    else if (field.type === "string" && field.options?.type === "url")
+      link.push(path);
+    else arm.push(path);
+  }
+  return { arm, media, link };
+}
+
 /** Immutably set a dot-path (numeric segments = array indices) in a values object. */
 export function setValueAtPath(
   values: Record<string, unknown>,

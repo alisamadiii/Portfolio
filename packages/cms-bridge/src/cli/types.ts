@@ -132,7 +132,8 @@ export type ReasonCode =
   | "R7"
   | "R8"
   | "R9"
-  | "R10";
+  | "R10"
+  | "R11";
 
 export type ReportItem = {
   code: ReasonCode;

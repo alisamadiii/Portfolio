@@ -14,29 +14,39 @@ import { useTRPC } from "@workspace/trpc/client";
 import {
   ArrowLeft,
   Frame,
+  Image as ImageIcon,
+  Link2,
   Loader2,
   Maximize,
   Minus,
   Plus,
   Settings2,
   UploadCloud,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
+import { Input } from "@workspace/ui/components/input";
+import { ImageKitLibraryPanel } from "@/components/media/imagekit-widget";
 import { cn } from "@workspace/ui/lib/utils";
 
 import {
   buildEntryMap,
   candidatesFor,
+  classifyEditable,
   flattenTextValues,
   resolveFieldEntry,
   setValueAtPath,
   TEXT_FIELD_TYPES,
   type EntryRoute,
 } from "@/lib/canvas-entries";
-import { parseBridgeMessage, postSet } from "@/lib/bridge-messages";
+import {
+  parseBridgeMessage,
+  postEditable,
+  postSet,
+} from "@/lib/bridge-messages";
 import {
   draftKey,
   getDraft,
@@ -274,10 +284,23 @@ export function Canvas() {
 
   const copiesRef = useRef<Map<string, WorkingCopy>>(new Map());
   const dirtyRef = useRef<Set<string>>(new Set());
+  // Last `data-cms-field` list each frame reported in `ready` — kept so the
+  // editable whitelist can be re-sent once the config/schema finishes loading.
+  const frameFieldsRef = useRef<Map<string, string[]>>(new Map());
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [engagedKey, setEngagedKey] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [copiesVersion, setCopiesVersion] = useState(0);
+  // Non-text field editors triggered from the canvas (bridge `field-activate`).
+  const [linkEditor, setLinkEditor] = useState<{
+    framePath: string;
+    path: string;
+    value: string;
+  } | null>(null);
+  const [mediaEditor, setMediaEditor] = useState<{
+    framePath: string;
+    path: string;
+  } | null>(null);
 
   // Prefetch every mapped entry (content + sha) so commits can build drafts.
   const entryQueries = useQueries({
@@ -334,6 +357,29 @@ export function Canvas() {
     [entryMap, siteOrigin]
   );
 
+  /**
+   * Tell one frame which of its tagged fields are editable (and how). Skipped
+   * until the config/schema has loaded — sending an empty whitelist too early
+   * would make the bridge disarm everything and it would never re-arm (the page
+   * only announces `ready` once). Re-sent when `entryMap` becomes available.
+   */
+  const pushEditableToFrame = useCallback(
+    (framePath: string) => {
+      if (!siteOrigin) return;
+      if (entryMap.routes.length === 0) return; // schema not loaded yet
+      const fields = frameFieldsRef.current.get(framePath);
+      if (!fields) return; // frame hasn't announced `ready`
+      const iframe = framesRef.current.get(framePath);
+      if (!iframe?.contentWindow) return;
+      postEditable(
+        iframe.contentWindow,
+        siteOrigin,
+        classifyEditable(candidatesFor(entryMap, framePath), fields)
+      );
+    },
+    [entryMap, siteOrigin]
+  );
+
   /** Broadcast one changed value to every mounted frame that shows it. */
   const propagate = useCallback(
     (entryName: string, fieldPath: string, value: string, exclude?: string) => {
@@ -357,12 +403,13 @@ export function Canvas() {
     (framePath: string, fieldPath: string, rawValue: string) => {
       const candidates = candidatesFor(entryMap, framePath);
       const resolved = resolveFieldEntry(candidates, fieldPath);
-      if (!resolved) {
-        toast.warning(`No CMS field maps to "${fieldPath}" on ${framePath}.`);
-        return;
-      }
+      // No CMS field maps here — the element was tagged but isn't in the schema.
+      // The bridge no longer arms these, so a commit shouldn't reach us; ignore
+      // silently if it does (no toast — this is not the user's problem to fix).
+      if (!resolved) return;
       const { entry, field } = resolved;
-      if (!TEXT_FIELD_TYPES.has(field.type)) {
+      // Text types edit inline; images carry a URL string from the media picker.
+      if (!TEXT_FIELD_TYPES.has(field.type) && field.type !== "image") {
         toast.info("This element isn't text-editable yet — use the form view.");
         return;
       }
@@ -399,6 +446,34 @@ export function Canvas() {
     [entryMap, owner, repo, branch, propagate]
   );
 
+  /** Write a non-text field value (media URL / link href) and reflect it live. */
+  const commitNonText = useCallback(
+    (framePath: string, fieldPath: string, value: string) => {
+      commitEdit(framePath, fieldPath, value);
+      // Unlike inline text, the source frame didn't mutate itself — push the
+      // new src/href back to it too (propagate already covers the others).
+      const iframe = framesRef.current.get(framePath);
+      if (iframe?.contentWindow && siteOrigin) {
+        postSet(iframe.contentWindow, siteOrigin, [{ path: fieldPath, value }]);
+      }
+    },
+    [commitEdit, siteOrigin]
+  );
+
+  /** Open the matching editor when a page reports a non-text field click. */
+  const activateField = useCallback(
+    (
+      framePath: string,
+      path: string,
+      kind: "media" | "link",
+      value: string
+    ) => {
+      if (kind === "media") setMediaEditor({ framePath, path });
+      else setLinkEditor({ framePath, path, value });
+    },
+    []
+  );
+
   // Single window-level message listener; frames identified by event.source
   // (all frames share one origin — origin alone can't tell them apart).
   useEffect(() => {
@@ -415,12 +490,26 @@ export function Canvas() {
       }
       if (!framePath) return;
       switch (msg.type) {
-        case "ready":
+        case "ready": {
           handleFrameLoad(framePath);
           pushDraftsToFrame(framePath);
+          // Remember what the page reported, then tell it which of those fields
+          // are actually editable (and how). Held so it can be re-sent once the
+          // schema loads if `ready` beat it. The bridge also posts a legacy v1
+          // `cms-preview-ready` (normalized to a ready with empty `fields`)
+          // right after the v2 one — skip it, or it would overwrite the real
+          // field list and push an empty whitelist that disarms the page.
+          if (msg.v >= 2) {
+            frameFieldsRef.current.set(framePath, msg.fields);
+            pushEditableToFrame(framePath);
+          }
           break;
+        }
         case "field-commit":
           commitEdit(framePath, msg.path, msg.value);
+          break;
+        case "field-activate":
+          activateField(framePath, msg.path, msg.kind, msg.value);
           break;
         default:
           break;
@@ -428,7 +517,23 @@ export function Canvas() {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [siteOrigin, commitEdit, pushDraftsToFrame, handleFrameLoad]);
+  }, [
+    siteOrigin,
+    commitEdit,
+    activateField,
+    pushDraftsToFrame,
+    pushEditableToFrame,
+    handleFrameLoad,
+  ]);
+
+  // Config/schema can finish loading after a frame already announced `ready`
+  // (which sent no whitelist yet, or an incomplete one). Re-send to every frame
+  // that has reported its fields whenever the resolved entry map changes.
+  useEffect(() => {
+    for (const framePath of frameFieldsRef.current.keys()) {
+      pushEditableToFrame(framePath);
+    }
+  }, [pushEditableToFrame]);
 
   // ------------------------------------------------------------------
   // Site config sheet (global entry, e.g. `site`).
@@ -650,6 +755,12 @@ export function Canvas() {
               candidatesFor(entryMap, page.path).find(
                 (entry) => entry.route === page.path
               )?.name;
+            const editHref =
+              page.kind === "collection" && page.collection
+                ? `${repoBase}/collection/${encodeURIComponent(page.collection)}`
+                : mappedEntry
+                  ? `${repoBase}/file/${encodeURIComponent(mappedEntry)}`
+                  : null;
             return (
               <CanvasFrame
                 key={page.path}
@@ -659,9 +770,7 @@ export function Canvas() {
                 engaged={engagedKey === page.path}
                 selected={selectedKey === page.path}
                 editSrc={editSrc}
-                editHref={
-                  mappedEntry ? `${repoBase}/file/${encodeURIComponent(mappedEntry)}` : null
-                }
+                editHref={editHref}
                 onSelect={setSelectedKey}
                 onEngage={(path) => {
                   setSelectedKey(path);
@@ -693,6 +802,147 @@ export function Canvas() {
           onLiveChange={handleSiteConfigLiveChange}
         />
       )}
+
+      {/* Link URL editor — opened when a link is clicked/focused on a page. */}
+      {linkEditor && (
+        <LinkEditor
+          key={`${linkEditor.framePath}:${linkEditor.path}`}
+          value={linkEditor.value}
+          onSave={(url) => {
+            commitNonText(linkEditor.framePath, linkEditor.path, url);
+            setLinkEditor(null);
+          }}
+          onCancel={() => setLinkEditor(null)}
+        />
+      )}
+
+      {/* Image picker — opened when an image is clicked on a page. */}
+      {mediaEditor && (
+        <MediaEditor
+          key={`${mediaEditor.framePath}:${mediaEditor.path}`}
+          onInsert={(url) => {
+            commitNonText(mediaEditor.framePath, mediaEditor.path, url);
+            setMediaEditor(null);
+          }}
+          onClose={() => setMediaEditor(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Floating URL editor for a link. Anchored bottom-center of the canvas (the
+ * link lives inside an iframe, so there's no DOM element to attach a popover
+ * to). Enter saves, Escape cancels.
+ */
+function LinkEditor({
+  value,
+  onSave,
+  onCancel,
+}: {
+  value: string;
+  onSave: (url: string) => void;
+  onCancel: () => void;
+}) {
+  const [url, setUrl] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+  return (
+    <div className="bg-background fixed bottom-6 left-1/2 z-50 flex w-[min(28rem,90vw)] -translate-x-1/2 items-center gap-2 rounded-xl border p-2 shadow-xl">
+      <Link2 className="text-muted-foreground ml-1 size-4 shrink-0" />
+      <Input
+        ref={inputRef}
+        value={url}
+        placeholder="https://…"
+        onChange={(event) => setUrl(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onSave(url.trim());
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            onCancel();
+          }
+        }}
+        className="h-8 flex-1"
+      />
+      <Button size="sm" onClick={() => onSave(url.trim())}>
+        Save
+      </Button>
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        onClick={onCancel}
+        aria-label="Cancel"
+      >
+        <X className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * Contained image picker for the canvas: a centered dialog with the ImageKit
+ * library embedded inline (same panel as the entry page) instead of the
+ * widget's own fullscreen modal. Pick an image, hit the library's Insert
+ * button, done. Backdrop click / X / Escape close without changing anything.
+ */
+function MediaEditor({
+  onInsert,
+  onClose,
+}: {
+  onInsert: (url: string) => void;
+  onClose: () => void;
+}) {
+  // Close on Escape — capture phase so the canvas's own Escape handler
+  // (disengage frame) doesn't also fire while the dialog is open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      onClose();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div className="bg-background relative flex h-[min(44rem,85vh)] w-[min(70rem,92vw)] flex-col overflow-hidden rounded-xl border shadow-2xl">
+        <div className="bg-muted/40 flex h-11 shrink-0 items-center gap-2 border-b px-4">
+          <ImageIcon className="text-muted-foreground size-4" />
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+            Replace image
+          </span>
+          <span className="text-muted-foreground hidden text-xs sm:block">
+            Select an image, then press Insert
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            onClick={onClose}
+            aria-label="Close image picker"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+        <ImageKitLibraryPanel
+          onInsert={(urls) => {
+            const url = urls[0];
+            if (url) onInsert(url);
+          }}
+        />
+      </div>
     </div>
   );
 }

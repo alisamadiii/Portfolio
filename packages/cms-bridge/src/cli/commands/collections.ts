@@ -16,6 +16,7 @@ import YAML from "yaml";
 import {
   ensureEntryInGroup,
   ensureGroup,
+  ensurePreviewPath,
   findEntry,
   loadPagesYml,
   savePagesYml,
@@ -84,6 +85,7 @@ export async function collectionsCommand(
   const defNames: string[] = [];
   let created = 0;
   let fieldsAdded = 0;
+  let previewAdded = 0;
 
   for (const defPath of scan.collectionDefs) {
     const name = path
@@ -120,12 +122,19 @@ export async function collectionsCommand(
           ?.name);
 
     const collectionPath = (body.path as string) ?? `src/data/${name}`;
+    // `route` is a bridge-only hint (the dynamic per-item route, e.g.
+    // /blog/{slug}) — it maps the collection in settings.preview.paths so the
+    // canvas collapses its item URLs into one table card. Not a .pages.yml
+    // entry key, so keep it out of the entry body.
+    const route = typeof body.route === "string" ? body.route : undefined;
+    const entryBody = { ...body };
+    delete entryBody.route;
     // The definition body IS the entry body — everything passes through;
     // only name/type are injected and defaults filled where absent.
     const entry: ContentEntry = {
       name,
       type: "collection",
-      ...body,
+      ...entryBody,
       path: collectionPath,
       format: (body.format as string) ?? "json",
       filename:
@@ -141,6 +150,9 @@ export async function collectionsCommand(
     const result = ensureEntryInGroup(doc, groupItems, entry);
     if (result.created) created++;
     fieldsAdded += result.fieldsAdded;
+
+    // Wire the per-item route so the canvas can fold item URLs into one card.
+    if (route && ensurePreviewPath(doc, name, route)) previewAdded++;
 
     // Content directory + optional sample.
     const absDir = path.join(root, collectionPath);
@@ -167,7 +179,7 @@ export async function collectionsCommand(
 
   // Only write on semantic changes — yaml re-serialization otherwise
   // normalizes formatting of untouched nodes.
-  const ymlChanged = created + fieldsAdded > 0;
+  const ymlChanged = created + fieldsAdded + previewAdded > 0;
   if (ymlChanged && !dryRun) {
     fs.writeFileSync(scan.pagesYmlPath, savePagesYml(doc));
   }
@@ -187,7 +199,7 @@ export async function collectionsCommand(
     `${prefix}${pc.bold("cms-bridge collections")} — ${scan.collectionDefs.length} definition(s)`
   );
   console.log(
-    `  ${pc.green("✓")} ${created} collection(s) created, ${fieldsAdded} field(s) added, .pages.yml ${ymlChanged ? "updated" : "unchanged"}`
+    `  ${pc.green("✓")} ${created} collection(s) created, ${fieldsAdded} field(s) added, ${previewAdded} route(s) mapped, .pages.yml ${ymlChanged ? "updated" : "unchanged"}`
   );
   for (const orphan of orphanNames) {
     console.log(
