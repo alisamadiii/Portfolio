@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Database,
+  Frame,
   LogOut,
   Moon,
   Search,
@@ -343,6 +344,22 @@ export function RepoSidebar() {
     [config]
   );
 
+  // Canvas view needs the site's live URL to embed pages.
+  const viewItems = useMemo<NavItem[]>(() => {
+    if (!config) return [];
+    const settings = (config.object as any)?.settings;
+    if (!settings || typeof settings !== "object" || !settings.baseUrl)
+      return [];
+    return [
+      {
+        key: "view-canvas",
+        label: "Canvas",
+        href: `/${config.owner}/${config.repo}/${encodeURIComponent(config.branch)}/canvas`,
+        icon: <Frame className="size-4" />,
+      },
+    ];
+  }, [config]);
+
   const adminItems = useMemo<NavItem[]>(() => {
     if (!config) return [];
     const canManageRepo = isAdminUser(user);
@@ -616,6 +633,7 @@ export function RepoSidebar() {
   };
 
   const groups = [
+    renderFlatGroup("Views", viewItems),
     renderNavigationGroup("Content", contentNavigation),
     renderNavigationGroup("Media", mediaNavigation),
     renderFlatGroup("Admin", adminItems),

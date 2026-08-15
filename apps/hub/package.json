@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@alisamadiillc/agency-api": "workspace:*",
+    "@alisamadiillc/cms-bridge": "workspace:*",
     "@base-ui/react": "^1.3.0",
     "@codemirror/lang-html": "^6.4.9",
     "@codemirror/lang-javascript": "^6.2.2",

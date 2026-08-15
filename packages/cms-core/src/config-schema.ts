@@ -871,6 +871,13 @@ const ConfigSchema = z
                 .object(
                   {
                     paths: z.record(z.string(), z.string()).optional(),
+                    // Entries rendered on every page (header/footer globals,
+                    // e.g. `site`). The canvas maps their fields on all pages.
+                    global: z
+                      .array(z.string(), {
+                        message: "'global' must be an array of entry names.",
+                      })
+                      .optional(),
                   },
                   {
                     message: "'preview' must be an object.",

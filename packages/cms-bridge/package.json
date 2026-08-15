@@ -1,0 +1,67 @@
+{
+  "name": "@alisamadiillc/cms-bridge",
+  "version": "0.1.0",
+  "description": "CMS live-preview & in-page editing bridge for client sites — highlight fields from the CMS, edit text inline on the canvas",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      },
+      "require": {
+        "types": "./dist/client.d.cts",
+        "default": "./dist/client.cjs"
+      }
+    },
+    "./astro": {
+      "import": {
+        "types": "./dist/astro.d.ts",
+        "default": "./dist/astro.js"
+      },
+      "require": {
+        "types": "./dist/astro.d.cts",
+        "default": "./dist/astro.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@workspace/typescript-config": "workspace:*",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.0"
+  },
+  "keywords": [
+    "cms",
+    "live-preview",
+    "contenteditable",
+    "astro-integration"
+  ],
+  "license": "MIT"
+}

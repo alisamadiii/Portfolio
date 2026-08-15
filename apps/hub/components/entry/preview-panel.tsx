@@ -27,6 +27,7 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import type { PreviewTarget } from "@/lib/preview";
 
+import { parseBridgeMessage, postFocus } from "@/lib/bridge-messages";
 import { PreviewProvider } from "@/components/entry/preview-context";
 import { useMediaLibrary } from "@/components/media/media-library-context";
 
@@ -114,10 +115,7 @@ export function PreviewPanel({
 
   const post = useCallback(
     (fieldName: string) => {
-      iframeRef.current?.contentWindow?.postMessage(
-        { type: "cms-field-focus", field: fieldName },
-        target.origin
-      );
+      postFocus(iframeRef.current?.contentWindow, target.origin, fieldName);
     },
     [target.origin]
   );
@@ -133,8 +131,8 @@ export function PreviewPanel({
   // Bridge readiness handshake: the site posts `cms-preview-ready` on load.
   useEffect(() => {
     function onMessage(event: MessageEvent) {
-      if (event.origin !== target.origin) return;
-      if (event.data?.type === "cms-preview-ready") {
+      const msg = parseBridgeMessage(event, target.origin);
+      if (msg?.type === "ready") {
         readyRef.current = true;
         if (pendingRef.current) {
           post(pendingRef.current);

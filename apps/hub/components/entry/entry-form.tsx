@@ -928,7 +928,9 @@ const SeoPreview = ({ fieldName }: { fieldName: string }) => {
       </div>
       <div
         className={cn(
-          "truncate text-lg leading-tight",
+          // line-clamp, not truncate: nowrap min-content would blow out
+          // narrow containers (site config sheet) via grid track sizing.
+          "line-clamp-1 text-lg leading-tight",
           title
             ? "text-[#1a0dab] dark:text-[#8ab4f8]"
             : "text-muted-foreground italic"
@@ -1146,6 +1148,7 @@ const EntryForm = ({
   filePath,
   onDirtyChange,
   onChangeRegistered,
+  onValuesChange,
   resetSignal,
 }: {
   fields: Field[];
@@ -1154,6 +1157,8 @@ const EntryForm = ({
   filePath?: React.ReactNode;
   onDirtyChange?: (isDirty: boolean) => void;
   onChangeRegistered?: () => void;
+  /** Live form values on every change (canvas broadcasts these into iframes). */
+  onValuesChange?: (values: Record<string, unknown>) => void;
   /** Bump to mark the form clean, keeping the current values (draft saved). */
   resetSignal?: number;
 }) => {
@@ -1188,6 +1193,14 @@ const EntryForm = ({
   useEffect(() => {
     onDirtyChange?.(form.formState.isDirty);
   }, [form.formState.isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!onValuesChange) return;
+    const subscription = form.watch((values) => {
+      onValuesChange(values as Record<string, unknown>);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, onValuesChange]);
 
   // Deep-link from the command palette: ?focus=fieldPath scrolls to the field
   // and flashes it. List indices are ignored when matching ("sections.heading"

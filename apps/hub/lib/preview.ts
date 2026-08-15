@@ -27,7 +27,10 @@ export type PreviewContext = {
  * to its own page — e.g. `legal: /{slug}` or `newsletters: /newsletter/{slug}`.
  * Unknown tokens resolve to an empty string.
  */
-function interpolatePath(template: string, context?: PreviewContext): string {
+export function interpolatePath(
+  template: string,
+  context?: PreviewContext
+): string {
   return template.replace(/\{([^}]+)\}/g, (_match, raw: string) => {
     const token = raw.trim();
     let value: unknown;
