@@ -13,6 +13,7 @@ import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -73,14 +74,16 @@ export const AdminHeader = ({ user }: { user: AdminUser }) => {
             <span className="bg-primary ring-background absolute right-0 bottom-0 block size-2.5 rounded-full ring-2" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-56">
-            <DropdownMenuLabel className="flex flex-col gap-0.5">
-              <span className="truncate text-sm font-medium">
-                {user.name ?? "Admin"}
-              </span>
-              <span className="text-muted-foreground truncate text-xs font-normal">
-                {user.email}
-              </span>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="flex flex-col gap-0.5">
+                <span className="truncate text-sm font-medium">
+                  {user.name ?? "Admin"}
+                </span>
+                <span className="text-muted-foreground truncate text-xs font-normal">
+                  {user.email}
+                </span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
