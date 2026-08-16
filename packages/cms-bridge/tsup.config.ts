@@ -7,6 +7,7 @@ export default defineConfig([
       index: "src/index.ts",
       client: "src/client.ts",
       astro: "src/astro.ts",
+      rich: "src/rich.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

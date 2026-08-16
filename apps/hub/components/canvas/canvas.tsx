@@ -35,6 +35,8 @@ import {
   candidatesFor,
   classifyEditable,
   flattenTextValues,
+  getValueAtPath,
+  pathWithinBounds,
   resolveFieldEntry,
   schemaFieldAtPath,
   setValueAtPath,
@@ -42,10 +44,18 @@ import {
   type EntryRoute,
 } from "@/lib/canvas-entries";
 import {
+  assemblePagesDraft,
+  buildV2EntryMap,
+  SITE_ENTRY,
+  type ManifestData,
+} from "@/lib/engine/v2";
+import {
   parseBridgeMessage,
   postEditable,
   postSet,
+  postToFrame,
   type GroupMember,
+  type GroupOpMessage,
 } from "@/lib/bridge-messages";
 import {
   draftKey,
@@ -119,7 +129,53 @@ export function Canvas() {
   );
   const siteOrigin = pagesQuery.data?.origin ?? null;
 
-  const entryMap = useMemo(() => buildEntryMap(config), [config]);
+  // ------------------------------------------------------------------
+  // CMS v2: a repo with a cms.json manifest is schema-less — the entry map
+  // is built from the manifest + the two content files, with field schemas
+  // inferred from the JSON value shapes. Legacy repos keep the .pages.yml
+  // path below untouched.
+  // ------------------------------------------------------------------
+  const manifestQuery = useQuery(
+    trpc.cms.manifest.get.queryOptions(
+      { owner, repo, branch },
+      { enabled: Boolean(owner && repo && branch), staleTime: 60_000 }
+    )
+  );
+  const manifest = (manifestQuery.data ?? null) as ManifestData | null;
+  const isV2 = Boolean(manifest);
+
+  const pagesContentQuery = useQuery(
+    trpc.cms.entries.getContent.queryOptions(
+      { owner, repo, branch, path: manifest?.object.paths.pages ?? "" },
+      { enabled: isV2, staleTime: 30_000 }
+    )
+  );
+  const siteContentQuery = useQuery(
+    trpc.cms.entries.getContent.queryOptions(
+      { owner, repo, branch, path: manifest?.object.paths.site ?? "" },
+      { enabled: isV2, staleTime: 30_000 }
+    )
+  );
+  // Committed base content — the overlay persistV2 draft assembly starts from.
+  const pagesBaseRef = useRef<Record<string, unknown> | null>(null);
+
+  const entryMap = useMemo(
+    () =>
+      isV2
+        ? buildV2EntryMap(
+            manifest,
+            (pagesContentQuery.data?.contentObject as Record<
+              string,
+              unknown
+            > | null) ?? null,
+            (siteContentQuery.data?.contentObject as Record<
+              string,
+              unknown
+            > | null) ?? null
+          )
+        : buildEntryMap(config),
+    [isV2, manifest, pagesContentQuery.data, siteContentQuery.data, config]
+  );
 
   // ------------------------------------------------------------------
   // Layout: static world rects, grid of ~sqrt(n) columns.
@@ -331,6 +387,12 @@ export function Canvas() {
   // Last `data-cms-field` list each frame reported in `ready` — kept so the
   // editable whitelist can be re-sent once the config/schema finishes loading.
   const frameFieldsRef = useRef<Map<string, string[]>>(new Map());
+  // Last group item-counts each frame reported (v2) — the reconcile baseline.
+  // Updated to the draft's lengths once a reconcile runs so it never
+  // double-applies structural ops.
+  const frameGroupsRef = useRef<
+    Map<string, Array<{ path: string; count: number }>>
+  >(new Map());
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [engagedKey, setEngagedKey] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -361,8 +423,10 @@ export function Canvas() {
   } | null>(null);
 
   // Prefetch every mapped entry (content + sha) so commits can build drafts.
+  // v2 repos skip this — their content arrives via the two getContent queries.
+  const legacyRoutes = isV2 ? [] : entryMap.routes;
   const entryQueries = useQueries({
-    queries: entryMap.routes.map((entry) =>
+    queries: legacyRoutes.map((entry) =>
       trpc.cms.entries.get.queryOptions(
         {
           owner,
@@ -376,9 +440,69 @@ export function Canvas() {
     ),
   });
 
+  // Seed v2 working copies: one per page (a slice of pages.json) + the site
+  // entry. A stored draft (whole pages.json) wins over committed content;
+  // pages whose draft slice differs from the committed base are marked dirty.
+  useEffect(() => {
+    if (!isV2 || !manifest) return;
+    const pagesData = pagesContentQuery.data;
+    const siteData = siteContentQuery.data;
+    let changed = false;
+    if (pagesData) {
+      const base = pagesData.contentObject as Record<string, unknown>;
+      pagesBaseRef.current = base;
+      const draft = getDraft(owner, repo, branch, manifest.object.paths.pages);
+      for (const entry of entryMap.routes) {
+        if (entry.name === SITE_ENTRY || copiesRef.current.has(entry.name))
+          continue;
+        const draftSlice = (
+          draft?.values as Record<string, unknown> | undefined
+        )?.[entry.name] as Record<string, unknown> | undefined;
+        const baseSlice = (base[entry.name] ?? {}) as Record<string, unknown>;
+        copiesRef.current.set(entry.name, {
+          entry,
+          sha: draft?.sha ?? pagesData.sha ?? null,
+          values: draftSlice ?? baseSlice,
+        });
+        if (
+          draftSlice &&
+          JSON.stringify(draftSlice) !== JSON.stringify(baseSlice)
+        ) {
+          dirtyRef.current.add(entry.name);
+        }
+        changed = true;
+      }
+    }
+    if (siteData && !copiesRef.current.has(SITE_ENTRY)) {
+      const siteEntry = entryMap.byName.get(SITE_ENTRY);
+      if (siteEntry) {
+        const draft = getDraft(owner, repo, branch, manifest.object.paths.site);
+        copiesRef.current.set(SITE_ENTRY, {
+          entry: siteEntry,
+          sha: draft?.sha ?? siteData.sha ?? null,
+          values:
+            (draft?.values as Record<string, unknown> | undefined) ??
+            (siteData.contentObject as Record<string, unknown>),
+        });
+        if (draft) dirtyRef.current.add(SITE_ENTRY);
+        changed = true;
+      }
+    }
+    if (changed) setCopiesVersion((version) => version + 1);
+  }, [
+    isV2,
+    manifest,
+    pagesContentQuery.data,
+    siteContentQuery.data,
+    entryMap,
+    owner,
+    repo,
+    branch,
+  ]);
+
   useEffect(() => {
     let changed = false;
-    entryMap.routes.forEach((entry, index) => {
+    legacyRoutes.forEach((entry, index) => {
       const query = entryQueries[index];
       const data = query?.data;
       // The meta-only union member has no contentObject — narrow on it.
@@ -396,7 +520,8 @@ export function Canvas() {
       changed = true;
     });
     if (changed) setCopiesVersion((version) => version + 1);
-  }, [entryQueries, entryMap, owner, repo, branch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryQueries, legacyRoutes, owner, repo, branch]);
 
   /** Push current draft values into one frame (used on ready + remount). */
   const pushDraftsToFrame = useCallback(
@@ -457,6 +582,52 @@ export function Canvas() {
     [entryMap, siteOrigin]
   );
 
+  /**
+   * Persist an entry's working copy to the drafts store. Legacy: one draft
+   * per content file. v2: page entries are slices of the shared pages.json —
+   * the draft is the committed base overlaid with every page's current
+   * values, saved under the pages.json path; the site entry saves alone.
+   * Throws on quota errors (caller handles the toast).
+   */
+  const persistEntryDraft = useCallback(
+    (entry: EntryRoute) => {
+      const copy = copiesRef.current.get(entry.name);
+      if (!copy) return;
+      if (isV2 && manifest && entry.name !== SITE_ENTRY) {
+        const pageValues = new Map<string, Record<string, unknown>>();
+        for (const route of entryMap.routes) {
+          if (route.name === SITE_ENTRY) continue;
+          const pageCopy = copiesRef.current.get(route.name);
+          if (pageCopy && (dirtyRef.current.has(route.name) || route.name === entry.name))
+            pageValues.set(route.name, pageCopy.values);
+        }
+        const pagesPath = manifest.object.paths.pages;
+        saveDraftOrThrow(draftKey(owner, repo, branch, pagesPath), {
+          v: 1,
+          path: pagesPath,
+          schemaName: "$pages",
+          sha: copy.sha,
+          isNew: false,
+          values: assemblePagesDraft(pagesBaseRef.current, pageValues),
+          savedAt: Date.now(),
+          title: "Pages",
+        });
+        return;
+      }
+      saveDraftOrThrow(draftKey(owner, repo, branch, entry.filePath), {
+        v: 1,
+        path: entry.filePath,
+        schemaName: isV2 ? SITE_ENTRY : entry.name,
+        sha: copy.sha,
+        isNew: false,
+        values: copy.values,
+        savedAt: Date.now(),
+        ...(isV2 ? { title: "Site settings" } : {}),
+      });
+    },
+    [isV2, manifest, entryMap, owner, repo, branch]
+  );
+
   const commitEdit = useCallback(
     (framePath: string, fieldPath: string, rawValue: string) => {
       const candidates = candidatesFor(entryMap, framePath);
@@ -476,6 +647,9 @@ export function Canvas() {
         toast.error("Entry content is still loading — try again in a moment.");
         return;
       }
+      // A blur that raced a group remove can commit a now-out-of-bounds index
+      // — writing it would resurrect the deleted item as a sparse array slot.
+      if (!pathWithinBounds(copy.values, fieldPath)) return;
       let value: string | number = rawValue;
       if (field.type === "number") {
         // The on-screen text can carry a suffix / thousands separators (e.g. an
@@ -492,15 +666,7 @@ export function Canvas() {
       copy.values = setValueAtPath(copy.values, fieldPath, value);
       dirtyRef.current.add(entry.name);
       try {
-        saveDraftOrThrow(draftKey(owner, repo, branch, entry.filePath), {
-          v: 1,
-          path: entry.filePath,
-          schemaName: entry.name,
-          sha: copy.sha,
-          isNew: false,
-          values: copy.values,
-          savedAt: Date.now(),
-        });
+        persistEntryDraft(entry);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to save draft."
@@ -510,7 +676,163 @@ export function Canvas() {
       setCopiesVersion((version) => version + 1);
       propagate(entry.name, fieldPath, String(value), framePath);
     },
-    [entryMap, owner, repo, branch, propagate]
+    [entryMap, persistEntryDraft, propagate]
+  );
+
+  /**
+   * A `<Group>` structural edit request from a frame. Hub-authoritative: the
+   * draft array is spliced here, then the frame (and every other frame
+   * showing the entry) gets a `group-apply` telling it how to mutate its DOM
+   * plus the flattened values to repaint with. On failure the frame gets
+   * `ok: false` and leaves its DOM untouched.
+   */
+  const handleGroupOp = useCallback(
+    (framePath: string, msg: GroupOpMessage) => {
+      if (!siteOrigin) return;
+      const iframe = framesRef.current.get(framePath);
+      const reply = (
+        ok: boolean,
+        values?: Array<{ path: string; value: string }>
+      ) =>
+        postToFrame(iframe?.contentWindow, siteOrigin, {
+          type: "group-apply",
+          ok,
+          path: msg.path,
+          op: msg.op,
+          index: msg.index,
+          toIndex: msg.toIndex,
+          values,
+        });
+
+      const candidates = candidatesFor(entryMap, framePath);
+      const resolved = resolveFieldEntry(candidates, msg.path);
+      if (!resolved) return reply(false);
+      const copy = copiesRef.current.get(resolved.entry.name);
+      if (!copy) return reply(false);
+      const current = getValueAtPath(copy.values, msg.path);
+      if (!Array.isArray(current)) return reply(false);
+
+      const next = [...current];
+      if (msg.op === "add") {
+        // Duplicate semantics: clone the clicked item (always template-safe).
+        const sourceIndex = Math.min(Math.max(msg.index, 0), next.length - 1);
+        const template = next[sourceIndex];
+        if (template === undefined) return reply(false);
+        next.splice(sourceIndex + 1, 0, structuredClone(template));
+      } else if (msg.op === "remove") {
+        if (msg.index < 0 || msg.index >= next.length) return reply(false);
+        next.splice(msg.index, 1);
+      } else if (msg.op === "move") {
+        const to = msg.toIndex;
+        if (
+          typeof to !== "number" ||
+          msg.index < 0 ||
+          msg.index >= next.length ||
+          to < 0 ||
+          to >= next.length
+        )
+          return reply(false);
+        const [moved] = next.splice(msg.index, 1);
+        next.splice(to, 0, moved!);
+      } else {
+        return reply(false);
+      }
+
+      copy.values = setValueAtPath(copy.values, msg.path, next);
+      dirtyRef.current.add(resolved.entry.name);
+      try {
+        persistEntryDraft(resolved.entry);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save draft."
+        );
+        return reply(false);
+      }
+      setCopiesVersion((version) => version + 1);
+
+      const values = flattenTextValues(next, msg.path);
+      reply(true, values);
+      // Same structural op to every other mounted frame showing this entry.
+      for (const [otherPath, otherFrame] of framesRef.current) {
+        if (otherPath === framePath || !otherFrame.contentWindow) continue;
+        const shows = candidatesFor(entryMap, otherPath).some(
+          (candidate) => candidate.name === resolved.entry.name
+        );
+        if (shows) {
+          postToFrame(otherFrame.contentWindow, siteOrigin, {
+            type: "group-apply",
+            ok: true,
+            path: msg.path,
+            op: msg.op,
+            index: msg.index,
+            toIndex: msg.toIndex,
+            values,
+          });
+        }
+      }
+      // Keep the reconcile baselines in sync with the new array length.
+      for (const [path, groups] of frameGroupsRef.current) {
+        void path;
+        for (const group of groups) {
+          if (group.path === msg.path) group.count = next.length;
+        }
+      }
+    },
+    [entryMap, siteOrigin, persistEntryDraft]
+  );
+
+  /**
+   * Structural draft replay: a freshly loaded iframe renders the COMMITTED
+   * item count — if a draft's array is longer/shorter, tell the frame to
+   * clone/remove items (`group-apply`) BEFORE the value flood, or added items
+   * would silently vanish on frame reload. Baseline counts come from the
+   * frame's `ready`; they're bumped to the draft lengths after each run so a
+   * repeat (e.g. once copies finish seeding) never double-applies.
+   */
+  const reconcileFrameGroups = useCallback(
+    (framePath: string) => {
+      if (!siteOrigin) return;
+      const iframe = framesRef.current.get(framePath);
+      if (!iframe?.contentWindow) return;
+      const groups = frameGroupsRef.current.get(framePath);
+      if (!groups?.length) return;
+      const candidates = candidatesFor(entryMap, framePath);
+      for (const group of groups) {
+        const resolved = resolveFieldEntry(candidates, group.path);
+        if (!resolved) continue;
+        const copy = copiesRef.current.get(resolved.entry.name);
+        if (!copy || !dirtyRef.current.has(resolved.entry.name)) continue;
+        const draftArray = getValueAtPath(copy.values, group.path);
+        if (!Array.isArray(draftArray) || draftArray.length === group.count)
+          continue;
+        const values = flattenTextValues(draftArray, group.path);
+        if (draftArray.length > group.count) {
+          for (let i = group.count; i < draftArray.length; i++) {
+            postToFrame(iframe.contentWindow, siteOrigin, {
+              type: "group-apply",
+              ok: true,
+              path: group.path,
+              op: "add",
+              index: Math.max(0, i - 1),
+              values,
+            });
+          }
+        } else {
+          for (let i = group.count - 1; i >= draftArray.length; i--) {
+            postToFrame(iframe.contentWindow, siteOrigin, {
+              type: "group-apply",
+              ok: true,
+              path: group.path,
+              op: "remove",
+              index: i,
+              values,
+            });
+          }
+        }
+        group.count = draftArray.length;
+      }
+    },
+    [entryMap, siteOrigin]
   );
 
   /** Write a non-text field value (media URL / link href) and reflect it live. */
@@ -571,6 +893,15 @@ export function Canvas() {
       switch (msg.type) {
         case "ready": {
           handleFrameLoad(framePath);
+          // Structure BEFORE values: reconcile draft array lengths against the
+          // rendered item counts first, then flood the draft values.
+          if (msg.v >= 2 && msg.groups?.length) {
+            frameGroupsRef.current.set(
+              framePath,
+              msg.groups.map((group) => ({ ...group }))
+            );
+            reconcileFrameGroups(framePath);
+          }
           pushDraftsToFrame(framePath);
           // Remember what the page reported, then tell it which of those fields
           // are actually editable (and how). Held so it can be re-sent once the
@@ -586,6 +917,9 @@ export function Canvas() {
         }
         case "field-commit":
           commitEdit(framePath, msg.path, msg.value);
+          break;
+        case "group-op":
+          handleGroupOp(framePath, msg);
           break;
         case "field-activate":
           activateField(
@@ -613,7 +947,20 @@ export function Canvas() {
     pushDraftsToFrame,
     pushEditableToFrame,
     handleFrameLoad,
+    handleGroupOp,
+    reconcileFrameGroups,
   ]);
+
+  // Copies can finish seeding AFTER a frame announced `ready` (queries still
+  // loading) — re-run the structural reconcile + draft push then. Baseline
+  // counts were bumped on the first pass, so this never double-applies, and
+  // repeated `set` floods are idempotent (applySet skips the caret host).
+  useEffect(() => {
+    for (const framePath of frameFieldsRef.current.keys()) {
+      reconcileFrameGroups(framePath);
+      pushDraftsToFrame(framePath);
+    }
+  }, [copiesVersion, reconcileFrameGroups, pushDraftsToFrame]);
 
   // Config/schema can finish loading after a frame already announced `ready`
   // (which sent no whitelist yet, or an incomplete one). Re-send to every frame
@@ -642,15 +989,7 @@ export function Canvas() {
       copy.values = values;
       dirtyRef.current.add(globalEntry.name);
       try {
-        saveDraftOrThrow(draftKey(owner, repo, branch, globalEntry.filePath), {
-          v: 1,
-          path: globalEntry.filePath,
-          schemaName: globalEntry.name,
-          sha: copy.sha,
-          isNew: false,
-          values,
-          savedAt: Date.now(),
-        });
+        persistEntryDraft(globalEntry);
         toast.success("Draft saved on this device");
       } catch (error) {
         toast.error(
@@ -667,7 +1006,7 @@ export function Canvas() {
         }
       }
     },
-    [globalEntry, owner, repo, branch, siteOrigin]
+    [globalEntry, persistEntryDraft, siteOrigin]
   );
 
   const handleSiteConfigLiveChange = useCallback(
@@ -712,15 +1051,7 @@ export function Canvas() {
       copy.values = setValueAtPath(copy.values, "seo", seoValues);
       dirtyRef.current.add(entryName);
       try {
-        saveDraftOrThrow(draftKey(owner, repo, branch, entry.filePath), {
-          v: 1,
-          path: entry.filePath,
-          schemaName: entryName,
-          sha: copy.sha,
-          isNew: false,
-          values: copy.values,
-          savedAt: Date.now(),
-        });
+        persistEntryDraft(entry);
         toast.success("Draft saved on this device");
       } catch (error) {
         toast.error(
@@ -730,7 +1061,7 @@ export function Canvas() {
       }
       setCopiesVersion((version) => version + 1);
     },
-    [entryMap, owner, repo, branch]
+    [entryMap, persistEntryDraft]
   );
 
   // ------------------------------------------------------------------
@@ -872,10 +1203,12 @@ export function Canvas() {
               candidatesFor(entryMap, page.path).find(
                 (entry) => entry.route === page.path
               )?.name;
+            // v2 repos have no form editor — the canvas is the only editing
+            // surface for pages (collections keep their table).
             const editHref =
               page.kind === "collection" && page.collection
                 ? `${repoBase}/collection/${encodeURIComponent(page.collection)}`
-                : mappedEntry
+                : !isV2 && mappedEntry
                   ? `${repoBase}/file/${encodeURIComponent(mappedEntry)}`
                   : null;
             const seoInfo =

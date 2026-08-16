@@ -15,16 +15,21 @@ import {
 } from "../../lib/cms/content-file";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { requireFeatureAccess } from "../../lib/cms/feature-access";
-import { updateFileCache } from "../../lib/cms/github-cache-file";
+import {
+  commitFilesAtomic,
+  type CommitFileInput,
+} from "../../lib/cms/git-commit";
+import { getManifest } from "../../lib/cms/manifest-store";
 import { createOctokitInstance } from "../../lib/cms/octokit";
+import { stringify } from "../../lib/cms/serialization";
 
 /**
  * Publish a batch of content entries as a single atomic commit.
  * Ported from POST /api/[owner]/[repo]/[branch]/publish.
  *
  * Uses the Git Data API (createTree → createCommit → updateRef) so all files
- * land in one commit on the working branch. All-or-nothing: any validation
- * failure aborts before anything is committed.
+ * land in one commit on the working branch (see lib/cms/git-commit.ts).
+ * All-or-nothing: any validation failure aborts before anything is committed.
  *
  * Contract change vs the REST route: the stale/conflict case (formerly a 409
  * with path lists) is returned as a `{ status: "conflict" }` result instead of
@@ -81,14 +86,9 @@ export const publishRouter = createTRPCRouter({
         const force = input.force === true;
 
         // Validate and serialize every file up-front (all-or-nothing).
-        const entries: Array<{
-          path: string;
-          name: string;
-          sha: string | null;
-          isNew: boolean;
-          stringified: string;
-          schema: Record<string, any>;
-        }> = [];
+        const entries: Array<
+          CommitFileInput & { name: string; schema: Record<string, any> }
+        > = [];
         const seenPaths = new Set<string>();
 
         for (const file of files) {
@@ -141,99 +141,6 @@ export const publishRouter = createTRPCRouter({
 
         const octokit = createOctokitInstance(ctx.token);
 
-        // Current branch head and its tree.
-        const refResponse = await octokit.rest.git.getRef({
-          owner: input.owner,
-          repo: input.repo,
-          ref: `heads/${input.branch}`,
-        });
-        const headSha = refResponse.data.object.sha;
-
-        const headCommitResponse = await octokit.rest.git.getCommit({
-          owner: input.owner,
-          repo: input.repo,
-          commit_sha: headSha,
-        });
-        const baseTreeSha = headCommitResponse.data.tree.sha;
-
-        // Conflict check: compare each draft's base sha against the branch tree.
-        const stalePaths: string[] = [];
-        const conflictPaths: string[] = [];
-
-        const baseTreeResponse = await octokit.rest.git.getTree({
-          owner: input.owner,
-          repo: input.repo,
-          tree_sha: baseTreeSha,
-          recursive: "1",
-        });
-
-        if (baseTreeResponse.data.truncated) {
-          // Tree too large to list — fall back to per-file HEAD sha checks.
-          for (const entry of entries) {
-            try {
-              const response = await octokit.rest.repos.getContent({
-                owner: input.owner,
-                repo: input.repo,
-                path: entry.path,
-                ref: input.branch,
-              });
-              if (Array.isArray(response.data))
-                throw new Error(
-                  `Expected a file at "${entry.path}" but found a directory.`
-                );
-              if (entry.isNew) {
-                conflictPaths.push(entry.path);
-              } else if (response.data.sha !== entry.sha) {
-                stalePaths.push(entry.path);
-              }
-            } catch (error: any) {
-              if (error.status === 404) {
-                // Missing on GitHub: fine for new files, stale for existing ones.
-                if (!entry.isNew) stalePaths.push(entry.path);
-              } else {
-                throw error;
-              }
-            }
-          }
-        } else {
-          const blobShaByPath = new Map<string, string>();
-          for (const item of baseTreeResponse.data.tree) {
-            if (item.type === "blob" && item.path && item.sha)
-              blobShaByPath.set(item.path, item.sha);
-          }
-          for (const entry of entries) {
-            const currentSha = blobShaByPath.get(entry.path);
-            if (entry.isNew) {
-              if (currentSha) conflictPaths.push(entry.path);
-            } else if (currentSha !== entry.sha) {
-              stalePaths.push(entry.path);
-            }
-          }
-        }
-
-        if ((stalePaths.length > 0 || conflictPaths.length > 0) && !force) {
-          // Result union instead of the REST route's 409: the client shows the
-          // diff dialog off this shape, no error handling needed.
-          return {
-            status: "conflict" as const,
-            stalePaths,
-            conflictPaths,
-          };
-        }
-
-        // One tree, one commit for all files (inline content — no createBlob).
-        const newTreeResponse = await octokit.rest.git.createTree({
-          owner: input.owner,
-          repo: input.repo,
-          base_tree: baseTreeSha,
-          tree: entries.map((entry) => ({
-            path: entry.path,
-            mode: "100644" as const,
-            type: "blob" as const,
-            content: entry.stringified,
-          })),
-        });
-
         // Commits are always authored by the org PAT owner; when the config asks
         // for user identity, the editor's name goes into the commit message instead
         // (stamping user emails as author can block Vercel deploys).
@@ -267,86 +174,183 @@ export const publishRouter = createTRPCRouter({
           ? `${resolvedMessage} — by ${editorName}`
           : resolvedMessage;
 
-        const newCommitResponse = await octokit.rest.git.createCommit({
+        const result = await commitFilesAtomic({
+          octokit,
           owner: input.owner,
           repo: input.repo,
+          branch: input.branch,
+          files: entries,
           message,
-          tree: newTreeResponse.data.sha,
-          parents: [headSha],
+          force,
         });
-        const newCommitSha = newCommitResponse.data.sha;
 
-        try {
-          await octokit.rest.git.updateRef({
-            owner: input.owner,
-            repo: input.repo,
-            ref: `heads/${input.branch}`,
-            sha: newCommitSha,
-            force: false,
-          });
-        } catch (error: any) {
-          if (error.status === 422) {
-            // Branch advanced between getRef and updateRef — drafts stay intact.
-            throw createHttpError(
-              "Branch was updated while publishing — please retry.",
-              409
-            );
-          }
-          throw error;
-        }
-
-        // Fetch the new tree to get the blob shas of the published files.
-        const publishedTreeResponse = await octokit.rest.git.getTree({
-          owner: input.owner,
-          repo: input.repo,
-          tree_sha: newCommitResponse.data.tree.sha,
-          recursive: "1",
-        });
-        const publishedShaByPath = new Map<
-          string,
-          { sha: string; size?: number }
-        >();
-        for (const item of publishedTreeResponse.data.tree) {
-          if (item.type === "blob" && item.path && item.sha)
-            publishedShaByPath.set(item.path, {
-              sha: item.sha,
-              size: item.size,
-            });
-        }
-
-        const commitTimestamp = Date.now();
-        const publishedFiles: Array<{ path: string; sha: string }> = [];
-
-        for (const entry of entries) {
-          const published = publishedShaByPath.get(entry.path);
-          if (!published) continue;
-          publishedFiles.push({ path: entry.path, sha: published.sha });
-
-          await updateFileCache(
-            "collection",
-            input.owner,
-            input.repo,
-            input.branch,
-            {
-              type: entry.isNew ? "add" : "modify",
-              path: entry.path,
-              sha: published.sha,
-              content: entry.stringified,
-              size: published.size,
-              commit: {
-                sha: newCommitSha,
-                timestamp: commitTimestamp,
-              },
-            }
-          );
+        if (result.status === "conflict") {
+          // Result union instead of the REST route's 409: the client shows the
+          // diff dialog off this shape, no error handling needed.
+          return {
+            status: "conflict" as const,
+            stalePaths: result.stalePaths,
+            conflictPaths: result.conflictPaths,
+          };
         }
 
         return {
           status: "success" as const,
           message: `Published ${entries.length} file(s).`,
           data: {
-            commit: { sha: newCommitSha },
-            files: publishedFiles,
+            commit: { sha: result.commitSha },
+            files: result.files,
+          },
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  /**
+   * CMS v2 publish: schema-less. Files are the repo's v2 content files
+   * (pages.json, site.json, collection markdown). JSON files are serialized
+   * exactly like the legacy json branch (`JSON.stringify(obj, null, 2)`, no
+   * trailing newline) so a v2 publish never produces a whole-file diff.
+   * Markdown files take `{ body, ...frontmatter }` objects and serialize as
+   * YAML frontmatter.
+   */
+  publishV2: cmsProcedure
+    .input(
+      z.object({
+        branch: z.string(),
+        files: z
+          .array(
+            z.object({
+              path: z.string().min(1),
+              content: z.any(),
+              sha: z.string().nullable().optional(),
+              isNew: z.boolean().optional(),
+            })
+          )
+          .min(1, `"files" must be a non-empty array.`)
+          .max(
+            MAX_FILES,
+            `Cannot publish more than ${MAX_FILES} files at once.`
+          ),
+        force: z.boolean().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await requireFeatureAccess(ctx.user, "cms");
+
+        const manifest = await getManifest(
+          input.owner,
+          input.repo,
+          input.branch,
+          { getToken: async () => ctx.token }
+        );
+        if (!manifest)
+          throw createHttpError(
+            `No cms.json manifest found for ${input.owner}/${input.repo}/${input.branch}.`,
+            404
+          );
+
+        // Only the manifest's own files are publishable: pages/site JSON and
+        // declared collection folders.
+        const allowedJson = new Set([
+          manifest.object.paths.pages,
+          manifest.object.paths.site,
+        ]);
+        const collectionRoots = manifest.object.collections.map(
+          (collection) => `${collection.path}/`
+        );
+
+        const entries: CommitFileInput[] = [];
+        const seenPaths = new Set<string>();
+
+        for (const file of input.files) {
+          const normalizedPath = normalizePath(file.path);
+          if (seenPaths.has(normalizedPath))
+            throw createHttpError(
+              `Duplicate path "${normalizedPath}" in publish request.`,
+              400
+            );
+          seenPaths.add(normalizedPath);
+
+          const inCollection = collectionRoots.some((root) =>
+            normalizedPath.startsWith(root)
+          );
+          if (!allowedJson.has(normalizedPath) && !inCollection)
+            throw createHttpError(
+              `"${normalizedPath}" is not a CMS-managed file for this repo.`,
+              400
+            );
+
+          let stringified: string;
+          if (normalizedPath.endsWith(".json")) {
+            if (!file.content || typeof file.content !== "object")
+              throw createHttpError(
+                `Content for "${normalizedPath}" must be an object.`,
+                400
+              );
+            stringified = JSON.stringify(file.content, null, 2);
+          } else if (
+            normalizedPath.endsWith(".md") ||
+            normalizedPath.endsWith(".mdx")
+          ) {
+            if (!file.content || typeof file.content !== "object")
+              throw createHttpError(
+                `Content for "${normalizedPath}" must be an object with a body.`,
+                400
+              );
+            stringified = stringify(file.content, {
+              format: "yaml-frontmatter",
+            });
+          } else {
+            throw createHttpError(
+              `Unsupported file type for "${normalizedPath}".`,
+              400
+            );
+          }
+
+          entries.push({
+            path: normalizedPath,
+            sha: file.sha ?? null,
+            isNew: !!file.isNew,
+            stringified,
+          });
+        }
+
+        const octokit = createOctokitInstance(ctx.token);
+
+        const editorName = ctx.user.name?.trim() || ctx.user.email;
+        const fileNames = entries
+          .map((entry) => entry.path.split("/").pop())
+          .join(", ");
+        const message = `content: update ${fileNames} — by ${editorName}`;
+
+        const result = await commitFilesAtomic({
+          octokit,
+          owner: input.owner,
+          repo: input.repo,
+          branch: input.branch,
+          files: entries,
+          message,
+          force: input.force === true,
+        });
+
+        if (result.status === "conflict") {
+          return {
+            status: "conflict" as const,
+            stalePaths: result.stalePaths,
+            conflictPaths: result.conflictPaths,
+          };
+        }
+
+        return {
+          status: "success" as const,
+          message: `Published ${entries.length} file(s).`,
+          data: {
+            commit: { sha: result.commitSha },
+            files: result.files,
           },
         };
       } catch (error) {

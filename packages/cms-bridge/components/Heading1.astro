@@ -1,0 +1,13 @@
+---
+/** CMS-editable `<h1>`. See Text.astro. */
+import Text from "./Text.astro";
+
+interface Props {
+  field: string;
+  value?: string | number | null;
+  class?: string;
+  [key: string]: unknown;
+}
+---
+
+<Text as="h1" {...Astro.props} />

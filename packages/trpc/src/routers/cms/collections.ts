@@ -24,6 +24,7 @@ import {
 } from "../../lib/cms/commit-message";
 import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
+import { getManifest } from "../../lib/cms/manifest-store";
 import { requireFeatureAccess } from "../../lib/cms/feature-access";
 import {
   getBranchHeadSha,
@@ -199,6 +200,70 @@ const parseContents = (
 };
 
 export const collectionsRouter = createTRPCRouter({
+  /**
+   * CMS v2: list a manifest-declared collection's Markdown entries. No
+   * schema, no content parsing — just the folder listing (name/path/sha);
+   * the entry sheet fetches individual files via `entries.getContent`.
+   */
+  listV2: cmsProcedure
+    .input(z.object({ branch: z.string(), name: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const manifest = await getManifest(
+          input.owner,
+          input.repo,
+          input.branch,
+          { getToken: async () => ctx.token }
+        );
+        if (!manifest)
+          throw createHttpError(
+            `No cms.json manifest found for ${input.owner}/${input.repo}/${input.branch}.`,
+            404
+          );
+        const collection = manifest.object.collections.find(
+          (candidate) => candidate.name === input.name
+        );
+        if (!collection)
+          throw createHttpError(
+            `Collection "${input.name}" is not declared in cms.json.`,
+            404
+          );
+
+        const octokit = createOctokitInstance(ctx.token);
+        let entries: Array<{ name: string; path: string; sha: string; size: number }> =
+          [];
+        try {
+          const response = await octokit.rest.repos.getContent({
+            owner: input.owner,
+            repo: input.repo,
+            path: collection.path,
+            ref: input.branch,
+          });
+          if (Array.isArray(response.data)) {
+            entries = response.data
+              .filter(
+                (item) =>
+                  item.type === "file" && /\.(md|mdx|json)$/.test(item.name)
+              )
+              .map((item) => ({
+                name: item.name,
+                path: item.path,
+                sha: item.sha,
+                size: item.size,
+              }));
+          }
+        } catch (error: any) {
+          // Missing folder = empty collection (first entry creates it).
+          if (error?.status !== 404) throw error;
+        }
+
+        return { collection, entries };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
   /**
    * Fetches and parses collection contents from GitHub repositories
    * (for collection views and searches). If type is "search", contents are

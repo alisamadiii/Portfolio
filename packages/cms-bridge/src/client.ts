@@ -18,21 +18,34 @@ import {
   isBridgeEnvelope,
   type BridgeMode,
   type CmsToBridgeMessage,
+  type FieldInfo,
+  type GroupInfo,
   type GroupMember,
   type LegacyFieldFocusMessage,
 } from "./protocol";
+import { HL_CLASS, readRich, renderRich } from "./rich";
 
 const PARAM = "cms-preview";
 const MODE_KEY = "cms-bridge-mode";
 const HIGHLIGHT_CLASS = "cms-preview-highlight";
 const STYLE_ID = "cms-preview-style";
 const FIELD_ATTR = "data-cms-field";
+/**
+ * Explicit editor kind, emitted by the bridge components (`<Heading1>`,
+ * `<Image>`, `<Group>`, …). When present it is trusted outright — no leaf
+ * heuristics, no CMS whitelist — which is what makes component-tagged
+ * elements reliably editable. Values: "text" | "media" | "link" | "group".
+ */
+const KIND_ATTR = "data-cms-kind";
+/** Index wrapper inside a `<Group>` (`<Item index={i}>`). */
+const ITEM_ATTR = "data-cms-item";
 const EDITABLE_ATTR = "data-cms-editable";
 const MEDIA_ATTR = "data-cms-media";
 const LINK_ATTR = "data-cms-link";
 const GROUP_ATTR = "data-cms-group";
-/** Class wrapping a `backtick`-highlighted run in a text field. Styled by the site. */
-const HL_CLASS = "cms-hl";
+/** Bridge-injected UI (group add button, item move/remove pills) — never content. */
+const UI_ATTR = "data-cms-ui";
+const UI_ACTION_ATTR = "data-cms-ui-action";
 const INPUT_THROTTLE_MS = 150;
 
 /** Tags that never make sense as editable text hosts. */
@@ -92,7 +105,20 @@ function injectStyle(): void {
     `[${EDITABLE_ATTR}]:focus{outline:2px solid #6366f1;outline-offset:2px;border-radius:2px;}` +
     `[${MEDIA_ATTR}]:hover{outline:2px dashed rgba(99,102,241,.7);outline-offset:2px;cursor:pointer;}` +
     `[${LINK_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.5);outline-offset:3px;}` +
-    `[${GROUP_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.55);outline-offset:4px;cursor:pointer;}`;
+    `[${GROUP_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.55);outline-offset:4px;cursor:pointer;}` +
+    // Group structural-edit UI: add button on the host, move/remove pill per item.
+    `[${UI_ATTR}]{font:600 12px/1 system-ui,sans-serif;}` +
+    `[${UI_ATTR}="group-add"]{position:absolute;top:8px;right:8px;z-index:2147483000;` +
+    `border:0;border-radius:9999px;background:#6366f1;color:#fff;padding:6px 12px;` +
+    `cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:0;transition:opacity .15s;}` +
+    `[${KIND_ATTR}="group"]:hover>[${UI_ATTR}="group-add"]{opacity:1;}` +
+    `[${UI_ATTR}="item-controls"]{position:absolute;top:8px;right:8px;z-index:2147483000;` +
+    `display:flex;gap:2px;border-radius:9999px;background:rgba(24,24,27,.85);padding:2px;` +
+    `opacity:0;transition:opacity .15s;}` +
+    `[${ITEM_ATTR}]:hover>[${UI_ATTR}="item-controls"]{opacity:1;}` +
+    `[${UI_ATTR}="item-controls"] button{border:0;border-radius:9999px;background:transparent;` +
+    `color:#fff;width:24px;height:24px;cursor:pointer;display:grid;place-items:center;}` +
+    `[${UI_ATTR}="item-controls"] button:hover{background:#6366f1;}`;
   document.head.appendChild(style);
 }
 
@@ -152,7 +178,15 @@ function isEditableCandidate(el: Element): boolean {
   return true;
 }
 
-type FieldKind = "text" | "media" | "link" | "none";
+type FieldKind = "text" | "media" | "link" | "group" | "none";
+
+const EXPLICIT_KINDS = new Set(["text", "media", "link", "group"]);
+
+/** Explicit `data-cms-kind` from a bridge component, or null. */
+function declaredKind(el: Element): FieldKind | null {
+  const raw = el.getAttribute(KIND_ATTR);
+  return raw && EXPLICIT_KINDS.has(raw) ? (raw as FieldKind) : null;
+}
 
 /** What editor a tagged path gets. Without a whitelist, everything is text. */
 function kindForPath(path: string): FieldKind {
@@ -161,6 +195,15 @@ function kindForPath(path: string): FieldKind {
   if (editable.link.has(path)) return "link";
   if (editable.arm.has(path)) return "text";
   return "none";
+}
+
+/**
+ * The editor kind of an element. An explicit `data-cms-kind` (bridge
+ * component) is trusted outright; otherwise fall back to the CMS whitelist
+ * (legacy schema-driven sites) or, absent both, plain text.
+ */
+function kindOf(el: Element, path: string): FieldKind {
+  return declaredKind(el) ?? kindForPath(path);
 }
 
 function armTextEditable(host: HTMLElement, plaintext: boolean): void {
@@ -179,12 +222,24 @@ function armEditables(): void {
     if (!path) continue;
     // Only the top-level tagged element of a cluster is interactive. Anything
     // with a tagged ancestor is edited through that ancestor's group popover,
-    // never inline — so it stays fully inert here.
-    if (host.parentElement?.closest(`[${FIELD_ATTR}]`)) continue;
-    switch (kindForPath(path)) {
+    // never inline — EXCEPT component-declared elements (`data-cms-kind`),
+    // which are always individually editable: inside a `<Group>` every
+    // `<Text>`/`<Image>` item child must arm on its own.
+    if (
+      !declaredKind(host) &&
+      host.parentElement?.closest(`[${FIELD_ATTR}]`)
+    ) {
+      continue;
+    }
+    switch (kindOf(host, path)) {
       case "none":
         // Tagged in the markup but not a real CMS field — leave inert.
         continue;
+      case "group":
+        // Explicit `<Group>` host: click opens the CMS group editor. Its item
+        // children arm individually on their own iterations.
+        host.setAttribute(GROUP_ATTR, "");
+        break;
       case "media":
         // Images open the media picker on click (never contenteditable).
         host.setAttribute(MEDIA_ATTR, "");
@@ -217,6 +272,7 @@ function armEditables(): void {
 }
 
 function disarmEditables(): void {
+  removeGroupControls();
   for (const el of Array.from(document.querySelectorAll(`[${EDITABLE_ATTR}]`))) {
     el.removeAttribute("contenteditable");
     el.removeAttribute(EDITABLE_ATTR);
@@ -275,8 +331,8 @@ function collectGroupMembers(host: HTMLElement): GroupMember[] {
   const push = (el: Element): void => {
     const path = el.getAttribute(FIELD_ATTR);
     if (!path || seen.has(path)) return;
-    const kind = kindForPath(path);
-    if (kind === "none") return;
+    const kind = kindOf(el, path);
+    if (kind === "none" || kind === "group") return;
     seen.add(path);
     out.push({ path, kind });
   };
@@ -302,6 +358,188 @@ function activateGroup(host: HTMLElement): void {
       height: rect.height,
     },
   });
+}
+
+// ---------------------------------------------------------------------------
+// Group structural editing (add / remove / reorder items).
+//
+// Hub-authoritative: the bridge only posts `group-op`; the CMS splices the
+// draft array and answers `group-apply`, which mutates the DOM (cloneNode for
+// add, remove, reinsert for move), reindexes every descendant field path
+// positionally from DOM order, then applies the flattened values.
+// ---------------------------------------------------------------------------
+
+/** The `<Item>` wrappers that belong directly to this group host (DOM order). */
+function groupItems(host: Element): HTMLElement[] {
+  return Array.from(host.querySelectorAll(`[${ITEM_ATTR}]`)).filter(
+    (item): item is HTMLElement =>
+      item instanceof HTMLElement &&
+      item.parentElement?.closest(`[${KIND_ATTR}="group"]`) === host
+  );
+}
+
+/** Flush any in-flight edit (blur commits; old-index paths must not fire late). */
+function flushPendingEdit(): void {
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && active.hasAttribute(EDITABLE_ATTR)) {
+    active.blur(); // synchronously dispatches focusout → commit
+  }
+  if (inputTimer) {
+    clearTimeout(inputTimer);
+    inputTimer = null;
+  }
+}
+
+function requestGroupOp(
+  host: HTMLElement,
+  op: "add" | "remove" | "move",
+  index: number,
+  toIndex?: number
+): void {
+  const path = host.getAttribute(FIELD_ATTR);
+  if (!path) return;
+  flushPendingEdit();
+  post({ type: "group-op", path, op, index, toIndex });
+}
+
+/** Remove bridge-injected UI and runtime attrs from a cloned item subtree. */
+function sanitizeClone(clone: HTMLElement): void {
+  for (const ui of Array.from(clone.querySelectorAll(`[${UI_ATTR}]`)))
+    ui.remove();
+  const nodes = [clone, ...Array.from(clone.querySelectorAll("*"))];
+  for (const node of nodes) {
+    node.removeAttribute("contenteditable");
+    node.removeAttribute(EDITABLE_ATTR);
+    node.removeAttribute(MEDIA_ATTR);
+    node.removeAttribute(LINK_ATTR);
+    node.removeAttribute(GROUP_ATTR);
+    node.classList.remove(HIGHLIGHT_CLASS);
+  }
+}
+
+/**
+ * Rewrite `data-cms-item` indices and the index segment of every descendant
+ * `data-cms-field` from DOM order. Positional (never string-replace of the old
+ * index), so it is idempotent and never double-shifts.
+ */
+function reindexGroup(host: HTMLElement, path: string): void {
+  const prefix = `${path}.`;
+  groupItems(host).forEach((item, index) => {
+    item.setAttribute(ITEM_ATTR, String(index));
+    const tagged = [item, ...Array.from(item.querySelectorAll(`[${FIELD_ATTR}]`))];
+    for (const el of tagged) {
+      const field = el.getAttribute(FIELD_ATTR);
+      if (!field || !field.startsWith(prefix)) continue;
+      const rest = field.slice(prefix.length);
+      const dot = rest.indexOf(".");
+      const tail = dot === -1 ? "" : rest.slice(dot);
+      el.setAttribute(FIELD_ATTR, `${prefix}${index}${tail}`);
+    }
+  });
+}
+
+/** Apply a CMS-confirmed structural op to the DOM. No-op on `ok: false`. */
+function applyGroupOp(msg: {
+  ok: boolean;
+  path: string;
+  op: "add" | "remove" | "move";
+  index: number;
+  toIndex?: number;
+  values?: Array<{ path: string; value: string }>;
+}): void {
+  if (!msg.ok) return;
+  const host = document.querySelector(
+    `[${KIND_ATTR}="group"][${FIELD_ATTR}="${esc(msg.path)}"]`
+  );
+  if (!(host instanceof HTMLElement)) return;
+  const items = groupItems(host);
+  if (msg.op === "add") {
+    const source = items[msg.index] ?? items[items.length - 1];
+    if (!source) return; // empty group — no DOM template to clone
+    const clone = source.cloneNode(true) as HTMLElement;
+    sanitizeClone(clone);
+    source.after(clone);
+  } else if (msg.op === "remove") {
+    items[msg.index]?.remove();
+  } else if (msg.op === "move" && typeof msg.toIndex === "number") {
+    const item = items[msg.index];
+    const target = items[msg.toIndex];
+    if (!item || !target || item === target) return;
+    if (msg.toIndex > msg.index) target.after(item);
+    else target.before(item);
+  }
+  reindexGroup(host, msg.path);
+  if (msg.values) applySet(msg.values);
+  if (mode === "edit") {
+    armEditables();
+    attachGroupControls();
+  }
+}
+
+/** Inject the add button on each group host + move/remove pills on each item. */
+function attachGroupControls(): void {
+  if (mode !== "edit") return;
+  for (const host of Array.from(
+    document.querySelectorAll(`[${KIND_ATTR}="group"]`)
+  )) {
+    if (!(host instanceof HTMLElement)) continue;
+    if (getComputedStyle(host).position === "static")
+      host.style.position = "relative";
+    if (!host.querySelector(`:scope > [${UI_ATTR}="group-add"]`)) {
+      const add = document.createElement("button");
+      add.type = "button";
+      add.setAttribute(UI_ATTR, "group-add");
+      add.setAttribute(UI_ACTION_ATTR, "add");
+      add.textContent = "+ Add";
+      host.appendChild(add);
+    }
+    for (const item of groupItems(host)) {
+      if (getComputedStyle(item).position === "static")
+        item.style.position = "relative";
+      if (item.querySelector(`:scope > [${UI_ATTR}="item-controls"]`)) continue;
+      const pill = document.createElement("div");
+      pill.setAttribute(UI_ATTR, "item-controls");
+      for (const [label, action, title] of [
+        ["↑", "move-up", "Move up"],
+        ["↓", "move-down", "Move down"],
+        ["✕", "remove", "Remove"],
+      ] as const) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute(UI_ACTION_ATTR, action);
+        button.textContent = label;
+        button.title = title;
+        pill.appendChild(button);
+      }
+      item.appendChild(pill);
+    }
+  }
+}
+
+function removeGroupControls(): void {
+  for (const el of Array.from(document.querySelectorAll(`[${UI_ATTR}]`)))
+    el.remove();
+}
+
+/** Route a click on injected group UI to the matching `group-op`. */
+function handleUiAction(el: HTMLElement): void {
+  const action = el.getAttribute(UI_ACTION_ATTR);
+  const host = el.closest(`[${KIND_ATTR}="group"]`);
+  if (!action || !(host instanceof HTMLElement)) return;
+  const items = groupItems(host);
+  if (action === "add") {
+    requestGroupOp(host, "add", Math.max(0, items.length - 1));
+    return;
+  }
+  const item = el.closest(`[${ITEM_ATTR}]`);
+  if (!(item instanceof HTMLElement)) return;
+  const index = items.indexOf(item);
+  if (index === -1) return;
+  if (action === "remove") requestGroupOp(host, "remove", index);
+  else if (action === "move-up" && index > 0)
+    requestGroupOp(host, "move", index, index - 1);
+  else if (action === "move-down" && index < items.length - 1)
+    requestGroupOp(host, "move", index, index + 1);
 }
 
 /** Ask the CMS to open a non-text editor (media picker / link popover). */
@@ -389,6 +627,15 @@ function onKeyDown(event: KeyboardEvent): void {
 function onClick(event: MouseEvent): void {
   const target = event.target;
   if (!(target instanceof Element)) return;
+  // Bridge-injected group UI (add / move / remove) wins over everything —
+  // it must never fall through to the group popover or link handling.
+  const uiAction = target.closest(`[${UI_ACTION_ATTR}]`);
+  if (uiAction instanceof HTMLElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    handleUiAction(uiAction);
+    return;
+  }
   // Clicking an image opens the media picker.
   const media = target.closest(`[${MEDIA_ATTR}]`);
   if (media instanceof HTMLElement) {
@@ -446,41 +693,8 @@ function onClick(event: MouseEvent): void {
  * duplicated. Known limitation: text authored after the children still lands
  * in the first text node — fine for the common "text + inline highlight" case.
  */
-// ---------------------------------------------------------------------------
-// Backtick highlight: `word` in a text field ⇄ <span class="cms-hl">word</span>.
-// Lets a heading keep its colored phrase in a single plain field (no nested
-// data-cms-field). The site renders the same span at build time and styles it.
-// ---------------------------------------------------------------------------
-
-/** Source string (with backticks) → safe HTML with highlight spans. */
-function renderRich(source: string): string {
-  const escaped = source
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return escaped.replace(
-    /`([^`]+)`/g,
-    (_match, inner) => `<span class="${HL_CLASS}">${inner}</span>`
-  );
-}
-
-/** Rendered element (highlight spans) → source string with backticks. */
-function readRich(el: HTMLElement): string {
-  let out = "";
-  for (const node of Array.from(el.childNodes)) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      out += node.textContent ?? "";
-    } else if (
-      node instanceof HTMLElement &&
-      node.classList.contains(HL_CLASS)
-    ) {
-      out += "`" + (node.textContent ?? "") + "`";
-    } else {
-      out += (node as HTMLElement).textContent ?? "";
-    }
-  }
-  return out;
-}
+// Backtick highlight helpers (renderRich/readRich) live in ./rich — shared
+// with the server-rendered bridge components so markup stays byte-identical.
 
 function setOwnText(el: Element, value: string): void {
   const textNodes = Array.from(el.childNodes).filter(
@@ -524,8 +738,12 @@ function setMode(next: BridgeMode): void {
   } catch {
     /* ignore */
   }
-  if (mode === "edit") armEditables();
-  else disarmEditables();
+  if (mode === "edit") {
+    armEditables();
+    attachGroupControls();
+  } else {
+    disarmEditables();
+  }
 }
 
 function onMessage(event: MessageEvent): void {
@@ -565,9 +783,13 @@ function onMessage(event: MessageEvent): void {
       if (mode === "edit") {
         disarmEditables();
         armEditables();
+        attachGroupControls();
       }
       break;
     }
+    case "group-apply":
+      applyGroupOp(msg);
+      break;
   }
 }
 
@@ -585,6 +807,48 @@ function collectFields(): string[] {
   return Array.from(out);
 }
 
+/**
+ * CMS v2 field inventory: every tagged field with its kind. Explicit
+ * `data-cms-kind` (bridge components) is reported as declared; otherwise the
+ * kind is inferred from the element so the hub needs no schema.
+ */
+function collectFieldsV2(): FieldInfo[] {
+  const out: FieldInfo[] = [];
+  const seen = new Set<string>();
+  for (const el of Array.from(document.querySelectorAll(`[${FIELD_ATTR}]`))) {
+    const path = el.getAttribute(FIELD_ATTR);
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    const declared = declaredKind(el);
+    const kind =
+      declared ??
+      (el.tagName === "IMG"
+        ? "media"
+        : el.tagName === "A"
+          ? "link"
+          : "text");
+    out.push({ path, kind: kind as FieldInfo["kind"], declared: !!declared });
+  }
+  return out;
+}
+
+/** Rendered `<Group>` hosts and how many direct `data-cms-item` children each holds. */
+function collectGroups(): GroupInfo[] {
+  const out: GroupInfo[] = [];
+  for (const el of Array.from(
+    document.querySelectorAll(`[${KIND_ATTR}="group"]`)
+  )) {
+    const path = el.getAttribute(FIELD_ATTR);
+    if (!path) continue;
+    const count = Array.from(el.querySelectorAll(`[${ITEM_ATTR}]`)).filter(
+      (item) =>
+        item.parentElement?.closest(`[${KIND_ATTR}="group"]`) === el
+    ).length;
+    out.push({ path, count });
+  }
+  return out;
+}
+
 function announce(): void {
   post({
     type: "ready",
@@ -592,7 +856,9 @@ function announce(): void {
     path: location.pathname,
     mode,
     fields: collectFields(),
-    caps: ["text", "media", "link", "group"],
+    caps: ["text", "media", "link", "group", "group-ops"],
+    fieldsV2: collectFieldsV2(),
+    groups: collectGroups(),
   });
   // Legacy handshake for older CMS builds.
   if (window.parent && window.parent !== window) {
@@ -601,7 +867,10 @@ function announce(): void {
 }
 
 function scan(): void {
-  if (mode === "edit") armEditables();
+  if (mode === "edit") {
+    armEditables();
+    attachGroupControls();
+  }
   announce();
 }
 
@@ -616,6 +885,9 @@ function resolveMode(): BridgeMode | null {
   }
   return null;
 }
+
+// Exported for tests only — not part of the public bridge API.
+export { groupItems as _groupItems, reindexGroup as _reindexGroup };
 
 export function boot(): void {
   if (booted) return;

@@ -26,11 +26,20 @@ Flags:
   init:         --dry-run  --pages <glob>  --verbose  --yes
   check:        --strict
   collections:  --sample  --dry-run
+  migrate:      --dry-run  --delete-legacy
 `;
 
 async function main(): Promise<number> {
   const argv = mri(process.argv.slice(2), {
-    boolean: ["dry-run", "verbose", "yes", "strict", "sample", "help"],
+    boolean: [
+      "dry-run",
+      "verbose",
+      "yes",
+      "strict",
+      "sample",
+      "help",
+      "delete-legacy",
+    ],
     string: ["pages"],
   });
   const command = argv._[0];
@@ -60,6 +69,13 @@ async function main(): Promise<number> {
       return collectionsCommand(root, {
         sample: argv.sample,
         dryRun: argv["dry-run"],
+      });
+    }
+    case "migrate": {
+      const { migrateCommand } = await import("./commands/migrate.js");
+      return migrateCommand(root, {
+        dryRun: argv["dry-run"],
+        deleteLegacy: argv["delete-legacy"],
       });
     }
     default:

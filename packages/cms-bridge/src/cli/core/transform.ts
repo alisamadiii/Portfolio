@@ -261,7 +261,7 @@ export async function transformPage(
       if (candidate.role === "image") {
         if (!el.srcAttr) continue;
         const altRef = `${entryIdent}.${fieldPath}Alt`;
-        let attrInsertion = ` data-cms-field="${fieldPath}"`;
+        let attrInsertion = ` data-cms-field="${fieldPath}" data-cms-kind="media"`;
         if (!el.altAttr) attrInsertion += ` alt={${altRef}}`;
         splices.push(attrInsertSplice(source, el.start, el.name, attrInsertion));
         splices.push(attrValueSplice(source, el.srcAttr, `src={${ref}}`));
@@ -284,7 +284,7 @@ export async function transformPage(
             source,
             el.start,
             el.name,
-            ` data-cms-field="${fieldPath}.link"`
+            ` data-cms-field="${fieldPath}.link" data-cms-kind="link"`
           )
         );
         if (el.labelInSpan && el.spanStart !== undefined && el.spanName) {
@@ -293,7 +293,7 @@ export async function transformPage(
               source,
               el.spanStart,
               el.spanName,
-              ` data-cms-field="${fieldPath}.label"`
+              ` data-cms-field="${fieldPath}.label" data-cms-kind="text"`
             )
           );
           splices.push(
@@ -305,7 +305,7 @@ export async function transformPage(
               source,
               el.textStart,
               el.textValue,
-              `<span data-cms-field="${fieldPath}.label">{${ref}.label}</span>`
+              `<span data-cms-field="${fieldPath}.label" data-cms-kind="text">{${ref}.label}</span>`
             )
           );
         }
@@ -319,7 +319,12 @@ export async function transformPage(
       // Text roles.
       if (el.textStart === undefined || el.textValue === undefined) continue;
       splices.push(
-        attrInsertSplice(source, el.start, el.name, ` data-cms-field="${fieldPath}"`)
+        attrInsertSplice(
+          source,
+          el.start,
+          el.name,
+          ` data-cms-field="${fieldPath}" data-cms-kind="text"`
+        )
       );
       splices.push(textReplaceSplice(source, el.textStart, el.textValue, `{${ref}}`));
       additions.push({ path: fieldPath, value: collapse(candidate.text ?? "") });

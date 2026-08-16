@@ -1,0 +1,31 @@
+---
+/**
+ * Wrapper for repeated/mapped content (galleries, lists, card grids). Tags
+ * the array's field path so the canvas can offer add/remove/reorder controls.
+ * Each mapped child must be wrapped in an <Item index={i}>.
+ *
+ *   <Group field="gallery.images" class="grid">
+ *     {images.map((image, i) => (
+ *       <Item index={i}>
+ *         <Image field={`gallery.images.${i}.src`} value={image.src} alt={image.alt} />
+ *       </Item>
+ *     ))}
+ *   </Group>
+ */
+interface Props {
+  field: string;
+  as?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { field, as = "div", ...rest } = Astro.props;
+if (!field) {
+  throw new Error("cms-bridge <Group> requires a `field` prop.");
+}
+const Tag = as;
+---
+
+<Tag data-cms-field={field} data-cms-kind="group" {...rest}>
+  <slot />
+</Tag>

@@ -1,0 +1,22 @@
+---
+/**
+ * One item inside a <Group>. The index attribute is the item boundary the
+ * canvas uses for structural edits (add/remove/reorder). See Group.astro.
+ */
+interface Props {
+  index: number;
+  as?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { index, as = "div", ...rest } = Astro.props;
+if (typeof index !== "number" || !Number.isInteger(index) || index < 0) {
+  throw new Error("cms-bridge <Item> requires a non-negative integer `index` prop.");
+}
+const Tag = as;
+---
+
+<Tag data-cms-item={index} {...rest}>
+  <slot />
+</Tag>

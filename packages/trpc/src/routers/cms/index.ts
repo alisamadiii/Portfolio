@@ -5,6 +5,7 @@ import { collaboratorsRouter } from "./collaborators";
 import { collectionsRouter } from "./collections";
 import { entriesRouter } from "./entries";
 import { filesRouter } from "./files";
+import { manifestRouter } from "./manifest";
 import { mediaRouter } from "./media";
 import { pagesRouter } from "./pages";
 import { publishRouter } from "./publish";
@@ -20,6 +21,7 @@ export const cmsRouter = createTRPCRouter({
   collections: collectionsRouter,
   entries: entriesRouter,
   files: filesRouter,
+  manifest: manifestRouter,
   media: mediaRouter,
   pages: pagesRouter,
   publish: publishRouter,

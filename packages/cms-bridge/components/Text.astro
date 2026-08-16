@@ -1,0 +1,31 @@
+---
+/**
+ * CMS-editable text element. Renders `value` (with `backtick` highlight spans)
+ * and tags itself with the field path + explicit kind, so the canvas can edit
+ * it with zero guessing. `as` picks the HTML tag.
+ *
+ *   <Text as="p" field="hero.text" value={hero.text} class="lead" />
+ */
+import { renderRich } from "@alisamadiillc/cms-bridge/rich";
+
+interface Props {
+  field: string;
+  value?: string | number | null;
+  as?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { field, value = "", as = "p", ...rest } = Astro.props;
+if (!field) {
+  throw new Error("cms-bridge <Text> requires a `field` prop.");
+}
+const Tag = as;
+---
+
+<Tag
+  data-cms-field={field}
+  data-cms-kind="text"
+  {...rest}
+  set:html={renderRich(String(value ?? ""))}
+/>

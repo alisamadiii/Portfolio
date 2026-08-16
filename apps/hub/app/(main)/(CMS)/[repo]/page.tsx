@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -26,9 +28,34 @@ import { CanvasChrome } from "@/components/chrome/canvas-chrome";
 export default function Page() {
   const { config } = useConfig();
   const { user } = useUser();
+  const trpc = useTRPC();
 
-  // Canvas is the repo root when the site exposes a live preview URL.
-  const hasBaseUrl = Boolean((config?.object as any)?.settings?.baseUrl);
+  // Canvas is the repo root when the site exposes a live preview URL —
+  // either via the legacy .pages.yml `settings.baseUrl` or a v2 cms.json
+  // manifest (which always carries a baseUrl).
+  const legacyBaseUrl = Boolean((config?.object as any)?.settings?.baseUrl);
+  const manifestQuery = useQuery(
+    trpc.cms.manifest.get.queryOptions(
+      {
+        owner: config?.owner ?? "",
+        repo: config?.repo ?? "",
+        branch: config?.branch ?? "",
+      },
+      {
+        enabled:
+          !legacyBaseUrl &&
+          Boolean(config?.owner && config?.repo && config?.branch),
+        staleTime: 60_000,
+      }
+    )
+  );
+  const hasBaseUrl = legacyBaseUrl || Boolean(manifestQuery.data);
+
+  if (!legacyBaseUrl && manifestQuery.isLoading) {
+    return (
+      <div className="bg-shell relative -m-4 h-[calc(100vh)] overflow-hidden md:-m-8" />
+    );
+  }
 
   if (hasBaseUrl) {
     return (

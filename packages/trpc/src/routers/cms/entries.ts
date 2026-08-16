@@ -205,4 +205,61 @@ export const entriesRouter = createTRPCRouter({
         throw toTRPCError(error);
       }
     }),
+
+  /**
+   * CMS v2: fetch a raw content file with no schema involved. JSON parses to
+   * an object; markdown parses to `{ body, ...frontmatter }`. Path must live
+   * under a `src/data` or `src/content` folder (basePath prefixes allowed).
+   */
+  getContent: cmsProcedure
+    .input(
+      z.object({
+        branch: z.string(),
+        path: z
+          .string()
+          .regex(
+            /^(?:[A-Za-z0-9._-]+\/)*src\/(?:data|content)\/[A-Za-z0-9._/ -]+\.(?:json|md|mdx)$/,
+            "Path must be a JSON or Markdown file under src/data or src/content."
+          ),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const normalizedPath = normalizePath(input.path);
+        const octokit = createOctokitInstance(ctx.token);
+
+        let response;
+        try {
+          response = await octokit.rest.repos.getContent({
+            owner: input.owner,
+            repo: input.repo,
+            path: normalizedPath,
+            ref: input.branch,
+          });
+        } catch (error: any) {
+          if (error?.status === 404) throw createHttpError("Not found", 404);
+          throw error;
+        }
+
+        if (Array.isArray(response.data))
+          throw createHttpError("Expected a file but found a directory", 400);
+        if (response.data.type !== "file")
+          throw createHttpError("Invalid response type", 500);
+
+        const content = Buffer.from(response.data.content, "base64").toString();
+        const contentObject = normalizedPath.endsWith(".json")
+          ? JSON.parse(content)
+          : parse(content, { format: "yaml-frontmatter" });
+
+        return {
+          sha: response.data.sha,
+          name: response.data.name,
+          path: response.data.path,
+          contentObject,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

@@ -179,6 +179,44 @@ export function classifyEditable(
   return { arm, media, link };
 }
 
+/** Read a dot-path (numeric segments = array indices) from a values object. */
+export function getValueAtPath(
+  values: unknown,
+  path: string
+): unknown {
+  const segments = path.split(".").filter(Boolean);
+  let cursor: any = values;
+  for (const segment of segments) {
+    if (cursor === null || typeof cursor !== "object") return undefined;
+    const key: string | number = /^\d+$/.test(segment)
+      ? parseInt(segment, 10)
+      : segment;
+    cursor = cursor[key];
+  }
+  return cursor;
+}
+
+/**
+ * True when every numeric segment of the path indexes within bounds of the
+ * array at that level. Guards late commits against a just-spliced array
+ * (a blur that raced a group remove must not resurrect the item).
+ */
+export function pathWithinBounds(values: unknown, path: string): boolean {
+  const segments = path.split(".").filter(Boolean);
+  let cursor: any = values;
+  for (const segment of segments) {
+    if (cursor === null || typeof cursor !== "object") return true;
+    if (/^\d+$/.test(segment)) {
+      const index = parseInt(segment, 10);
+      if (Array.isArray(cursor) && index >= cursor.length) return false;
+      cursor = cursor[index];
+    } else {
+      cursor = cursor[segment];
+    }
+  }
+  return true;
+}
+
 /** Immutably set a dot-path (numeric segments = array indices) in a values object. */
 export function setValueAtPath(
   values: Record<string, unknown>,

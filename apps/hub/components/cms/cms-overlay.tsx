@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { ChevronRight, Database, X } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
@@ -27,6 +29,8 @@ import {
   useRepoHeaderState,
 } from "@/components/repo/repo-header-context";
 import { EntrySheet } from "@/components/cms/entry-sheet";
+import { CollectionV2 } from "@/components/cms/collection-v2";
+import type { ManifestCollection } from "@/lib/engine/collections";
 
 /** Renders the Collection component's captured header (breadcrumb + New entry + search). */
 function OverlayToolbar() {
@@ -67,7 +71,42 @@ export function CmsOverlay({
   } | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 
-  const collections = useMemo(() => getCollectionLeaves(config), [config]);
+  // CMS v2: collections come from the cms.json manifest instead of the
+  // .pages.yml navigation tree; the panel + sheet run schema-less.
+  const trpc = useTRPC();
+  const manifestQuery = useQuery(
+    trpc.cms.manifest.get.queryOptions(
+      {
+        owner: config?.owner ?? "",
+        repo: config?.repo ?? "",
+        branch: config?.branch ?? "",
+      },
+      {
+        enabled: open && Boolean(config?.owner && config?.repo),
+        staleTime: 60_000,
+      }
+    )
+  );
+  const v2Collections: ManifestCollection[] =
+    (manifestQuery.data?.object.collections as ManifestCollection[]) ?? [];
+  const isV2 = Boolean(manifestQuery.data);
+
+  const legacyCollections = useMemo(
+    () => getCollectionLeaves(config),
+    [config]
+  );
+  const collections = useMemo(
+    () =>
+      isV2
+        ? v2Collections.map((collection) => ({
+            name: collection.name,
+            label: collection.label ?? collection.name,
+            breadcrumb: [] as string[],
+          }))
+        : legacyCollections,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isV2, manifestQuery.data, legacyCollections]
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -83,6 +122,9 @@ export function CmsOverlay({
   const active =
     collections.find((collection) => collection.name === selected) ??
     collections[0];
+  const activeV2 = isV2
+    ? v2Collections.find((collection) => collection.name === active?.name)
+    : undefined;
 
   // Close on Escape — captured so the canvas's own Escape handling never sees it.
   useEffect(() => {
@@ -178,7 +220,9 @@ export function CmsOverlay({
 
       {/* Middle: entries table with the Collection component's own toolbar */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {active ? (
+        {activeV2 ? (
+          <CollectionV2 key={activeV2.name} collection={activeV2} />
+        ) : active && !isV2 ? (
           <RepoHeaderProvider>
             <OverlayToolbar />
             <div className="scrollbar flex-1 overflow-y-auto p-4 md:p-6">

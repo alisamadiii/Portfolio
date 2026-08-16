@@ -3,8 +3,15 @@
 import { useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { toast } from "sonner";
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
+
+import { inferFields } from "@/lib/engine/infer";
 
 import type { EntryData } from "@/types/api";
 import type { Field } from "@workspace/cms-core/types/field";
@@ -103,25 +110,52 @@ export function PublishDialog({
 
   const drafts = useDrafts(owner, repo, branch);
 
+  // CMS v2 repos (cms.json manifest present) are schema-less: drafts are the
+  // shared pages.json / site.json objects, fetched raw and published via
+  // publishV2 — no entry names, no schema validation.
+  const manifestQuery = useQuery(
+    trpc.cms.manifest.get.queryOptions(
+      { owner, repo, branch },
+      { enabled: open && Boolean(owner && repo && branch), staleTime: 60_000 }
+    )
+  );
+  const isV2 = Boolean(manifestQuery.data);
+
   const entryQueries = useQueries({
     queries: drafts.map(([, draft]) =>
-      trpc.cms.entries.get.queryOptions(
-        { owner, repo, branch, path: draft.path, name: draft.schemaName },
-        {
-          enabled: open && !draft.isNew,
-          staleTime: 2_000,
-          retry: (failureCount, error) =>
-            !isEntryNotFound(error) && failureCount < 2,
-        }
-      )
+      isV2
+        ? trpc.cms.entries.getContent.queryOptions(
+            { owner, repo, branch, path: draft.path },
+            {
+              enabled: open && !draft.isNew,
+              staleTime: 2_000,
+              retry: (failureCount, error) =>
+                !isEntryNotFound(error) && failureCount < 2,
+            }
+          )
+        : trpc.cms.entries.get.queryOptions(
+            { owner, repo, branch, path: draft.path, name: draft.schemaName },
+            {
+              enabled: open && !draft.isNew,
+              staleTime: 2_000,
+              retry: (failureCount, error) =>
+                !isEntryNotFound(error) && failureCount < 2,
+            }
+          )
     ),
   });
 
   const reviews = useMemo<EntryReview[]>(() => {
     if (!config) return [];
     return drafts.map(([key, draft], index) => {
-      const schema = getSchemaByName(config.object, draft.schemaName);
-      const fields = diffFieldsForSchema(schema);
+      // v2 drafts have no schema — infer diff fields from the draft's own
+      // value shapes (labels come out of the JSON keys).
+      const schema = isV2
+        ? null
+        : getSchemaByName(config.object, draft.schemaName);
+      const fields = isV2
+        ? (inferFields(draft.values) as unknown as Field[])
+        : diffFieldsForSchema(schema);
       let isStale = serverFlaggedPaths.includes(draft.path);
       let deletedUpstream = false;
       let oldContent: unknown = undefined;
@@ -178,7 +212,7 @@ export function PublishDialog({
         diff,
       };
     });
-  }, [config, drafts, entryQueries, serverFlaggedPaths]);
+  }, [config, drafts, entryQueries, serverFlaggedPaths, isV2]);
 
   const isLoadingAny = reviews.some((review) => review.status === "loading");
   const hasError = reviews.some((review) => review.status === "error");
@@ -191,6 +225,66 @@ export function PublishDialog({
       setServerFlaggedPaths([]);
     }
   };
+
+  const handlePublishResult = (
+    result:
+      | { status: "conflict"; stalePaths: string[]; conflictPaths: string[] }
+      | { status: "success"; [key: string]: unknown },
+    publishedPaths: string[]
+  ) => {
+    if (result.status === "conflict") {
+      const flagged = [...result.stalePaths, ...result.conflictPaths];
+      setServerFlaggedPaths(flagged);
+      void queryClient.invalidateQueries({
+        queryKey: trpc.cms.entries.get.queryKey({ owner, repo, branch }),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: trpc.cms.entries.getContent.queryKey({
+          owner,
+          repo,
+          branch,
+        }),
+      });
+      toast.error("Some entries changed on GitHub — review before publishing.");
+      return;
+    }
+    const keys = publishedPaths.map((path) =>
+      draftKey(owner, repo, branch, path)
+    );
+    useDraftsStore.getState().deleteMany(keys);
+    void queryClient.invalidateQueries({
+      queryKey: trpc.cms.entries.get.queryKey({ owner, repo, branch }),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: trpc.cms.entries.getContent.queryKey({ owner, repo, branch }),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: trpc.cms.collections.list.queryKey({ owner, repo, branch }),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: trpc.cms.cache.status.queryKey({ owner, repo, branch }),
+    });
+    toast.success(
+      `Published ${keys.length} ${keys.length === 1 ? "change" : "changes"}`
+    );
+    setForceOverwrite(false);
+    setServerFlaggedPaths([]);
+    onOpenChange(false);
+  };
+
+  const publishV2Mutation = useMutation(
+    trpc.cms.publish.publishV2.mutationOptions({
+      onSuccess: (result, variables) => {
+        handlePublishResult(
+          result,
+          variables.files.map((file) => file.path)
+        );
+      },
+      onError: (error: unknown) => {
+        toast.error(handleCmsError(error, "Failed to publish."));
+      },
+    })
+  );
 
   const publishMutation = useMutation(
     trpc.cms.publish.publish.mutationOptions({
@@ -240,12 +334,13 @@ export function PublishDialog({
     })
   );
 
+  const isPublishing = publishMutation.isPending || publishV2Mutation.isPending;
   const canPublish =
     drafts.length > 0 &&
     !isLoadingAny &&
     !hasError &&
     (!hasStale || forceOverwrite) &&
-    !publishMutation.isPending;
+    !isPublishing;
 
   if (!config) return null;
 
@@ -306,21 +401,34 @@ export function PublishDialog({
             </Button>
             <Button
               disabled={!canPublish}
-              isLoading={publishMutation.isPending}
+              isLoading={isPublishing}
               onClick={() =>
-                publishMutation.mutate({
-                  owner,
-                  repo,
-                  branch,
-                  files: drafts.map(([, draft]) => ({
-                    path: draft.path,
-                    name: draft.schemaName,
-                    content: draft.values,
-                    sha: draft.sha,
-                    isNew: draft.isNew,
-                  })),
-                  force: (hasStale && forceOverwrite) || undefined,
-                })
+                isV2
+                  ? publishV2Mutation.mutate({
+                      owner,
+                      repo,
+                      branch,
+                      files: drafts.map(([, draft]) => ({
+                        path: draft.path,
+                        content: draft.values,
+                        sha: draft.sha,
+                        isNew: draft.isNew,
+                      })),
+                      force: (hasStale && forceOverwrite) || undefined,
+                    })
+                  : publishMutation.mutate({
+                      owner,
+                      repo,
+                      branch,
+                      files: drafts.map(([, draft]) => ({
+                        path: draft.path,
+                        name: draft.schemaName,
+                        content: draft.values,
+                        sha: draft.sha,
+                        isNew: draft.isNew,
+                      })),
+                      force: (hasStale && forceOverwrite) || undefined,
+                    })
               }
             >
               Publish {drafts.length}{" "}

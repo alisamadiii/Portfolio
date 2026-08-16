@@ -169,6 +169,12 @@ export async function checkCommand(
   root: string,
   flags: { strict?: boolean }
 ): Promise<number> {
+  // v2 project (cms.json contract) → dedicated checks, no .pages.yml lints.
+  if (fs.existsSync(path.join(root, "src/data/cms.json"))) {
+    const { runCheckV2 } = await import("./check-v2.js");
+    return runCheckV2(root);
+  }
+
   const { scan, analyses, componentItems, lintWarnings } =
     await analyzeProject(root);
 

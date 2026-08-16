@@ -17,6 +17,10 @@ export const COMMANDS = [
     name: "collections",
     summary: "Sync cms/collections/*.yml into .pages.yml",
   },
+  {
+    name: "migrate",
+    summary: "Convert .pages.yml project to the v2 cms.json + pages.json contract",
+  },
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number]["name"];

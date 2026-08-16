@@ -17,11 +17,29 @@ export type BridgeMode = "highlight" | "edit";
  * v3 adds "media" (click an image → CMS media picker) and "link" (edit an
  * anchor's href).
  */
-export type BridgeCapability = "text" | "media" | "link" | "group";
+export type BridgeCapability = "text" | "media" | "link" | "group" | "group-ops";
 
 // ---------------------------------------------------------------------------
 // Bridge → CMS
 // ---------------------------------------------------------------------------
+
+/**
+ * A tagged field with its editor kind, as declared in the DOM. `kind` comes
+ * from the explicit `data-cms-kind` attribute (bridge components) or, absent
+ * that, is inferred from the element (IMG → media, A → link, else text).
+ */
+export interface FieldInfo {
+  path: string;
+  kind: "text" | "media" | "link" | "group";
+  /** True when the element carried an explicit `data-cms-kind` attribute. */
+  declared: boolean;
+}
+
+/** A `<Group>` host and how many `data-cms-item` children it rendered. */
+export interface GroupInfo {
+  path: string;
+  count: number;
+}
 
 export interface ReadyMessage {
   cms: 1;
@@ -35,6 +53,17 @@ export interface ReadyMessage {
   /** Unique `data-cms-field` values present in the DOM. */
   fields: string[];
   caps: BridgeCapability[];
+  /**
+   * CMS v2: every tagged field with its kind. A v2 CMS uses this instead of
+   * sending back an `editable` whitelist — the DOM is the source of truth.
+   */
+  fieldsV2?: FieldInfo[];
+  /**
+   * CMS v2: rendered `<Group>` hosts and their item counts, so the CMS can
+   * reconcile structural draft changes (added/removed items) against the
+   * committed HTML the iframe rendered.
+   */
+  groups?: GroupInfo[];
 }
 
 export interface FieldInputMessage {
@@ -103,13 +132,32 @@ export interface LinkInfoMessage {
   rect: { x: number; y: number; width: number; height: number };
 }
 
+/**
+ * CMS v2 structural edit request from a `<Group>`'s edit controls. The bridge
+ * never mutates the DOM on its own — the CMS is authoritative: it splices the
+ * draft array and answers with `group-apply`, which the bridge then applies
+ * (cloneNode for add, remove, reinsert for move) before reindexing paths.
+ */
+export interface GroupOpMessage {
+  cms: 1;
+  v: number;
+  type: "group-op";
+  /** The group host's field path (the array). */
+  path: string;
+  op: "add" | "remove" | "move";
+  index: number;
+  /** Target index — present only for `op: "move"`. */
+  toIndex?: number;
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
   | FieldCommitMessage
   | FieldFocusMessage
   | FieldActivateMessage
-  | LinkInfoMessage;
+  | LinkInfoMessage
+  | GroupOpMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge
@@ -154,11 +202,32 @@ export interface EditableMessage {
   link: string[];
 }
 
+/**
+ * CMS v2 answer to `group-op` (or an unsolicited structural reconcile on
+ * frame load, when a draft's array length differs from the rendered count).
+ * On `ok: true` the bridge mutates the DOM and reindexes; on `ok: false` it
+ * does nothing (no optimistic mutation to revert). `values` carries the
+ * flattened field values of the whole array after the splice, applied through
+ * the normal `set` path once the DOM matches.
+ */
+export interface GroupApplyMessage {
+  cms: 1;
+  v: number;
+  type: "group-apply";
+  ok: boolean;
+  path: string;
+  op: "add" | "remove" | "move";
+  index: number;
+  toIndex?: number;
+  values?: Array<{ path: string; value: string }>;
+}
+
 export type CmsToBridgeMessage =
   | FocusMessage
   | SetMessage
   | ModeMessage
-  | EditableMessage;
+  | EditableMessage
+  | GroupApplyMessage;
 
 // ---------------------------------------------------------------------------
 // Legacy (v1) shapes

@@ -1,0 +1,28 @@
+---
+/**
+ * CMS-editable image. Clicking it on the canvas opens the media picker.
+ * The convention pairs `field` (the src) with a sibling alt key in the JSON:
+ *
+ *   <Image field="hero.image" value={hero.image} alt={hero.imageAlt} class="rounded" />
+ */
+interface Props {
+  field: string;
+  value?: string | null;
+  alt?: string | null;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { field, value = "", alt = "", ...rest } = Astro.props;
+if (!field) {
+  throw new Error("cms-bridge <Image> requires a `field` prop.");
+}
+---
+
+<img
+  data-cms-field={field}
+  data-cms-kind="media"
+  src={String(value ?? "")}
+  alt={String(alt ?? "")}
+  {...rest}
+/>

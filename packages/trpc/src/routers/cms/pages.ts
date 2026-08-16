@@ -4,6 +4,7 @@ import z from "zod";
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
+import { getManifest } from "../../lib/cms/manifest-store";
 
 /**
  * Page discovery for the canvas view. The single source of truth is
@@ -73,6 +74,59 @@ export const pagesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       try {
         const { token } = ctx;
+
+        // CMS v2: tiles come straight from the cms.json manifest — one tile
+        // per `pages` entry plus one table card per collection.
+        const manifest = await getManifest(
+          input.owner,
+          input.repo,
+          input.branch,
+          { getToken: async () => token }
+        );
+        if (manifest) {
+          const baseUrl = manifest.object.baseUrl;
+          const origin = new URL(baseUrl).origin;
+          const byPath = new Map<string, CanvasPage>();
+
+          for (const [name, page] of Object.entries(manifest.object.pages)) {
+            try {
+              const url = new URL(page.route, baseUrl);
+              const pathname = normalizePathname(url.pathname);
+              if (!byPath.has(pathname)) {
+                byPath.set(pathname, {
+                  path: pathname,
+                  url: url.href,
+                  title:
+                    page.title ??
+                    (pathname === "/" ? "Home" : titleFromPath(pathname)),
+                  entry: name,
+                  kind: "page",
+                });
+              }
+            } catch {
+              // Ignore malformed routes.
+            }
+          }
+
+          for (const collection of manifest.object.collections) {
+            const template = collection.route;
+            if (!template) continue;
+            const key = normalizePathname(template);
+            const listPath = listPathFromTemplate(template);
+            if (!byPath.has(key)) {
+              byPath.set(key, {
+                path: key,
+                url: new URL(listPath, baseUrl).href,
+                title: collection.label ?? titleFromPath(listPath),
+                entry: collection.name,
+                kind: "collection",
+                collection: collection.name,
+              });
+            }
+          }
+
+          return { baseUrl, origin, pages: Array.from(byPath.values()) };
+        }
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
           getToken: async () => token,

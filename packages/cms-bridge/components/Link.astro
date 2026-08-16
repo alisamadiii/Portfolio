@@ -1,0 +1,43 @@
+---
+/**
+ * CMS-editable link. `value` is a `{ label, link }` object (the shared link
+ * shape) or a plain href string. The anchor edits its URL via the canvas link
+ * popover; the label renders as a nested editable <Text> span unless custom
+ * children are slotted in.
+ *
+ *   <Link field="hero.cta" value={hero.cta} class="btn" />
+ *   <Link field="hero.cta" value={hero.cta}><Icon /> {hero.cta.label}</Link>
+ */
+import Text from "./Text.astro";
+
+type LinkValue = { label?: string | null; link?: string | null };
+
+interface Props {
+  field: string;
+  value?: LinkValue | string | null;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { field, value = "", ...rest } = Astro.props;
+if (!field) {
+  throw new Error("cms-bridge <Link> requires a `field` prop.");
+}
+const href =
+  typeof value === "string" ? value : String((value as LinkValue)?.link ?? "");
+const label =
+  typeof value === "object" && value
+    ? String((value as LinkValue).label ?? "")
+    : "";
+const hasChildren = Astro.slots.has("default");
+---
+
+<a data-cms-field={field} data-cms-kind="link" href={href} {...rest}>
+  {
+    hasChildren ? (
+      <slot />
+    ) : (
+      <Text as="span" field={`${field}.label`} value={label} />
+    )
+  }
+</a>

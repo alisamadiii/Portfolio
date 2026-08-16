@@ -71,6 +71,7 @@ export function EntrySheet({
   onOpenChangeComplete,
   schemaName,
   mode,
+  schemaOverride,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -78,6 +79,12 @@ export function EntrySheet({
   onOpenChangeComplete?: (open: boolean) => void;
   schemaName: string;
   mode: EntrySheetMode;
+  /**
+   * CMS v2: a synthetic schema built from the cms.json collection
+   * declaration. When set, the entry loads via the schema-less
+   * `entries.getContent` instead of the legacy schema lookup.
+   */
+  schemaOverride?: Record<string, any> | null;
 }) {
   const { config } = useConfig();
   const trpc = useTRPC();
@@ -91,8 +98,10 @@ export function EntrySheet({
   const formId = isEdit ? "cms-entry-sheet-edit" : "cms-entry-sheet-new";
 
   const schema = useMemo(
-    () => (config ? getSchemaByName(config.object, schemaName) : null),
-    [config, schemaName]
+    () =>
+      schemaOverride ??
+      (config ? getSchemaByName(config.object, schemaName) : null),
+    [schemaOverride, config, schemaName]
   );
 
   const entryFields = useMemo(() => {
@@ -112,7 +121,7 @@ export function EntrySheet({
     return fields;
   }, [schema]);
 
-  const entryQuery = useQuery(
+  const legacyEntryQuery = useQuery(
     trpc.cms.entries.get.queryOptions(
       {
         owner: config?.owner ?? "",
@@ -121,9 +130,27 @@ export function EntrySheet({
         name: schemaName,
         path: editPath,
       },
-      { enabled: Boolean(config && open && isEdit && editPath) }
+      {
+        enabled: Boolean(
+          config && open && isEdit && editPath && !schemaOverride
+        ),
+      }
     )
   );
+  const rawEntryQuery = useQuery(
+    trpc.cms.entries.getContent.queryOptions(
+      {
+        owner: config?.owner ?? "",
+        repo: config?.repo ?? "",
+        branch: config?.branch ?? "",
+        path: editPath,
+      },
+      {
+        enabled: Boolean(config && open && isEdit && editPath && schemaOverride),
+      }
+    )
+  );
+  const entryQuery = schemaOverride ? rawEntryQuery : legacyEntryQuery;
 
   // The meta-only union member has no contentObject — narrow on it.
   const fetched =
