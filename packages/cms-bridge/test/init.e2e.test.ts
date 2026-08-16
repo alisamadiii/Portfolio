@@ -115,7 +115,7 @@ describe("init on plain-site", () => {
     expect(fs.existsSync(doc)).toBe(true);
     const content = fs.readFileSync(doc, "utf8");
     expect(content).toContain("cms-bridge:managed:start");
-    expect(content).toContain("Site name in search results");
+    expect(content).toContain("client project guide (v2)");
   });
 
   it("writes a self-contained report covering the skipped cases", () => {

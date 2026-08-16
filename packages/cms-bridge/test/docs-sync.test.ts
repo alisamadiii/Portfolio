@@ -139,11 +139,11 @@ describe("syncDocs on disk", () => {
 });
 
 describe("packaged canonical doc", () => {
-  it("loads and contains the site-name SEO section", () => {
+  it("loads and contains the v2 contract", () => {
     const canonical = loadCanonicalDoc();
     expect(canonical).not.toBeNull();
-    expect(canonical!).toContain("Site name in search results");
-    expect(canonical!).toContain("application-name");
+    expect(canonical!).toContain("client project guide (v2)");
+    expect(canonical!).toContain("cms.json");
     // Bearded Pig project section must NOT be in the canonical source
     expect(canonical!).not.toContain("Bearded Pig");
   });

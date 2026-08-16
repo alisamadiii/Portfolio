@@ -1,76 +1,63 @@
-# Collections — declarative content types
+# Collections (v2)
 
-A collection is a folder of structured entries (newsletters, jobs,
-testimonials…) shown as a table in the CMS. Collections are defined as files in
-the client project and synced — never hand-edited into `.pages.yml`.
+Structured, repeating content — blog posts, newsletters, jobs, testimonials.
+Declared in `src/data/cms.json`; entries are files on disk, edited from the CMS
+collection table.
 
-## Define
+## Declaring a collection
 
-Create `cms/collections/<name>.yml`. The filename becomes the collection name.
-The file body IS the `.pages.yml` entry body — any entry key is allowed;
-`name` and `type: collection` are injected for you, and defaults fill in
-anything you omit:
+Add an entry to `collections` in `cms.json`:
 
-```yaml
-# cms/collections/newsletters.yml
-label: Newsletters
-description: Email newsletters — drafts and archive.
-fields:
-  - { name: title, label: Title, type: string, required: true }
-  - { name: date, label: Date, type: date }
-  - { name: excerpt, label: Excerpt, type: text }
-  - { name: body, label: Body, type: rich-text }
+```json
+{
+  "collections": [
+    {
+      "name": "blog",
+      "path": "src/data/blog",
+      "route": "/blog/{slug}",
+      "format": "md",
+      "fields": [
+        { "name": "title", "type": "string", "required": true },
+        { "name": "date", "type": "date", "required": true },
+        { "name": "excerpt", "type": "text" },
+        { "name": "banner", "type": "image" }
+      ]
+    }
+  ]
+}
 ```
 
-Defaults when omitted:
+- `name` — unique id; also the collection's label (Title Case) unless `label`
+  is set.
+- `path` — folder holding the entry files (e.g. `src/data/blog`).
+- `format` — `"md"` (Markdown: frontmatter + body, the default) or `"json"`.
+- `route` — with `{slug}` gives each entry a canvas tile at that URL; omit for
+  a non-routed list.
+- `fields` — drives the create dialog and table columns. Types: `string`,
+  `text`, `image`, `date`, `boolean`, `number`, `select` (`options: [...]`).
+  A `body` field is always available for the long/Markdown content.
 
-| key            | default                                              |
-| -------------- | ---------------------------------------------------- |
-| `path`         | `src/data/<name>`                                    |
-| `format`       | `json`                                               |
-| `filename`     | `{year}-{month}-{day}-{fields.<primary>}.json`       |
-| `view.primary` | field named `title`, else the first non-object field |
+## Entry files
 
-`view.primary` is the column shown as the table's title in the CMS.
+Markdown entry (`format: "md"`) — frontmatter + body:
 
-### Dynamic route (optional)
-
-If the collection is rendered through a dynamic Astro route (one URL per entry,
-e.g. `src/pages/blog/[slug].astro` → `/blog/<slug>`), add a `route` key with the
-item template:
-
-```yaml
-route: /blog/{slug}
-```
-
-Sync writes it into `settings.preview.paths`. The canvas uses it to collapse the
-many per-item URLs into a single card that links to the collection table (rather
-than showing one card per entry). `route` is bridge-only — it is not written into
-the collection entry body. Sibling static pages under the same prefix (e.g.
-`/blog/featured`, if mapped as their own `file` entry) stay as their own cards.
-
-## Sync
-
-```sh
-npx cms-bridge collections            # upsert into .pages.yml, create dirs
-npx cms-bridge collections --sample   # also write one sample entry (only when empty)
-npx cms-bridge collections --dry-run
-```
-
-Sync is append-only: existing entries/fields in `.pages.yml` are never
-modified — your manual edits win. Entries land under a `Collections` group in
-the sidebar. Deleting a definition file does NOT delete the entry (reported as
-an orphan instead).
-
-## Consume in Astro
-
-Collection entries are plain JSON files — load them with `import.meta.glob`:
-
-```astro
+```md
 ---
-const posts = Object.values(
-  import.meta.glob("../data/newsletters/*.json", { eager: true })
-).filter((entry) => !entry.default?.draft);
+title: Choosing Your Wood
+date: 2026-06-22
+excerpt: A quick guide to the three woods we burn.
+banner: /media/wood.jpg
 ---
-{posts.map((post) => <article><h2>{post.default.title}</h2></article>)}
+
+Body content here…
 ```
+
+JSON entry (`format: "json"`) — one object per file, `body` as a field.
+
+The CMS reads the folder by `path` and edits/creates entries; the site reads
+the same folder however it prefers (Astro content collections, an
+`import.meta.glob`, etc.). Filenames default to
+`{year}-{month}-{day}-{title}.{ext}` on create.
+
+That's the whole collections model — declare fields in `cms.json`, entries are
+files. No separate schema, no sync step.

@@ -40,113 +40,47 @@ export function loadConventionsContract(): string {
   return loadPackagedDoc("conventions.md") ?? FALLBACK_CONTRACT;
 }
 
-const FALLBACK_CONTRACT = `## The CMS conventions contract
+const FALLBACK_CONTRACT = `## The CMS conventions contract (v2)
 
-This project is wired to a git-based CMS. Three things must always be the
-**same string**:
+Content lives in three JSON files under \`src/data/\`: \`cms.json\` (manifest),
+\`pages.json\` (all pages, keyed by page name), \`site.json\` (global). Markup is
+made editable with the bridge components, or a \`data-cms-field\` attribute.
 
-1. the key path inside the page's JSON file (\`src/data/<entry>.json\`)
-2. the field path in \`.pages.yml\` (nesting of \`fields\` under the entry)
-3. the \`data-cms-field\` attribute value in the markup
+Two things must always be the **same string**:
 
-Example — all three lines describe one field:
+1. the key path inside \`pages.json\` (page-relative) or \`site.json\` (bare)
+2. the component \`field\` prop — or the \`data-cms-field\` attribute value
 
 \`\`\`
-src/data/home.json:      { "hero": { "heading": "Welcome" } }
-.pages.yml:              home entry → fields: [{name: hero, type: object, fields: [{name: heading, type: string}]}]
-src/pages/index.astro:   <h1 data-cms-field="hero.heading">{home.hero.heading}</h1>
+pages.json:            { "home": { "hero": { "heading": "Welcome" } } }
+src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} />
 \`\`\`
 
 ### Rules
 
-- **Page entries** use section-prefixed dot paths (\`hero.heading\`). The page
-  itself is implied by the route — NEVER prefix paths with the page name.
-- **Global fields** (\`src/data/site.json\`) use bare paths
-  (\`data-cms-field="name"\`, \`data-cms-field="address.street"\`) — the \`site\`
-  entry is resolved on every page via \`settings.preview.global: [site]\`.
-- **List items append their index**: inside \`.map((item, i) => ...)\` use a
-  template literal: \`data-cms-field={\\\`features.items.\${i}.title\\\`}\`.
-- **Naming scheme** (auto-generated fields follow this; keep it for manual ones):
-
-  | element | key |
-  |---|---|
-  | h1 | \`heading\` |
-  | h2 / h3 | \`title\` |
-  | h4-h6 | \`subtitle\` |
-  | p / blockquote / figcaption | \`text\` |
-  | short p/span above the heading | \`eyebrow\` |
-  | a (link/button) | \`cta\` — an object \`{label, link}\` |
-  | img | \`image\` + sibling \`imageAlt\` |
-
-  Collisions get numbered: \`text\`, \`text2\`, \`cta\`, \`cta2\`. The section
-  prefix comes from the containing \`<section>\`: its \`data-cms-section\`
-  attribute → \`id\` → first heading slug → first meaningful class name.
-- **CTA pattern** — links are \`{label, link}\` objects. The \`data-cms-field\`
-  goes on an inner \`<span>\` around the label (so the link itself stays
-  clickable in edit mode):
-
-  \`\`\`astro
-  <a href={home.hero.cta.link} class="btn">
-    <span data-cms-field="hero.cta.label">{home.hero.cta.label}</span>
-  </a>
-  \`\`\`
-
-  In \`.pages.yml\` CTAs use the shared \`link\` component:
-
-  \`\`\`yaml
-  components:
-    link:
-      type: object
-      fields:
-        - { name: label, label: Button label, type: string }
-        - { name: link, label: Button link, type: string, options: { type: url } }
-  # in an entry:
-  - { name: cta, label: Button, component: link }
-  \`\`\`
-- **Image pattern** — \`data-cms-field\` tags the src; alt lives in a sibling
-  key and is not tagged:
-
-  \`\`\`astro
-  <img src={home.hero.image} alt={home.hero.imageAlt} data-cms-field="hero.image" />
-  \`\`\`
-
-  In lists, image objects use \`{src, alt}\`:
-  \`data-cms-field={\\\`gallery.images.\${i}.src\\\`}\`.
-- **SEO** — every page entry has a top-level \`seo\` object placed FIRST:
-  \`{ title (string, required), description (text) }\`. Pages pass it to the
-  layout: \`<Layout title={menu.seo.title} description={menu.seo.description}>\`.
-- **The \`site\` entry is mandatory** in every project: \`name: site\`,
-  \`type: file\`, \`path: src/data/site.json\`, \`format: json\`, listed FIRST in
-  \`content\`. Baseline field names (use exactly these, omit what doesn't
-  apply, extend after): \`seo{title,description}\`, \`name\`, \`tagline\`,
-  \`logo\`, \`phone\` (\`options.type: tel\`), \`email\` (\`options.type: email\`),
-  \`address{street,city,region,zip,mapsUrl}\`, \`socials[]{label,url}\`,
-  \`footer{text}\`.
-- **\`src/data/seo.ts\` is NOT CMS content** — it is per-client identity config
-  (canonical URL, JSON-LD business data). Leave it alone.
-
-### .pages.yml field syntax reference
-
-Field types: \`string\`, \`text\` (multi-line), \`rich-text\`, \`number\`,
-\`boolean\`, \`date\`, \`select\` (\`options.values\`), \`image\`, \`file\`, \`code\`,
-\`reference\`, \`uuid\`, plus \`object\` (requires \`fields\`) and \`block\`.
-Common field keys: \`name\` (required), \`label\`, \`description\`, \`required\`,
-\`default\`, \`list\` (true or \`{min, max, collapsible}\`), \`options\`
-(\`options.type: url|email|tel\` for typed strings), \`component\` (instead of
-\`type\`, references a shared component).
-
-Entries: \`{name, type: file|collection, path, label, fields}\`. Groups:
-\`{name, type: group, items: [...]}\` (sidebar folder only).
-\`settings.preview.paths\` maps entry name → route; \`settings.preview.global\`
-lists entries available on every page (the \`site\` entry).
+- **Page fields** use section-prefixed dot paths (\`hero.heading\`); the page is
+  implied by its route — NEVER prefix a path with the page name.
+- **Global fields** (\`site.json\`) use bare paths (\`name\`, \`address.street\`).
+- **List items append their index**: \`<Text field={\\\`items.\${i}.title\\\`} … />\`.
+- **CTA** — \`{label, link}\` objects, use \`<Link field="hero.cta" value={cta} />\`.
+- **Image** — \`<Image field="hero.image" value={img} alt={imageAlt} />\` (alt is a
+  sibling key, untagged).
+- **Repeated content** — wrap a mapped list in \`<Group field="…">\` with each
+  item in \`<Item index={i}>\`.
+- **Inline emphasis** in a text value: \`\\\`word\\\`\` → \`.cms-hl\`, \`**word**\` →
+  \`.cms-mark\`. Both round-trip through canvas editing.
+- **SEO** — every page has a top-level \`seo\` object \`{ title, description }\`.
+- **\`site.json\` is mandatory.** Baseline keys: \`seo\`, \`name\`, \`tagline\`,
+  \`logo\`, \`phone\`, \`email\`, \`address{street,city,region,zip,mapsUrl}\`,
+  \`socials[]{label,url}\`, \`footer{text}\`.
+- **\`src/data/seo.ts\` is NOT CMS content** — per-client identity config. Leave it.
 
 ### Idempotency rules (MUST respect)
 
-- NEVER rename or renumber an existing \`data-cms-field\` path, JSON key, or
-  \`.pages.yml\` field — the CMS and saved drafts reference them.
-- Only ADD. Existing values in JSON always win over generated defaults.
-- After every batch of fixes, run \`npx cms-bridge check\` — repeat until the
-  report is clean or every remaining item is intentionally skipped.
+- NEVER rename or renumber an existing \`data-cms-field\` path or JSON key — the
+  CMS and saved drafts reference them.
+- Only ADD. Existing values in the JSON always win over defaults.
+- After every batch of changes, run \`npx cms-bridge check\` until clean.
 `;
 
 // ---------------------------------------------------------------------------
