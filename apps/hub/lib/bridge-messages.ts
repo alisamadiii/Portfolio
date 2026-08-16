@@ -18,6 +18,8 @@ export type {
   FieldCommitMessage,
   FieldInputMessage,
   FieldActivateMessage,
+  GroupMember,
+  LinkInfoMessage,
 } from "@alisamadiillc/cms-bridge";
 
 /**

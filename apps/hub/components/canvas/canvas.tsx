@@ -6,11 +6,13 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import {
+  ExternalLink,
   Frame,
   Image as ImageIcon,
   Link2,
@@ -43,6 +45,7 @@ import {
   parseBridgeMessage,
   postEditable,
   postSet,
+  type GroupMember,
 } from "@/lib/bridge-messages";
 import {
   draftKey,
@@ -83,6 +86,10 @@ const FRAME_H = 900;
 const GAP = 160;
 const MAX_LOADING = 3;
 const MAX_MOUNTED = 12;
+// A mounted frame can't hold a loading slot forever: if neither the native
+// `load` event nor the bridge `ready` fires within this window (slow page,
+// X-Frame-Options, 5xx, redirect loop), free the slot so the queue advances.
+const FRAME_LOAD_TIMEOUT_MS = 10_000;
 
 type WorkingCopy = {
   entry: EntryRoute;
@@ -271,6 +278,42 @@ export function Canvas() {
     setLoadTick((tick) => tick + 1);
   }, []);
 
+  // Watchdog: never let a mounted-but-unloaded frame hold its loading slot past
+  // FRAME_LOAD_TIMEOUT_MS. On timeout we mark it loaded (freeing the slot for
+  // the next queued frame); if it does finish later the iframe paints over its
+  // placeholder anyway. Timers are cleared once a frame loads or unmounts.
+  const loadTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
+  useEffect(() => {
+    const timers = loadTimersRef.current;
+    for (const key of mountedKeys) {
+      if (loadedRef.current.has(key) || timers.has(key)) continue;
+      timers.set(
+        key,
+        setTimeout(() => {
+          timers.delete(key);
+          if (!loadedRef.current.has(key)) handleFrameLoad(key);
+        }, FRAME_LOAD_TIMEOUT_MS)
+      );
+    }
+    const mounted = new Set(mountedKeys);
+    for (const [key, timer] of timers) {
+      if (!mounted.has(key) || loadedRef.current.has(key)) {
+        clearTimeout(timer);
+        timers.delete(key);
+      }
+    }
+  }, [mountedKeys, loadTick, handleFrameLoad]);
+
+  useEffect(() => {
+    const timers = loadTimersRef.current;
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
+
   // ------------------------------------------------------------------
   // Edit controller: iframe messages → entry resolution → drafts.
   // ------------------------------------------------------------------
@@ -301,6 +344,20 @@ export function Canvas() {
   const [mediaEditor, setMediaEditor] = useState<{
     framePath: string;
     path: string;
+  } | null>(null);
+  // Non-leaf field clicked: a popover editing the host field + its tagged
+  // descendants, anchored to the host's box inside the frame.
+  const [groupEditor, setGroupEditor] = useState<{
+    framePath: string;
+    path: string;
+    members: GroupMember[];
+    rect: { x: number; y: number; width: number; height: number };
+  } | null>(null);
+  // A link clicked in the iframe — shows its destination (never navigates).
+  const [linkInfo, setLinkInfo] = useState<{
+    framePath: string;
+    href: string;
+    rect: { x: number; y: number; width: number; height: number };
   } | null>(null);
 
   // Prefetch every mapped entry (content + sha) so commits can build drafts.
@@ -419,10 +476,19 @@ export function Canvas() {
         toast.error("Entry content is still loading — try again in a moment.");
         return;
       }
-      const value =
-        field.type === "number" && rawValue.trim() !== ""
-          ? Number(rawValue)
-          : rawValue;
+      let value: string | number = rawValue;
+      if (field.type === "number") {
+        // The on-screen text can carry a suffix / thousands separators (e.g. an
+        // animated "1,200+"), so strip everything but digits/sign/decimal.
+        // Never store NaN — it corrupts the JSON and the draft.
+        const cleaned = rawValue.replace(/[^0-9.-]/g, "");
+        const parsed = Number(cleaned);
+        if (cleaned === "" || Number.isNaN(parsed)) {
+          toast.error("Enter a valid number.");
+          return;
+        }
+        value = parsed;
+      }
       copy.values = setValueAtPath(copy.values, fieldPath, value);
       dirtyRef.current.add(entry.name);
       try {
@@ -442,7 +508,7 @@ export function Canvas() {
         return;
       }
       setCopiesVersion((version) => version + 1);
-      propagate(entry.name, fieldPath, rawValue, framePath);
+      propagate(entry.name, fieldPath, String(value), framePath);
     },
     [entryMap, owner, repo, branch, propagate]
   );
@@ -466,11 +532,23 @@ export function Canvas() {
     (
       framePath: string,
       path: string,
-      kind: "media" | "link",
-      value: string
+      kind: "media" | "link" | "group",
+      value: string,
+      members?: GroupMember[],
+      rect?: { x: number; y: number; width: number; height: number }
     ) => {
-      if (kind === "media") setMediaEditor({ framePath, path });
-      else setLinkEditor({ framePath, path, value });
+      if (kind === "group") {
+        setGroupEditor({
+          framePath,
+          path,
+          members: members ?? [{ path, kind: "text" }],
+          rect: rect ?? { x: 0, y: 0, width: 0, height: 0 },
+        });
+      } else if (kind === "media") {
+        setMediaEditor({ framePath, path });
+      } else {
+        setLinkEditor({ framePath, path, value });
+      }
     },
     []
   );
@@ -510,7 +588,17 @@ export function Canvas() {
           commitEdit(framePath, msg.path, msg.value);
           break;
         case "field-activate":
-          activateField(framePath, msg.path, msg.kind, msg.value);
+          activateField(
+            framePath,
+            msg.path,
+            msg.kind,
+            msg.value ?? "",
+            msg.members,
+            msg.rect
+          );
+          break;
+        case "link-info":
+          setLinkInfo({ framePath, href: msg.href, rect: msg.rect });
           break;
         default:
           break;
@@ -822,6 +910,125 @@ export function Canvas() {
               />
             );
           })}
+
+          {/* Group-field popover — anchored to the clicked non-leaf element.
+              Lives in the world layer so it pans/zooms with its frame; the
+              inner card counter-scales to stay a constant on-screen size. */}
+          {groupEditor &&
+            (() => {
+              const frameRect = rects.get(groupEditor.framePath);
+              if (!frameRect) return null;
+              const candidates = candidatesFor(entryMap, groupEditor.framePath);
+              const valueByPath = new Map<string, string>();
+              for (const entry of candidates) {
+                const copy = copiesRef.current.get(entry.name);
+                if (copy)
+                  for (const { path, value } of flattenTextValues(copy.values))
+                    valueByPath.set(path, value);
+              }
+              // Build one row per editable scalar field in the cluster.
+              const isScalar = (f: Record<string, any>) =>
+                TEXT_FIELD_TYPES.has(f.type) || f.type === "image";
+              const kindOf = (f: Record<string, any>): GroupMember["kind"] =>
+                f.type === "image"
+                  ? "media"
+                  : f.type === "string" && f.options?.type === "url"
+                    ? "link"
+                    : "text";
+              const rows = new Map<
+                string,
+                { kind: GroupMember["kind"]; label: string }
+              >();
+              const addField = (
+                path: string,
+                field: Record<string, any> | undefined
+              ) => {
+                if (!field || !isScalar(field) || rows.has(path)) return;
+                rows.set(path, {
+                  kind: kindOf(field),
+                  label: String(
+                    field.label ?? field.name ?? path.split(".").pop() ?? path
+                  ),
+                });
+              };
+              // 1. Every scalar child of an object host — surfaces fields that
+              //    never got a `data-cms-field` in the markup (e.g. a stat's
+              //    `suffix`, baked into a countup script).
+              const hostField = resolveFieldEntry(
+                candidates,
+                groupEditor.path
+              )?.field;
+              if (Array.isArray(hostField?.fields))
+                for (const child of hostField.fields)
+                  addField(`${groupEditor.path}.${child.name}`, child);
+              // 2. Plus any tagged members the bridge reported — covers a scalar
+              //    host that wraps tagged siblings (a heading + its highlight).
+              for (const member of groupEditor.members)
+                addField(
+                  member.path,
+                  resolveFieldEntry(candidates, member.path)?.field
+                );
+              const seeded = Array.from(rows, ([path, meta]) => {
+                const raw = valueByPath.get(path) ?? "";
+                return {
+                  path,
+                  kind: meta.kind,
+                  label: meta.label,
+                  // A previously-corrupted number draft flattens to "NaN" —
+                  // show it blank so the user can just type the value.
+                  value: raw === "NaN" ? "" : raw,
+                };
+              });
+              if (seeded.length === 0) return null;
+              return (
+                <FrameAnchored
+                  frameRect={frameRect}
+                  rect={groupEditor.rect}
+                  scale={committed.scale}
+                >
+                  <GroupEditor
+                    key={`${groupEditor.framePath}:${groupEditor.path}`}
+                    members={seeded}
+                    onCommit={(path, value) =>
+                      commitNonText(groupEditor.framePath, path, value)
+                    }
+                    onClose={() => setGroupEditor(null)}
+                  />
+                </FrameAnchored>
+              );
+            })()}
+
+          {/* Link destination popover — a link was clicked in edit mode; the
+              iframe never navigates, we just show where it points. */}
+          {linkInfo &&
+            (() => {
+              const frameRect = rects.get(linkInfo.framePath);
+              if (!frameRect) return null;
+              return (
+                <FrameAnchored
+                  frameRect={frameRect}
+                  rect={linkInfo.rect}
+                  scale={committed.scale}
+                >
+                  <LinkInfoPopover
+                    key={`${linkInfo.framePath}:${linkInfo.href}`}
+                    href={linkInfo.href}
+                    onOpen={() => {
+                      try {
+                        const url = new URL(
+                          linkInfo.href || "/",
+                          siteOrigin ?? undefined
+                        ).href;
+                        window.open(url, "_blank", "noopener");
+                      } catch {
+                        /* malformed href — nothing to open */
+                      }
+                    }}
+                    onClose={() => setLinkInfo(null)}
+                  />
+                </FrameAnchored>
+              );
+            })()}
         </div>
       </div>
 
@@ -1015,6 +1222,210 @@ function MediaEditor({
           }}
         />
       </div>
+    </div>
+  );
+}
+
+type GroupEditorMember = GroupMember & { label: string; value: string };
+
+/**
+ * Popover for a non-leaf field: edits the host field plus each tagged
+ * descendant. Text/link rows edit inline (Enter or blur commits); an image row
+ * opens the shared `MediaEditor`. Anchored by the caller; Escape closes it
+ * (capture phase, so the canvas's own Escape doesn't disengage the frame).
+ */
+function GroupEditor({
+  members,
+  onCommit,
+  onClose,
+}: {
+  members: GroupEditorMember[];
+  onCommit: (path: string, value: string) => void;
+  onClose: () => void;
+}) {
+  const [mediaFor, setMediaFor] = useState<string | null>(null);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      if (mediaFor) setMediaFor(null);
+      else onClose();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [onClose, mediaFor]);
+  return (
+    <div className="bg-background w-80 rounded-xl border p-3 shadow-2xl">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs font-medium">
+          Edit fields
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <X className="size-3.5" />
+        </Button>
+      </div>
+      <div className="flex flex-col gap-3">
+        {members.map((member) =>
+          member.kind === "media" ? (
+            <div key={member.path} className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-xs">
+                {member.label}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMediaFor(member.path)}
+              >
+                <ImageIcon className="size-4" />
+                Replace image
+              </Button>
+            </div>
+          ) : (
+            <GroupEditorRow
+              key={member.path}
+              label={member.label}
+              value={member.value}
+              onCommit={(value) => onCommit(member.path, value)}
+            />
+          )
+        )}
+      </div>
+      {mediaFor && (
+        <MediaEditor
+          onInsert={(url) => {
+            onCommit(mediaFor, url);
+            setMediaFor(null);
+          }}
+          onClose={() => setMediaFor(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** One text/link row inside the group popover — commits on Enter or blur. */
+function GroupEditorRow({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string;
+  value: string;
+  onCommit: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  // Re-seed if the underlying draft changes (e.g. propagated from inline edit).
+  useEffect(() => setDraft(value), [value]);
+  const commit = () => {
+    if (draft !== value) onCommit(draft);
+  };
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <Input
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit();
+            (event.target as HTMLInputElement).blur();
+          }
+        }}
+        className="h-8"
+      />
+    </label>
+  );
+}
+
+/**
+ * Anchors a popover to an element inside a frame. Rendered in the world layer
+ * (so it pans/zooms with the frame) at the frame's world position + the
+ * element's iframe-space box, then counter-scaled so the card stays a constant
+ * on-screen size. `data-canvas-no-pan` + stopPropagation keep interaction from
+ * panning or disengaging the frame.
+ */
+function FrameAnchored({
+  frameRect,
+  rect,
+  scale,
+  children,
+}: {
+  frameRect: { x: number; y: number };
+  rect: { x: number; y: number; width: number; height: number };
+  scale: number;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="absolute z-40"
+      data-canvas-no-pan
+      onClick={(event) => event.stopPropagation()}
+      style={{ left: frameRect.x + rect.x, top: frameRect.y + rect.y + rect.height }}
+    >
+      <div style={{ transform: `scale(${1 / scale})`, transformOrigin: "top left" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Read-only popover showing a clicked link's destination, with open-in-new-tab. */
+function LinkInfoPopover({
+  href,
+  onOpen,
+  onClose,
+}: {
+  href: string;
+  onOpen: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      onClose();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [onClose]);
+  return (
+    <div className="bg-background w-72 rounded-xl border p-3 shadow-2xl">
+      <div className="mb-1 flex items-center gap-2">
+        <span className="text-muted-foreground min-w-0 flex-1 text-xs font-medium">
+          Links to
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <X className="size-3.5" />
+        </Button>
+      </div>
+      <p className="mb-2 truncate text-sm font-medium" title={href}>
+        {href || "(no href)"}
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={onOpen}
+      >
+        <ExternalLink className="size-4" />
+        Open in new tab
+      </Button>
     </div>
   );
 }

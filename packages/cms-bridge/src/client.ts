@@ -18,6 +18,7 @@ import {
   isBridgeEnvelope,
   type BridgeMode,
   type CmsToBridgeMessage,
+  type GroupMember,
   type LegacyFieldFocusMessage,
 } from "./protocol";
 
@@ -29,6 +30,9 @@ const FIELD_ATTR = "data-cms-field";
 const EDITABLE_ATTR = "data-cms-editable";
 const MEDIA_ATTR = "data-cms-media";
 const LINK_ATTR = "data-cms-link";
+const GROUP_ATTR = "data-cms-group";
+/** Class wrapping a `backtick`-highlighted run in a text field. Styled by the site. */
+const HL_CLASS = "cms-hl";
 const INPUT_THROTTLE_MS = 150;
 
 /** Tags that never make sense as editable text hosts. */
@@ -87,7 +91,8 @@ function injectStyle(): void {
     `[${EDITABLE_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.6);outline-offset:2px;cursor:text;}` +
     `[${EDITABLE_ATTR}]:focus{outline:2px solid #6366f1;outline-offset:2px;border-radius:2px;}` +
     `[${MEDIA_ATTR}]:hover{outline:2px dashed rgba(99,102,241,.7);outline-offset:2px;cursor:pointer;}` +
-    `[${LINK_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.5);outline-offset:3px;}`;
+    `[${LINK_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.5);outline-offset:3px;}` +
+    `[${GROUP_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.55);outline-offset:4px;cursor:pointer;}`;
   document.head.appendChild(style);
 }
 
@@ -172,6 +177,10 @@ function armEditables(): void {
     const host = el as HTMLElement;
     const path = host.getAttribute(FIELD_ATTR);
     if (!path) continue;
+    // Only the top-level tagged element of a cluster is interactive. Anything
+    // with a tagged ancestor is edited through that ancestor's group popover,
+    // never inline — so it stays fully inert here.
+    if (host.parentElement?.closest(`[${FIELD_ATTR}]`)) continue;
     switch (kindForPath(path)) {
       case "none":
         // Tagged in the markup but not a real CMS field — leave inert.
@@ -191,7 +200,16 @@ function armEditables(): void {
         }
         break;
       case "text":
-        if (isEditableCandidate(host)) armTextEditable(host, plaintext);
+        if (isEditableCandidate(host)) {
+          armTextEditable(host, plaintext);
+        } else if (!host.hasAttribute(GROUP_ATTR)) {
+          // Non-leaf text field — it wraps other tagged fields (or media), so it
+          // can't be contenteditable. Arm it as a group host: a click opens the
+          // CMS popover editing this field plus its tagged descendants. Those
+          // descendants still arm on their own loop iterations, so inline
+          // editing of the inner span keeps working.
+          host.setAttribute(GROUP_ATTR, "");
+        }
         break;
     }
   }
@@ -207,6 +225,8 @@ function disarmEditables(): void {
     el.removeAttribute(MEDIA_ATTR);
   for (const el of Array.from(document.querySelectorAll(`[${LINK_ATTR}]`)))
     el.removeAttribute(LINK_ATTR);
+  for (const el of Array.from(document.querySelectorAll(`[${GROUP_ATTR}]`)))
+    el.removeAttribute(GROUP_ATTR);
 }
 
 function editableFrom(target: EventTarget | null): HTMLElement | null {
@@ -237,8 +257,51 @@ function commit(el: HTMLElement, path: string, original: string): void {
     inputTimer = null;
   }
   const value = valueOf(el);
+  // Re-render `backtick` spans in this frame (the element was flattened to plain
+  // source while editing). Always — even on an unchanged/Escape revert.
+  el.innerHTML = renderRich(value);
   if (value === original) return;
   post({ type: "field-commit", path, value });
+}
+
+/**
+ * The editable fields inside a group host: the host itself first, then every
+ * tagged descendant that resolves to a real CMS field. Deduped by path so a
+ * descendant that is itself a group host isn't listed twice.
+ */
+function collectGroupMembers(host: HTMLElement): GroupMember[] {
+  const out: GroupMember[] = [];
+  const seen = new Set<string>();
+  const push = (el: Element): void => {
+    const path = el.getAttribute(FIELD_ATTR);
+    if (!path || seen.has(path)) return;
+    const kind = kindForPath(path);
+    if (kind === "none") return;
+    seen.add(path);
+    out.push({ path, kind });
+  };
+  push(host);
+  for (const el of Array.from(host.querySelectorAll(`[${FIELD_ATTR}]`))) push(el);
+  return out;
+}
+
+/** Ask the CMS to open the group popover for a non-leaf tagged host. */
+function activateGroup(host: HTMLElement): void {
+  const path = host.getAttribute(FIELD_ATTR);
+  if (!path) return;
+  const rect = host.getBoundingClientRect();
+  post({
+    type: "field-activate",
+    path,
+    kind: "group",
+    members: collectGroupMembers(host),
+    rect: {
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height,
+    },
+  });
 }
 
 /** Ask the CMS to open a non-text editor (media picker / link popover). */
@@ -259,6 +322,9 @@ function onFocusIn(event: FocusEvent): void {
   if (!el) return;
   const path = fieldPathOf(el);
   if (!path) return;
+  // Editing a highlighted field: flatten its spans back to `backtick` source so
+  // the user edits plain text (skip when there's no highlight, to keep the caret).
+  if (el.querySelector(`.${HL_CLASS}`)) el.textContent = readRich(el);
   focusSnapshot = { el, path, value: valueOf(el) };
   post({ type: "field-focus", path });
   // Editing a link's label also surfaces its URL editor in the CMS.
@@ -340,14 +406,93 @@ function onClick(event: MouseEvent): void {
     if (!editableFrom(target)) activate(link, "link");
     return;
   }
-  // Editing text inside a plain <a> must not navigate away.
-  const el = editableFrom(target);
-  if (el && el.closest("a")) event.preventDefault();
+  // A non-leaf group host opens the CMS popover — unless the click landed on an
+  // inner editable text child (media/link children were handled + returned
+  // above), in which case inline editing wins and the caret drops.
+  const group = target.closest(`[${GROUP_ATTR}]`);
+  if (group instanceof HTMLElement && !editableFrom(target)) {
+    event.preventDefault();
+    event.stopPropagation();
+    activateGroup(group);
+    return;
+  }
+  // Any remaining link (nav, footer, CTA — not a CMS field, not in a cluster):
+  // never navigate the iframe in edit mode. Show its destination in the CMS
+  // instead, unless the click landed on inline-editable text (caret drops).
+  const anchor = target.closest("a");
+  if (anchor instanceof HTMLElement) {
+    event.preventDefault();
+    event.stopPropagation(); // also stop Astro's client-router navigation
+    if (!editableFrom(target)) {
+      const r = anchor.getBoundingClientRect();
+      post({
+        type: "link-info",
+        href: anchor.getAttribute("href") ?? "",
+        rect: { x: r.left, y: r.top, width: r.width, height: r.height },
+      });
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Messages from the CMS
 // ---------------------------------------------------------------------------
+
+/**
+ * Write `value` as the element's own text WITHOUT touching nested tagged
+ * children. Used for group hosts (e.g. a heading wrapping a highlight span):
+ * `textContent = value` would delete the span. The host's own text is the
+ * first text node; any later stray text nodes are cleared so the value isn't
+ * duplicated. Known limitation: text authored after the children still lands
+ * in the first text node — fine for the common "text + inline highlight" case.
+ */
+// ---------------------------------------------------------------------------
+// Backtick highlight: `word` in a text field ⇄ <span class="cms-hl">word</span>.
+// Lets a heading keep its colored phrase in a single plain field (no nested
+// data-cms-field). The site renders the same span at build time and styles it.
+// ---------------------------------------------------------------------------
+
+/** Source string (with backticks) → safe HTML with highlight spans. */
+function renderRich(source: string): string {
+  const escaped = source
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped.replace(
+    /`([^`]+)`/g,
+    (_match, inner) => `<span class="${HL_CLASS}">${inner}</span>`
+  );
+}
+
+/** Rendered element (highlight spans) → source string with backticks. */
+function readRich(el: HTMLElement): string {
+  let out = "";
+  for (const node of Array.from(el.childNodes)) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      out += node.textContent ?? "";
+    } else if (
+      node instanceof HTMLElement &&
+      node.classList.contains(HL_CLASS)
+    ) {
+      out += "`" + (node.textContent ?? "") + "`";
+    } else {
+      out += (node as HTMLElement).textContent ?? "";
+    }
+  }
+  return out;
+}
+
+function setOwnText(el: Element, value: string): void {
+  const textNodes = Array.from(el.childNodes).filter(
+    (node) => node.nodeType === Node.TEXT_NODE
+  );
+  if (textNodes.length === 0) {
+    el.insertBefore(document.createTextNode(value), el.firstChild);
+    return;
+  }
+  textNodes[0]!.textContent = value;
+  for (let i = 1; i < textNodes.length; i++) textNodes[i]!.textContent = "";
+}
 
 function applySet(values: Array<{ path: string; value: string }>): void {
   for (const { path, value } of values) {
@@ -360,8 +505,12 @@ function applySet(values: Array<{ path: string; value: string }>): void {
         (el as HTMLImageElement).src = value;
       } else if (el.tagName === "A") {
         (el as HTMLAnchorElement).href = value;
+      } else if (el.querySelector(`[${FIELD_ATTR}]`)) {
+        // Group host: preserve nested tagged children, write only its own text.
+        setOwnText(el, value);
       } else {
-        el.textContent = value;
+        // Leaf text: render `backtick` highlights as spans (plain text otherwise).
+        el.innerHTML = renderRich(value);
       }
     }
   }
@@ -443,7 +592,7 @@ function announce(): void {
     path: location.pathname,
     mode,
     fields: collectFields(),
-    caps: ["text", "media", "link"],
+    caps: ["text", "media", "link", "group"],
   });
   // Legacy handshake for older CMS builds.
   if (window.parent && window.parent !== window) {

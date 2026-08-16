@@ -222,6 +222,7 @@ export const CanvasFrame = memo(function CanvasFrame({
             title={page.title}
             className="absolute inset-0 h-full w-full border-0 bg-white"
             onLoad={() => onLoad(page.path)}
+            onError={() => onLoad(page.path)}
           />
         )}
 

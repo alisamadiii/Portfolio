@@ -17,7 +17,7 @@ export type BridgeMode = "highlight" | "edit";
  * v3 adds "media" (click an image → CMS media picker) and "link" (edit an
  * anchor's href).
  */
-export type BridgeCapability = "text" | "media" | "link";
+export type BridgeCapability = "text" | "media" | "link" | "group";
 
 // ---------------------------------------------------------------------------
 // Bridge → CMS
@@ -60,18 +60,47 @@ export interface FieldFocusMessage {
   path: string;
 }
 
+/** A single field inside a `group` activation: its path and how the CMS edits it. */
+export interface GroupMember {
+  path: string;
+  kind: "text" | "media" | "link";
+}
+
 /**
  * A non-text field was activated in edit mode — the CMS opens the matching
  * editor (media picker for images, URL popover for links) rather than editing
  * inline. `value` is the element's current src/href so the editor can seed it.
+ *
+ * `kind: "group"` is a NON-LEAF tagged element (e.g. a heading that wraps a
+ * tagged highlight span): it can't be contenteditable, so the CMS opens a
+ * popover editing the host field plus every tagged descendant. `members`
+ * carries the cluster (host first) and `rect` the host's on-screen box so the
+ * CMS can anchor the popover. `value` is unused for groups.
  */
 export interface FieldActivateMessage {
   cms: 1;
   v: number;
   type: "field-activate";
   path: string;
-  kind: "media" | "link";
-  value: string;
+  kind: "media" | "link" | "group";
+  value?: string;
+  /** Present only for `kind: "group"` — the host field and its tagged descendants. */
+  members?: GroupMember[];
+  /** Present only for `kind: "group"` — host `getBoundingClientRect` (iframe px). */
+  rect?: { x: number; y: number; width: number; height: number };
+}
+
+/**
+ * A link was clicked in edit mode — the bridge blocks navigation (the iframe
+ * must never change pages) and the CMS shows a small popover with the link's
+ * destination, anchored via `rect` (the anchor's box in iframe px).
+ */
+export interface LinkInfoMessage {
+  cms: 1;
+  v: number;
+  type: "link-info";
+  href: string;
+  rect: { x: number; y: number; width: number; height: number };
 }
 
 export type BridgeToCmsMessage =
@@ -79,7 +108,8 @@ export type BridgeToCmsMessage =
   | FieldInputMessage
   | FieldCommitMessage
   | FieldFocusMessage
-  | FieldActivateMessage;
+  | FieldActivateMessage
+  | LinkInfoMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge

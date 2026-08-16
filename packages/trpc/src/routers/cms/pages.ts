@@ -88,6 +88,7 @@ export const pagesRouter = createTRPCRouter({
           settings && typeof settings === "object"
             ? settings.baseUrl
             : undefined;
+        // const baseUrl: unknown = "http://localhost:4321";
         if (!baseUrl || typeof baseUrl !== "string") {
           throw createHttpError(
             "No `settings.baseUrl` configured — the canvas needs the site's live URL.",
@@ -104,8 +105,7 @@ export const pagesRouter = createTRPCRouter({
             ? settings.preview?.paths
             : undefined;
         for (const [entry, template] of Object.entries(previewPaths ?? {})) {
-          const isCollection =
-            entriesByName.get(entry)?.type === "collection";
+          const isCollection = entriesByName.get(entry)?.type === "collection";
           if (template.includes("{")) {
             // Templated route. A collection collapses to one table card; any
             // other templated entry stays out of scope (no single URL).
