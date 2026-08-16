@@ -114,6 +114,7 @@ import { FileOptions } from "@/components/file/file-options";
 import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 import { PublishButton } from "@/components/publish/publish-button";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
+import { repoPath } from "@/lib/paths";
 
 import {
   ChangedFieldsProvider,
@@ -1182,7 +1183,11 @@ export function Entry({
     ]
   );
 
-  useRepoHeader({ header: headerNode });
+  useRepoHeader({
+    header: headerNode,
+    backHref: repoPath(config.repo, "pages"),
+    backLabel: "Pages",
+  });
 
   const loadingSkeleton = useMemo(
     () => (

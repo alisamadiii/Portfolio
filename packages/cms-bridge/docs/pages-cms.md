@@ -521,6 +521,52 @@ const { heading, images, cmsPath } = Astro.props;
 - `undefined` prefix (normal visit) → returns `undefined` → no attribute → zero production
   overhead.
 
+#### Inline text highlight — backticks
+
+To color part of a heading/text (a highlighted phrase) **without a second field or a nested
+`data-cms-field`**, wrap the run in backticks inside the single string field:
+
+```json
+{ "heading": "Bridging Afghan Heritage `and Life` in the United States." }
+```
+
+Render it through a tiny helper that turns each backtick run into `<span class="cms-hl">`, and
+tag the element with the **single** field path:
+
+```astro
+---
+// src/components/Highlight.astro
+const { text = "" } = Astro.props;
+const parts = String(text).split(/(`[^`]+`)/g).filter(Boolean);
+---
+{parts.map((p) =>
+  p.startsWith("`") && p.endsWith("`")
+    ? <span class="cms-hl">{p.slice(1, -1)}</span>
+    : p
+)}
+```
+
+```astro
+<h1 data-cms-field="hero.heading"><Highlight text={hero.heading} /></h1>
+```
+
+Style the span; the color comes from `--cms-highlight` (default to your primary; dark sections
+override on the element):
+
+```css
+.cms-hl { color: var(--cms-highlight, var(--primary)); }
+/* dark hero: add style="--cms-highlight:#E8C87A" on the heading element */
+```
+
+In edit mode the bridge flattens the spans back to backticks on focus (you edit plain text and
+type/move backticks) and re-renders the colored spans on blur — one plain inline-editable field,
+no group popover, and multiple/mid-sentence highlights just work.
+
+- **Never** split a highlight into a separate `headingHighlight` field or a nested
+  `data-cms-field` span — that breaks live editing (the highlight renders in the wrong place).
+- The highlight class is exactly `cms-hl` (the bridge emits the same class); a literal backtick
+  in copy becomes a highlight, so use backticks only for highlighting.
+
 ### 3. The bridge — `@alisamadiillc/cms-bridge` (Astro integration)
 
 Ship the bridge via the npm package — upgrading every client site is a version bump.

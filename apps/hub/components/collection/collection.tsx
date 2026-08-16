@@ -1401,6 +1401,8 @@ export function Collection({
 
   useRepoHeader({
     header: headerNode,
+    backHref: `/${config.repo}/pages`,
+    backLabel: "Pages",
   });
 
   const isLoading = collectionQuery.isPending;

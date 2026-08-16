@@ -20,7 +20,7 @@ import {
 
 function RepoHeader() {
   const { repo } = useRepo();
-  const { header } = useRepoHeaderState();
+  const { header, backHref, backLabel } = useRepoHeaderState();
   const hasHeaderContent =
     header !== null &&
     header !== undefined &&
@@ -36,9 +36,9 @@ function RepoHeader() {
         size="sm"
         className="mr-2 shrink-0"
         render={
-          <Link href={repoPath(repo)}>
+          <Link href={backHref ?? repoPath(repo)}>
             <ArrowLeft className="size-4" />
-            Canvas
+            {backLabel ?? "Canvas"}
           </Link>
         }
       />

@@ -12,6 +12,9 @@ import type { ReactNode } from "react";
 
 type RepoHeaderSlots = {
   header: ReactNode | null;
+  /** Back-button target. `null` = default (the canvas). Strings keep it stable. */
+  backHref: string | null;
+  backLabel: string | null;
 };
 
 type RepoHeaderContextValue = {
@@ -22,15 +25,19 @@ type RepoHeaderContextValue = {
 
 const RepoHeaderContext = createContext<RepoHeaderContextValue | null>(null);
 
+const EMPTY: RepoHeaderSlots = { header: null, backHref: null, backLabel: null };
+
 export function RepoHeaderProvider({ children }: { children: ReactNode }) {
-  const [slots, setSlotsState] = useState<RepoHeaderSlots>({
-    header: null,
-  });
+  const [slots, setSlotsState] = useState<RepoHeaderSlots>(EMPTY);
 
   const setSlots = useCallback((next: Partial<RepoHeaderSlots>) => {
     setSlotsState((prev) => {
       const merged = { ...prev, ...next };
-      if (prev.header === merged.header) {
+      if (
+        prev.header === merged.header &&
+        prev.backHref === merged.backHref &&
+        prev.backLabel === merged.backLabel
+      ) {
         return prev;
       }
       return merged;
@@ -38,9 +45,7 @@ export function RepoHeaderProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearSlots = useCallback(() => {
-    setSlotsState({
-      header: null,
-    });
+    setSlotsState(EMPTY);
   }, []);
 
   const value = useMemo(
@@ -81,8 +86,10 @@ export function useRepoHeader(slots: Partial<RepoHeaderSlots>) {
   useEffect(() => {
     setSlots({
       header: slots.header ?? null,
+      backHref: slots.backHref ?? null,
+      backLabel: slots.backLabel ?? null,
     });
-  }, [slots.header, setSlots]);
+  }, [slots.header, slots.backHref, slots.backLabel, setSlots]);
 
   useEffect(() => {
     return () => {
@@ -104,8 +111,10 @@ export function useOptionalRepoHeader(
 
     setSlots({
       header: slots.header ?? null,
+      backHref: slots.backHref ?? null,
+      backLabel: slots.backLabel ?? null,
     });
-  }, [enabled, setSlots, slots.header]);
+  }, [enabled, setSlots, slots.header, slots.backHref, slots.backLabel]);
 
   useEffect(() => {
     if (!clearSlots || !enabled) return;

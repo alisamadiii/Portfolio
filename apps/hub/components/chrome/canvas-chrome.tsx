@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  ArrowRight,
   Search,
   Settings2,
   ShieldCheck,
@@ -24,6 +25,8 @@ import { useCommandPalette } from "@/components/chrome/command-palette-provider"
 import { RepoMenu } from "@/components/chrome/repo-menu";
 import { CmsOverlay } from "@/components/cms/cms-overlay";
 import { User } from "@/components/user";
+import { useRepo } from "@/contexts/repo-context";
+import { repoPath } from "@/lib/paths";
 
 /**
  * Figma-style floating chrome over the fullscreen canvas: top-left card with
@@ -47,6 +50,7 @@ export function CanvasChrome({
   const { draftCount, openPublishDialog } = usePublish();
   const { openPalette } = useCommandPalette();
   const adminItems = useAdminNavItems();
+  const { repo } = useRepo();
   const [internalCms, setInternalCms] = useState<CmsOverlayState>({
     open: false,
   });
@@ -131,6 +135,31 @@ export function CanvasChrome({
             </span>
           )}
         </Button>
+      </div>
+
+      {/* Beta badge — links to the classic per-page form editor. Sits below the
+          corner cards so it never overlaps them. */}
+      <div
+        data-canvas-no-pan
+        className="bg-background/95 absolute top-16 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-2 py-1 shadow-sm backdrop-blur"
+      >
+        <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
+          Beta
+        </span>
+        <span className="text-muted-foreground text-xs max-md:hidden">
+          New canvas editing. Prefer the old way?
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 rounded-full"
+          render={
+            <Link href={repoPath(repo, "pages")}>
+              Classic editor
+              <ArrowRight className="size-3.5" />
+            </Link>
+          }
+        />
       </div>
 
       <CmsOverlay
