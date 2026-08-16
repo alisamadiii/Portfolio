@@ -42,6 +42,8 @@ const CollectionSchema = z.object({
   path: z.string().min(1),
   route: z.string().optional(),
   label: z.string().optional(),
+  /** Entry file format. Defaults to Markdown (frontmatter + body). */
+  format: z.enum(["md", "json"]).optional(),
   fields: z.array(CollectionFieldSchema).default([]),
 });
 

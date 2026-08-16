@@ -109,9 +109,54 @@ Hand-tagged `data-cms-field` attributes (without components) still work — the
 bridge falls back to the legacy heuristics for them. Components are the
 convention for new and edited sections.
 
-Text values render through the shared backtick-highlight convention:
-`` `word` `` in a JSON string becomes `<span class="cms-hl">word</span>` —
-same as legacy (style via `.cms-hl`).
+### Inline emphasis in text fields
+
+A single text field can carry inline emphasis without splitting into extra
+fields — two markers, both editable and round-tripping through the canvas:
+
+```
+`word`     → <span class="cms-hl">word</span>            (accent — style .cms-hl)
+**word**   → <span class="cms-mark …">word</span>        (mark — style .cms-mark)
+```
+
+Put them in the JSON value and they stay one editable string:
+
+```json
+{ "hero": { "heading": "Wood-fired **pasta**, made `nightly`" } }
+```
+
+```astro
+<Heading1 field="hero.heading" value={home.hero.heading} />
+```
+
+Style the base look once in global CSS (`.cms-mark { … }`), and override per
+field with the `markClass` (and `markStyle`) prop:
+
+```astro
+<Heading1
+  field="hero.heading"
+  value={home.hero.heading}
+  markClass="text-brand-600 italic"
+/>
+<!-- **pasta** → <span class="cms-mark text-brand-600 italic">pasta</span> -->
+```
+
+The class/style ride on the host's `data-cms-mark-class` / `-style`
+attributes, so when a heading is edited on the canvas the bridge rebuilds the
+exact span — the styling is never lost, and `pages.json` keeps the plain
+`**pasta**` source.
+
+Text/Heading components also accept **children** instead of `value`, for when
+you want to author the markup in the template:
+
+```astro
+<Heading1 field="hero.heading">Wood-fired <strong>pasta</strong></Heading1>
+```
+
+Authored `<strong>` / `<span class="cms-hl">` flatten to `**` / `` ` ``
+source on the first canvas edit and are stored back into the single field
+value, so they keep round-tripping. Prefer the `value` form when you want the
+emphasis editable from the start.
 
 ### Group structural editing (canvas)
 

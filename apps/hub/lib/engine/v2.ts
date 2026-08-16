@@ -24,6 +24,7 @@ export type ManifestData = {
       path: string;
       route?: string;
       label?: string;
+      format?: "md" | "json";
       fields: Array<{
         name: string;
         type: string;

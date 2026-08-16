@@ -1,10 +1,19 @@
 ---
 /**
- * CMS-editable text element. Renders `value` (with `backtick` highlight spans)
- * and tags itself with the field path + explicit kind, so the canvas can edit
- * it with zero guessing. `as` picks the HTML tag.
+ * CMS-editable text element. Renders `value` (with `backtick` accent and
+ * **bold** inline markup) and tags itself with the field path + explicit kind,
+ * so the canvas can edit it with zero guessing. `as` picks the HTML tag.
  *
  *   <Text as="p" field="hero.text" value={hero.text} class="lead" />
+ *
+ * Children override `value` — use them when you need custom inline markup:
+ *
+ *   <Heading1 field="hero.heading">Wood-fired <strong>pasta</strong></Heading1>
+ *
+ * On the canvas, authored bold/accent markup flattens to plain source on the
+ * first edit and is stored back into the single field value, so it keeps
+ * round-tripping. Prefer bold/accent markers in `value` when you want the
+ * emphasis editable from the start.
  */
 import { renderRich } from "@alisamadiillc/cms-bridge/rich";
 
@@ -13,19 +22,32 @@ interface Props {
   value?: string | number | null;
   as?: string;
   class?: string;
+  /** Extra class(es) applied to **mark** spans in `value` (Tailwind etc.). */
+  markClass?: string;
+  /** Inline style applied to **mark** spans in `value`. */
+  markStyle?: string;
   [key: string]: unknown;
 }
 
-const { field, value = "", as = "p", ...rest } = Astro.props;
+const { field, value, as = "p", markClass, markStyle, ...rest } = Astro.props;
 if (!field) {
   throw new Error("cms-bridge <Text> requires a `field` prop.");
 }
 const Tag = as;
+// Render the slot to a string so an EMPTY forwarded slot (the Heading* wrappers
+// always pass `<slot/>`) falls back to `value` instead of blanking the field.
+const slotHtml = Astro.slots.has("default")
+  ? (await Astro.slots.render("default")).trim()
+  : "";
+const html = slotHtml || renderRich(String(value ?? ""), { markClass, markStyle });
 ---
 
 <Tag
   data-cms-field={field}
   data-cms-kind="text"
+  data-cms-mark-class={markClass || undefined}
+  data-cms-mark-style={markStyle || undefined}
   {...rest}
-  set:html={renderRich(String(value ?? ""))}
+  set:html={html}
 />
+

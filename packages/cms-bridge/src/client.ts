@@ -307,15 +307,31 @@ function scheduleInput(el: HTMLElement, path: string): void {
   }, INPUT_THROTTLE_MS);
 }
 
+/**
+ * The mark span's styling (markClass/markStyle) is authored on the component
+ * and carried on the host element's data-cms-mark-* attributes, so the bridge
+ * can rebuild the exact `<span class="cms-mark …">` when it re-renders from the
+ * plain-string value — the styling survives every edit and `set`.
+ */
+function markOpts(el: HTMLElement): {
+  markClass?: string;
+  markStyle?: string;
+} {
+  return {
+    markClass: el.getAttribute("data-cms-mark-class") ?? undefined,
+    markStyle: el.getAttribute("data-cms-mark-style") ?? undefined,
+  };
+}
+
 function commit(el: HTMLElement, path: string, original: string): void {
   if (inputTimer) {
     clearTimeout(inputTimer);
     inputTimer = null;
   }
   const value = valueOf(el);
-  // Re-render `backtick` spans in this frame (the element was flattened to plain
+  // Re-render inline markup in this frame (the element was flattened to plain
   // source while editing). Always — even on an unchanged/Escape revert.
-  el.innerHTML = renderRich(value);
+  el.innerHTML = renderRich(value, markOpts(el));
   if (value === original) return;
   post({ type: "field-commit", path, value });
 }
@@ -560,9 +576,10 @@ function onFocusIn(event: FocusEvent): void {
   if (!el) return;
   const path = fieldPathOf(el);
   if (!path) return;
-  // Editing a highlighted field: flatten its spans back to `backtick` source so
-  // the user edits plain text (skip when there's no highlight, to keep the caret).
-  if (el.querySelector(`.${HL_CLASS}`)) el.textContent = readRich(el);
+  // Editing a rich field: flatten its inline markup (cms-hl spans, <strong>)
+  // back to ` / ** source so the user edits plain text. Skipped when the field
+  // has no child markup, to keep the caret position on a plain edit.
+  if (el.children.length > 0) el.textContent = readRich(el);
   focusSnapshot = { el, path, value: valueOf(el) };
   post({ type: "field-focus", path });
   // Editing a link's label also surfaces its URL editor in the CMS.
@@ -723,8 +740,8 @@ function applySet(values: Array<{ path: string; value: string }>): void {
         // Group host: preserve nested tagged children, write only its own text.
         setOwnText(el, value);
       } else {
-        // Leaf text: render `backtick` highlights as spans (plain text otherwise).
-        el.innerHTML = renderRich(value);
+        // Leaf text: render inline markup (accent + mark spans), plain otherwise.
+        el.innerHTML = renderRich(value, markOpts(el as HTMLElement));
       }
     }
   }

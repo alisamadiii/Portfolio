@@ -38,17 +38,20 @@ export function collectionSchema(
     declared.find((field) => field.type === "string")?.name ??
     declared[0]?.name ??
     "title";
+  // JSON collections store body as a plain field; Markdown collections put it
+  // below the frontmatter. Either way it's edited as multiline text and
+  // publishV2 serializes by file extension.
+  const isJson = collection.format === "json";
+  const extension = isJson ? "json" : "md";
   return {
     name: collection.name,
     label: collection.label ?? labelize(collection.name),
     type: "collection",
     path: collection.path,
-    format: "yaml-frontmatter",
-    extension: "md",
-    filename: "{year}-{month}-{day}-{primary}.md",
+    format: isJson ? "json" : "yaml-frontmatter",
+    extension,
+    filename: `{year}-{month}-{day}-{primary}.${extension}`,
     view: { primary },
-    // Body is the markdown below the frontmatter — edited as plain text
-    // (markdown), serialized server-side by publishV2.
     fields: [...declared, { name: "body", label: "Body", type: "text" }],
   };
 }

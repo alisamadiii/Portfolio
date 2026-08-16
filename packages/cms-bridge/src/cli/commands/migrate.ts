@@ -34,6 +34,7 @@ type CollectionEntry = {
   name: string;
   label?: string;
   path: string;
+  format?: string;
   fields?: Array<Record<string, any>>;
 };
 
@@ -77,6 +78,7 @@ function flattenContent(content: unknown): {
           name: node.name,
           label: node.label,
           path: node.path,
+          format: typeof node.format === "string" ? node.format : undefined,
           fields: node.fields,
         });
     }
@@ -205,6 +207,7 @@ export async function migrateCommand(
       ...(entry.label ? { label: entry.label } : {}),
       path: entry.path,
       ...(route && route.includes("{") ? { route } : {}),
+      ...(entry.format === "json" ? { format: "json" as const } : {}),
       fields: declarationFields(entry.fields),
     };
   });
