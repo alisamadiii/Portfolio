@@ -1,8 +1,9 @@
+import { TRPCError } from "@trpc/server";
 import { and, sql } from "drizzle-orm";
 import z from "zod";
 
 import {
-  authenticatedProcedure,
+  cmsProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
 
@@ -14,7 +15,7 @@ import {
 import { assertAdminUser } from "@workspace/trpc/lib/cms/authz-shared";
 import { getConfig } from "@workspace/trpc/lib/cms/config-store";
 import { configTable, db } from "@workspace/trpc/lib/cms/db";
-import { createHttpError, runCms } from "@workspace/trpc/lib/cms/errors";
+import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { clearFileCache } from "@workspace/trpc/lib/cms/github-cache-file";
 import { deleteCacheFileMeta } from "@workspace/trpc/lib/cms/github-cache-meta";
 import {
@@ -24,44 +25,32 @@ import {
   setBasePath as setRepoBasePath,
   setMediaSettings as setRepoMediaSettings,
 } from "@workspace/trpc/lib/cms/repo-settings";
-import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
-import { getToken } from "@workspace/trpc/lib/cms/token";
-
-const repoInput = z.object({ owner: z.string(), repo: z.string() });
 
 /**
  * Get the per-repository base path (monorepo subfolder support).
  * Port of GET /api/[owner]/[repo]/base-path. Never reads the config, so it
  * works even when `.pages.yml` doesn't exist yet.
  */
-const getBasePath = authenticatedProcedure
-  .input(repoInput)
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
-      const user = toCmsUser(ctx.session.user);
-
-      assertAdminUser(user, "Only admins can manage the base path.");
-
-      const { token } = await getToken(user, input.owner, input.repo, true);
-      if (!token) throw createHttpError("Token not found", 401);
+const getBasePath = cmsProcedure
+  .query(async ({ input, ctx }) => {
+    try {
+      assertAdminUser(ctx.user, "Only admins can manage the base path.");
 
       const basePath = await getRepoBasePath(input.owner, input.repo);
 
       return { basePath };
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 /** Set the base path + clear all cached data. Port of PUT .../base-path. */
-const setBasePath = authenticatedProcedure
-  .input(repoInput.extend({ basePath: z.string() }))
-  .mutation(async ({ input, ctx }) =>
-    runCms(async () => {
-      const user = toCmsUser(ctx.session.user);
-
-      assertAdminUser(user, "Only admins can manage the base path.");
-
-      const { token } = await getToken(user, input.owner, input.repo, true);
-      if (!token) throw createHttpError("Token not found", 401);
+const setBasePath = cmsProcedure
+  .input(z.object({ basePath: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    try {
+      assertAdminUser(ctx.user, "Only admins can manage the base path.");
 
       const basePath = await setRepoBasePath(
         input.owner,
@@ -84,24 +73,21 @@ const setBasePath = authenticatedProcedure
       await deleteCacheFileMeta(input.owner, input.repo);
 
       return { message: "Base path updated.", basePath };
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 /**
  * Get the per-repository media provider settings. Port of GET
  * /api/[owner]/[repo]/media-settings. Secrets are write-only: never returned
  * — only whether they are set.
  */
-const getMediaSettings = authenticatedProcedure
-  .input(repoInput)
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
-      const user = toCmsUser(ctx.session.user);
-
-      assertAdminUser(user, "Only admins can manage media settings.");
-
-      const { token } = await getToken(user, input.owner, input.repo, true);
-      if (!token) throw createHttpError("Token not found", 401);
+const getMediaSettings = cmsProcedure
+  .query(async ({ input, ctx }) => {
+    try {
+      assertAdminUser(ctx.user, "Only admins can manage media settings.");
 
       const { provider, config } = await getPublicMediaSettings(
         input.owner,
@@ -118,28 +104,26 @@ const getMediaSettings = authenticatedProcedure
         .map((field) => field.key);
 
       return { provider, config, secretsSet };
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 /**
  * Set the media provider settings. Port of PUT .../media-settings. An empty
  * value for a secret field keeps the stored one (write-only inputs).
  */
-const setMediaSettings = authenticatedProcedure
+const setMediaSettings = cmsProcedure
   .input(
-    repoInput.extend({
+    z.object({
       provider: z.string(),
       config: z.record(z.string(), z.string()).optional(),
     })
   )
-  .mutation(async ({ input, ctx }) =>
-    runCms(async () => {
-      const user = toCmsUser(ctx.session.user);
-
-      assertAdminUser(user, "Only admins can manage media settings.");
-
-      const { token } = await getToken(user, input.owner, input.repo, true);
-      if (!token) throw createHttpError("Token not found", 401);
+  .mutation(async ({ input, ctx }) => {
+    try {
+      assertAdminUser(ctx.user, "Only admins can manage media settings.");
 
       if (!isMediaProviderId(input.provider)) {
         throw createHttpError('"provider" is invalid.', 400);
@@ -157,27 +141,29 @@ const setMediaSettings = authenticatedProcedure
         provider: saved.provider,
         config: toPublicMediaConfig(saved.provider, saved.config),
       };
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 /**
  * Synced `.pages.yml` config for a branch (port of what the
  * [owner]/[repo]/[branch] layout resolved server-side: getToken + getConfig).
  * Returns Config | null — null when `.pages.yml` doesn't exist yet.
  */
-const getBranchConfig = authenticatedProcedure
-  .input(repoInput.extend({ branch: z.string() }))
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
-      const user = toCmsUser(ctx.session.user);
-
-      const { token } = await getToken(user, input.owner, input.repo);
-
+const getBranchConfig = cmsProcedure
+  .input(z.object({ branch: z.string() }))
+  .query(async ({ input, ctx }) => {
+    try {
       return getConfig(input.owner, input.repo, input.branch, {
-        getToken: async () => token,
+        getToken: async () => ctx.token,
       });
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 const settingsRouter = createTRPCRouter({
   getBasePath,

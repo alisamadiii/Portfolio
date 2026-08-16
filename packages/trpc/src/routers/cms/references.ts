@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { readFns } from "@workspace/cms-core/fields/registry";
@@ -14,15 +15,11 @@ import {
   serializedTypes,
 } from "@workspace/cms-core/utils/file";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
-import { createHttpError, runCms } from "../../lib/cms/errors";
+import { cmsProcedure, createTRPCRouter } from "../../init";
+import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { getCollectionCache } from "../../lib/cms/github-cache-file";
 import { getRepoReadContext } from "../../lib/cms/repo-context";
 import { parse } from "../../lib/cms/serialization";
-import type { User } from "../../lib/cms/types";
-
-// Swap for the shared helper from ../../lib/cms/session-user once it lands.
-const toCmsUser = (user: unknown): User => user as User;
 
 type ParsedReferenceItem = {
   name: string;
@@ -201,11 +198,9 @@ export const referencesRouter = createTRPCRouter({
    * pairs interpolated from templates). When `values` is provided, options are
    * filtered to the selected values instead of the query.
    */
-  search: authenticatedProcedure
+  search: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         name: z.string(),
         query: z.string().optional(),
@@ -215,11 +210,12 @@ export const referencesRouter = createTRPCRouter({
         values: z.array(z.string()).optional(),
       })
     )
-    .query(({ ctx, input }) =>
-      runCms(async () => {
-        const { token, config } = await getRepoReadContext(
+    .query(async ({ ctx, input }) => {
+      try {
+        const { config } = await getRepoReadContext(
           input,
-          toCmsUser(ctx.session.user)
+          ctx.user,
+          ctx.token
         );
 
         const schema = getSchemaByName(config.object, input.name);
@@ -261,7 +257,7 @@ export const referencesRouter = createTRPCRouter({
           input.repo,
           input.branch,
           normalizedPath,
-          token,
+          ctx.token,
           schema.view?.node?.filename
         );
 
@@ -316,6 +312,9 @@ export const referencesRouter = createTRPCRouter({
         return {
           options: filtered,
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

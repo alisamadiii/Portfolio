@@ -9,13 +9,18 @@
 import mri from "mri";
 import pc from "picocolors";
 
+import { COMMANDS } from "./commands.js";
+
+const NAME_COLUMN = Math.max(...COMMANDS.map((c) => c.name.length)) + 3;
+const USAGE = COMMANDS.map(
+  (c) => `  cms-bridge ${c.name.padEnd(NAME_COLUMN)}${c.summary}`
+).join("\n");
+
 const HELP = `
 ${pc.bold("cms-bridge")} — make an Astro project CMS-ready
 
 Usage:
-  cms-bridge init          Extract static text → JSON, tag elements, write .pages.yml
-  cms-bridge check         Analyze only; writes cms-report.md (exit 1 if work remains)
-  cms-bridge collections   Sync cms/collections/*.yml into .pages.yml
+${USAGE}
 
 Flags:
   init:         --dry-run  --pages <glob>  --verbose  --yes

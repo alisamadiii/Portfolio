@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import {
@@ -14,7 +15,7 @@ import {
   normalizePath,
 } from "@workspace/cms-core/utils/file";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
+import { cmsProcedure, createTRPCRouter } from "../../init";
 import { assertAdminUser } from "../../lib/cms/authz-shared";
 import {
   buildCommitTokens,
@@ -26,7 +27,7 @@ import {
   stringifyContentEntry,
   validateContentEntry,
 } from "../../lib/cms/content-file";
-import { createHttpError, runCms } from "../../lib/cms/errors";
+import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { requireFeatureAccess } from "../../lib/cms/feature-access";
 import {
   getBranchHeadSha,
@@ -40,8 +41,6 @@ import {
   resolveConfigFilePath,
 } from "../../lib/cms/repo-settings";
 import { parse } from "../../lib/cms/serialization";
-import { getToken } from "../../lib/cms/token";
-import { type User } from "../../lib/cms/types";
 
 /**
  * Create, update, delete and rename individual files in a GitHub repository.
@@ -339,11 +338,9 @@ const githubRenameFile = async (
 };
 
 export const filesRouter = createTRPCRouter({
-  save: authenticatedProcedure
+  save: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         path: z.string(),
         type: z.enum(["content", "media", "settings"]),
@@ -353,20 +350,15 @@ export const filesRouter = createTRPCRouter({
         onConflict: z.enum(["rename", "error"]).optional(),
       })
     )
-    .mutation(({ ctx, input }) =>
-      runCms(async () => {
-        const user = ctx.session.user as User;
-
-        await requireFeatureAccess(user, "cms");
-
-        const { token } = await getToken(user, input.owner, input.repo, true);
-        if (!token) throw new Error("Token not found");
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await requireFeatureAccess(ctx.user, "cms");
 
         const normalizedPath = normalizePath(input.path);
         const basePath = await getBasePath(input.owner, input.repo);
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
-          getToken: async () => token,
+          getToken: async () => ctx.token,
         });
         if (!config && normalizedPath !== ".pages.yml")
           throw new Error(
@@ -407,7 +399,7 @@ export const filesRouter = createTRPCRouter({
                 input.sha &&
                 !schema.list
               ) {
-                const octokit = createOctokitInstance(token);
+                const octokit = createOctokitInstance(ctx.token);
                 const response = await octokit.rest.repos.getContent({
                   owner: input.owner,
                   repo: input.repo,
@@ -472,7 +464,7 @@ export const filesRouter = createTRPCRouter({
             }
             break;
           case "settings":
-            assertAdminUser(user, "Only admins can manage settings.");
+            assertAdminUser(ctx.user, "Only admins can manage settings.");
             if (normalizedPath !== ".pages.yml")
               throw new Error(`Invalid path "${input.path}" for settings.`);
             if (
@@ -501,7 +493,9 @@ export const filesRouter = createTRPCRouter({
         // for user identity, the editor's name goes into the commit message instead
         // (stamping user emails as author can block Vercel deploys).
         const editorName =
-          commitIdentity === "user" ? user.name?.trim() || user.email : undefined;
+          commitIdentity === "user"
+            ? ctx.user.name?.trim() || ctx.user.email
+            : undefined;
 
         // Settings live at `{basePath}/.pages.yml`; content/media paths are already
         // physical (rebased via the config schema), so they write as-is.
@@ -511,7 +505,7 @@ export const filesRouter = createTRPCRouter({
             : normalizedPath;
 
         const response = await githubSaveFile(
-          token,
+          ctx.token,
           input.owner,
           input.repo,
           input.branch,
@@ -522,7 +516,7 @@ export const filesRouter = createTRPCRouter({
             configObject: config?.object,
             templatesOverride: schemaCommitTemplates,
             contentName: input.name,
-            user: user.email || user.name || String(user.id || ""),
+            user: ctx.user.email || ctx.user.name || String(ctx.user.id || ""),
             onConflict,
             editorName,
           }
@@ -591,14 +585,15 @@ export const filesRouter = createTRPCRouter({
             config: newConfig ?? undefined,
           },
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 
-  delete: authenticatedProcedure
+  delete: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         path: z.string(),
         sha: z.string(),
@@ -606,14 +601,9 @@ export const filesRouter = createTRPCRouter({
         name: z.string().optional(),
       })
     )
-    .mutation(({ ctx, input }) =>
-      runCms(async () => {
-        const user = ctx.session.user as User;
-
-        await requireFeatureAccess(user, "cms");
-
-        const { token } = await getToken(user, input.owner, input.repo, true);
-        if (!token) throw new Error("Token not found");
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await requireFeatureAccess(ctx.user, "cms");
 
         if (
           !isContentOperationAllowed("delete", { scope: "settings" }) &&
@@ -630,7 +620,7 @@ export const filesRouter = createTRPCRouter({
         if (!name && type === "content") throw new Error(`"name" is required.`);
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
-          getToken: async () => token,
+          getToken: async () => ctx.token,
         });
         if (!config)
           throw new Error(
@@ -705,9 +695,11 @@ export const filesRouter = createTRPCRouter({
           identityOverride: schemaCommitIdentity,
         });
         const editorName =
-          commitIdentity === "user" ? user.name?.trim() || user.email : undefined;
+          commitIdentity === "user"
+            ? ctx.user.name?.trim() || ctx.user.email
+            : undefined;
 
-        const octokit = createOctokitInstance(token);
+        const octokit = createOctokitInstance(ctx.token);
         const response = await octokit.rest.repos.deleteFile({
           owner: input.owner,
           repo: input.repo,
@@ -726,7 +718,7 @@ export const filesRouter = createTRPCRouter({
                 branch: input.branch,
                 path: normalizedPath,
                 contentName: name || undefined,
-                user: user.email || user.name || String(user.id || ""),
+                user: ctx.user.email || ctx.user.name || String(ctx.user.id || ""),
                 userName: editorName,
               }),
             });
@@ -766,14 +758,15 @@ export const filesRouter = createTRPCRouter({
             path: response?.data.content?.path,
           },
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 
-  rename: authenticatedProcedure
+  rename: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         path: z.string(),
         type: z.enum(["content", "media"]),
@@ -781,14 +774,9 @@ export const filesRouter = createTRPCRouter({
         newPath: z.string(),
       })
     )
-    .mutation(({ ctx, input }) =>
-      runCms(async () => {
-        const user = ctx.session.user as User;
-
-        await requireFeatureAccess(user, "cms");
-
-        const { token } = await getToken(user, input.owner, input.repo, true);
-        if (!token) throw new Error("Token not found");
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await requireFeatureAccess(ctx.user, "cms");
 
         if (
           !isContentOperationAllowed("rename", { scope: "settings" }) &&
@@ -801,7 +789,7 @@ export const filesRouter = createTRPCRouter({
         }
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
-          getToken: async () => token,
+          getToken: async () => ctx.token,
         });
         if (!config)
           throw new Error(
@@ -897,10 +885,12 @@ export const filesRouter = createTRPCRouter({
           identityOverride: schemaCommitIdentity,
         });
         const editorName =
-          commitIdentity === "user" ? user.name?.trim() || user.email : undefined;
+          commitIdentity === "user"
+            ? ctx.user.name?.trim() || ctx.user.email
+            : undefined;
 
         const response = await githubRenameFile(
-          token,
+          ctx.token,
           input.owner,
           input.repo,
           input.branch,
@@ -910,7 +900,7 @@ export const filesRouter = createTRPCRouter({
             configObject: config.object,
             templatesOverride: schemaCommitTemplates,
             contentName: input.name,
-            user: user.email || user.name || String(user.id || ""),
+            user: ctx.user.email || ctx.user.name || String(ctx.user.id || ""),
             editorName,
           }
         );
@@ -940,6 +930,9 @@ export const filesRouter = createTRPCRouter({
             newPath: response?.newPath,
           },
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

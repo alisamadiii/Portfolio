@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import {
@@ -5,7 +6,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 
-import { runCms } from "@workspace/trpc/lib/cms/errors";
+import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { refreshFeatureAccess } from "@workspace/trpc/lib/cms/feature-access";
 import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
 import { featureKeys } from "@workspace/trpc/lib/features";
@@ -18,16 +19,19 @@ import { featureKeys } from "@workspace/trpc/lib/features";
  */
 const refresh = authenticatedProcedure
   .input(z.object({ feature: z.enum(featureKeys) }))
-  .mutation(async ({ input, ctx }) =>
-    runCms(async () => {
+  .mutation(async ({ input, ctx }) => {
+    try {
       const hasAccess = await refreshFeatureAccess(
         toCmsUser(ctx.session.user),
         input.feature
       );
 
       return { hasAccess };
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 const subscriptionRouter = createTRPCRouter({
   refresh,

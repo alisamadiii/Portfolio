@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { and, desc, ilike, sql } from "drizzle-orm";
 import z from "zod";
 
@@ -12,7 +13,7 @@ import { cmsOrgRepo } from "@workspace/drizzle/schema";
 import { isAdminUser } from "@workspace/trpc/lib/cms/authz-shared";
 import { collaboratorMatchesUser } from "@workspace/trpc/lib/cms/collaborator-access";
 import { collaboratorTable, db as cmsDb } from "@workspace/trpc/lib/cms/db";
-import { createHttpError, runCms } from "@workspace/trpc/lib/cms/errors";
+import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { syncOrgRepos } from "@workspace/trpc/lib/cms/org-repos";
 import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
@@ -59,8 +60,8 @@ const syncRepos = adminProcedure.mutation(() => syncOrgRepos());
  * Admins act as the org; collaborators get the distinct owners they were
  * invited to. Keeps GITHUB_ORG out of the hub app entirely.
  */
-const listAccounts = authenticatedProcedure.query(async ({ ctx }) =>
-  runCms(async () => {
+const listAccounts = authenticatedProcedure.query(async ({ ctx }) => {
+  try {
     const user = toCmsUser(ctx.session.user);
 
     if (isAdminUser(user)) {
@@ -93,8 +94,11 @@ const listAccounts = authenticatedProcedure.query(async ({ ctx }) =>
       type: collaborator.type,
       repositorySelection: "selected",
     }));
-  })
-);
+  } catch (error) {
+    if (error instanceof TRPCError) throw error;
+    throw toTRPCError(error);
+  }
+});
 
 /**
  * Repositories visible to the current user (port of GET /api/repos/[owner]).
@@ -103,8 +107,8 @@ const listAccounts = authenticatedProcedure.query(async ({ ctx }) =>
  */
 const listMine = authenticatedProcedure
   .input(z.object({ owner: z.string(), keyword: z.string().optional() }))
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
+  .query(async ({ input, ctx }) => {
+    try {
       const user = ctx.session.user;
 
       let githubRepos: any[] = [];
@@ -141,8 +145,11 @@ const listMine = authenticatedProcedure
       }
 
       return Array.from(reposByKey.values());
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 /**
  * Repo metadata + branch list (port of what the [owner]/[repo] layout resolved
@@ -150,8 +157,8 @@ const listMine = authenticatedProcedure
  */
 const getSnapshot = authenticatedProcedure
   .input(z.object({ owner: z.string().optional(), repo: z.string() }))
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
+  .query(async ({ input, ctx }) => {
+    try {
       const owner = input.owner ?? process.env.GITHUB_ORG;
       if (!owner) throw createHttpError("Missing GITHUB_ORG.", 500);
 
@@ -161,8 +168,11 @@ const getSnapshot = authenticatedProcedure
       if (!token) throw createHttpError("Token not found", 401);
 
       return getRepoSnapshot(owner, input.repo, token);
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 const reposRouter = createTRPCRouter({
   listRepos,

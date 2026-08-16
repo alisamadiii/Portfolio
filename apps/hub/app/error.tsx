@@ -31,6 +31,11 @@ export default function Error({
           We hit a temporary problem loading this page. Try again in a moment —
           if it keeps happening, contact your admin.
         </EmptyDescription>
+        {error.message && (
+          <p className="mt-3 rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground break-words">
+            {error.message}
+          </p>
+        )}
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
         <Button variant="outline" onClick={reset}>

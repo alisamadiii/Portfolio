@@ -1,8 +1,9 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { normalizePath } from "@workspace/cms-core/utils/file";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
+import { cmsProcedure, createTRPCRouter } from "../../init";
 import {
   resolveBatchCommitMessage,
   resolveCommitIdentity,
@@ -12,12 +13,10 @@ import {
   stringifyContentEntry,
   validateContentEntry,
 } from "../../lib/cms/content-file";
-import { createHttpError, runCms } from "../../lib/cms/errors";
+import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { requireFeatureAccess } from "../../lib/cms/feature-access";
 import { updateFileCache } from "../../lib/cms/github-cache-file";
 import { createOctokitInstance } from "../../lib/cms/octokit";
-import { getToken } from "../../lib/cms/token";
-import { type User } from "../../lib/cms/types";
 
 /**
  * Publish a batch of content entries as a single atomic commit.
@@ -44,11 +43,9 @@ import { type User } from "../../lib/cms/types";
 const MAX_FILES = 50;
 
 export const publishRouter = createTRPCRouter({
-  publish: authenticatedProcedure
+  publish: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         files: z
           .array(
@@ -68,17 +65,12 @@ export const publishRouter = createTRPCRouter({
         force: z.boolean().optional(),
       })
     )
-    .mutation(({ ctx, input }) =>
-      runCms(async () => {
-        const user = ctx.session.user as User;
-
-        await requireFeatureAccess(user, "cms");
-
-        const { token } = await getToken(user, input.owner, input.repo, true);
-        if (!token) throw new Error("Token not found");
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await requireFeatureAccess(ctx.user, "cms");
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
-          getToken: async () => token,
+          getToken: async () => ctx.token,
         });
         if (!config)
           throw new Error(
@@ -147,7 +139,7 @@ export const publishRouter = createTRPCRouter({
           });
         }
 
-        const octokit = createOctokitInstance(token);
+        const octokit = createOctokitInstance(ctx.token);
 
         // Current branch head and its tree.
         const refResponse = await octokit.rest.git.getRef({
@@ -253,7 +245,9 @@ export const publishRouter = createTRPCRouter({
               : undefined,
         });
         const editorName =
-          commitIdentity === "user" ? user.name?.trim() || user.email : undefined;
+          commitIdentity === "user"
+            ? ctx.user.name?.trim() || ctx.user.email
+            : undefined;
 
         const resolvedMessage = resolveBatchCommitMessage({
           configObject: config.object,
@@ -265,7 +259,7 @@ export const publishRouter = createTRPCRouter({
           owner: input.owner,
           repo: input.repo,
           branch: input.branch,
-          user: user.email || user.name || String(user.id || ""),
+          user: ctx.user.email || ctx.user.name || String(ctx.user.id || ""),
           userName: editorName,
         });
         // Appended after the length cap so the editor's name is never truncated away.
@@ -355,6 +349,9 @@ export const publishRouter = createTRPCRouter({
             files: publishedFiles,
           },
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

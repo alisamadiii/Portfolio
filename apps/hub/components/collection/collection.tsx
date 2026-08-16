@@ -95,7 +95,10 @@ import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { Badge } from "@workspace/ui/components/badge";
 
 import { CollectionTable } from "./collection-table";
-import { EntryDialog, type EntryDialogDraft } from "./entry-dialog";
+import {
+  EntrySheet,
+  type EntrySheetDraft,
+} from "@/components/cms/entry-sheet";
 
 type GroupTrailItem = {
   name: string;
@@ -453,12 +456,12 @@ export function Collection({
   const [entryDialog, setEntryDialog] = useState<{
     open: boolean;
     parent?: string;
-    draft?: EntryDialogDraft;
+    draft?: EntrySheetDraft;
   }>({ open: false });
   const openNewEntry = useCallback((parentOverride?: string) => {
     setEntryDialog({ open: true, parent: parentOverride });
   }, []);
-  const openDraft = useCallback((draft: EntryDialogDraft) => {
+  const openDraft = useCallback((draft: EntrySheetDraft) => {
     setEntryDialog({ open: true, draft });
   }, []);
   const error =
@@ -1459,16 +1462,19 @@ export function Collection({
   return (
     <div className="flex min-w-0 flex-col space-y-6">
       {contentNode}
-      <EntryDialog
+      <EntrySheet
         open={entryDialog.open}
         onOpenChange={(open) =>
           setEntryDialog((state) => ({ ...state, open }))
         }
         schemaName={name}
-        parent={entryDialog.parent ?? newEntryParent}
-        initialValues={newEntryInitialValues}
-        draft={entryDialog.draft}
-        takenPaths={takenPaths}
+        mode={{
+          kind: "new",
+          parent: entryDialog.parent ?? newEntryParent,
+          initialValues: newEntryInitialValues,
+          draft: entryDialog.draft,
+          takenPaths,
+        }}
       />
     </div>
   );

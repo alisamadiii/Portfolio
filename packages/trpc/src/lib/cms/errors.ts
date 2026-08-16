@@ -111,17 +111,4 @@ const toTRPCError = (error: unknown): TRPCError => {
   });
 };
 
-/**
- * Run an engine call inside a tRPC procedure: HttpErrors become TRPCErrors,
- * TRPCErrors pass through untouched.
- */
-const runCms = async <T>(fn: () => Promise<T>): Promise<T> => {
-  try {
-    return await fn();
-  } catch (error) {
-    if (error instanceof TRPCError) throw error;
-    throw toTRPCError(error);
-  }
-};
-
-export { createHttpError, runCms, toErrorResponse, toTRPCError };
+export { createHttpError, toErrorResponse, toTRPCError };

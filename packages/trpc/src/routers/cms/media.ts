@@ -1,15 +1,12 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { getFileExtension, normalizePath } from "@workspace/cms-core/utils/file";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
-import { createHttpError, runCms } from "../../lib/cms/errors";
+import { cmsProcedure, createTRPCRouter } from "../../init";
+import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { getMediaCache } from "../../lib/cms/github-cache-file";
 import { getRepoReadContext } from "../../lib/cms/repo-context";
-import type { User } from "../../lib/cms/types";
-
-// Swap for the shared helper from ../../lib/cms/session-user once it lands.
-const toCmsUser = (user: unknown): User => user as User;
 
 // REST URL-encoded the path segment and decoded it here; tRPC inputs arrive
 // decoded, so no decodeURIComponent on the raw path.
@@ -56,22 +53,21 @@ export const mediaRouter = createTRPCRouter({
    * Get the list of media files in a directory (with extension filtering,
    * dirs-first sorting and download URLs).
    */
-  list: authenticatedProcedure
+  list: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         name: z.string(),
         path: z.string(),
         nocache: z.boolean().optional(),
       })
     )
-    .query(({ ctx, input }) =>
-      runCms(async () => {
-        const { token, config } = await getRepoReadContext(
+    .query(async ({ ctx, input }) => {
+      try {
+        const { config } = await getRepoReadContext(
           input,
-          toCmsUser(ctx.session.user)
+          ctx.user,
+          ctx.token
         );
 
         const mediaConfig =
@@ -109,7 +105,7 @@ export const mediaRouter = createTRPCRouter({
             input.repo,
             input.branch,
             normalizedPath,
-            token,
+            ctx.token,
             !!input.nocache
           );
         } catch (error: any) {
@@ -148,6 +144,9 @@ export const mediaRouter = createTRPCRouter({
             url: item.downloadUrl,
           };
         });
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

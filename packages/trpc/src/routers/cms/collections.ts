@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { readFns } from "@workspace/cms-core/fields/registry";
@@ -15,14 +16,14 @@ import {
   serializedTypes,
 } from "@workspace/cms-core/utils/file";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
+import { cmsProcedure, createTRPCRouter } from "../../init";
 import {
   buildCommitTokens,
   resolveCommitIdentity,
   resolveCommitMessage,
 } from "../../lib/cms/commit-message";
 import { getConfig } from "../../lib/cms/config-store";
-import { createHttpError, runCms } from "../../lib/cms/errors";
+import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { requireFeatureAccess } from "../../lib/cms/feature-access";
 import {
   getBranchHeadSha,
@@ -33,11 +34,6 @@ import {
 import { createOctokitInstance } from "../../lib/cms/octokit";
 import { getRepoReadContext } from "../../lib/cms/repo-context";
 import { parse, stringify } from "../../lib/cms/serialization";
-import { getToken } from "../../lib/cms/token";
-import type { User } from "../../lib/cms/types";
-
-// Swap for the shared helper from ../../lib/cms/session-user once it lands.
-const toCmsUser = (user: unknown): User => user as User;
 
 const setByPath = (target: Record<string, any>, path: string, value: any) => {
   if (!path) return;
@@ -208,11 +204,9 @@ export const collectionsRouter = createTRPCRouter({
    * (for collection views and searches). If type is "search", contents are
    * filtered by query and fields.
    */
-  list: authenticatedProcedure
+  list: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         name: z.string(),
         path: z.string().optional(),
@@ -221,11 +215,12 @@ export const collectionsRouter = createTRPCRouter({
         fields: z.array(z.string()).optional(),
       })
     )
-    .query(({ ctx, input }) =>
-      runCms(async () => {
+    .query(async ({ ctx, input }) => {
+      try {
         const { token, config } = await getRepoReadContext(
           input,
-          toCmsUser(ctx.session.user)
+          ctx.user,
+          ctx.token
         );
 
         const schema = getSchemaByName(config.object, input.name);
@@ -348,18 +343,19 @@ export const collectionsRouter = createTRPCRouter({
         }
 
         return data;
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 
   /**
    * Reorders a collection's entries by rewriting the collection's order field
    * (`view.reorder`) in every entry whose value changed, in a single commit.
    */
-  reorder: authenticatedProcedure
+  reorder: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         name: z.string(),
         path: z.string().min(1, `"path" is required.`),
@@ -374,14 +370,12 @@ export const collectionsRouter = createTRPCRouter({
           .min(1, `"items" is required and must be a non-empty array.`),
       })
     )
-    .mutation(({ ctx, input }) =>
-      runCms(async () => {
-        const user = toCmsUser(ctx.session.user);
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const user = ctx.user;
+        const token = ctx.token;
 
         await requireFeatureAccess(user, "cms");
-
-        const { token } = await getToken(user, input.owner, input.repo, true);
-        if (!token) throw new Error("Token not found");
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
           getToken: async () => token,
@@ -625,6 +619,9 @@ export const collectionsRouter = createTRPCRouter({
           commitSha: commitSha as string | null,
           updated,
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

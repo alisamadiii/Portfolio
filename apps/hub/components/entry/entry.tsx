@@ -83,6 +83,7 @@ import {
 
 import { parseAndValidateConfig } from "@workspace/cms-core/config";
 import { computeEntryDiff } from "@/lib/entry-diff";
+import { applySeoAutofill, hideSeoFields } from "@/lib/seo-autofill";
 import { resolveContentOperations } from "@workspace/cms-core/operations";
 import { getPreviewUrl } from "@/lib/preview";
 import { handleCmsError } from "@/lib/trpc-errors";
@@ -266,10 +267,10 @@ export function Entry({
               label: false,
               type: "object",
               list: true,
-              fields: schema.fields,
+              fields: hideSeoFields(schema, schema.fields),
             },
           ]
-        : schema.fields;
+        : hideSeoFields(schema, schema.fields);
   }, [schema, entry, path, showFilenameField]);
 
   const previewTarget = useMemo(
@@ -728,9 +729,12 @@ export function Entry({
 
       // Exactly what the files POST sends as `content` (list-unwrapped), so
       // the publish payload matches single-file save semantics.
-      const values = (
-        schema?.list === true ? contentObject.listWrapper : contentObject
-      ) as Record<string, unknown>;
+      const values = applySeoAutofill(
+        schema,
+        (schema?.list === true
+          ? contentObject.listWrapper
+          : contentObject) as Record<string, unknown>
+      );
 
       let draftTitle: string | undefined;
       if (schema && schema.type === "collection" && schema.list !== true) {

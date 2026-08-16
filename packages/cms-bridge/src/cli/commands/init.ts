@@ -27,6 +27,8 @@ import {
   writeDataFile,
 } from "../core/json-store.js";
 import { assignPaths } from "../core/naming.js";
+import { ensurePackageScripts } from "../core/package-scripts.js";
+import { COMMANDS } from "../commands.js";
 import {
   ensureEntry,
   ensureLinkComponent,
@@ -279,6 +281,18 @@ export async function initCommand(
     });
   }
 
+  // ---- package.json scripts ----------------------------------------------
+  // Append a `cms:<cmd>` run-script for every CLI command (append-only —
+  // existing keys are kept, nothing else is touched).
+  const scriptsResult = ensurePackageScripts(
+    root,
+    COMMANDS.map((command) => ({
+      key: `cms:${command.name}`,
+      command: `npx cms-bridge ${command.name}`,
+    })),
+    { dryRun }
+  );
+
   // ---- Docs sync ---------------------------------------------------------
   const docsSync = syncDocs(root, { dryRun });
 
@@ -308,6 +322,17 @@ export async function initCommand(
   );
   if (configResult === "added") {
     console.log(`  ${pc.green("✓")} astro.config: cmsBridge() integration added`);
+  }
+  if (scriptsResult.result === "written") {
+    console.log(
+      `  ${pc.green("✓")} package.json: added ${scriptsResult.added.length} script(s) (${scriptsResult.added.join(", ")})`
+    );
+  } else if (scriptsResult.result === "unchanged") {
+    console.log(`  ${pc.dim("·")} package.json: scripts already present`);
+  } else {
+    console.log(
+      `  ${pc.yellow("⚠")} package.json not found — scripts not added`
+    );
   }
   for (const report of docsSync.reports) {
     const verb =

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { and, eq, sql } from "drizzle-orm";
 import z from "zod";
 
@@ -14,7 +15,7 @@ import {
   configTable,
   db,
 } from "@workspace/trpc/lib/cms/db";
-import { createHttpError, runCms } from "@workspace/trpc/lib/cms/errors";
+import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import {
   clearFileCache,
   ensureFileCacheFreshness,
@@ -59,8 +60,8 @@ const requireCacheAccess = async (
 /** Cache dashboard data. Port of GET /api/[owner]/[repo]/[branch]/cache. */
 const status = authenticatedProcedure
   .input(branchInput)
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
+  .query(async ({ input, ctx }) => {
+    try {
       const { owner, repo, branch } = input;
 
       const { token } = await requireCacheAccess(
@@ -109,8 +110,11 @@ const status = authenticatedProcedure
           : null,
         branchHeadSha,
       };
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 /** Cache maintenance actions. Port of POST /api/[owner]/[repo]/[branch]/cache. */
 const action = authenticatedProcedure
@@ -125,8 +129,8 @@ const action = authenticatedProcedure
       ]),
     })
   )
-  .mutation(async ({ input, ctx }) =>
-    runCms(async () => {
+  .mutation(async ({ input, ctx }) => {
+    try {
       const { owner, repo, branch } = input;
 
       const { token } = await requireCacheAccess(
@@ -189,8 +193,11 @@ const action = authenticatedProcedure
             );
           return { message: "All cache cleared." };
       }
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 const cacheRouter = createTRPCRouter({
   status,

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { readFns } from "@workspace/cms-core/fields/registry";
@@ -8,21 +9,16 @@ import {
   serializedTypes,
 } from "@workspace/cms-core/utils/file";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
+import { cmsProcedure, createTRPCRouter } from "../../init";
 import { assertAdminUser } from "../../lib/cms/authz-shared";
 import { getConfig } from "../../lib/cms/config-store";
-import { createHttpError, runCms } from "../../lib/cms/errors";
+import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { createOctokitInstance } from "../../lib/cms/octokit";
 import {
   getBasePath,
   resolveConfigFilePath,
 } from "../../lib/cms/repo-settings";
 import { parse } from "../../lib/cms/serialization";
-import { getToken } from "../../lib/cms/token";
-import type { User } from "../../lib/cms/types";
-
-// Swap for the shared helper from ../../lib/cms/session-user once it lands.
-const toCmsUser = (user: unknown): User => user as User;
 
 // Parse the entry into an object based on the content schema.
 const parseContent = (
@@ -84,11 +80,9 @@ export const entriesRouter = createTRPCRouter({
    * ".pages.yml" (admin only) and the raw contents are returned. With
    * `meta: true` (and no name), only the cached config metadata is returned.
    */
-  get: authenticatedProcedure
+  get: cmsProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
         branch: z.string(),
         // Repo-relative file path. REST URL-encoded this segment; tRPC inputs
         // arrive decoded, so no decodeURIComponent here.
@@ -97,12 +91,9 @@ export const entriesRouter = createTRPCRouter({
         meta: z.boolean().optional(),
       })
     )
-    .query(({ ctx, input }) =>
-      runCms(async () => {
-        const user = toCmsUser(ctx.session.user);
-
-        const { token } = await getToken(user, input.owner, input.repo);
-        if (!token) throw createHttpError("Token not found", 401);
+    .query(async ({ ctx, input }) => {
+      try {
+        const { user, token } = ctx;
 
         const name = input.name;
         const metaOnly = input.meta === true;
@@ -209,6 +200,9 @@ export const entriesRouter = createTRPCRouter({
           path: response.data.path,
           contentObject,
         };
-      })
-    ),
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

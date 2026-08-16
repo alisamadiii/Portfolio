@@ -26,7 +26,7 @@ import {
   RepoHeaderProvider,
   useRepoHeaderState,
 } from "@/components/repo/repo-header-context";
-import { EntryEditPanel } from "@/components/cms/entry-edit-panel";
+import { EntrySheet } from "@/components/cms/entry-sheet";
 
 /** Renders the Collection component's captured header (breadcrumb + New entry + search). */
 function OverlayToolbar() {
@@ -58,10 +58,14 @@ export function CmsOverlay({
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState<string | undefined>(undefined);
+  // `editing` holds the sheet's identity, `editorOpen` drives the open/close
+  // animation — identity is cleared only after the exit animation settles so
+  // the sheet can animate out instead of unmounting mid-transition.
   const [editing, setEditing] = useState<{
     schemaName: string;
     path: string;
   } | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const collections = useMemo(() => getCollectionLeaves(config), [config]);
 
@@ -86,18 +90,19 @@ export function CmsOverlay({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       // Let the edit panel / dialogs handle their own Escape first.
-      if (editing) return;
+      if (editorOpen) return;
       event.stopPropagation();
       onOpenChange(false);
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [open, editing, onOpenChange]);
+  }, [open, editorOpen, onOpenChange]);
 
   // Fresh folder state per overlay session; honor a requested collection.
   useEffect(() => {
     if (!open) {
       setEditing(null);
+      setEditorOpen(false);
       setFolderPath(undefined);
       return;
     }
@@ -142,6 +147,7 @@ export function CmsOverlay({
                 setSelected(collection.name);
                 setFolderPath(undefined);
                 setEditing(null);
+                setEditorOpen(false);
               }}
               className={cn(
                 "flex w-full items-center gap-1 rounded-lg px-3 py-2 text-left text-sm",
@@ -180,9 +186,10 @@ export function CmsOverlay({
                 key={`${active.name}:${folderPath ?? ""}`}
                 name={active.name}
                 path={folderPath}
-                onOpenEntry={(path) =>
-                  setEditing({ schemaName: active.name, path })
-                }
+                onOpenEntry={(path) => {
+                  setEditing({ schemaName: active.name, path });
+                  setEditorOpen(true);
+                }}
                 onNavigateFolder={setFolderPath}
               />
             </div>
@@ -213,15 +220,17 @@ export function CmsOverlay({
         )}
       </div>
 
-      {/* Right: slide-in entry editor */}
+      {/* Right: slide-in entry editor. Stays mounted through the exit
+          animation — identity clears in onOpenChangeComplete. */}
       {editing && (
-        <EntryEditPanel
-          open={Boolean(editing)}
-          onOpenChange={(next) => {
+        <EntrySheet
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          onOpenChangeComplete={(next) => {
             if (!next) setEditing(null);
           }}
           schemaName={editing.schemaName}
-          path={editing.path}
+          mode={{ kind: "edit", path: editing.path }}
         />
       )}
     </div>

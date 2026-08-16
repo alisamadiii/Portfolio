@@ -754,7 +754,7 @@ export function Canvas() {
       <div
         ref={viewportRef}
         className={cn(
-          "canvas-viewport h-full w-full touch-none overscroll-none",
+          "canvas-viewport h-full w-full touch-none overscroll-none select-none",
           engagedKey ? "cursor-default" : "cursor-grab active:cursor-grabbing"
         )}
         onClick={() => {

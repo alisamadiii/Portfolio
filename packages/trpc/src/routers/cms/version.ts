@@ -1,6 +1,8 @@
+import { TRPCError } from "@trpc/server";
+
 import { baseProcedure, createTRPCRouter } from "@workspace/trpc/init";
 
-import { createHttpError, runCms } from "@workspace/trpc/lib/cms/errors";
+import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { rateLimit } from "@workspace/trpc/middleware/rate-limit";
 
 const REPO = "pagescms/pagescms";
@@ -22,8 +24,8 @@ let cached: { value: VersionInfo; expiresAt: number } | null = null;
  * Latest upstream Pages CMS version (port of GET /api/app/version).
  * Public + rate limited; result cached in-memory for an hour.
  */
-const get = baseProcedure.query(async () =>
-  runCms(async () => {
+const get = baseProcedure.query(async () => {
+  try {
     await rateLimit();
 
     if (cached && cached.expiresAt > Date.now()) return cached.value;
@@ -51,8 +53,11 @@ const get = baseProcedure.query(async () =>
 
     cached = { value, expiresAt: Date.now() + CACHE_TTL_MS };
     return value;
-  })
-);
+  } catch (error) {
+    if (error instanceof TRPCError) throw error;
+    throw toTRPCError(error);
+  }
+});
 
 const versionRouter = createTRPCRouter({
   get,

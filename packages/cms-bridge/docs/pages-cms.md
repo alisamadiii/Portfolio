@@ -361,6 +361,14 @@ file's `fields`, not nested); put it first.
 Wire into `<head>`: `<title>{seo.title}</title>`,
 `<meta name="description" content={seo.description}>`.
 
+**Collections auto-derive their SEO.** For `type: collection` entries the CMS hides the
+`seo` section in the entry form and fills it at save time: `seo.title` ← the primary field
+(usually `title`), `seo.description` ← the first non-blank of `excerpt` / `description` /
+`summary`. Only blank values are filled — hand-written seo in existing records is never
+overwritten, and existing values round-trip untouched. Still declare the `seo` field on
+collections (the astro templates read it), but do **not** mark it or its subfields
+`required`. File entries (pages) keep the visible SEO section + SERP preview.
+
 ### Site name in search results
 
 Google shows a **site name** above the title (not the bare domain) only when the site
@@ -393,7 +401,7 @@ import site from "../data/site.json";
 The CMS docks a live site preview; focusing a field scrolls to and highlights the matching
 element. Three things per site — do all three when you build or edit one.
 
-### 1. `settings.baseUrl` (+ optional `settings.preview.paths`)
+### 1. `settings.baseUrl` + `settings.preview.paths`
 
 Without `baseUrl` the preview doesn't show.
 
@@ -401,18 +409,25 @@ Without `baseUrl` the preview doesn't show.
 settings:
   baseUrl: https://the-client-site.com # live (or local dev) URL
   preview:
-    paths: # optional — override the route for an entry
-      site: / # default: `/` for entry `home`, else `/<name>`
+    paths: # entry → route; THIS list is the canvas
+      site: / # global entry, previews at /
+      home: / # homepage content
       about: /about
       hervoice-winners: /hervoice/winners
     global: [site] # optional — entries on EVERY page (header/footer)
 ```
 
-Route per entry: `preview.paths[<name>]` if set, else `/` when named `home`, else
-`/<name>`. A single-page site whose only entry is `site` needs `paths: { site: / }`.
-`preview.global` lists entries whose fields appear on every page (defaults to a `site`
-entry when omitted) — the canvas uses it to resolve which JSON an in-page edit belongs to
-and update all frames at once.
+**`preview.paths` is the sole source of canvas tiles.** The canvas renders exactly one tile
+per key here (collections with `{slug}` collapse to one — see below); there is no sitemap
+crawl and no default-route inference. An entry absent from `preview.paths` gets **no tile**
+— to show a page on the canvas you must map it here. A single-page site whose only entry is
+`site` needs `paths: { site: / }`. Multiple keys may share one route (`site` + `home` → `/`);
+the first-listed wins the tile, the rest still resolve for in-page field editing. **Tiles
+appear in the order the keys are listed** (no alphabetical sort) — order `preview.paths` to
+control the canvas layout.
+`preview.global` lists entries whose fields appear on every page (defaults to a `site` entry
+when omitted) — the canvas uses it to resolve which JSON an in-page edit belongs to and
+update all frames at once.
 
 #### Collection detail routes — the `{slug}` placeholder
 
@@ -426,8 +441,8 @@ preview:
     blog: /blog/{slug} # the collection → one templated detail route
 ```
 
-The canvas enumerates real routes as tiles. Without the placeholder a 40-record collection
-becomes 40 tiles; with `{slug}` it collapses to one "Linked to a CMS table · Manage entries"
+Map the collection under one `{slug}` key so it stays one tile. Without the placeholder the
+key resolves to a single detail route; with `{slug}` the tile becomes a "Linked to a CMS table · Manage entries"
 placeholder (records edited in the list view). Use `{slug}` regardless of field name; the
 template must match the built route (`/hervoice/{slug}` for `/hervoice/<slug>`). Collections
 that render **inline** on a parent page (logo strip, team grid — no `[slug]` route) need no

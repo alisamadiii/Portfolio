@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import z from "zod";
 
@@ -8,7 +9,7 @@ import {
 
 import { requireAdminRepoAccess } from "@workspace/trpc/lib/cms/authz";
 import { collaboratorTable, db } from "@workspace/trpc/lib/cms/db";
-import { runCms } from "@workspace/trpc/lib/cms/errors";
+import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 
 /**
  * Fetches collaborators for a repository.
@@ -17,8 +18,8 @@ import { runCms } from "@workspace/trpc/lib/cms/errors";
  */
 const list = authenticatedProcedure
   .input(z.object({ owner: z.string(), repo: z.string() }))
-  .query(async ({ input, ctx }) =>
-    runCms(async () => {
+  .query(async ({ input, ctx }) => {
+    try {
       // TODO: support for branches and account collaborators
       const { repoAccess } = await requireAdminRepoAccess(
         ctx.session.user,
@@ -33,8 +34,11 @@ const list = authenticatedProcedure
           eq(collaboratorTable.repoId, repoAccess.repoId)
         ),
       });
-    })
-  );
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
 
 const collaboratorsRouter = createTRPCRouter({
   list,
