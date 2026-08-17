@@ -985,8 +985,15 @@ const SingleField = ({
   const changedMatch = useChangedField(fieldName);
   const isRichTextField = field.type === "rich-text";
   const showLabelSlot = isRichTextField && field.options?.switcher !== false;
+  // string/text/number/uuid render as MUI fields that carry their own floating
+  // label — suppress the external FormLabel row to avoid a duplicate label.
+  const selfLabeledMui = ["string", "text", "number", "uuid"].includes(
+    field.type
+  );
   const shouldShowFieldMeta =
-    showLabel && (field.label !== false || field.required || showLabelSlot);
+    showLabel &&
+    !selfLabeledMui &&
+    (field.label !== false || field.required || showLabelSlot);
   const rawLabelSlotId = useId();
   const labelSlotId = useMemo(
     () => `field-label-slot-${rawLabelSlotId.replace(/[^a-zA-Z0-9_-]/g, "")}`,

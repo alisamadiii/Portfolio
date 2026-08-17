@@ -138,11 +138,11 @@ export const pagesRouter = createTRPCRouter({
           );
 
         const settings = config.object?.settings;
-        const baseUrl: unknown =
-          settings && typeof settings === "object"
-            ? settings.baseUrl
-            : undefined;
-        // const baseUrl: unknown = "http://localhost:4321";
+        // const baseUrl: unknown =
+        //   settings && typeof settings === "object"
+        //     ? settings.baseUrl
+        //     : undefined;
+        const baseUrl: unknown = "http://localhost:4321";
         if (!baseUrl || typeof baseUrl !== "string") {
           throw createHttpError(
             "No `settings.baseUrl` configured — the canvas needs the site's live URL.",

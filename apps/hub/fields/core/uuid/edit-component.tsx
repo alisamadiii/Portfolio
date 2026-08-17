@@ -4,7 +4,6 @@ import { forwardRef } from "react";
 import { RefreshCcw } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
 import {
   Tooltip,
   TooltipContent,
@@ -12,22 +11,29 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
+import { TextField } from "@/components/ui/mui";
+
 const EditComponent = forwardRef(
   (props: any, ref: React.Ref<HTMLInputElement>) => {
-    const { field, onChange, ...restProps } = props;
+    const { field, value, onChange, ...restProps } = props;
     const isInputReadonly = field?.readonly || !field?.options?.editable;
+    const label =
+      field?.label === false ? undefined : field?.label || field?.name;
 
     const generateNewUUID = () => {
       onChange(crypto.randomUUID());
     };
 
     return (
-      <div className="flex gap-2">
-        <Input
+      <div className="flex items-center gap-2">
+        <TextField
           {...restProps}
-          ref={ref}
-          className="text-base"
-          readOnly={isInputReadonly}
+          inputRef={ref}
+          label={label}
+          value={value ?? ""}
+          onChange={onChange}
+          className="flex-1"
+          slotProps={{ input: { readOnly: isInputReadonly } }}
         />
         {field?.options?.generate !== false && (
           <TooltipProvider>

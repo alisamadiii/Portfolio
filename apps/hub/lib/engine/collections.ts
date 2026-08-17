@@ -7,6 +7,7 @@
 
 import type { ManifestData } from "./v2";
 
+import { buildBlogSchema, isBlogCollection } from "./blog-schema";
 import { labelize } from "./infer";
 
 export type ManifestCollection =
@@ -25,6 +26,10 @@ const FIELD_TYPES = new Set([
 export function collectionSchema(
   collection: ManifestCollection
 ): Record<string, any> {
+  // Blog is special: every client shares one fixed, future-proofed schema
+  // (always Markdown), regardless of what its cms.json blog fields declare.
+  if (isBlogCollection(collection)) return buildBlogSchema(collection);
+
   const declared = collection.fields.map((field) => ({
     name: field.name,
     label: field.label ?? labelize(field.name),

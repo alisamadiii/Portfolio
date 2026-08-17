@@ -12,13 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+import { FieldError } from "@workspace/ui/components/field";
+
+import { TextField } from "@/components/ui/mui";
 
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";
 
@@ -84,21 +80,13 @@ export const Company = () => {
             control={form.control}
             name="phone"
             render={({ field, fieldState }) => (
-              <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">
-                  Phone
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    aria-invalid={fieldState.invalid}
-                    placeholder="+1 (971) 382-8969"
-                  />
-                </FieldContent>
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : undefined}
-                />
-              </Field>
+              <TextField
+                label="Phone"
+                placeholder="+1 (971) 382-8969"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                {...field}
+              />
             )}
           />
 
@@ -106,21 +94,13 @@ export const Company = () => {
             control={form.control}
             name="company"
             render={({ field, fieldState }) => (
-              <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">
-                  Company
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    aria-invalid={fieldState.invalid}
-                    placeholder="AliSamadiiLLC"
-                  />
-                </FieldContent>
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : undefined}
-                />
-              </Field>
+              <TextField
+                label="Company"
+                placeholder="AliSamadiiLLC"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                {...field}
+              />
             )}
           />
 
@@ -128,21 +108,13 @@ export const Company = () => {
             control={form.control}
             name="address"
             render={({ field, fieldState }) => (
-              <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">
-                  Address
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Oregon, USA"
-                  />
-                </FieldContent>
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : undefined}
-                />
-              </Field>
+              <TextField
+                label="Address"
+                placeholder="Oregon, USA"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                {...field}
+              />
             )}
           />
 

@@ -31,6 +31,7 @@ import {
 import { EntrySheet } from "@/components/cms/entry-sheet";
 import { CollectionV2 } from "@/components/cms/collection-v2";
 import type { ManifestCollection } from "@/lib/engine/collections";
+import { isBlogCollection } from "@/lib/engine/blog-schema";
 
 /** Renders the Collection component's captured header (breadcrumb + New entry + search). */
 function OverlayToolbar() {
@@ -87,8 +88,11 @@ export function CmsOverlay({
       }
     )
   );
-  const v2Collections: ManifestCollection[] =
-    (manifestQuery.data?.object.collections as ManifestCollection[]) ?? [];
+  // Blog has its own dedicated manager (/[repo]/blog); it never shows in the
+  // generic collections rail.
+  const v2Collections: ManifestCollection[] = (
+    (manifestQuery.data?.object.collections as ManifestCollection[]) ?? []
+  ).filter((collection) => !isBlogCollection(collection));
   const isV2 = Boolean(manifestQuery.data);
 
   const legacyCollections = useMemo(

@@ -2,31 +2,36 @@
 
 import { forwardRef } from "react";
 
-import { Input } from "@workspace/ui/components/input";
-import { cn } from "@workspace/ui/lib/utils";
+import { TextField } from "@/components/ui/mui";
 
 const EditComponent = forwardRef(
   (props: any, ref: React.Ref<HTMLInputElement>) => {
     const { field, value, onChange, ...restProps } = props;
+    const label =
+      field?.label === false ? undefined : field?.label || field?.name;
 
     return (
-      <Input
+      <TextField
         {...restProps}
-        ref={ref}
+        inputRef={ref}
         type="number"
-        min={field?.options?.min ?? undefined}
-        max={field?.options?.max ?? undefined}
-        step={field?.options?.step ?? undefined}
-        value={value}
+        label={label}
+        value={value ?? ""}
         onChange={onChange}
-        className={cn(
-          "text-base",
-          field?.readonly && "focus-visible:border-input focus-visible:ring-0"
-        )}
-        readOnly={field?.readonly}
+        required={Boolean(field?.required)}
+        slotProps={{
+          input: { readOnly: Boolean(field?.readonly) },
+          htmlInput: {
+            min: field?.options?.min ?? undefined,
+            max: field?.options?.max ?? undefined,
+            step: field?.options?.step ?? undefined,
+          },
+        }}
       />
     );
   }
 );
+
+EditComponent.displayName = "EditComponent";
 
 export { EditComponent };

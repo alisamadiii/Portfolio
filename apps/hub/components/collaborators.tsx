@@ -52,7 +52,7 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Textarea } from "@workspace/ui/components/textarea";
+import { TextArea } from "@/components/ui/mui";
 import {
   Tooltip,
   TooltipContent,
@@ -144,13 +144,14 @@ function InviteCollaboratorsDialog({
         <form action={action} className="space-y-4">
           <input type="hidden" name="owner" value={owner} />
           <input type="hidden" name="repo" value={repo} />
-          <Textarea
+          <TextArea
             name="emails"
+            label="Email addresses"
             placeholder="alice@example.com, bob@example.com"
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
             required
-            rows={6}
+            minRows={6}
           />
           {state?.error ? (
             <p className="text-destructive text-sm font-medium">

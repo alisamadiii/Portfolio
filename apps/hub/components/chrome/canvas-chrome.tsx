@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  NotebookPen,
   Search,
   Settings2,
   ShieldCheck,
@@ -79,6 +80,16 @@ export function CanvasChrome({
           <Table2 className="size-4" />
           <span className="max-md:hidden">CMS</span>
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          render={
+            <Link href={repoPath(repo, "blog")}>
+              <NotebookPen className="size-4" />
+              <span className="max-md:hidden">Blog</span>
+            </Link>
+          }
+        />
         {adminItems.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger

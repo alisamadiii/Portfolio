@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { Textarea } from "@workspace/ui/components/textarea";
+import { TextArea } from "@/components/ui/mui";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -109,10 +109,11 @@ export const DangerSettings = () => {
               <AlertDialogHeader className="mb-4">
                 <AlertDialogTitle>Request Account Deletion</AlertDialogTitle>
               </AlertDialogHeader>
-              <Textarea
-                placeholder="Can you please provide a reason for the deletion? (Optional)"
+              <TextArea
+                label="Reason for deletion (optional)"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
+                minRows={3}
               />
               <AlertDialogFooter className="grid grid-cols-2 gap-2">
                 <AlertDialogCancel

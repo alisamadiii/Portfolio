@@ -2,28 +2,40 @@
 
 import { forwardRef, useImperativeHandle, useRef } from "react";
 
-import { Textarea } from "@workspace/ui/components/textarea";
-import { cn } from "@workspace/ui/lib/utils";
+import { TextArea } from "@/components/ui/mui";
 
+/**
+ * Multiline text field — Google/Material outlined textarea. Self-labels from the
+ * schema (entry-form suppresses its own FormLabel for this type).
+ */
 const EditComponent = forwardRef((props: any, ref) => {
-  const { field, ...restProps } = props;
+  const { field, value, ...restProps } = props;
   const internalRef = useRef<HTMLTextAreaElement | null>(null);
 
   useImperativeHandle(ref, () => internalRef.current);
 
+  const label =
+    field?.label === false ? undefined : field?.label || field?.name;
+
   return (
-    <Textarea
+    <TextArea
       {...restProps}
-      ref={internalRef}
-      minLength={field.options?.minlength}
-      maxLength={field.options?.maxlength}
-      className={cn(
-        "min-h-19.5 text-base bg-background",
-        field?.readonly && "focus-visible:border-input focus-visible:ring-0"
-      )}
-      readOnly={field?.readonly}
+      value={value ?? ""}
+      inputRef={internalRef}
+      label={label}
+      required={Boolean(field?.required)}
+      minRows={3}
+      slotProps={{
+        input: { readOnly: Boolean(field?.readonly) },
+        htmlInput: {
+          minLength: field?.options?.minlength,
+          maxLength: field?.options?.maxlength,
+        },
+      }}
     />
   );
 });
+
+EditComponent.displayName = "EditComponent";
 
 export { EditComponent };

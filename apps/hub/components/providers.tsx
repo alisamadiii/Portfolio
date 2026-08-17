@@ -9,6 +9,7 @@ import { User } from "@/types/user";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { MuiProvider } from "@/components/ui/mui/provider";
 
 export function Providers({
   children,
@@ -25,9 +26,11 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        <UserProvider user={user}>
-          <TooltipProvider>{children}</TooltipProvider>
-        </UserProvider>
+        <MuiProvider>
+          <UserProvider user={user}>
+            <TooltipProvider>{children}</TooltipProvider>
+          </UserProvider>
+        </MuiProvider>
       </ThemeProvider>
     </NuqsAdapter>
   );

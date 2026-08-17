@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Input } from "@workspace/ui/components/input";
+import { TextField } from "@/components/ui/mui";
 
 import { handleCmsError } from "@/lib/trpc-errors";
 import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";
@@ -148,8 +148,9 @@ const FolderCreate = ({
           }}
           className="space-y-4"
         >
-          <Input
+          <TextField
             autoFocus
+            label="Folder name"
             value={folderPath}
             onChange={(e) => setFolderPath(e.target.value)}
           />

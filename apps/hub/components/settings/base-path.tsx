@@ -15,8 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { TextField } from "@/components/ui/mui";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -100,14 +99,14 @@ export function BasePath({ owner, repo }: BasePathProps) {
           }}
         >
           <div className="grid w-full items-center gap-2">
-            <Label htmlFor="base-path">Folder</Label>
-            <Input
+            <TextField
               id="base-path"
               name="base-path"
+              label="Folder"
               value={basePath}
               placeholder="frontend"
               onChange={(event) => setBasePath(event.target.value)}
-              maxLength={255}
+              slotProps={{ htmlInput: { maxLength: 255 } }}
               disabled={isLoading || isSaving}
             />
           </div>

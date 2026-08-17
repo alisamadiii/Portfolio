@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
-import { Input } from "@workspace/ui/components/input";
+import { TextField } from "@/components/ui/mui";
 
 import { handleCmsError } from "@/lib/trpc-errors";
 import { getSchemaByName } from "@workspace/cms-core/schema";
@@ -136,7 +136,9 @@ export function FileRename({
           <DialogTitle>Rename file</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
-        <Input
+        <TextField
+          autoFocus
+          label="File name"
           defaultValue={relativePath}
           onChange={(e) => setNewRelativePath(e.target.value)}
         />

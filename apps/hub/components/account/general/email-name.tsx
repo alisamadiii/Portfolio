@@ -17,13 +17,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+import { FieldError } from "@workspace/ui/components/field";
+
+import { TextField } from "@/components/ui/mui";
 
 import { useResendEmailVerification } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";
@@ -94,17 +90,12 @@ export const EmailName = () => {
             control={form.control}
             name="name"
             render={({ field, fieldState }) => (
-              <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">
-                  Name
-                </FieldLabel>
-                <FieldContent>
-                  <Input {...field} aria-invalid={fieldState.invalid} />
-                </FieldContent>
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : undefined}
-                />
-              </Field>
+              <TextField
+                label="Name"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                {...field}
+              />
             )}
           />
 
@@ -112,22 +103,14 @@ export const EmailName = () => {
             control={form.control}
             name="email"
             render={({ field, fieldState }) => (
-              <Field aria-invalid={fieldState.invalid}>
-                <FieldLabel className="text-[13px] font-semibold">
-                  Email
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    {...field}
-                    type="email"
-                    disabled
-                    aria-invalid={fieldState.invalid}
-                  />
-                </FieldContent>
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : undefined}
-                />
-              </Field>
+              <TextField
+                label="Email"
+                type="email"
+                disabled
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                {...field}
+              />
             )}
           />
 
