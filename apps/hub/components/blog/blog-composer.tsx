@@ -45,7 +45,6 @@ import { BLOG_FIELDS, buildBlogSchema } from "@/lib/engine/blog-schema";
 import { isBlogCollection } from "@/lib/engine/blog-schema";
 import type { ManifestCollection } from "@/lib/engine/collections";
 import { PublishButton } from "@/components/publish/publish-button";
-import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 
 /** Look up a canonical blog field definition by name (for options/type). */
 const fieldByName = (name: string): Field =>
@@ -301,30 +300,28 @@ export function BlogComposer({
 
   return (
     <ConfigProvider value={bridgedConfig}>
-      <MediaLibraryProvider>
-        <ComposerForm
-          mode={mode}
-          path={path}
-          schema={schema}
-          content={contentObject ?? {}}
-          sha={fetched?.sha ?? localDraft?.sha ?? null}
-          owner={owner}
-          repo={repo}
-          branch={branch}
-          seoOpen={seoOpen}
-          setSeoOpen={setSeoOpen}
-          saving={saving}
-          setSaving={setSaving}
-          onCreated={(newPath) =>
-            router.replace(
-              `${repoPath(repo, "blog")}/edit/${newPath
-                .split("/")
-                .map(encodeURIComponent)
-                .join("/")}`
-            )
-          }
-        />
-      </MediaLibraryProvider>
+      <ComposerForm
+        mode={mode}
+        path={path}
+        schema={schema}
+        content={contentObject ?? {}}
+        sha={fetched?.sha ?? localDraft?.sha ?? null}
+        owner={owner}
+        repo={repo}
+        branch={branch}
+        seoOpen={seoOpen}
+        setSeoOpen={setSeoOpen}
+        saving={saving}
+        setSaving={setSaving}
+        onCreated={(newPath) =>
+          router.replace(
+            `${repoPath(repo, "blog")}/edit/${newPath
+              .split("/")
+              .map(encodeURIComponent)
+              .join("/")}`
+          )
+        }
+      />
     </ConfigProvider>
   );
 }

@@ -125,10 +125,53 @@ export function checkV2(root: string): CheckResult {
       errors.push(`cms.json: every collection needs "name" and "path".`);
       continue;
     }
-    if (!fs.existsSync(path.join(root, collection.path)))
+    const abs = path.join(root, collection.path);
+    // A `.json` path is an ARRAY collection (single file = [ {item}, … ]);
+    // anything else is a DIRECTORY collection (one file per entry).
+    if (collection.path.endsWith(".json")) {
+      if (!fs.existsSync(abs)) {
+        warnings.push(
+          `Collection file "${collection.path}" doesn't exist yet (created on first entry).`
+        );
+      } else {
+        let data: unknown;
+        try {
+          data = readJson(abs);
+        } catch {
+          errors.push(`Collection file "${collection.path}" is not valid JSON.`);
+          continue;
+        }
+        if (!Array.isArray(data)) {
+          errors.push(
+            `Collection file "${collection.path}" must hold a JSON array.`
+          );
+          continue;
+        }
+        const required = (
+          Array.isArray(collection.fields) ? collection.fields : []
+        )
+          .filter((field: any) => field?.required)
+          .map((field: any) => field.name);
+        data.forEach((item: any, index: number) => {
+          if (!item || typeof item !== "object" || Array.isArray(item)) {
+            warnings.push(
+              `${collection.path}[${index}] is not an object.`
+            );
+            return;
+          }
+          for (const name of required) {
+            if (item[name] === undefined || item[name] === "")
+              warnings.push(
+                `${collection.path}[${index}] is missing required field "${name}".`
+              );
+          }
+        });
+      }
+    } else if (!fs.existsSync(abs)) {
       warnings.push(
         `Collection folder "${collection.path}" doesn't exist yet (created on first entry).`
       );
+    }
   }
 
   // Static field paths must resolve into some page object or site.json.

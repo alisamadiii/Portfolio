@@ -29,7 +29,6 @@ import type { PreviewTarget } from "@/lib/preview";
 
 import { parseBridgeMessage, postFocus } from "@/lib/bridge-messages";
 import { PreviewProvider } from "@/components/entry/preview-context";
-import { useMediaLibrary } from "@/components/media/media-library-context";
 
 const VISIBLE_KEY = "cms-preview:visible";
 const COLLAPSED_KEY = "cms-preview:collapsed";
@@ -306,13 +305,9 @@ export function PreviewPanel({
     </div>
   );
 
-  // The media library split panel takes over the right column — the preview
-  // yields its UI while staying mounted. IMPORTANT: yielding must not change
-  // where `children` sits in the tree (bare vs. inside the panel group), or
-  // the form remounts and unsaved react-hook-form state is wiped — so each
-  // branch below hides its own chrome instead of an early bare return here.
-  const { activeFieldId: mediaLibraryFieldId } = useMediaLibrary();
-  const mediaLibraryOpen = mediaLibraryFieldId !== null && isWide;
+  // The media library is now a global centered dialog (an overlay), so it never
+  // takes over the preview's right column — the preview always keeps its UI.
+  const mediaLibraryOpen = false;
 
   // Maximized: iframe fills the screen as a fixed overlay. Form stays mounted
   // underneath so RHF state survives the toggle.

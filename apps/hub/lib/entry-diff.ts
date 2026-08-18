@@ -141,6 +141,112 @@ export const computeEntryDiff = (
   return rows;
 };
 
+/** First string field names the item (its identity + row label). */
+const primaryFieldName = (itemFields: Field[]): string | null =>
+  itemFields.find((field) => field.type === "string")?.name ??
+  itemFields[0]?.name ??
+  null;
+
+/** A short, human label for one array item (its primary value). */
+const itemSummary = (item: unknown, primary: string | null): string => {
+  if (primary && item && typeof item === "object") {
+    const value = (item as Record<string, unknown>)[primary];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number") return String(value);
+  }
+  return formatDiffValue(item, 80);
+};
+
+/** Identity key for matching an item across old/new (primary value, else JSON). */
+const itemKey = (item: unknown, primary: string | null): string => {
+  if (primary && item && typeof item === "object") {
+    const value = (item as Record<string, unknown>)[primary];
+    if (typeof value === "string" && value.trim()) return `k:${value.trim()}`;
+    if (typeof value === "number") return `k:${value}`;
+  }
+  return `j:${JSON.stringify(item ?? null)}`;
+};
+
+/**
+ * Item-level diff for an array collection (the whole collection is one JSON
+ * array file). Items are matched by identity (primary field), NOT by index —
+ * so removing/reordering one item doesn't cascade into every later item like a
+ * positional `computeEntryDiff` list diff would. Produces: one row per added /
+ * removed item, and per-field rows for an edited item; a pure reorder collapses
+ * to a single "Order" note.
+ */
+export const computeArrayCollectionDiff = (
+  itemFields: Field[],
+  oldArray: unknown[],
+  newArray: unknown[]
+): EntryDiffRow[] => {
+  const primary = primaryFieldName(itemFields);
+  const rows: EntryDiffRow[] = [];
+
+  // Bucket old items by key (FIFO within a key so duplicate names still pair).
+  const oldByKey = new Map<string, unknown[]>();
+  for (const item of oldArray) {
+    const key = itemKey(item, primary);
+    const bucket = oldByKey.get(key);
+    if (bucket) bucket.push(item);
+    else oldByKey.set(key, [item]);
+  }
+  const takeOld = (key: string): { item: unknown } | null => {
+    const bucket = oldByKey.get(key);
+    if (bucket && bucket.length) return { item: bucket.shift() };
+    return null;
+  };
+
+  // Walk new items in order → added or edited (unchanged/reordered skipped).
+  newArray.forEach((newItem, i) => {
+    const matched = takeOld(itemKey(newItem, primary));
+    if (!matched) {
+      pushRow(rows, `items.${i}`, "New item", undefined, itemSummary(newItem, primary));
+      return;
+    }
+    if (isEqual(matched.item, newItem)) return;
+    const label = itemSummary(newItem, primary);
+    const sub = computeEntryDiff(
+      itemFields,
+      matched.item as Record<string, unknown>,
+      newItem as Record<string, unknown>
+    );
+    for (const row of sub) {
+      rows.push({
+        ...row,
+        fieldPath: `items.${i}.${row.fieldPath}`,
+        label: `${label} › ${row.label}`,
+      });
+    }
+  });
+
+  // Anything left in the old buckets was removed.
+  for (const bucket of oldByKey.values()) {
+    for (const item of bucket) {
+      pushRow(
+        rows,
+        `removed.${rows.length}`,
+        "Removed item",
+        itemSummary(item, primary),
+        undefined
+      );
+    }
+  }
+
+  // Same items, different order → a single note instead of nothing.
+  if (rows.length === 0 && !isEqual(oldArray, newArray)) {
+    pushRow(
+      rows,
+      "items.order",
+      "Order",
+      "(previous order)",
+      `Reordered ${newArray.length} item${newArray.length === 1 ? "" : "s"}`
+    );
+  }
+
+  return rows;
+};
+
 /** Format a diff value for display (tooltips, diff rows). */
 export const formatDiffValue = (value: unknown, maxLength = 300): string => {
   if (value === undefined || value === null || value === "") return "(empty)";

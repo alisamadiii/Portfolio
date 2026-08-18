@@ -33,7 +33,6 @@ import {
 import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";
 
 import { EntryForm } from "@/components/entry/entry-form";
-import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 
 /**
  * The one slide-in entry editor — creating and editing collection entries
@@ -311,16 +310,14 @@ export function EntrySheet({
         ) : contentObject ? (
           <>
             <div className="px-4 pb-24">
-              <MediaLibraryProvider>
-                <EntryForm
-                  key={isEdit ? editPath : (newDraft?.key ?? "new")}
-                  formId={formId}
-                  fields={entryFields}
-                  contentObject={contentObject}
-                  onSubmit={handleSubmit}
-                  resetSignal={resetSignal}
-                />
-              </MediaLibraryProvider>
+              <EntryForm
+                key={isEdit ? editPath : (newDraft?.key ?? "new")}
+                formId={formId}
+                fields={entryFields}
+                contentObject={contentObject}
+                onSubmit={handleSubmit}
+                resetSignal={resetSignal}
+              />
             </div>
             <div className="bg-background sticky bottom-0 border-t p-4">
               <Button

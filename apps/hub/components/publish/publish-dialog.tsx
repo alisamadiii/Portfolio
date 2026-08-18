@@ -30,6 +30,7 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import {
+  computeArrayCollectionDiff,
   computeEntryDiff,
   formatDiffValue,
   type EntryDiffRow,
@@ -149,13 +150,22 @@ export function PublishDialog({
     if (!config) return [];
     return drafts.map(([key, draft], index) => {
       // v2 drafts have no schema — infer diff fields from the draft's own
-      // value shapes (labels come out of the JSON keys).
+      // value shapes (labels come out of the JSON keys). An ARRAY collection
+      // draft is a whole file (`[ {item}, … ]`): it gets an item-level diff
+      // (matched by identity) so removing/reordering one item doesn't cascade
+      // into every later item — see computeArrayCollectionDiff below.
+      const isArrayDraft = isV2 && Array.isArray(draft.values);
+      const itemFields = isArrayDraft
+        ? ((inferFields({ items: draft.values })[0]?.fields ??
+            []) as unknown as Field[])
+        : [];
       const schema = isV2
         ? null
         : getSchemaByName(config.object, draft.schemaName);
-      const fields = isV2
-        ? (inferFields(draft.values) as unknown as Field[])
-        : diffFieldsForSchema(schema);
+      const fields =
+        isV2 && !isArrayDraft
+          ? (inferFields(draft.values as Record<string, unknown>) as unknown as Field[])
+          : diffFieldsForSchema(schema);
       let isStale = serverFlaggedPaths.includes(draft.path);
       let deletedUpstream = false;
       let oldContent: unknown = undefined;
@@ -197,11 +207,17 @@ export function PublishDialog({
         }
       }
 
-      const diff = computeEntryDiff(
-        fields,
-        wrapContent(schema, oldContent),
-        wrapContent(schema, draft.values)
-      );
+      const diff = isArrayDraft
+        ? computeArrayCollectionDiff(
+            itemFields,
+            Array.isArray(oldContent) ? oldContent : [],
+            draft.values as unknown[]
+          )
+        : computeEntryDiff(
+            fields,
+            wrapContent(schema, oldContent),
+            wrapContent(schema, draft.values as Record<string, unknown>)
+          );
 
       return {
         key,

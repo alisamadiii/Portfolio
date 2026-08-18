@@ -1043,7 +1043,9 @@ export function Collection({
 
           if (existing) {
             // Merge the order change into the user's pending edit for this entry.
-            baseValues = existing.values;
+            // Directory-collection drafts are always keyed objects (never the
+            // array-collection whole-file shape).
+            baseValues = existing.values as Record<string, unknown>;
             sha = existing.sha;
             isNew = existing.isNew;
             title = existing.title;

@@ -253,15 +253,22 @@ export const publishRouter = createTRPCRouter({
             404
           );
 
-        // Only the manifest's own files are publishable: pages/site JSON and
-        // declared collection folders.
+        // Only the manifest's own files are publishable: pages/site JSON,
+        // array-collection files (path ends in ".json"), and directory
+        // collection folders (matched by their "path/" prefix).
+        const arrayCollectionPaths = new Set(
+          manifest.object.collections
+            .filter((collection) => collection.path.endsWith(".json"))
+            .map((collection) => collection.path)
+        );
         const allowedJson = new Set([
           manifest.object.paths.pages,
           manifest.object.paths.site,
+          ...arrayCollectionPaths,
         ]);
-        const collectionRoots = manifest.object.collections.map(
-          (collection) => `${collection.path}/`
-        );
+        const collectionRoots = manifest.object.collections
+          .filter((collection) => !collection.path.endsWith(".json"))
+          .map((collection) => `${collection.path}/`);
 
         const entries: CommitFileInput[] = [];
         const seenPaths = new Set<string>();
@@ -286,11 +293,23 @@ export const publishRouter = createTRPCRouter({
 
           let stringified: string;
           if (normalizedPath.endsWith(".json")) {
-            if (!file.content || typeof file.content !== "object")
+            const mustBeArray = arrayCollectionPaths.has(normalizedPath);
+            if (mustBeArray) {
+              if (!Array.isArray(file.content))
+                throw createHttpError(
+                  `Content for "${normalizedPath}" must be an array.`,
+                  400
+                );
+            } else if (
+              !file.content ||
+              typeof file.content !== "object" ||
+              Array.isArray(file.content)
+            ) {
               throw createHttpError(
                 `Content for "${normalizedPath}" must be an object.`,
                 400
               );
+            }
             stringified = JSON.stringify(file.content, null, 2);
           } else if (
             normalizedPath.endsWith(".md") ||

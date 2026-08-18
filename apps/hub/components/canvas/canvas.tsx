@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Input } from "@workspace/ui/components/input";
-import { ImageKitLibraryPanel } from "@/components/media/imagekit-widget";
+import { useMediaLibrary } from "@/components/media/media-library-context";
 import { cn } from "@workspace/ui/lib/utils";
 
 import {
@@ -110,6 +110,7 @@ type WorkingCopy = {
 export function Canvas() {
   const { config } = useConfig();
   const trpc = useTRPC();
+  const { open: openMediaLibrary } = useMediaLibrary();
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
@@ -402,10 +403,6 @@ export function Canvas() {
     framePath: string;
     path: string;
     value: string;
-  } | null>(null);
-  const [mediaEditor, setMediaEditor] = useState<{
-    framePath: string;
-    path: string;
   } | null>(null);
   // Non-leaf field clicked: a popover editing the host field + its tagged
   // descendants, anchored to the host's box inside the frame.
@@ -867,12 +864,18 @@ export function Canvas() {
           rect: rect ?? { x: 0, y: 0, width: 0, height: 0 },
         });
       } else if (kind === "media") {
-        setMediaEditor({ framePath, path });
+        openMediaLibrary({
+          title: "Replace image",
+          onInsert: (urls) => {
+            const url = urls[0];
+            if (url) commitNonText(framePath, path, url);
+          },
+        });
       } else {
         setLinkEditor({ framePath, path, value });
       }
     },
-    []
+    [openMediaLibrary, commitNonText]
   );
 
   // Single window-level message listener; frames identified by event.source
@@ -1427,18 +1430,6 @@ export function Canvas() {
           onCancel={() => setLinkEditor(null)}
         />
       )}
-
-      {/* Image picker — opened when an image is clicked on a page. */}
-      {mediaEditor && (
-        <MediaEditor
-          key={`${mediaEditor.framePath}:${mediaEditor.path}`}
-          onInsert={(url) => {
-            commitNonText(mediaEditor.framePath, mediaEditor.path, url);
-            setMediaEditor(null);
-          }}
-          onClose={() => setMediaEditor(null)}
-        />
-      )}
     </div>
   );
 }
@@ -1498,73 +1489,12 @@ function LinkEditor({
   );
 }
 
-/**
- * Contained image picker for the canvas: a centered dialog with the ImageKit
- * library embedded inline (same panel as the entry page) instead of the
- * widget's own fullscreen modal. Pick an image, hit the library's Insert
- * button, done. Backdrop click / X / Escape close without changing anything.
- */
-function MediaEditor({
-  onInsert,
-  onClose,
-}: {
-  onInsert: (url: string) => void;
-  onClose: () => void;
-}) {
-  // Close on Escape — capture phase so the canvas's own Escape handler
-  // (disengage frame) doesn't also fire while the dialog is open.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.stopPropagation();
-      onClose();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [onClose]);
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={onClose}
-        aria-hidden
-      />
-      <div className="bg-background relative flex h-[min(44rem,85vh)] w-[min(70rem,92vw)] flex-col overflow-hidden rounded-xl border shadow-2xl">
-        <div className="bg-muted/40 flex h-11 shrink-0 items-center gap-2 border-b px-4">
-          <ImageIcon className="text-muted-foreground size-4" />
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">
-            Replace image
-          </span>
-          <span className="text-muted-foreground hidden text-xs sm:block">
-            Select an image, then press Insert
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            onClick={onClose}
-            aria-label="Close image picker"
-          >
-            <X className="size-3.5" />
-          </Button>
-        </div>
-        <ImageKitLibraryPanel
-          onInsert={(urls) => {
-            const url = urls[0];
-            if (url) onInsert(url);
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 type GroupEditorMember = GroupMember & { label: string; value: string };
 
 /**
  * Popover for a non-leaf field: edits the host field plus each tagged
  * descendant. Text/link rows edit inline (Enter or blur commits); an image row
- * opens the shared `MediaEditor`. Anchored by the caller; Escape closes it
+ * opens the global media dialog. Anchored by the caller; Escape closes it
  * (capture phase, so the canvas's own Escape doesn't disengage the frame).
  */
 function GroupEditor({
@@ -1576,17 +1506,16 @@ function GroupEditor({
   onCommit: (path: string, value: string) => void;
   onClose: () => void;
 }) {
-  const [mediaFor, setMediaFor] = useState<string | null>(null);
+  const { open: openMediaLibrary } = useMediaLibrary();
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.stopPropagation();
-      if (mediaFor) setMediaFor(null);
-      else onClose();
+      onClose();
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [onClose, mediaFor]);
+  }, [onClose]);
   return (
     <div className="bg-background w-80 rounded-xl border p-3 shadow-2xl">
       <div className="mb-2 flex items-center gap-2">
@@ -1614,7 +1543,15 @@ function GroupEditor({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setMediaFor(member.path)}
+                onClick={() =>
+                  openMediaLibrary({
+                    title: "Replace image",
+                    onInsert: (urls) => {
+                      const url = urls[0];
+                      if (url) onCommit(member.path, url);
+                    },
+                  })
+                }
               >
                 <ImageIcon className="size-4" />
                 Replace image
@@ -1630,15 +1567,6 @@ function GroupEditor({
           )
         )}
       </div>
-      {mediaFor && (
-        <MediaEditor
-          onInsert={(url) => {
-            onCommit(mediaFor, url);
-            setMediaFor(null);
-          }}
-          onClose={() => setMediaFor(null)}
-        />
-      )}
     </div>
   );
 }

@@ -30,7 +30,11 @@ import {
 } from "@/components/repo/repo-header-context";
 import { EntrySheet } from "@/components/cms/entry-sheet";
 import { CollectionV2 } from "@/components/cms/collection-v2";
-import type { ManifestCollection } from "@/lib/engine/collections";
+import { ArrayCollection } from "@/components/cms/array-collection";
+import {
+  isArrayCollection,
+  type ManifestCollection,
+} from "@/lib/engine/collections";
 import { isBlogCollection } from "@/lib/engine/blog-schema";
 
 /** Renders the Collection component's captured header (breadcrumb + New entry + search). */
@@ -225,7 +229,11 @@ export function CmsOverlay({
       {/* Middle: entries table with the Collection component's own toolbar */}
       <div className="flex min-w-0 flex-1 flex-col">
         {activeV2 ? (
-          <CollectionV2 key={activeV2.name} collection={activeV2} />
+          isArrayCollection(activeV2) ? (
+            <ArrayCollection key={activeV2.name} collection={activeV2} />
+          ) : (
+            <CollectionV2 key={activeV2.name} collection={activeV2} />
+          )
         ) : active && !isV2 ? (
           <RepoHeaderProvider>
             <OverlayToolbar />

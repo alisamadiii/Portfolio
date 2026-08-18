@@ -503,7 +503,6 @@ const EditComponent = forwardRef(
           {filesBlock}
           {!isReadonly && remainingSlots > 0 && (
             <HostedMediaControls
-              files={files.map((file) => file.path)}
               maxSelected={remainingSlots}
               onSelected={handleSelected}
               submitLabel="Add file"

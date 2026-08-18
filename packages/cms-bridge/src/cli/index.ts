@@ -27,6 +27,7 @@ Flags:
   check:        --strict
   collections:  --sample  --dry-run
   migrate:      --dry-run  --delete-legacy
+  collections-to-array: --dry-run
 `;
 
 async function main(): Promise<number> {
@@ -77,6 +78,12 @@ async function main(): Promise<number> {
         dryRun: argv["dry-run"],
         deleteLegacy: argv["delete-legacy"],
       });
+    }
+    case "collections-to-array": {
+      const { collectionsToArrayCommand } = await import(
+        "./commands/collections-to-array.js"
+      );
+      return collectionsToArrayCommand(root, { dryRun: argv["dry-run"] });
     }
     default:
       console.error(`${pc.red("Unknown command:")} ${command}`);

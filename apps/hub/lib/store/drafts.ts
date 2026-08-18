@@ -17,7 +17,11 @@ export type Draft = {
   /** File sha the draft was based on; null for new entries. Stale anchor. */
   sha: string | null;
   isNew: boolean;
-  values: Record<string, unknown>;
+  /**
+   * The exact object sent as the publish `content`. Usually a keyed object
+   * (page/site/entry); for an ARRAY collection it's the whole array file.
+   */
+  values: Record<string, unknown> | unknown[];
   savedAt: number;
   title?: string;
 };

@@ -111,7 +111,6 @@ import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 
 import { EmptyCreate } from "@/components/empty-create";
 import { FileOptions } from "@/components/file/file-options";
-import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 import { PublishButton } from "@/components/publish/publish-button";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { repoPath } from "@/lib/paths";
@@ -1451,19 +1450,15 @@ export function Entry({
   );
 
   // Live preview only makes sense for an existing content entry with a page.
-  return (
-    <MediaLibraryProvider>
-      {previewTarget && path && path !== ".pages.yml" ? (
-        <PreviewPanel
-          target={previewTarget}
-          pageKey={previewTarget.href}
-          pageTitle={displayTitle}
-        >
-          {formNode}
-        </PreviewPanel>
-      ) : (
-        formNode
-      )}
-    </MediaLibraryProvider>
+  return previewTarget && path && path !== ".pages.yml" ? (
+    <PreviewPanel
+      target={previewTarget}
+      pageKey={previewTarget.href}
+      pageTitle={displayTitle}
+    >
+      {formNode}
+    </PreviewPanel>
+  ) : (
+    formNode
   );
 }

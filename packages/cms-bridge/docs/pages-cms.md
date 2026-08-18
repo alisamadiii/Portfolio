@@ -193,31 +193,41 @@ site-wide default.
 
 ## Collections
 
-Structured, repeating content (blog posts, newsletters). Declared in
-`cms.json`; entries are files in `path`, edited from the CMS collection table.
+Structured, repeating content. Two kinds, chosen by `path` (full details in
+`docs/collections.md`):
+
+**Array collection** — `path` is a `.json` FILE. The whole collection is one
+JSON array, edited/published as a single file like `pages.json`. **Order is
+array position** (no `sort_order`). No `route`, no `body`. Default for data
+lists (team, partners, workshops, …).
 
 ```json
-{
-  "name": "blog",
-  "path": "src/data/blog",
-  "route": "/blog/{slug}",
-  "format": "md",
-  "fields": [
-    { "name": "title", "type": "string", "required": true },
-    { "name": "date", "type": "date" },
-    { "name": "excerpt", "type": "text" },
-    { "name": "banner", "type": "image" }
-  ]
-}
+{ "name": "team", "path": "src/data/collections/team.json",
+  "fields": [ { "name": "name", "type": "string", "required": true } ] }
 ```
 
-- `format`: `"md"` (Markdown — frontmatter + body, the default) or `"json"`.
-- `route` with `{slug}` gives each entry a canvas tile; omit for
-  non-routed lists.
-- `fields` drives the create dialog and table columns. A `body` field is
-  always available for the Markdown/long content.
-- The site reads the folder however it likes (e.g. Astro content collections /
-  an import glob). The CMS only needs `path` + `fields`.
+The site imports the file directly, rendered in order:
+
+```ts
+import team from "../data/collections/team.json";   // already ordered — no sort
+```
+
+**Directory collection** — `path` is a FOLDER, one file per entry. Needed for
+`{slug}` routes and Markdown bodies (blog, stories).
+
+```json
+{ "name": "blog", "path": "src/data/blog", "route": "/blog/{slug}",
+  "format": "md",
+  "fields": [ { "name": "title", "type": "string", "required": true } ] }
+```
+
+- `format` (directory only): `"md"` (frontmatter + body, default) or `"json"`.
+- `route` (directory only) with `{slug}` gives each entry a canvas tile.
+- `fields` drives the create dialog and table columns. Directory collections
+  also get a `body` field; array collections don't.
+- The site reads the file/folder however it likes; the CMS only needs `path` +
+  `fields`. Convert a directory JSON collection with
+  `npx cms-bridge collections-to-array`.
 
 ---
 
@@ -262,6 +272,22 @@ heuristics.
   CMS and saved drafts reference them.
 - Only ADD. Existing values in the JSON always win over defaults.
 - After changes, run `npx cms-bridge check` until clean.
+
+## Non-functional / cosmetic changes (AI need not track)
+
+Some edits are pure presentation and carry **no functional meaning** — the CMS
+behaves identically before and after. Record them here so a future AI treats
+them as noise, not signal, and never over-engineers around them.
+
+- **`pages` key order in `cms.json`** — controls only the order of canvas tiles.
+  Reorder freely (e.g. home → about → sections → legal). No route, key, or
+  content changes; nothing else reads the order.
+- **Item order in an array-collection file** — the array's order IS the display
+  order and the *only* ordering signal (there is no `sort_order` field). Moving
+  a line up/down reorders that item on the site; it changes nothing else.
+
+> **Standing rule:** whenever a change turns out to be unnecessary for the AI to
+> reason about, add it to this list.
 
 ## Migrating a legacy `.pages.yml` project
 

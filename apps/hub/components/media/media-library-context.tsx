@@ -3,13 +3,13 @@
 import { createContext, useContext } from "react";
 
 interface MediaLibraryContextType {
-  /** Provider mounted + hosted media + viewport wide enough for the split. */
+  /** Hosted media provider present (ImageKit) — the dialog can open. */
   isAvailable: boolean;
-  /** Id of the field currently driving the panel; `null` when closed. */
-  activeFieldId: string | null;
+  /** Open the global media library dialog; `onInsert` gets the picked URLs. */
   open: (request: {
-    fieldId: string;
     onInsert: (urls: string[]) => void;
+    maxSelected?: number;
+    title?: string;
   }) => void;
   close: () => void;
 }
@@ -17,15 +17,13 @@ interface MediaLibraryContextType {
 const MediaLibraryContext = createContext<MediaLibraryContextType | null>(null);
 
 /**
- * Read the media library panel controls. No-ops when no `MediaLibraryProvider`
- * is mounted (or hosted media is off), so fields can call unconditionally —
- * `isAvailable: false` routes them to the fullscreen modal fallback.
+ * Controls for the single global media library dialog. No-ops when no
+ * `MediaLibraryProvider` is mounted, so callers can invoke unconditionally.
  */
 export const useMediaLibrary = (): MediaLibraryContextType => {
   return (
     useContext(MediaLibraryContext) ?? {
       isAvailable: false,
-      activeFieldId: null,
       open: () => {},
       close: () => {},
     }
