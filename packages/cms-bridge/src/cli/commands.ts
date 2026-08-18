@@ -7,24 +7,23 @@
 export const COMMANDS = [
   {
     name: "init",
-    summary: "Extract static text → JSON, tag elements, write .pages.yml",
+    summary: "Wire pages to the CMS: bridge components + cms/pages/site JSON + skill",
   },
   {
     name: "check",
-    summary: "Analyze only; writes cms-report.md (exit 1 if work remains)",
+    summary: "Validate the v2 contract; report un-wired content (exit 1 if work remains)",
   },
   {
-    name: "collections",
-    summary: "Sync cms/collections/*.yml into .pages.yml",
+    name: "collection",
+    summary: "Add a collection to cms.json interactively",
   },
-  {
-    name: "migrate",
-    summary: "Convert .pages.yml project to the v2 cms.json + pages.json contract",
-  },
-  {
-    name: "collections-to-array",
-    summary: "Convert directory JSON collections to single array files",
-  },
+] as const;
+
+/** Obsolete `cms:*` scripts init cleans up when it owns their exact value. */
+export const OBSOLETE_COMMANDS = [
+  "collections",
+  "migrate",
+  "collections-to-array",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number]["name"];

@@ -289,15 +289,15 @@ them as noise, not signal, and never over-engineers around them.
 > **Standing rule:** whenever a change turns out to be unnecessary for the AI to
 > reason about, add it to this list.
 
-## Migrating a legacy `.pages.yml` project
+## Wiring a new or partially-wired site
 
 ```sh
-npx cms-bridge migrate                 # → cms.json + pages.json, rewires imports
-npx cms-bridge check                   # validates the v2 contract (auto-detected)
-npx cms-bridge migrate --delete-legacy # once the v2 canvas round-trips
+npx cms-bridge init    # replaces plain tags with bridge components,
+                       # fills pages.json, installs this skill (idempotent)
+npx cms-bridge check   # validates the contract; lists what still needs wiring
 ```
 
-`migrate` merges every page JSON into `pages.json`, builds `cms.json` from the
-old `settings`/`preview`/collections, and rewrites
-`import home from ".../home.json"` to read from `pages.json`. Legacy files are
-kept by default for rollback; rewrite key sections with components afterwards.
+`init` is add-only and safe to re-run: adopted markup and existing JSON keys are
+never touched, so hand-edits to `pages.json` always survive. It only wires pages
+and components used by a single page; a component shared by 2+ pages is reported
+(thread a `cmsPath` prop from each page instead).

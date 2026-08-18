@@ -14,6 +14,7 @@ import type {
 } from "./astro-doc.js";
 import {
   getAttr,
+  isComponent,
   isExpression,
   quotedAttrSpan,
   soleStaticText,
@@ -33,6 +34,17 @@ const CHROME_TAGS = new Set(["label", "button", "option", "legend", "summary"]);
 const SKIP_TAGS = new Set(["script", "style", "slot", "title"]);
 
 const line = (node: AstroNode): number => node.position?.start?.line ?? 0;
+
+/**
+ * The CMS field path an element/component already carries, if any: a
+ * `data-cms-field` attribute (raw markup) or a bridge component's `field` prop
+ * (`<Text field="hero.text" />`). Any attr kind counts — template-literal paths
+ * (`{`items.${i}.name`}`) are adopted too.
+ */
+function adoptedFieldOf(node: AstroNode): string | undefined {
+  const attr = getAttr(node, "data-cms-field") ?? getAttr(node, "field");
+  return attr?.value;
+}
 
 const excerptAt = (source: string, lineNumber: number): string => {
   const text = source.split("\n")[lineNumber - 1] ?? "";
@@ -145,15 +157,13 @@ export function classifyPage(
     // never descend for candidates.
     if (isExpression(node)) {
       walk(node, (inner) => {
-        const adopted = getAttr(inner, "data-cms-field");
-        if (adopted?.kind === "quoted") adoptedPaths.push(adopted.value);
-        // Template-literal attrs (`x.items.${i}.name`) are adopted too.
-        if (adopted && adopted.kind !== "quoted") adoptedPaths.push(adopted.value);
+        const adopted = adoptedFieldOf(inner);
+        if (adopted) adoptedPaths.push(adopted);
       });
       const hasAdopted = (() => {
         let found = false;
         walk(node, (inner) => {
-          if (getAttr(inner, "data-cms-field")) {
+          if (adoptedFieldOf(inner)) {
             found = true;
             return false;
           }
@@ -176,6 +186,19 @@ export function classifyPage(
         });
       }
       return false;
+    }
+
+    // Bridge components (<Text>, <Heading1>, <Image>, <Link>, <Group>) carry a
+    // `field` prop — adopt the path and never descend (their slot children are
+    // their own concern). Plain wrapper components (Layout, section wrappers
+    // with no `field`) stay transparent so page markup inside is still scanned.
+    if (isComponent(node)) {
+      const field = getAttr(node, "field");
+      if (field) {
+        adoptedPaths.push(field.value);
+        return false;
+      }
+      return;
     }
 
     if (node.type !== "element") return;
@@ -387,7 +410,7 @@ export function classifyPage(
 
   return {
     page,
-    adopted: page.hasDataImport || adoptedPaths.length > 0,
+    adopted: page.hasPagesBinding || adoptedPaths.length > 0,
     adoptedPaths,
     candidates,
     reports,

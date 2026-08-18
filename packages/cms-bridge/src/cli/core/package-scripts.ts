@@ -1,13 +1,21 @@
 /**
- * Append run-script shortcuts to the consumer's package.json. Append-only:
- * existing keys always win (never overwritten), nothing else is touched, and
- * the file's own indentation + trailing-newline style is preserved.
+ * Sync the `cms:*` run-scripts in the consumer's package.json. A key is ADDED
+ * when absent; UPDATED only when its current value is a known-stale form we
+ * generated (never a hand-edited value); and REMOVED (obsolete keys) only when
+ * its value matches a form we generated. The file's indentation + trailing
+ * newline are preserved.
+ *
+ * Scripts use the bare `cms-bridge` bin (resolved from node_modules/.bin when
+ * npm/pnpm runs the script) — NOT `npx cms-bridge`, which would try to fetch
+ * the unscoped package name from the registry and 404 (the real package is
+ * scoped: @alisamadiillc/cms-bridge).
  */
 
 import fs from "node:fs";
 import path from "node:path";
 
-type ScriptEntry = { key: string; command: string };
+type ScriptEntry = { key: string; command: string; replaces?: string[] };
+type RemoveEntry = { key: string; values: string[] };
 
 export type EnsureScriptsResult = {
   added: string[];
@@ -26,7 +34,7 @@ function detectIndent(raw: string): string | number {
 export function ensurePackageScripts(
   root: string,
   entries: ScriptEntry[],
-  opts: { dryRun?: boolean } = {}
+  opts: { dryRun?: boolean; remove?: RemoveEntry[] } = {}
 ): EnsureScriptsResult {
   const pkgPath = path.join(root, "package.json");
   if (!fs.existsSync(pkgPath)) {
@@ -53,16 +61,37 @@ export function ensurePackageScripts(
 
   const added: string[] = [];
   const skipped: string[] = [];
-  for (const { key, command } of entries) {
-    if (key in scripts) {
+  let changed = 0;
+  for (const { key, command, replaces } of entries) {
+    if (!(key in scripts)) {
+      scripts[key] = command;
+      added.push(key);
+      changed++;
+      continue;
+    }
+    if (scripts[key] === command) {
       skipped.push(key);
       continue;
     }
-    scripts[key] = command;
-    added.push(key);
+    // Present with a different value — only overwrite a stale form we generated.
+    if ((replaces ?? []).includes(scripts[key])) {
+      scripts[key] = command;
+      added.push(key);
+      changed++;
+    } else {
+      skipped.push(key); // hand-edited — leave it alone
+    }
   }
 
-  if (added.length === 0) {
+  // Remove obsolete self-owned scripts, only when the value is one we generated.
+  for (const { key, values } of opts.remove ?? []) {
+    if (key in scripts && values.includes(scripts[key])) {
+      delete scripts[key];
+      changed++;
+    }
+  }
+
+  if (changed === 0) {
     return { added, skipped, result: "unchanged" };
   }
 

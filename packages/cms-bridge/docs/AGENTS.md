@@ -22,30 +22,29 @@ editable on the canvas. Prefer components for anything new; a plain
 
 ## The workflow
 
-- **New site** — build pages with the bridge components, put content in the
-  three files, add `cmsBridge()` to `astro.config.mjs`. Run
-  `npx cms-bridge check` and fix what it flags.
-- **Migrate a legacy `.pages.yml` site** — `npx cms-bridge migrate` generates
-  `cms.json` + `pages.json` and rewires imports; then rewrite key sections with
-  components. `--delete-legacy` once the canvas round-trips.
+- **`npx cms-bridge init`** — the onboarding pipeline. Installs this skill,
+  ensures the three JSON files exist, creates placeholder files for array
+  collections, and codemods pages (+ single-use components): it replaces plain
+  tags (`h1`/`p`/`img`/`a`/…) with the bridge components and moves their values
+  into `pages.json`. Idempotent and add-only — safe to re-run.
 - **`npx cms-bridge check`** — validates the v2 contract (manifest shape,
-  page/site key collisions, every `data-cms-field` resolves to a value). Run it
-  until clean.
+  page/site key collisions, every `field`/`data-cms-field` resolves to a value)
+  and lists any markup still needing wiring. Run it until clean.
+- **`npx cms-bridge collection`** — interactively adds an array collection to
+  `cms.json` (name, label, fields) and creates its placeholder file.
 
 ## `pages-cms.md` is package-managed
 
-Each project carries a `pages-cms.md` (in `docs/`, `marketing/docs/`, wherever)
-documenting the CMS contract. It is **synced from this package** by
-`npx cms-bridge init` — content between the `<!-- cms-bridge:managed:start -->`
-/ `:end` markers is canonical and overwritten on every sync. Never hand-edit
-inside the markers; project-specific notes go **outside** them. To change the
-canonical text, edit `docs/pages-cms.md` in the cms-bridge package, publish, and
-re-run init.
+The full client-site guide lives in `.claude/skills/cms-bridge/pages-cms.md`,
+installed by `npx cms-bridge init` from this package. It's overwritten on every
+run, so never hand-edit it. To change the canonical text, edit
+`docs/pages-cms.md` in the cms-bridge package, publish, and re-run init.
 
 ## Hard rules you must never break
 
-- Never rename or renumber an existing `data-cms-field` path or JSON key — the
-  CMS and saved drafts reference them.
+- Never rename or renumber an existing `field` / `data-cms-field` path or JSON
+  key — the CMS and saved drafts reference them.
+- Never nest one `field` / `data-cms-field` element inside another.
 - Only add; never delete or restructure existing content shapes.
 - `src/data/seo.ts` is per-client identity config, NOT CMS content. Leave it.
 - `src/data/site.json` is mandatory and uses bare field paths on every page.

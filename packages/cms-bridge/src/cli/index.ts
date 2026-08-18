@@ -1,9 +1,9 @@
 /**
  * cms-bridge CLI entry.
  *
- *   cms-bridge init          idempotent codemod + config generation
- *   cms-bridge check         analysis only, writes cms-report.md, exit 1 if work remains
- *   cms-bridge collections   sync cms/collections/*.yml into .pages.yml
+ *   cms-bridge init          wire pages to the CMS (idempotent)
+ *   cms-bridge check         validate the v2 contract, exit 1 if work remains
+ *   cms-bridge collection    add a collection to cms.json interactively
  */
 
 import mri from "mri";
@@ -23,25 +23,12 @@ Usage:
 ${USAGE}
 
 Flags:
-  init:         --dry-run  --pages <glob>  --verbose  --yes
-  check:        --strict
-  collections:  --sample  --dry-run
-  migrate:      --dry-run  --delete-legacy
-  collections-to-array: --dry-run
+  init:   --dry-run  --verbose
 `;
 
 async function main(): Promise<number> {
   const argv = mri(process.argv.slice(2), {
-    boolean: [
-      "dry-run",
-      "verbose",
-      "yes",
-      "strict",
-      "sample",
-      "help",
-      "delete-legacy",
-    ],
-    string: ["pages"],
+    boolean: ["dry-run", "verbose", "help"],
   });
   const command = argv._[0];
 
@@ -53,37 +40,17 @@ async function main(): Promise<number> {
   const root = process.cwd();
 
   switch (command) {
-    case "check": {
-      const { checkCommand } = await import("./commands/check.js");
-      return checkCommand(root, { strict: argv.strict });
-    }
     case "init": {
       const { initCommand } = await import("./commands/init.js");
-      return initCommand(root, {
-        dryRun: argv["dry-run"],
-        verbose: argv.verbose,
-        yes: argv.yes,
-      });
+      return initCommand(root, { dryRun: argv["dry-run"], verbose: argv.verbose });
     }
-    case "collections": {
-      const { collectionsCommand } = await import("./commands/collections.js");
-      return collectionsCommand(root, {
-        sample: argv.sample,
-        dryRun: argv["dry-run"],
-      });
+    case "check": {
+      const { checkCommand } = await import("./commands/check.js");
+      return checkCommand(root);
     }
-    case "migrate": {
-      const { migrateCommand } = await import("./commands/migrate.js");
-      return migrateCommand(root, {
-        dryRun: argv["dry-run"],
-        deleteLegacy: argv["delete-legacy"],
-      });
-    }
-    case "collections-to-array": {
-      const { collectionsToArrayCommand } = await import(
-        "./commands/collections-to-array.js"
-      );
-      return collectionsToArrayCommand(root, { dryRun: argv["dry-run"] });
+    case "collection": {
+      const { collectionCommand } = await import("./commands/collection.js");
+      return collectionCommand(root);
     }
     default:
       console.error(`${pc.red("Unknown command:")} ${command}`);

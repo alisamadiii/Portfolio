@@ -4,9 +4,12 @@
  * The convention pairs `field` (the src) with a sibling alt key in the JSON:
  *
  *   <Image field="hero.image" value={hero.image} alt={hero.imageAlt} class="rounded" />
+ *
+ * `field` is required to pass, but may resolve to null/undefined (no cmsPath);
+ * then a plain <img> renders with no CMS attributes.
  */
 interface Props {
-  field: string;
+  field: string | null | undefined;
   value?: string | null;
   alt?: string | null;
   class?: string;
@@ -14,14 +17,11 @@ interface Props {
 }
 
 const { field, value = "", alt = "", ...rest } = Astro.props;
-if (!field) {
-  throw new Error("cms-bridge <Image> requires a `field` prop.");
-}
 ---
 
 <img
-  data-cms-field={field}
-  data-cms-kind="media"
+  data-cms-field={field || undefined}
+  data-cms-kind={field ? "media" : undefined}
   src={String(value ?? "")}
   alt={String(alt ?? "")}
   {...rest}

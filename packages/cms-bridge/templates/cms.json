@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "baseUrl": "",
+  "media": {
+    "input": "public/media",
+    "output": "/media"
+  },
+  "pages": {},
+  "collections": []
+}

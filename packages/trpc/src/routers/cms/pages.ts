@@ -83,8 +83,13 @@ export const pagesRouter = createTRPCRouter({
           input.branch,
           { getToken: async () => token }
         );
+        // Dev override: point every canvas iframe at a local server for
+        // testing (e.g. CMS_PREVIEW_BASE_URL=http://localhost:4321), without
+        // touching the client's committed cms.json baseUrl.
+        const devBaseUrl = process.env.CMS_PREVIEW_BASE_URL;
+
         if (manifest) {
-          const baseUrl = manifest.object.baseUrl;
+          const baseUrl = devBaseUrl || manifest.object.baseUrl;
           const origin = new URL(baseUrl).origin;
           const byPath = new Map<string, CanvasPage>();
 
@@ -138,17 +143,18 @@ export const pagesRouter = createTRPCRouter({
           );
 
         const settings = config.object?.settings;
-        // const baseUrl: unknown =
-        //   settings && typeof settings === "object"
-        //     ? settings.baseUrl
-        //     : undefined;
-        const baseUrl: unknown = "http://localhost:4321";
+        const baseUrl: unknown =
+          devBaseUrl ||
+          (settings && typeof settings === "object"
+            ? settings.baseUrl
+            : undefined);
         if (!baseUrl || typeof baseUrl !== "string") {
           throw createHttpError(
             "No `settings.baseUrl` configured — the canvas needs the site's live URL.",
             400
           );
         }
+        console.log("🔥🔥🔥🔥", baseUrl);
         const origin = new URL(baseUrl).origin;
 
         const byPath = new Map<string, CanvasPage>();

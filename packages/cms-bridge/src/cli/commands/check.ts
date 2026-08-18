@@ -1,254 +1,260 @@
 /**
- * `cms-bridge check` — analysis only. Scans pages + components, classifies
- * everything, writes cms-report.md, lints .pages.yml structure. Exit 1 when
- * unadopted content remains (CI-friendly). Never writes anything but the
- * report.
+ * `cms-bridge check` — validates the v2 three-file contract and reports any
+ * markup that still needs wiring. Never writes anything but cms-report.md.
+ * Exit 1 when the contract has errors or un-wired content remains (CI-friendly).
+ *
+ *  - cms.json shape (version, baseUrl, pages, collections)
+ *  - every manifest page has a pages.json object (and vice versa)
+ *  - page top-level keys don't collide with site.json keys
+ *  - array collections hold an array with their required fields
+ *  - every static field path (data-cms-field / component `field` prop) resolves
+ *    into pages.json or site.json
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
-import YAML from "yaml";
 
-import { parseAstro, walk, getAttr } from "../core/astro-doc.js";
-import { classifyPage } from "../core/classify.js";
-import {
-  findPagesCmsDocs,
-  isDocInSync,
-  loadCanonicalDoc,
-} from "../core/docs-sync.js";
+import { analyzeProject } from "../core/analyze.js";
+import { buildComponentGraph } from "../core/component-graph.js";
 import { writeReport } from "../core/report.js";
-import { scanProject } from "../core/scan.js";
-import type { PageAnalysis, ReportItem } from "../types.js";
+import type { ReportItem } from "../types.js";
 
-/** One R5 item per component file that still holds untagged static text. */
-export async function analyzeComponents(root: string): Promise<ReportItem[]> {
-  const componentsDir = path.join(root, "src", "components");
-  if (!fs.existsSync(componentsDir)) return [];
-  const items: ReportItem[] = [];
-  for (const entry of fs.readdirSync(componentsDir).sort()) {
-    if (!entry.endsWith(".astro")) continue;
-    const filePath = path.join(componentsDir, entry);
-    const source = fs.readFileSync(filePath, "utf8");
-    let untagged = 0;
-    try {
-      const parsed = await parseAstro(source);
-      walk(parsed.ast, (node) => {
-        if (node.type === "frontmatter") return false;
-        if (node.type !== "element") return;
-        if (getAttr(node, "data-cms-field")) return;
-        const textChildren = (node.children ?? []).filter(
-          (child) =>
-            child.type === "text" && (child.value ?? "").trim().length > 1
-        );
-        const elementChildren = (node.children ?? []).filter(
-          (child) => child.type === "element" || child.type === "component"
-        );
-        if (textChildren.length === 1 && elementChildren.length === 0) untagged++;
-      });
-    } catch {
-      continue;
-    }
-    if (untagged > 0) {
-      items.push({
-        code: "R5",
-        file: `src/components/${entry}`,
-        line: 1,
-        excerpt: `${untagged} untagged static text element(s)`,
-        note: "Shared component — extract to site.json (bare paths) if global, or thread a cmsPath prop from pages.",
-      });
-    }
+const COMPONENTS_MODULE = "@alisamadiillc/cms-bridge/components";
+
+const readJson = (file: string): any => JSON.parse(fs.readFileSync(file, "utf8"));
+
+const resolvePath = (values: unknown, fieldPath: string): boolean => {
+  let cursor: any = values;
+  for (const segment of fieldPath.split(".")) {
+    if (cursor === null || typeof cursor !== "object") return false;
+    const key = /^\d+$/.test(segment) ? parseInt(segment, 10) : segment;
+    cursor = cursor[key];
+    if (cursor === undefined) return false;
   }
-  return items;
-}
+  return true;
+};
 
-/** Structural lint of an existing .pages.yml. Returns human-readable warnings. */
-export function lintPagesYml(source: string): string[] {
-  const warnings: string[] = [];
-  let doc: YAML.Document.Parsed;
-  try {
-    doc = YAML.parseDocument(source);
-  } catch (error) {
-    return [`.pages.yml does not parse: ${(error as Error).message}`];
-  }
-  for (const error of doc.errors) warnings.push(`.pages.yml: ${error.message}`);
-
-  const config = doc.toJS() as Record<string, unknown> | null;
-  if (!config || typeof config !== "object") return warnings;
-
-  const seen = new Set<string>();
-  const visitEntries = (entries: unknown, context: string) => {
-    if (!Array.isArray(entries)) return;
-    for (const entry of entries) {
-      if (!entry || typeof entry !== "object") continue;
-      const record = entry as Record<string, unknown>;
-      const name = typeof record.name === "string" ? record.name : undefined;
-      if (name) {
-        if (record.type !== "group" && seen.has(name)) {
-          warnings.push(`duplicate content entry name "${name}" (${context})`);
+/** All static field paths in src/ (data-cms-field + bridge `field` props). */
+function collectStaticFields(root: string): Map<string, string[]> {
+  const byFile = new Map<string, string[]>();
+  const visit = (dir: string) => {
+    for (const name of fs.readdirSync(dir)) {
+      if (name === "node_modules" || name.startsWith(".")) continue;
+      const full = path.join(dir, name);
+      if (fs.statSync(full).isDirectory()) visit(full);
+      else if (/\.(astro|tsx|jsx)$/.test(name)) {
+        const source = fs.readFileSync(full, "utf8");
+        const fields: string[] = [];
+        for (const match of source.matchAll(
+          /data-cms-field=(?:"([^"$]+)"|'([^'$]+)')/g
+        )) {
+          const value = match[1] ?? match[2];
+          if (value && !value.includes("${")) fields.push(value);
         }
-        seen.add(name);
+        // Bridge component `field` props, but only in files that import them.
+        if (source.includes(COMPONENTS_MODULE)) {
+          for (const match of source.matchAll(/\bfield=(?:"([^"$]+)"|'([^'$]+)')/g)) {
+            const value = match[1] ?? match[2];
+            if (value && !value.includes("${")) fields.push(value);
+          }
+        }
+        if (fields.length) byFile.set(path.relative(root, full), fields);
       }
-      if (record.type === "group") visitEntries(record.items, `group ${name}`);
-      // Recursive duplicate-field check (object/block fields nest).
-      const visitFields = (fields: unknown, fieldContext: string) => {
-        if (!Array.isArray(fields)) return;
-        const fieldNames = new Set<string>();
-        for (const field of fields as Array<Record<string, unknown>>) {
-          const fieldName = typeof field?.name === "string" ? field.name : undefined;
-          if (!fieldName) continue;
-          if (fieldNames.has(fieldName)) {
-            warnings.push(`${fieldContext}: duplicate field "${fieldName}"`);
-          }
-          fieldNames.add(fieldName);
-          if (Array.isArray(field.fields)) {
-            visitFields(field.fields, `${fieldContext} → ${fieldName}`);
-          }
-        }
-      };
-      visitFields(record.fields, `entry "${name}"`);
     }
   };
-  visitEntries(config.content, "top level");
-
-  const settings = config.settings as Record<string, unknown> | undefined;
-  const preview = settings?.preview as Record<string, unknown> | undefined;
-  const global = preview?.global;
-  if (Array.isArray(global) && new Set(global).size !== global.length) {
-    warnings.push("settings.preview.global contains duplicates");
-  }
-  return warnings;
+  const src = path.join(root, "src");
+  if (fs.existsSync(src)) visit(src);
+  return byFile;
 }
 
-export async function analyzeProject(root: string): Promise<{
-  scan: ReturnType<typeof scanProject>;
-  analyses: PageAnalysis[];
-  componentItems: ReportItem[];
-  lintWarnings: string[];
-}> {
-  const scan = scanProject(root);
-  const analyses: PageAnalysis[] = [];
-  for (const page of scan.pages) {
-    const parsed = await parseAstro(page.source);
-    analyses.push(classifyPage(page, parsed, page.source));
-  }
-  const componentItems = await analyzeComponents(root);
-  const lintWarnings = scan.pagesYml ? lintPagesYml(scan.pagesYml) : [];
-  return { scan, analyses, componentItems, lintWarnings };
-}
+export function checkContract(root: string): {
+  errors: string[];
+  warnings: string[];
+} {
+  const errors: string[] = [];
+  const warnings: string[] = [];
 
-/** Orphaned JSON keys: exist in data files but never referenced by any page. */
-export function findOrphans(
-  scan: ReturnType<typeof scanProject>,
-  analyses: PageAnalysis[]
-): string[] {
-  const referenced = new Set<string>();
-  for (const analysis of analyses) {
-    for (const adoptedPath of analysis.adoptedPaths) {
-      // Normalize template-literal indexes: features.items.${i}.name → features.items
-      const normalized = adoptedPath.replace(/\.\$\{[^}]*\}.*$/, "");
-      referenced.add(`${analysis.page.entryName}:${normalized.split(".")[0]}`);
-    }
+  const cmsFile = path.join(root, "src/data/cms.json");
+  if (!fs.existsSync(cmsFile)) {
+    return {
+      errors: ["src/data/cms.json not found — run `cms-bridge init` first."],
+      warnings,
+    };
   }
-  const orphans: string[] = [];
-  const entryNames = new Set(analyses.map((analysis) => analysis.page.entryName));
-  for (const [fileName, content] of scan.dataFiles) {
-    if (fileName === "site") continue; // consumed by components, not pages
-    if (!entryNames.has(fileName)) continue;
-    for (const key of Object.keys(content)) {
+  let manifest: any;
+  try {
+    manifest = readJson(cmsFile);
+  } catch (error: any) {
+    return { errors: [`cms.json does not parse: ${error?.message}`], warnings };
+  }
+
+  if (manifest.version !== 1) errors.push(`cms.json: "version" must be 1.`);
+  if (typeof manifest.baseUrl !== "string" || !manifest.baseUrl)
+    errors.push(`cms.json: "baseUrl" is required.`);
+  const manifestPages: Record<string, any> =
+    manifest.pages && typeof manifest.pages === "object" ? manifest.pages : {};
+  for (const [name, page] of Object.entries(manifestPages)) {
+    if (typeof page?.route !== "string")
+      errors.push(`cms.json: pages.${name} is missing "route".`);
+  }
+
+  let pages: Record<string, any> = {};
+  try {
+    pages = readJson(path.join(root, "src/data/pages.json"));
+  } catch (error: any) {
+    errors.push(`pages.json does not parse or is missing: ${error?.message}`);
+  }
+  let site: Record<string, any> = {};
+  try {
+    site = readJson(path.join(root, "src/data/site.json"));
+  } catch {
+    warnings.push(`site.json missing — global fields won't resolve.`);
+  }
+
+  for (const name of Object.keys(manifestPages))
+    if (!(name in pages))
+      errors.push(`pages.json: no "${name}" object (declared in cms.json).`);
+  for (const name of Object.keys(pages))
+    if (!(name in manifestPages))
+      warnings.push(
+        `pages.json: "${name}" has no cms.json route — it won't appear on the canvas.`
+      );
+
+  const siteKeys = new Set(Object.keys(site));
+  for (const [name, values] of Object.entries(pages)) {
+    if (!values || typeof values !== "object") continue;
+    for (const key of Object.keys(values)) {
       if (key === "seo") continue;
-      if (!referenced.has(`${fileName}:${key}`)) {
-        orphans.push(`${fileName}.json: top-level key "${key}" not referenced by any data-cms-field`);
-      }
+      if (siteKeys.has(key))
+        warnings.push(
+          `Key collision: "${name}.${key}" shadows site.json "${key}" on that page.`
+        );
     }
   }
-  return orphans;
+
+  for (const collection of Array.isArray(manifest.collections)
+    ? manifest.collections
+    : []) {
+    if (typeof collection?.name !== "string" || typeof collection?.path !== "string") {
+      errors.push(`cms.json: every collection needs "name" and "path".`);
+      continue;
+    }
+    const abs = path.join(root, collection.path);
+    if (collection.path.endsWith(".json")) {
+      if (!fs.existsSync(abs)) {
+        warnings.push(
+          `Collection file "${collection.path}" doesn't exist yet (created on first entry).`
+        );
+        continue;
+      }
+      let data: unknown;
+      try {
+        data = readJson(abs);
+      } catch {
+        errors.push(`Collection file "${collection.path}" is not valid JSON.`);
+        continue;
+      }
+      if (!Array.isArray(data)) {
+        errors.push(`Collection file "${collection.path}" must hold a JSON array.`);
+        continue;
+      }
+      const required = (Array.isArray(collection.fields) ? collection.fields : [])
+        .filter((field: any) => field?.required)
+        .map((field: any) => field.name);
+      data.forEach((item: any, index: number) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) {
+          warnings.push(`${collection.path}[${index}] is not an object.`);
+          return;
+        }
+        for (const req of required)
+          if (item[req] === undefined || item[req] === "")
+            warnings.push(
+              `${collection.path}[${index}] is missing required field "${req}".`
+            );
+      });
+    } else if (!fs.existsSync(abs)) {
+      warnings.push(
+        `Collection folder "${collection.path}" doesn't exist yet (created on first entry).`
+      );
+    }
+  }
+
+  // Static field paths must resolve into some page object or site.json.
+  const pageObjects = Object.values(pages);
+  for (const [file, fields] of collectStaticFields(root)) {
+    for (const field of fields) {
+      const inPages = pageObjects.some((values) => resolvePath(values, field));
+      if (!inPages && !resolvePath(site, field))
+        warnings.push(
+          `${file}: field "${field}" resolves to no value in pages.json or site.json.`
+        );
+    }
+  }
+
+  return { errors, warnings };
 }
 
-export async function checkCommand(
-  root: string,
-  flags: { strict?: boolean }
-): Promise<number> {
-  // v2 project (cms.json contract) → dedicated checks, no .pages.yml lints.
-  if (fs.existsSync(path.join(root, "src/data/cms.json"))) {
-    const { runCheckV2 } = await import("./check-v2.js");
-    return runCheckV2(root);
-  }
+export async function checkCommand(root: string): Promise<number> {
+  const { errors, warnings } = checkContract(root);
 
-  const { scan, analyses, componentItems, lintWarnings } =
-    await analyzeProject(root);
+  // Un-wired markup: candidates on pages + shared-component R5 items.
+  const { analyses } = await analyzeProject(root);
+  const candidateCount = analyses.reduce((sum, a) => sum + a.candidates.length, 0);
+  const adoptedCount = analyses.reduce((sum, a) => sum + a.adoptedPaths.length, 0);
 
-  const { reportPath, itemCount } = writeReport(root, analyses, componentItems);
-
-  const candidateCount = analyses.reduce(
-    (sum, analysis) => sum + analysis.candidates.length,
-    0
-  );
-  const adoptedCount = analyses.reduce(
-    (sum, analysis) => sum + analysis.adoptedPaths.length,
-    0
-  );
-
-  console.log(`${pc.bold("cms-bridge check")} — ${scan.pages.length} page(s)`);
-  console.log(`  ${pc.green("✓")} ${adoptedCount} field(s) already CMS-wired`);
-  if (candidateCount > 0) {
-    console.log(
-      `  ${pc.yellow("●")} ${candidateCount} element(s) auto-extractable — run ${pc.bold("cms-bridge init")}`
+  // Components carry wireable content too. A single-use component is wired by
+  // init (counts toward "run init"); a shared one can't be (→ R5).
+  const extra: ReportItem[] = [];
+  let componentCandidates = 0;
+  const { parseAstro } = await import("../core/astro-doc.js");
+  const { classifyPage } = await import("../core/classify.js");
+  const graph = buildComponentGraph(root, analyses.map((a) => a.page));
+  for (const usage of graph.values()) {
+    const parsed = await parseAstro(usage.source);
+    const analysis = classifyPage(
+      {
+        filePath: usage.filePath,
+        relPath: usage.relPath,
+        route: "",
+        pageKey: "",
+        contentIdent: "content",
+        hasPagesBinding: false,
+        source: usage.source,
+      },
+      parsed,
+      usage.source
     );
+    if (analysis.candidates.length === 0) continue;
+    componentCandidates += analysis.candidates.length;
+    if (usage.pages.size >= 2) {
+      extra.push({
+        code: "R5",
+        file: usage.relPath,
+        line: analysis.candidates[0]?.line ?? 1,
+        excerpt: `${analysis.candidates.length} editable element(s) in a component used by ${usage.pages.size} pages`,
+        note: `Shared by: ${[...usage.pages].join(", ")}.`,
+      });
+    }
   }
-  if (itemCount > 0) {
+
+  const { reportPath, itemCount } = writeReport(root, analyses, extra);
+  const wireable = candidateCount + componentCandidates;
+
+  console.log(`${pc.bold("cms-bridge check")} — ${analyses.length} page(s)`);
+  for (const error of errors) console.log(`  ${pc.red("✗")} ${error}`);
+  for (const warning of warnings) console.log(`  ${pc.yellow("⚠")} ${warning}`);
+  console.log(`  ${pc.green("✓")} ${adoptedCount} field(s) CMS-wired`);
+  if (wireable > 0)
+    console.log(
+      `  ${pc.yellow("●")} ${wireable} element(s) auto-wireable — run ${pc.bold("cms-bridge init")}`
+    );
+  if (itemCount > 0)
     console.log(
       `  ${pc.yellow("⚠")} ${itemCount} item(s) need review → ${path.basename(reportPath)}`
     );
-  }
-  for (const warning of lintWarnings) {
-    console.log(`  ${pc.red("✗")} ${warning}`);
-  }
-  if (!scan.pagesYml) {
-    console.log(`  ${pc.yellow("⚠")} no .pages.yml yet — init will create it`);
-  }
-  if (!scan.hasBridgeIntegration) {
-    console.log(
-      `  ${pc.yellow("⚠")} cms-bridge integration not found in astro.config — init will add it`
-    );
-  }
+  if (errors.length === 0 && wireable === 0 && itemCount === 0)
+    console.log(`  ${pc.green("✓")} contract clean, nothing left to wire.`);
 
-  // pages-cms.md staleness.
-  const canonical = loadCanonicalDoc();
-  let docsStale = 0;
-  if (canonical) {
-    const docs = findPagesCmsDocs(root);
-    if (docs.length === 0) {
-      docsStale = 1;
-      console.log(
-        `  ${pc.yellow("⚠")} no pages-cms.md — init will create docs/pages-cms.md`
-      );
-    } else {
-      for (const filePath of docs) {
-        const existing = fs.readFileSync(filePath, "utf8");
-        if (!isDocInSync(existing, canonical)) {
-          docsStale++;
-          const rel = path.relative(root, filePath).split(path.sep).join("/");
-          console.log(
-            `  ${pc.yellow("⚠")} ${rel} out of date — run cms-bridge init`
-          );
-        }
-      }
-    }
-  }
-
-  let orphanCount = 0;
-  if (flags.strict) {
-    const orphans = findOrphans(scan, analyses);
-    orphanCount = orphans.length;
-    for (const orphan of orphans) console.log(`  ${pc.red("✗")} orphan: ${orphan}`);
-  }
-
-  const failing =
-    candidateCount > 0 ||
-    itemCount > 0 ||
-    lintWarnings.length > 0 ||
-    orphanCount > 0 ||
-    docsStale > 0;
-  return failing ? 1 : 0;
+  return errors.length > 0 || wireable > 0 || itemCount > 0 ? 1 : 0;
 }

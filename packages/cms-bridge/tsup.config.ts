@@ -38,7 +38,6 @@ export default defineConfig([
       "magicast",
       "mri",
       "picocolors",
-      "yaml",
     ],
   },
 ]);

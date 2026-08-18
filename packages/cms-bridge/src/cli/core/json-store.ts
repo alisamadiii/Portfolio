@@ -80,32 +80,39 @@ export function orderedForWrite(
   return out;
 }
 
-export function readDataFile(
-  root: string,
-  entryName: string
-): Record<string, unknown> {
-  const filePath = path.join(root, "src", "data", `${entryName}.json`);
-  if (!fs.existsSync(filePath)) return {};
+/** Read + parse any JSON file. Returns null on missing/malformed. */
+export function readJsonAt(absPath: string): any {
+  if (!fs.existsSync(absPath)) return null;
   try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? parsed
-      : {};
+    return JSON.parse(fs.readFileSync(absPath, "utf8"));
   } catch {
-    return {};
+    return null;
   }
 }
 
-export function writeDataFile(
-  root: string,
-  entryName: string,
-  content: Record<string, unknown>
-): string {
-  const dataDir = path.join(root, "src", "data");
-  fs.mkdirSync(dataDir, { recursive: true });
-  const filePath = path.join(dataDir, `${entryName}.json`);
-  fs.writeFileSync(filePath, `${JSON.stringify(orderedForWrite(content), null, 2)}\n`);
-  return filePath;
+/** Write any JSON value verbatim (2-space, trailing newline). */
+export function writeJsonObject(absPath: string, value: unknown): void {
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  fs.writeFileSync(absPath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+/**
+ * Write pages.json with each page object's `seo` key hoisted first. Only the
+ * key ORDER is normalized — values are the same objects, so untouched pages
+ * round-trip byte-equivalent across re-runs.
+ */
+export function writePagesJson(
+  absPath: string,
+  pagesJson: Record<string, unknown>
+): void {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(pagesJson)) {
+    out[key] =
+      value && typeof value === "object" && !Array.isArray(value)
+        ? orderedForWrite(value as Record<string, unknown>)
+        : value;
+  }
+  writeJsonObject(absPath, out);
 }
 
 /** Every dot path present in a JSON object (all nesting levels). */

@@ -1,14 +1,17 @@
 /**
- * `cms-bridge init` — the full idempotent pipeline:
+ * `cms-bridge init` — the v2 onboarding pipeline (idempotent, add-only):
  *
- *   codemod pages (extract static text, tag elements)
- *   → merge values into src/data/*.json (existing values win)
- *   → surgically merge .pages.yml (comments preserved, append-only)
- *   → ensure the astro.config integration
+ *   install the .claude skill (packaged docs)
+ *   → ensure src/data/{cms,pages,site}.json exist
+ *   → create placeholder files for array collections that have none
+ *   → codemod pages + single-use components: replace plain tags with the
+ *     bridge components and move their values into pages.json (existing values
+ *     always win)
+ *   → ensure the astro.config integration + package.json scripts
  *   → write the self-contained cms-report.md for whatever was skipped
  *
- * Re-running is always safe: adopted elements/keys are never touched, so a
- * second run on an unchanged project is a no-op.
+ * Re-running is always safe: adopted markup/keys are never touched, and every
+ * JSON write only ADDS keys — hand-edits to pages.json survive verbatim.
  */
 
 import fs from "node:fs";
@@ -16,143 +19,140 @@ import path from "node:path";
 import pc from "picocolors";
 
 import { parseAstro } from "../core/astro-doc.js";
+import { classifyPage } from "../core/classify.js";
+import { buildComponentGraph } from "../core/component-graph.js";
 import { ensureBridgeIntegration } from "../core/config-edit.js";
-import { entryFieldsFor, fieldsForObject, SEO_FIELD } from "../core/fields.js";
+import { addAtPath, canAddPath, flattenPaths, getAtPath, writePagesJson } from "../core/json-store.js";
 import {
-  addAtPath,
-  canAddPath,
-  flattenPaths,
-  getAtPath,
-  readDataFile,
-  writeDataFile,
-} from "../core/json-store.js";
+  ensureCollectionFiles,
+  ensureDataFiles,
+  readManifest,
+} from "../core/manifest.js";
 import { assignPaths } from "../core/naming.js";
 import { ensurePackageScripts } from "../core/package-scripts.js";
-import { COMMANDS } from "../commands.js";
-import {
-  ensureEntry,
-  ensureLinkComponent,
-  ensureMedia,
-  ensurePreviewGlobal,
-  ensurePreviewPath,
-  entryTypeOf,
-  loadPagesYml,
-  savePagesYml,
-} from "../core/pages-yml.js";
+import { pageBinding, scanProject } from "../core/scan.js";
 import { writeReport } from "../core/report.js";
-import { syncDocs } from "../core/docs-sync.js";
 import { transformPage } from "../core/transform.js";
-import type { ContentEntry, ReportItem } from "../types.js";
-import { analyzeProject } from "./check.js";
+import { COMMANDS, OBSOLETE_COMMANDS } from "../commands.js";
+import type { PageAnalysis, PageFile, ReportItem } from "../types.js";
+
+/** True when cms.json is present on disk but doesn't parse. */
+function manifestIsMalformed(root: string): boolean {
+  const file = path.join(root, "src", "data", "cms.json");
+  if (!fs.existsSync(file)) return false;
+  return readManifest(root) === null;
+}
 
 export async function initCommand(
   root: string,
-  flags: { dryRun?: boolean; verbose?: boolean; yes?: boolean }
+  flags: { dryRun?: boolean; verbose?: boolean }
 ): Promise<number> {
   const dryRun = !!flags.dryRun;
-  const { scan, analyses, componentItems } = await analyzeProject(root);
   const extraReports: ReportItem[] = [];
 
-  // A malformed .pages.yml can't be merged into — bail before touching ANY
-  // file, so init never leaves the project half-transformed.
-  const doc = loadPagesYml(scan.pagesYml);
-  const ymlParseErrors =
-    "errors" in doc ? (doc as { errors: Array<{ message: string }> }).errors : [];
-  if (ymlParseErrors.length > 0) {
-    console.log(`${pc.bold("cms-bridge init")} — ${scan.pages.length} page(s)`);
+  // Bail before touching anything if cms.json exists but is broken.
+  if (manifestIsMalformed(root)) {
+    console.log(`${pc.bold("cms-bridge init")}`);
     console.log(
-      `  ${pc.red("✗")} .pages.yml has parse errors — fix them first, then re-run init:`
-    );
-    for (const error of ymlParseErrors) {
-      console.log(`    ${pc.red("•")} ${error.message.split("\n")[0]}`);
-    }
-    console.log(
-      `  ${pc.dim("Nothing was written. Run `cms-bridge check` for the full lint.")}`
+      `  ${pc.red("✗")} src/data/cms.json does not parse — fix it first, then re-run init.`
     );
     return 1;
   }
 
-  const siteJson = readDataFile(root, "site");
-  const siteKeys = new Set(Object.keys(siteJson));
+  const scan = scanProject(root);
 
-  // Resolve entry-name collisions before anything reads `page.entryName`. A
-  // page whose own data import shares a name with a collection (e.g. the
-  // `/blog` index backed by src/data/blog.json, alongside a `blog` collection
-  // at src/data/blog/) must get its OWN file entry — merging its fields into
-  // the collection leaves the page uneditable on the canvas (collections
-  // aren't route-mapped). Rename the page's file entry (blog → blogPage) and
-  // let the codemod repoint its data import to match.
-  const isDataDir = (name: string) => {
-    try {
-      return fs
-        .statSync(path.join(root, "src", "data", name))
-        .isDirectory();
-    } catch {
-      return false;
-    }
-  };
-  const usedEntryNames = new Set<string>();
-  for (const { page } of analyses) {
-    const name = page.entryName;
-    const clashes =
-      entryTypeOf(doc, name) === "collection" || isDataDir(name);
-    if (!clashes) {
-      usedEntryNames.add(name);
-      continue;
-    }
-    let candidate = `${name}Page`;
-    let suffix = 2;
-    while (
-      usedEntryNames.has(candidate) ||
-      entryTypeOf(doc, candidate) !== undefined ||
-      isDataDir(candidate) ||
-      fs.existsSync(path.join(root, "src", "data", `${candidate}.json`))
-    ) {
-      candidate = `${name}Page${suffix++}`;
-    }
-    page.entryName = candidate;
-    page.hasDataImport = false; // its data file doesn't exist yet under the new name
-    usedEntryNames.add(candidate);
+  // ---- 1. Skill install --------------------------------------------------
+  const { installSkill } = await import("../core/skill-install.js");
+  const skill = installSkill(root, { dryRun });
+
+  // ---- 2/3. Ensure the three contract files ------------------------------
+  const scannedPages = scan.pages.map((page) => ({
+    key: page.pageKey,
+    route: page.route,
+  }));
+  const { created, pagesAdded, manifest, pagesJson } = ensureDataFiles(
+    root,
+    scannedPages,
+    { dryRun }
+  );
+
+  // ---- 4. Collection placeholder files -----------------------------------
+  const collectionFiles = ensureCollectionFiles(root, manifest, { dryRun });
+
+  // ---- 5. Codemod: pages + single-use components -------------------------
+  const graph = buildComponentGraph(root, scan.pages);
+
+  // Build the transform work-list. Each page is a target; each component used
+  // by exactly one page becomes a target under that page's key. Components used
+  // by 2+ pages can't be auto-wired (they'd need a cmsPath prop) → R5.
+  const targets: { page: PageFile; analysis: PageAnalysis }[] = [];
+  for (const page of scan.pages) {
+    const parsed = await parseAstro(page.source);
+    targets.push({ page, analysis: classifyPage(page, parsed, page.source) });
+  }
+  for (const usage of graph.values()) {
+    if (usage.pages.size !== 1) continue; // shared → handled below as R5
+    const pageKey = [...usage.pages][0];
+    const binding = pageBinding(usage.source);
+    const compPage: PageFile = {
+      filePath: usage.filePath,
+      relPath: usage.relPath,
+      route: "",
+      pageKey,
+      contentIdent: binding?.ident ?? "content",
+      hasPagesBinding: binding !== null,
+      source: usage.source,
+    };
+    const parsed = await parseAstro(usage.source);
+    targets.push({ page: compPage, analysis: classifyPage(compPage, parsed, usage.source) });
+  }
+
+  // Shared-component R5 reports.
+  for (const usage of graph.values()) {
+    if (usage.pages.size < 2) continue;
+    const compPage: PageFile = {
+      filePath: usage.filePath,
+      relPath: usage.relPath,
+      route: "",
+      pageKey: "",
+      contentIdent: "content",
+      hasPagesBinding: false,
+      source: usage.source,
+    };
+    const parsed = await parseAstro(usage.source);
+    const analysis = classifyPage(compPage, parsed, usage.source);
+    if (analysis.candidates.length === 0) continue;
     extraReports.push({
-      code: "R11",
-      file: page.relPath,
-      line: 1,
-      excerpt: `Entry name "${name}" clashes with a collection — mapped to "${candidate}" instead.`,
+      code: "R5",
+      file: usage.relPath,
+      line: analysis.candidates[0]?.line ?? 1,
+      excerpt: `${analysis.candidates.length} editable element(s) in a component used by ${usage.pages.size} pages`,
+      note: `Shared by: ${[...usage.pages].join(", ")}. Thread a cmsPath prop from each page (see recipe) instead of hardcoding one page's data.`,
     });
   }
 
   let filesChanged = 0;
   let fieldsExtracted = 0;
-  const entryContents = new Map<string, Record<string, unknown>>();
-  const entryDirty = new Map<string, boolean>();
+  let pagesDirty = false;
 
-  // ---- Codemod pass ------------------------------------------------------
-  for (const analysis of analyses) {
-    const { page } = analysis;
-    const existing = readDataFile(root, page.entryName);
-    // Two pages can share an entry — reuse the working copy, never re-clone.
-    const content =
-      entryContents.get(page.entryName) ?? structuredClone(existing);
-    entryContents.set(page.entryName, content);
-    entryDirty.set(page.entryName, entryDirty.get(page.entryName) ?? false);
+  for (const { page, analysis } of targets) {
+    const pageObj = ((pagesJson[page.pageKey] ??= {}) as Record<string, unknown>);
 
     const taken = new Set<string>([
-      ...flattenPaths(existing),
-      ...siteKeys,
-      ...analysis.adoptedPaths.map((adoptedPath) =>
-        adoptedPath.replace(/\.\$\{[^}]*\}.*$/, "")
-      ),
+      ...flattenPaths(pageObj),
+      ...Object.keys(scan.siteJson),
+      ...analysis.adoptedPaths.map((p) => p.replace(/\.\$\{[^}]*\}.*$/, "")),
       ...analysis.adoptedPaths,
     ]);
 
     assignPaths(analysis.candidates, taken);
     const usable = analysis.candidates.filter(
-      (candidate) => candidate.path && canAddPath(content, candidate.path)
+      (candidate) => candidate.path && canAddPath(pageObj, candidate.path)
     );
 
     const parsed = await parseAstro(page.source);
-    const heroHeading = getAtPath(content, "hero.heading");
-    const heroText = getAtPath(content, "hero.text");
+    const heroHeading = getAtPath(pageObj, "hero.heading");
+    const heroText = getAtPath(pageObj, "hero.text");
     const result = await transformPage(page, parsed, usable, {
       wireSeo: true,
       seoSeed: {
@@ -173,95 +173,27 @@ export async function initCommand(
     }
 
     extraReports.push(...result.reports);
-
     for (const addition of result.additions) {
-      if (addAtPath(content, addition.path, addition.value)) {
+      if (addAtPath(pageObj, addition.path, addition.value)) {
         fieldsExtracted++;
-        entryDirty.set(page.entryName, true);
+        pagesDirty = true;
       }
     }
-
     if (result.newSource !== page.source) {
       filesChanged++;
-      if (flags.verbose) {
-        console.log(`  ${pc.dim("edit")} ${page.relPath}`);
-      }
+      if (flags.verbose) console.log(`  ${pc.dim("edit")} ${page.relPath}`);
       if (!dryRun) fs.writeFileSync(page.filePath, result.newSource);
     }
   }
 
-  // ---- JSON writes -------------------------------------------------------
-  const jsonWritten: string[] = [];
-  for (const [entryName, content] of entryContents) {
-    if (!entryDirty.get(entryName)) continue;
-    jsonWritten.push(`src/data/${entryName}.json`);
-    if (!dryRun) writeDataFile(root, entryName, content);
-  }
+  // ---- Write pages.json (once, add-only) ---------------------------------
+  const pagesFile = path.join(root, "src", "data", "pages.json");
+  const pagesNeedsWrite =
+    pagesDirty || pagesAdded.length > 0 || created.includes("src/data/pages.json");
+  if (pagesNeedsWrite && !dryRun) writePagesJson(pagesFile, pagesJson);
 
-  // Site skeleton when missing entirely.
-  const siteExists =
-    fs.existsSync(path.join(root, "src", "data", "site.json")) || siteKeys.size > 0;
-  let siteContent = siteJson;
-  if (!siteExists) {
-    siteContent = { seo: { title: "", description: "" }, name: "" };
-    jsonWritten.push("src/data/site.json (skeleton — fill in business info)");
-    if (!dryRun) writeDataFile(root, "site", siteContent);
-  }
-
-  // ---- .pages.yml merge --------------------------------------------------
-  // Track semantic mutations: yaml re-serialization normalizes flow-map style
-  // even for untouched nodes, so we only write the file when something was
-  // actually added — an adopted project stays byte-identical.
-  let ymlMutations = 0;
-  if (ensureMedia(doc)) ymlMutations++;
-  if (ensureLinkComponent(doc)) ymlMutations++;
-
-  // Site entry first, always.
-  const siteEntry: ContentEntry = {
-    name: "site",
-    label: "Site Settings",
-    type: "file",
-    path: "src/data/site.json",
-    format: "json",
-    fields: [SEO_FIELD, ...fieldsForObject(siteContent)],
-  };
-  const siteResult = ensureEntry(doc, siteEntry, { first: true });
-  ymlMutations += (siteResult.created ? 1 : 0) + siteResult.fieldsAdded;
-  if (ensurePreviewPath(doc, "site", "/")) ymlMutations++;
-  if (ensurePreviewGlobal(doc, "site")) ymlMutations++;
-
-  let entriesTouched = 0;
-  for (const analysis of analyses) {
-    const { page } = analysis;
-    const content = entryContents.get(page.entryName) ?? {};
-    const hasData =
-      entryDirty.get(page.entryName) ||
-      Object.keys(readDataFile(root, page.entryName)).length > 0 ||
-      Object.keys(content).length > 0;
-    if (!hasData) continue; // chrome-only page — nothing to manage yet
-
-    const entry: ContentEntry = {
-      name: page.entryName,
-      label: page.entryName === "home" ? "Home" : undefined,
-      type: "file",
-      path: `src/data/${page.entryName}.json`,
-      format: "json",
-      fields: entryFieldsFor(content),
-    };
-    if (!entry.label) delete entry.label;
-    const { created, fieldsAdded } = ensureEntry(doc, entry);
-    if (created || fieldsAdded > 0) entriesTouched++;
-    ymlMutations += (created ? 1 : 0) + fieldsAdded;
-    if (ensurePreviewPath(doc, page.entryName, page.route)) ymlMutations++;
-  }
-
-  const ymlChanged = ymlMutations > 0;
-  if (ymlChanged && !dryRun) {
-    fs.writeFileSync(scan.pagesYmlPath, savePagesYml(doc));
-  }
-
-  // ---- astro.config ------------------------------------------------------
-  let configResult: string = "present";
+  // ---- 6. astro.config ---------------------------------------------------
+  let configResult = "present";
   if (scan.astroConfigPath && !scan.hasBridgeIntegration) {
     configResult = ensureBridgeIntegration(scan.astroConfigPath, { dryRun });
     if (configResult === "failed") {
@@ -281,79 +213,80 @@ export async function initCommand(
     });
   }
 
-  // ---- package.json scripts ----------------------------------------------
-  // Append a `cms:<cmd>` run-script for every CLI command (append-only —
-  // existing keys are kept, nothing else is touched).
+  // ---- 7. package.json scripts -------------------------------------------
   const scriptsResult = ensurePackageScripts(
     root,
     COMMANDS.map((command) => ({
       key: `cms:${command.name}`,
-      command: `npx cms-bridge ${command.name}`,
+      command: `cms-bridge ${command.name}`,
+      // Upgrade the old `npx cms-bridge …` form (which 404s on the scoped name).
+      replaces: [`npx cms-bridge ${command.name}`],
     })),
-    { dryRun }
+    {
+      dryRun,
+      remove: OBSOLETE_COMMANDS.map((name) => ({
+        key: `cms:${name}`,
+        values: [`npx cms-bridge ${name}`, `cms-bridge ${name}`],
+      })),
+    }
   );
 
-  // ---- Docs sync ---------------------------------------------------------
-  const docsSync = syncDocs(root, { dryRun });
-
-  // ---- Report ------------------------------------------------------------
-  // Re-analyze AFTER the writes so the report's line numbers and item list
-  // describe the files as they are now — and stay stable across re-runs.
-  let itemCount =
-    analyses.reduce((sum, analysis) => sum + analysis.reports.length, 0) +
-    componentItems.length +
-    extraReports.length;
+  // ---- 8. Report ---------------------------------------------------------
+  // Re-analyze AFTER the writes so line numbers describe the files as they are
+  // now and stay stable across re-runs. Shared-component R5 items don't re-scan
+  // (they live in components), so carry them (and R0/R10) through.
+  let itemCount = 0;
   if (!dryRun) {
-    const fresh = await analyzeProject(root);
-    const written = writeReport(root, fresh.analyses, [
-      ...fresh.componentItems,
-      ...extraReports,
-    ]);
+    const fresh = await Promise.all(
+      scanProject(root).pages.map(async (page) => {
+        const parsed = await parseAstro(page.source);
+        return classifyPage(page, parsed, page.source);
+      })
+    );
+    const written = writeReport(root, fresh, extraReports);
     itemCount = written.itemCount;
+  } else {
+    itemCount =
+      targets.reduce((sum, t) => sum + t.analysis.reports.length, 0) +
+      extraReports.length;
   }
 
   // ---- Summary -----------------------------------------------------------
   const prefix = dryRun ? `${pc.bold(pc.yellow("[dry-run]"))} ` : "";
   console.log(`${prefix}${pc.bold("cms-bridge init")} — ${scan.pages.length} page(s)`);
-  console.log(`  ${pc.green("✓")} ${fieldsExtracted} field(s) extracted, ${filesChanged} page(s) edited`);
-  for (const file of jsonWritten) console.log(`  ${pc.green("✓")} ${file}`);
   console.log(
-    `  ${pc.green("✓")} .pages.yml ${ymlChanged ? (scan.pagesYml ? "updated" : "created") : "unchanged"}${entriesTouched ? ` (${entriesTouched} entr${entriesTouched === 1 ? "y" : "ies"} touched)` : ""}`
+    `  ${pc.green("✓")} ${fieldsExtracted} field(s) extracted, ${filesChanged} file(s) edited`
   );
-  if (configResult === "added") {
+  const skillCount = skill.written.length;
+  console.log(
+    skillCount > 0
+      ? `  ${pc.green("✓")} skill: ${skillCount} file(s) written to .claude/skills/cms-bridge/`
+      : `  ${pc.dim("·")} skill: up to date`
+  );
+  if (skill.docsMissing) {
+    console.log(`  ${pc.yellow("⚠")} packaged docs not found — skill docs not copied`);
+  }
+  for (const file of created) console.log(`  ${pc.green("✓")} ${file} created`);
+  for (const file of collectionFiles.created)
+    console.log(`  ${pc.green("✓")} ${file} (placeholder collection)`);
+  if (pagesAdded.length > 0)
+    console.log(`  ${pc.green("✓")} cms.json: added page(s) ${pagesAdded.join(", ")}`);
+  if (configResult === "added")
     console.log(`  ${pc.green("✓")} astro.config: cmsBridge() integration added`);
-  }
-  if (scriptsResult.result === "written") {
-    console.log(
-      `  ${pc.green("✓")} package.json: added ${scriptsResult.added.length} script(s) (${scriptsResult.added.join(", ")})`
-    );
-  } else if (scriptsResult.result === "unchanged") {
+  if (scriptsResult.result === "written")
+    console.log(`  ${pc.green("✓")} package.json: scripts synced`);
+  else if (scriptsResult.result === "unchanged")
     console.log(`  ${pc.dim("·")} package.json: scripts already present`);
-  } else {
-    console.log(
-      `  ${pc.yellow("⚠")} package.json not found — scripts not added`
-    );
-  }
-  for (const report of docsSync.reports) {
-    const verb =
-      report.result === "unchanged"
-        ? "unchanged"
-        : report.result === "adopted"
-          ? "adopted (markers added, notes preserved)"
-          : report.result;
-    const mark = report.result === "unchanged" ? pc.dim("·") : pc.green("✓");
-    console.log(`  ${mark} ${report.file} ${verb}`);
-  }
-  if (docsSync.canonicalMissing) {
-    console.log(`  ${pc.yellow("⚠")} packaged pages-cms.md not found — docs not synced`);
-  }
+  else console.log(`  ${pc.yellow("⚠")} package.json not found — scripts not added`);
   if (itemCount > 0) {
     console.log(`  ${pc.yellow("⚠")} ${itemCount} item(s) need review → cms-report.md`);
-    console.log(`    ${pc.dim('Finish them with an AI agent: point it at cms-report.md — the file is self-contained.')}`);
-  }
-  if (!doc.hasIn(["settings", "baseUrl"])) {
     console.log(
-      `  ${pc.yellow("⚠")} settings.baseUrl not set in .pages.yml — required for the CMS preview/canvas.`
+      `    ${pc.dim("Finish them with an AI agent: point it at cms-report.md — the file is self-contained.")}`
+    );
+  }
+  if (!manifest.baseUrl) {
+    console.log(
+      `  ${pc.yellow("⚠")} cms.json baseUrl is empty — set it (required for the CMS preview/canvas).`
     );
   }
   return 0;

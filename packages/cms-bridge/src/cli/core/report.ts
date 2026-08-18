@@ -91,7 +91,7 @@ export const REASON_RECIPES: Record<ReasonCode, { title: string; recipe: string 
   R0: {
     title: "File reverted — automated edit failed verification",
     recipe:
-      "The codemod aborted this file to avoid breaking it. Apply the conventions manually: extract static text to the page JSON, tag elements with data-cms-field, add the fields to .pages.yml.",
+      "The codemod aborted this file to avoid breaking it. Apply the conventions manually: replace the plain tags with bridge components (Heading1/Text/Image/Link), add the values to this page's object in pages.json.",
   },
   R1: {
     title: "Expression-driven text",
@@ -115,36 +115,27 @@ markup so each text run is its own tagged element; (c) if formatting must be
 client-editable, use a \`rich-text\` field and render with \`set:html\`.`,
   },
   R3: {
-    title: "Loop over non-JSON data",
-    recipe: `A \`.map()\` renders content from a frontmatter const or prop. Move the
-array into the page JSON and use indexed template-literal paths:
+    title: "Loop over data",
+    recipe: `A \`.map()\` renders a list. Put the array in this page's object in
+pages.json, then wrap the loop in \`<Group>\`/\`<Item>\` with indexed fields:
 
 \`\`\`astro
 ---
-import home from "../data/home.json";
+import pages from "../data/pages.json";
+const content = pages.home;
 ---
-{home.features.items.map((item, i) => (
-  <li>
-    <h3 data-cms-field={\`features.items.\${i}.title\`}>{item.title}</h3>
-    <p data-cms-field={\`features.items.\${i}.text\`}>{item.text}</p>
-  </li>
-))}
+<Group field="features.items">
+  {content.features.items.map((item, i) => (
+    <Item index={i}>
+      <Heading3 field={\`features.items.\${i}.title\`} value={item.title} />
+      <Text field={\`features.items.\${i}.text\`} value={item.text} />
+    </Item>
+  ))}
+</Group>
 \`\`\`
 
-In .pages.yml the list is one object field with \`list: true\`:
-
-\`\`\`yaml
-- name: features
-  type: object
-  fields:
-    - name: items
-      label: Items
-      type: object
-      list: { collapsible: { summary: "{fields.title}" } }
-      fields:
-        - { name: title, label: Title, type: string }
-        - { name: text, label: Text, type: text }
-\`\`\``,
+The field schema is inferred from the pages.json array shape — no separate
+declaration is needed.`,
   },
   R4: {
     title: "Text inside a conditional",
@@ -152,9 +143,23 @@ In .pages.yml the list is one object field with \`list: true\`:
       "Text renders under a ternary/&&. If both branches are content, extract each branch to its own JSON field and tag each branch's element. If the condition is UI state, leave it.",
   },
   R5: {
-    title: "Component file content",
-    recipe:
-      "Content lives in a shared component (src/components/*.astro). Extract its text to site.json (if global — header/footer) or accept a cmsPath prop and thread section-prefixed paths from each page. Global fields use bare data-cms-field paths.",
+    title: "Shared component (used by 2+ pages)",
+    recipe: `A component is imported by more than one page, so init can't wire it to
+one page's data. Thread a \`cmsPath\` prop from each page and build the field
+paths from it:
+
+\`\`\`astro
+--- Card.astro ---
+interface Props { cmsPath: string; title: string; body: string; }
+const { cmsPath, title, body } = Astro.props;
+---
+<Heading3 field={\`\${cmsPath}.title\`} value={title} />
+<Text field={\`\${cmsPath}.body\`} value={body} />
+\`\`\`
+
+Each page passes its own path: \`<Card cmsPath="features.card" {...content.features.card} />\`.
+If the text is truly global (header/footer), move it to site.json and use bare
+paths instead.`,
   },
   R6: {
     title: "Chrome string (nav / form / button / placeholder / aria)",
@@ -174,7 +179,7 @@ In .pages.yml the list is one object field with \`list: true\`:
   R9: {
     title: "Layout SEO props not migratable",
     recipe:
-      "The page passes dynamic title/description to the layout. Ensure the page JSON has a top-level seo {title, description} object (FIRST in the entry fields) and pass <Layout title={entry.seo.title} description={entry.seo.description}>.",
+      "The page passes dynamic title/description to the layout. Ensure this page's object in pages.json has a top-level seo {title, description} and pass <Layout title={content.seo.title} description={content.seo.description}>.",
   },
   R10: {
     title: "astro.config not edited",
@@ -187,17 +192,10 @@ export default defineConfig({
 });
 \`\`\``,
   },
-  R11: {
-    title: "Page entry renamed to avoid a collection clash",
-    recipe: `A page's own JSON (e.g. \`src/data/blog.json\` behind the \`/blog\` index)
-shared a name with a collection (\`src/data/blog/\`). Two entries can't share
-one name, and merging the page's fields into the collection would leave the
-page uneditable on the canvas — collections aren't route-mapped. init gave the
-page its own file entry with a \`Page\` suffix (\`blog\` → \`blogPage\`) and
-repointed its data import.
-
-Nothing to do unless you want a different name: rename the file entry in
-\`.pages.yml\`, its \`src/data/<name>.json\`, and the page's import to match.`,
+  R12: {
+    title: "Element could not be safely replaced",
+    recipe:
+      "The codemod couldn't verify this element's open/close span (unusual nesting or attribute shape), so it left it untouched. Convert it by hand: swap the tag for the matching bridge component (Heading1/Text/Image/Link), add its value to this page's object in pages.json, and wire the component `value` prop back to it.",
   },
 };
 
@@ -205,7 +203,7 @@ Nothing to do unless you want a different name: rename the file entry in
 // Writer
 // ---------------------------------------------------------------------------
 
-const ORDER: ReasonCode[] = ["R0", "R3", "R8", "R5", "R2", "R1", "R4", "R9", "R7", "R11", "R10", "R6"];
+const ORDER: ReasonCode[] = ["R0", "R12", "R3", "R8", "R5", "R2", "R1", "R4", "R9", "R7", "R10", "R6"];
 
 export function buildReport(
   analyses: PageAnalysis[],

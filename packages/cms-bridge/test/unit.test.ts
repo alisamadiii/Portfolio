@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { camelCase, entryNameForPage, routeForPage } from "../src/cli/core/routes.js";
 import { assignPaths, roleForTag } from "../src/cli/core/naming.js";
@@ -7,31 +10,39 @@ import {
   canAddPath,
   flattenPaths,
   orderedForWrite,
+  writePagesJson,
 } from "../src/cli/core/json-store.js";
-import { fieldForValue, fieldsForObject } from "../src/cli/core/fields.js";
-import { buildReport } from "../src/cli/core/report.js";
+import { openTagEnd, SpliceError } from "../src/cli/core/astro-doc.js";
+import { pageBinding } from "../src/cli/core/scan.js";
 import {
-  ensureEntry,
-  ensureLinkComponent,
-  ensureMedia,
-  ensurePreviewGlobal,
-  loadPagesYml,
-  savePagesYml,
-} from "../src/cli/core/pages-yml.js";
-import { lintPagesYml } from "../src/cli/commands/check.js";
+  ensureDataFiles,
+  normalizeRoute,
+  pageKeyForRoute,
+  placeholderItem,
+  type CmsManifest,
+} from "../src/cli/core/manifest.js";
+import { buildReport } from "../src/cli/core/report.js";
 import type { CandidateField } from "../src/cli/types.js";
 
+const tmpDirs: string[] = [];
+const mkTmp = (): string => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cms-bridge-unit-"));
+  tmpDirs.push(dir);
+  return dir;
+};
+afterEach(() => {
+  while (tmpDirs.length) fs.rmSync(tmpDirs.pop()!, { recursive: true, force: true });
+});
+
 describe("routes", () => {
-  it("derives routes", () => {
+  it("derives routes and skips dynamic ones", () => {
     expect(routeForPage("index.astro")).toBe("/");
     expect(routeForPage("our-story.astro")).toBe("/our-story");
     expect(routeForPage("blog/[slug].astro")).toBeNull();
   });
-  it("derives entry names", () => {
+  it("derives entry names + camelCases", () => {
     expect(entryNameForPage("index.astro")).toBe("home");
     expect(entryNameForPage("our-story.astro")).toBe("ourStory");
-  });
-  it("camelCases", () => {
     expect(camelCase("join-our-team")).toBe("joinOurTeam");
   });
 });
@@ -44,30 +55,27 @@ describe("naming", () => {
     expect(roleForTag("a")).toBe("cta");
     expect(roleForTag("div")).toBeNull();
   });
-
-  it("numbers collisions against taken paths and never renumbers on re-run", () => {
-    const make = (role: CandidateField["role"]): CandidateField => ({
-      role,
+  it("numbers collisions against taken and never renumbers on re-run", () => {
+    const make = (): CandidateField => ({
+      role: "text",
       tag: "p",
       sectionChain: ["hero"],
       line: 1,
       el: { start: 0, name: "p" },
     });
-    const a = make("text");
-    const b = make("text");
-    const taken = new Set(["hero.text3"]);
-    assignPaths([a, b], taken);
+    const a = make();
+    const b = make();
+    assignPaths([a, b], new Set(["hero.text3"]));
     expect(a.path).toBe("hero.text");
     expect(b.path).toBe("hero.text2");
-    // re-run with previous results adopted
-    const c = make("text");
+    const c = make();
     assignPaths([c], new Set(["hero.text", "hero.text2", "hero.text3"]));
     expect(c.path).toBe("hero.text4");
   });
 });
 
 describe("json-store", () => {
-  it("existing values always win", () => {
+  it("existing values always win (add-only)", () => {
     const target: Record<string, unknown> = { hero: { heading: "keep" } };
     expect(addAtPath(target, "hero.heading", "new")).toBe(false);
     expect((target.hero as Record<string, unknown>).heading).toBe("keep");
@@ -77,104 +85,106 @@ describe("json-store", () => {
     expect(canAddPath({ hero: "scalar" }, "hero.heading")).toBe(false);
     expect(canAddPath({}, "hero.heading")).toBe(true);
   });
-  it("orders seo first", () => {
-    expect(Object.keys(orderedForWrite({ b: 1, seo: {}, a: 2 }))).toEqual([
-      "seo",
-      "b",
-      "a",
-    ]);
-  });
-  it("flattens all levels", () => {
+  it("orders seo first + flattens all levels", () => {
+    expect(Object.keys(orderedForWrite({ b: 1, seo: {}, a: 2 }))).toEqual(["seo", "b", "a"]);
     expect(flattenPaths({ a: { b: "x" } })).toEqual(["a", "a.b"]);
+  });
+  it("writePagesJson hoists per-page seo", () => {
+    const dir = mkTmp();
+    const file = path.join(dir, "pages.json");
+    writePagesJson(file, { home: { hero: { heading: "h" }, seo: { title: "t" } } });
+    const home = JSON.parse(fs.readFileSync(file, "utf8")).home;
+    expect(Object.keys(home)).toEqual(["seo", "hero"]);
   });
 });
 
-describe("fields inference", () => {
-  it("detects link objects, images, and typed strings", () => {
-    expect(fieldForValue("cta", { label: "Go", link: "/x" })).toMatchObject({
-      component: "link",
-    });
-    expect(fieldForValue("image", "/media/x.jpg")).toMatchObject({ type: "image" });
-    expect(fieldForValue("email", "a@b.c")).toMatchObject({
-      options: { type: "email" },
-    });
-    expect(fieldForValue("orderUrl", "https://x.com")).toMatchObject({
-      options: { type: "url" },
-    });
+describe("openTagEnd", () => {
+  const end = (s: string) => openTagEnd(s, 0, s.slice(1).match(/^\w+/)![0]);
+  it("finds the close of simple + attr'd tags", () => {
+    expect(end("<p>x</p>").end).toBe(3);
+    expect(end('<p class="a">x</p>').end).toBe(13);
   });
-  it("builds collapsible object lists with a primary summary", () => {
-    const field = fieldForValue("items", [{ name: "A", price: "$1" }]);
-    expect(field).toMatchObject({
-      type: "object",
-      list: { collapsible: { summary: "{fields.name}" } },
-    });
+  it("ignores > inside quotes and expressions", () => {
+    const s = '<a href="/a>b" data-x={a > b}>t</a>';
+    const r = openTagEnd(s, 0, "a");
+    expect(s.slice(r.end - 1, r.end)).toBe(">");
+    expect(s[r.end]).toBe("t");
   });
-  it("skips seo in object inference", () => {
-    expect(fieldsForObject({ seo: { title: "x" }, hero: { heading: "y" } })).toHaveLength(1);
+  it("reports self-closing + spans multiline", () => {
+    expect(openTagEnd('<img src="x" />', 0, "img").selfClosed).toBe(true);
+    expect(openTagEnd("<p\n  class='x'\n>t</p>", 0, "p").selfClosed).toBe(false);
+  });
+  it("throws on an unterminated tag", () => {
+    expect(() => openTagEnd('<p class="x', 0, "p")).toThrow(SpliceError);
+  });
+});
+
+describe("pageBinding", () => {
+  it("reads dot + bracket bindings", () => {
+    expect(
+      pageBinding(`import pages from "../data/pages.json";\nconst content = pages.home;`)
+    ).toEqual({ ident: "content", pageKey: "home" });
+    expect(
+      pageBinding(`import pages from "../../data/pages.json";\nconst c = pages["about-us"];`)
+    ).toEqual({ ident: "c", pageKey: "about-us" });
+  });
+  it("returns null without a binding", () => {
+    expect(pageBinding(`import Layout from "./L.astro";`)).toBeNull();
+    expect(pageBinding(`import pages from "../data/pages.json";`)).toBeNull();
+  });
+});
+
+describe("manifest", () => {
+  it("normalizes routes + resolves page keys", () => {
+    const manifest = {
+      version: 1,
+      baseUrl: "",
+      pages: { home: { route: "/" }, about: { route: "/about/" } },
+      collections: [],
+    } as CmsManifest;
+    expect(normalizeRoute("/about/")).toBe("/about");
+    expect(pageKeyForRoute(manifest, "/about")).toBe("about");
+    expect(pageKeyForRoute(manifest, "/missing")).toBeNull();
+  });
+  it("builds placeholder items by field type", () => {
+    expect(
+      placeholderItem([
+        { name: "title", type: "string" },
+        { name: "count", type: "number" },
+        { name: "live", type: "boolean" },
+        { name: "photo", type: "image" },
+      ])
+    ).toEqual({ title: "", count: 0, live: false, photo: "" });
+  });
+  it("ensureDataFiles is add-only: existing keys win", () => {
+    const dir = mkTmp();
+    fs.mkdirSync(path.join(dir, "src/data"), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "src/data/cms.json"),
+      JSON.stringify({ version: 1, baseUrl: "https://x.com", pages: { home: { route: "/" } }, collections: [] })
+    );
+    fs.writeFileSync(
+      path.join(dir, "src/data/pages.json"),
+      JSON.stringify({ home: { hero: { heading: "KEEP" } } })
+    );
+    const result = ensureDataFiles(dir, [
+      { key: "home", route: "/" },
+      { key: "about", route: "/about" },
+    ]);
+    expect(result.pagesAdded).toEqual(["about"]);
+    expect(result.manifest.baseUrl).toBe("https://x.com"); // untouched
+    expect((result.pagesJson.home as any).hero.heading).toBe("KEEP");
+    expect(result.pagesJson.about).toEqual({});
   });
 });
 
 describe("report", () => {
-  it("embeds the full conventions contract from docs/", () => {
-    const report = buildReport([]);
-    expect(report).toContain("## The CMS conventions contract");
-    expect(report).toContain("data-cms-field");
-    expect(report).toContain("Idempotency rules");
-  });
-});
-
-describe("pages-yml merge", () => {
-  const base = `media:
-  input: public/media
-  output: /media
-
-# keep this comment
-content:
-  - name: site
-    type: file
-    path: src/data/site.json
-    fields:
-      - { name: name, label: Business name, type: string }
-`;
-
-  it("is append-only and preserves comments", () => {
-    const doc = loadPagesYml(base);
-    expect(ensureMedia(doc)).toBe(false); // exists
-    expect(ensureLinkComponent(doc)).toBe(true);
-    expect(ensurePreviewGlobal(doc, "site")).toBe(true);
-    expect(ensurePreviewGlobal(doc, "site")).toBe(false); // second time no-op
-    const result = ensureEntry(doc, {
-      name: "site",
-      type: "file",
-      path: "src/data/site.json",
-      fields: [
-        { name: "name", type: "string", label: "SHOULD NOT REPLACE" },
-        { name: "tagline", type: "string", label: "Tagline" },
-      ],
-    });
-    expect(result.created).toBe(false);
-    expect(result.fieldsAdded).toBe(1); // only tagline
-    const out = savePagesYml(doc);
-    expect(out).toContain("# keep this comment");
-    expect(out).toContain("Business name"); // existing label untouched
-    expect(out).not.toContain("SHOULD NOT REPLACE");
-    expect(out).toContain("tagline");
-  });
-
-  it("lints duplicates recursively", () => {
-    const warnings = lintPagesYml(`content:
-  - name: site
-    type: file
-    path: src/data/site.json
-    fields:
-      - name: seo
-        type: object
-        fields:
-          - { name: title, type: string }
-          - { name: title, type: string }
-`);
-    expect(warnings.some((warning) => warning.includes('duplicate field "title"'))).toBe(
-      true
-    );
+  it("embeds the conventions contract + a fix recipe", () => {
+    const report = buildReport([], [
+      { code: "R5", file: "src/components/Card.astro", line: 1, excerpt: "shared" },
+    ]);
+    expect(report).toContain("CMS conventions contract");
+    expect(report).toContain("R5 — Shared component");
+    expect(report).not.toContain(".pages.yml");
   });
 });

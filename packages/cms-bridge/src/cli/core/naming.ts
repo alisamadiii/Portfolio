@@ -65,7 +65,9 @@ export function sectionName(section: AstroNode, used: Set<string>): string {
     let adoptedPrefix: string | undefined;
     walk(section, (node) => {
       if (adoptedPrefix) return false;
-      const field = staticAttr(node, "data-cms-field");
+      // Either raw markup (data-cms-field) or a bridge component (field prop).
+      const field =
+        staticAttr(node, "data-cms-field") ?? staticAttr(node, "field");
       const segment = field?.split(".")[0];
       if (segment && /^[a-zA-Z_]\w*$/.test(segment)) {
         adoptedPrefix = segment;

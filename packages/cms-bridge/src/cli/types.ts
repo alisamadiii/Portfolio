@@ -1,41 +1,8 @@
 /**
- * Shared types for the cms-bridge CLI.
- *
- * The config model here is a closed subset of what the CMS accepts — the CLI
- * only ever emits shapes it fully understands. The hub validates the real
- * schema at load time; this model is correct by construction.
+ * Shared types for the cms-bridge CLI (v2 three-file contract).
  */
 
-// ---------------------------------------------------------------------------
-// .pages.yml model (emitted subset)
-// ---------------------------------------------------------------------------
-
-export type FieldDef = {
-  name: string;
-  label?: string;
-  type?: string;
-  component?: string;
-  description?: string;
-  required?: boolean;
-  default?: unknown;
-  list?: boolean | { min?: number; max?: number; collapsible?: unknown };
-  options?: Record<string, unknown>;
-  fields?: FieldDef[];
-};
-
-export type ContentEntry = {
-  name: string;
-  label?: string;
-  description?: string;
-  type: "file" | "collection";
-  path: string;
-  format?: string;
-  filename?: string;
-  view?: Record<string, unknown>;
-  fields?: FieldDef[];
-  /** Collection definition files pass through arbitrary schema keys. */
-  [key: string]: unknown;
-};
+import type { CmsManifest } from "./core/manifest.js";
 
 // ---------------------------------------------------------------------------
 // Scan results
@@ -48,29 +15,28 @@ export type PageFile = {
   relPath: string;
   /** URL route ("/", "/menu", "/our-story"). */
   route: string;
-  /** Entry name: existing JSON import name if adopted, else derived. */
-  entryName: string;
-  /** Basename-derived slug ("index" → "home"). */
-  slug: string;
-  /** True when the page already imports a src/data JSON. */
-  hasDataImport: boolean;
+  /** pages.json key this page's content lives under (route-adopted or derived). */
+  pageKey: string;
+  /** Frontmatter identifier bound to `pages.<key>` (default "content"). */
+  contentIdent: string;
+  /** True when the page already binds `const <ident> = pages.<key>`. */
+  hasPagesBinding: boolean;
   source: string;
 };
 
 export type ProjectScan = {
   root: string;
   pages: PageFile[];
-  /** src/data/*.json — name → parsed content. */
-  dataFiles: Map<string, Record<string, unknown>>;
-  /** Raw .pages.yml text, null when absent. */
-  pagesYml: string | null;
-  pagesYmlPath: string;
+  /** Parsed cms.json, or null when the project isn't wired yet. */
+  manifest: CmsManifest | null;
+  /** Parsed pages.json ({} when absent). */
+  pagesJson: Record<string, unknown>;
+  /** Parsed site.json ({} when absent). */
+  siteJson: Record<string, unknown>;
   /** astro.config.(mjs|js|ts) path, null when not found. */
   astroConfigPath: string | null;
   /** True when the cms-bridge integration import already exists in the config. */
   hasBridgeIntegration: boolean;
-  /** cms/collections/*.yml absolute paths. */
-  collectionDefs: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -133,7 +99,7 @@ export type ReasonCode =
   | "R8"
   | "R9"
   | "R10"
-  | "R11";
+  | "R12";
 
 export type ReportItem = {
   code: ReasonCode;

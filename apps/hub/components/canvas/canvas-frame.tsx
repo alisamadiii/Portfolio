@@ -1,7 +1,14 @@
 "use client";
 
-import { memo, useCallback, useRef } from "react";
-import { ArrowRight, FileText, Globe, PencilLine, Table2 } from "lucide-react";
+import { memo, useCallback, useRef, useState } from "react";
+import {
+  ArrowRight,
+  FileText,
+  Globe,
+  PencilLine,
+  RefreshCw,
+  Table2,
+} from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -39,6 +46,7 @@ export const CanvasFrame = memo(function CanvasFrame({
   onSelect,
   onEngage,
   onLoad,
+  onRefresh,
   registerFrame,
 }: {
   page: CanvasPageInfo;
@@ -58,6 +66,8 @@ export const CanvasFrame = memo(function CanvasFrame({
   onSelect: (path: string) => void;
   onEngage: (path: string) => void;
   onLoad: (path: string) => void;
+  /** Re-sync this frame's working copy from localStorage before it reloads. */
+  onRefresh?: (path: string) => void;
   registerFrame: (path: string, iframe: HTMLIFrameElement | null) => void;
 }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -69,6 +79,19 @@ export const CanvasFrame = memo(function CanvasFrame({
     },
     [page.path, registerFrame]
   );
+
+  // Reassigning the same src forces the iframe to reload — a manual refresh.
+  // Bumping `spinId` remounts the icon so its one-shot spin replays each click.
+  const [spinId, setSpinId] = useState(0);
+  const reloadFrame = useCallback(() => {
+    // Re-read localStorage first so a discarded (or externally changed) draft is
+    // reflected: the parent resets this frame's working copy, then the reload
+    // re-pushes the refreshed values on `ready`.
+    onRefresh?.(page.path);
+    const frame = iframeRef.current;
+    if (frame) frame.src = editSrc;
+    setSpinId((n) => n + 1);
+  }, [editSrc, onRefresh, page.path]);
 
   const isCollection = page.kind === "collection";
   const openCollection =
@@ -105,6 +128,20 @@ export const CanvasFrame = memo(function CanvasFrame({
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-5">
+          {!isCollection && (
+            <button
+              type="button"
+              data-canvas-no-pan
+              onClick={reloadFrame}
+              aria-label="Refresh preview"
+              className="text-muted-foreground hover:text-foreground flex items-center"
+            >
+              <RefreshCw
+                key={spinId}
+                className={cn("size-6", spinId > 0 && "animate-[spin_0.6s_ease]")}
+              />
+            </button>
+          )}
           {seoAvailable && onOpenSeo && (
             <button
               type="button"

@@ -3,7 +3,7 @@
 import Text from "./Text.astro";
 
 interface Props {
-  field: string;
+  field: string | null | undefined;
   value?: string | number | null;
   class?: string;
   [key: string]: unknown;

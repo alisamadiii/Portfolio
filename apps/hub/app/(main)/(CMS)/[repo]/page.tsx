@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
 import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@workspace/trpc/client";
+import { isConfigEnabled } from "@workspace/cms-core/config";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -15,15 +15,16 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
-import { isAdminUser } from "@/lib/authz-shared";
-import { isConfigEnabled } from "@workspace/cms-core/config";
+import { useTRPC } from "@workspace/trpc/client";
 
+import { isAdminUser } from "@/lib/authz-shared";
+
+import { Canvas } from "@/components/canvas/canvas";
+import { CanvasChrome } from "@/components/chrome/canvas-chrome";
 import {
   DocumentTitle,
   formatRepoBranchTitle,
 } from "@/components/document-title";
-import { Canvas } from "@/components/canvas/canvas";
-import { CanvasChrome } from "@/components/chrome/canvas-chrome";
 
 export default function Page() {
   const { config } = useConfig();

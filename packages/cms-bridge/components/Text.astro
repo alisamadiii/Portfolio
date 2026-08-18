@@ -10,15 +10,13 @@
  *
  *   <Heading1 field="hero.heading">Wood-fired <strong>pasta</strong></Heading1>
  *
- * On the canvas, authored bold/accent markup flattens to plain source on the
- * first edit and is stored back into the single field value, so it keeps
- * round-tripping. Prefer bold/accent markers in `value` when you want the
- * emphasis editable from the start.
+ * `field` is required to pass, but may resolve to null/undefined (no cmsPath);
+ * then the plain element renders with no CMS attributes.
  */
 import { renderRich } from "@alisamadiillc/cms-bridge/rich";
 
 interface Props {
-  field: string;
+  field: string | null | undefined;
   value?: string | number | null;
   as?: string;
   class?: string;
@@ -30,9 +28,6 @@ interface Props {
 }
 
 const { field, value, as = "p", markClass, markStyle, ...rest } = Astro.props;
-if (!field) {
-  throw new Error("cms-bridge <Text> requires a `field` prop.");
-}
 const Tag = as;
 // Render the slot to a string so an EMPTY forwarded slot (the Heading* wrappers
 // always pass `<slot/>`) falls back to `value` instead of blanking the field.
@@ -43,11 +38,10 @@ const html = slotHtml || renderRich(String(value ?? ""), { markClass, markStyle 
 ---
 
 <Tag
-  data-cms-field={field}
-  data-cms-kind="text"
-  data-cms-mark-class={markClass || undefined}
-  data-cms-mark-style={markStyle || undefined}
+  data-cms-field={field || undefined}
+  data-cms-kind={field ? "text" : undefined}
+  data-cms-mark-class={(field && markClass) || undefined}
+  data-cms-mark-style={(field && markStyle) || undefined}
   {...rest}
   set:html={html}
 />
-

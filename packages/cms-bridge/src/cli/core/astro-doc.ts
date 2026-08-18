@@ -205,6 +205,55 @@ export function quotedAttrSpan(
   return undefined;
 }
 
+/**
+ * Char offset just past an element's open-tag `>`, plus whether it self-closed
+ * (`/>`). Scans from `start` (the `<`) tracking quote state and `{}` expression
+ * depth, so `>` inside a string or an expression attr never ends the tag early.
+ * Throws SpliceError if the open tag never closes.
+ */
+export function openTagEnd(
+  source: string,
+  start: number,
+  tag: string
+): { end: number; selfClosed: boolean } {
+  verifySlice(source, start, `<${tag}`);
+  let quote: string | null = null;
+  let brace = 0;
+  for (let i = start + 1 + tag.length; i < source.length; i++) {
+    const c = source[i];
+    if (quote) {
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      quote = c;
+      continue;
+    }
+    if (c === "{") {
+      brace++;
+      continue;
+    }
+    if (c === "}") {
+      if (brace > 0) brace--;
+      continue;
+    }
+    if (c === ">" && brace === 0) {
+      let j = i - 1;
+      while (j > start && /\s/.test(source[j])) j--;
+      return { end: i + 1, selfClosed: source[j] === "/" };
+    }
+  }
+  throw new SpliceError(`offset ${start}: <${tag}> open tag never closes`);
+}
+
+/** Char offset just past the next `>` at or after `from`. */
+export function scanPastGt(source: string, from: number): number {
+  for (let i = from; i < source.length; i++) {
+    if (source[i] === ">") return i + 1;
+  }
+  throw new SpliceError(`offset ${from}: expected a closing '>'`);
+}
+
 /** Sole non-whitespace child text node of an element, if that's all there is. */
 export function soleStaticText(
   node: AstroNode

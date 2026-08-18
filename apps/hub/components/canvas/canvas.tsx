@@ -1,18 +1,10 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import {
-  ExternalLink,
   Frame,
   Image as ImageIcon,
   Link2,
@@ -27,6 +19,15 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Input } from "@workspace/ui/components/input";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
+import { TextField } from "@/components/ui/mui";
 import { useMediaLibrary } from "@/components/media/media-library-context";
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -412,12 +413,6 @@ export function Canvas() {
     members: GroupMember[];
     rect: { x: number; y: number; width: number; height: number };
   } | null>(null);
-  // A link clicked in the iframe — shows its destination (never navigates).
-  const [linkInfo, setLinkInfo] = useState<{
-    framePath: string;
-    href: string;
-    rect: { x: number; y: number; width: number; height: number };
-  } | null>(null);
 
   // Prefetch every mapped entry (content + sha) so commits can build drafts.
   // v2 repos skip this — their content arrives via the two getContent queries.
@@ -535,6 +530,48 @@ export function Canvas() {
       postSet(iframe.contentWindow, siteOrigin, values);
     },
     [entryMap, siteOrigin]
+  );
+
+  /**
+   * Re-seed a frame's working copy from localStorage (the source of truth),
+   * dropping stale in-memory edits. Called by the Refresh button before the
+   * iframe reloads: if a draft was discarded elsewhere, its entry is no longer
+   * dirty, so the reloaded page keeps its published content instead of having
+   * the old edit re-pushed. V2 pages only (legacy frames just reload).
+   */
+  const refreshFrameFromStore = useCallback(
+    (framePath: string) => {
+      if (!isV2 || !manifest) return;
+      const base = pagesBaseRef.current;
+      if (!base) return;
+      const draft = getDraft(owner, repo, branch, manifest.object.paths.pages);
+      const draftValues = draft?.values as Record<string, unknown> | undefined;
+      let changed = false;
+      for (const entry of candidatesFor(entryMap, framePath)) {
+        if (entry.name === SITE_ENTRY) continue;
+        const draftSlice = draftValues?.[entry.name] as
+          | Record<string, unknown>
+          | undefined;
+        const baseSlice = (base[entry.name] ?? {}) as Record<string, unknown>;
+        const prev = copiesRef.current.get(entry.name);
+        copiesRef.current.set(entry.name, {
+          entry,
+          sha: draft?.sha ?? prev?.sha ?? null,
+          values: draftSlice ?? baseSlice,
+        });
+        if (
+          draftSlice &&
+          JSON.stringify(draftSlice) !== JSON.stringify(baseSlice)
+        ) {
+          dirtyRef.current.add(entry.name);
+        } else {
+          dirtyRef.current.delete(entry.name);
+        }
+        changed = true;
+      }
+      if (changed) setCopiesVersion((version) => version + 1);
+    },
+    [isV2, manifest, owner, repo, branch, entryMap]
   );
 
   /**
@@ -934,9 +971,25 @@ export function Canvas() {
             msg.rect
           );
           break;
-        case "link-info":
-          setLinkInfo({ framePath, href: msg.href, rect: msg.rect });
+        case "link-info": {
+          // A link was clicked in edit mode (the iframe never navigates). Show
+          // where it points as a toast with an open-in-new-tab action.
+          const href = msg.href;
+          toast(`Links to ${href || "(no href)"}`, {
+            action: {
+              label: "Open in new tab",
+              onClick: () => {
+                try {
+                  const url = new URL(href || "/", siteOrigin ?? undefined).href;
+                  window.open(url, "_blank", "noopener");
+                } catch {
+                  /* malformed href — nothing to open */
+                }
+              },
+            },
+          });
           break;
+        }
         default:
           break;
       }
@@ -1094,11 +1147,13 @@ export function Canvas() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") disengage();
+      // Escape while an editor is open closes that editor (Base UI handles it) —
+      // it must NOT also disengage the frame behind it.
+      if (event.key === "Escape" && !groupEditor && !linkEditor) disengage();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [disengage]);
+  }, [disengage, groupEditor, linkEditor]);
 
   const mountedSet = useMemo(() => new Set(mountedKeys), [mountedKeys]);
 
@@ -1179,7 +1234,16 @@ export function Canvas() {
           "canvas-viewport h-full w-full touch-none overscroll-none select-none",
           engagedKey ? "cursor-default" : "cursor-grab active:cursor-grabbing"
         )}
-        onClick={() => {
+        onClick={(event) => {
+          // Clicks on frame chrome (Refresh / SEO / popovers — anything marked
+          // no-pan) must not deselect or disengage the engaged frame. Only a
+          // click on the bare canvas clears selection + engagement.
+          if (
+            event.target instanceof Element &&
+            event.target.closest("[data-canvas-no-pan]")
+          ) {
+            return;
+          }
           setSelectedKey(null);
           disengage();
         }}
@@ -1242,18 +1306,17 @@ export function Canvas() {
                   zoomToFrame(path);
                 }}
                 onLoad={handleFrameLoad}
+                onRefresh={refreshFrameFromStore}
                 registerFrame={registerFrame}
               />
             );
           })}
 
-          {/* Group-field popover — anchored to the clicked non-leaf element.
-              Lives in the world layer so it pans/zooms with its frame; the
-              inner card counter-scales to stay a constant on-screen size. */}
+          {/* Group-field editor — a modal listing every editable field of the
+              clicked CMS group, grouped by array item. Opened by clicking the
+              group host or its "✎ Edit content" badge. */}
           {groupEditor &&
             (() => {
-              const frameRect = rects.get(groupEditor.framePath);
-              if (!frameRect) return null;
               const candidates = candidatesFor(entryMap, groupEditor.framePath);
               const valueByPath = new Map<string, string>();
               for (const entry of candidates) {
@@ -1262,109 +1325,116 @@ export function Canvas() {
                   for (const { path, value } of flattenTextValues(copy.values))
                     valueByPath.set(path, value);
               }
-              // Build one row per editable scalar field in the cluster.
               const isScalar = (f: Record<string, any>) =>
                 TEXT_FIELD_TYPES.has(f.type) || f.type === "image";
-              const kindOf = (f: Record<string, any>): GroupMember["kind"] =>
+              const memberKind = (
+                f: Record<string, any>
+              ): GroupMember["kind"] =>
                 f.type === "image"
                   ? "media"
                   : f.type === "string" && f.options?.type === "url"
                     ? "link"
                     : "text";
-              const rows = new Map<
-                string,
-                { kind: GroupMember["kind"]; label: string }
-              >();
-              const addField = (
+              const makeRow = (
                 path: string,
                 field: Record<string, any> | undefined
-              ) => {
-                if (!field || !isScalar(field) || rows.has(path)) return;
-                rows.set(path, {
-                  kind: kindOf(field),
-                  label: String(
-                    field.label ?? field.name ?? path.split(".").pop() ?? path
-                  ),
-                });
-              };
-              // 1. Every scalar child of an object host — surfaces fields that
-              //    never got a `data-cms-field` in the markup (e.g. a stat's
-              //    `suffix`, baked into a countup script).
-              const hostField = resolveFieldEntry(
-                candidates,
-                groupEditor.path
-              )?.field;
-              if (Array.isArray(hostField?.fields))
-                for (const child of hostField.fields)
-                  addField(`${groupEditor.path}.${child.name}`, child);
-              // 2. Plus any tagged members the bridge reported — covers a scalar
-              //    host that wraps tagged siblings (a heading + its highlight).
-              for (const member of groupEditor.members)
-                addField(
-                  member.path,
-                  resolveFieldEntry(candidates, member.path)?.field
-                );
-              const seeded = Array.from(rows, ([path, meta]) => {
+              ): GroupEditorFieldRow | null => {
+                if (!field || !isScalar(field)) return null;
                 const raw = valueByPath.get(path) ?? "";
                 return {
                   path,
-                  kind: meta.kind,
-                  label: meta.label,
+                  kind: memberKind(field),
+                  label: String(
+                    field.label ?? field.name ?? path.split(".").pop() ?? path
+                  ),
                   // A previously-corrupted number draft flattens to "NaN" —
                   // show it blank so the user can just type the value.
                   value: raw === "NaN" ? "" : raw,
                 };
-              });
-              if (seeded.length === 0) return null;
+              };
+
+              const hostPath = groupEditor.path;
+              const prefix = `${hostPath}.`;
+              const hostField = resolveFieldEntry(candidates, hostPath)?.field;
+              const childFields: Record<string, any>[] = Array.isArray(
+                hostField?.fields
+              )
+                ? (hostField!.fields as Record<string, any>[])
+                : [];
+
+              // Item index of a member path (`stats.0.number` → 0), or null when
+              // the host is a scalar/object cluster (`hero.title`) not an array.
+              const indexOf = (path: string): number | null => {
+                if (!path.startsWith(prefix)) return null;
+                const seg = path.slice(prefix.length).split(".")[0];
+                return /^\d+$/.test(seg) ? Number(seg) : null;
+              };
+              const indices = Array.from(
+                new Set(
+                  groupEditor.members
+                    .map((m) => indexOf(m.path))
+                    .filter((i): i is number => i !== null)
+                )
+              ).sort((a, b) => a - b);
+
+              const sections: GroupEditorSection[] = [];
+              const pushRows = (
+                rows: GroupEditorFieldRow[],
+                title?: string
+              ) => {
+                const seen = new Set<string>();
+                const deduped = rows.filter((r) => {
+                  if (seen.has(r.path)) return false;
+                  seen.add(r.path);
+                  return true;
+                });
+                if (deduped.length) sections.push({ title, rows: deduped });
+              };
+              const rowsFor = (indexed: number | null) => {
+                const rows: GroupEditorFieldRow[] = [];
+                // Schema children first, seeded at the resolved (indexed) path so
+                // untagged fields surface with their real value, not a blank.
+                for (const child of childFields) {
+                  const base =
+                    indexed === null
+                      ? `${hostPath}.${child.name}`
+                      : `${hostPath}.${indexed}.${child.name}`;
+                  const row = makeRow(base, child);
+                  if (row) rows.push(row);
+                }
+                // Then any tagged members the schema didn't cover.
+                for (const member of groupEditor.members) {
+                  if (indexOf(member.path) !== indexed) continue;
+                  const row = makeRow(
+                    member.path,
+                    resolveFieldEntry(candidates, member.path)?.field
+                  );
+                  if (row) rows.push(row);
+                }
+                return rows;
+              };
+
+              if (indices.length)
+                for (const i of indices)
+                  pushRows(
+                    rowsFor(i),
+                    indices.length > 1 ? `Item ${i + 1}` : undefined
+                  );
+              else pushRows(rowsFor(null));
+
               return (
-                <FrameAnchored
-                  frameRect={frameRect}
-                  rect={groupEditor.rect}
-                  scale={committed.scale}
-                >
-                  <GroupEditor
-                    key={`${groupEditor.framePath}:${groupEditor.path}`}
-                    members={seeded}
-                    onCommit={(path, value) =>
-                      commitNonText(groupEditor.framePath, path, value)
-                    }
-                    onClose={() => setGroupEditor(null)}
-                  />
-                </FrameAnchored>
+                <GroupEditorDialog
+                  key={`${groupEditor.framePath}:${groupEditor.path}`}
+                  open
+                  sections={sections}
+                  onCommit={(path, value) =>
+                    commitNonText(groupEditor.framePath, path, value)
+                  }
+                  onClose={() => setGroupEditor(null)}
+                />
               );
             })()}
 
-          {/* Link destination popover — a link was clicked in edit mode; the
-              iframe never navigates, we just show where it points. */}
-          {linkInfo &&
-            (() => {
-              const frameRect = rects.get(linkInfo.framePath);
-              if (!frameRect) return null;
-              return (
-                <FrameAnchored
-                  frameRect={frameRect}
-                  rect={linkInfo.rect}
-                  scale={committed.scale}
-                >
-                  <LinkInfoPopover
-                    key={`${linkInfo.framePath}:${linkInfo.href}`}
-                    href={linkInfo.href}
-                    onOpen={() => {
-                      try {
-                        const url = new URL(
-                          linkInfo.href || "/",
-                          siteOrigin ?? undefined
-                        ).href;
-                        window.open(url, "_blank", "noopener");
-                      } catch {
-                        /* malformed href — nothing to open */
-                      }
-                    }}
-                    onClose={() => setLinkInfo(null)}
-                  />
-                </FrameAnchored>
-              );
-            })()}
         </div>
       </div>
 
@@ -1489,204 +1559,137 @@ function LinkEditor({
   );
 }
 
-type GroupEditorMember = GroupMember & { label: string; value: string };
+type GroupEditorFieldRow = {
+  path: string;
+  kind: GroupMember["kind"];
+  label: string;
+  value: string;
+};
+type GroupEditorSection = { title?: string; rows: GroupEditorFieldRow[] };
 
 /**
- * Popover for a non-leaf field: edits the host field plus each tagged
- * descendant. Text/link rows edit inline (Enter or blur commits); an image row
- * opens the global media dialog. Anchored by the caller; Escape closes it
- * (capture phase, so the canvas's own Escape doesn't disengage the frame).
+ * Modal editor for a CMS group: lists every editable field of the clicked
+ * cluster, grouped by array item. Text/link rows commit on Enter or blur; an
+ * image row opens the global media dialog. All fields for a group are edited
+ * here — the group's children are never individually editable inline.
  */
-function GroupEditor({
-  members,
+function GroupEditorDialog({
+  open,
+  sections,
   onCommit,
   onClose,
 }: {
-  members: GroupEditorMember[];
+  open: boolean;
+  sections: GroupEditorSection[];
   onCommit: (path: string, value: string) => void;
   onClose: () => void;
 }) {
   const { open: openMediaLibrary } = useMediaLibrary();
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.stopPropagation();
-      onClose();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [onClose]);
-  return (
-    <div className="bg-background w-80 rounded-xl border p-3 shadow-2xl">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs font-medium">
-          Edit fields
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X className="size-3.5" />
-        </Button>
-      </div>
-      <div className="flex flex-col gap-3">
-        {members.map((member) =>
-          member.kind === "media" ? (
-            <div key={member.path} className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-xs">
-                {member.label}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  openMediaLibrary({
-                    title: "Replace image",
-                    onInsert: (urls) => {
-                      const url = urls[0];
-                      if (url) onCommit(member.path, url);
-                    },
-                  })
-                }
-              >
-                <ImageIcon className="size-4" />
-                Replace image
-              </Button>
-            </div>
-          ) : (
-            <GroupEditorRow
-              key={member.path}
-              label={member.label}
-              value={member.value}
-              onCommit={(value) => onCommit(member.path, value)}
-            />
-          )
-        )}
-      </div>
-    </div>
+  const hasRows = sections.some((section) => section.rows.length > 0);
+  // Buffer every edit locally — NOTHING is persisted or pushed to the iframe
+  // until Save. Keyed by field path. Seeded once on mount (the dialog remounts
+  // per group via its React key), so re-renders don't clobber in-progress edits.
+  const [drafts, setDrafts] = useState<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const section of sections)
+      for (const row of section.rows) seed[row.path] = row.value;
+    return seed;
+  });
+  const setField = (path: string, value: string) =>
+    setDrafts((prev) => ({ ...prev, [path]: value }));
+  const dirty = sections.some((section) =>
+    section.rows.some((row) => (drafts[row.path] ?? "") !== row.value)
   );
-}
-
-/** One text/link row inside the group popover — commits on Enter or blur. */
-function GroupEditorRow({
-  label,
-  value,
-  onCommit,
-}: {
-  label: string;
-  value: string;
-  onCommit: (value: string) => void;
-}) {
-  const [draft, setDraft] = useState(value);
-  // Re-seed if the underlying draft changes (e.g. propagated from inline edit).
-  useEffect(() => setDraft(value), [value]);
-  const commit = () => {
-    if (draft !== value) onCommit(draft);
+  const save = () => {
+    for (const section of sections)
+      for (const row of section.rows) {
+        const next = drafts[row.path] ?? "";
+        if (next !== row.value) onCommit(row.path, next);
+      }
+    onClose();
   };
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-muted-foreground text-xs">{label}</span>
-      <Input
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit();
-            (event.target as HTMLInputElement).blur();
-          }
-        }}
-        className="h-8"
-      />
-    </label>
-  );
-}
-
-/**
- * Anchors a popover to an element inside a frame. Rendered in the world layer
- * (so it pans/zooms with the frame) at the frame's world position + the
- * element's iframe-space box, then counter-scaled so the card stays a constant
- * on-screen size. `data-canvas-no-pan` + stopPropagation keep interaction from
- * panning or disengaging the frame.
- */
-function FrameAnchored({
-  frameRect,
-  rect,
-  scale,
-  children,
-}: {
-  frameRect: { x: number; y: number };
-  rect: { x: number; y: number; width: number; height: number };
-  scale: number;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className="absolute z-40"
-      data-canvas-no-pan
-      onClick={(event) => event.stopPropagation()}
-      style={{ left: frameRect.x + rect.x, top: frameRect.y + rect.y + rect.height }}
+    // `modal={false}` so opening the panel never traps focus or inerts the
+    // selected iframe (it stays engaged behind the dialog); `disablePointer-
+    // Dismissal` so a click outside never closes it — only Cancel / ✕ / Escape.
+    <Dialog
+      open={open}
+      modal={false}
+      disablePointerDismissal
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
-      <div style={{ transform: `scale(${1 / scale})`, transformOrigin: "top left" }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/** Read-only popover showing a clicked link's destination, with open-in-new-tab. */
-function LinkInfoPopover({
-  href,
-  onOpen,
-  onClose,
-}: {
-  href: string;
-  onOpen: () => void;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.stopPropagation();
-      onClose();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [onClose]);
-  return (
-    <div className="bg-background w-72 rounded-xl border p-3 shadow-2xl">
-      <div className="mb-1 flex items-center gap-2">
-        <span className="text-muted-foreground min-w-0 flex-1 text-xs font-medium">
-          Links to
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X className="size-3.5" />
-        </Button>
-      </div>
-      <p className="mb-2 truncate text-sm font-medium" title={href}>
-        {href || "(no href)"}
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={onOpen}
-      >
-        <ExternalLink className="size-4" />
-        Open in new tab
-      </Button>
-    </div>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit content</DialogTitle>
+        </DialogHeader>
+        {hasRows ? (
+          <div className="flex flex-col gap-5">
+            {sections.map((section, index) => (
+              <div
+                key={section.title ?? index}
+                className="flex flex-col gap-3"
+              >
+                {section.title && (
+                  <span className="text-muted-foreground text-xs font-medium">
+                    {section.title}
+                  </span>
+                )}
+                {section.rows.map((row) =>
+                  row.kind === "media" ? (
+                    <div key={row.path} className="flex flex-col gap-1.5">
+                      <span className="text-muted-foreground text-xs">
+                        {row.label}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          openMediaLibrary({
+                            title: "Replace image",
+                            onInsert: (urls) => {
+                              const url = urls[0];
+                              if (url) setField(row.path, url);
+                            },
+                          })
+                        }
+                      >
+                        <ImageIcon className="size-4" />
+                        {(drafts[row.path] ?? "") !== row.value
+                          ? "Image selected — Save to apply"
+                          : "Replace image"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <TextField
+                      key={row.path}
+                      label={row.label}
+                      value={drafts[row.path] ?? ""}
+                      size="small"
+                      fullWidth
+                      onChange={(event) =>
+                        setField(row.path, event.target.value)
+                      }
+                    />
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No editable fields in this section.
+          </p>
+        )}
+        <DialogFooter>
+          <DialogClose render={<Button variant="secondary">Cancel</Button>} />
+          <Button type="button" disabled={!dirty} onClick={save}>
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

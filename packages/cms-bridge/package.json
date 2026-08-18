@@ -56,7 +56,8 @@
   "files": [
     "dist",
     "docs",
-    "components"
+    "components",
+    "templates"
   ],
   "peerDependencies": {
     "astro": ">=4.0.0"
@@ -82,8 +83,7 @@
     "es-module-lexer": "^1.5.0",
     "magicast": "^0.3.4",
     "mri": "^1.2.0",
-    "picocolors": "^1.1.0",
-    "yaml": "^2.4.0"
+    "picocolors": "^1.1.0"
   },
   "devDependencies": {
     "@workspace/typescript-config": "workspace:*",

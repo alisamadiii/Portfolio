@@ -11,21 +11,26 @@
  *       </Item>
  *     ))}
  *   </Group>
+ *
+ * `field` is required to pass (from `cmsField(...)`), but may resolve to
+ * null/undefined (no cmsPath — a collection card or non-preview render); then
+ * the plain wrapper renders with no CMS attributes.
  */
 interface Props {
-  field: string;
+  field: string | null | undefined;
   as?: string;
   class?: string;
   [key: string]: unknown;
 }
 
 const { field, as = "div", ...rest } = Astro.props;
-if (!field) {
-  throw new Error("cms-bridge <Group> requires a `field` prop.");
-}
 const Tag = as;
 ---
 
-<Tag data-cms-field={field} data-cms-kind="group" {...rest}>
+<Tag
+  data-cms-field={field || undefined}
+  data-cms-kind={field ? "group" : undefined}
+  {...rest}
+>
   <slot />
 </Tag>

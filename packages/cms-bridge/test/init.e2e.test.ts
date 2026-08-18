@@ -1,22 +1,41 @@
 /**
  * End-to-end: run the real init pipeline against the plain-site fixture in a
- * temp directory. Covers extraction, tagging, JSON/yml generation, the
- * self-contained report, and the idempotency contract (second run = zero
- * changes).
+ * temp dir. Covers tag→component replacement, pages.json extraction, the
+ * three-file scaffold, the skill install, the self-contained report, the
+ * idempotency + add-only contract, and the interactive `collection` command.
  */
 
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { Readable } from "node:stream";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { initCommand } from "../src/cli/commands/init.js";
-import { collectionsCommand } from "../src/cli/commands/collections.js";
-import { parseAstro } from "../src/cli/core/astro-doc.js";
+import { checkContract } from "../src/cli/commands/check.js";
+import { collectionCommand } from "../src/cli/commands/collection.js";
+import { getAttr, parseAstro, walk, type AstroNode } from "../src/cli/core/astro-doc.js";
+
+const fieldOf = (n: AstroNode): string | undefined =>
+  (getAttr(n, "data-cms-field") ?? getAttr(n, "field"))?.value;
+
+/** True if any field-bearing node contains another field-bearing descendant. */
+async function hasNestedField(source: string): Promise<boolean> {
+  const { ast } = await parseAstro(source);
+  let nested = false;
+  walk(ast, (node, ancestors) => {
+    if (nested) return false;
+    if (fieldOf(node) && ancestors.some((a) => fieldOf(a))) nested = true;
+  });
+  return nested;
+}
 
 const FIXTURE = path.join(__dirname, "fixtures", "plain-site");
 
 let root: string;
+
+const read = (rel: string): string => fs.readFileSync(path.join(root, rel), "utf8");
+const readJson = (rel: string): any => JSON.parse(read(rel));
 
 const snapshotTree = (dir: string): Map<string, string> => {
   const out = new Map<string, string>();
@@ -31,207 +50,118 @@ const snapshotTree = (dir: string): Map<string, string> => {
   return out;
 };
 
-beforeAll(() => {
+beforeEach(() => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), "cms-bridge-e2e-"));
   fs.cpSync(FIXTURE, root, { recursive: true });
 });
-
-afterAll(() => {
-  fs.rmSync(root, { recursive: true, force: true });
-});
+afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
 describe("init on plain-site", () => {
-  it("runs the full pipeline", async () => {
-    const code = await initCommand(root, {});
-    expect(code).toBe(0);
+  it("runs and scaffolds the three files + skill", async () => {
+    expect(await initCommand(root, {})).toBe(0);
+    expect(fs.existsSync(path.join(root, "src/data/cms.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "src/data/pages.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "src/data/site.json"))).toBe(true);
+    expect(
+      fs.existsSync(path.join(root, ".claude/skills/cms-bridge/SKILL.md"))
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(root, ".claude/skills/cms-bridge/pages-cms.md"))
+    ).toBe(true);
   });
 
-  it("tags safe elements and rewrites text to JSON refs", async () => {
-    const index = fs.readFileSync(path.join(root, "src/pages/index.astro"), "utf8");
-    expect(index).toContain('import home from "../data/home.json";');
-    expect(index).toContain('data-cms-field="hero.heading"');
-    expect(index).toContain("{home.hero.heading}");
-    // eyebrow: short text before the heading
-    expect(index).toContain('data-cms-field="hero.eyebrow"');
-    // cta: label wrapped in span, href rewritten, anchor tagged for href editing
-    expect(index).toContain('href={home.hero.cta.link}');
-    expect(index).toContain('data-cms-field="hero.cta.label"');
-    expect(index).toContain('data-cms-field="hero.cta.link"');
-    // image: src + alt migrated, field on src
-    expect(index).toContain('src={home.hero.image}');
-    expect(index).toContain('alt={home.hero.imageAlt}');
-    // section named from heading slug (no id on section 2)
-    expect(index).toContain('data-cms-field="whyChooseUs.title"');
-    // untouched: mixed markup, map over const, form chrome
-    expect(index).toContain("<strong>2,000+</strong>");
-    expect(index).toContain("{perks.map((perk) => <li>{perk}</li>)}");
-    expect(index).toContain('placeholder="Your name"');
-  });
+  it("replaces plain tags with bridge components + moves values to pages.json", async () => {
+    await initCommand(root, {});
+    const index = read("src/pages/index.astro");
+    expect(index).toContain('<Heading1 field="hero.heading" value={content.hero.heading} />');
+    expect(index).toContain('<Text as="p" field="hero.text" value={content.hero.text} />');
+    expect(index).toContain('<Image field="hero.image"');
+    expect(index).toContain('<Link field="hero.cta" value={content.hero.cta}>');
+    expect(index).toContain('import pages from "../data/pages.json"');
+    expect(index).toContain("const content = pages.home");
+    // SEO wired into the layout.
+    expect(index).toContain("title={content.seo.title}");
 
-  it("still parses as valid Astro", async () => {
-    for (const page of ["index.astro", "about.astro"]) {
-      const source = fs.readFileSync(path.join(root, "src/pages", page), "utf8");
-      const { diagnosticCount } = await parseAstro(source);
-      expect(diagnosticCount).toBe(0);
-    }
-  });
-
-  it("writes JSON with seo first and extracted values", () => {
-    const home = JSON.parse(
-      fs.readFileSync(path.join(root, "src/data/home.json"), "utf8")
-    );
-    expect(Object.keys(home)[0]).toBe("seo");
-    expect(home.seo.title).toBe("Acme Plumbing — Springfield");
+    const home = readJson("src/data/pages.json").home;
     expect(home.hero.heading).toBe("Reliable plumbing, day or night");
     expect(home.hero.cta).toEqual({ label: "Get a quote", link: "/contact" });
     expect(home.hero.image).toBe("/media/hero.jpg");
     expect(home.hero.imageAlt).toBe("A plumber fixing a sink");
   });
 
-  it("wires SEO props on the Layout", () => {
-    const index = fs.readFileSync(path.join(root, "src/pages/index.astro"), "utf8");
-    expect(index).toMatch(/<Layout title=\{home\.seo\.title\} description=\{home\.seo\.description\}>/);
-    const about = fs.readFileSync(path.join(root, "src/pages/about.astro"), "utf8");
-    expect(about).toContain("title={about.seo.title}");
+  it("never nests a field element inside another", async () => {
+    await initCommand(root, {});
+    for (const rel of ["src/pages/index.astro", "src/pages/about.astro"]) {
+      expect(await hasNestedField(read(rel))).toBe(false);
+    }
   });
 
-  it("creates .pages.yml with site first + entries + preview settings", () => {
-    const yml = fs.readFileSync(path.join(root, ".pages.yml"), "utf8");
-    expect(yml.indexOf("name: site")).toBeLessThan(yml.indexOf("name: home"));
-    expect(yml).toContain("global:");
-    expect(yml).toContain("home: /");
-    expect(yml).toContain("about: /about");
-    expect(yml).toContain("component: link");
-  });
-
-  it("adds the astro integration", () => {
-    const config = fs.readFileSync(path.join(root, "astro.config.mjs"), "utf8");
-    expect(config).toContain("@alisamadiillc/cms-bridge/astro");
-    expect(config).toContain("cmsBridge()");
-  });
-
-  it("syncs the canonical pages-cms.md into the project", () => {
-    const doc = path.join(root, "docs/pages-cms.md");
-    expect(fs.existsSync(doc)).toBe(true);
-    const content = fs.readFileSync(doc, "utf8");
-    expect(content).toContain("cms-bridge:managed:start");
-    expect(content).toContain("client project guide (v2)");
-  });
-
-  it("writes a self-contained report covering the skipped cases", () => {
-    const report = fs.readFileSync(path.join(root, "cms-report.md"), "utf8");
-    expect(report).toContain("## The CMS conventions contract");
-    expect(report).toContain("R8"); // const perks = [...]
-    expect(report).toContain("R2"); // mixed <p>…<strong>
-    expect(report).toContain("R6"); // form chrome
-    expect(report).toContain("R3"); // perks.map loop
-  });
-
-  it("second run is a byte-for-byte no-op", async () => {
+  it("second run is byte-identical (idempotent)", async () => {
+    await initCommand(root, {});
     const before = snapshotTree(root);
-    const code = await initCommand(root, {});
-    expect(code).toBe(0);
+    await initCommand(root, {});
     const after = snapshotTree(root);
     expect([...after.keys()].sort()).toEqual([...before.keys()].sort());
-    for (const [file, content] of after) {
-      expect(content, file).toBe(before.get(file));
-    }
+    for (const [file, content] of before) expect(after.get(file)).toBe(content);
+  });
+
+  it("preserves hand-added pages.json data across re-runs (add-only)", async () => {
+    await initCommand(root, {});
+    const pagesFile = path.join(root, "src/data/pages.json");
+    const j = JSON.parse(fs.readFileSync(pagesFile, "utf8"));
+    j.home.hero.customNote = "KEEP ME";
+    j.brandNew = { seo: { title: "X", description: "Y" } };
+    fs.writeFileSync(pagesFile, `${JSON.stringify(j, null, 2)}\n`);
+    await initCommand(root, {});
+    const after = JSON.parse(fs.readFileSync(pagesFile, "utf8"));
+    expect(after.home.hero.customNote).toBe("KEEP ME");
+    expect(after.brandNew).toEqual({ seo: { title: "X", description: "Y" } });
+  });
+
+  it("writes a yml-free self-contained report", async () => {
+    await initCommand(root, {});
+    const report = read("cms-report.md");
+    expect(report).toContain("CMS adoption report");
+    expect(report).not.toContain(".pages.yml");
   });
 });
 
-describe("collections on plain-site", () => {
-  it("syncs a definition into .pages.yml and creates the dir", async () => {
-    const defDir = path.join(root, "cms", "collections");
-    fs.mkdirSync(defDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(defDir, "testimonials.yml"),
-      `label: Testimonials
-fields:
-  - { name: title, label: Title, type: string, required: true }
-  - { name: quote, label: Quote, type: text }
-`
-    );
-    fs.writeFileSync(
-      path.join(defDir, "stories.yml"),
-      `label: Stories
-route: /stories/{slug}
-fields:
-  - { name: title, label: Title, type: string, required: true }
-`
-    );
-    const code = await collectionsCommand(root, {});
+describe("collection command", () => {
+  const drive = (answers: string[]) =>
+    collectionCommand(root, {
+      input: Readable.from(answers.map((a) => `${a}\n`)),
+      output: new (require("node:stream").Writable)({ write(_c: any, _e: any, cb: any) { cb(); } }),
+    });
+
+  it("requires init first", async () => {
+    expect(await drive(["team"])).toBe(1); // no cms.json yet
+  });
+
+  it("creates a collection file + cms.json entry, and refuses duplicates", async () => {
+    await initCommand(root, {});
+    const code = await drive(["team", "", "name", "string", "y", "role", "string", "", ""]);
     expect(code).toBe(0);
-    const yml = fs.readFileSync(path.join(root, ".pages.yml"), "utf8");
-    expect(yml).toContain("name: testimonials");
-    expect(yml).toContain("type: collection");
-    expect(yml).toContain("primary: title");
-    expect(fs.existsSync(path.join(root, "src/data/testimonials/.gitkeep"))).toBe(true);
-    // A collection with a dynamic route maps into settings.preview.paths, and
-    // `route` never leaks into the entry body.
-    expect(yml).toContain("stories: /stories/{slug}");
-    expect(yml).not.toContain("route: /stories/{slug}");
-  });
-
-  it("re-sync is a no-op", async () => {
-    const before = snapshotTree(root);
-    await collectionsCommand(root, {});
-    const after = snapshotTree(root);
-    for (const [file, content] of after) {
-      expect(content, file).toBe(before.get(file));
-    }
+    const file = readJson("src/data/collections/team.json");
+    expect(file).toEqual([{ name: "", role: "" }]);
+    const collection = readJson("src/data/cms.json").collections.find(
+      (c: any) => c.name === "team"
+    );
+    expect(collection.path).toBe("src/data/collections/team.json");
+    expect(collection.fields).toHaveLength(2);
+    expect(collection.fields[0].required).toBe(true);
+    // Duplicate name aborts.
+    expect(await drive(["team"])).toBe(1);
   });
 });
 
-describe("init with a page/collection name clash", () => {
-  it("gives the page its own file entry instead of merging into the collection", async () => {
-    // A `blog` collection (dir src/data/blog/) …
-    fs.writeFileSync(
-      path.join(root, "cms", "collections", "blog.yml"),
-      `label: Blog
-route: /blog/{slug}
-fields:
-  - { name: title, label: Title, type: string, required: true }
-  - { name: body, label: Body, type: rich-text }
-`
-    );
-    expect(await collectionsCommand(root, {})).toBe(0);
-
-    // … next to a `/blog` index page backed by src/data/blog.json (same name).
-    fs.mkdirSync(path.join(root, "src/pages/blog"), { recursive: true });
-    fs.writeFileSync(
-      path.join(root, "src/pages/blog/index.astro"),
-      `---
-import Layout from "../../layouts/Layout.astro";
-import blog from "../../data/blog.json";
----
-<Layout title="Blog" description="Posts">
-  <h1>{blog.intro.heading}</h1>
-</Layout>
-`
-    );
-    fs.writeFileSync(
-      path.join(root, "src/data/blog.json"),
-      JSON.stringify({ intro: { heading: "The Blog" } }, null, 2)
-    );
-
-    expect(await initCommand(root, {})).toBe(0);
-
-    const yml = fs.readFileSync(path.join(root, ".pages.yml"), "utf8");
-    // The page got a distinct, non-colliding file entry mapped to /blog.
-    expect(yml).toContain("name: blogPage");
-    expect(yml).toContain("blogPage: /blog");
-    // The collection is untouched — still a collection, no page fields merged.
-    expect(yml).toContain("name: blog");
-    expect(yml).not.toContain("name: intro");
-
-    // The page's data import was repointed to the renamed entry's file.
-    const page = fs.readFileSync(
-      path.join(root, "src/pages/blog/index.astro"),
-      "utf8"
-    );
-    expect(page).toContain('data/blogPage.json');
-
-    const report = fs.readFileSync(path.join(root, "cms-report.md"), "utf8");
-    expect(report).toContain("R11");
+describe("check", () => {
+  it("passes the contract once baseUrl is set", async () => {
+    await initCommand(root, {});
+    const cmsFile = path.join(root, "src/data/cms.json");
+    const j = JSON.parse(fs.readFileSync(cmsFile, "utf8"));
+    j.baseUrl = "https://example.com";
+    fs.writeFileSync(cmsFile, `${JSON.stringify(j, null, 2)}\n`);
+    const { errors } = checkContract(root);
+    expect(errors).toEqual([]);
   });
 });

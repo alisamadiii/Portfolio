@@ -1,12 +1,14 @@
 /**
- * Project discovery: pages, data files, .pages.yml, astro.config, collection
- * definitions. Pure reads — no writes here.
+ * Project discovery for the v2 contract: pages, cms.json/pages.json/site.json,
+ * astro.config. Pure reads — no writes here.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 
 import type { PageFile, ProjectScan } from "../types.js";
+import { pageKeyForRoute, readManifest } from "./manifest.js";
+import { readJsonAt } from "./json-store.js";
 import { entryNameForPage, routeForPage } from "./routes.js";
 
 const walkDir = (dir: string, out: string[] = []): string[] => {
@@ -21,23 +23,35 @@ const walkDir = (dir: string, out: string[] = []): string[] => {
 };
 
 /**
- * The page's OWN data-entry import name. Pages typically import site.json
- * (global chrome) AND their own JSON — `site` never identifies the page, so
- * prefer the first non-site data import.
+ * The page's binding to its pages.json object: `const <ident> = pages.<key>`
+ * (or `pages["<kebab-key>"]`). Returns the identifier + the page key so
+ * re-runs adopt both instead of re-deriving them.
  */
-export function dataImportName(source: string): string | null {
-  const matches = [
-    ...source.matchAll(
-      /import\s+(\w+)\s+from\s+["'][^"']*\/data\/(\w[\w-]*)\.json["']/g
-    ),
-  ];
-  const own = matches.find((match) => match[1] !== "site");
-  return own?.[1] ?? null;
+export function pageBinding(
+  source: string
+): { ident: string; pageKey: string } | null {
+  const importMatch = source.match(
+    /import\s+(\w+)\s+from\s+["'][^"']*\/data\/pages\.json["']/
+  );
+  if (!importMatch) return null;
+  const pagesIdent = importMatch[1];
+  const bindMatch = source.match(
+    new RegExp(
+      `(?:const|let|var)\\s+(\\w+)\\s*=\\s*${pagesIdent}(?:\\.(\\w+)|\\[["']([\\w-]+)["']\\])`
+    )
+  );
+  if (!bindMatch) return null;
+  const ident = bindMatch[1];
+  const pageKey = bindMatch[2] ?? bindMatch[3];
+  if (!pageKey) return null;
+  return { ident, pageKey };
 }
 
 export function scanProject(root: string): ProjectScan {
   const pagesDir = path.join(root, "src", "pages");
   const dataDir = path.join(root, "src", "data");
+
+  const manifest = readManifest(root);
 
   const pages: PageFile[] = [];
   for (const filePath of walkDir(pagesDir)) {
@@ -49,40 +63,31 @@ export function scanProject(root: string): ProjectScan {
     const route = routeForPage(relToPages);
     if (route === null) continue; // dynamic route — out of scope
     const source = fs.readFileSync(filePath, "utf8");
-    const adopted = dataImportName(source);
+    const binding = pageBinding(source);
+    const pageKey =
+      binding?.pageKey ??
+      pageKeyForRoute(manifest, route) ??
+      entryNameForPage(relToPages);
     pages.push({
       filePath,
       relPath: path.relative(root, filePath).split(path.sep).join("/"),
       route,
-      slug: entryNameForPage(relToPages),
-      entryName: adopted ?? entryNameForPage(relToPages),
-      hasDataImport: adopted !== null,
+      pageKey,
+      contentIdent: binding?.ident ?? "content",
+      hasPagesBinding: binding !== null,
       source,
     });
   }
-  pages.sort((a, b) => (a.route === "/" ? -1 : b.route === "/" ? 1 : a.route.localeCompare(b.route)));
+  pages.sort((a, b) =>
+    a.route === "/" ? -1 : b.route === "/" ? 1 : a.route.localeCompare(b.route)
+  );
 
-  const dataFiles = new Map<string, Record<string, unknown>>();
-  if (fs.existsSync(dataDir)) {
-    for (const entry of fs.readdirSync(dataDir)) {
-      if (!entry.endsWith(".json")) continue;
-      try {
-        const parsed = JSON.parse(
-          fs.readFileSync(path.join(dataDir, entry), "utf8")
-        );
-        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-          dataFiles.set(entry.replace(/\.json$/, ""), parsed);
-        }
-      } catch {
-        // Malformed JSON is reported by the caller via check lint, not here.
-      }
-    }
-  }
-
-  const pagesYmlPath = path.join(root, ".pages.yml");
-  const pagesYml = fs.existsSync(pagesYmlPath)
-    ? fs.readFileSync(pagesYmlPath, "utf8")
-    : null;
+  const pagesJson =
+    (readJsonAt(path.join(dataDir, "pages.json")) as Record<string, unknown>) ??
+    {};
+  const siteJson =
+    (readJsonAt(path.join(dataDir, "site.json")) as Record<string, unknown>) ??
+    {};
 
   let astroConfigPath: string | null = null;
   for (const name of ["astro.config.mjs", "astro.config.ts", "astro.config.js"]) {
@@ -98,23 +103,19 @@ export function scanProject(root: string): ProjectScan {
         .includes("@alisamadiillc/cms-bridge/astro")
     : false;
 
-  const collectionsDir = path.join(root, "cms", "collections");
-  const collectionDefs = fs.existsSync(collectionsDir)
-    ? fs
-        .readdirSync(collectionsDir)
-        .filter((entry) => /\.ya?ml$/.test(entry))
-        .map((entry) => path.join(collectionsDir, entry))
-        .sort()
-    : [];
-
   return {
     root,
     pages,
-    dataFiles,
-    pagesYml,
-    pagesYmlPath,
+    manifest,
+    pagesJson:
+      pagesJson && typeof pagesJson === "object" && !Array.isArray(pagesJson)
+        ? pagesJson
+        : {},
+    siteJson:
+      siteJson && typeof siteJson === "object" && !Array.isArray(siteJson)
+        ? siteJson
+        : {},
     astroConfigPath,
     hasBridgeIntegration,
-    collectionDefs,
   };
 }

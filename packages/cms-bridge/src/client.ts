@@ -97,28 +97,35 @@ function injectStyle(): void {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent =
-    `.${HIGHLIGHT_CLASS}{outline:2px solid #6366f1;outline-offset:3px;border-radius:2px;` +
+    // Accent = the hub dashboard's primary green (oklch). Held in a var so the
+    // whole overlay recolors from one place; alpha variants use oklch's `/ a`.
+    `:root{--cms-accent:oklch(0.60 0.13 163);}` +
+    `.${HIGHLIGHT_CLASS}{outline:2px solid var(--cms-accent);outline-offset:3px;border-radius:2px;` +
     `animation:cms-preview-pulse 1.2s ease-out;}` +
-    `@keyframes cms-preview-pulse{0%{box-shadow:0 0 0 0 rgba(99,102,241,.5);}` +
-    `100%{box-shadow:0 0 0 14px rgba(99,102,241,0);}}` +
-    `[${EDITABLE_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.6);outline-offset:2px;cursor:text;}` +
-    `[${EDITABLE_ATTR}]:focus{outline:2px solid #6366f1;outline-offset:2px;border-radius:2px;}` +
-    `[${MEDIA_ATTR}]:hover{outline:2px dashed rgba(99,102,241,.7);outline-offset:2px;cursor:pointer;}` +
-    `[${LINK_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.5);outline-offset:3px;}` +
-    `[${GROUP_ATTR}]:hover{outline:1px dashed rgba(99,102,241,.55);outline-offset:4px;cursor:pointer;}` +
-    // Group structural-edit UI: add button on the host, move/remove pill per item.
+    `@keyframes cms-preview-pulse{0%{box-shadow:0 0 0 0 oklch(0.60 0.13 163 / .5);}` +
+    `100%{box-shadow:0 0 0 14px oklch(0.60 0.13 163 / 0);}}` +
+    `[${EDITABLE_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .6);outline-offset:2px;cursor:text;}` +
+    `[${EDITABLE_ATTR}]:focus{outline:2px solid var(--cms-accent);outline-offset:2px;border-radius:2px;}` +
+    `[${MEDIA_ATTR}]:hover{outline:2px dashed oklch(0.60 0.13 163 / .7);outline-offset:2px;cursor:pointer;}` +
+    `[${LINK_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .5);outline-offset:3px;}` +
+    `[${GROUP_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .55);outline-offset:4px;cursor:pointer;}` +
+    // Group structural-edit UI. Host tools (✎ Edit content + '+ Add') sit in one
+    // flex toolbar at the host's top-right so they never overlap each other; the
+    // per-item move/remove pill sits at the item's top-LEFT so it never overlaps
+    // the host toolbar. Host tools render above item controls if they meet.
     `[${UI_ATTR}]{font:600 12px/1 system-ui,sans-serif;}` +
-    `[${UI_ATTR}="group-add"]{position:absolute;top:8px;right:8px;z-index:2147483000;` +
-    `border:0;border-radius:9999px;background:#6366f1;color:#fff;padding:6px 12px;` +
-    `cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:0;transition:opacity .15s;}` +
-    `[${KIND_ATTR}="group"]:hover>[${UI_ATTR}="group-add"]{opacity:1;}` +
-    `[${UI_ATTR}="item-controls"]{position:absolute;top:8px;right:8px;z-index:2147483000;` +
+    `[${UI_ATTR}="group-tools"]{position:absolute;top:8px;right:8px;z-index:2147483001;` +
+    `display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;}` +
+    `[${KIND_ATTR}="group"]:hover>[${UI_ATTR}="group-tools"]{opacity:1;pointer-events:auto;}` +
+    `[${UI_ATTR}="group-tools"] button{border:0;border-radius:9999px;background:var(--cms-accent);` +
+    `color:#fff;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);}` +
+    `[${UI_ATTR}="item-controls"]{position:absolute;top:8px;left:8px;z-index:2147483000;` +
     `display:flex;gap:2px;border-radius:9999px;background:rgba(24,24,27,.85);padding:2px;` +
     `opacity:0;transition:opacity .15s;}` +
     `[${ITEM_ATTR}]:hover>[${UI_ATTR}="item-controls"]{opacity:1;}` +
     `[${UI_ATTR}="item-controls"] button{border:0;border-radius:9999px;background:transparent;` +
     `color:#fff;width:24px;height:24px;cursor:pointer;display:grid;place-items:center;}` +
-    `[${UI_ATTR}="item-controls"] button:hover{background:#6366f1;}`;
+    `[${UI_ATTR}="item-controls"] button:hover{background:var(--cms-accent);}`;
   document.head.appendChild(style);
 }
 
@@ -220,11 +227,17 @@ function armEditables(): void {
     const host = el as HTMLElement;
     const path = host.getAttribute(FIELD_ATTR);
     if (!path) continue;
-    // Only the top-level tagged element of a cluster is interactive. Anything
-    // with a tagged ancestor is edited through that ancestor's group popover,
-    // never inline — EXCEPT component-declared elements (`data-cms-kind`),
-    // which are always individually editable: inside a `<Group>` every
-    // `<Text>`/`<Image>` item child must arm on its own.
+    // Anything inside a `<Group>` host is edited ONLY through that group's CMS
+    // dialog — never inline. So a descendant of a `[data-cms-kind="group"]`
+    // element never arms individually (no contenteditable / media / link
+    // marker). Starting from `parentElement` leaves the group host itself
+    // armable, so its click still opens the dialog.
+    if (host.parentElement?.closest(`[${KIND_ATTR}="group"]`)) {
+      continue;
+    }
+    // Outside groups: only the top-level tagged element of a cluster is
+    // interactive. A tagged descendant is edited via its ancestor's popover —
+    // EXCEPT component-declared elements (`data-cms-kind`), which always arm.
     if (
       !declaredKind(host) &&
       host.parentElement?.closest(`[${FIELD_ATTR}]`)
@@ -492,23 +505,44 @@ function applyGroupOp(msg: {
   }
 }
 
-/** Inject the add button on each group host + move/remove pills on each item. */
+/** Build the host's top-right toolbar with the given [label, action] buttons. */
+function addGroupTools(
+  host: HTMLElement,
+  actions: ReadonlyArray<readonly [string, string]>
+): void {
+  if (getComputedStyle(host).position === "static")
+    host.style.position = "relative";
+  if (host.querySelector(`:scope > [${UI_ATTR}="group-tools"]`)) return;
+  const tools = document.createElement("div");
+  tools.setAttribute(UI_ATTR, "group-tools");
+  for (const [label, action] of actions) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute(UI_ACTION_ATTR, action);
+    button.textContent = label;
+    tools.appendChild(button);
+  }
+  host.appendChild(tools);
+}
+
+/**
+ * Inject group-editing UI:
+ *  - Declared array groups (`data-cms-kind="group"`): an "✎ Edit content" +
+ *    "+ Add" toolbar plus a move/remove pill per item.
+ *  - Implicit group hosts (a tagged non-leaf wrapper armed with `data-cms-group`
+ *    but not a declared array group — e.g. a partners logo grid): an
+ *    "✎ Edit content" badge only, so the client can open the CMS dialog.
+ */
 function attachGroupControls(): void {
   if (mode !== "edit") return;
   for (const host of Array.from(
     document.querySelectorAll(`[${KIND_ATTR}="group"]`)
   )) {
     if (!(host instanceof HTMLElement)) continue;
-    if (getComputedStyle(host).position === "static")
-      host.style.position = "relative";
-    if (!host.querySelector(`:scope > [${UI_ATTR}="group-add"]`)) {
-      const add = document.createElement("button");
-      add.type = "button";
-      add.setAttribute(UI_ATTR, "group-add");
-      add.setAttribute(UI_ACTION_ATTR, "add");
-      add.textContent = "+ Add";
-      host.appendChild(add);
-    }
+    addGroupTools(host, [
+      ["✎ Edit content", "edit"],
+      ["+ Add", "add"],
+    ]);
     for (const item of groupItems(host)) {
       if (getComputedStyle(item).position === "static")
         item.style.position = "relative";
@@ -530,6 +564,13 @@ function attachGroupControls(): void {
       item.appendChild(pill);
     }
   }
+  // Implicit group hosts: an Edit-content badge only (no structural add/remove).
+  for (const host of Array.from(
+    document.querySelectorAll(`[${GROUP_ATTR}]:not([${KIND_ATTR}="group"])`)
+  )) {
+    if (!(host instanceof HTMLElement)) continue;
+    addGroupTools(host, [["✎ Edit content", "edit"]]);
+  }
 }
 
 function removeGroupControls(): void {
@@ -540,8 +581,17 @@ function removeGroupControls(): void {
 /** Route a click on injected group UI to the matching `group-op`. */
 function handleUiAction(el: HTMLElement): void {
   const action = el.getAttribute(UI_ACTION_ATTR);
+  if (!action) return;
+  // The edit badge just opens the CMS group dialog — no structural op. It lives
+  // on declared AND implicit group hosts, so resolve either.
+  if (action === "edit") {
+    const editHost = el.closest(`[${KIND_ATTR}="group"],[${GROUP_ATTR}]`);
+    if (editHost instanceof HTMLElement) activateGroup(editHost);
+    return;
+  }
+  // add / move / remove only exist on declared array groups.
   const host = el.closest(`[${KIND_ATTR}="group"]`);
-  if (!action || !(host instanceof HTMLElement)) return;
+  if (!(host instanceof HTMLElement)) return;
   const items = groupItems(host);
   if (action === "add") {
     requestGroupOp(host, "add", Math.max(0, items.length - 1));
