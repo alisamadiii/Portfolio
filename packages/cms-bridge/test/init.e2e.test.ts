@@ -1,8 +1,7 @@
 /**
  * End-to-end: run the real init pipeline against the plain-site fixture in a
- * temp dir. Covers tag→component replacement, pages.json extraction, the
- * three-file scaffold, the skill install, the idempotency + add-only
- * contract, and the interactive `collection` command.
+ * temp dir. Covers the three-file scaffold, the skill install, the idempotency
+ * + add-only contract, and the interactive `collection` command.
  */
 
 import fs from "node:fs";
@@ -14,21 +13,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { initCommand } from "../src/cli/commands/init.js";
 import { checkContract } from "../src/cli/commands/check.js";
 import { collectionCommand } from "../src/cli/commands/collection.js";
-import { getAttr, parseAstro, walk, type AstroNode } from "../src/cli/core/astro-doc.js";
-
-const fieldOf = (n: AstroNode): string | undefined =>
-  (getAttr(n, "data-cms-field") ?? getAttr(n, "field"))?.value;
-
-/** True if any field-bearing node contains another field-bearing descendant. */
-async function hasNestedField(source: string): Promise<boolean> {
-  const { ast } = await parseAstro(source);
-  let nested = false;
-  walk(ast, (node, ancestors) => {
-    if (nested) return false;
-    if (fieldOf(node) && ancestors.some((a) => fieldOf(a))) nested = true;
-  });
-  return nested;
-}
 
 const FIXTURE = path.join(__dirname, "fixtures", "plain-site");
 
@@ -70,30 +54,13 @@ describe("init on plain-site", () => {
     ).toBe(true);
   });
 
-  it("replaces plain tags with bridge components + moves values to pages.json", async () => {
+  it("scaffolds a page object per manifest page in pages.json", async () => {
     await initCommand(root, {});
+    const pages = readJson("src/data/pages.json");
+    expect(pages.home).toEqual({});
+    // Leaves the source markup untouched — wiring happens in the canvas.
     const index = read("src/pages/index.astro");
-    expect(index).toContain('<Heading1 field="hero.heading" value={content.hero.heading} />');
-    expect(index).toContain('<Text as="p" field="hero.text" value={content.hero.text} />');
-    expect(index).toContain('<Image field="hero.image"');
-    expect(index).toContain('<Link field="hero.cta" value={content.hero.cta}>');
-    expect(index).toContain('import pages from "../data/pages.json"');
-    expect(index).toContain("const content = pages.home");
-    // SEO wired into the layout.
-    expect(index).toContain("title={content.seo.title}");
-
-    const home = readJson("src/data/pages.json").home;
-    expect(home.hero.heading).toBe("Reliable plumbing, day or night");
-    expect(home.hero.cta).toEqual({ label: "Get a quote", link: "/contact" });
-    expect(home.hero.image).toBe("/media/hero.jpg");
-    expect(home.hero.imageAlt).toBe("A plumber fixing a sink");
-  });
-
-  it("never nests a field element inside another", async () => {
-    await initCommand(root, {});
-    for (const rel of ["src/pages/index.astro", "src/pages/about.astro"]) {
-      expect(await hasNestedField(read(rel))).toBe(false);
-    }
+    expect(index).not.toContain("field=");
   });
 
   it("second run is byte-identical (idempotent)", async () => {
@@ -109,7 +76,7 @@ describe("init on plain-site", () => {
     await initCommand(root, {});
     const pagesFile = path.join(root, "src/data/pages.json");
     const j = JSON.parse(fs.readFileSync(pagesFile, "utf8"));
-    j.home.hero.customNote = "KEEP ME";
+    j.home = { hero: { customNote: "KEEP ME" } };
     j.brandNew = { seo: { title: "X", description: "Y" } };
     fs.writeFileSync(pagesFile, `${JSON.stringify(j, null, 2)}\n`);
     await initCommand(root, {});

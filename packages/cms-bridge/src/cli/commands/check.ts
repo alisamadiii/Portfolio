@@ -16,9 +16,7 @@ import path from "node:path";
 import pc from "picocolors";
 
 import { analyzeProject } from "../core/analyze.js";
-import { buildComponentGraph } from "../core/component-graph.js";
 import { countReportItems } from "../core/report.js";
-import type { ReportItem } from "../types.js";
 
 const COMPONENTS_MODULE = "@alisamadiillc/cms-bridge/components";
 
@@ -198,63 +196,21 @@ export function checkContract(root: string): {
 export async function checkCommand(root: string): Promise<number> {
   const { errors, warnings } = checkContract(root);
 
-  // Un-wired markup: candidates on pages + shared-component R5 items.
+  // Un-wired markup still needing review (expression-driven text, loops, etc.).
   const { analyses } = await analyzeProject(root);
-  const candidateCount = analyses.reduce((sum, a) => sum + a.candidates.length, 0);
   const adoptedCount = analyses.reduce((sum, a) => sum + a.adoptedPaths.length, 0);
-
-  // Components carry wireable content too. A single-use component is wired by
-  // init (counts toward "run init"); a shared one can't be (→ R5).
-  const extra: ReportItem[] = [];
-  let componentCandidates = 0;
-  const { parseAstro } = await import("../core/astro-doc.js");
-  const { classifyPage } = await import("../core/classify.js");
-  const graph = buildComponentGraph(root, analyses.map((a) => a.page));
-  for (const usage of graph.values()) {
-    const parsed = await parseAstro(usage.source);
-    const analysis = classifyPage(
-      {
-        filePath: usage.filePath,
-        relPath: usage.relPath,
-        route: "",
-        pageKey: "",
-        contentIdent: "content",
-        hasPagesBinding: false,
-        source: usage.source,
-      },
-      parsed,
-      usage.source
-    );
-    if (analysis.candidates.length === 0) continue;
-    componentCandidates += analysis.candidates.length;
-    if (usage.pages.size >= 2) {
-      extra.push({
-        code: "R5",
-        file: usage.relPath,
-        line: analysis.candidates[0]?.line ?? 1,
-        excerpt: `${analysis.candidates.length} editable element(s) in a component used by ${usage.pages.size} pages`,
-        note: `Shared by: ${[...usage.pages].join(", ")}.`,
-      });
-    }
-  }
-
-  const itemCount = countReportItems(analyses, extra);
-  const wireable = candidateCount + componentCandidates;
+  const itemCount = countReportItems(analyses);
 
   console.log(`${pc.bold("cms-bridge check")} — ${analyses.length} page(s)`);
   for (const error of errors) console.log(`  ${pc.red("✗")} ${error}`);
   for (const warning of warnings) console.log(`  ${pc.yellow("⚠")} ${warning}`);
   console.log(`  ${pc.green("✓")} ${adoptedCount} field(s) CMS-wired`);
-  if (wireable > 0)
-    console.log(
-      `  ${pc.yellow("●")} ${wireable} element(s) auto-wireable — run ${pc.bold("cms-bridge init")}`
-    );
   if (itemCount > 0)
     console.log(
       `  ${pc.yellow("⚠")} ${itemCount} item(s) need manual review`
     );
-  if (errors.length === 0 && wireable === 0 && itemCount === 0)
+  if (errors.length === 0 && itemCount === 0)
     console.log(`  ${pc.green("✓")} contract clean, nothing left to wire.`);
 
-  return errors.length > 0 || wireable > 0 || itemCount > 0 ? 1 : 0;
+  return errors.length > 0 || itemCount > 0 ? 1 : 0;
 }

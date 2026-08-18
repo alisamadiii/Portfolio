@@ -292,12 +292,12 @@ them as noise, not signal, and never over-engineers around them.
 ## Wiring a new or partially-wired site
 
 ```sh
-npx cms-bridge init    # replaces plain tags with bridge components,
-                       # fills pages.json, installs this skill (idempotent)
+npx cms-bridge init    # scaffolds the three JSON files + placeholders,
+                       # wires astro.config, installs this skill (idempotent)
 npx cms-bridge check   # validates the contract; lists what still needs wiring
 ```
 
-`init` is add-only and safe to re-run: adopted markup and existing JSON keys are
-never touched, so hand-edits to `pages.json` always survive. It only wires pages
-and components used by a single page; a component shared by 2+ pages is reported
-(thread a `cmsPath` prop from each page instead).
+`init` is add-only and safe to re-run: existing JSON keys are never touched, so
+hand-edits to `pages.json` always survive, and an untouched project stays
+byte-identical. It does **not** rewrite your markup — wiring pages to fields is
+done in the canvas editor.

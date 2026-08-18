@@ -22,11 +22,11 @@ editable on the canvas. Prefer components for anything new; a plain
 
 ## The workflow
 
-- **`npx cms-bridge init`** — the onboarding pipeline. Installs this skill,
-  ensures the three JSON files exist, creates placeholder files for array
-  collections, and codemods pages (+ single-use components): it replaces plain
-  tags (`h1`/`p`/`img`/`a`/…) with the bridge components and moves their values
-  into `pages.json`. Idempotent and add-only — safe to re-run.
+- **`npx cms-bridge init`** — the onboarding scaffold. Installs this skill,
+  ensures the three JSON files exist (a page object per manifest page), creates
+  placeholder files for array collections, and wires the `astro.config`
+  integration + `package.json` scripts. Idempotent and add-only — safe to
+  re-run. It does not rewrite markup; wiring is done in the canvas editor.
 - **`npx cms-bridge check`** — validates the v2 contract (manifest shape,
   page/site key collisions, every `field`/`data-cms-field` resolves to a value)
   and lists any markup still needing wiring. Run it until clean.

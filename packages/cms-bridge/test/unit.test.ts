@@ -4,14 +4,8 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { camelCase, entryNameForPage, routeForPage } from "../src/cli/core/routes.js";
-import { assignPaths, roleForTag } from "../src/cli/core/naming.js";
-import {
-  addAtPath,
-  canAddPath,
-  flattenPaths,
-  orderedForWrite,
-  writePagesJson,
-} from "../src/cli/core/json-store.js";
+import { roleForTag } from "../src/cli/core/naming.js";
+import { orderedForWrite, writePagesJson } from "../src/cli/core/json-store.js";
 import { openTagEnd, SpliceError } from "../src/cli/core/astro-doc.js";
 import { pageBinding } from "../src/cli/core/scan.js";
 import {
@@ -22,7 +16,6 @@ import {
   type CmsManifest,
 } from "../src/cli/core/manifest.js";
 import { buildReport } from "../src/cli/core/report.js";
-import type { CandidateField } from "../src/cli/types.js";
 
 const tmpDirs: string[] = [];
 const mkTmp = (): string => {
@@ -55,39 +48,11 @@ describe("naming", () => {
     expect(roleForTag("a")).toBe("cta");
     expect(roleForTag("div")).toBeNull();
   });
-  it("numbers collisions against taken and never renumbers on re-run", () => {
-    const make = (): CandidateField => ({
-      role: "text",
-      tag: "p",
-      sectionChain: ["hero"],
-      line: 1,
-      el: { start: 0, name: "p" },
-    });
-    const a = make();
-    const b = make();
-    assignPaths([a, b], new Set(["hero.text3"]));
-    expect(a.path).toBe("hero.text");
-    expect(b.path).toBe("hero.text2");
-    const c = make();
-    assignPaths([c], new Set(["hero.text", "hero.text2", "hero.text3"]));
-    expect(c.path).toBe("hero.text4");
-  });
 });
 
 describe("json-store", () => {
-  it("existing values always win (add-only)", () => {
-    const target: Record<string, unknown> = { hero: { heading: "keep" } };
-    expect(addAtPath(target, "hero.heading", "new")).toBe(false);
-    expect((target.hero as Record<string, unknown>).heading).toBe("keep");
-    expect(addAtPath(target, "hero.text", "added")).toBe(true);
-  });
-  it("refuses paths through non-objects", () => {
-    expect(canAddPath({ hero: "scalar" }, "hero.heading")).toBe(false);
-    expect(canAddPath({}, "hero.heading")).toBe(true);
-  });
-  it("orders seo first + flattens all levels", () => {
+  it("orders seo first", () => {
     expect(Object.keys(orderedForWrite({ b: 1, seo: {}, a: 2 }))).toEqual(["seo", "b", "a"]);
-    expect(flattenPaths({ a: { b: "x" } })).toEqual(["a", "a.b"]);
   });
   it("writePagesJson hoists per-page seo", () => {
     const dir = mkTmp();

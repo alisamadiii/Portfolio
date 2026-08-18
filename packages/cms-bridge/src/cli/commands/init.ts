@@ -1,40 +1,32 @@
 /**
- * `cms-bridge init` — the v2 onboarding pipeline (idempotent, add-only):
+ * `cms-bridge init` — the v2 onboarding scaffold (idempotent, add-only):
  *
  *   install the .claude skill (packaged docs)
- *   → ensure src/data/{cms,pages,site}.json exist
+ *   → ensure src/data/{cms,pages,site}.json exist (new page keys added)
  *   → create placeholder files for array collections that have none
- *   → codemod pages + single-use components: replace plain tags with the
- *     bridge components and move their values into pages.json (existing values
- *     always win)
  *   → ensure the astro.config integration + package.json scripts
- *   → report a count of whatever was skipped and needs manual review
+ *   → report a count of anything that still needs manual review
  *
- * Re-running is always safe: adopted markup/keys are never touched, and every
- * JSON write only ADDS keys — hand-edits to pages.json survive verbatim.
+ * Re-running is always safe: every JSON write only ADDS keys — hand-edits to
+ * pages.json survive verbatim, and an untouched project stays byte-identical.
+ * Wiring markup to fields is done in the canvas editor, not here.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 
-import { parseAstro } from "../core/astro-doc.js";
-import { classifyPage } from "../core/classify.js";
-import { buildComponentGraph } from "../core/component-graph.js";
 import { ensureBridgeIntegration } from "../core/config-edit.js";
-import { addAtPath, canAddPath, flattenPaths, getAtPath, writePagesJson } from "../core/json-store.js";
+import { writePagesJson } from "../core/json-store.js";
 import {
   ensureCollectionFiles,
   ensureDataFiles,
   readManifest,
 } from "../core/manifest.js";
-import { assignPaths } from "../core/naming.js";
 import { ensurePackageScripts } from "../core/package-scripts.js";
-import { pageBinding, scanProject } from "../core/scan.js";
-import { countReportItems } from "../core/report.js";
-import { transformPage } from "../core/transform.js";
+import { scanProject } from "../core/scan.js";
 import { COMMANDS, OBSOLETE_COMMANDS } from "../commands.js";
-import type { PageAnalysis, PageFile, ReportItem } from "../types.js";
+import type { ReportItem } from "../types.js";
 
 /** True when cms.json is present on disk but doesn't parse. */
 function manifestIsMalformed(root: string): boolean {
@@ -65,7 +57,7 @@ export async function initCommand(
   const { installSkill } = await import("../core/skill-install.js");
   const skill = installSkill(root, { dryRun });
 
-  // ---- 2/3. Ensure the three contract files ------------------------------
+  // ---- 2. Ensure the three contract files --------------------------------
   const scannedPages = scan.pages.map((page) => ({
     key: page.pageKey,
     route: page.route,
@@ -76,123 +68,17 @@ export async function initCommand(
     { dryRun }
   );
 
-  // ---- 4. Collection placeholder files -----------------------------------
-  const collectionFiles = ensureCollectionFiles(root, manifest, { dryRun });
-
-  // ---- 5. Codemod: pages + single-use components -------------------------
-  const graph = buildComponentGraph(root, scan.pages);
-
-  // Build the transform work-list. Each page is a target; each component used
-  // by exactly one page becomes a target under that page's key. Components used
-  // by 2+ pages can't be auto-wired (they'd need a cmsPath prop) → R5.
-  const targets: { page: PageFile; analysis: PageAnalysis }[] = [];
-  for (const page of scan.pages) {
-    const parsed = await parseAstro(page.source);
-    targets.push({ page, analysis: classifyPage(page, parsed, page.source) });
-  }
-  for (const usage of graph.values()) {
-    if (usage.pages.size !== 1) continue; // shared → handled below as R5
-    const pageKey = [...usage.pages][0];
-    const binding = pageBinding(usage.source);
-    const compPage: PageFile = {
-      filePath: usage.filePath,
-      relPath: usage.relPath,
-      route: "",
-      pageKey,
-      contentIdent: binding?.ident ?? "content",
-      hasPagesBinding: binding !== null,
-      source: usage.source,
-    };
-    const parsed = await parseAstro(usage.source);
-    targets.push({ page: compPage, analysis: classifyPage(compPage, parsed, usage.source) });
-  }
-
-  // Shared-component R5 reports.
-  for (const usage of graph.values()) {
-    if (usage.pages.size < 2) continue;
-    const compPage: PageFile = {
-      filePath: usage.filePath,
-      relPath: usage.relPath,
-      route: "",
-      pageKey: "",
-      contentIdent: "content",
-      hasPagesBinding: false,
-      source: usage.source,
-    };
-    const parsed = await parseAstro(usage.source);
-    const analysis = classifyPage(compPage, parsed, usage.source);
-    if (analysis.candidates.length === 0) continue;
-    extraReports.push({
-      code: "R5",
-      file: usage.relPath,
-      line: analysis.candidates[0]?.line ?? 1,
-      excerpt: `${analysis.candidates.length} editable element(s) in a component used by ${usage.pages.size} pages`,
-      note: `Shared by: ${[...usage.pages].join(", ")}. Thread a cmsPath prop from each page (see recipe) instead of hardcoding one page's data.`,
-    });
-  }
-
-  let filesChanged = 0;
-  let fieldsExtracted = 0;
-  let pagesDirty = false;
-
-  for (const { page, analysis } of targets) {
-    const pageObj = ((pagesJson[page.pageKey] ??= {}) as Record<string, unknown>);
-
-    const taken = new Set<string>([
-      ...flattenPaths(pageObj),
-      ...Object.keys(scan.siteJson),
-      ...analysis.adoptedPaths.map((p) => p.replace(/\.\$\{[^}]*\}.*$/, "")),
-      ...analysis.adoptedPaths,
-    ]);
-
-    assignPaths(analysis.candidates, taken);
-    const usable = analysis.candidates.filter(
-      (candidate) => candidate.path && canAddPath(pageObj, candidate.path)
-    );
-
-    const parsed = await parseAstro(page.source);
-    const heroHeading = getAtPath(pageObj, "hero.heading");
-    const heroText = getAtPath(pageObj, "hero.text");
-    const result = await transformPage(page, parsed, usable, {
-      wireSeo: true,
-      seoSeed: {
-        title: typeof heroHeading === "string" ? heroHeading : undefined,
-        description: typeof heroText === "string" ? heroText : undefined,
-      },
-    });
-
-    if (!result.ok) {
-      extraReports.push({
-        code: "R0",
-        file: page.relPath,
-        line: 1,
-        excerpt: result.reason,
-        note: "Automated transform reverted — apply the conventions manually.",
-      });
-      continue;
-    }
-
-    extraReports.push(...result.reports);
-    for (const addition of result.additions) {
-      if (addAtPath(pageObj, addition.path, addition.value)) {
-        fieldsExtracted++;
-        pagesDirty = true;
-      }
-    }
-    if (result.newSource !== page.source) {
-      filesChanged++;
-      if (flags.verbose) console.log(`  ${pc.dim("edit")} ${page.relPath}`);
-      if (!dryRun) fs.writeFileSync(page.filePath, result.newSource);
-    }
-  }
-
-  // ---- Write pages.json (once, add-only) ---------------------------------
+  // pages.json is returned in-memory; persist it here (add-only) whenever it
+  // was just created or gained page keys, so an untouched project round-trips.
   const pagesFile = path.join(root, "src", "data", "pages.json");
   const pagesNeedsWrite =
-    pagesDirty || pagesAdded.length > 0 || created.includes("src/data/pages.json");
+    pagesAdded.length > 0 || created.includes("src/data/pages.json");
   if (pagesNeedsWrite && !dryRun) writePagesJson(pagesFile, pagesJson);
 
-  // ---- 6. astro.config ---------------------------------------------------
+  // ---- 3. Collection placeholder files -----------------------------------
+  const collectionFiles = ensureCollectionFiles(root, manifest, { dryRun });
+
+  // ---- 4. astro.config ---------------------------------------------------
   let configResult = "present";
   if (scan.astroConfigPath && !scan.hasBridgeIntegration) {
     configResult = ensureBridgeIntegration(scan.astroConfigPath, { dryRun });
@@ -213,7 +99,7 @@ export async function initCommand(
     });
   }
 
-  // ---- 7. package.json scripts -------------------------------------------
+  // ---- 5. package.json scripts -------------------------------------------
   const scriptsResult = ensurePackageScripts(
     root,
     COMMANDS.map((command) => ({
@@ -231,32 +117,10 @@ export async function initCommand(
     }
   );
 
-  // ---- 8. Review count ---------------------------------------------------
-  // Re-analyze AFTER the writes so the count reflects the files as they are
-  // now and stays stable across re-runs. Shared-component R5 items don't
-  // re-scan (they live in components), so carry them (and R0/R10) through.
-  let itemCount = 0;
-  if (!dryRun) {
-    const fresh = await Promise.all(
-      scanProject(root).pages.map(async (page) => {
-        const parsed = await parseAstro(page.source);
-        return classifyPage(page, parsed, page.source);
-      })
-    );
-    itemCount = countReportItems(fresh, extraReports);
-  } else {
-    itemCount = countReportItems(
-      targets.map((t) => t.analysis),
-      extraReports
-    );
-  }
-
   // ---- Summary -----------------------------------------------------------
+  const itemCount = extraReports.length;
   const prefix = dryRun ? `${pc.bold(pc.yellow("[dry-run]"))} ` : "";
   console.log(`${prefix}${pc.bold("cms-bridge init")} — ${scan.pages.length} page(s)`);
-  console.log(
-    `  ${pc.green("✓")} ${fieldsExtracted} field(s) extracted, ${filesChanged} file(s) edited`
-  );
   const skillCount = skill.written.length;
   console.log(
     skillCount > 0
@@ -281,7 +145,7 @@ export async function initCommand(
   if (itemCount > 0) {
     console.log(`  ${pc.yellow("⚠")} ${itemCount} item(s) need manual review`);
     console.log(
-      `    ${pc.dim("Run cms-bridge check to see what's left, then wire it by hand or with an AI agent.")}`
+      `    ${pc.dim("Run cms-bridge check to see what's left, then wire it in the canvas editor.")}`
     );
   }
   if (!manifest.baseUrl) {
