@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight,
   NotebookPen,
   Search,
   Settings2,
@@ -26,7 +25,6 @@ import { useCommandPalette } from "@/components/chrome/command-palette-provider"
 import { RepoMenu } from "@/components/chrome/repo-menu";
 import { CmsOverlay } from "@/components/cms/cms-overlay";
 import { User } from "@/components/user";
-import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
 import { repoPath } from "@/lib/paths";
 
@@ -53,10 +51,6 @@ export function CanvasChrome({
   const { openPalette } = useCommandPalette();
   const adminItems = useAdminNavItems();
   const { repo } = useRepo();
-  const { config } = useConfig();
-  // v2 (schema-less) repos have no .pages.yml `content` — and no form editor
-  // to link to, so the "Classic editor" badge only renders for legacy repos.
-  const hasFormEditor = Array.isArray((config?.object as any)?.content);
   const [internalCms, setInternalCms] = useState<CmsOverlayState>({
     open: false,
   });
@@ -152,33 +146,6 @@ export function CanvasChrome({
           )}
         </Button>
       </div>
-
-      {/* Beta badge — links to the classic per-page form editor. Sits below the
-          corner cards so it never overlaps them. Legacy repos only. */}
-      {hasFormEditor && (
-      <div
-        data-canvas-no-pan
-        className="bg-background/95 absolute top-16 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-2 py-1 shadow-sm backdrop-blur"
-      >
-        <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
-          Beta
-        </span>
-        <span className="text-muted-foreground text-xs max-md:hidden">
-          New canvas editing. Prefer the old way?
-        </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 rounded-full"
-          render={
-            <Link href={repoPath(repo, "pages")}>
-              Classic editor
-              <ArrowRight className="size-3.5" />
-            </Link>
-          }
-        />
-      </div>
-      )}
 
       <CmsOverlay
         open={cmsState.open}

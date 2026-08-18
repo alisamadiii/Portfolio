@@ -8,7 +8,7 @@
  *     bridge components and move their values into pages.json (existing values
  *     always win)
  *   → ensure the astro.config integration + package.json scripts
- *   → write the self-contained cms-report.md for whatever was skipped
+ *   → report a count of whatever was skipped and needs manual review
  *
  * Re-running is always safe: adopted markup/keys are never touched, and every
  * JSON write only ADDS keys — hand-edits to pages.json survive verbatim.
@@ -31,7 +31,7 @@ import {
 import { assignPaths } from "../core/naming.js";
 import { ensurePackageScripts } from "../core/package-scripts.js";
 import { pageBinding, scanProject } from "../core/scan.js";
-import { writeReport } from "../core/report.js";
+import { countReportItems } from "../core/report.js";
 import { transformPage } from "../core/transform.js";
 import { COMMANDS, OBSOLETE_COMMANDS } from "../commands.js";
 import type { PageAnalysis, PageFile, ReportItem } from "../types.js";
@@ -231,10 +231,10 @@ export async function initCommand(
     }
   );
 
-  // ---- 8. Report ---------------------------------------------------------
-  // Re-analyze AFTER the writes so line numbers describe the files as they are
-  // now and stay stable across re-runs. Shared-component R5 items don't re-scan
-  // (they live in components), so carry them (and R0/R10) through.
+  // ---- 8. Review count ---------------------------------------------------
+  // Re-analyze AFTER the writes so the count reflects the files as they are
+  // now and stays stable across re-runs. Shared-component R5 items don't
+  // re-scan (they live in components), so carry them (and R0/R10) through.
   let itemCount = 0;
   if (!dryRun) {
     const fresh = await Promise.all(
@@ -243,12 +243,12 @@ export async function initCommand(
         return classifyPage(page, parsed, page.source);
       })
     );
-    const written = writeReport(root, fresh, extraReports);
-    itemCount = written.itemCount;
+    itemCount = countReportItems(fresh, extraReports);
   } else {
-    itemCount =
-      targets.reduce((sum, t) => sum + t.analysis.reports.length, 0) +
-      extraReports.length;
+    itemCount = countReportItems(
+      targets.map((t) => t.analysis),
+      extraReports
+    );
   }
 
   // ---- Summary -----------------------------------------------------------
@@ -279,9 +279,9 @@ export async function initCommand(
     console.log(`  ${pc.dim("·")} package.json: scripts already present`);
   else console.log(`  ${pc.yellow("⚠")} package.json not found — scripts not added`);
   if (itemCount > 0) {
-    console.log(`  ${pc.yellow("⚠")} ${itemCount} item(s) need review → cms-report.md`);
+    console.log(`  ${pc.yellow("⚠")} ${itemCount} item(s) need manual review`);
     console.log(
-      `    ${pc.dim("Finish them with an AI agent: point it at cms-report.md — the file is self-contained.")}`
+      `    ${pc.dim("Run cms-bridge check to see what's left, then wire it by hand or with an AI agent.")}`
     );
   }
   if (!manifest.baseUrl) {

@@ -1,14 +1,14 @@
 /**
- * cms-report.md writer.
+ * CMS adoption report builder.
  *
- * The report is a fully self-contained brief for an AI agent: the complete
- * CMS conventions contract is embedded inline (not linked), so
- * `claude "finish cms-report.md"` needs zero other context. The same
- * convention strings are reused by the shipped docs — single source, no drift.
+ * `buildReport` produces a fully self-contained brief for an AI agent: the
+ * complete CMS conventions contract is embedded inline (not linked), so it
+ * needs zero other context. The same convention strings are reused by the
+ * shipped docs — single source, no drift. The report is no longer written to
+ * disk; the CLI surfaces an item count instead (see `countReportItems`).
  */
 
 import fs from "node:fs";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { PageAnalysis, ReasonCode, ReportItem } from "../types.js";
@@ -260,16 +260,13 @@ export function buildReport(
   return lines.join("\n");
 }
 
-export function writeReport(
-  root: string,
+/** Count review items across pages + any extra (shared-component) items. */
+export function countReportItems(
   analyses: PageAnalysis[],
   extraItems: ReportItem[] = []
-): { reportPath: string; itemCount: number } {
-  const reportPath = path.join(root, "cms-report.md");
-  const content = buildReport(analyses, extraItems);
-  fs.writeFileSync(reportPath, content);
-  const itemCount =
+): number {
+  return (
     analyses.reduce((sum, analysis) => sum + analysis.reports.length, 0) +
-    extraItems.length;
-  return { reportPath, itemCount };
+    extraItems.length
+  );
 }

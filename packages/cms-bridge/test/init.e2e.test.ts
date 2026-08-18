@@ -1,8 +1,8 @@
 /**
  * End-to-end: run the real init pipeline against the plain-site fixture in a
  * temp dir. Covers tag→component replacement, pages.json extraction, the
- * three-file scaffold, the skill install, the self-contained report, the
- * idempotency + add-only contract, and the interactive `collection` command.
+ * three-file scaffold, the skill install, the idempotency + add-only
+ * contract, and the interactive `collection` command.
  */
 
 import fs from "node:fs";
@@ -116,13 +116,6 @@ describe("init on plain-site", () => {
     const after = JSON.parse(fs.readFileSync(pagesFile, "utf8"));
     expect(after.home.hero.customNote).toBe("KEEP ME");
     expect(after.brandNew).toEqual({ seo: { title: "X", description: "Y" } });
-  });
-
-  it("writes a yml-free self-contained report", async () => {
-    await initCommand(root, {});
-    const report = read("cms-report.md");
-    expect(report).toContain("CMS adoption report");
-    expect(report).not.toContain(".pages.yml");
   });
 });
 

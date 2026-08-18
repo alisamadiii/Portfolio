@@ -1,6 +1,6 @@
 /**
  * `cms-bridge check` — validates the v2 three-file contract and reports any
- * markup that still needs wiring. Never writes anything but cms-report.md.
+ * markup that still needs wiring. Never writes anything.
  * Exit 1 when the contract has errors or un-wired content remains (CI-friendly).
  *
  *  - cms.json shape (version, baseUrl, pages, collections)
@@ -17,7 +17,7 @@ import pc from "picocolors";
 
 import { analyzeProject } from "../core/analyze.js";
 import { buildComponentGraph } from "../core/component-graph.js";
-import { writeReport } from "../core/report.js";
+import { countReportItems } from "../core/report.js";
 import type { ReportItem } from "../types.js";
 
 const COMPONENTS_MODULE = "@alisamadiillc/cms-bridge/components";
@@ -238,7 +238,7 @@ export async function checkCommand(root: string): Promise<number> {
     }
   }
 
-  const { reportPath, itemCount } = writeReport(root, analyses, extra);
+  const itemCount = countReportItems(analyses, extra);
   const wireable = candidateCount + componentCandidates;
 
   console.log(`${pc.bold("cms-bridge check")} — ${analyses.length} page(s)`);
@@ -251,7 +251,7 @@ export async function checkCommand(root: string): Promise<number> {
     );
   if (itemCount > 0)
     console.log(
-      `  ${pc.yellow("⚠")} ${itemCount} item(s) need review → ${path.basename(reportPath)}`
+      `  ${pc.yellow("⚠")} ${itemCount} item(s) need manual review`
     );
   if (errors.length === 0 && wireable === 0 && itemCount === 0)
     console.log(`  ${pc.green("✓")} contract clean, nothing left to wire.`);

@@ -64,6 +64,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils";
 
 import { handleCmsError } from "@/lib/trpc-errors";
+import { repoPath } from "@/lib/paths";
 import { resolveContentOperations } from "@workspace/cms-core/operations";
 import {
   draftKey,
@@ -1403,8 +1404,8 @@ export function Collection({
 
   useRepoHeader({
     header: headerNode,
-    backHref: `/${config.repo}/pages`,
-    backLabel: "Pages",
+    backHref: repoPath(config.repo),
+    backLabel: "Canvas",
   });
 
   const isLoading = collectionQuery.isPending;

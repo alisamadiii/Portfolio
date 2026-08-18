@@ -1184,8 +1184,8 @@ export function Entry({
 
   useRepoHeader({
     header: headerNode,
-    backHref: repoPath(config.repo, "pages"),
-    backLabel: "Pages",
+    backHref: repoPath(config.repo),
+    backLabel: "Canvas",
   });
 
   const loadingSkeleton = useMemo(
