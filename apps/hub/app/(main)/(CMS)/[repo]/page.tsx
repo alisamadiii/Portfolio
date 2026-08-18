@@ -19,8 +19,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { isAdminUser } from "@/lib/authz-shared";
 
-import { Canvas } from "@/components/canvas/canvas";
-import { CanvasChrome } from "@/components/chrome/canvas-chrome";
+import { EditorShell } from "@/components/shell/editor-shell";
 import {
   DocumentTitle,
   formatRepoBranchTitle,
@@ -71,7 +70,7 @@ export default function Page() {
         />
         {/* Full-bleed: escape RepoLayout's main padding; own scroll surface. */}
         <div className="-m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
-          <Canvas />
+          <EditorShell />
         </div>
       </>
     );
@@ -82,7 +81,6 @@ export default function Page() {
 
   return (
     <div className="bg-shell relative -m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
-      <CanvasChrome />
       <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>No site preview yet</EmptyTitle>

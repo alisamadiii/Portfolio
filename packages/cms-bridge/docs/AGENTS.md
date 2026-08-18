@@ -7,12 +7,13 @@ Read `pages-cms.md` for the full guide and `conventions.md` for the contract.
 
 ## The model (v2)
 
-Content is three JSON files under `src/data/`:
+Content is JSON files under `src/data/`:
 
 - `cms.json` — manifest: `baseUrl`, `pages` (name → route), optional
   `collections`.
 - `pages.json` — all page content, keyed by page name.
-- `site.json` — global content (header/footer/identity).
+- `variables.json` — global values reused on every page (name/logo/contact/socials).
+- `seo.json` — site + per-page SEO (`site` and `pages.<key>` slices).
 
 Markup is made editable with the bridge **components**
 (`@alisamadiillc/cms-bridge/components`): `Heading1/2/3`, `Text`, `Image`,
@@ -47,7 +48,7 @@ run, so never hand-edit it. To change the canonical text, edit
 - Never nest one `field` / `data-cms-field` element inside another.
 - Only add; never delete or restructure existing content shapes.
 - `src/data/seo.ts` is per-client identity config, NOT CMS content. Leave it.
-- `src/data/site.json` is mandatory and uses bare field paths on every page.
+- `src/data/variables.json` holds global values and uses bare field paths on every page.
 
 ## Collections
 

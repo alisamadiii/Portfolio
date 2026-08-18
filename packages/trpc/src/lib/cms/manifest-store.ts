@@ -25,7 +25,8 @@ const manifestVersion = "cms-v2.1";
 /** Repo-relative (pre-basePath) location of the manifest. */
 const MANIFEST_FILE = "src/data/cms.json";
 const PAGES_FILE = "src/data/pages.json";
-const SITE_FILE = "src/data/site.json";
+const VARIABLES_FILE = "src/data/variables.json";
+const SEO_FILE = "src/data/seo.json";
 
 const CollectionFieldSchema = z.object({
   name: z.string().min(1),
@@ -62,7 +63,7 @@ const ManifestObjectSchema = z.object({
 
 type ManifestObject = z.infer<typeof ManifestObjectSchema> & {
   /** Physical (basePath-rebased) paths the hub reads/writes. */
-  paths: { manifest: string; pages: string; site: string };
+  paths: { manifest: string; pages: string; variables: string; seo: string };
 };
 
 type Manifest = {
@@ -106,7 +107,8 @@ const normalizeManifest = (
     paths: {
       manifest: rebase(basePath, MANIFEST_FILE),
       pages: rebase(basePath, PAGES_FILE),
-      site: rebase(basePath, SITE_FILE),
+      variables: rebase(basePath, VARIABLES_FILE),
+      seo: rebase(basePath, SEO_FILE),
     },
   };
 };
@@ -300,6 +302,7 @@ export {
   ManifestObjectSchema,
   MANIFEST_FILE,
   PAGES_FILE,
-  SITE_FILE,
+  VARIABLES_FILE,
+  SEO_FILE,
 };
 export type { Manifest, ManifestObject };

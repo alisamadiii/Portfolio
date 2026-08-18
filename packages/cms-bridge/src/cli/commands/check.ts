@@ -1,14 +1,14 @@
 /**
- * `cms-bridge check` — validates the v2 three-file contract and reports any
- * markup that still needs wiring. Never writes anything.
+ * `cms-bridge check` — validates the v2 contract and reports any markup that
+ * still needs wiring. Never writes anything.
  * Exit 1 when the contract has errors or un-wired content remains (CI-friendly).
  *
  *  - cms.json shape (version, baseUrl, pages, collections)
  *  - every manifest page has a pages.json object (and vice versa)
- *  - page top-level keys don't collide with site.json keys
+ *  - page top-level keys don't collide with variables.json keys
  *  - array collections hold an array with their required fields
  *  - every static field path (data-cms-field / component `field` prop) resolves
- *    into pages.json or site.json
+ *    into pages.json or variables.json
  */
 
 import fs from "node:fs";
@@ -103,11 +103,16 @@ export function checkContract(root: string): {
   } catch (error: any) {
     errors.push(`pages.json does not parse or is missing: ${error?.message}`);
   }
-  let site: Record<string, any> = {};
+  let variables: Record<string, any> = {};
   try {
-    site = readJson(path.join(root, "src/data/site.json"));
+    variables = readJson(path.join(root, "src/data/variables.json"));
   } catch {
-    warnings.push(`site.json missing — global fields won't resolve.`);
+    // Legacy repos may still use the old site.json name.
+    try {
+      variables = readJson(path.join(root, "src/data/site.json"));
+    } catch {
+      warnings.push(`variables.json missing — global fields won't resolve.`);
+    }
   }
 
   for (const name of Object.keys(manifestPages))
@@ -119,14 +124,14 @@ export function checkContract(root: string): {
         `pages.json: "${name}" has no cms.json route — it won't appear on the canvas.`
       );
 
-  const siteKeys = new Set(Object.keys(site));
+  const variablesKeys = new Set(Object.keys(variables));
   for (const [name, values] of Object.entries(pages)) {
     if (!values || typeof values !== "object") continue;
     for (const key of Object.keys(values)) {
       if (key === "seo") continue;
-      if (siteKeys.has(key))
+      if (variablesKeys.has(key))
         warnings.push(
-          `Key collision: "${name}.${key}" shadows site.json "${key}" on that page.`
+          `Key collision: "${name}.${key}" shadows variables.json "${key}" on that page.`
         );
     }
   }
@@ -178,14 +183,14 @@ export function checkContract(root: string): {
     }
   }
 
-  // Static field paths must resolve into some page object or site.json.
+  // Static field paths must resolve into some page object or variables.json.
   const pageObjects = Object.values(pages);
   for (const [file, fields] of collectStaticFields(root)) {
     for (const field of fields) {
       const inPages = pageObjects.some((values) => resolvePath(values, field));
-      if (!inPages && !resolvePath(site, field))
+      if (!inPages && !resolvePath(variables, field))
         warnings.push(
-          `${file}: field "${field}" resolves to no value in pages.json or site.json.`
+          `${file}: field "${field}" resolves to no value in pages.json or variables.json.`
         );
     }
   }

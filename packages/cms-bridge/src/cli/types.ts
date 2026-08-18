@@ -31,8 +31,8 @@ export type ProjectScan = {
   manifest: CmsManifest | null;
   /** Parsed pages.json ({} when absent). */
   pagesJson: Record<string, unknown>;
-  /** Parsed site.json ({} when absent). */
-  siteJson: Record<string, unknown>;
+  /** Parsed variables.json (legacy site.json fallback; {} when absent). */
+  variablesJson: Record<string, unknown>;
   /** astro.config.(mjs|js|ts) path, null when not found. */
   astroConfigPath: string | null;
   /** True when the cms-bridge integration import already exists in the config. */

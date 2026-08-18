@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 const SKILL_MD = `---
 name: cms-bridge
-description: Edit this site's CMS wiring — the v2 three-file contract (cms.json / pages.json / site.json), the bridge components, field-path conventions, and collections. Use when adding, renaming, or debugging CMS-editable content on this Astro site.
+description: Edit this site's CMS wiring — the v2 contract (cms.json / pages.json / variables.json / seo.json), the bridge components, field-path conventions, and collections. Use when adding, renaming, or debugging CMS-editable content on this Astro site.
 ---
 
 # cms-bridge

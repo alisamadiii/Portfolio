@@ -13,14 +13,14 @@ The `path` of a collection is the entire contract for how it's stored:
 | ends in `.json` (a **file**)          | **array**     | one file: `[ {item}, … ]`        |
 | a **directory**                       | **directory** | one file per entry inside it     |
 
-Keep `src/data/` to the three core files (`cms.json`, `pages.json`,
-`site.json`) — array-collection files live in `src/data/collections/` (e.g.
+Keep `src/data/` to the core files (`cms.json`, `pages.json`, `variables.json`,
+`seo.json`) — array-collection files live in `src/data/collections/` (e.g.
 `src/data/collections/team.json`). Directory collections can live wherever
 (`src/data/blog`, `src/content/…`).
 
 - **Array collection** (`"path": "src/data/collections/team.json"`) — the whole collection
   is a single JSON array file, edited as one draft and published as one commit,
-  exactly like `pages.json` / `site.json`. **Order is array position** — reorder
+  exactly like `pages.json` / `variables.json`. **Order is array position** — reorder
   moves the item in the array; there is no `sort_order` field. Use this for data
   lists (team, partners, workshops, resources, …). No `route`, no `body`.
 - **Directory collection** (`"path": "src/data/blog"`) — one file per entry, so

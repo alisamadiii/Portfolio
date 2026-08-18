@@ -1,6 +1,6 @@
 # Pages CMS — client project guide (v2)
 
-How a client site is wired to the Pages CMS. The whole contract is three JSON
+How a client site is wired to the Pages CMS. The whole contract is four JSON
 files plus a set of Astro components — no `.pages.yml`, no schema to maintain.
 
 > **Maintainers:** canonical copy shipped in `@alisamadiillc/cms-bridge`, synced
@@ -9,7 +9,7 @@ files plus a set of Astro components — no `.pages.yml`, no schema to maintain.
 
 ---
 
-## The three files (all in `src/data/`)
+## The four files (all in `src/data/`)
 
 ### 1. `cms.json` — the manifest (the only config the CMS reads)
 
@@ -69,33 +69,65 @@ One file, one GitHub fetch, one publish commit. Field paths in the markup stay
 **page-relative** (`hero.heading`) — the page is implied by its route, never
 prefixed with the page name.
 
-### 3. `site.json` — global content, shown on every page
+### 3. `variables.json` — global values, reused on every page
 
-Business identity and chrome (header/footer). Global fields use **bare** paths
-(`name`, `address.street`). Edited from the canvas "Site settings" panel.
+Business identity and contact details — the "variables" a client edits once and
+sees everywhere. Global fields use **bare** paths (`name`, `address.street`).
+Edited from Settings → Variables. (SEO lives in `seo.json`, see §4.)
 
 Baseline shape (keep what applies, extend after):
 
 ```json
 {
-  "seo": { "title": "…", "description": "…" },
   "name": "The Client",
-  "tagline": "…",
   "logo": "/media/logo.svg",
   "phone": "+1 904 555 0100",
   "email": "hello@client.com",
   "address": { "street": "…", "city": "…", "region": "…", "zip": "…", "mapsUrl": "…" },
-  "socials": [{ "label": "Instagram", "url": "…" }],
-  "footer": { "text": "© The Client" }
+  "socials": [{ "label": "Instagram", "url": "…" }]
 }
 ```
 
 **Resolution rule:** a field from a frame at route R resolves **page-first** —
 if the value exists in `pages.json[page]` it belongs there, otherwise
-`site.json`. Keep a page's top-level keys distinct from `site.json`'s.
+`variables.json`. Keep a page's top-level keys distinct from `variables.json`'s.
 
 `src/data/seo.ts` (canonical URL, JSON-LD business data) is **per-client
-identity config, NOT CMS content** — leave it alone.
+identity config, NOT CMS content** — leave it alone. Not to be confused with
+`seo.json` below.
+
+### 4. `seo.json` — site + per-page SEO / social metadata
+
+Edited from the in-shell **Settings** view (Site Settings → General, and each
+page under Page Settings). The hub writes it **additively** — it never prunes.
+
+```json
+{
+  "site": {
+    "title": "The Client",
+    "description": "…",
+    "favicon": "/media/favicon.png",
+    "ogImage": "/media/og.png",
+    "appleTouchIcon": "/media/apple-touch-icon.png",
+    "googleAnalytics": "G-XXXXXXXXXX"
+  },
+  "pages": {
+    "home": { "title": "…", "description": "…", "ogImage": "/media/og-home.png" },
+    "about": { "title": "…", "description": "…", "ogImage": "" }
+  }
+}
+```
+
+- `site` — site-wide defaults + images (favicon 64×64, `ogImage` / social preview
+  1200×630, `appleTouchIcon` 180×180) and the Google Analytics measurement id.
+- `pages` — keyed by the same page keys as `cms.json` / `pages.json`; per-page
+  `title` / `description` / `ogImage` override the site defaults.
+
+> **Migration note:** SEO title/description historically lived in
+> `site.json.seo` and `pages.json[page].seo`. `seo.json` is the new source of
+> truth; the client Astro layout should read from it. Until a project's layout
+> is migrated, the old `seo` objects still work — `seo.json` is written
+> alongside them, never in place of them.
 
 ---
 
@@ -184,10 +216,10 @@ rather author the markup (`<Heading1 field="hero.heading">Wood-fired
 
 ### SEO
 
-Every page has a top-level `seo` object — `{ title, description }` — passed to
-the layout: `<Layout title={home.seo.title} description={home.seo.description}>`.
-Edited from the per-frame SEO button on the canvas. `site.json.seo` is the
-site-wide default.
+Site and per-page SEO live in `seo.json` (§4) — `site` defaults plus a
+`pages.<key>` slice per page (`title`, `description`, `ogImage`). Edited from
+Settings → General (site) and Settings → Page Settings (per page). The layout
+reads them, e.g. `<Layout title={seo.pages.home.title ?? seo.site.title}>`.
 
 ---
 
@@ -234,7 +266,8 @@ import team from "../data/collections/team.json";   // already ordered — no so
 ## Setup checklist
 
 1. `src/data/cms.json` with `baseUrl` + `pages` (canvas tiles come from here).
-2. `src/data/pages.json` + `src/data/site.json` with the content.
+2. `src/data/pages.json` + `src/data/variables.json` (+ `src/data/seo.json`)
+   with the content.
 3. The bridge integration in `astro.config.mjs`:
 
    ```js
@@ -252,7 +285,7 @@ Any element with a `data-cms-field` attribute is editable too — the bridge
 falls back to heuristics for these, and mixed mode (components + attributes) is
 fully supported. When hand-tagging, three strings must be the **same**:
 
-1. the key path in `pages.json` / `site.json`
+1. the key path in `pages.json` / `variables.json`
 2. the component `field` prop OR the `data-cms-field` attribute value
 3. the position in the JSON (dot path, list items append their index)
 

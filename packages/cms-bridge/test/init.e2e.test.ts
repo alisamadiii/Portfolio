@@ -41,11 +41,12 @@ beforeEach(() => {
 afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
 describe("init on plain-site", () => {
-  it("runs and scaffolds the three files + skill", async () => {
+  it("runs and scaffolds the contract files + skill", async () => {
     expect(await initCommand(root, {})).toBe(0);
     expect(fs.existsSync(path.join(root, "src/data/cms.json"))).toBe(true);
     expect(fs.existsSync(path.join(root, "src/data/pages.json"))).toBe(true);
-    expect(fs.existsSync(path.join(root, "src/data/site.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "src/data/variables.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "src/data/seo.json"))).toBe(true);
     expect(
       fs.existsSync(path.join(root, ".claude/skills/cms-bridge/SKILL.md"))
     ).toBe(true);

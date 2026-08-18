@@ -6,7 +6,7 @@ import {
   DocumentTitle,
   formatRepoBranchTitle,
 } from "@/components/document-title";
-import { Canvas } from "@/components/canvas/canvas";
+import { EditorShell } from "@/components/shell/editor-shell";
 
 export default function Page() {
   const { config } = useConfig();
@@ -24,7 +24,7 @@ export default function Page() {
       />
       {/* Full-bleed: escape RepoLayout's main padding; own scroll surface. */}
       <div className="-m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
-        <Canvas />
+        <EditorShell />
       </div>
     </>
   );

@@ -1,7 +1,8 @@
 /**
- * The v2 three-file contract: cms.json (manifest), pages.json (page content),
- * site.json (global). Pure reads + add-only ensures — existing data ALWAYS
- * wins, nothing is ever renamed, pruned, or overwritten.
+ * The v2 contract: cms.json (manifest), pages.json (page content),
+ * variables.json (global values), seo.json (SEO). Pure reads + add-only
+ * ensures — existing data ALWAYS wins, nothing is renamed, pruned, or
+ * overwritten.
  */
 
 import fs from "node:fs";
@@ -51,7 +52,7 @@ export function normalizeRoute(route: string): string {
  * source during tests (`src/cli/core/*.ts` → `../../../templates`).
  */
 export function loadTemplate(
-  name: "cms" | "pages" | "site"
+  name: "cms" | "pages" | "variables" | "seo"
 ): Record<string, unknown> {
   for (const relative of [
     `../../templates/${name}.json`,
@@ -75,14 +76,26 @@ export function loadTemplate(
       pages: {},
       collections: [],
     };
-  if (name === "site")
+  if (name === "variables")
     return {
-      seo: { title: "", description: "" },
       name: "",
+      logo: "",
+      phone: "",
       email: "",
+      address: { street: "", city: "", region: "", zip: "", mapsUrl: "" },
       socials: [],
-      nav: { links: [], cta: { label: "", link: "" } },
-      footer: { text: "" },
+    };
+  if (name === "seo")
+    return {
+      site: {
+        title: "",
+        description: "",
+        favicon: "",
+        ogImage: "",
+        appleTouchIcon: "",
+        googleAnalytics: "",
+      },
+      pages: {},
     };
   return {};
 }
@@ -140,9 +153,9 @@ export function placeholderItem(
 }
 
 /**
- * Ensure src/data/ + the three contract files exist. Add-only: an existing
- * cms.json only gains missing baseline keys and NEW page entries; pages.json
- * only gains a key per manifest page; site.json is never touched once present.
+ * Ensure src/data/ + the contract files exist. Add-only: an existing cms.json
+ * only gains missing baseline keys and NEW page entries; pages.json only gains
+ * a key per manifest page; variables.json is never touched once present.
  * Returns the in-memory documents so init can mutate + write pages.json once.
  */
 export function ensureDataFiles(
@@ -154,14 +167,17 @@ export function ensureDataFiles(
   pagesAdded: string[];
   manifest: CmsManifest;
   pagesJson: Record<string, unknown>;
-  siteJson: Record<string, unknown>;
+  variablesJson: Record<string, unknown>;
+  seoJson: Record<string, unknown>;
 } {
   const created: string[] = [];
   const pagesAdded: string[] = [];
 
   const cmsFile = dataPath(root, "cms");
   const pagesFile = dataPath(root, "pages");
-  const siteFile = dataPath(root, "site");
+  const variablesFile = dataPath(root, "variables");
+  const legacySiteFile = dataPath(root, "site");
+  const seoFile = dataPath(root, "seo");
 
   // ---- cms.json ----
   let manifest = readManifest(root);
@@ -216,23 +232,57 @@ export function ensureDataFiles(
     if (!(key in pagesJson)) pagesJson[key] = {};
   }
 
-  // ---- site.json (never touched once present) ----
-  let siteJson: Record<string, unknown>;
-  if (fs.existsSync(siteFile)) {
-    siteJson = (readJsonAt(siteFile) as Record<string, unknown>) ?? {};
+  // ---- variables.json (never touched once present) ----
+  // Legacy repos may still carry the old site.json name; keep reading it so
+  // an un-migrated project isn't scaffolded with a duplicate empty file.
+  let variablesJson: Record<string, unknown>;
+  if (fs.existsSync(variablesFile)) {
+    variablesJson = (readJsonAt(variablesFile) as Record<string, unknown>) ?? {};
+  } else if (fs.existsSync(legacySiteFile)) {
+    variablesJson = (readJsonAt(legacySiteFile) as Record<string, unknown>) ?? {};
   } else {
-    siteJson = loadTemplate("site");
-    created.push("src/data/site.json");
-    if (!opts.dryRun) writeJsonObject(siteFile, siteJson);
+    variablesJson = loadTemplate("variables");
+    created.push("src/data/variables.json");
+    if (!opts.dryRun) writeJsonObject(variablesFile, variablesJson);
+  }
+
+  // ---- seo.json (add-only: create from template, stub a page slice per
+  // manifest page; existing values are never modified) ----
+  let seoJson: Record<string, unknown>;
+  let seoDirty = false;
+  if (fs.existsSync(seoFile)) {
+    seoJson = (readJsonAt(seoFile) as Record<string, unknown>) ?? {};
+  } else {
+    seoJson = loadTemplate("seo");
+    created.push("src/data/seo.json");
+    seoDirty = true;
+  }
+  if (!seoJson.site || typeof seoJson.site !== "object") {
+    seoJson.site = (loadTemplate("seo").site as Record<string, unknown>) ?? {};
+    seoDirty = true;
+  }
+  if (!seoJson.pages || typeof seoJson.pages !== "object") {
+    seoJson.pages = {};
+    seoDirty = true;
+  }
+  const seoPages = seoJson.pages as Record<string, unknown>;
+  for (const key of Object.keys(manifest.pages)) {
+    if (!(key in seoPages)) {
+      seoPages[key] = { title: "", description: "", ogImage: "" };
+      seoDirty = true;
+    }
   }
 
   if (!opts.dryRun && cmsDirty) {
     writeJsonObject(cmsFile, manifest as unknown as Record<string, unknown>);
   }
+  if (!opts.dryRun && seoDirty) {
+    writeJsonObject(seoFile, seoJson);
+  }
   // pages.json is written once by init after the codemod (add-only), so an
   // untouched project stays byte-identical.
 
-  return { created, pagesAdded, manifest, pagesJson, siteJson };
+  return { created, pagesAdded, manifest, pagesJson, variablesJson, seoJson };
 }
 
 /**

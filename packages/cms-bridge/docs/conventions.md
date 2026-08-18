@@ -1,14 +1,14 @@
 ## The CMS conventions contract (v2)
 
-This project is wired to a git-based CMS. Content lives in three JSON files
-under `src/data/` — `cms.json` (manifest), `pages.json` (all pages), and
-`site.json` (global). Markup is made editable with the bridge components (or,
-as a fallback, a `data-cms-field` attribute). See `pages-cms.md` for the full
-guide.
+This project is wired to a git-based CMS. Content lives in JSON files under
+`src/data/` — `cms.json` (manifest), `pages.json` (all pages), `variables.json`
+(global values), and `seo.json` (SEO). Markup is made editable with the bridge
+components (or, as a fallback, a `data-cms-field` attribute). See `pages-cms.md`
+for the full guide.
 
 Two things must always be the **same string**:
 
-1. the key path inside `pages.json` (page-relative) or `site.json` (bare)
+1. the key path inside `pages.json` (page-relative) or `variables.json` (bare)
 2. the component `field` prop — or the `data-cms-field` attribute value
 
 ```
@@ -20,8 +20,8 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 
 - **Page fields** use section-prefixed dot paths (`hero.heading`). The page is
   implied by its route — NEVER prefix a path with the page name.
-- **Global fields** (`site.json`) use bare paths (`name`, `address.street`) —
-  resolved on every page.
+- **Global fields** (`variables.json`) use bare paths (`name`, `address.street`)
+  — resolved on every page.
 - **List items append their index** inside `.map((item, i) => …)`:
 
   ```astro
@@ -60,12 +60,12 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 - **Inline emphasis** — in a text value, `` `word` `` → `.cms-hl` (accent) and
   `**word**` → `.cms-mark` (mark; style once, override per field with
   `markClass`). Both round-trip through canvas editing.
-- **SEO** — every page has a top-level `seo` object `{ title, description }`
-  passed to the layout. `site.json.seo` is the site-wide default.
-- **The `site.json` file is mandatory.** Baseline keys (use these, omit what
-  doesn't apply, extend after): `seo{title,description}`, `name`, `tagline`,
-  `logo`, `phone`, `email`, `address{street,city,region,zip,mapsUrl}`,
-  `socials[]{label,url}`, `footer{text}`.
+- **SEO** — site + per-page SEO live in `seo.json` (`site` defaults and a
+  `pages.<key>` slice each: `title`, `description`, `ogImage`), edited from the
+  Settings view — not in `variables.json`.
+- **`variables.json`** holds reusable global values. Baseline keys (use these,
+  omit what doesn't apply, extend after): `name`, `logo`, `phone`, `email`,
+  `address{street,city,region,zip,mapsUrl}`, `socials[]{label,url}`.
 - **`src/data/seo.ts` is NOT CMS content** — per-client identity config
   (canonical URL, JSON-LD business data). Leave it alone.
 

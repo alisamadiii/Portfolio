@@ -82,7 +82,7 @@ type AddCollaboratorState = {
   data?: Collaborator[];
 };
 
-function InviteCollaboratorsDialog({
+export function InviteCollaboratorsDialog({
   owner,
   repo,
   state,

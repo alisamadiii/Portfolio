@@ -42,13 +42,14 @@ export function loadConventionsContract(): string {
 
 const FALLBACK_CONTRACT = `## The CMS conventions contract (v2)
 
-Content lives in three JSON files under \`src/data/\`: \`cms.json\` (manifest),
-\`pages.json\` (all pages, keyed by page name), \`site.json\` (global). Markup is
-made editable with the bridge components, or a \`data-cms-field\` attribute.
+Content lives in JSON files under \`src/data/\`: \`cms.json\` (manifest),
+\`pages.json\` (all pages, keyed by page name), \`variables.json\` (global values
+reused on every page), \`seo.json\` (site + per-page SEO). Markup is made
+editable with the bridge components, or a \`data-cms-field\` attribute.
 
 Two things must always be the **same string**:
 
-1. the key path inside \`pages.json\` (page-relative) or \`site.json\` (bare)
+1. the key path inside \`pages.json\` (page-relative) or \`variables.json\` (bare)
 2. the component \`field\` prop — or the \`data-cms-field\` attribute value
 
 \`\`\`
@@ -60,7 +61,7 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 
 - **Page fields** use section-prefixed dot paths (\`hero.heading\`); the page is
   implied by its route — NEVER prefix a path with the page name.
-- **Global fields** (\`site.json\`) use bare paths (\`name\`, \`address.street\`).
+- **Global fields** (\`variables.json\`) use bare paths (\`name\`, \`address.street\`).
 - **List items append their index**: \`<Text field={\\\`items.\${i}.title\\\`} … />\`.
 - **CTA** — \`{label, link}\` objects, use \`<Link field="hero.cta" value={cta} />\`.
 - **Image** — \`<Image field="hero.image" value={img} alt={imageAlt} />\` (alt is a
@@ -69,10 +70,12 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
   item in \`<Item index={i}>\`.
 - **Inline emphasis** in a text value: \`\\\`word\\\`\` → \`.cms-hl\`, \`**word**\` →
   \`.cms-mark\`. Both round-trip through canvas editing.
-- **SEO** — every page has a top-level \`seo\` object \`{ title, description }\`.
-- **\`site.json\` is mandatory.** Baseline keys: \`seo\`, \`name\`, \`tagline\`,
+- **SEO** — site + per-page SEO live in \`seo.json\` (\`site\` and \`pages.<key>\`
+  slices with \`title\`, \`description\`, \`ogImage\`, …), edited from the Settings
+  view, not in \`variables.json\`.
+- **\`variables.json\`** holds reusable global values. Baseline keys: \`name\`,
   \`logo\`, \`phone\`, \`email\`, \`address{street,city,region,zip,mapsUrl}\`,
-  \`socials[]{label,url}\`, \`footer{text}\`.
+  \`socials[]{label,url}\`.
 - **\`src/data/seo.ts\` is NOT CMS content** — per-client identity config. Leave it.
 
 ### Idempotency rules (MUST respect)
@@ -158,13 +161,13 @@ const { cmsPath, title, body } = Astro.props;
 \`\`\`
 
 Each page passes its own path: \`<Card cmsPath="features.card" {...content.features.card} />\`.
-If the text is truly global (header/footer), move it to site.json and use bare
-paths instead.`,
+If the text is truly global (header/footer), move it to variables.json and use
+bare paths instead.`,
   },
   R6: {
     title: "Chrome string (nav / form / button / placeholder / aria)",
     recipe:
-      "UI chrome vs content is a judgment call. Client-facing marketing copy (nav labels, button text like 'Order Online') → usually extract to site.json. Functional strings (form validation, aria-labels, placeholders) → usually leave hardcoded. When extracting nav arrays, follow the R3 recipe against site.json with bare paths.",
+      "UI chrome vs content is a judgment call. Client-facing marketing copy (nav labels, button text like 'Order Online') → usually extract to variables.json. Functional strings (form validation, aria-labels, placeholders) → usually leave hardcoded. When extracting nav arrays, follow the R3 recipe against variables.json with bare paths.",
   },
   R7: {
     title: "Static alt on dynamic-src image",
@@ -174,7 +177,7 @@ paths instead.`,
   R8: {
     title: "Content-shaped frontmatter const",
     recipe:
-      "A frontmatter const holds an array/object of display strings. Move it into the page JSON (or site.json if shared), import the JSON, and render with indexed data-cms-field paths (see R3).",
+      "A frontmatter const holds an array/object of display strings. Move it into the page JSON (or variables.json if shared), import the JSON, and render with indexed data-cms-field paths (see R3).",
   },
   R9: {
     title: "Layout SEO props not migratable",

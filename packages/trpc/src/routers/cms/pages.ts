@@ -25,6 +25,12 @@ export type CanvasPage = {
   kind?: "page" | "collection";
   /** Collection entry name — set only when `kind === "collection"`. */
   collection?: string;
+  /**
+   * For a collection, the normalized list path its detail route hangs off
+   * (e.g. `/newsletter/{slug}` → `/newsletter`). The page tree nests the
+   * collection under the page whose `path` equals this.
+   */
+  parentPath?: string;
 };
 
 /** Flatten `content` (groups included) into leaf entries keyed by name. */
@@ -126,6 +132,7 @@ export const pagesRouter = createTRPCRouter({
                 entry: collection.name,
                 kind: "collection",
                 collection: collection.name,
+                parentPath: listPath,
               });
             }
           }
@@ -154,7 +161,6 @@ export const pagesRouter = createTRPCRouter({
             400
           );
         }
-        console.log("🔥🔥🔥🔥", baseUrl);
         const origin = new URL(baseUrl).origin;
 
         const byPath = new Map<string, CanvasPage>();
@@ -184,6 +190,7 @@ export const pagesRouter = createTRPCRouter({
                 entry,
                 kind: "collection",
                 collection: entry,
+                parentPath: listPath,
               });
             }
             continue;

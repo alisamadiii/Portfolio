@@ -1,0 +1,154 @@
+"use client";
+
+import { useState } from "react";
+import { Image as ImageIcon } from "lucide-react";
+
+import { Button } from "@workspace/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
+import { TextField } from "@/components/ui/mui";
+import { useMediaLibrary } from "@/components/media/media-library-context";
+
+import type { GroupMember } from "@/lib/bridge-messages";
+
+export type GroupEditorFieldRow = {
+  path: string;
+  kind: GroupMember["kind"];
+  label: string;
+  value: string;
+};
+export type GroupEditorSection = {
+  title?: string;
+  rows: GroupEditorFieldRow[];
+};
+
+/**
+ * Modal editor for a CMS group: lists every editable field of the clicked
+ * cluster, grouped by array item. Text/link rows commit on Save; an image row
+ * opens the global media dialog. All fields for a group are edited here — the
+ * group's children are never individually editable inline.
+ */
+export function GroupEditorDialog({
+  open,
+  sections,
+  onCommit,
+  onClose,
+}: {
+  open: boolean;
+  sections: GroupEditorSection[];
+  onCommit: (path: string, value: string) => void;
+  onClose: () => void;
+}) {
+  const { open: openMediaLibrary } = useMediaLibrary();
+  const hasRows = sections.some((section) => section.rows.length > 0);
+  // Buffer every edit locally — NOTHING is persisted or pushed to the iframe
+  // until Save. Keyed by field path. Seeded once on mount (the dialog remounts
+  // per group via its React key), so re-renders don't clobber in-progress edits.
+  const [drafts, setDrafts] = useState<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const section of sections)
+      for (const row of section.rows) seed[row.path] = row.value;
+    return seed;
+  });
+  const setField = (path: string, value: string) =>
+    setDrafts((prev) => ({ ...prev, [path]: value }));
+  const dirty = sections.some((section) =>
+    section.rows.some((row) => (drafts[row.path] ?? "") !== row.value)
+  );
+  const save = () => {
+    for (const section of sections)
+      for (const row of section.rows) {
+        const next = drafts[row.path] ?? "";
+        if (next !== row.value) onCommit(row.path, next);
+      }
+    onClose();
+  };
+  return (
+    // `modal={false}` so opening the panel never traps focus or inerts the
+    // selected iframe; `disablePointerDismissal` so a click outside never
+    // closes it — only Cancel / ✕ / Escape.
+    <Dialog
+      open={open}
+      modal={false}
+      disablePointerDismissal
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit content</DialogTitle>
+        </DialogHeader>
+        {hasRows ? (
+          <div className="flex flex-col gap-5">
+            {sections.map((section, index) => (
+              <div
+                key={section.title ?? index}
+                className="flex flex-col gap-3"
+              >
+                {section.title && (
+                  <span className="text-muted-foreground text-xs font-medium">
+                    {section.title}
+                  </span>
+                )}
+                {section.rows.map((row) =>
+                  row.kind === "media" ? (
+                    <div key={row.path} className="flex flex-col gap-1.5">
+                      <span className="text-muted-foreground text-xs">
+                        {row.label}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          openMediaLibrary({
+                            title: "Replace image",
+                            onInsert: (urls) => {
+                              const url = urls[0];
+                              if (url) setField(row.path, url);
+                            },
+                          })
+                        }
+                      >
+                        <ImageIcon className="size-4" />
+                        {(drafts[row.path] ?? "") !== row.value
+                          ? "Image selected — Save to apply"
+                          : "Replace image"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <TextField
+                      key={row.path}
+                      label={row.label}
+                      value={drafts[row.path] ?? ""}
+                      size="small"
+                      fullWidth
+                      onChange={(event) => setField(row.path, event.target.value)}
+                    />
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No editable fields in this section.
+          </p>
+        )}
+        <DialogFooter>
+          <DialogClose render={<Button variant="secondary">Cancel</Button>} />
+          <Button type="button" disabled={!dirty} onClick={save}>
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

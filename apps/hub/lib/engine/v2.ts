@@ -33,7 +33,7 @@ export type ManifestData = {
         options?: string[];
       }>;
     }>;
-    paths: { manifest: string; pages: string; site: string };
+    paths: { manifest: string; pages: string; variables: string; seo: string };
   };
 };
 
@@ -79,12 +79,12 @@ export function buildV2EntryMap(
 
   const siteEntry: EntryRoute = {
     name: SITE_ENTRY,
-    filePath: paths.site,
+    filePath: paths.variables,
     schema: {
       name: SITE_ENTRY,
-      label: "Site (global)",
+      label: "Variables",
       type: "file",
-      path: paths.site,
+      path: paths.variables,
       format: "json",
       fields: inferFields(siteContent ?? {}),
     },

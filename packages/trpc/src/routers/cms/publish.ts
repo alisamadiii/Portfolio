@@ -263,7 +263,8 @@ export const publishRouter = createTRPCRouter({
         );
         const allowedJson = new Set([
           manifest.object.paths.pages,
-          manifest.object.paths.site,
+          manifest.object.paths.variables,
+          manifest.object.paths.seo,
           ...arrayCollectionPaths,
         ]);
         const collectionRoots = manifest.object.collections

@@ -1,5 +1,5 @@
 /**
- * Project discovery for the v2 contract: pages, cms.json/pages.json/site.json,
+ * Project discovery for the v2 contract: pages, cms.json/pages.json/variables.json/seo.json,
  * astro.config. Pure reads — no writes here.
  */
 
@@ -85,7 +85,13 @@ export function scanProject(root: string): ProjectScan {
   const pagesJson =
     (readJsonAt(path.join(dataDir, "pages.json")) as Record<string, unknown>) ??
     {};
-  const siteJson =
+  // variables.json is the current global-values file; fall back to the legacy
+  // site.json name for repos not yet migrated.
+  const variablesJson =
+    (readJsonAt(path.join(dataDir, "variables.json")) as Record<
+      string,
+      unknown
+    >) ??
     (readJsonAt(path.join(dataDir, "site.json")) as Record<string, unknown>) ??
     {};
 
@@ -111,9 +117,11 @@ export function scanProject(root: string): ProjectScan {
       pagesJson && typeof pagesJson === "object" && !Array.isArray(pagesJson)
         ? pagesJson
         : {},
-    siteJson:
-      siteJson && typeof siteJson === "object" && !Array.isArray(siteJson)
-        ? siteJson
+    variablesJson:
+      variablesJson &&
+      typeof variablesJson === "object" &&
+      !Array.isArray(variablesJson)
+        ? variablesJson
         : {},
     astroConfigPath,
     hasBridgeIntegration,
