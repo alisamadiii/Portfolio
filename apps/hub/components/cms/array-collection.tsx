@@ -145,9 +145,11 @@ export function ArrayCollection({
 
   const handleAdd = () => {
     const blank = initializeState(schema.fields, {}) as Item;
-    const next = [...items, blank];
+    // New items go to the top (index 0), not the bottom — order is array
+    // position, so the newest entry shows first.
+    const next = [blank, ...items];
     commitItems(next);
-    setEditing(next.length - 1);
+    setEditing(0);
     setSheetOpen(true);
   };
 

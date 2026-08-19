@@ -242,6 +242,46 @@ export function PublishDialog({
     }
   };
 
+  // Re-anchor local sha baselines to the shas the server just committed. The
+  // publish response returns each file's new blob sha; write them straight into
+  // the entry query caches so any open editor re-derives the fresh sha the
+  // instant we finish — otherwise the baseline falls back to the stale cached
+  // sha until the async refetch lands, and a quick re-edit would false-flag
+  // "Changed on GitHub" on the next publish.
+  const reanchorShas = (result: {
+    data?: { files?: { path: string; sha: string }[] };
+  }) => {
+    const shaByPath = new Map(
+      (result.data?.files ?? []).map((f) => [f.path, f.sha])
+    );
+    for (const [, draft] of drafts) {
+      const newSha = shaByPath.get(draft.path);
+      if (!newSha) continue;
+      // Patch both query families (no-op when that key isn't cached).
+      queryClient.setQueryData(
+        trpc.cms.entries.getContent.queryKey({
+          owner,
+          repo,
+          branch,
+          path: draft.path,
+        }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (old: any) => (old ? { ...old, sha: newSha } : old)
+      );
+      queryClient.setQueryData(
+        trpc.cms.entries.get.queryKey({
+          owner,
+          repo,
+          branch,
+          path: draft.path,
+          name: draft.schemaName || undefined,
+        }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (old: any) => (old ? { ...old, sha: newSha } : old)
+      );
+    }
+  };
+
   const handlePublishResult = (
     result:
       | { status: "conflict"; stalePaths: string[]; conflictPaths: string[] }
@@ -264,6 +304,9 @@ export function PublishDialog({
       toast.error("Some entries changed on GitHub — review before publishing.");
       return;
     }
+    reanchorShas(
+      result as { data?: { files?: { path: string; sha: string }[] } }
+    );
     const keys = publishedPaths.map((path) =>
       draftKey(owner, repo, branch, path)
     );
@@ -320,6 +363,9 @@ export function PublishDialog({
           return;
         }
 
+        reanchorShas(
+          result as { data?: { files?: { path: string; sha: string }[] } }
+        );
         const keys = variables.files.map((file) =>
           draftKey(owner, repo, branch, file.path)
         );
