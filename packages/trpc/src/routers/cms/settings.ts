@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import { and, sql } from "drizzle-orm";
 import z from "zod";
@@ -22,8 +23,10 @@ import {
   getBasePath as getRepoBasePath,
   getMediaSettings as getRepoMediaSettings,
   getPublicMediaSettings,
+  getWebsiteUrl as getRepoWebsiteUrl,
   setBasePath as setRepoBasePath,
   setMediaSettings as setRepoMediaSettings,
+  setWebsiteUrl as setRepoWebsiteUrl,
 } from "@workspace/trpc/lib/cms/repo-settings";
 
 /**
@@ -132,8 +135,7 @@ const setMediaSettings = cmsProcedure
       const saved = await setRepoMediaSettings(
         input.owner,
         input.repo,
-        input.provider,
-        input.config ?? {}
+        input.provider
       );
 
       return {
@@ -141,6 +143,44 @@ const setMediaSettings = cmsProcedure
         provider: saved.provider,
         config: toPublicMediaConfig(saved.provider, saved.config),
       };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  });
+
+/** Get the per-repository live website URL (admin only). */
+const getWebsiteUrl = cmsProcedure.query(async ({ input, ctx }) => {
+  try {
+    assertAdminUser(ctx.user, "Only admins can manage the website URL.");
+
+    const websiteUrl = await getRepoWebsiteUrl(input.owner, input.repo);
+
+    return { websiteUrl };
+  } catch (error) {
+    if (error instanceof TRPCError) throw error;
+    throw toTRPCError(error);
+  }
+});
+
+/** Set the per-repository live website URL (admin only). */
+const setWebsiteUrl = cmsProcedure
+  .input(z.object({ url: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    try {
+      assertAdminUser(ctx.user, "Only admins can manage the website URL.");
+
+      const websiteUrl = await setRepoWebsiteUrl(
+        input.owner,
+        input.repo,
+        input.url
+      );
+
+      // Refresh the pinged website-status cache so the home page reflects the
+      // new URL on the next load.
+      revalidateTag("website-status", { expire: 0 });
+
+      return { message: "Website URL updated.", websiteUrl };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
@@ -170,6 +210,8 @@ const settingsRouter = createTRPCRouter({
   setBasePath,
   getMediaSettings,
   setMediaSettings,
+  getWebsiteUrl,
+  setWebsiteUrl,
   getConfig: getBranchConfig,
 });
 

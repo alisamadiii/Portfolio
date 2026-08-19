@@ -45,6 +45,7 @@ const listOrgRepos = async (keyword?: string) => {
     private: row.private,
     defaultBranch: row.defaultBranch,
     updatedAt: row.githubUpdatedAt.toISOString(),
+    websiteUrl: row.websiteUrl ?? null,
   }));
 };
 
@@ -130,6 +131,19 @@ const listMine = authenticatedProcedure
         ),
       });
 
+      // websiteUrl lives on cmsOrgRepo; collaborator rows don't carry it, so
+      // look it up for this owner and attach it (used by the home page gallery).
+      let urlByRepo = new Map<string, string | null>();
+      if (collaboratorRepos.length) {
+        const orgRows = await db
+          .select({ repo: cmsOrgRepo.repo, websiteUrl: cmsOrgRepo.websiteUrl })
+          .from(cmsOrgRepo)
+          .where(sql`lower(${cmsOrgRepo.owner}) = lower(${input.owner})`);
+        urlByRepo = new Map(
+          orgRows.map((r) => [r.repo.toLowerCase(), r.websiteUrl])
+        );
+      }
+
       const reposByKey = new Map<string, any>();
       for (const repo of githubRepos) {
         reposByKey.set(
@@ -140,7 +154,10 @@ const listMine = authenticatedProcedure
       for (const repo of collaboratorRepos) {
         const key = `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`;
         if (!reposByKey.has(key)) {
-          reposByKey.set(key, repo);
+          reposByKey.set(key, {
+            ...repo,
+            websiteUrl: urlByRepo.get(repo.repo.toLowerCase()) ?? null,
+          });
         }
       }
 

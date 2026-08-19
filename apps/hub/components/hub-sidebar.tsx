@@ -13,9 +13,7 @@ import {
   HelpCircle,
   House,
   LogOut,
-  Loader2,
   Mail,
-  PenLine,
   Settings,
 } from "lucide-react";
 
@@ -41,7 +39,6 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 
-import { CmsProjectsDialog } from "./cms-projects-dialog";
 import { NavPages } from "./nav-pages";
 import { StatusDot } from "./status-dot";
 
@@ -106,10 +103,9 @@ const productLinks = [
   { title: "Purchases", href: "/billing?tab=purchases", external: false },
 ];
 
-// The Website group is hand-rolled (instead of NavPages) because the CMS item
-// is not a link — clicking it fetches the user's projects on demand to either
-// jump straight into a single project or open the picker dialog. Nothing
-// fetches until that click.
+// The Website group is hand-rolled (instead of NavPages) because the Website
+// item carries a live status dot and the AI Requests item a "Soon" badge —
+// neither fits the plain link list NavPages renders.
 const WebsiteGroup = () => {
   const pathname = usePathname();
 
@@ -129,16 +125,6 @@ const WebsiteGroup = () => {
         Website
       </SidebarGroupLabel>
       <SidebarMenu className="gap-0.5">
-        <SidebarMenuItem>
-          <CmsProjectsDialog>
-            {({ onClick, loading }) => (
-              <SidebarMenuButton className={menuButtonClass} onClick={onClick}>
-                {loading ? <Loader2 className="animate-spin" /> : <PenLine />}
-                <span>Content (CMS)</span>
-              </SidebarMenuButton>
-            )}
-          </CmsProjectsDialog>
-        </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton
             className={linkClass("/website")}

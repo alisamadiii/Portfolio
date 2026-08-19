@@ -55,6 +55,19 @@ describe("init on plain-site", () => {
     ).toBe(true);
   });
 
+  it("migrates a legacy site.json into variables.json (seeded from its content)", async () => {
+    fs.mkdirSync(path.join(root, "src/data"), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, "src/data/site.json"),
+      JSON.stringify({ name: "Acme Co", phone: "+1 555 0100" }, null, 2)
+    );
+    expect(await initCommand(root, {})).toBe(0);
+    expect(fs.existsSync(path.join(root, "src/data/variables.json"))).toBe(true);
+    const variables = readJson("src/data/variables.json");
+    expect(variables.name).toBe("Acme Co");
+    expect(variables.phone).toBe("+1 555 0100");
+  });
+
   it("scaffolds a page object per manifest page in pages.json", async () => {
     await initCommand(root, {});
     const pages = readJson("src/data/pages.json");

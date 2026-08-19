@@ -1,29 +1,29 @@
 /**
- * Per-repository settings: the monorepo "base path" and the media provider.
+ * Per-repository settings, stored as columns on `cmsOrgRepo` (owner/repo, so
+ * set once and applied to all branches):
  *
- * The base path lets Client Hub operate inside a subfolder of the repository
- * (e.g. `frontend`) for monorepos. When set:
- * - `.pages.yml` is loaded from `{basePath}/.pages.yml`.
- * - Every collection `path` and media `input` in the config is resolved
- *   relative to `{basePath}` (see `rebaseConfigObject`).
+ * - **basePath** lets Client Hub operate inside a subfolder for monorepos
+ *   (e.g. `frontend`). When set, `.pages.yml` loads from `{basePath}/.pages.yml`
+ *   and every collection `path` / media `input` is resolved relative to it
+ *   (see `rebaseConfigObject`). Empty = repository root (legacy behavior).
+ * - **mediaProvider** selects where media is stored/browsed. ImageKit is the
+ *   only provider today, so this is effectively fixed — kept as a column for
+ *   future providers. No provider-specific config is stored.
+ * - **websiteUrl** is the live client site URL, powering the home page website
+ *   status card + project gallery preview.
  *
- * The media provider selects where media is stored/browsed (GitHub repo by
- * default, or a hosted service like ImageKit). Provider-specific config lives
- * in the `mediaConfig` jsonb column; secrets in it are server-only — anything
- * sent to the browser must go through `getPublicMediaSettings`.
- *
- * Stored per-repo (owner/repo) so it's set once and applies to all branches.
- * An empty base path means "repository root" — identical to the legacy behavior.
+ * Rows are created solely by `syncOrgRepos`, so the setters are UPDATE-only —
+ * a repo must be in the org catalog before its settings can be written (it
+ * always is, since you can't open a repo's settings unless it's listed).
  */
 
 import { sql } from "drizzle-orm";
 
 import { db } from "./db";
-import { repoSettingsTable } from "./db";
+import { orgRepoTable } from "./db";
 
 import {
   DEFAULT_MEDIA_PROVIDER,
-  getMediaProvider,
   isMediaProviderId,
   toPublicMediaConfig,
   type MediaProviderId,
@@ -35,6 +35,9 @@ type MediaSettings = {
   config: Record<string, string>;
 };
 
+const matchRepo = (owner: string, repo: string) =>
+  sql`lower(${orgRepoTable.owner}) = lower(${owner}) and lower(${orgRepoTable.repo}) = lower(${repo})`;
+
 const normalizeBasePath = (basePath: string): string => {
   if (!basePath) return "";
   return normalizePath(basePath.replace(/^\/+|\/+$/g, ""));
@@ -43,8 +46,8 @@ const normalizeBasePath = (basePath: string): string => {
 const getBasePath = async (owner: string, repo: string): Promise<string> => {
   if (!owner || !repo) return "";
 
-  const row = await db.query.cmsRepoSettings.findFirst({
-    where: sql`lower(${repoSettingsTable.owner}) = lower(${owner}) and lower(${repoSettingsTable.repo}) = lower(${repo})`,
+  const row = await db.query.cmsOrgRepo.findFirst({
+    where: matchRepo(owner, repo),
   });
 
   return normalizeBasePath(row?.basePath ?? "");
@@ -56,108 +59,86 @@ const setBasePath = async (
   basePath: string
 ): Promise<string> => {
   const normalized = normalizeBasePath(basePath);
-  const match = sql`lower(${repoSettingsTable.owner}) = lower(${owner}) and lower(${repoSettingsTable.repo}) = lower(${repo})`;
 
-  // Manual upsert: the unique index is on the expressions (lower(owner),
-  // lower(repo)), which `onConflictDoUpdate` can't target in this drizzle
-  // version, so update first and insert only when no row matched.
-  const updated = await db
-    .update(repoSettingsTable)
-    .set({ basePath: normalized, updatedAt: new Date() })
-    .where(match)
-    .returning({ id: repoSettingsTable.id });
-
-  if (updated.length === 0) {
-    await db.insert(repoSettingsTable).values({
-      owner: owner.toLowerCase(),
-      repo: repo.toLowerCase(),
-      basePath: normalized,
-    });
-  }
+  await db
+    .update(orgRepoTable)
+    .set({ basePath: normalized })
+    .where(matchRepo(owner, repo));
 
   return normalized;
 };
 
 /**
- * Full media settings including secrets. SERVER-ONLY — never return this to
- * the client; use `getPublicMediaSettings` for anything browser-bound.
+ * Full media settings. SERVER-ONLY — use `getPublicMediaSettings` for anything
+ * browser-bound. ImageKit is the sole provider and declares no config fields,
+ * so `config` is always empty; the stored `mediaProvider` is not read back.
+ * Args kept for call-site compatibility (config-store / manifest-store).
  */
 const getMediaSettings = async (
-  owner: string,
-  repo: string
+  _owner?: string,
+  _repo?: string
 ): Promise<MediaSettings> => {
-  if (!owner || !repo) {
-    return { provider: DEFAULT_MEDIA_PROVIDER, config: {} };
-  }
-
-  const row = await db.query.cmsRepoSettings.findFirst({
-    where: sql`lower(${repoSettingsTable.owner}) = lower(${owner}) and lower(${repoSettingsTable.repo}) = lower(${repo})`,
-  });
-
-  // ImageKit is the sole media provider for every repo. Any legacy stored value
-  // (e.g. a "github" row) is ignored — media is always hosted.
-  return { provider: DEFAULT_MEDIA_PROVIDER, config: row?.mediaConfig ?? {} };
+  return { provider: DEFAULT_MEDIA_PROVIDER, config: {} };
 };
 
 /** Media settings with secrets stripped — safe to send to the browser. */
 const getPublicMediaSettings = async (
-  owner: string,
-  repo: string
+  owner?: string,
+  repo?: string
 ): Promise<MediaSettings> => {
   const { provider, config } = await getMediaSettings(owner, repo);
   return { provider, config: toPublicMediaConfig(provider, config) };
 };
 
-/**
- * Persist the media provider and its config. Only keys declared in the
- * provider's registry entry are kept. Secret fields submitted as empty
- * strings keep their previously stored value (write-only inputs).
- */
+/** Persist the media provider. No provider-specific config is stored. */
 const setMediaSettings = async (
   owner: string,
   repo: string,
-  provider: MediaProviderId,
-  config: Record<string, string>
+  provider: MediaProviderId
 ): Promise<MediaSettings> => {
   if (!isMediaProviderId(provider)) {
     throw new Error(`Unknown media provider: ${provider}`);
   }
 
-  const { config: storedConfig } = await getMediaSettings(owner, repo);
+  await db
+    .update(orgRepoTable)
+    .set({ mediaProvider: provider })
+    .where(matchRepo(owner, repo));
 
-  const nextConfig: Record<string, string> = {};
-  for (const field of getMediaProvider(provider).configFields) {
-    const incoming =
-      typeof config[field.key] === "string" ? config[field.key].trim() : "";
-    const value = !incoming && !field.public
-      ? (storedConfig[field.key] ?? "")
-      : incoming;
-    if (value) nextConfig[field.key] = value;
-  }
+  return { provider, config: {} };
+};
 
-  const match = sql`lower(${repoSettingsTable.owner}) = lower(${owner}) and lower(${repoSettingsTable.repo}) = lower(${repo})`;
+const normalizeWebsiteUrl = (url: string): string | null => {
+  const trimmed = url.trim();
+  return trimmed ? trimmed : null;
+};
 
-  // Manual upsert, same as `setBasePath` (the unique index is on expressions).
-  const updated = await db
-    .update(repoSettingsTable)
-    .set({
-      mediaProvider: provider,
-      mediaConfig: nextConfig,
-      updatedAt: new Date(),
-    })
-    .where(match)
-    .returning({ id: repoSettingsTable.id });
+const getWebsiteUrl = async (
+  owner: string,
+  repo: string
+): Promise<string | null> => {
+  if (!owner || !repo) return null;
 
-  if (updated.length === 0) {
-    await db.insert(repoSettingsTable).values({
-      owner: owner.toLowerCase(),
-      repo: repo.toLowerCase(),
-      mediaProvider: provider,
-      mediaConfig: nextConfig,
-    });
-  }
+  const row = await db.query.cmsOrgRepo.findFirst({
+    where: matchRepo(owner, repo),
+  });
 
-  return { provider, config: nextConfig };
+  return row?.websiteUrl ?? null;
+};
+
+const setWebsiteUrl = async (
+  owner: string,
+  repo: string,
+  url: string
+): Promise<string | null> => {
+  const normalized = normalizeWebsiteUrl(url);
+
+  await db
+    .update(orgRepoTable)
+    .set({ websiteUrl: normalized })
+    .where(matchRepo(owner, repo));
+
+  return normalized;
 };
 
 /**
@@ -212,6 +193,8 @@ export {
   getMediaSettings,
   getPublicMediaSettings,
   setMediaSettings,
+  getWebsiteUrl,
+  setWebsiteUrl,
   normalizeBasePath,
   resolveConfigFilePath,
   rebaseConfigObject,

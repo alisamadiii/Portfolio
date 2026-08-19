@@ -19,6 +19,7 @@ import {
 } from "@/components/document-title";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { BasePath } from "@/components/settings/base-path";
+import { WebsiteUrl } from "@/components/settings/website-url";
 
 export default function Page() {
   const { config } = useConfig();
@@ -56,7 +57,10 @@ export default function Page() {
         />
       )}
       {config?.owner && config?.repo && (
-        <BasePath owner={config.owner} repo={config.repo} />
+        <>
+          <WebsiteUrl owner={config.owner} repo={config.repo} />
+          <BasePath owner={config.owner} repo={config.repo} />
+        </>
       )}
     </div>
   );

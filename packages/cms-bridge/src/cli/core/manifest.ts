@@ -233,15 +233,21 @@ export function ensureDataFiles(
   }
 
   // ---- variables.json (never touched once present) ----
-  // Legacy repos may still carry the old site.json name; keep reading it so
-  // an un-migrated project isn't scaffolded with a duplicate empty file.
+  // Always ensure it exists. A legacy repo that still has the old site.json
+  // is migrated: variables.json is seeded from site.json's content (globals
+  // preserved) instead of a blank template. site.json is left in place — the
+  // client removes it after its layout imports point at variables.json.
   let variablesJson: Record<string, unknown>;
   if (fs.existsSync(variablesFile)) {
     variablesJson = (readJsonAt(variablesFile) as Record<string, unknown>) ?? {};
-  } else if (fs.existsSync(legacySiteFile)) {
-    variablesJson = (readJsonAt(legacySiteFile) as Record<string, unknown>) ?? {};
   } else {
-    variablesJson = loadTemplate("variables");
+    const legacy = fs.existsSync(legacySiteFile)
+      ? (readJsonAt(legacySiteFile) as Record<string, unknown> | null)
+      : null;
+    variablesJson =
+      legacy && typeof legacy === "object" && !Array.isArray(legacy)
+        ? legacy
+        : loadTemplate("variables");
     created.push("src/data/variables.json");
     if (!opts.dryRun) writeJsonObject(variablesFile, variablesJson);
   }

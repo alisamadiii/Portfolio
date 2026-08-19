@@ -16,7 +16,7 @@ export {
   cmsCollaborator as collaboratorTable,
   cmsCollaboratorInvite as collaboratorInviteTable,
   cmsConfig as configTable,
-  cmsRepoSettings as repoSettingsTable,
+  cmsOrgRepo as orgRepoTable,
   cmsCacheFile as cacheFileTable,
   cmsCacheFileMeta as cacheFileMetaTable,
 } from "@workspace/drizzle/schema";

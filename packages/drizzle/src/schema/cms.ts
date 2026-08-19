@@ -101,6 +101,9 @@ export const mediaProviderEnum = pgEnum("media_provider", mediaProviderValues);
 
 export type MediaProviderId = (typeof mediaProviderValues)[number];
 
+// DEPRECATED: fields merged into cmsOrgRepo (base_path, media_provider). Kept
+// only so the one-off backfill can copy existing rows across; remove this table
+// + push once the backfill has run (see plan Phase B).
 export const cmsRepoSettings = pgTable(
   "cms_repo_settings",
   {
@@ -134,6 +137,17 @@ export const cmsOrgRepo = pgTable(
     defaultBranch: text("default_branch").notNull(),
     githubUpdatedAt: timestamp("github_updated_at").notNull(),
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
+    // Per-repo settings (merged in from the former cms_repo_settings table).
+    // syncOrgRepos' onConflictDoUpdate.set does NOT list these, so they survive
+    // every webhook re-sync; new repos fall back to these defaults.
+    basePath: text("base_path").notNull().default(""),
+    // Plain text (not the media_provider enum): the value is always "imagekit"
+    // and never read for logic, and drizzle-kit push mishandles adding an
+    // enum-typed column to an existing table.
+    mediaProvider: text("media_provider").notNull().default("imagekit"),
+    // Live client website URL, set by an admin; powers the home page website
+    // status card + project gallery preview.
+    websiteUrl: text("website_url"),
   },
   (table) => ({
     uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(table.repoId),
