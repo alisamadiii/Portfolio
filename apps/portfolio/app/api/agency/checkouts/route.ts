@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 import { z } from "zod";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { FEATURES, featureKeys, PRICE_IDS } from "@workspace/trpc/lib/features";
 import { stripe } from "@workspace/trpc/lib/stripe";
+import { db } from "@workspace/drizzle/index";
+import { user } from "@workspace/drizzle/schema";
 import { urls } from "@workspace/ui/lib/company";
 
 const AGENCY_URL = "https://agency.alisamadii.com";
@@ -47,6 +50,10 @@ const bodySchema = z.object({
   hosting: z.boolean().optional(),
   cms: z.boolean().optional(),
   promotionCode: z.string().max(64).optional(),
+  // Per-project CMS subscription: the webhook keys the subscription off
+  // metadata.repoId, and reuses the user's Stripe customer to avoid dupes.
+  repoId: z.number().int().positive().optional(),
+  userId: z.string().max(200).optional(),
   // Feature purchases return the user to the page they were on.
   returnUrl: z.url().max(2000).optional(),
 });
@@ -86,6 +93,8 @@ export async function POST(req: Request) {
     cms,
     promotionCode,
     returnUrl,
+    repoId,
+    userId,
   } = parsed.data;
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
@@ -123,7 +132,22 @@ export async function POST(req: Request) {
     company: company ?? "",
     project: project?.slice(0, 500) ?? "",
     pages: plan === "upfront" ? String(pages ?? 1) : "",
+    // Per-project CMS subscription join keys (read back by the Stripe webhook).
+    repoId: repoId ? String(repoId) : "",
+    userId: userId ?? "",
   };
+
+  // Reuse the user's existing Stripe customer so a user never spawns duplicate
+  // customers across their multiple project subscriptions.
+  let existingCustomerId: string | null = null;
+  if (userId) {
+    const [record] = await db
+      .select({ stripeCustomerId: user.stripeCustomerId })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+    existingCustomerId = record?.stripeCustomerId ?? null;
+  }
 
   // Re-resolve the promo code server-side before trusting it.
   let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
@@ -151,7 +175,10 @@ export async function POST(req: Request) {
     const params: Stripe.Checkout.SessionCreateParams = {
       mode,
       line_items: lineItems,
-      customer_email: email,
+      // A known customer takes precedence; Stripe rejects both together.
+      ...(existingCustomerId
+        ? { customer: existingCustomerId }
+        : { customer_email: email }),
       metadata,
       success_url: isFeaturePlan(plan)
         ? featureSuccessUrl

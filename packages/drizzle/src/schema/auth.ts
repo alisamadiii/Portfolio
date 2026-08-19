@@ -28,6 +28,10 @@ export const user = pgTable("user", {
   phone: text("phone"),
   company: text("company"),
   address: text("address"),
+  // One Stripe customer per user. Written by the Stripe webhook on first
+  // purchase and reused as the checkout `customer` so a user never spawns
+  // duplicate customers. NOT keyed off email (Stripe emails aren't unique).
+  stripeCustomerId: text("stripe_customer_id"),
 });
 
 export const userSignals = pgTable("user_signals", {

@@ -148,6 +148,12 @@ export const cmsOrgRepo = pgTable(
     // Live client website URL, set by an admin; powers the home page website
     // status card + project gallery preview.
     websiteUrl: text("website_url"),
+    // Agency-granted free-for-life access. When true, the CMS gate is bypassed
+    // for this project for every user (no subscription, no Stripe), and Billing
+    // shows a gratitude panel. Set directly in the DB (no admin UI). Like the
+    // other per-repo settings, it is intentionally absent from syncOrgRepos'
+    // onConflict set() so it survives every GitHub webhook re-sync.
+    freeLife: boolean("free_life").notNull().default(false),
   },
   (table) => ({
     uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(table.repoId),

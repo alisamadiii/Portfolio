@@ -1,10 +1,41 @@
 import "server-only";
 
+import { and, sql } from "drizzle-orm";
+
+import { db } from "@workspace/drizzle/index";
+import { cmsOrgRepo } from "@workspace/drizzle/schema";
+
 import { hasFeatureAccess } from "../feature-access-check";
 import { FEATURES, type FeatureKey } from "../features";
 import { hasAdminAccess } from "./admin";
 import { createHttpError } from "./errors";
 import { User } from "./types";
+
+/**
+ * Whether a project (owner/repo) is flagged free-for-life on cmsOrgRepo — an
+ * agency-granted override that bypasses the feature gate for every user. Uses
+ * the same case-insensitive owner/repo match as the unique index. Returns false
+ * when the repo isn't found so callers fall through to the normal gate rather
+ * than erroring. Owner defaults to GITHUB_ORG.
+ */
+const repoHasFreeLife = async (repo: {
+  owner?: string;
+  repo: string;
+}): Promise<boolean> => {
+  const org = repo.owner ?? process.env.GITHUB_ORG;
+  if (!org) return false;
+  const [row] = await db
+    .select({ freeLife: cmsOrgRepo.freeLife })
+    .from(cmsOrgRepo)
+    .where(
+      and(
+        sql`lower(${cmsOrgRepo.owner}) = lower(${org})`,
+        sql`lower(${cmsOrgRepo.repo}) = lower(${repo.repo})`
+      )
+    )
+    .limit(1);
+  return row?.freeLife ?? false;
+};
 
 /**
  * Feature gate: throws 402 unless the user has an active subscription that
@@ -16,9 +47,12 @@ import { User } from "./types";
  */
 const requireFeatureAccess = async (
   user: User,
-  feature: FeatureKey
+  feature: FeatureKey,
+  repo?: { owner?: string; repo: string }
 ): Promise<void> => {
   if (hasAdminAccess(user)) return;
+  // Free-for-life projects grant access to everyone, regardless of subscription.
+  if (repo && (await repoHasFreeLife(repo))) return;
   if (!user.email) {
     throw createHttpError(
       `An active ${FEATURES[feature].label} subscription is required.`,

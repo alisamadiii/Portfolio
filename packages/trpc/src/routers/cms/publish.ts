@@ -72,7 +72,10 @@ export const publishRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await requireFeatureAccess(ctx.user, "cms");
+        await requireFeatureAccess(ctx.user, "cms", {
+          owner: input.owner,
+          repo: input.repo,
+        });
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
           getToken: async () => ctx.token,
@@ -239,7 +242,10 @@ export const publishRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await requireFeatureAccess(ctx.user, "cms");
+        await requireFeatureAccess(ctx.user, "cms", {
+          owner: input.owner,
+          repo: input.repo,
+        });
 
         const manifest = await getManifest(
           input.owner,

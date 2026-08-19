@@ -2,10 +2,17 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Blocks, FileText, House, SlidersHorizontal } from "lucide-react";
+import {
+  Blocks,
+  CreditCard,
+  FileText,
+  House,
+  SlidersHorizontal,
+} from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
+import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
@@ -15,6 +22,7 @@ import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
 /** Sentinels for the Site Settings entries in the settings nav. */
 const GENERAL = "$general";
 const VARIABLES = "$variables";
+const BILLING = "$billing";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
@@ -32,7 +40,7 @@ export function SettingsMode() {
   );
 
   const selectedPage =
-    selected === GENERAL || selected === VARIABLES
+    selected === GENERAL || selected === VARIABLES || selected === BILLING
       ? null
       : (pageRows.find((page) => page.path === selected) ?? null);
 
@@ -54,6 +62,12 @@ export function SettingsMode() {
           label="Variables"
           active={selected === VARIABLES}
           onClick={() => setSelected(VARIABLES)}
+        />
+        <NavRow
+          icon={<CreditCard className="size-4" />}
+          label="Billing"
+          active={selected === BILLING}
+          onClick={() => setSelected(BILLING)}
         />
 
         <p className="text-muted-foreground mt-3 px-2 py-1.5 text-xs font-semibold tracking-wide">
@@ -89,6 +103,8 @@ export function SettingsMode() {
           <PageSettingsPanel page={selectedPage} seo={seo} />
         ) : selected === VARIABLES ? (
           <VariablesPanel />
+        ) : selected === BILLING ? (
+          <ProjectBillingPanel />
         ) : (
           <GeneralSettingsPanel seo={seo} />
         )}

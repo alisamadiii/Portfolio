@@ -92,6 +92,43 @@ const LivePill = ({ up }: { up: boolean }) => (
   </span>
 );
 
+// Plan badge for a project card. `undefined` plan ⇒ no subscription row.
+// free_life (agency gift, from cms_org_repo) takes precedence over any plan.
+const PlanBadge = ({
+  plan,
+  freeLife,
+}: {
+  plan: string | undefined;
+  freeLife?: boolean;
+}) => {
+  const label = freeLife
+    ? "Free for life"
+    : plan === "free_lifetime"
+      ? "Free for life"
+      : plan === "free"
+        ? "Free"
+        : plan === "paid"
+          ? "Paid"
+          : "No plan";
+  const style = freeLife
+    ? "bg-status-success-bg text-status-success"
+    : plan === "paid"
+      ? "bg-status-success-bg text-status-success"
+      : plan === "free" || plan === "free_lifetime"
+        ? "bg-status-info-bg text-status-info"
+        : "bg-status-neutral-bg text-status-neutral";
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
+        style
+      )}
+    >
+      {label}
+    </span>
+  );
+};
+
 // Bare host for the secondary line ("https://acme.com/" → "acme.com").
 const hostOf = (url: string) =>
   url
@@ -102,9 +139,13 @@ const hostOf = (url: string) =>
 const ProjectCard = ({
   project,
   site,
+  plan,
+  freeLife,
 }: {
   project: Project;
   site?: Site;
+  plan?: string;
+  freeLife?: boolean;
 }) => {
   const url = project.websiteUrl ?? null;
   return (
@@ -125,7 +166,10 @@ const ProjectCard = ({
             {url ? hostOf(url) : project.repo}
           </p>
         </div>
-        {site && <LivePill up={site.status.up} />}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <PlanBadge plan={plan} freeLife={freeLife} />
+          {site && <LivePill up={site.status.up} />}
+        </div>
       </div>
     </Link>
   );
@@ -181,9 +225,41 @@ export function ProjectGallery() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repoQueries.map((q) => q.dataUpdatedAt).join(",")]);
 
+  // One batched plan lookup for every visible project (keyed by owner/repo).
+  const { data: plans } = useQuery(
+    trpc.cms.subscription.listForProjects.queryOptions(
+      { projects: projects.map((p) => ({ owner: p.owner, repo: p.repo })) },
+      { enabled: projects.length > 0 }
+    )
+  );
+
+  const planByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of plans ?? []) {
+      if (row.plan)
+        map.set(`${row.owner.toLowerCase()}/${row.repo.toLowerCase()}`, row.plan);
+    }
+    return map;
+  }, [plans]);
+
+  const freeLifeByKey = useMemo(() => {
+    const set = new Set<string>();
+    for (const row of plans ?? []) {
+      if (row.freeLife)
+        set.add(`${row.owner.toLowerCase()}/${row.repo.toLowerCase()}`);
+    }
+    return set;
+  }, [plans]);
+
   // Match a project to its pinged live-status row by owner/repo id.
   const siteFor = (p: Project): Site | undefined =>
     (sites as Site[] | undefined)?.find((s) => s.id === `${p.owner}/${p.repo}`);
+
+  const planFor = (p: Project): string | undefined =>
+    planByKey.get(`${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`);
+
+  const freeLifeFor = (p: Project): boolean =>
+    freeLifeByKey.has(`${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`);
 
   return (
     <section className="space-y-4">
@@ -208,7 +284,13 @@ export function ProjectGallery() {
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {projects.map((p) => (
-            <ProjectCard key={`${p.owner}/${p.repo}`} project={p} site={siteFor(p)} />
+            <ProjectCard
+              key={`${p.owner}/${p.repo}`}
+              project={p}
+              site={siteFor(p)}
+              plan={planFor(p)}
+              freeLife={freeLifeFor(p)}
+            />
           ))}
         </div>
       )}

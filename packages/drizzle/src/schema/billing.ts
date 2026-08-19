@@ -5,11 +5,13 @@ import { SubscriptionStatus } from "@polar-sh/sdk/models/components/subscription
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -87,6 +89,55 @@ export const orders = pgTable("order", {
   updatedAt: timestamp("updated_at").defaultNow(),
   metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
 });
+
+// Per-project (= GitHub repo) CMS subscription. Framer-style: one row per
+// project, independently free / free-for-life / paid. Stripe stays the source
+// of truth (checkout, invoices, portal); this table mirrors only what the hub
+// needs to render + badge. Synced by the standalone Stripe webhook using the
+// state-sync pattern (any event -> subscriptions.list -> upsert on repoId).
+// The project<->payment join is `subscription.metadata.repoId`, never email.
+export const cmsSubscription = pgTable(
+  "cms_subscription",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    // GitHub-stable repo id, unique in cmsOrgRepo. Survives repo rename.
+    repoId: integer("repo_id").notNull(),
+    // Client user who owns the subscription. Nullable: admin-granted free rows
+    // may predate a signup.
+    userId: text("user_id"),
+    email: text("email"),
+    // Plan tier — drives the gating + home badge. Stripe rows use "paid";
+    // "free"/"free_lifetime" are admin-granted with no Stripe subscription.
+    plan: text("plan", {
+      enum: ["free", "free_lifetime", "paid"],
+    })
+      .notNull()
+      .default("paid"),
+    // Stripe mirror (null for free/free_lifetime rows).
+    stripeCustomerId: text("stripe_customer_id"),
+    stripeSubscriptionId: text("stripe_subscription_id"),
+    status: text("status"), // active | trialing | past_due | canceled | ...
+    priceId: text("price_id"),
+    productId: text("product_id"),
+    currentPeriodEnd: timestamp("current_period_end"),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    // One subscription row per project (upsert target for the webhook).
+    uqCmsSubscriptionRepoId: uniqueIndex("uq_cms_subscription_repo_id").on(
+      table.repoId
+    ),
+    // Fast webhook lookup by Stripe customer.
+    idxCmsSubscriptionCustomer: index("idx_cms_subscription_customer").on(
+      table.stripeCustomerId
+    ),
+  })
+);
 
 export const webhookEvents = pgTable("webhook_events", {
   id: uuid("id")

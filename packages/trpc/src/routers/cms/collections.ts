@@ -440,7 +440,10 @@ export const collectionsRouter = createTRPCRouter({
         const user = ctx.user;
         const token = ctx.token;
 
-        await requireFeatureAccess(user, "cms");
+        await requireFeatureAccess(user, "cms", {
+          owner: input.owner,
+          repo: input.repo,
+        });
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
           getToken: async () => token,
