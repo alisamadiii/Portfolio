@@ -160,7 +160,6 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
       const existingUser = await findVerifiedUserByEmail(normalizedEmail);
       const collaborator = await db.query.collaboratorTable.findFirst({
         where: and(
-          eq(collaboratorTable.ownerId, repoAccess.ownerId),
           eq(collaboratorTable.repoId, repoAccess.repoId),
           sql`lower(${collaboratorTable.email}) = lower(${normalizedEmail})`
         ),
@@ -242,7 +241,6 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
         .insert(collaboratorTable)
         .values({
           type: repoAccess.ownerType,
-          ownerId: repoAccess.ownerId,
           repoId: repoAccess.repoId,
           owner: repoAccess.ownerLogin,
           repo: repoAccess.repoName,

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -28,10 +28,7 @@ const list = authenticatedProcedure
       );
 
       return db.query.cmsCollaborator.findMany({
-        where: and(
-          eq(collaboratorTable.ownerId, repoAccess.ownerId),
-          eq(collaboratorTable.repoId, repoAccess.repoId)
-        ),
+        where: eq(collaboratorTable.repoId, repoAccess.repoId),
       });
     } catch (error) {
       if (error instanceof TRPCError) throw error;

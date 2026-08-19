@@ -30,7 +30,9 @@ export const cmsCollaborator = pgTable(
   {
     id: serial("id").primaryKey(),
     type: text("type").notNull(),
-    ownerId: integer("owner_id").notNull(),
+    // LEGACY: GitHub owner id from the old GitHub-backed invite flow. No code
+    // reads or writes it anymore — collaborators are scoped by repoId.
+    ownerId: integer("owner_id"),
     repoId: integer("repo_id"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),

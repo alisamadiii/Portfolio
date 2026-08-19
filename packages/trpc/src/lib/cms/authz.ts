@@ -3,10 +3,12 @@ import "server-only";
 import type { CollaboratorRole } from "@workspace/drizzle/schema";
 import type { User } from "./types";
 
+import { sql } from "drizzle-orm";
+
 import { createHttpError } from "./errors";
 import { isAdminUser, roleAtLeast } from "./authz-shared";
 import { collaboratorMatchesUserForRepo } from "./collaborator-access";
-import { db } from "./db";
+import { db, orgRepoTable } from "./db";
 import { getPatToken } from "./token";
 import { createOctokitInstance } from "./octokit";
 
@@ -18,13 +20,29 @@ const getRepoAccess = async (owner: string, repo: string) => {
 
   const repoAccess = {
     repoId: response.data.id,
-    ownerId: response.data.owner.id,
     ownerLogin: response.data.owner.login,
     repoName: response.data.name,
     ownerType: response.data.owner.type === "User" ? "user" : "org",
   };
 
   return { token, repoAccess };
+};
+
+// Repo lookup from the synced org catalog — no GitHub, no PAT. Collaborator
+// invites are CMS-dashboard-only (nothing is sent to GitHub), and the hub app
+// that runs them has no GITHUB_* env, so this must stay DB-only.
+const getRepoAccessFromDb = async (owner: string, repo: string) => {
+  const row = await db.query.cmsOrgRepo.findFirst({
+    where: sql`lower(${orgRepoTable.owner}) = lower(${owner}) and lower(${orgRepoTable.repo}) = lower(${repo})`,
+  });
+  if (!row) throw createHttpError("Repository not found.", 404);
+
+  return {
+    repoId: row.repoId,
+    ownerLogin: row.owner,
+    repoName: row.repo,
+    ownerType: "org",
+  };
 };
 
 // Admin-gated repo access with the org PAT.
@@ -42,6 +60,7 @@ const requireAdminRepoAccess = async (
 };
 
 // Collaborator management: admins or full-access collaborators of the repo.
+// DB-only on purpose — invites live in the CMS dashboard, never on GitHub.
 const requireCollaboratorManageAccess = async (
   user: Pick<User, "id" | "email" | "role"> & { isAdmin?: boolean },
   owner: string,
@@ -61,8 +80,8 @@ const requireCollaboratorManageAccess = async (
     }
   }
 
-  const { token, repoAccess } = await getRepoAccess(owner, repo);
-  return { token, repoAccess, isActorAdmin };
+  const repoAccess = await getRepoAccessFromDb(owner, repo);
+  return { repoAccess, isActorAdmin };
 };
 
 const assertWriteAccess = (

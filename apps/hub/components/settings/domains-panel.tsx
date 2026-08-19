@@ -347,13 +347,13 @@ const DomainItem = ({
             }
           />
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>
               Edit
             </DropdownMenuItem>
             {!isVercelApp && (
               <DropdownMenuItem
                 variant="destructive"
-                onSelect={() => setRemoveOpen(true)}
+                onClick={() => setRemoveOpen(true)}
               >
                 Remove
               </DropdownMenuItem>
