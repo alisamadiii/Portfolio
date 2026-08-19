@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/contexts/repo-context";
 
 import {
   Empty,
@@ -11,7 +11,6 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
-import { isAdminUser } from "@/lib/authz-shared";
 
 import {
   DocumentTitle,
@@ -19,11 +18,10 @@ import {
 } from "@/components/document-title";
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { BasePath } from "@/components/settings/base-path";
-import { WebsiteUrl } from "@/components/settings/website-url";
 
 export default function Page() {
   const { config } = useConfig();
-  const { user } = useUser();
+  const { myRole } = useRepo();
 
   const header = useMemo(
     () => <span className="font-semibold">Settings</span>,
@@ -31,13 +29,13 @@ export default function Page() {
   );
   useRepoHeader({ header });
 
-  if (!isAdminUser(user)) {
+  if (myRole !== "full-access") {
     return (
       <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Access denied</EmptyTitle>
           <EmptyDescription>
-            Only GitHub users can manage repository settings.
+            Full access is required to manage repository settings.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -57,10 +55,7 @@ export default function Page() {
         />
       )}
       {config?.owner && config?.repo && (
-        <>
-          <WebsiteUrl owner={config.owner} repo={config.repo} />
-          <BasePath owner={config.owner} repo={config.repo} />
-        </>
+        <BasePath owner={config.owner} repo={config.repo} />
       )}
     </div>
   );

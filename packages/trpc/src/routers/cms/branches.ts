@@ -6,6 +6,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 
+import { assertFullAccess } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
 
@@ -22,6 +23,8 @@ const create = cmsProcedure
   )
   .mutation(async ({ input, ctx }) => {
     try {
+      assertFullAccess(ctx.role);
+
       const octokit = createOctokitInstance(ctx.token);
 
       // Get the SHA of the branch we're creating the new branch from

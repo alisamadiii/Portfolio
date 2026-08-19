@@ -4,6 +4,7 @@ import z from "zod";
 import { normalizePath } from "@workspace/cms-core/utils/file";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
+import { assertWriteAccess } from "../../lib/cms/authz";
 import {
   resolveBatchCommitMessage,
   resolveCommitIdentity,
@@ -72,6 +73,7 @@ export const publishRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms", {
           owner: input.owner,
           repo: input.repo,
@@ -242,6 +244,7 @@ export const publishRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms", {
           owner: input.owner,
           repo: input.repo,

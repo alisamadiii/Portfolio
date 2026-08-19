@@ -10,17 +10,16 @@ import {
 } from "@/components/canvas/canvas-editor-context";
 import { EditorOverlays } from "@/components/canvas/editor-overlays";
 import { PageFrame } from "@/components/canvas/page-frame";
-import { ShellHeader } from "@/components/shell/shell-header";
+import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
 import { PageTree } from "@/components/shell/page-tree";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { SettingsMode } from "@/components/settings/settings-mode";
-import type { ShellMode } from "@/components/shell/mode-switcher";
 
 /**
  * Framer-style single-page editor shell: docked header, left page tree, one
- * active iframe on the gray canvas, and a collapsible docs panel. A logo-menu
- * mode switch flips the center between Canvas and Settings. All editing state
- * lives in CanvasEditorProvider.
+ * active iframe on the gray canvas, and a collapsible docs panel. Header
+ * Canvas/CMS/Settings toggle flips the center between modes. All editing
+ * state lives in CanvasEditorProvider.
  */
 export function EditorShell() {
   return (

@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import {
+  ArrowLeft,
   GitBranch,
+  LayoutGrid,
   PanelRight,
   Settings2,
   Table2,
@@ -10,15 +13,19 @@ import {
 
 import { Button } from "@workspace/ui/components/button";
 
+import { useRepo } from "@/contexts/repo-context";
+import { roleAtLeast } from "@/lib/authz-shared";
 import { usePublish } from "@/components/publish/publish-context";
 import { User } from "@/components/user";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
-import { ModeSwitcher, type ShellMode } from "@/components/shell/mode-switcher";
 import { InviteButton } from "@/components/shell/invite-button";
 
+export type ShellMode = "canvas" | "settings";
+
 /**
- * Docked top bar (white). Left: mode switcher (logo) + CMS + Settings. Center:
- * project name + branch. Right: user menu, admin-only Invite, Publish.
+ * Docked top bar (white). Left: back arrow (home) + Canvas / CMS / Settings
+ * toggle (settings = full access). Center: project name + branch. Right: user
+ * menu, Invite (full access), Publish (content editor+).
  */
 export function ShellHeader({
   mode,
@@ -31,28 +38,56 @@ export function ShellHeader({
   onOpenCms: () => void;
   onToggleDocs: () => void;
 }) {
-  const { owner, repo, branch } = useCanvasEditor();
+  const { owner, repo, branch, cmsOverlay } = useCanvasEditor();
   const { draftCount, openPublishDialog } = usePublish();
+  const { myRole } = useRepo();
+  const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
+  const canManage = (myRole ?? "full-access") === "full-access";
 
   return (
     <header className="bg-background relative flex h-12 shrink-0 items-center gap-1 border-b px-2">
       {/* Left */}
       <div className="flex items-center gap-1">
-        <ModeSwitcher mode={mode} onModeChange={onModeChange} />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Back to projects"
+          render={
+            <Link href="/">
+              <ArrowLeft className="size-4" />
+            </Link>
+          }
+        />
         <div className="bg-border mx-1 h-5 w-px" />
-        <Button variant="ghost" size="sm" onClick={onOpenCms}>
-          <Table2 className="size-4" />
-          <span className="max-md:hidden">CMS</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onModeChange("canvas")}
+          data-active={mode === "canvas" && !cmsOverlay.open}
+        >
+          <LayoutGrid className="size-4" />
+          <span className="max-md:hidden">Canvas</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onModeChange("settings")}
-          data-active={mode === "settings"}
+          onClick={onOpenCms}
+          data-active={cmsOverlay.open}
         >
-          <Settings2 className="size-4" />
-          <span className="max-md:hidden">Settings</span>
+          <Table2 className="size-4" />
+          <span className="max-md:hidden">CMS</span>
         </Button>
+        {canManage && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onModeChange("settings")}
+            data-active={mode === "settings" && !cmsOverlay.open}
+          >
+            <Settings2 className="size-4" />
+            <span className="max-md:hidden">Settings</span>
+          </Button>
+        )}
       </div>
 
       {/* Center */}
@@ -75,15 +110,17 @@ export function ShellHeader({
         </Button>
         <User align="end" />
         <InviteButton owner={owner} repo={repo} />
-        <Button size="sm" onClick={openPublishDialog}>
-          <UploadCloud className="size-4" />
-          Publish
-          {draftCount > 0 && (
-            <span className="bg-primary-foreground/20 ml-1 rounded-full px-1.5 text-xs tabular-nums">
-              {draftCount}
-            </span>
-          )}
-        </Button>
+        {canEdit && (
+          <Button size="sm" onClick={openPublishDialog}>
+            <UploadCloud className="size-4" />
+            Publish
+            {draftCount > 0 && (
+              <span className="bg-primary-foreground/20 ml-1 rounded-full px-1.5 text-xs tabular-nums">
+                {draftCount}
+              </span>
+            )}
+          </Button>
+        )}
       </div>
     </header>
   );

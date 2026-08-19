@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
 import { isConfigEnabled } from "@workspace/cms-core/config";
 
@@ -17,7 +17,6 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { isAdminUser } from "@/lib/authz-shared";
 
 import { EditorShell } from "@/components/shell/editor-shell";
 import {
@@ -27,7 +26,7 @@ import {
 
 export default function Page() {
   const { config } = useConfig();
-  const { user } = useUser();
+  const { myRole } = useRepo();
   const trpc = useTRPC();
 
   // Canvas is the repo root when the site exposes a live preview URL —
@@ -77,7 +76,7 @@ export default function Page() {
   }
 
   // No baseUrl: same fullscreen chrome, hint card instead of a canvas.
-  const canConfigure = isAdminUser(user) && isConfigEnabled(config?.object);
+  const canConfigure = myRole === "full-access" && isConfigEnabled(config?.object);
 
   return (
     <div className="bg-shell relative -m-4 h-[calc(100vh)] overflow-hidden md:-m-8">

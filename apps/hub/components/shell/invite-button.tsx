@@ -19,16 +19,25 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 
+import { useRepo } from "@/contexts/repo-context";
 import { useUser } from "@/contexts/user-context";
-import { isAdminUser } from "@/lib/authz-shared";
+import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
 import {
   handleAddCollaborator,
   handleRemoveCollaborator,
 } from "@/lib/actions/collaborator";
 import { getInitialsFromName } from "@/lib/utils/avatar";
+import { ROLE_LABELS } from "@/components/collaborators";
 
-type Collaborator = { id: number; email: string };
+type Collaborator = { id: number; email: string; role: CollaboratorRole };
 
 type AddState = {
   message?: string;
@@ -38,26 +47,32 @@ type AddState = {
 };
 
 /**
- * Header Invite — admin only. Framer-style popover: one email field + send,
- * then the list of people with access to this repo. Reuses the collaborator
- * server actions and list query (no modal).
+ * Header Invite — full-access only. Framer-style popover: email field + role
+ * select + send, then the list of people with access to this repo. Reuses the
+ * collaborator server actions and list query (no modal). Only admins can grant
+ * (or remove) Full Access.
  */
 export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
   const { user } = useUser();
+  const { myRole } = useRepo();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  const canManage = myRole === "full-access";
+  const isAdmin = isAdminUser(user);
 
   const [state, action, pending] = useActionState<AddState, FormData>(
     handleAddCollaborator,
     {}
   );
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<CollaboratorRole>("content-editor");
   const [removing, setRemoving] = useState<number[]>([]);
 
   const collaboratorsQuery = useQuery(
     trpc.cms.collaborators.list.queryOptions(
       { owner, repo },
-      { enabled: isAdminUser(user) }
+      { enabled: canManage }
     )
   );
   const collaborators = (collaboratorsQuery.data ?? []) as Collaborator[];
@@ -104,7 +119,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
     }
   };
 
-  if (!isAdminUser(user)) return null;
+  if (!canManage) return null;
 
   return (
     <Popover>
@@ -118,34 +133,57 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
       <PopoverContent align="end" className="w-80 gap-3">
         <PopoverTitle>Invite</PopoverTitle>
 
-        <form
-          action={action}
-          className="flex items-center gap-1.5"
-        >
+        <form action={action} className="flex flex-col gap-1.5">
           <input type="hidden" name="owner" value={owner} />
           <input type="hidden" name="repo" value={repo} />
-          <Input
-            name="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@email.com"
-            className="h-9 flex-1"
-            required
-          />
-          <Button
-            type="submit"
-            size="icon-sm"
-            className="size-9 shrink-0"
-            disabled={pending || email.trim().length === 0}
-            aria-label="Send invite"
+          <input type="hidden" name="role" value={role} />
+          <div className="flex items-center gap-1.5">
+            <Input
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@email.com"
+              className="h-9 flex-1"
+              required
+            />
+            <Button
+              type="submit"
+              size="icon-sm"
+              className="size-9 shrink-0"
+              disabled={pending || email.trim().length === 0}
+              aria-label="Send invite"
+            >
+              {pending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ArrowUp className="size-4" />
+              )}
+            </Button>
+          </div>
+          <Select
+            value={role}
+            onValueChange={(value) =>
+              setRole((value as CollaboratorRole) ?? "content-editor")
+            }
           >
-            {pending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <ArrowUp className="size-4" />
-            )}
-          </Button>
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              {isAdmin && (
+                <SelectItem value="full-access">
+                  {ROLE_LABELS["full-access"]}
+                </SelectItem>
+              )}
+              <SelectItem value="content-editor">
+                {ROLE_LABELS["content-editor"]}
+              </SelectItem>
+              <SelectItem value="view-only">
+                {ROLE_LABELS["view-only"]}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </form>
 
         <div className="bg-border h-px" />
@@ -190,23 +228,28 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
                   {collaborator.email.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0 flex-1 truncate text-sm">
-                {collaborator.email}
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm">{collaborator.email}</div>
+                <div className="text-muted-foreground truncate text-xs">
+                  {ROLE_LABELS[collaborator.role] ?? collaborator.role}
+                </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
-                onClick={() => void remove(collaborator.id)}
-                disabled={removing.includes(collaborator.id)}
-                aria-label={`Remove ${collaborator.email}`}
-              >
-                {removing.includes(collaborator.id) ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <X className="size-3.5" />
-                )}
-              </Button>
+              {(isAdmin || collaborator.role !== "full-access") && (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+                  onClick={() => void remove(collaborator.id)}
+                  disabled={removing.includes(collaborator.id)}
+                  aria-label={`Remove ${collaborator.email}`}
+                >
+                  {removing.includes(collaborator.id) ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <X className="size-3.5" />
+                  )}
+                </Button>
+              )}
             </li>
           ))}
         </ul>

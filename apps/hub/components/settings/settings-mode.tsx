@@ -6,6 +6,7 @@ import {
   Blocks,
   CreditCard,
   FileText,
+  Globe,
   House,
   SlidersHorizontal,
 } from "lucide-react";
@@ -15,6 +16,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
+import { DomainsPanel } from "@/components/settings/domains-panel";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { VariablesPanel } from "@/components/settings/variables-panel";
 import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
@@ -23,6 +25,7 @@ import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
 const GENERAL = "$general";
 const VARIABLES = "$variables";
 const BILLING = "$billing";
+const DOMAIN = "$domain";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
@@ -40,7 +43,10 @@ export function SettingsMode() {
   );
 
   const selectedPage =
-    selected === GENERAL || selected === VARIABLES || selected === BILLING
+    selected === GENERAL ||
+    selected === VARIABLES ||
+    selected === BILLING ||
+    selected === DOMAIN
       ? null
       : (pageRows.find((page) => page.path === selected) ?? null);
 
@@ -68,6 +74,12 @@ export function SettingsMode() {
           label="Billing"
           active={selected === BILLING}
           onClick={() => setSelected(BILLING)}
+        />
+        <NavRow
+          icon={<Globe className="size-4" />}
+          label="Domain"
+          active={selected === DOMAIN}
+          onClick={() => setSelected(DOMAIN)}
         />
 
         <p className="text-muted-foreground mt-3 px-2 py-1.5 text-xs font-semibold tracking-wide">
@@ -105,6 +117,8 @@ export function SettingsMode() {
           <VariablesPanel />
         ) : selected === BILLING ? (
           <ProjectBillingPanel />
+        ) : selected === DOMAIN ? (
+          <DomainsPanel />
         ) : (
           <GeneralSettingsPanel seo={seo} />
         )}

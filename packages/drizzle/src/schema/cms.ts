@@ -16,6 +16,15 @@ import { user } from "./auth";
 
 // Client Hub CMS (hub.alisamadii.com) — GitHub-backed content management
 
+// Framer-style collaborator roles: view-only < content-editor < full-access.
+export const COLLABORATOR_ROLE_VALUES = [
+  "full-access",
+  "content-editor",
+  "view-only",
+] as const;
+
+export type CollaboratorRole = (typeof COLLABORATOR_ROLE_VALUES)[number];
+
 export const cmsCollaborator = pgTable(
   "cms_collaborator",
   {
@@ -29,6 +38,9 @@ export const cmsCollaborator = pgTable(
     email: text("email").notNull(),
     userId: text("user_id").references(() => user.id),
     invitedBy: text("invited_by").references(() => user.id),
+    // Plain text (not pgEnum): drizzle-kit push mishandles adding enum-typed
+    // columns to existing tables (see mediaProvider on cmsOrgRepo).
+    role: text("role").$type<CollaboratorRole>().notNull().default("full-access"),
   },
   (table) => ({
     idxCmsCollaboratorOwnerRepoEmail: index(
@@ -145,8 +157,10 @@ export const cmsOrgRepo = pgTable(
     // and never read for logic, and drizzle-kit push mishandles adding an
     // enum-typed column to an existing table.
     mediaProvider: text("media_provider").notNull().default("imagekit"),
-    // Live client website URL, set by an admin; powers the home page website
-    // status card + project gallery preview.
+    // DEPRECATED: replaced by the derived URL from cms_domain (Vercel-synced).
+    // No code reads this anymore — kept only to compare against the derived
+    // URLs after the first domain backfill (vercel.domains.syncAll). Drop the
+    // column + push once parity is confirmed.
     websiteUrl: text("website_url"),
     // Agency-granted free-for-life access. When true, the CMS gate is bypassed
     // for this project for every user (no subscription, no Stripe), and Billing
@@ -154,6 +168,10 @@ export const cmsOrgRepo = pgTable(
     // other per-repo settings, it is intentionally absent from syncOrgRepos'
     // onConflict set() so it survives every GitHub webhook re-sync.
     freeLife: boolean("free_life").notNull().default(false),
+    // Cached Vercel project id, auto-discovered by matching the project's
+    // GitHub link (GET /v9/projects → link.repoId === repoId). Also absent from
+    // syncOrgRepos' onConflict set() so it survives GitHub webhook re-syncs.
+    vercelProjectId: text("vercel_project_id"),
   },
   (table) => ({
     uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(table.repoId),
@@ -161,6 +179,45 @@ export const cmsOrgRepo = pgTable(
       sql`lower(${table.owner})`,
       sql`lower(${table.repo})`
     ),
+  })
+);
+
+// Vercel project domains, one row per (repo, domain) — including *.vercel.app.
+// Source of truth is the Vercel API; rows are replaced wholesale by
+// syncDomainsForRepo (state-sync, same pattern as the Stripe webhook). The
+// live site URL shown across the hub is derived from these rows.
+export const cmsDomain = pgTable(
+  "cms_domain",
+  {
+    id: serial("id").primaryKey(),
+    // = cmsOrgRepo.repoId (GitHub-stable)
+    repoId: integer("repo_id").notNull(),
+    // Lowercased host, e.g. "acme.com" / "www.acme.com" / "acme.vercel.app"
+    domain: text("domain").notNull(),
+    apexName: text("apex_name").notNull(),
+    verified: boolean("verified").notNull().default(false),
+    // From GET /v6/domains/{domain}/config — null until first config check.
+    misconfigured: boolean("misconfigured"),
+    redirect: text("redirect"),
+    redirectStatusCode: integer("redirect_status_code"),
+    // Null = production domain
+    gitBranch: text("git_branch"),
+    // Vercel `verification` array (TXT challenges) for the DNS instructions UI.
+    verification: jsonb("verification").$type<
+      { type: string; domain: string; value: string; reason: string }[]
+    >(),
+    // Raw /config response (recommendedCNAME/recommendedIPv4/…) — powers the
+    // A/CNAME instruction block without schema churn.
+    dnsConfig: jsonb("dns_config").$type<Record<string, unknown>>(),
+    vercelCreatedAt: timestamp("vercel_created_at"),
+    syncedAt: timestamp("synced_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqCmsDomainRepoDomainCi: uniqueIndex("uq_cms_domain_repo_domain_ci").on(
+      table.repoId,
+      sql`lower(${table.domain})`
+    ),
+    idxCmsDomainRepoId: index("idx_cms_domain_repo_id").on(table.repoId),
   })
 );
 

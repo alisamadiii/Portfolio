@@ -17,6 +17,7 @@ import {
 } from "@workspace/cms-core/utils/file";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
+import { assertWriteAccess } from "../../lib/cms/authz";
 import {
   buildCommitTokens,
   resolveCommitIdentity,
@@ -437,6 +438,8 @@ export const collectionsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        assertWriteAccess(ctx.role);
+
         const user = ctx.user;
         const token = ctx.token;
 

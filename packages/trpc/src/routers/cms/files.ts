@@ -17,6 +17,7 @@ import {
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { assertAdminUser } from "../../lib/cms/authz-shared";
+import { assertWriteAccess } from "../../lib/cms/authz";
 import {
   buildCommitTokens,
   resolveCommitIdentity,
@@ -352,6 +353,7 @@ export const filesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms");
 
         const normalizedPath = normalizePath(input.path);
@@ -603,6 +605,7 @@ export const filesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms");
 
         if (
@@ -776,6 +779,7 @@ export const filesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms");
 
         if (

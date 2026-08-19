@@ -1,4 +1,3 @@
-import { revalidateTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import { and, sql } from "drizzle-orm";
 import z from "zod";
@@ -13,7 +12,7 @@ import {
   isMediaProviderId,
   toPublicMediaConfig,
 } from "@workspace/cms-core/media-providers";
-import { assertAdminUser } from "@workspace/trpc/lib/cms/authz-shared";
+import { assertFullAccess } from "@workspace/trpc/lib/cms/authz";
 import { getConfig } from "@workspace/trpc/lib/cms/config-store";
 import { configTable, db } from "@workspace/trpc/lib/cms/db";
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
@@ -23,10 +22,8 @@ import {
   getBasePath as getRepoBasePath,
   getMediaSettings as getRepoMediaSettings,
   getPublicMediaSettings,
-  getWebsiteUrl as getRepoWebsiteUrl,
   setBasePath as setRepoBasePath,
   setMediaSettings as setRepoMediaSettings,
-  setWebsiteUrl as setRepoWebsiteUrl,
 } from "@workspace/trpc/lib/cms/repo-settings";
 
 /**
@@ -37,7 +34,7 @@ import {
 const getBasePath = cmsProcedure
   .query(async ({ input, ctx }) => {
     try {
-      assertAdminUser(ctx.user, "Only admins can manage the base path.");
+      assertFullAccess(ctx.role, "Full access is required to manage the base path.");
 
       const basePath = await getRepoBasePath(input.owner, input.repo);
 
@@ -53,7 +50,7 @@ const setBasePath = cmsProcedure
   .input(z.object({ basePath: z.string() }))
   .mutation(async ({ input, ctx }) => {
     try {
-      assertAdminUser(ctx.user, "Only admins can manage the base path.");
+      assertFullAccess(ctx.role, "Full access is required to manage the base path.");
 
       const basePath = await setRepoBasePath(
         input.owner,
@@ -90,7 +87,7 @@ const setBasePath = cmsProcedure
 const getMediaSettings = cmsProcedure
   .query(async ({ input, ctx }) => {
     try {
-      assertAdminUser(ctx.user, "Only admins can manage media settings.");
+      assertFullAccess(ctx.role, "Full access is required to manage media settings.");
 
       const { provider, config } = await getPublicMediaSettings(
         input.owner,
@@ -126,7 +123,7 @@ const setMediaSettings = cmsProcedure
   )
   .mutation(async ({ input, ctx }) => {
     try {
-      assertAdminUser(ctx.user, "Only admins can manage media settings.");
+      assertFullAccess(ctx.role, "Full access is required to manage media settings.");
 
       if (!isMediaProviderId(input.provider)) {
         throw createHttpError('"provider" is invalid.', 400);
@@ -143,44 +140,6 @@ const setMediaSettings = cmsProcedure
         provider: saved.provider,
         config: toPublicMediaConfig(saved.provider, saved.config),
       };
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  });
-
-/** Get the per-repository live website URL (admin only). */
-const getWebsiteUrl = cmsProcedure.query(async ({ input, ctx }) => {
-  try {
-    assertAdminUser(ctx.user, "Only admins can manage the website URL.");
-
-    const websiteUrl = await getRepoWebsiteUrl(input.owner, input.repo);
-
-    return { websiteUrl };
-  } catch (error) {
-    if (error instanceof TRPCError) throw error;
-    throw toTRPCError(error);
-  }
-});
-
-/** Set the per-repository live website URL (admin only). */
-const setWebsiteUrl = cmsProcedure
-  .input(z.object({ url: z.string() }))
-  .mutation(async ({ input, ctx }) => {
-    try {
-      assertAdminUser(ctx.user, "Only admins can manage the website URL.");
-
-      const websiteUrl = await setRepoWebsiteUrl(
-        input.owner,
-        input.repo,
-        input.url
-      );
-
-      // Refresh the pinged website-status cache so the home page reflects the
-      // new URL on the next load.
-      revalidateTag("website-status", { expire: 0 });
-
-      return { message: "Website URL updated.", websiteUrl };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
@@ -210,8 +169,6 @@ const settingsRouter = createTRPCRouter({
   setBasePath,
   getMediaSettings,
   setMediaSettings,
-  getWebsiteUrl,
-  setWebsiteUrl,
   getConfig: getBranchConfig,
 });
 

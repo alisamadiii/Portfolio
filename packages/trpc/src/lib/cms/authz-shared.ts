@@ -1,3 +1,5 @@
+import type { CollaboratorRole } from "@workspace/drizzle/schema";
+
 type UserLike =
   | {
       role?: string | null;
@@ -19,4 +21,15 @@ const assertAdminUser = (
   }
 };
 
-export { isAdminUser, assertAdminUser };
+// Collaborator role hierarchy: view-only < content-editor < full-access.
+const ROLE_RANK: Record<CollaboratorRole, number> = {
+  "view-only": 0,
+  "content-editor": 1,
+  "full-access": 2,
+};
+
+const roleAtLeast = (role: CollaboratorRole, min: CollaboratorRole): boolean =>
+  ROLE_RANK[role] >= ROLE_RANK[min];
+
+export { isAdminUser, assertAdminUser, roleAtLeast };
+export type { CollaboratorRole };

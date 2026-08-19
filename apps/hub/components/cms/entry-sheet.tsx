@@ -16,6 +16,8 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useConfig } from "@/contexts/config-context";
+import { useRepo } from "@/contexts/repo-context";
+import { roleAtLeast } from "@/lib/authz-shared";
 import {
   draftKey,
   getDraft,
@@ -86,6 +88,8 @@ export function EntrySheet({
   schemaOverride?: Record<string, any> | null;
 }) {
   const { config } = useConfig();
+  const { myRole } = useRepo();
+  const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const trpc = useTRPC();
   const deleteDraft = useDraftsStore((state) => state.deleteDraft);
   const [saving, setSaving] = useState(false);
@@ -324,7 +328,7 @@ export function EntrySheet({
                 type="submit"
                 form={formId}
                 className="w-full"
-                disabled={saving}
+                disabled={saving || !canEdit}
               >
                 Save draft
               </Button>

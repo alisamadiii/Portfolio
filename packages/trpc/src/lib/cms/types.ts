@@ -1,5 +1,7 @@
 /** Shared CMS engine types (moved from apps/hub/types). */
 
+import type { CollaboratorRole } from "@workspace/drizzle/schema";
+
 export interface User {
   id: string;
   email: string;
@@ -19,4 +21,6 @@ export interface Repo {
   branches?: string[];
   defaultBranch?: string;
   isPrivate: boolean;
+  /** The caller's collaborator role for this repo (admins = full-access). */
+  myRole?: CollaboratorRole;
 }

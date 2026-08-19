@@ -8,7 +8,11 @@ import { z } from "zod";
 import { db } from "@/db";
 import { collaboratorInviteTable, collaboratorTable } from "@/db/schema";
 
-import { requireAdminRepoAccess } from "@workspace/trpc/lib/cms/authz";
+import {
+  COLLABORATOR_ROLE_VALUES,
+  type CollaboratorRole,
+} from "@workspace/drizzle/schema";
+import { requireCollaboratorManageAccess } from "@workspace/trpc/lib/cms/authz";
 import { getBaseUrl } from "@/lib/base-url";
 import { getServerUser } from "@/lib/session-server";
 import {
@@ -32,18 +36,17 @@ const parseInviteEmails = (raw: FormDataEntryValue | null) => {
 };
 
 const assertCollaboratorManageAccess = async (
-  user: { id: string; role?: string | null },
+  user: { id: string; email: string; role?: string | null },
   owner: string,
   repo: string
 ) => {
-  const { repoAccess } = await requireAdminRepoAccess(
+  const { repoAccess, isActorAdmin } = await requireCollaboratorManageAccess(
     user,
     owner,
-    repo,
-    "Only admins can manage collaborators."
+    repo
   );
 
-  return { repoAccess };
+  return { repoAccess, isActorAdmin };
 };
 
 const generateInviteToken = () => {
@@ -130,11 +133,20 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
       throw new Error("Invalid email list");
     const emails = emailsValidation.data;
 
-    const { repoAccess } = await assertCollaboratorManageAccess(
+    const roleValidation = z
+      .enum(COLLABORATOR_ROLE_VALUES)
+      .safeParse(formData.get("role") ?? "content-editor");
+    if (!roleValidation.success) throw new Error("Invalid role");
+    const role = roleValidation.data;
+
+    const { repoAccess, isActorAdmin } = await assertCollaboratorManageAccess(
       user,
       owner,
       repo
     );
+
+    if (!isActorAdmin && role === "full-access")
+      throw new Error("Only admins can grant full access.");
 
     const baseUrl = getBaseUrl();
     const repoUrl = new URL(`/${repo}`, baseUrl).toString();
@@ -237,6 +249,7 @@ const handleAddCollaborator = async (prevState: any, formData: FormData) => {
           email: normalizedEmail,
           userId: existingUser?.id ?? null,
           invitedBy: user.id,
+          role,
         })
         .returning();
 
@@ -288,11 +301,14 @@ const handleRemoveCollaborator = async (
     });
     if (!collaborator) throw new Error("Collaborator not found");
 
-    const { repoAccess } = await assertCollaboratorManageAccess(
+    const { repoAccess, isActorAdmin } = await assertCollaboratorManageAccess(
       user,
       owner,
       repo
     );
+
+    if (!isActorAdmin && collaborator.role === "full-access")
+      throw new Error("Only admins can remove full-access collaborators.");
 
     const deletedCollaborator = await db
       .delete(collaboratorTable)
@@ -380,8 +396,58 @@ const handleResendCollaboratorInvite = async (
   }
 };
 
+// Change a collaborator's role. Non-admin actors can neither grant
+// full access nor touch an existing full-access collaborator.
+const handleChangeCollaboratorRole = async (
+  collaboratorId: number,
+  owner: string,
+  repo: string,
+  role: CollaboratorRole
+) => {
+  try {
+    const user = await getServerUser();
+    if (!user)
+      throw new Error("You must be signed in to manage collaborators.");
+
+    const roleValidation = z.enum(COLLABORATOR_ROLE_VALUES).safeParse(role);
+    if (!roleValidation.success) throw new Error("Invalid role");
+
+    const { repoAccess, isActorAdmin } = await assertCollaboratorManageAccess(
+      user,
+      owner,
+      repo
+    );
+
+    const collaborator = await db.query.collaboratorTable.findFirst({
+      where: and(
+        eq(collaboratorTable.id, collaboratorId),
+        eq(collaboratorTable.repoId, repoAccess.repoId)
+      ),
+    });
+    if (!collaborator) throw new Error("Collaborator not found");
+
+    if (
+      !isActorAdmin &&
+      (role === "full-access" || collaborator.role === "full-access")
+    ) {
+      throw new Error("Only admins can manage full-access collaborators.");
+    }
+
+    await db
+      .update(collaboratorTable)
+      .set({ role: roleValidation.data })
+      .where(eq(collaboratorTable.id, collaborator.id));
+
+    return { message: `Role updated for ${collaborator.email}.` };
+  } catch (error: any) {
+    console.error(error);
+    return { error: error.message };
+  }
+};
+
 export {
   handleAddCollaborator,
+  handleChangeCollaboratorRole,
   handleRemoveCollaborator,
   handleResendCollaboratorInvite,
 };

@@ -34,6 +34,7 @@ const getToken = cache(
       return {
         token: await getPatToken(),
         source: "pat" as const,
+        role: "full-access" as const,
       };
     }
 
@@ -44,6 +45,7 @@ const getToken = cache(
       return {
         token: await getPatToken(),
         source: "pat" as const,
+        role: permission.role,
       };
     }
 

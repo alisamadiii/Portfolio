@@ -54,12 +54,12 @@ export const cmsProcedure = authenticatedProcedure
   .input(z.object({ owner: z.string(), repo: z.string() }))
   .use(async ({ next, ctx, input }) => {
     const user = ctx.session.user as User;
-    const { token } = await getToken(user, input.owner, input.repo);
+    const { token, role } = await getToken(user, input.owner, input.repo);
     if (!token) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Token not found" });
     }
 
-    return next({ ctx: { ...ctx, user, token } });
+    return next({ ctx: { ...ctx, user, token, role } });
   });
 
 // Server-to-server only: guarded by a shared secret header, never a browser session.

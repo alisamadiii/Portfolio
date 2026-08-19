@@ -18,6 +18,7 @@ import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { syncOrgRepos } from "@workspace/trpc/lib/cms/org-repos";
 import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
 import { getToken } from "@workspace/trpc/lib/cms/token";
+import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/vercel/domains";
 
 // Org repo listing shared by `listRepos` (admin picker) and the admin path of
 // `listMine`. Seeds the table on first read after deploy so it's never empty.
@@ -39,13 +40,16 @@ const listOrgRepos = async (keyword?: string) => {
     rows = await selectRepos();
   }
 
+  // websiteUrl is derived from the repo's Vercel domains (cms_domain).
+  const urlByRepoId = await getWebsiteUrlsByRepoId(rows.map((r) => r.repoId));
+
   return rows.map((row) => ({
     owner: row.owner,
     repo: row.repo,
     private: row.private,
     defaultBranch: row.defaultBranch,
     updatedAt: row.githubUpdatedAt.toISOString(),
-    websiteUrl: row.websiteUrl ?? null,
+    websiteUrl: urlByRepoId.get(row.repoId) ?? null,
   }));
 };
 
@@ -131,16 +135,23 @@ const listMine = authenticatedProcedure
         ),
       });
 
-      // websiteUrl lives on cmsOrgRepo; collaborator rows don't carry it, so
-      // look it up for this owner and attach it (used by the home page gallery).
+      // websiteUrl is derived from cms_domain rows keyed by repoId;
+      // collaborator rows don't carry it, so look it up for this owner and
+      // attach it (used by the home page gallery).
       let urlByRepo = new Map<string, string | null>();
       if (collaboratorRepos.length) {
         const orgRows = await db
-          .select({ repo: cmsOrgRepo.repo, websiteUrl: cmsOrgRepo.websiteUrl })
+          .select({ repo: cmsOrgRepo.repo, repoId: cmsOrgRepo.repoId })
           .from(cmsOrgRepo)
           .where(sql`lower(${cmsOrgRepo.owner}) = lower(${input.owner})`);
+        const urlByRepoId = await getWebsiteUrlsByRepoId(
+          orgRows.map((r) => r.repoId)
+        );
         urlByRepo = new Map(
-          orgRows.map((r) => [r.repo.toLowerCase(), r.websiteUrl])
+          orgRows.map((r) => [
+            r.repo.toLowerCase(),
+            urlByRepoId.get(r.repoId) ?? null,
+          ])
         );
       }
 
@@ -181,10 +192,13 @@ const getSnapshot = authenticatedProcedure
 
       const user = toCmsUser(ctx.session.user);
 
-      const { token } = await getToken(user, owner, input.repo);
+      const { token, role } = await getToken(user, owner, input.repo);
       if (!token) throw createHttpError("Token not found", 401);
 
-      return getRepoSnapshot(owner, input.repo, token);
+      // Spread copy: the snapshot is module-cached per repo and shared
+      // across users — the caller's role must never be written into it.
+      const snapshot = await getRepoSnapshot(owner, input.repo, token);
+      return { ...snapshot, myRole: role };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);

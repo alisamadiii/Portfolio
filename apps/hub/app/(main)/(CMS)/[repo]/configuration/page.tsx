@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/contexts/repo-context";
 import { BookText } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
@@ -18,7 +18,6 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { isAdminUser } from "@/lib/authz-shared";
 
 import {
   DocumentTitle,
@@ -29,7 +28,7 @@ import { BasePath } from "@/components/settings/base-path";
 
 export default function Page() {
   const { config, setConfig } = useConfig();
-  const { user } = useUser();
+  const { myRole } = useRepo();
 
   // No sha means `.pages.yml` couldn't be loaded (missing or wrong base path).
   // Surface the base path here so the user can fix it without leaving the page.
@@ -39,13 +38,13 @@ export default function Page() {
     setConfig(data.config);
   };
 
-  if (!isAdminUser(user)) {
+  if (myRole !== "full-access") {
     return (
       <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Access denied</EmptyTitle>
           <EmptyDescription>
-            Only GitHub users can manage repository configuration.
+            Full access is required to manage repository configuration.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

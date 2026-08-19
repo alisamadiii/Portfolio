@@ -1,7 +1,7 @@
 "use client";
 
 import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/contexts/repo-context";
 
 import {
   Empty,
@@ -10,7 +10,6 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
-import { isAdminUser } from "@/lib/authz-shared";
 
 import { Collaborators } from "@/components/collaborators";
 import {
@@ -20,15 +19,15 @@ import {
 
 export default function Page() {
   const { config } = useConfig();
-  const { user } = useUser();
+  const { myRole } = useRepo();
   if (!config) throw new Error(`Configuration not found.`);
-  if (!isAdminUser(user)) {
+  if (myRole !== "full-access") {
     return (
       <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
           <EmptyTitle>Access denied</EmptyTitle>
           <EmptyDescription>
-            Only GitHub users can manage collaborators.
+            Full access is required to manage collaborators.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

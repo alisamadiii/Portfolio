@@ -51,6 +51,13 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@workspace/ui/components/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { TextArea } from "@/components/ui/mui";
 import {
@@ -61,8 +68,11 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { useUser } from "@/contexts/user-context";
+import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
 import {
   handleAddCollaborator,
+  handleChangeCollaboratorRole,
   handleRemoveCollaborator,
   handleResendCollaboratorInvite,
 } from "@/lib/actions/collaborator";
@@ -70,9 +80,16 @@ import {
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { SubmitButton } from "@/components/submit-button";
 
+export const ROLE_LABELS: Record<CollaboratorRole, string> = {
+  "full-access": "Full Access",
+  "content-editor": "Content Editor",
+  "view-only": "View Only",
+};
+
 type Collaborator = {
   id: number;
   email: string;
+  role: CollaboratorRole;
 };
 
 type AddCollaboratorState = {
@@ -92,6 +109,7 @@ export function InviteCollaboratorsDialog({
   value,
   onValueChange,
   disabled,
+  canGrantFullAccess = false,
   triggerLabel,
   triggerVariant = "outline",
   triggerSize = "default",
@@ -105,10 +123,12 @@ export function InviteCollaboratorsDialog({
   value: string;
   onValueChange: (value: string) => void;
   disabled: boolean;
+  canGrantFullAccess?: boolean;
   triggerLabel?: string;
   triggerVariant?: "default" | "outline";
   triggerSize?: "default" | "sm";
 }) {
+  const [role, setRole] = useState<CollaboratorRole>("content-editor");
   const parsedInviteEmails = useMemo(() => {
     return Array.from(
       new Set(
@@ -144,6 +164,7 @@ export function InviteCollaboratorsDialog({
         <form action={action} className="space-y-4">
           <input type="hidden" name="owner" value={owner} />
           <input type="hidden" name="repo" value={repo} />
+          <input type="hidden" name="role" value={role} />
           <TextArea
             name="emails"
             label="Email addresses"
@@ -153,6 +174,29 @@ export function InviteCollaboratorsDialog({
             required
             minRows={6}
           />
+          <Select
+            value={role}
+            onValueChange={(newRole) =>
+              setRole((newRole as CollaboratorRole) ?? "content-editor")
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              {canGrantFullAccess && (
+                <SelectItem value="full-access">
+                  {ROLE_LABELS["full-access"]}
+                </SelectItem>
+              )}
+              <SelectItem value="content-editor">
+                {ROLE_LABELS["content-editor"]}
+              </SelectItem>
+              <SelectItem value="view-only">
+                {ROLE_LABELS["view-only"]}
+              </SelectItem>
+            </SelectContent>
+          </Select>
           {state?.error ? (
             <p className="text-destructive text-sm font-medium">
               {state.error}
@@ -182,6 +226,8 @@ export function Collaborators({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
 
   const collaboratorsQuery = useQuery(
     trpc.cms.collaborators.list.queryOptions({ owner, repo })
@@ -208,6 +254,7 @@ export function Collaborators({
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [removing, setRemoving] = useState<number[]>([]);
   const [resending, setResending] = useState<number[]>([]);
+  const [changingRole, setChangingRole] = useState<number[]>([]);
   const [pendingRemoveId, setPendingRemoveId] = useState<number | null>(null);
 
   const addNewCollaborator = useCallback(
@@ -274,6 +321,38 @@ export function Collaborators({
     }
   };
 
+  const handleChangeRole = async (
+    collaboratorId: number,
+    role: CollaboratorRole
+  ) => {
+    setChangingRole((prev) => [...prev, collaboratorId]);
+
+    try {
+      const changed = await handleChangeCollaboratorRole(
+        collaboratorId,
+        owner,
+        repo,
+        role
+      );
+      if (changed.error) {
+        toast.error(changed.error);
+      } else {
+        setCollaborators((prev) =>
+          prev.map((collaborator) =>
+            collaborator.id === collaboratorId
+              ? { ...collaborator, role }
+              : collaborator
+          )
+        );
+        toast.success(changed.message);
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setChangingRole((prev) => prev.filter((id) => id !== collaboratorId));
+    }
+  };
+
   const handleResendInvite = async (collaboratorId: number) => {
     setResending((prev) => [...prev, collaboratorId]);
 
@@ -336,6 +415,7 @@ export function Collaborators({
             value={emails}
             onValueChange={setEmails}
             disabled={isLoading}
+            canGrantFullAccess={isAdmin}
             triggerVariant="default"
             triggerSize="default"
           />
@@ -410,71 +490,97 @@ export function Collaborators({
       ) : collaborators.length > 0 ? (
         <>
           <ul className="bg-background shadow-xs divide-y overflow-hidden rounded-xl border">
-            {collaborators.map((collaborator) => (
-              <li
-                key={collaborator.id}
-                className="flex items-center gap-x-2 px-4 py-2.5 text-sm"
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarImage
-                    src={`https://unavatar.io/${collaborator.email}?fallback=false`}
-                    alt={`${collaborator.email}'s avatar`}
-                  />
-                  <AvatarFallback className="text-muted-foreground text-xs font-medium uppercase">
-                    {collaborator.email.split("@")[0].substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="truncate text-left font-medium">
-                  {collaborator.email}
-                </div>
+            {collaborators.map((collaborator) => {
+              const busy =
+                removing.includes(collaborator.id) ||
+                resending.includes(collaborator.id) ||
+                changingRole.includes(collaborator.id);
+              // Non-admin actors cannot touch full-access collaborators,
+              // nor grant full access (mirrors the server-side rules).
+              const canManageRow =
+                isAdmin || collaborator.role !== "full-access";
+              const assignableRoles = (
+                Object.keys(ROLE_LABELS) as CollaboratorRole[]
+              ).filter(
+                (role) =>
+                  role !== collaborator.role &&
+                  (isAdmin || role !== "full-access")
+              );
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button
-                        size="icon-xs"
-                        variant="outline"
-                        className="ml-auto"
-                        disabled={
-                          removing.includes(collaborator.id) ||
-                          resending.includes(collaborator.id)
-                        }
+              return (
+                <li
+                  key={collaborator.id}
+                  className="flex items-center gap-x-2 px-4 py-2.5 text-sm"
+                >
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage
+                      src={`https://unavatar.io/${collaborator.email}?fallback=false`}
+                      alt={`${collaborator.email}'s avatar`}
+                    />
+                    <AvatarFallback className="text-muted-foreground text-xs font-medium uppercase">
+                      {collaborator.email.split("@")[0].substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="truncate text-left font-medium">
+                    {collaborator.email}
+                  </div>
+                  <span className="text-muted-foreground ml-auto text-xs">
+                    {ROLE_LABELS[collaborator.role] ?? collaborator.role}
+                  </span>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          size="icon-xs"
+                          variant="outline"
+                          disabled={busy}
+                        >
+                          {busy ? (
+                            <Loader className="animate-spin" />
+                          ) : (
+                            <EllipsisVertical />
+                          )}
+                          <span className="sr-only">Collaborator actions</span>
+                        </Button>
+                      }
+                    />
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => void handleResendInvite(collaborator.id)}
+                        disabled={busy}
                       >
-                        {removing.includes(collaborator.id) ||
-                        resending.includes(collaborator.id) ? (
-                          <Loader className="animate-spin" />
-                        ) : (
-                          <EllipsisVertical />
-                        )}
-                        <span className="sr-only">Collaborator actions</span>
-                      </Button>
-                    }
-                  />
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => void handleResendInvite(collaborator.id)}
-                      disabled={
-                        removing.includes(collaborator.id) ||
-                        resending.includes(collaborator.id)
-                      }
-                    >
-                      Resend invitation
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => setPendingRemoveId(collaborator.id)}
-                      disabled={
-                        removing.includes(collaborator.id) ||
-                        resending.includes(collaborator.id)
-                      }
-                    >
-                      Remove
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
-            ))}
+                        Resend invitation
+                      </DropdownMenuItem>
+                      {canManageRow && (
+                        <>
+                          <DropdownMenuSeparator />
+                          {assignableRoles.map((role) => (
+                            <DropdownMenuItem
+                              key={role}
+                              onClick={() =>
+                                void handleChangeRole(collaborator.id, role)
+                              }
+                              disabled={busy}
+                            >
+                              Change to {ROLE_LABELS[role]}
+                            </DropdownMenuItem>
+                          ))}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setPendingRemoveId(collaborator.id)}
+                            disabled={busy}
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              );
+            })}
           </ul>
 
           <AlertDialog
@@ -525,6 +631,7 @@ export function Collaborators({
                 value={emails}
                 onValueChange={setEmails}
                 disabled={isLoading}
+                canGrantFullAccess={isAdmin}
                 triggerLabel="Invite a collaborator"
                 triggerVariant="default"
                 triggerSize="default"

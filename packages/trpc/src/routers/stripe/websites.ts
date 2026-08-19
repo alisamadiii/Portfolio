@@ -1,6 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
-import { isNotNull } from "drizzle-orm";
 
 import { authenticatedProcedure, createTRPCRouter } from "../../init";
 
@@ -13,12 +12,13 @@ import {
 } from "@workspace/trpc/lib/cms/db";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
+import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/vercel/domains";
 
-// The live website URL now lives on cms_org_repo (set per repo by an admin in
-// the CMS settings). Status is derived by pinging that URL — no Stripe.
+// The live website URL is derived from the repo's Vercel domains (cms_domain,
+// kept in sync by the Vercel webhook). Status is derived by pinging it.
 
-// Bare host only ("acme.com") — websiteUrl is hand-typed, so tolerate
-// "https://acme.com/" etc. Keeps the probe URL and cache tag stable.
+// Bare host only ("acme.com") — tolerate "https://acme.com/" etc. Keeps the
+// probe URL and cache tag stable.
 const normalizeDomain = (raw: string) =>
   raw
     .trim()
@@ -61,14 +61,15 @@ export const websitesRouter = createTRPCRouter({
     try {
       const user = toCmsUser(ctx.session.user);
 
-      // Every org repo that has a website URL set. Admins see them all;
-      // collaborators are filtered down to the repos they were invited to.
-      const orgRows = await cmsDb
-        .select()
-        .from(orgRepoTable)
-        .where(isNotNull(orgRepoTable.websiteUrl));
+      // Every org repo whose Vercel project has a derivable website URL.
+      // Admins see them all; collaborators are filtered down to the repos
+      // they were invited to.
+      const orgRows = await cmsDb.select().from(orgRepoTable);
+      const urlByRepoId = await getWebsiteUrlsByRepoId(
+        orgRows.map((r) => r.repoId)
+      );
 
-      let repos = orgRows;
+      let repos = orgRows.filter((r) => urlByRepoId.get(r.repoId));
       if (!isAdminUser(user)) {
         const collab = await cmsDb
           .select({
@@ -81,19 +82,20 @@ export const websitesRouter = createTRPCRouter({
         const allowed = new Set(
           collab.map((c) => `${c.owner.toLowerCase()}/${c.repo.toLowerCase()}`)
         );
-        repos = orgRows.filter((r) =>
+        repos = repos.filter((r) =>
           allowed.has(`${r.owner.toLowerCase()}/${r.repo.toLowerCase()}`)
         );
       }
 
       return Promise.all(
         repos.map(async (r) => {
-          const domain = normalizeDomain(r.websiteUrl as string);
+          const websiteUrl = urlByRepoId.get(r.repoId) as string;
+          const domain = normalizeDomain(websiteUrl);
           return {
             id: `${r.owner}/${r.repo}`,
             owner: r.owner,
             repo: r.repo,
-            websiteUrl: r.websiteUrl,
+            websiteUrl,
             domain,
             label: r.repo,
             githubUrl: `https://github.com/${r.owner}/${r.repo}`,

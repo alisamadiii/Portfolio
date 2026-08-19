@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import { ChevronRight, Database, X } from "lucide-react";
@@ -19,7 +19,6 @@ import {
 import { Input } from "@workspace/ui/components/input";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { isAdminUser } from "@/lib/authz-shared";
 import { isConfigEnabled } from "@workspace/cms-core/config";
 import { getCollectionLeaves } from "@/lib/repo-nav";
 
@@ -63,7 +62,7 @@ export function CmsOverlay({
   initialCollection?: string;
 }) {
   const { config } = useConfig();
-  const { user } = useUser();
+  const { myRole } = useRepo();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState<string | undefined>(undefined);
@@ -161,7 +160,7 @@ export function CmsOverlay({
 
   if (!open || !config) return null;
 
-  const canConfigure = isAdminUser(user) && isConfigEnabled(config.object);
+  const canConfigure = myRole === "full-access" && isConfigEnabled(config.object);
 
   return (
     <div className="bg-background fixed inset-0 z-40 flex" data-canvas-no-pan>

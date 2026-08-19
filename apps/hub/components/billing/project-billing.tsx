@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Spinner } from "@workspace/ui/components/spinner";
 import { DataTable } from "@workspace/ui/custom/data-table";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
@@ -32,6 +33,7 @@ import {
   SectionHeading,
   StatusPill,
 } from "@/components/billing/shared";
+import { PanelError } from "@/components/settings/panel-error";
 
 type ProjectSubscription = NonNullable<
   RouterOutputs["cms"]["subscription"]["getProject"]["subscription"]
@@ -49,7 +51,7 @@ export const ProjectBillingPanel = () => {
   const owner = config?.owner;
   const repo = config?.repo;
 
-  const { data, isLoading, refetch } = useQuery(
+  const { data, isLoading, error, refetch, isRefetching } = useQuery(
     trpc.cms.subscription.getProject.queryOptions(
       { owner: owner ?? undefined, repo: repo ?? "" },
       { enabled: !!repo }
@@ -80,13 +82,16 @@ export const ProjectBillingPanel = () => {
         </p>
       </div>
 
-      {isLoading || !data ? (
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-40" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Skeleton className="h-56 w-full rounded-lg" />
-            <Skeleton className="h-56 w-full rounded-lg" />
-          </div>
+      {error ? (
+        <PanelError
+          title="Failed to load billing"
+          message={error.message}
+          onRetry={() => void refetch()}
+          retrying={isRefetching}
+        />
+      ) : isLoading || !data ? (
+        <div className="flex justify-center py-24">
+          <Spinner className="text-muted-foreground size-6" />
         </div>
       ) : data.freeLife ? (
         <FreeForLifePanel />
@@ -340,9 +345,12 @@ export const ProjectManage = ({
   const trpc = useTRPC();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const { data: invoices, isFetching: invoicesLoading } = useQuery(
-    trpc.cms.subscription.getInvoices.queryOptions({ repoId })
-  );
+  const {
+    data: invoices,
+    isFetching: invoicesLoading,
+    error: invoicesError,
+    refetch: refetchInvoices,
+  } = useQuery(trpc.cms.subscription.getInvoices.queryOptions({ repoId }));
 
   const portalMutation = useMutation(
     trpc.cms.subscription.createPortalSession.mutationOptions()
@@ -421,7 +429,14 @@ export const ProjectManage = ({
 
       <section className="space-y-4 pt-2">
         <SectionHeading>Invoices</SectionHeading>
-        {invoicesLoading ? (
+        {invoicesError ? (
+          <PanelError
+            title="Failed to load invoices"
+            message={invoicesError.message}
+            onRetry={() => void refetchInvoices()}
+            retrying={invoicesLoading}
+          />
+        ) : invoicesLoading ? (
           <Skeleton className="h-24 w-full rounded-lg" />
         ) : (invoices?.length ?? 0) === 0 ? (
           <div className="rounded-lg border border-dashed px-6 py-10 text-center">

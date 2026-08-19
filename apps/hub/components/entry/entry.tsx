@@ -12,6 +12,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
+import { useRepo } from "@/contexts/repo-context";
+import { roleAtLeast } from "@/lib/authz-shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import { formatDistanceToNow } from "date-fns";
@@ -199,6 +201,7 @@ export function Entry({
   const router = useRouter();
 
   const { config } = useConfig();
+  const { myRole } = useRepo();
   if (!config) throw new Error(`Configuration not found.`);
 
   const schema = useMemo(() => {
@@ -1077,7 +1080,11 @@ export function Entry({
     schemaType,
   ]);
   const isCreationBlocked = !path && schemaType === "collection" && !canCreate;
-  const showHeaderActions = error !== "Not found" && !isCreationBlocked;
+  // View-only collaborators get a read-only entry (no Save/Publish actions);
+  // the server rejects their writes with 403 regardless.
+  const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
+  const showHeaderActions =
+    error !== "Not found" && !isCreationBlocked && canEdit;
   const headerActionsNode = null;
 
   const headerNode = useMemo(

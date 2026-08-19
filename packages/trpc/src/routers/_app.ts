@@ -12,6 +12,7 @@ import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
 import { uploadsRouter } from "./uploads";
 import { usersRouter } from "./users";
+import { vercelRouter } from "./vercel/index";
 import { websitesRouter } from "./stripe/websites";
 
 export const appRouter = createTRPCRouter({
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   contact: contactRouter,
   emails: emailsRouter,
   cms: cmsRouter,
+  vercel: vercelRouter,
   websites: websitesRouter,
 });
 

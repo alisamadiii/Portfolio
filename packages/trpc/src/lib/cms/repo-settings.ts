@@ -9,8 +9,6 @@
  * - **mediaProvider** selects where media is stored/browsed. ImageKit is the
  *   only provider today, so this is effectively fixed — kept as a column for
  *   future providers. No provider-specific config is stored.
- * - **websiteUrl** is the live client site URL, powering the home page website
- *   status card + project gallery preview.
  *
  * Rows are created solely by `syncOrgRepos`, so the setters are UPDATE-only —
  * a repo must be in the org catalog before its settings can be written (it
@@ -108,39 +106,6 @@ const setMediaSettings = async (
   return { provider, config: {} };
 };
 
-const normalizeWebsiteUrl = (url: string): string | null => {
-  const trimmed = url.trim();
-  return trimmed ? trimmed : null;
-};
-
-const getWebsiteUrl = async (
-  owner: string,
-  repo: string
-): Promise<string | null> => {
-  if (!owner || !repo) return null;
-
-  const row = await db.query.cmsOrgRepo.findFirst({
-    where: matchRepo(owner, repo),
-  });
-
-  return row?.websiteUrl ?? null;
-};
-
-const setWebsiteUrl = async (
-  owner: string,
-  repo: string,
-  url: string
-): Promise<string | null> => {
-  const normalized = normalizeWebsiteUrl(url);
-
-  await db
-    .update(orgRepoTable)
-    .set({ websiteUrl: normalized })
-    .where(matchRepo(owner, repo));
-
-  return normalized;
-};
-
 /**
  * Resolve the physical location of the config file given a base path.
  * Returns `.pages.yml` when the base path is empty.
@@ -193,8 +158,6 @@ export {
   getMediaSettings,
   getPublicMediaSettings,
   setMediaSettings,
-  getWebsiteUrl,
-  setWebsiteUrl,
   normalizeBasePath,
   resolveConfigFilePath,
   rebaseConfigObject,

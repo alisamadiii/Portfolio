@@ -4,12 +4,11 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/contexts/repo-context";
 import { FileStack, FileText, FolderOpen, Settings, Users } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { isAdminUser } from "@/lib/authz-shared";
 import { isConfigEnabled } from "@workspace/cms-core/config";
 
 const RepoNavItem = ({
@@ -40,7 +39,7 @@ const RepoNavItem = ({
 
 const RepoNav = ({ onClick }: { onClick?: () => void }) => {
   const { config } = useConfig();
-  const { user } = useUser();
+  const { myRole } = useRepo();
   const pathname = usePathname();
 
   const items = useMemo(() => {
@@ -79,7 +78,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
           label: item.label || item.name || "Media",
         })) || [];
 
-    const canManageRepo = isAdminUser(user);
+    const canManageRepo = myRole === "full-access";
 
     const settingsItem =
       canManageRepo && isConfigEnabled(configObject)
@@ -107,7 +106,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
       settingsItem,
       collaboratorsItem,
     ].filter(Boolean);
-  }, [config, user]);
+  }, [config, myRole]);
 
   if (!items.length) return null;
 
