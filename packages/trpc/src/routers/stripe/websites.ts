@@ -1,17 +1,10 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { TRPCError } from "@trpc/server";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
+import { collaboratorProcedure, createTRPCRouter } from "../../init";
 
-import { isAdminUser } from "@workspace/trpc/lib/cms/authz-shared";
-import { collaboratorMatchesUser } from "@workspace/trpc/lib/cms/collaborator-access";
-import {
-  collaboratorTable,
-  db as cmsDb,
-  orgRepoTable,
-} from "@workspace/trpc/lib/cms/db";
+import { db as cmsDb, orgRepoTable } from "@workspace/trpc/lib/cms/db";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { toCmsUser } from "@workspace/trpc/lib/cms/session-user";
 import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/vercel/domains";
 
 // The live website URL is derived from the repo's Vercel domains (cms_domain,
@@ -57,10 +50,8 @@ const checkWebsiteStatus = async (domain: string) => {
 };
 
 export const websitesRouter = createTRPCRouter({
-  getMine: authenticatedProcedure.query(async ({ ctx }) => {
+  getMine: collaboratorProcedure.query(async ({ ctx }) => {
     try {
-      const user = toCmsUser(ctx.session.user);
-
       // Every org repo whose Vercel project has a derivable website URL.
       // Admins see them all; collaborators are filtered down to the repos
       // they were invited to.
@@ -70,17 +61,11 @@ export const websitesRouter = createTRPCRouter({
       );
 
       let repos = orgRows.filter((r) => urlByRepoId.get(r.repoId));
-      if (!isAdminUser(user)) {
-        const collab = await cmsDb
-          .select({
-            owner: collaboratorTable.owner,
-            repo: collaboratorTable.repo,
-          })
-          .from(collaboratorTable)
-          .where(collaboratorMatchesUser(user));
-
+      if (ctx.collaborations) {
         const allowed = new Set(
-          collab.map((c) => `${c.owner.toLowerCase()}/${c.repo.toLowerCase()}`)
+          ctx.collaborations.map(
+            (c) => `${c.owner.toLowerCase()}/${c.repo.toLowerCase()}`
+          )
         );
         repos = repos.filter((r) =>
           allowed.has(`${r.owner.toLowerCase()}/${r.repo.toLowerCase()}`)

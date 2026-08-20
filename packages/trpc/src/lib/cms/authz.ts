@@ -1,12 +1,9 @@
 import "server-only";
 
-import type { CollaboratorRole } from "@workspace/drizzle/schema";
-import type { User } from "./types";
-
 import { sql } from "drizzle-orm";
 
 import { createHttpError } from "./errors";
-import { isAdminUser, roleAtLeast } from "./authz-shared";
+import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForRepo } from "./collaborator-access";
 import { db, orgRepoTable } from "./db";
 import { getPatToken } from "./token";
@@ -45,24 +42,12 @@ const getRepoAccessFromDb = async (owner: string, repo: string) => {
   };
 };
 
-// Admin-gated repo access with the org PAT.
-const requireAdminRepoAccess = async (
-  user: Pick<User, "id" | "role"> & { isAdmin?: boolean },
-  owner: string,
-  repo: string,
-  message = "Admin access required."
-) => {
-  if (!isAdminUser(user)) {
-    throw createHttpError(message, 403);
-  }
-
-  return getRepoAccess(owner, repo);
-};
-
 // Collaborator management: admins or full-access collaborators of the repo.
 // DB-only on purpose — invites live in the CMS dashboard, never on GitHub.
+// Also used directly by hub's collaborator server actions, so it can't fold
+// into the tRPC procedure that wraps it.
 const requireCollaboratorManageAccess = async (
-  user: Pick<User, "id" | "email" | "role"> & { isAdmin?: boolean },
+  user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
   owner: string,
   repo: string
 ) => {
@@ -84,27 +69,4 @@ const requireCollaboratorManageAccess = async (
   return { repoAccess, isActorAdmin };
 };
 
-const assertWriteAccess = (
-  role: CollaboratorRole,
-  message = "You have view-only access."
-) => {
-  if (!roleAtLeast(role, "content-editor")) {
-    throw createHttpError(message, 403);
-  }
-};
-
-const assertFullAccess = (
-  role: CollaboratorRole,
-  message = "Full access required."
-) => {
-  if (role !== "full-access") {
-    throw createHttpError(message, 403);
-  }
-};
-
-export {
-  assertFullAccess,
-  assertWriteAccess,
-  requireAdminRepoAccess,
-  requireCollaboratorManageAccess,
-};
+export { getRepoAccess, requireCollaboratorManageAccess };

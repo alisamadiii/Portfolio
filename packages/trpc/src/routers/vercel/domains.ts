@@ -32,209 +32,198 @@ import {
 const revalidateWebsiteStatus = () =>
   revalidateTag("website-status", { expire: 0 });
 
-/**
- * Domains of the repo's linked Vercel project, from the DB. First open (no
- * cached vercelProjectId, no rows) attempts one sync to seed both; a repo
- * without a GitHub-linked Vercel project returns { linked: false }.
- */
-const list = cmsProcedure.query(async ({ input }) => {
-  try {
-    const repoId = await resolveRepoId(input.owner, input.repo);
-
-    let domains = await db
-      .select()
-      .from(hubDomain)
-      .where(eq(hubDomain.repoId, repoId));
-
-    if (domains.length === 0) {
-      const [row] = await db
-        .select({ vercelProjectId: hubProject.vercelProjectId })
-        .from(hubProject)
-        .where(eq(hubProject.repoId, repoId))
-        .limit(1);
-
-      try {
-        domains = await syncDomainsForRepo(repoId);
-        if (!row?.vercelProjectId) revalidateWebsiteStatus();
-      } catch (error) {
-        if (error instanceof TRPCError && error.code === "NOT_FOUND") {
-          return { linked: false as const, domains: [], websiteUrl: null };
-        }
-        throw error;
-      }
-    }
-
-    return {
-      linked: true as const,
-      domains,
-      websiteUrl: deriveWebsiteUrl(domains),
-    };
-  } catch (error) {
-    if (error instanceof TRPCError) throw error;
-    throw toTRPCError(error);
-  }
-});
-
-/** Add a domain to the project. Returns the fresh list + the added row (its
- * verification/dnsConfig power the DNS instructions screen). */
-const add = cmsProcedure
-  .input(
-    z.object({
-      domain: z.string().trim().toLowerCase().min(3),
-      redirect: z.string().nullable().optional(),
-      gitBranch: z.string().nullable().optional(),
-    })
-  )
-  .mutation(async ({ input }) => {
+export const domainsRouter = createTRPCRouter({
+  /**
+   * Domains of the repo's linked Vercel project, from the DB. First open (no
+   * cached vercelProjectId, no rows) attempts one sync to seed both; a repo
+   * without a GitHub-linked Vercel project returns { linked: false }.
+   */
+  list: cmsProcedure.query(async ({ input }) => {
     try {
       const repoId = await resolveRepoId(input.owner, input.repo);
-      const projectId = await resolveVercelProjectId(repoId);
 
-      await addProjectDomain(projectId, {
-        name: input.domain,
-        redirect: input.redirect ?? undefined,
-        gitBranch: input.gitBranch ?? undefined,
-      });
+      let domains = await db
+        .select()
+        .from(hubDomain)
+        .where(eq(hubDomain.repoId, repoId));
 
-      const domains = await syncDomainsForRepo(repoId);
-      revalidateWebsiteStatus();
+      if (domains.length === 0) {
+        const [row] = await db
+          .select({ vercelProjectId: hubProject.vercelProjectId })
+          .from(hubProject)
+          .where(eq(hubProject.repoId, repoId))
+          .limit(1);
+
+        try {
+          domains = await syncDomainsForRepo(repoId);
+          if (!row?.vercelProjectId) revalidateWebsiteStatus();
+        } catch (error) {
+          if (error instanceof TRPCError && error.code === "NOT_FOUND") {
+            return { linked: false as const, domains: [], websiteUrl: null };
+          }
+          throw error;
+        }
+      }
 
       return {
+        linked: true as const,
         domains,
-        added: domains.find((d) => d.domain === input.domain) ?? null,
+        websiteUrl: deriveWebsiteUrl(domains),
       };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
     }
-  });
+  }),
 
-const remove = cmsProcedure
-  .input(z.object({ domain: z.string().trim().toLowerCase() }))
-  .mutation(async ({ input }) => {
-    try {
-      if (input.domain.endsWith(".vercel.app")) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "The default .vercel.app domain cannot be removed.",
+  /** Add a domain to the project. Returns the fresh list + the added row (its
+   * verification/dnsConfig power the DNS instructions screen). */
+  add: cmsProcedure
+    .input(
+      z.object({
+        domain: z.string().trim().toLowerCase().min(3),
+        redirect: z.string().nullable().optional(),
+        gitBranch: z.string().nullable().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const repoId = await resolveRepoId(input.owner, input.repo);
+        const projectId = await resolveVercelProjectId(repoId);
+
+        await addProjectDomain(projectId, {
+          name: input.domain,
+          redirect: input.redirect ?? undefined,
+          gitBranch: input.gitBranch ?? undefined,
         });
+
+        const domains = await syncDomainsForRepo(repoId);
+        revalidateWebsiteStatus();
+
+        return {
+          domains,
+          added: domains.find((d) => d.domain === input.domain) ?? null,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
       }
-      const repoId = await resolveRepoId(input.owner, input.repo);
-      const projectId = await resolveVercelProjectId(repoId);
+    }),
 
-      await deleteProjectDomain(projectId, input.domain);
+  remove: cmsProcedure
+    .input(z.object({ domain: z.string().trim().toLowerCase() }))
+    .mutation(async ({ input }) => {
+      try {
+        if (input.domain.endsWith(".vercel.app")) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "The default .vercel.app domain cannot be removed.",
+          });
+        }
+        const repoId = await resolveRepoId(input.owner, input.repo);
+        const projectId = await resolveVercelProjectId(repoId);
 
-      const domains = await syncDomainsForRepo(repoId);
-      revalidateWebsiteStatus();
+        await deleteProjectDomain(projectId, input.domain);
 
-      return { domains };
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  });
+        const domains = await syncDomainsForRepo(repoId);
+        revalidateWebsiteStatus();
 
-const update = cmsProcedure
-  .input(
-    z.object({
-      domain: z.string().trim().toLowerCase(),
-      redirect: z.string().nullable().optional(),
-      redirectStatusCode: z
-        .union([
-          z.literal(301),
-          z.literal(302),
-          z.literal(307),
-          z.literal(308),
-        ])
-        .nullable()
-        .optional(),
-      gitBranch: z.string().nullable().optional(),
-    })
-  )
-  .mutation(async ({ input }) => {
+        return { domains };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  update: cmsProcedure
+    .input(
+      z.object({
+        domain: z.string().trim().toLowerCase(),
+        redirect: z.string().nullable().optional(),
+        redirectStatusCode: z
+          .union([
+            z.literal(301),
+            z.literal(302),
+            z.literal(307),
+            z.literal(308),
+          ])
+          .nullable()
+          .optional(),
+        gitBranch: z.string().nullable().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const repoId = await resolveRepoId(input.owner, input.repo);
+        const projectId = await resolveVercelProjectId(repoId);
+
+        await updateProjectDomain(projectId, input.domain, {
+          redirect: input.redirect,
+          redirectStatusCode: input.redirectStatusCode,
+          gitBranch: input.gitBranch,
+        });
+
+        const domains = await syncDomainsForRepo(repoId);
+        revalidateWebsiteStatus();
+
+        return { domains };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  /** The Refresh button: re-run verification on every unverified domain, then
+   * re-sync everything (verified/misconfigured/config) from Vercel. */
+  refresh: cmsProcedure.mutation(async ({ input }) => {
     try {
       const repoId = await resolveRepoId(input.owner, input.repo);
       const projectId = await resolveVercelProjectId(repoId);
 
-      await updateProjectDomain(projectId, input.domain, {
-        redirect: input.redirect,
-        redirectStatusCode: input.redirectStatusCode,
-        gitBranch: input.gitBranch,
-      });
+      const unverified = await db
+        .select({ domain: hubDomain.domain })
+        .from(hubDomain)
+        .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.verified, false)));
 
-      const domains = await syncDomainsForRepo(repoId);
-      revalidateWebsiteStatus();
-
-      return { domains };
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  });
-
-/** The Refresh button: re-run verification on every unverified domain, then
- * re-sync everything (verified/misconfigured/config) from Vercel. */
-const refresh = cmsProcedure.mutation(async ({ input }) => {
-  try {
-    const repoId = await resolveRepoId(input.owner, input.repo);
-    const projectId = await resolveVercelProjectId(repoId);
-
-    const unverified = await db
-      .select({ domain: hubDomain.domain })
-      .from(hubDomain)
-      .where(
-        and(eq(hubDomain.repoId, repoId), eq(hubDomain.verified, false))
+      await Promise.all(
+        unverified.map((row) =>
+          verifyProjectDomain(projectId, row.domain).catch(() => null)
+        )
       );
 
-    await Promise.all(
-      unverified.map((row) =>
-        verifyProjectDomain(projectId, row.domain).catch(() => null)
-      )
-    );
+      const domains = await syncDomainsForRepo(repoId);
+      revalidateWebsiteStatus();
 
-    const domains = await syncDomainsForRepo(repoId);
-    revalidateWebsiteStatus();
-
-    return { domains, websiteUrl: deriveWebsiteUrl(domains) };
-  } catch (error) {
-    if (error instanceof TRPCError) throw error;
-    throw toTRPCError(error);
-  }
-});
-
-/** Admin backfill/ops: sync every org repo's domains, report per-repo result. */
-const syncAll = adminProcedure.mutation(async () => {
-  const repos = await db
-    .select({ repoId: hubProject.repoId, repo: hubProject.repo })
-    .from(hubProject);
-
-  const results: { repo: string; status: string }[] = [];
-  for (const row of repos) {
-    try {
-      const domains = await syncDomainsForRepo(row.repoId);
-      results.push({ repo: row.repo, status: `synced ${domains.length}` });
+      return { domains, websiteUrl: deriveWebsiteUrl(domains) };
     } catch (error) {
-      const notLinked =
-        error instanceof TRPCError && error.code === "NOT_FOUND";
-      results.push({
-        repo: row.repo,
-        status: notLinked
-          ? "no vercel project"
-          : `error: ${error instanceof Error ? error.message : "unknown"}`,
-      });
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
     }
-  }
-  revalidateWebsiteStatus();
-  return results;
-});
+  }),
 
-const domainsRouter = createTRPCRouter({
-  list,
-  add,
-  remove,
-  update,
-  refresh,
-  syncAll,
-});
+  /** Admin backfill/ops: sync every org repo's domains, report per-repo result. */
+  syncAll: adminProcedure.mutation(async () => {
+    const repos = await db
+      .select({ repoId: hubProject.repoId, repo: hubProject.repo })
+      .from(hubProject);
 
-export { domainsRouter };
+    const results: { repo: string; status: string }[] = [];
+    for (const row of repos) {
+      try {
+        const domains = await syncDomainsForRepo(row.repoId);
+        results.push({ repo: row.repo, status: `synced ${domains.length}` });
+      } catch (error) {
+        const notLinked =
+          error instanceof TRPCError && error.code === "NOT_FOUND";
+        results.push({
+          repo: row.repo,
+          status: notLinked
+            ? "no vercel project"
+            : `error: ${error instanceof Error ? error.message : "unknown"}`,
+        });
+      }
+    }
+    revalidateWebsiteStatus();
+    return results;
+  }),
+});

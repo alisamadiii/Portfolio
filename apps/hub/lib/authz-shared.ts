@@ -4,5 +4,5 @@ export {
   assertAdminUser,
   isAdminUser,
   roleAtLeast,
-} from "@workspace/trpc/lib/cms/authz-shared";
-export type { CollaboratorRole } from "@workspace/trpc/lib/cms/authz-shared";
+} from "@workspace/trpc/lib/authz-shared";
+export type { CollaboratorRole } from "@workspace/trpc/lib/authz-shared";

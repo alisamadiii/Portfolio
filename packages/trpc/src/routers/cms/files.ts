@@ -15,9 +15,8 @@ import {
   normalizePath,
 } from "@workspace/cms-core/utils/file";
 
-import { cmsProcedure, createTRPCRouter } from "../../init";
-import { assertAdminUser } from "../../lib/cms/authz-shared";
-import { assertWriteAccess } from "../../lib/cms/authz";
+import { cmsWriteProcedure, createTRPCRouter } from "../../init";
+import { assertAdminUser } from "../../lib/authz-shared";
 import {
   buildCommitTokens,
   resolveCommitIdentity,
@@ -339,7 +338,7 @@ const githubRenameFile = async (
 };
 
 export const filesRouter = createTRPCRouter({
-  save: cmsProcedure
+  save: cmsWriteProcedure
     .input(
       z.object({
         branch: z.string(),
@@ -353,7 +352,6 @@ export const filesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms");
 
         const normalizedPath = normalizePath(input.path);
@@ -593,7 +591,7 @@ export const filesRouter = createTRPCRouter({
       }
     }),
 
-  delete: cmsProcedure
+  delete: cmsWriteProcedure
     .input(
       z.object({
         branch: z.string(),
@@ -605,7 +603,6 @@ export const filesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms");
 
         if (
@@ -767,7 +764,7 @@ export const filesRouter = createTRPCRouter({
       }
     }),
 
-  rename: cmsProcedure
+  rename: cmsWriteProcedure
     .input(
       z.object({
         branch: z.string(),
@@ -779,7 +776,6 @@ export const filesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms");
 
         if (

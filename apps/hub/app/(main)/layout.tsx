@@ -6,11 +6,9 @@ import { SessionRefreshProvider } from "@workspace/auth/providers/session-refres
 import { SubscriptionGateProvider } from "@/components/subscription/subscription-gate";
 import { UserProvider } from "@/contexts/user-context";
 
-import { User } from "@/types/user";
-
 import { createHttpCaller } from "@workspace/trpc/http-caller";
-import { hasAdminAccess } from "@workspace/trpc/lib/cms/admin";
 import { bindCollaboratorInvitesToUser } from "@workspace/trpc/lib/cms/collaborator-access";
+import { isAdminUser } from "@/lib/authz-shared";
 import { getServerSession } from "@/lib/session-server";
 
 export default async function Layout({
@@ -29,8 +27,7 @@ export default async function Layout({
 
   // Auth lives in the shared portal package, so the invite binding that used
   // to run in Better Auth's session-create hook happens here on CMS entry.
-  const sessionUser = session.user as User;
-  await bindCollaboratorInvitesToUser(sessionUser).catch(() => {});
+  await bindCollaboratorInvitesToUser(session.user).catch(() => {});
 
   const accounts = await createHttpCaller(
     requestHeaders
@@ -38,7 +35,7 @@ export default async function Layout({
 
   const userWithAccounts = {
     ...session.user,
-    isAdmin: hasAdminAccess(session.user as User),
+    isAdmin: isAdminUser(session.user),
     accounts,
   };
 

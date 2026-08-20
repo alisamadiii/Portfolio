@@ -5,8 +5,12 @@ import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
 
+import { isAdminUser, roleAtLeast } from "./lib/authz-shared";
+import { getRepoAccess, requireCollaboratorManageAccess } from "./lib/cms/authz";
+import { collaboratorMatchesUser } from "./lib/cms/collaborator-access";
+import { db } from "./lib/cms/db";
+import { toTRPCError } from "./lib/cms/errors";
 import { getToken } from "./lib/cms/token";
-import { type User } from "./lib/cms/types";
 
 export const createTRPCContext = cache(async () => {});
 
@@ -53,7 +57,7 @@ export const authenticatedProcedure = baseProcedure.use(
 export const cmsProcedure = authenticatedProcedure
   .input(z.object({ owner: z.string(), repo: z.string() }))
   .use(async ({ next, ctx, input }) => {
-    const user = ctx.session.user as User;
+    const user = ctx.session.user;
     const { token, role } = await getToken(user, input.owner, input.repo);
     if (!token) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Token not found" });
@@ -89,3 +93,80 @@ export const adminProcedure = authenticatedProcedure.use(
     return next({ ctx });
   }
 );
+
+// Collaborator-aware: `collaborations` is the caller's collaborator rows, or
+// null for admins (unrestricted — no rows to filter against).
+export const collaboratorProcedure = authenticatedProcedure.use(
+  async ({ next, ctx }) => {
+    const user = ctx.session.user;
+    const isAdmin = isAdminUser(user);
+
+    // Retry once: the shared Neon WebSocket pool can drop a query on cold start.
+    const query = () =>
+      db.query.hubCollaborator.findMany({
+        where: collaboratorMatchesUser(user),
+      });
+    const collaborations = isAdmin ? null : await query().catch(query);
+
+    return next({ ctx: { ...ctx, isAdmin, collaborations } });
+  }
+);
+
+// CMS write: content-editor or full-access collaborators (and admins).
+export const cmsWriteProcedure = cmsProcedure.use(async ({ next, ctx }) => {
+  if (!roleAtLeast(ctx.role, "content-editor")) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You have view-only access.",
+    });
+  }
+
+  return next({ ctx });
+});
+
+// CMS full access: repo settings, branches, anything destructive.
+export const cmsFullAccessProcedure = cmsProcedure.use(
+  async ({ next, ctx }) => {
+    if (ctx.role !== "full-access") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Full access required.",
+      });
+    }
+
+    return next({ ctx });
+  }
+);
+
+// Collaborator management: admins or full-access collaborators of the repo.
+// Injects `repoAccess` (DB-only lookup) and `isActorAdmin`.
+export const collaboratorManageProcedure = authenticatedProcedure
+  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .use(async ({ next, ctx, input }) => {
+    let access;
+    try {
+      access = await requireCollaboratorManageAccess(
+        ctx.session.user,
+        input.owner,
+        input.repo
+      );
+    } catch (error) {
+      throw toTRPCError(error);
+    }
+
+    return next({ ctx: { ...ctx, ...access } });
+  });
+
+// Admin-only repo access with the org PAT. Injects `token` + `repoAccess`.
+export const adminRepoProcedure = adminProcedure
+  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .use(async ({ next, ctx, input }) => {
+    let result;
+    try {
+      result = await getRepoAccess(input.owner, input.repo);
+    } catch (error) {
+      throw toTRPCError(error);
+    }
+
+    return next({ ctx: { ...ctx, ...result } });
+  });

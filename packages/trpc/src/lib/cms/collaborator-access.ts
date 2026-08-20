@@ -1,7 +1,5 @@
 import { and, eq, isNull, or, sql } from "drizzle-orm";
 
-import type { User } from "./types";
-
 import { db } from "./db";
 import {
   collaboratorInviteTable,
@@ -11,7 +9,7 @@ import {
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-const collaboratorMatchesUser = (user: Pick<User, "id" | "email">) =>
+const collaboratorMatchesUser = (user: { id: string; email: string }) =>
   or(
     eq(collaboratorTable.userId, user.id),
     and(
@@ -21,7 +19,7 @@ const collaboratorMatchesUser = (user: Pick<User, "id" | "email">) =>
   );
 
 const collaboratorMatchesUserForRepo = (
-  user: Pick<User, "id" | "email">,
+  user: { id: string; email: string },
   owner: string,
   repo: string
 ) =>
@@ -52,7 +50,7 @@ const findVerifiedUserByEmail = async (email: string) => {
 };
 
 const bindCollaboratorInvitesToUser = async (
-  user: Pick<User, "id" | "email" | "emailVerified">
+  user: { id: string; email: string; emailVerified: boolean }
 ) => {
   if (!user.emailVerified) return;
 

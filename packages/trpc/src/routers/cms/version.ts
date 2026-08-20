@@ -20,47 +20,43 @@ type VersionInfo = {
 
 let cached: { value: VersionInfo; expiresAt: number } | null = null;
 
-/**
- * Latest upstream Pages CMS version (port of GET /api/app/version).
- * Public + rate limited; result cached in-memory for an hour.
- */
-const get = baseProcedure.query(async () => {
-  try {
-    await rateLimit();
-
-    if (cached && cached.expiresAt > Date.now()) return cached.value;
-
-    let response: Response;
+export const versionRouter = createTRPCRouter({
+  /**
+   * Latest upstream Pages CMS version (port of GET /api/app/version).
+   * Public + rate limited; result cached in-memory for an hour.
+   */
+  get: baseProcedure.query(async () => {
     try {
-      response = await fetch(PACKAGE_JSON_URL, {
-        headers: { Accept: "application/json" },
-      });
-    } catch {
-      throw createHttpError("Unable to fetch latest app version.", 500);
+      await rateLimit();
+
+      if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+      let response: Response;
+      try {
+        response = await fetch(PACKAGE_JSON_URL, {
+          headers: { Accept: "application/json" },
+        });
+      } catch {
+        throw createHttpError("Unable to fetch latest app version.", 500);
+      }
+
+      if (!response.ok) {
+        throw createHttpError("Unable to fetch latest app version.", 502);
+      }
+
+      const pkg = (await response.json()) as { version?: string };
+
+      const value: VersionInfo = {
+        latest: pkg.version ?? null,
+        repository: REPO,
+        source: "package.json",
+      };
+
+      cached = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+      return value;
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
     }
-
-    if (!response.ok) {
-      throw createHttpError("Unable to fetch latest app version.", 502);
-    }
-
-    const pkg = (await response.json()) as { version?: string };
-
-    const value: VersionInfo = {
-      latest: pkg.version ?? null,
-      repository: REPO,
-      source: "package.json",
-    };
-
-    cached = { value, expiresAt: Date.now() + CACHE_TTL_MS };
-    return value;
-  } catch (error) {
-    if (error instanceof TRPCError) throw error;
-    throw toTRPCError(error);
-  }
+  }),
 });
-
-const versionRouter = createTRPCRouter({
-  get,
-});
-
-export { versionRouter };

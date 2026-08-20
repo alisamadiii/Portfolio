@@ -10,7 +10,7 @@ import {
 } from "@workspace/cms-core/utils/file";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
-import { assertAdminUser } from "../../lib/cms/authz-shared";
+import { assertAdminUser } from "../../lib/authz-shared";
 import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { createOctokitInstance } from "../../lib/cms/octokit";

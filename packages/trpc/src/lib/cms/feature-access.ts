@@ -7,9 +7,8 @@ import { hubProject } from "@workspace/drizzle/schema";
 
 import { hasFeatureAccess } from "../feature-access-check";
 import { FEATURES, type FeatureKey } from "../features";
-import { hasAdminAccess } from "./admin";
+import { isAdminUser } from "../authz-shared";
 import { createHttpError } from "./errors";
-import { User } from "./types";
 
 /**
  * Whether a project (owner/repo) is flagged free-for-life on hubProject — an
@@ -46,11 +45,11 @@ const repoHasFreeLife = async (repo: {
  * purchase dialog on any 402.
  */
 const requireFeatureAccess = async (
-  user: User,
+  user: { email: string; role?: string | null },
   feature: FeatureKey,
   repo?: { owner?: string; repo: string }
 ): Promise<void> => {
-  if (hasAdminAccess(user)) return;
+  if (isAdminUser(user)) return;
   // Free-for-life projects grant access to everyone, regardless of subscription.
   if (repo && (await repoHasFreeLife(repo))) return;
   if (!user.email) {
@@ -85,10 +84,10 @@ const requireFeatureAccess = async (
  * Called from the refresh endpoint after the user reports a purchase.
  */
 const refreshFeatureAccess = async (
-  user: User,
+  user: { email: string; role?: string | null },
   feature: FeatureKey
 ): Promise<boolean> => {
-  if (hasAdminAccess(user)) return true;
+  if (isAdminUser(user)) return true;
   if (!user.email) return false;
   const { hasAccess } = await hasFeatureAccess({
     email: user.email,

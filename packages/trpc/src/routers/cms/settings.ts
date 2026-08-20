@@ -3,6 +3,7 @@ import { and, sql } from "drizzle-orm";
 import z from "zod";
 
 import {
+  cmsFullAccessProcedure,
   cmsProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
@@ -12,7 +13,6 @@ import {
   isMediaProviderId,
   toPublicMediaConfig,
 } from "@workspace/cms-core/media-providers";
-import { assertFullAccess } from "@workspace/trpc/lib/cms/authz";
 import { getConfig } from "@workspace/trpc/lib/cms/config-store";
 import { configTable, db } from "@workspace/trpc/lib/cms/db";
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
@@ -26,16 +26,14 @@ import {
   setMediaSettings as setRepoMediaSettings,
 } from "@workspace/trpc/lib/cms/repo-settings";
 
-/**
- * Get the per-repository base path (monorepo subfolder support).
- * Port of GET /api/[owner]/[repo]/base-path. Never reads the config, so it
- * works even when `.pages.yml` doesn't exist yet.
- */
-const getBasePath = cmsProcedure
-  .query(async ({ input, ctx }) => {
+export const settingsRouter = createTRPCRouter({
+  /**
+   * Get the per-repository base path (monorepo subfolder support).
+   * Port of GET /api/[owner]/[repo]/base-path. Never reads the config, so it
+   * works even when `.pages.yml` doesn't exist yet.
+   */
+  getBasePath: cmsFullAccessProcedure.query(async ({ input }) => {
     try {
-      assertFullAccess(ctx.role, "Full access is required to manage the base path.");
-
       const basePath = await getRepoBasePath(input.owner, input.repo);
 
       return { basePath };
@@ -43,52 +41,47 @@ const getBasePath = cmsProcedure
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
     }
-  });
+  }),
 
-/** Set the base path + clear all cached data. Port of PUT .../base-path. */
-const setBasePath = cmsProcedure
-  .input(z.object({ basePath: z.string() }))
-  .mutation(async ({ input, ctx }) => {
-    try {
-      assertFullAccess(ctx.role, "Full access is required to manage the base path.");
-
-      const basePath = await setRepoBasePath(
-        input.owner,
-        input.repo,
-        input.basePath
-      );
-
-      // The base path changes both where `.pages.yml` loads from and how every
-      // collection/media path is rebased, so all cached data for ALL branches of
-      // this repo is now stale. Clear it so the next load re-resolves from GitHub.
-      await db
-        .delete(configTable)
-        .where(
-          and(
-            sql`lower(${configTable.owner}) = lower(${input.owner})`,
-            sql`lower(${configTable.repo}) = lower(${input.repo})`
-          )
+  /** Set the base path + clear all cached data. Port of PUT .../base-path. */
+  setBasePath: cmsFullAccessProcedure
+    .input(z.object({ basePath: z.string() }))
+    .mutation(async ({ input }) => {
+      try {
+        const basePath = await setRepoBasePath(
+          input.owner,
+          input.repo,
+          input.basePath
         );
-      await clearFileCache(input.owner, input.repo);
-      await deleteCacheFileMeta(input.owner, input.repo);
 
-      return { message: "Base path updated.", basePath };
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  });
+        // The base path changes both where `.pages.yml` loads from and how every
+        // collection/media path is rebased, so all cached data for ALL branches of
+        // this repo is now stale. Clear it so the next load re-resolves from GitHub.
+        await db
+          .delete(configTable)
+          .where(
+            and(
+              sql`lower(${configTable.owner}) = lower(${input.owner})`,
+              sql`lower(${configTable.repo}) = lower(${input.repo})`
+            )
+          );
+        await clearFileCache(input.owner, input.repo);
+        await deleteCacheFileMeta(input.owner, input.repo);
 
-/**
- * Get the per-repository media provider settings. Port of GET
- * /api/[owner]/[repo]/media-settings. Secrets are write-only: never returned
- * — only whether they are set.
- */
-const getMediaSettings = cmsProcedure
-  .query(async ({ input, ctx }) => {
+        return { message: "Base path updated.", basePath };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  /**
+   * Get the per-repository media provider settings. Port of GET
+   * /api/[owner]/[repo]/media-settings. Secrets are write-only: never returned
+   * — only whether they are set.
+   */
+  getMediaSettings: cmsFullAccessProcedure.query(async ({ input }) => {
     try {
-      assertFullAccess(ctx.role, "Full access is required to manage media settings.");
-
       const { provider, config } = await getPublicMediaSettings(
         input.owner,
         input.repo
@@ -108,68 +101,57 @@ const getMediaSettings = cmsProcedure
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
     }
-  });
+  }),
 
-/**
- * Set the media provider settings. Port of PUT .../media-settings. An empty
- * value for a secret field keeps the stored one (write-only inputs).
- */
-const setMediaSettings = cmsProcedure
-  .input(
-    z.object({
-      provider: z.string(),
-      config: z.record(z.string(), z.string()).optional(),
-    })
-  )
-  .mutation(async ({ input, ctx }) => {
-    try {
-      assertFullAccess(ctx.role, "Full access is required to manage media settings.");
+  /**
+   * Set the media provider settings. Port of PUT .../media-settings. An empty
+   * value for a secret field keeps the stored one (write-only inputs).
+   */
+  setMediaSettings: cmsFullAccessProcedure
+    .input(
+      z.object({
+        provider: z.string(),
+        config: z.record(z.string(), z.string()).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        if (!isMediaProviderId(input.provider)) {
+          throw createHttpError('"provider" is invalid.', 400);
+        }
 
-      if (!isMediaProviderId(input.provider)) {
-        throw createHttpError('"provider" is invalid.', 400);
+        const saved = await setRepoMediaSettings(
+          input.owner,
+          input.repo,
+          input.provider
+        );
+
+        return {
+          message: "Media settings updated.",
+          provider: saved.provider,
+          config: toPublicMediaConfig(saved.provider, saved.config),
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
       }
+    }),
 
-      const saved = await setRepoMediaSettings(
-        input.owner,
-        input.repo,
-        input.provider
-      );
-
-      return {
-        message: "Media settings updated.",
-        provider: saved.provider,
-        config: toPublicMediaConfig(saved.provider, saved.config),
-      };
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  });
-
-/**
- * Synced `.pages.yml` config for a branch (port of what the
- * [owner]/[repo]/[branch] layout resolved server-side: getToken + getConfig).
- * Returns Config | null — null when `.pages.yml` doesn't exist yet.
- */
-const getBranchConfig = cmsProcedure
-  .input(z.object({ branch: z.string() }))
-  .query(async ({ input, ctx }) => {
-    try {
-      return getConfig(input.owner, input.repo, input.branch, {
-        getToken: async () => ctx.token,
-      });
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  });
-
-const settingsRouter = createTRPCRouter({
-  getBasePath,
-  setBasePath,
-  getMediaSettings,
-  setMediaSettings,
-  getConfig: getBranchConfig,
+  /**
+   * Synced `.pages.yml` config for a branch (port of what the
+   * [owner]/[repo]/[branch] layout resolved server-side: getToken + getConfig).
+   * Returns Config | null — null when `.pages.yml` doesn't exist yet.
+   */
+  getConfig: cmsProcedure
+    .input(z.object({ branch: z.string() }))
+    .query(async ({ input, ctx }) => {
+      try {
+        return getConfig(input.owner, input.repo, input.branch, {
+          getToken: async () => ctx.token,
+        });
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });
-
-export { settingsRouter };

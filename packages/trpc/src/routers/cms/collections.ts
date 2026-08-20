@@ -16,8 +16,7 @@ import {
   serializedTypes,
 } from "@workspace/cms-core/utils/file";
 
-import { cmsProcedure, createTRPCRouter } from "../../init";
-import { assertWriteAccess } from "../../lib/cms/authz";
+import { cmsProcedure, cmsWriteProcedure, createTRPCRouter } from "../../init";
 import {
   buildCommitTokens,
   resolveCommitIdentity,
@@ -419,7 +418,7 @@ export const collectionsRouter = createTRPCRouter({
    * Reorders a collection's entries by rewriting the collection's order field
    * (`view.reorder`) in every entry whose value changed, in a single commit.
    */
-  reorder: cmsProcedure
+  reorder: cmsWriteProcedure
     .input(
       z.object({
         branch: z.string(),
@@ -438,7 +437,6 @@ export const collectionsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        assertWriteAccess(ctx.role);
 
         const user = ctx.user;
         const token = ctx.token;

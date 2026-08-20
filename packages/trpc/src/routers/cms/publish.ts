@@ -3,8 +3,7 @@ import z from "zod";
 
 import { normalizePath } from "@workspace/cms-core/utils/file";
 
-import { cmsProcedure, createTRPCRouter } from "../../init";
-import { assertWriteAccess } from "../../lib/cms/authz";
+import { cmsWriteProcedure, createTRPCRouter } from "../../init";
 import {
   resolveBatchCommitMessage,
   resolveCommitIdentity,
@@ -49,7 +48,7 @@ import { stringify } from "../../lib/cms/serialization";
 const MAX_FILES = 50;
 
 export const publishRouter = createTRPCRouter({
-  publish: cmsProcedure
+  publish: cmsWriteProcedure
     .input(
       z.object({
         branch: z.string(),
@@ -73,7 +72,6 @@ export const publishRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms", {
           owner: input.owner,
           repo: input.repo,
@@ -221,7 +219,7 @@ export const publishRouter = createTRPCRouter({
    * Markdown files take `{ body, ...frontmatter }` objects and serialize as
    * YAML frontmatter.
    */
-  publishV2: cmsProcedure
+  publishV2: cmsWriteProcedure
     .input(
       z.object({
         branch: z.string(),
@@ -244,7 +242,6 @@ export const publishRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        assertWriteAccess(ctx.role);
         await requireFeatureAccess(ctx.user, "cms", {
           owner: input.owner,
           repo: input.repo,

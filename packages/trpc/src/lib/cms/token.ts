@@ -9,12 +9,11 @@
 
 import { cache } from "react";
 
-import { hasAdminAccess } from "./admin";
+import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForRepo } from "./collaborator-access";
 import { db } from "./db";
 import { createHttpError } from "./errors";
 import { getGithubEnv } from "./org-repos";
-import { User } from "./types";
 
 // Get the org PAT from the environment.
 const getPatToken = async () => {
@@ -25,12 +24,12 @@ const getPatToken = async () => {
 // Get a token for a user: admins access any repo, others need a collaborator row.
 const getToken = cache(
   async (
-    user: User,
+    user: { id: string; email: string; role?: string | null },
     owner: string,
     repo: string,
     _verifyGithubAccess: boolean = false
   ) => {
-    if (hasAdminAccess(user)) {
+    if (isAdminUser(user)) {
       return {
         token: await getPatToken(),
         source: "pat" as const,
