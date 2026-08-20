@@ -242,7 +242,7 @@ const handlePushWebhookEvent = async (event: string | null, data: any) => {
     basePath
   );
 
-  const existingConfig = await db.query.cmsConfig.findFirst({
+  const existingConfig = await db.query.hubConfig.findFirst({
     where: and(
       sql`lower(${configTable.owner}) = lower(${pushOwner})`,
       sql`lower(${configTable.repo}) = lower(${pushRepo})`,

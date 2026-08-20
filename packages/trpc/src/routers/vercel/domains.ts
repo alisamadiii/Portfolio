@@ -9,7 +9,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
-import { cmsDomain, cmsOrgRepo } from "@workspace/drizzle/schema";
+import { hubDomain, hubProject } from "@workspace/drizzle/schema";
 
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
@@ -43,14 +43,14 @@ const list = cmsProcedure.query(async ({ input }) => {
 
     let domains = await db
       .select()
-      .from(cmsDomain)
-      .where(eq(cmsDomain.repoId, repoId));
+      .from(hubDomain)
+      .where(eq(hubDomain.repoId, repoId));
 
     if (domains.length === 0) {
       const [row] = await db
-        .select({ vercelProjectId: cmsOrgRepo.vercelProjectId })
-        .from(cmsOrgRepo)
-        .where(eq(cmsOrgRepo.repoId, repoId))
+        .select({ vercelProjectId: hubProject.vercelProjectId })
+        .from(hubProject)
+        .where(eq(hubProject.repoId, repoId))
         .limit(1);
 
       try {
@@ -180,10 +180,10 @@ const refresh = cmsProcedure.mutation(async ({ input }) => {
     const projectId = await resolveVercelProjectId(repoId);
 
     const unverified = await db
-      .select({ domain: cmsDomain.domain })
-      .from(cmsDomain)
+      .select({ domain: hubDomain.domain })
+      .from(hubDomain)
       .where(
-        and(eq(cmsDomain.repoId, repoId), eq(cmsDomain.verified, false))
+        and(eq(hubDomain.repoId, repoId), eq(hubDomain.verified, false))
       );
 
     await Promise.all(
@@ -205,8 +205,8 @@ const refresh = cmsProcedure.mutation(async ({ input }) => {
 /** Admin backfill/ops: sync every org repo's domains, report per-repo result. */
 const syncAll = adminProcedure.mutation(async () => {
   const repos = await db
-    .select({ repoId: cmsOrgRepo.repoId, repo: cmsOrgRepo.repo })
-    .from(cmsOrgRepo);
+    .select({ repoId: hubProject.repoId, repo: hubProject.repo })
+    .from(hubProject);
 
   const results: { repo: string; status: string }[] = [];
   for (const row of repos) {

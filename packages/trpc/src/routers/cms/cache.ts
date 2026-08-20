@@ -88,7 +88,7 @@ const status = authenticatedProcedure
             eq(cacheFileTable.branch, branch)
           )
         );
-      const cachedConfig = await db.query.cmsConfig.findFirst({
+      const cachedConfig = await db.query.hubConfig.findFirst({
         where: and(
           sql`lower(${configTable.owner}) = lower(${owner})`,
           sql`lower(${configTable.repo}) = lower(${repo})`,

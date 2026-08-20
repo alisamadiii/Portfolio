@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { notInArray, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 type OrgRepo = {
   repoId: number;
@@ -92,7 +92,7 @@ const syncOrgRepos = async () => {
     const chunk = repos.slice(i, i + chunkSize);
 
     await db
-      .insert(cmsOrgRepo)
+      .insert(hubProject)
       .values(
         chunk.map((repo) => ({
           repoId: repo.repoId,
@@ -105,7 +105,7 @@ const syncOrgRepos = async () => {
         }))
       )
       .onConflictDoUpdate({
-        target: cmsOrgRepo.repoId,
+        target: hubProject.repoId,
         set: {
           owner: sql`excluded.owner`,
           repo: sql`excluded.repo`,
@@ -119,8 +119,8 @@ const syncOrgRepos = async () => {
 
   const repoIds = repos.map((repo) => repo.repoId);
   await db
-    .delete(cmsOrgRepo)
-    .where(repoIds.length ? notInArray(cmsOrgRepo.repoId, repoIds) : sql`true`);
+    .delete(hubProject)
+    .where(repoIds.length ? notInArray(hubProject.repoId, repoIds) : sql`true`);
 
   return { synced: repos.length };
 };

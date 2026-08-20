@@ -2,10 +2,10 @@ import { TRPCError } from "@trpc/server";
 import { and, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 // Resolve a project's GitHub-stable repoId from its (owner, repo), matching the
-// case-insensitive unique index on cmsOrgRepo. Owner defaults to GITHUB_ORG.
+// case-insensitive unique index on hubProject. Owner defaults to GITHUB_ORG.
 async function resolveRepoId(
   owner: string | undefined,
   repo: string
@@ -15,12 +15,12 @@ async function resolveRepoId(
     throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
   }
   const [row] = await db
-    .select({ repoId: cmsOrgRepo.repoId })
-    .from(cmsOrgRepo)
+    .select({ repoId: hubProject.repoId })
+    .from(hubProject)
     .where(
       and(
-        sql`lower(${cmsOrgRepo.owner}) = lower(${org})`,
-        sql`lower(${cmsOrgRepo.repo}) = lower(${repo})`
+        sql`lower(${hubProject.owner}) = lower(${org})`,
+        sql`lower(${hubProject.repo}) = lower(${repo})`
       )
     )
     .limit(1);

@@ -3,7 +3,7 @@ import "server-only";
 import { and, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 import { hasFeatureAccess } from "../feature-access-check";
 import { FEATURES, type FeatureKey } from "../features";
@@ -12,7 +12,7 @@ import { createHttpError } from "./errors";
 import { User } from "./types";
 
 /**
- * Whether a project (owner/repo) is flagged free-for-life on cmsOrgRepo — an
+ * Whether a project (owner/repo) is flagged free-for-life on hubProject — an
  * agency-granted override that bypasses the feature gate for every user. Uses
  * the same case-insensitive owner/repo match as the unique index. Returns false
  * when the repo isn't found so callers fall through to the normal gate rather
@@ -25,12 +25,12 @@ const repoHasFreeLife = async (repo: {
   const org = repo.owner ?? process.env.GITHUB_ORG;
   if (!org) return false;
   const [row] = await db
-    .select({ freeLife: cmsOrgRepo.freeLife })
-    .from(cmsOrgRepo)
+    .select({ freeLife: hubProject.freeLife })
+    .from(hubProject)
     .where(
       and(
-        sql`lower(${cmsOrgRepo.owner}) = lower(${org})`,
-        sql`lower(${cmsOrgRepo.repo}) = lower(${repo.repo})`
+        sql`lower(${hubProject.owner}) = lower(${org})`,
+        sql`lower(${hubProject.repo}) = lower(${repo.repo})`
       )
     )
     .limit(1);

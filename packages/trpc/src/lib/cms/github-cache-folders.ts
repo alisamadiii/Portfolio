@@ -64,7 +64,7 @@ const waitForScopeAndBranchMeta = async (
   const deadline = Date.now() + timeoutMs;
 
   while (true) {
-    const metas = await db.query.cmsCacheFileMeta.findMany({
+    const metas = await db.query.hubCacheFileMeta.findMany({
       where: and(
         sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
         sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,

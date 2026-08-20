@@ -9,7 +9,7 @@ import { TRPCError } from "@trpc/server";
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { cmsDomain, cmsOrgRepo } from "@workspace/drizzle/schema";
+import { hubDomain, hubProject } from "@workspace/drizzle/schema";
 import { vercelFetch } from "@workspace/trpc/lib/vercel/client";
 
 type VercelVerification = {
@@ -99,13 +99,13 @@ const getDomainConfig = (domain: string) =>
 /**
  * Resolve (and cache) the Vercel project id for a repo. Vercel projects
  * connected to GitHub carry `link.repoId` = the GitHub repository id, which is
- * exactly our cmsOrgRepo.repoId — so discovery needs no manual mapping.
+ * exactly our hubProject.repoId — so discovery needs no manual mapping.
  */
 const resolveVercelProjectId = async (repoId: number): Promise<string> => {
   const [row] = await db
-    .select({ vercelProjectId: cmsOrgRepo.vercelProjectId })
-    .from(cmsOrgRepo)
-    .where(eq(cmsOrgRepo.repoId, repoId))
+    .select({ vercelProjectId: hubProject.vercelProjectId })
+    .from(hubProject)
+    .where(eq(hubProject.repoId, repoId))
     .limit(1);
   if (!row) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
@@ -130,9 +130,9 @@ const resolveVercelProjectId = async (repoId: number): Promise<string> => {
     );
     if (match) {
       await db
-        .update(cmsOrgRepo)
+        .update(hubProject)
         .set({ vercelProjectId: match.id })
-        .where(eq(cmsOrgRepo.repoId, repoId));
+        .where(eq(hubProject.repoId, repoId));
       return match.id;
     }
 
@@ -177,15 +177,15 @@ const syncDomainsForRepo = async (repoId: number) => {
     syncedAt,
   }));
 
-  await db.delete(cmsDomain).where(eq(cmsDomain.repoId, repoId));
-  if (values.length) await db.insert(cmsDomain).values(values);
+  await db.delete(hubDomain).where(eq(hubDomain.repoId, repoId));
+  if (values.length) await db.insert(hubDomain).values(values);
 
-  return db.select().from(cmsDomain).where(eq(cmsDomain.repoId, repoId));
+  return db.select().from(hubDomain).where(eq(hubDomain.repoId, repoId));
 };
 
 // ----- Site URL derivation ---------------------------------------------------
 
-type DomainRow = typeof cmsDomain.$inferSelect;
+type DomainRow = typeof hubDomain.$inferSelect;
 
 /**
  * The domain the hub shows as "the site": a verified production custom domain
@@ -221,8 +221,8 @@ const getWebsiteUrlsByRepoId = async (
 
   const rows = await db
     .select()
-    .from(cmsDomain)
-    .where(inArray(cmsDomain.repoId, repoIds));
+    .from(hubDomain)
+    .where(inArray(hubDomain.repoId, repoIds));
 
   const byRepoId = new Map<number, DomainRow[]>();
   for (const row of rows) {

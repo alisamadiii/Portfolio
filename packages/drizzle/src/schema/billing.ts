@@ -90,19 +90,19 @@ export const orders = pgTable("order", {
   metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
 });
 
-// Per-project (= GitHub repo) CMS subscription. Framer-style: one row per
+// Per-project (= GitHub repo) hub subscription. Framer-style: one row per
 // project, independently free / free-for-life / paid. Stripe stays the source
 // of truth (checkout, invoices, portal); this table mirrors only what the hub
 // needs to render + badge. Synced by the standalone Stripe webhook using the
 // state-sync pattern (any event -> subscriptions.list -> upsert on repoId).
 // The project<->payment join is `subscription.metadata.repoId`, never email.
-export const cmsSubscription = pgTable(
-  "cms_subscription",
+export const hubSubscription = pgTable(
+  "hub_subscription",
   {
     id: uuid("id")
       .primaryKey()
       .default(sql`gen_random_uuid()`),
-    // GitHub-stable repo id, unique in cmsOrgRepo. Survives repo rename.
+    // GitHub-stable repo id, unique in hubProject. Survives repo rename.
     repoId: integer("repo_id").notNull(),
     // Client user who owns the subscription. Nullable: admin-granted free rows
     // may predate a signup.
@@ -129,11 +129,11 @@ export const cmsSubscription = pgTable(
   },
   (table) => ({
     // One subscription row per project (upsert target for the webhook).
-    uqCmsSubscriptionRepoId: uniqueIndex("uq_cms_subscription_repo_id").on(
+    uqHubSubscriptionRepoId: uniqueIndex("uq_hub_subscription_repo_id").on(
       table.repoId
     ),
     // Fast webhook lookup by Stripe customer.
-    idxCmsSubscriptionCustomer: index("idx_cms_subscription_customer").on(
+    idxHubSubscriptionCustomer: index("idx_hub_subscription_customer").on(
       table.stripeCustomerId
     ),
   })

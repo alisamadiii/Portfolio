@@ -4,7 +4,6 @@ import {
   index,
   integer,
   jsonb,
-  pgEnum,
   pgTable,
   serial,
   text,
@@ -14,7 +13,7 @@ import {
 
 import { user } from "./auth";
 
-// Client Hub CMS (hub.alisamadii.com) — GitHub-backed content management
+// Client Hub (hub.alisamadii.com) — GitHub-backed content management
 
 // Framer-style collaborator roles: view-only < content-editor < full-access.
 export const COLLABORATOR_ROLE_VALUES = [
@@ -25,8 +24,8 @@ export const COLLABORATOR_ROLE_VALUES = [
 
 export type CollaboratorRole = (typeof COLLABORATOR_ROLE_VALUES)[number];
 
-export const cmsCollaborator = pgTable(
-  "cms_collaborator",
+export const hubCollaborator = pgTable(
+  "hub_collaborator",
   {
     id: serial("id").primaryKey(),
     type: text("type").notNull(),
@@ -41,18 +40,18 @@ export const cmsCollaborator = pgTable(
     userId: text("user_id").references(() => user.id),
     invitedBy: text("invited_by").references(() => user.id),
     // Plain text (not pgEnum): drizzle-kit push mishandles adding enum-typed
-    // columns to existing tables (see mediaProvider on cmsOrgRepo).
+    // columns to existing tables (see mediaProvider on hubProject).
     role: text("role").$type<CollaboratorRole>().notNull().default("full-access"),
   },
   (table) => ({
-    idxCmsCollaboratorOwnerRepoEmail: index(
-      "idx_cms_collaborator_owner_repo_email"
+    idxHubCollaboratorOwnerRepoEmail: index(
+      "idx_hub_collaborator_owner_repo_email"
     ).on(table.owner, table.repo, table.email),
-    idxCmsCollaboratorUserId: index("idx_cms_collaborator_user_id").on(
+    idxHubCollaboratorUserId: index("idx_hub_collaborator_user_id").on(
       table.userId
     ),
-    uqCmsCollaboratorOwnerRepoEmailCi: uniqueIndex(
-      "uq_cms_collaborator_owner_repo_email_ci"
+    uqHubCollaboratorOwnerRepoEmailCi: uniqueIndex(
+      "uq_hub_collaborator_owner_repo_email_ci"
     ).on(
       sql`lower(${table.owner})`,
       sql`lower(${table.repo})`,
@@ -61,8 +60,8 @@ export const cmsCollaborator = pgTable(
   })
 );
 
-export const cmsCollaboratorInvite = pgTable(
-  "cms_collaborator_invite",
+export const hubCollaboratorInvite = pgTable(
+  "hub_collaborator_invite",
   {
     id: serial("id").primaryKey(),
     token: text("token").notNull(),
@@ -74,14 +73,14 @@ export const cmsCollaboratorInvite = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => ({
-    uqCmsCollaboratorInviteToken: uniqueIndex(
-      "uq_cms_collaborator_invite_token"
+    uqHubCollaboratorInviteToken: uniqueIndex(
+      "uq_hub_collaborator_invite_token"
     ).on(table.token),
-    idxCmsCollaboratorInviteOwnerRepoEmail: index(
-      "idx_cms_collaborator_invite_owner_repo_email"
+    idxHubCollaboratorInviteOwnerRepoEmail: index(
+      "idx_hub_collaborator_invite_owner_repo_email"
     ).on(table.owner, table.repo, table.email),
-    uqCmsCollaboratorInviteOwnerRepoEmailCi: uniqueIndex(
-      "uq_cms_collaborator_invite_owner_repo_email_ci"
+    uqHubCollaboratorInviteOwnerRepoEmailCi: uniqueIndex(
+      "uq_hub_collaborator_invite_owner_repo_email_ci"
     ).on(
       sql`lower(${table.owner})`,
       sql`lower(${table.repo})`,
@@ -90,8 +89,8 @@ export const cmsCollaboratorInvite = pgTable(
   })
 );
 
-export const cmsConfig = pgTable(
-  "cms_config",
+export const hubConfig = pgTable(
+  "hub_config",
   {
     id: serial("id").primaryKey(),
     owner: text("owner").notNull(),
@@ -103,45 +102,21 @@ export const cmsConfig = pgTable(
     lastCheckedAt: timestamp("last_checked_at").notNull().defaultNow(),
   },
   (table) => ({
-    idxCmsConfigOwnerRepoBranch: uniqueIndex(
-      "idx_cms_config_owner_repo_branch"
+    idxHubConfigOwnerRepoBranch: uniqueIndex(
+      "idx_hub_config_owner_repo_branch"
     ).on(table.owner, table.repo, table.branch),
   })
 );
 
-// Where CMS media is stored/browsed for a repo. Add new providers here.
+// Where hub media is stored/browsed for a project. Add new providers here.
+// (Values only — the column on hubProject is plain text, not a pgEnum, because
+// drizzle-kit push mishandles adding enum-typed columns to existing tables.)
 export const mediaProviderValues = ["imagekit"] as const;
-export const mediaProviderEnum = pgEnum("media_provider", mediaProviderValues);
 
 export type MediaProviderId = (typeof mediaProviderValues)[number];
 
-// DEPRECATED: fields merged into cmsOrgRepo (base_path, media_provider). Kept
-// only so the one-off backfill can copy existing rows across; remove this table
-// + push once the backfill has run (see plan Phase B).
-export const cmsRepoSettings = pgTable(
-  "cms_repo_settings",
-  {
-    id: serial("id").primaryKey(),
-    owner: text("owner").notNull(),
-    repo: text("repo").notNull(),
-    basePath: text("base_path").notNull().default(""),
-    mediaProvider: mediaProviderEnum("media_provider")
-      .notNull()
-      .default("imagekit"),
-    // Provider-specific config (e.g. ImageKit urlEndpoint/publicKey/privateKey/folder)
-    mediaConfig: jsonb("media_config").$type<Record<string, string>>(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => ({
-    uqCmsRepoSettingsOwnerRepoCi: uniqueIndex(
-      "uq_cms_repo_settings_owner_repo_ci"
-    ).on(sql`lower(${table.owner})`, sql`lower(${table.repo})`),
-  })
-);
-
-export const cmsOrgRepo = pgTable(
-  "cms_org_repo",
+export const hubProject = pgTable(
+  "hub_project",
   {
     id: serial("id").primaryKey(),
     repoId: integer("repo_id").notNull(),
@@ -151,23 +126,23 @@ export const cmsOrgRepo = pgTable(
     defaultBranch: text("default_branch").notNull(),
     githubUpdatedAt: timestamp("github_updated_at").notNull(),
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
-    // Per-repo settings (merged in from the former cms_repo_settings table).
-    // syncOrgRepos' onConflictDoUpdate.set does NOT list these, so they survive
-    // every webhook re-sync; new repos fall back to these defaults.
+    // Per-project settings. syncOrgRepos' onConflictDoUpdate.set does NOT list
+    // these, so they survive every webhook re-sync; new projects fall back to
+    // these defaults.
     basePath: text("base_path").notNull().default(""),
-    // Plain text (not the media_provider enum): the value is always "imagekit"
-    // and never read for logic, and drizzle-kit push mishandles adding an
-    // enum-typed column to an existing table.
+    // Plain text (not a pgEnum): the value is always "imagekit" and never read
+    // for logic, and drizzle-kit push mishandles adding an enum-typed column
+    // to an existing table.
     mediaProvider: text("media_provider").notNull().default("imagekit"),
-    // DEPRECATED: replaced by the derived URL from cms_domain (Vercel-synced).
+    // DEPRECATED: replaced by the derived URL from hub_domain (Vercel-synced).
     // No code reads this anymore — kept only to compare against the derived
     // URLs after the first domain backfill (vercel.domains.syncAll). Drop the
     // column + push once parity is confirmed.
     websiteUrl: text("website_url"),
-    // Agency-granted free-for-life access. When true, the CMS gate is bypassed
+    // Agency-granted free-for-life access. When true, the hub gate is bypassed
     // for this project for every user (no subscription, no Stripe), and Billing
     // shows a gratitude panel. Set directly in the DB (no admin UI). Like the
-    // other per-repo settings, it is intentionally absent from syncOrgRepos'
+    // other per-project settings, it is intentionally absent from syncOrgRepos'
     // onConflict set() so it survives every GitHub webhook re-sync.
     freeLife: boolean("free_life").notNull().default(false),
     // Cached Vercel project id, auto-discovered by matching the project's
@@ -176,8 +151,8 @@ export const cmsOrgRepo = pgTable(
     vercelProjectId: text("vercel_project_id"),
   },
   (table) => ({
-    uqCmsOrgRepoRepoId: uniqueIndex("uq_cms_org_repo_repo_id").on(table.repoId),
-    uqCmsOrgRepoOwnerRepoCi: uniqueIndex("uq_cms_org_repo_owner_repo_ci").on(
+    uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),
+    uqHubProjectOwnerRepoCi: uniqueIndex("uq_hub_project_owner_repo_ci").on(
       sql`lower(${table.owner})`,
       sql`lower(${table.repo})`
     ),
@@ -188,11 +163,11 @@ export const cmsOrgRepo = pgTable(
 // Source of truth is the Vercel API; rows are replaced wholesale by
 // syncDomainsForRepo (state-sync, same pattern as the Stripe webhook). The
 // live site URL shown across the hub is derived from these rows.
-export const cmsDomain = pgTable(
-  "cms_domain",
+export const hubDomain = pgTable(
+  "hub_domain",
   {
     id: serial("id").primaryKey(),
-    // = cmsOrgRepo.repoId (GitHub-stable)
+    // = hubProject.repoId (GitHub-stable)
     repoId: integer("repo_id").notNull(),
     // Lowercased host, e.g. "acme.com" / "www.acme.com" / "acme.vercel.app"
     domain: text("domain").notNull(),
@@ -215,16 +190,16 @@ export const cmsDomain = pgTable(
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
   },
   (table) => ({
-    uqCmsDomainRepoDomainCi: uniqueIndex("uq_cms_domain_repo_domain_ci").on(
+    uqHubDomainRepoDomainCi: uniqueIndex("uq_hub_domain_repo_domain_ci").on(
       table.repoId,
       sql`lower(${table.domain})`
     ),
-    idxCmsDomainRepoId: index("idx_cms_domain_repo_id").on(table.repoId),
+    idxHubDomainRepoId: index("idx_hub_domain_repo_id").on(table.repoId),
   })
 );
 
-export const cmsCacheFile = pgTable(
-  "cms_cache_file",
+export const hubCacheFile = pgTable(
+  "hub_cache_file",
   {
     id: serial("id").primaryKey(),
     context: text("context").notNull().default("collection"),
@@ -244,17 +219,17 @@ export const cmsCacheFile = pgTable(
     updatedAt: timestamp("updated_at").notNull(),
   },
   (table) => ({
-    idxCmsCacheFileOwnerRepoBranchParentPath: index(
-      "idx_cms_cache_file_owner_repo_branch_parent_path"
+    idxHubCacheFileOwnerRepoBranchParentPath: index(
+      "idx_hub_cache_file_owner_repo_branch_parent_path"
     ).on(table.owner, table.repo, table.branch, table.parentPath),
-    idxCmsCacheFileOwnerRepoBranchPath: uniqueIndex(
-      "idx_cms_cache_file_owner_repo_branch_path"
+    idxHubCacheFileOwnerRepoBranchPath: uniqueIndex(
+      "idx_hub_cache_file_owner_repo_branch_path"
     ).on(table.owner, table.repo, table.branch, table.path),
   })
 );
 
-export const cmsCacheFileMeta = pgTable(
-  "cms_cache_file_meta",
+export const hubCacheFileMeta = pgTable(
+  "hub_cache_file_meta",
   {
     id: serial("id").primaryKey(),
     owner: text("owner").notNull(),
@@ -270,8 +245,8 @@ export const cmsCacheFileMeta = pgTable(
     lastCheckedAt: timestamp("last_checked_at").notNull().defaultNow(),
   },
   (table) => ({
-    idxCmsCacheFileMetaOwnerRepoBranchPathContext: uniqueIndex(
-      "idx_cms_cache_file_meta_owner_repo_branch_path_context"
+    idxHubCacheFileMetaOwnerRepoBranchPathContext: uniqueIndex(
+      "idx_hub_cache_file_meta_owner_repo_branch_path_context"
     ).on(table.owner, table.repo, table.branch, table.path, table.context),
   })
 );

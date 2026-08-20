@@ -26,7 +26,7 @@ const getConfigFromDb = async (
   if (!owner || !repo || !branch)
     throw new Error(`Owner, repo, and branch must all be provided.`);
 
-  const config = await db.query.cmsConfig.findFirst({
+  const config = await db.query.hubConfig.findFirst({
     where: and(
       sql`lower(${configTable.owner}) = lower(${owner})`,
       sql`lower(${configTable.repo}) = lower(${repo})`,

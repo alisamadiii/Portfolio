@@ -319,7 +319,7 @@ const getVerifiedDirectFolderContexts = async (
   const uniqueFolderPaths = Array.from(new Set(folderPaths));
   if (uniqueFolderPaths.length === 0) return new Map();
 
-  const metas = await db.query.cmsCacheFileMeta.findMany({
+  const metas = await db.query.hubCacheFileMeta.findMany({
     where: and(
       sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
       sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
@@ -513,7 +513,7 @@ const updateMultipleFilesCache = async (
       verifiedDirectFolderContexts.has(getParentPath(filePath))
     );
   if (commit && filesToQuery.length > 0) {
-    const existingFiles = await db.query.cmsCacheFile.findMany({
+    const existingFiles = await db.query.hubCacheFile.findMany({
       where: and(
         eq(cacheFileTable.owner, lowerOwner),
         eq(cacheFileTable.repo, lowerRepo),
@@ -937,7 +937,7 @@ const getCollectionCache = async (
   const hasVerifiedSnapshot = hasVerifiedFolderSnapshot(stableMeta, branchMeta);
 
   // Check the cache (no context as we may invalidate media cache)
-  let entries = await db.query.cmsCacheFile.findMany({
+  let entries = await db.query.hubCacheFile.findMany({
     where: and(
       eq(cacheFileTable.owner, owner.toLowerCase()),
       eq(cacheFileTable.repo, repo.toLowerCase()),
@@ -1048,7 +1048,7 @@ const getCollectionCache = async (
 
     if (subdirs.length > 0) {
       // Check the cache for node entries
-      let nodeEntries = await db.query.cmsCacheFile.findMany({
+      let nodeEntries = await db.query.hubCacheFile.findMany({
         where: and(
           eq(cacheFileTable.owner, owner.toLowerCase()),
           eq(cacheFileTable.repo, repo.toLowerCase()),
@@ -1169,7 +1169,7 @@ const getMediaCache = async (
 
   if (!nocache) {
     // Check for entries from either context
-    entries = await db.query.cmsCacheFile.findMany({
+    entries = await db.query.hubCacheFile.findMany({
       where: and(
         eq(cacheFileTable.owner, owner.toLowerCase()),
         eq(cacheFileTable.repo, repo.toLowerCase()),

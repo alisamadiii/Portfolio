@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
-import { cmsSubscription, user, webhookEvents } from "@workspace/drizzle/schema";
+import { hubSubscription, user, webhookEvents } from "@workspace/drizzle/schema";
 
 // Standalone Stripe webhook for per-project CMS subscriptions.
 //
@@ -64,7 +64,7 @@ async function syncCmsSubscription(customerId: string) {
     : null;
 
   await db
-    .insert(cmsSubscription)
+    .insert(hubSubscription)
     .values({
       repoId,
       userId,
@@ -79,7 +79,7 @@ async function syncCmsSubscription(customerId: string) {
       cancelAtPeriodEnd: sub.cancel_at_period_end,
     })
     .onConflictDoUpdate({
-      target: cmsSubscription.repoId,
+      target: hubSubscription.repoId,
       set: {
         userId,
         plan: "paid",

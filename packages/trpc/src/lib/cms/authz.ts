@@ -32,7 +32,7 @@ const getRepoAccess = async (owner: string, repo: string) => {
 // invites are CMS-dashboard-only (nothing is sent to GitHub), and the hub app
 // that runs them has no GITHUB_* env, so this must stay DB-only.
 const getRepoAccessFromDb = async (owner: string, repo: string) => {
-  const row = await db.query.cmsOrgRepo.findFirst({
+  const row = await db.query.hubProject.findFirst({
     where: sql`lower(${orgRepoTable.owner}) = lower(${owner}) and lower(${orgRepoTable.repo}) = lower(${repo})`,
   });
   if (!row) throw createHttpError("Repository not found.", 404);
@@ -69,7 +69,7 @@ const requireCollaboratorManageAccess = async (
   const isActorAdmin = isAdminUser(user);
 
   if (!isActorAdmin) {
-    const row = await db.query.cmsCollaborator.findFirst({
+    const row = await db.query.hubCollaborator.findFirst({
       where: collaboratorMatchesUserForRepo(user, owner, repo),
     });
     if (row?.role !== "full-access") {

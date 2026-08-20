@@ -5,7 +5,7 @@
  * "manifest"): baseUrl, media config, the page-name → route map and optional
  * collection declarations. This module fetches, validates and caches it.
  *
- * The cache reuses the legacy `cmsConfig` table: a repo is either legacy or
+ * The cache reuses the legacy `hubConfig` table: a repo is either legacy or
  * v2, so the (owner, repo, branch) row is never contested. Rows are
  * distinguished by the `version` column (`manifestVersion` vs the legacy
  * `configVersion`), which makes v1/v2 rows self-invalidating on engine switch.
@@ -118,7 +118,7 @@ const getManifestFromDb = async (
   repo: string,
   branch: string
 ): Promise<Manifest | null> => {
-  const row = await db.query.cmsConfig.findFirst({
+  const row = await db.query.hubConfig.findFirst({
     where: and(
       sql`lower(${configTable.owner}) = lower(${owner})`,
       sql`lower(${configTable.repo}) = lower(${repo})`,

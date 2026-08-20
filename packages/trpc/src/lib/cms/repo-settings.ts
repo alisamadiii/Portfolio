@@ -1,5 +1,5 @@
 /**
- * Per-repository settings, stored as columns on `cmsOrgRepo` (owner/repo, so
+ * Per-repository settings, stored as columns on `hubProject` (owner/repo, so
  * set once and applied to all branches):
  *
  * - **basePath** lets Client Hub operate inside a subfolder for monorepos
@@ -44,7 +44,7 @@ const normalizeBasePath = (basePath: string): string => {
 const getBasePath = async (owner: string, repo: string): Promise<string> => {
   if (!owner || !repo) return "";
 
-  const row = await db.query.cmsOrgRepo.findFirst({
+  const row = await db.query.hubProject.findFirst({
     where: matchRepo(owner, repo),
   });
 

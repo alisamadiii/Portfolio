@@ -4,7 +4,7 @@ import { after } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo, webhookEvents } from "@workspace/drizzle/schema";
+import { hubProject, webhookEvents } from "@workspace/drizzle/schema";
 import { syncDomainsForRepo } from "@workspace/trpc/lib/vercel/domains";
 
 export const maxDuration = 60;
@@ -84,9 +84,9 @@ export async function POST(request: Request) {
         // Only projects already discovered (vercelProjectId cached) are
         // tracked; anything else is picked up on that repo's next list/refresh.
         const [row] = await db
-          .select({ repoId: cmsOrgRepo.repoId })
-          .from(cmsOrgRepo)
-          .where(eq(cmsOrgRepo.vercelProjectId, projectId))
+          .select({ repoId: hubProject.repoId })
+          .from(hubProject)
+          .where(eq(hubProject.vercelProjectId, projectId))
           .limit(1);
         if (!row) return;
 

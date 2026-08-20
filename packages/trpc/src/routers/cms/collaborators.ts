@@ -27,7 +27,7 @@ const list = authenticatedProcedure
         input.repo
       );
 
-      return db.query.cmsCollaborator.findMany({
+      return db.query.hubCollaborator.findMany({
         where: eq(collaboratorTable.repoId, repoAccess.repoId),
       });
     } catch (error) {

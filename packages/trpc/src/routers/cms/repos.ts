@@ -8,7 +8,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 import { isAdminUser } from "@workspace/trpc/lib/cms/authz-shared";
 import { collaboratorMatchesUser } from "@workspace/trpc/lib/cms/collaborator-access";
@@ -28,9 +28,9 @@ const listOrgRepos = async (keyword?: string) => {
   const selectRepos = () =>
     db
       .select()
-      .from(cmsOrgRepo)
-      .where(trimmed ? ilike(cmsOrgRepo.repo, `%${trimmed}%`) : undefined)
-      .orderBy(desc(cmsOrgRepo.githubUpdatedAt));
+      .from(hubProject)
+      .where(trimmed ? ilike(hubProject.repo, `%${trimmed}%`) : undefined)
+      .orderBy(desc(hubProject.githubUpdatedAt));
 
   let rows = await selectRepos();
 
@@ -128,7 +128,7 @@ const listMine = authenticatedProcedure
         githubRepos = await listOrgRepos(input.keyword);
       }
 
-      const collaboratorRepos = await cmsDb.query.cmsCollaborator.findMany({
+      const collaboratorRepos = await cmsDb.query.hubCollaborator.findMany({
         where: and(
           collaboratorMatchesUser(user),
           sql`lower(${collaboratorTable.owner}) = lower(${input.owner})`
@@ -141,9 +141,9 @@ const listMine = authenticatedProcedure
       let urlByRepo = new Map<string, string | null>();
       if (collaboratorRepos.length) {
         const orgRows = await db
-          .select({ repo: cmsOrgRepo.repo, repoId: cmsOrgRepo.repoId })
-          .from(cmsOrgRepo)
-          .where(sql`lower(${cmsOrgRepo.owner}) = lower(${input.owner})`);
+          .select({ repo: hubProject.repo, repoId: hubProject.repoId })
+          .from(hubProject)
+          .where(sql`lower(${hubProject.owner}) = lower(${input.owner})`);
         const urlByRepoId = await getWebsiteUrlsByRepoId(
           orgRows.map((r) => r.repoId)
         );

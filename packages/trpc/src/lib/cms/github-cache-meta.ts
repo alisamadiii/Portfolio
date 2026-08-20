@@ -76,7 +76,7 @@ const getCacheFileMeta = async (
   scope?: CacheMetaScope
 ) => {
   const normalizedScope = normalizeScope(scope);
-  return db.query.cmsCacheFileMeta.findFirst({
+  return db.query.hubCacheFileMeta.findFirst({
     where: and(
       sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
       sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,
@@ -217,7 +217,7 @@ const listCacheFileMeta = async (
   repo: string,
   branch: string
 ) => {
-  return db.query.cmsCacheFileMeta.findMany({
+  return db.query.hubCacheFileMeta.findMany({
     where: and(
       sql`lower(${cacheFileMetaTable.owner}) = lower(${owner})`,
       sql`lower(${cacheFileMetaTable.repo}) = lower(${repo})`,

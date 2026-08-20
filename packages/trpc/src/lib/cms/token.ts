@@ -38,7 +38,7 @@ const getToken = cache(
       };
     }
 
-    const permission = await db.query.cmsCollaborator.findFirst({
+    const permission = await db.query.hubCollaborator.findFirst({
       where: collaboratorMatchesUserForRepo(user, owner, repo),
     });
     if (permission) {

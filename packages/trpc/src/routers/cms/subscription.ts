@@ -10,7 +10,7 @@ import {
 } from "@workspace/trpc/init";
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
-import { cmsOrgRepo, cmsSubscription } from "@workspace/drizzle/schema";
+import { hubProject, hubSubscription } from "@workspace/drizzle/schema";
 
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { refreshFeatureAccess } from "@workspace/trpc/lib/cms/feature-access";
@@ -68,12 +68,12 @@ const getProject = authenticatedProcedure
       throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
     }
     const [project] = await db
-      .select({ repoId: cmsOrgRepo.repoId, freeLife: cmsOrgRepo.freeLife })
-      .from(cmsOrgRepo)
+      .select({ repoId: hubProject.repoId, freeLife: hubProject.freeLife })
+      .from(hubProject)
       .where(
         and(
-          sql`lower(${cmsOrgRepo.owner}) = lower(${org})`,
-          sql`lower(${cmsOrgRepo.repo}) = lower(${input.repo})`
+          sql`lower(${hubProject.owner}) = lower(${org})`,
+          sql`lower(${hubProject.repo}) = lower(${input.repo})`
         )
       )
       .limit(1);
@@ -82,8 +82,8 @@ const getProject = authenticatedProcedure
     }
     const [row] = await db
       .select()
-      .from(cmsSubscription)
-      .where(eq(cmsSubscription.repoId, project.repoId))
+      .from(hubSubscription)
+      .where(eq(hubSubscription.repoId, project.repoId))
       .limit(1);
     return {
       repoId: project.repoId,
@@ -97,15 +97,15 @@ const listForRepos = authenticatedProcedure
   .input(z.object({ repoIds: z.array(z.number().int().positive()).max(200) }))
   .query(async ({ input }) => {
     if (input.repoIds.length === 0)
-      return [] as (typeof cmsSubscription.$inferSelect)[];
+      return [] as (typeof hubSubscription.$inferSelect)[];
     return db
       .select()
-      .from(cmsSubscription)
-      .where(inArray(cmsSubscription.repoId, input.repoIds));
+      .from(hubSubscription)
+      .where(inArray(hubSubscription.repoId, input.repoIds));
   });
 
 // Batch plan lookup for the home gallery, keyed by (owner, repo) so the caller
-// doesn't need repoId. Joins cmsOrgRepo -> cmsSubscription; projects without a
+// doesn't need repoId. Joins hubProject -> hubSubscription; projects without a
 // row are simply absent (the gallery treats those as "No plan").
 const listForProjects = authenticatedProcedure
   .input(
@@ -132,21 +132,21 @@ const listForProjects = authenticatedProcedure
       input.projects.map((p) => `${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`)
     );
 
-    // Base on cmsOrgRepo (leftJoin the subscription) so free-for-life projects
+    // Base on hubProject (leftJoin the subscription) so free-for-life projects
     // without a subscription row still surface for the gallery badge.
     const rows = await db
       .select({
-        owner: cmsOrgRepo.owner,
-        repo: cmsOrgRepo.repo,
-        plan: cmsSubscription.plan,
-        status: cmsSubscription.status,
-        freeLife: cmsOrgRepo.freeLife,
+        owner: hubProject.owner,
+        repo: hubProject.repo,
+        plan: hubSubscription.plan,
+        status: hubSubscription.status,
+        freeLife: hubProject.freeLife,
       })
-      .from(cmsOrgRepo)
-      .leftJoin(cmsSubscription, eq(cmsSubscription.repoId, cmsOrgRepo.repoId))
+      .from(hubProject)
+      .leftJoin(hubSubscription, eq(hubSubscription.repoId, hubProject.repoId))
       .where(
         inArray(
-          sql`lower(${cmsOrgRepo.owner})`,
+          sql`lower(${hubProject.owner})`,
           owners
         )
       );
@@ -161,9 +161,9 @@ const getInvoices = authenticatedProcedure
   .input(z.object({ repoId: z.number().int().positive() }))
   .query(async ({ input }) => {
     const [row] = await db
-      .select({ stripeCustomerId: cmsSubscription.stripeCustomerId })
-      .from(cmsSubscription)
-      .where(eq(cmsSubscription.repoId, input.repoId))
+      .select({ stripeCustomerId: hubSubscription.stripeCustomerId })
+      .from(hubSubscription)
+      .where(eq(hubSubscription.repoId, input.repoId))
       .limit(1);
     if (!row?.stripeCustomerId) return [];
     const invoices = await stripe.invoices.list({
@@ -183,9 +183,9 @@ const createPortalSession = authenticatedProcedure
   )
   .mutation(async ({ input }) => {
     const [row] = await db
-      .select({ stripeCustomerId: cmsSubscription.stripeCustomerId })
-      .from(cmsSubscription)
-      .where(eq(cmsSubscription.repoId, input.repoId))
+      .select({ stripeCustomerId: hubSubscription.stripeCustomerId })
+      .from(hubSubscription)
+      .where(eq(hubSubscription.repoId, input.repoId))
       .limit(1);
     if (!row?.stripeCustomerId) {
       throw new TRPCError({
@@ -210,10 +210,10 @@ const setPlan = adminProcedure
   )
   .mutation(async ({ input }) => {
     await db
-      .insert(cmsSubscription)
+      .insert(hubSubscription)
       .values({ repoId: input.repoId, plan: input.plan })
       .onConflictDoUpdate({
-        target: cmsSubscription.repoId,
+        target: hubSubscription.repoId,
         set: { plan: input.plan, updatedAt: new Date() },
       });
     return { ok: true };

@@ -1,5 +1,5 @@
 export * from "./auth";
 export * from "./billing";
-export * from "./cms";
+export * from "./hub";
 export * from "./api";
 export * from "./general";
