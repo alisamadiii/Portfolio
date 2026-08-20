@@ -115,9 +115,6 @@ export const auth = betterAuth({
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // Cache duration in seconds (5 minutes)
-      refreshCache: {
-        updateAge: 60, // Refresh when 60 seconds remain before expiry
-      },
     },
   },
   databaseHooks: {
