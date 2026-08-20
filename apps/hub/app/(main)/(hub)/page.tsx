@@ -202,18 +202,22 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <DocumentTitle title="Home" />
-      <div>
-        <h1 className="text-[32px] font-extrabold tracking-tight">
-          Welcome{firstName ? `, ${firstName}` : ""}
-        </h1>
-        <p className="text-muted-foreground mt-1.5 text-[15px]">
-          Everything about your website, in one place.
-        </p>
-      </div>
+      {/* Everything except the gallery keeps the shared narrow column;
+          the gallery spans the wide home container (4 cards on desktop). */}
+      <div className="max-w-[860px] space-y-8">
+        <div>
+          <h1 className="text-[32px] font-extrabold tracking-tight">
+            Welcome{firstName ? `, ${firstName}` : ""}
+          </h1>
+          <p className="text-muted-foreground mt-1.5 text-[15px]">
+            Everything about your website, in one place.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <WebsiteSection />
-        <RequestsSection />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <WebsiteSection />
+          <RequestsSection />
+        </div>
       </div>
 
       <ProjectGallery />

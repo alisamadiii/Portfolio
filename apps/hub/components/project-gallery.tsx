@@ -273,7 +273,9 @@ export function ProjectGallery() {
       </h2>
 
       {isPending ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <CardSkeleton />
+          <CardSkeleton />
           <CardSkeleton />
           <CardSkeleton />
         </div>
@@ -282,7 +284,7 @@ export function ProjectGallery() {
           No projects yet. You'll see your website here once it's set up.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects.map((p) => (
             <ProjectCard
               key={`${p.owner}/${p.repo}`}
