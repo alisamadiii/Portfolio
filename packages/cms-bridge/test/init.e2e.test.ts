@@ -1,7 +1,7 @@
 /**
  * End-to-end: run the real init pipeline against the plain-site fixture in a
- * temp dir. Covers the three-file scaffold, the skill install, the idempotency
- * + add-only contract, and the interactive `collection` command.
+ * temp dir. Covers the three-file scaffold, the idempotency + add-only
+ * contract, and the interactive `collection` command.
  */
 
 import fs from "node:fs";
@@ -41,18 +41,13 @@ beforeEach(() => {
 afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
 describe("init on plain-site", () => {
-  it("runs and scaffolds the contract files + skill", async () => {
+  it("runs and scaffolds the contract files", async () => {
     expect(await initCommand(root, {})).toBe(0);
     expect(fs.existsSync(path.join(root, "src/data/cms.json"))).toBe(true);
     expect(fs.existsSync(path.join(root, "src/data/pages.json"))).toBe(true);
     expect(fs.existsSync(path.join(root, "src/data/variables.json"))).toBe(true);
     expect(fs.existsSync(path.join(root, "src/data/seo.json"))).toBe(true);
-    expect(
-      fs.existsSync(path.join(root, ".claude/skills/cms-bridge/SKILL.md"))
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(root, ".claude/skills/cms-bridge/pages-cms.md"))
-    ).toBe(true);
+    expect(fs.existsSync(path.join(root, ".claude"))).toBe(false);
   });
 
   it("migrates a legacy site.json into variables.json (seeded from its content)", async () => {

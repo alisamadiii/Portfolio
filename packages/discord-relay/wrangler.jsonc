@@ -1,0 +1,8 @@
+{
+  "name": "posthog-discord-relay",
+  "main": "index.js",
+  "compatibility_date": "2026-08-01",
+  "observability": {
+    "enabled": true
+  }
+}

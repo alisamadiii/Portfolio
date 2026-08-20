@@ -1,8 +1,7 @@
 /**
  * `cms-bridge init` — the v2 onboarding scaffold (idempotent, add-only):
  *
- *   install the .claude skill (packaged docs)
- *   → ensure src/data/{cms,pages,site}.json exist (new page keys added)
+ *   ensure src/data/{cms,pages,site}.json exist (new page keys added)
  *   → create placeholder files for array collections that have none
  *   → ensure the astro.config integration + package.json scripts
  *   → report a count of anything that still needs manual review
@@ -53,11 +52,7 @@ export async function initCommand(
 
   const scan = scanProject(root);
 
-  // ---- 1. Skill install --------------------------------------------------
-  const { installSkill } = await import("../core/skill-install.js");
-  const skill = installSkill(root, { dryRun });
-
-  // ---- 2. Ensure the three contract files --------------------------------
+  // ---- 1. Ensure the three contract files --------------------------------
   const scannedPages = scan.pages.map((page) => ({
     key: page.pageKey,
     route: page.route,
@@ -75,10 +70,10 @@ export async function initCommand(
     pagesAdded.length > 0 || created.includes("src/data/pages.json");
   if (pagesNeedsWrite && !dryRun) writePagesJson(pagesFile, pagesJson);
 
-  // ---- 3. Collection placeholder files -----------------------------------
+  // ---- 2. Collection placeholder files -----------------------------------
   const collectionFiles = ensureCollectionFiles(root, manifest, { dryRun });
 
-  // ---- 4. astro.config ---------------------------------------------------
+  // ---- 3. astro.config ---------------------------------------------------
   let configResult = "present";
   if (scan.astroConfigPath && !scan.hasBridgeIntegration) {
     configResult = ensureBridgeIntegration(scan.astroConfigPath, { dryRun });
@@ -99,7 +94,7 @@ export async function initCommand(
     });
   }
 
-  // ---- 5. package.json scripts -------------------------------------------
+  // ---- 4. package.json scripts -------------------------------------------
   const scriptsResult = ensurePackageScripts(
     root,
     COMMANDS.map((command) => ({
@@ -121,15 +116,6 @@ export async function initCommand(
   const itemCount = extraReports.length;
   const prefix = dryRun ? `${pc.bold(pc.yellow("[dry-run]"))} ` : "";
   console.log(`${prefix}${pc.bold("cms-bridge init")} — ${scan.pages.length} page(s)`);
-  const skillCount = skill.written.length;
-  console.log(
-    skillCount > 0
-      ? `  ${pc.green("✓")} skill: ${skillCount} file(s) written to .claude/skills/cms-bridge/`
-      : `  ${pc.dim("·")} skill: up to date`
-  );
-  if (skill.docsMissing) {
-    console.log(`  ${pc.yellow("⚠")} packaged docs not found — skill docs not copied`);
-  }
   for (const file of created) console.log(`  ${pc.green("✓")} ${file} created`);
   for (const file of collectionFiles.created)
     console.log(`  ${pc.green("✓")} ${file} (placeholder collection)`);

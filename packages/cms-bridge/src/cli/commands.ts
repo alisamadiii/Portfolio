@@ -7,7 +7,7 @@
 export const COMMANDS = [
   {
     name: "init",
-    summary: "Wire pages to the CMS: bridge components + cms/pages/site JSON + skill",
+    summary: "Wire pages to the CMS: bridge components + cms/pages/site JSON",
   },
   {
     name: "check",

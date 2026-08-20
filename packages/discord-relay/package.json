@@ -1,0 +1,9 @@
+{
+  "name": "@alisamadiillc/discord-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker relaying PostHog webhook posts to a Discord webhook (avoids Discord's IP ban on PostHog Cloud egress)",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  }
+}
