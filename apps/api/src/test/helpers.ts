@@ -16,6 +16,7 @@ export const testEnv = {
   AWS_ACCESS_KEY_VALUE: "test-aws-key",
   AWS_SECRET_KEY_VALUE: "test-aws-secret",
   RATE_LIMIT_KV: {} as KVNamespace,
+  IP_LIMITER: { limit: async () => ({ success: true }) } as RateLimit,
 } as Env;
 
 export const testCtx = {

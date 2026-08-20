@@ -52,6 +52,28 @@ app.use("*", async (c, next) => {
   c.res.headers.set("X-Request-Id", c.get("requestId") ?? "");
 });
 
+// Global per-IP throttle (native rate-limiting binding — in-memory per colo,
+// no KV/DB cost). Runs before every route so unauthenticated spam (bogus
+// keys, /health floods) is rejected without touching Neon or KV. The stricter
+// per-endpoint limiters (contactLimiter, keyLimiter) still apply after this.
+app.use("*", async (c, next) => {
+  const host = new URL(c.req.url).hostname;
+  if (host === "localhost" || host === "127.0.0.1") return next();
+  const ip = c.req.header("CF-Connecting-IP");
+  if (ip) {
+    const { success } = await c.env.IP_LIMITER.limit({ key: ip });
+    if (!success) {
+      throw new ApiError(
+        429,
+        "RATE_LIMIT_EXCEEDED",
+        "Too many requests from this IP. Try again shortly.",
+        "The API allows 300 requests per minute per IP."
+      );
+    }
+  }
+  await next();
+});
+
 app.get("/", (c) => c.json({ name: "agency-api", status: "ok" }));
 
 // Public health: serves the latest cron result from KV (cheap — no live

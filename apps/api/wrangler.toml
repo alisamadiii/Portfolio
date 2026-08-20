@@ -2,6 +2,7 @@ name = "agency-api"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
+workers_dev = false
 
 # Vars are set in the Cloudflare dashboard as plain-text bindings; without
 # this every deploy (incl. GitHub auto-deploys) deletes them and the API 500s.
@@ -11,6 +12,15 @@ keep_vars = true
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
 id = "5fbe475b09dc41719ffadd7d2428d815"
+
+# Global per-IP throttle (src/app.ts): in-memory per colo, unmetered. Rejects
+# floods before any DB/KV work; the zone rate-limit rule handles bigger bursts
+# at the edge.
+[[unsafe.bindings]]
+name = "IP_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 300, period = 60 }
 
 # Secrets (do NOT put here). Local: .dev.vars. Prod: `wrangler secret put <NAME>`.
 #   DATABASE_URL           Neon Postgres connection string (pooled URL)

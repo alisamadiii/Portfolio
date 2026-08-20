@@ -22,4 +22,8 @@ export type Env = {
 
   // KV namespace backing the contact-form rate limiter (hono-rate-limiter).
   RATE_LIMIT_KV: KVNamespace;
+
+  // Native rate-limiting binding: global per-IP throttle, checked before any
+  // DB/KV work (see the middleware in app.ts).
+  IP_LIMITER: RateLimit;
 };
