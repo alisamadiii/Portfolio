@@ -272,6 +272,7 @@ emails.get("/", requireAuth, async (c) => {
       messageId: emailLogs.messageId,
       visitorEmail: emailLogs.visitorEmail,
       source: emailLogs.source,
+      repoId: emailLogs.repoId,
       createdAt: emailLogs.createdAt,
     })
     .from(emailLogs)

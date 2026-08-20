@@ -52,6 +52,7 @@ export async function logEmail(
       r2Key,
       visitorEmail: args.visitorEmail,
       source: args.source,
+      repoId: args.user.repoId,
     });
   } catch (err) {
     // The email itself went out — only the audit trail failed.

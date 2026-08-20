@@ -43,6 +43,8 @@ export type ApiUser = {
   publicBaseUrl: string | null;
   emailDomain: string | null;
   allowedOrigins: string[];
+  // Hub project link (= hubProject.repoId); stamps email_logs rows.
+  repoId: number | null;
   createdAt: Date;
 };
 
@@ -56,6 +58,7 @@ export function toApiUser(u: AuthUser, s: Settings | null): ApiUser {
     publicBaseUrl: s?.publicBaseUrl ?? null,
     emailDomain: s?.emailDomain ?? null,
     allowedOrigins: s?.allowedOrigins ?? [],
+    repoId: s?.repoId ?? null,
     createdAt: u.createdAt,
   };
 }

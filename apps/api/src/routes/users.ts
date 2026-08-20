@@ -51,6 +51,8 @@ const createSchema = z
     emailDomain: z.string().min(1).nullish(),
     // Origins the user's keys may be called from (admins skip the check).
     allowedOrigins: z.array(originSchema).max(20).optional(),
+    // Hub project link (= hubProject.repoId).
+    repoId: z.number().int().positive().nullish(),
     // Type of the key auto-minted below. Not a column — destructured out
     // before the inserts.
     keyType: z.enum(["public", "server"]).default("public"),
@@ -67,6 +69,8 @@ const updateSchema = z
     emailDomain: z.string().min(1).nullish(),
     // Full-array replacement, like every other patched field; [] clears.
     allowedOrigins: z.array(originSchema).max(20).optional(),
+    // Hub project link (= hubProject.repoId); null clears.
+    repoId: z.number().int().positive().nullish(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
     message: "Provide at least one field to update",
@@ -231,6 +235,7 @@ users.post("/", async (c) => {
         publicBaseUrl: data.publicBaseUrl,
         emailDomain: data.emailDomain,
         allowedOrigins: data.allowedOrigins,
+        repoId: data.repoId,
       })
       .returning();
 

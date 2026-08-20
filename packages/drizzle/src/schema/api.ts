@@ -35,6 +35,10 @@ export const apiClientSettings = pgTable("api_client_settings", {
     .array()
     .notNull()
     .default(sql`'{}'::text[]`),
+  // Optional link to the hub project this API user belongs to
+  // (= hubProject.repoId, GitHub-stable). Stamped onto every email_logs row
+  // the user's keys produce so emails can be shown per project.
+  repoId: integer("repo_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -88,11 +92,17 @@ export const emailLogs = pgTable(
     // Contact-form sends only: who submitted the form, and from which site.
     visitorEmail: text("visitor_email"),
     source: text("source"),
+    // Copied from api_client_settings.repo_id at send time; null for rows
+    // sent before the sender was linked to a hub project.
+    repoId: integer("repo_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
-  (t) => [index("email_logs_user_created_idx").on(t.userId, t.createdAt)]
+  (t) => [
+    index("email_logs_user_created_idx").on(t.userId, t.createdAt),
+    index("email_logs_repo_created_idx").on(t.repoId, t.createdAt),
+  ]
 );
 
 export type EmailLog = typeof emailLogs.$inferSelect;

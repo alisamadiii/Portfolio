@@ -69,6 +69,7 @@ export function makeUser(overrides: Partial<ApiUser> = {}): ApiUser {
     publicBaseUrl: null,
     emailDomain: null,
     allowedOrigins: [],
+    repoId: null,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     ...overrides,
   };
