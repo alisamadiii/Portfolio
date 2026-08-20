@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import BackNav from "../components/BackNav.astro";
 import PricingCards from "../components/PricingCards.astro";
-import SimpleFooter from "../components/SimpleFooter.astro";
+import HomeFooter from "../components/HomeFooter.astro";
 import { PRICING, fmtPrice } from "../data/pricing";
 
 // Prices are rendered into the HTML at build time so crawlers/LLMs see real
@@ -164,7 +164,7 @@ const pricingSchema = [
     </div>
   </section>
 
-  <SimpleFooter />
+  <HomeFooter />
 
   <!-- ==================== JAVASCRIPT ==================== -->
   <!-- data-astro-rerun + IIFE: re-runs after every ClientRouter swap without

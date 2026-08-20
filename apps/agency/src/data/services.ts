@@ -4,8 +4,10 @@
 //
 // Each entry drives one SEO landing page (src/pages/services/[slug].astro).
 // Keyword goes in seoTitle, h1, and the first sentence of intro. FAQ content
-// is visible on-page only — no FAQPage schema (Google retired FAQ rich
-// results May 2026). Hero images are fetched by scripts/fetch-service-images.mjs
+// is visible on-page AND emitted as FAQPage JSON-LD from [slug].astro —
+// Google retired FAQ rich results (May 2026), but AI answer engines
+// (ChatGPT, Perplexity, AI Overviews) still parse FAQPage, so keep answers
+// self-contained. Hero images are fetched by scripts/fetch-service-images.mjs
 // (Pexels, self-hosted, credited).
 
 import credits from "./service-image-credits.json";

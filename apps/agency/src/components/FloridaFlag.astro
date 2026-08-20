@@ -1,0 +1,27 @@
+---
+// Simplified Florida state flag — red saltire on white with a plain gold disc
+// standing in for the state seal (the real seal is illegible at badge size).
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<svg
+  viewBox="0 0 30 20"
+  xmlns="http://www.w3.org/2000/svg"
+  class={className}
+  aria-hidden="true"
+>
+  <rect width="30" height="20" fill="#fff"></rect>
+  <path d="M0 0L30 20M30 0L0 20" stroke="#af002a" stroke-width="2.6"></path>
+  <circle cx="15" cy="10" r="3.4" fill="#c8a24a"></circle>
+  <circle
+    cx="15"
+    cy="10"
+    r="3.4"
+    fill="none"
+    stroke="#a5813a"
+    stroke-width="0.5"></circle>
+</svg>

@@ -1,14 +1,20 @@
 ---
-title: "Who Should Own Your Domain Name? You Do. Here's How I Host Your Site Anyway"
-description: "Who should own your domain name — you or your web agency? You, always. Here's exactly how I host client websites while you keep the domain, files, and keys."
+title: "Who Should Own Your Domain Name? You. Always You."
+description: "The domain goes in your account, under your email, on your card — while your agency hosts the site. The setup that keeps you off the hostage list."
 keyword: "who should own your domain name"
 publishDate: 2026-08-08
+updatedDate: 2026-08-20
 heroImage: "/blog/domain-hero.webp"
 heroImageAlt: "A close-up shot of a vintage typewriter"
 heroCredit:
   name: "Markus Winkler"
   url: "https://www.pexels.com/@markus-winkler-1430818"
   pexelsUrl: "https://www.pexels.com/photo/close-up-shot-of-a-typewriter-4160089/"
+author:
+  name: "Ali Samadi"
+  title: "Web Developer & Founder, Ali Samadi Agency"
+  avatar: "https://cdn.alisamadii.com/avatar.jpeg"
+  url: "https://www.alisamadii.com/"
 tags: ["hosting", "domains", "how we work"]
 ---
 
@@ -16,13 +22,17 @@ Let me open with something you'll rarely hear from a web agency: please spend yo
 
 Here's why that tiny purchase matters more than most of the big ones.
 
-> **The short version:** You should own your domain name — not your web designer, not your agency, not me. You buy it in your own account, I build and host the website, then I send you a few DNS records to paste into your domain provider so your name points at your site. You keep the deed. I'm just the builder.
+## The Direct Answer
 
-**Who should own your domain name?** You, the business owner — always. The domain should be registered in your own account, under your own email, paid with your own card. Your agency hosts the website and gives you DNS records to connect the two. With me, it works like this:
+<div class="direct-answer">
+
+**Who should own your domain name?** You, the business owner — always. Not your web designer, not your agency, not me. The domain should be registered in your own account, under your own email, paid with your own card. Your agency builds and hosts the website and gives you DNS records to connect the two — you keep the deed, they're just the builder. With me, it works like this:
 
 1. You buy the domain from any registrar — [Namecheap](https://www.namecheap.com), [GoDaddy](https://www.godaddy.com), wherever. If you've never done it, I'll walk you through it.
 2. I build and host the website.
 3. I send you the DNS values to paste into your registrar. Stuck? We hop on a call and do it together.
+
+</div>
 
 That's the whole system. The rest of this post is why it's set up that way — and why you should be suspicious of any setup that isn't.
 
@@ -57,6 +67,14 @@ And if that paragraph still made your eyes glaze over — genuinely fine. Give m
 
 Notice what this arrangement means: I never need your registrar password, and you never need to touch my hosting. Each of us holds our own keys. Which brings me to the part I actually care about.
 
+### While you're in there: three settings worth thirty seconds
+
+Since you're already logged in to your registrar pasting DNS records, flip three switches before you leave:
+
+1. **Auto-renew: on.** Most domain horror stories aren't theft — they're a $12 renewal that bounced off an expired card while the reminder emails went to an old address. Expired domains get snapped up by resellers within days, and buying your own name back costs a lot more than $12.
+2. **Registrar lock: on.** Usually called "transfer lock." It stops anyone moving the domain to another registrar without you explicitly unlocking it first. It's free, and it's the deadbolt on the deed.
+3. **Contact email: current.** The registrant email is where renewal and transfer notices go. If it points at an inbox you stopped checking in 2019, fix it now — that address is effectively the spare key.
+
 ![A person happily using a laptop in an office](/blog/launch.webp)
 
 ## The real reason: if I disappear tomorrow, your business doesn't
@@ -87,7 +105,10 @@ If you're starting a project and want it set up this way, [get in touch](/#conta
 You. Always you. The domain should be registered in an account you control, under your email, paid with your card. A good designer will help you buy it and then ask you for DNS access — not buy it for you under their own name.
 
 **What happens if my web designer already owns my domain?**
-They control it — they can transfer it, repoint it, or let it expire, and if the relationship sours it can become leverage. Ask them to transfer the domain into your own registrar account; a reputable designer will do it without fuss. If they resist, that resistance is your answer.
+They control it — they can transfer it, repoint it, or let it expire, and if the relationship sours it can become leverage. Ask them to transfer the domain into your own registrar account: they unlock it, send you the authorization code (also called an EPP code), and you start the transfer from your own registrar's dashboard. Takes about a week, costs roughly a year's renewal. A reputable designer will do it without fuss; if they resist, that resistance is your answer.
+
+**Should the domain be in my personal name or my business's name?**
+If you have a registered business entity, use its legal name as the registrant — the business owns its own address that way, and the domain doesn't get tangled up if a co-founder leaves. Sole trader with no entity? Your own name is fine. The rule that matters is the same either way: the account belongs to you, not to whoever built the website.
 
 **What are DNS records, and is adding them hard?**
 DNS records tell the internet where your domain should point — they're the address book entries connecting your name to your website. Adding them is copy-paste in your registrar's dashboard, and takes about ten minutes. If you get stuck, any decent agency (this one included) will do it with you on a call.
@@ -101,3 +122,60 @@ Nothing dramatic — and that's by design. You own the domain and you have the s
 ---
 
 **Image credits:** Photos by [Markus Winkler](https://www.pexels.com/@markus-winkler-1430818), [RDNE Stock project](https://www.pexels.com/@rdne), [cottonbro studio](https://www.pexels.com/@cottonbro), and [Vlad Bagacian](https://www.pexels.com/@vladbagacian) on [Pexels](https://www.pexels.com).
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Who should own my domain name — me or my web designer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You. Always you. The domain should be registered in an account you control, under your email, paid with your card. A good designer will help you buy it and then ask you for DNS access — not buy it for you under their own name."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if my web designer already owns my domain?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "They control it — they can transfer it, repoint it, or let it expire, and if the relationship sours it can become leverage. Ask them to transfer the domain into your own registrar account: they unlock it, send you the authorization code (also called an EPP code), and you start the transfer from your own registrar's dashboard. Takes about a week, costs roughly a year's renewal. A reputable designer will do it without fuss; if they resist, that resistance is your answer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should the domain be in my personal name or my business's name?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If you have a registered business entity, use its legal name as the registrant — the business owns its own address that way, and the domain doesn't get tangled up if a co-founder leaves. Sole trader with no entity? Your own name is fine. The rule that matters is the same either way: the account belongs to you, not to whoever built the website."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are DNS records, and is adding them hard?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DNS records tell the internet where your domain should point — they're the address book entries connecting your name to your website. Adding them is copy-paste in your registrar's dashboard, and takes about ten minutes. If you get stuck, any decent agency (this one included) will do it with you on a call."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I check who owns my domain right now?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Run a WHOIS lookup — free at lookup.icann.org. If your business name and details aren't on the registration, find out whose are, today rather than the day you need to move."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens to my website if your agency shuts down?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nothing dramatic — and that's by design. You own the domain and you have the site's complete code. If you took the one-time $149 website insurance, you've already been taught the rescue drill — get the code, run it on your laptop, host it on Vercel — and it's all written down in a guide you keep. And if you'd rather not touch it, any basic web developer can host a ready-made site for you cheaply. You'd be inconvenienced, not held hostage."
+      }
+    }
+  ]
+}
+</script>

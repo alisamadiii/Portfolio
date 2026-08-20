@@ -2,7 +2,7 @@
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
-import SimpleFooter from "../../components/SimpleFooter.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -52,7 +52,14 @@ const schema = [
     image: `${SITE}${data.heroImage}`,
     datePublished: data.publishDate.toISOString(),
     dateModified: (data.updatedDate ?? data.publishDate).toISOString(),
-    author: { "@id": `${SITE}/#person-ali` },
+    author: {
+      "@type": "Person",
+      "@id": `${SITE}/#person-ali`,
+      name: data.author.name,
+      jobTitle: data.author.title,
+      url: data.author.url,
+      image: data.author.avatar,
+    },
     publisher: { "@id": `${SITE}/#organization` },
     mainEntityOfPage: pageUrl,
     keywords: data.keyword,
@@ -97,6 +104,29 @@ const schema = [
       <p class="mt-5 text-[18px] leading-[1.55] text-warmgray">
         {data.description}
       </p>
+
+      <!-- Author byline -->
+      <div class="mt-7 flex items-center gap-3.5">
+        <img
+          src={data.author.avatar}
+          alt={data.author.name}
+          width="44"
+          height="44"
+          loading="lazy"
+          class="h-11 w-11 rounded-full border border-charcoal/[0.08] object-cover"
+        />
+        <div class="leading-tight">
+          <a
+            href={data.author.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[15px] font-medium text-charcoal underline decoration-charcoal/30 underline-offset-[3px] transition-colors duration-200 hover:text-accent hover:decoration-accent"
+          >
+            {data.author.name}
+          </a>
+          <p class="mt-0.5 text-[13px] text-muted">{data.author.title}</p>
+        </div>
+      </div>
     </div>
 
     <!-- Hero image -->
@@ -216,7 +246,7 @@ const schema = [
     </div>
   </section>
 
-  <SimpleFooter />
+  <HomeFooter />
 </Layout>
 
 <style is:global>

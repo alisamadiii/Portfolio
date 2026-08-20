@@ -133,3 +133,20 @@
   margin-top: 2.2em;
   margin-bottom: 2.2em;
 }
+
+/* "The Direct Answer" callout box (AEO posts) — wrap the answer content
+   in <div class="direct-answer"> in the post markdown. */
+.prose .direct-answer {
+  border: 1.5px dashed var(--color-accent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+  padding: 1.5rem 1.75rem;
+  margin-top: 1.6em;
+  margin-bottom: 2.2em;
+}
+.prose .direct-answer > :first-child {
+  margin-top: 0;
+}
+.prose .direct-answer > :last-child {
+  margin-bottom: 0;
+}

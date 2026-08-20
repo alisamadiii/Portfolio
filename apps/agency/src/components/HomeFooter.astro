@@ -1,7 +1,17 @@
 ---
+// The single site-wide footer — used on the homepage and every inner page.
+import { services } from "../data/services";
+
 const year = new Date().getFullYear();
 ---
 
+<!-- TrustBox script -->
+<script
+  is:inline
+  type="text/javascript"
+  src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"
+  async></script>
+<!-- End TrustBox script -->
 <footer class="mx-auto max-w-[1200px] px-6 pt-9 pb-14 md:px-10">
   <div class="grid grid-cols-2 gap-10 md:grid-cols-4">
     <!-- Brand -->
@@ -64,15 +74,20 @@ const year = new Date().getFullYear();
       </h4>
       <ul class="space-y-2.5 text-[13.5px] text-warmgray">
         <li>
-          <a
-            href="#hero"
-            class="transition-colors duration-300 hover:text-accent">Home</a
+          <a href="/" class="transition-colors duration-300 hover:text-accent"
+            >Home</a
           >
         </li>
         <li>
           <a
-            href="#services"
+            href="/services"
             class="transition-colors duration-300 hover:text-accent">Services</a
+          >
+        </li>
+        <li>
+          <a
+            href="/pricing"
+            class="transition-colors duration-300 hover:text-accent">Pricing</a
           >
         </li>
         <li>
@@ -117,48 +132,18 @@ const year = new Date().getFullYear();
         Services
       </h4>
       <ul class="space-y-2.5 text-[13.5px] text-warmgray">
-        <li>
-          <a
-            href="/services/web-development"
-            class="transition-colors duration-300 hover:text-accent"
-            >Web Development</a
-          >
-        </li>
-        <li>
-          <a
-            href="/services/ui-ux-design"
-            class="transition-colors duration-300 hover:text-accent"
-            >UI/UX Design</a
-          >
-        </li>
-        <li>
-          <a
-            href="/services/brand-identity"
-            class="transition-colors duration-300 hover:text-accent"
-            >Brand Identity</a
-          >
-        </li>
-        <li>
-          <a
-            href="/services/seo-analytics"
-            class="transition-colors duration-300 hover:text-accent"
-            >SEO &amp; Analytics</a
-          >
-        </li>
-        <li>
-          <a
-            href="/services/website-management"
-            class="transition-colors duration-300 hover:text-accent"
-            >Website Management</a
-          >
-        </li>
-        <li>
-          <a
-            href="/services/custom-web-apps"
-            class="transition-colors duration-300 hover:text-accent"
-            >Custom Web Apps</a
-          >
-        </li>
+        {
+          services.map((s) => (
+            <li>
+              <a
+                href={`/services/${s.slug}`}
+                class="transition-colors duration-300 hover:text-accent"
+              >
+                {s.name}
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </div>
 

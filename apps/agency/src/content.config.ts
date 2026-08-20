@@ -16,6 +16,14 @@ const blog = defineCollection({
       .object({ name: z.string(), url: z.string(), pexelsUrl: z.string() })
       .optional(),
     tags: z.array(z.string()).default([]),
+    // Author byline shown under the post description; url links to the
+    // author's portfolio.
+    author: z.object({
+      name: z.string(),
+      title: z.string(),
+      avatar: z.string(),
+      url: z.string(),
+    }),
     draft: z.boolean().default(false),
   }),
 });

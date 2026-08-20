@@ -7,8 +7,10 @@
 // first clause. intro + localContext + most FAQs are hand-written per city — never
 // reuse a sentence skeleton with the city name swapped, or the pages read as
 // doorway pages. Prices are never hardcoded here (Stripe-synced in pricing.ts).
-// FAQ content is visible on-page only — no FAQPage schema (Google retired FAQ
-// rich results May 2026). The agency is headquartered in Jacksonville; every
+// FAQ content is visible on-page AND emitted as FAQPage JSON-LD from
+// [city].astro — Google retired FAQ rich results (May 2026), but AI answer
+// engines (ChatGPT, Perplexity, AI Overviews) still parse FAQPage, so keep
+// answers self-contained. The agency is headquartered in Jacksonville; every
 // other city is served remotely and the pages say so honestly — no fake offices.
 
 export interface City {
@@ -33,6 +35,8 @@ export interface City {
   /** 3–4 slugs of nearby cities in this array — validated below. */
   nearby: string[];
   faqs: { q: string; a: string }[];
+  /** Hero band image — public/locations/<slug>.webp, generated via scripts/optimize-location-images.mjs. */
+  image?: { src: string; alt: string };
   /** Extra synonyms surfaced only by site search. */
   searchKeywords?: string[];
 }
@@ -46,6 +50,10 @@ export const cities: City[] = [
     region: "Northeast Florida",
     populationNote: "Florida's largest city, ~985,000 residents",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Jacksonville,_Florida",
+    image: {
+      src: "/locations/jacksonville.webp",
+      alt: "Main Street Bridge and the downtown Jacksonville skyline over the St. Johns River at golden hour",
+    },
     isHeadquarters: true,
     seoTitle: "Jacksonville Web Design & Development — Ali Samadi Agency",
     metaDescription:
@@ -94,6 +102,10 @@ export const cities: City[] = [
     region: "South Florida",
     populationNote: "~455,000 residents, metro area over 6 million",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Miami",
+    image: {
+      src: "/locations/miami.webp",
+      alt: "Downtown Miami skyline across Biscayne Bay",
+    },
     seoTitle: "Miami Web Design & Development — Ali Samadi Agency",
     metaDescription:
       "Miami web design for businesses that compete in a crowded market. Custom-coded, bilingual-ready sites built on Next.js — no templates, no bloated agencies.",
@@ -141,6 +153,10 @@ export const cities: City[] = [
     region: "Tampa Bay",
     populationNote: "~400,000 residents, heart of the Tampa Bay metro",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Tampa,_Florida",
+    image: {
+      src: "/locations/tampa.webp",
+      alt: "Tampa Riverwalk and the downtown skyline along the Hillsborough River",
+    },
     seoTitle: "Tampa Website Design & Development — Ali Samadi Agency",
     metaDescription:
       "Tampa website design built with custom code, not drag-and-drop templates. Fast, modern sites for Tampa Bay businesses — transparent pricing, quick launches.",
@@ -188,6 +204,10 @@ export const cities: City[] = [
     region: "Central Florida",
     populationNote: "~320,000 residents, 75+ million annual visitors",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Orlando,_Florida",
+    image: {
+      src: "/locations/orlando.webp",
+      alt: "Lake Eola fountain and the downtown Orlando skyline framed by cypress trees",
+    },
     seoTitle: "Orlando Web Design & Development — Ali Samadi Agency",
     metaDescription:
       "Orlando web design for the businesses behind the theme parks — custom-coded sites that win local customers and tourist traffic alike. No templates.",
@@ -235,6 +255,10 @@ export const cities: City[] = [
     region: "Tampa Bay",
     populationNote: "Florida's fifth-largest city, ~260,000 residents",
     wikipediaUrl: "https://en.wikipedia.org/wiki/St._Petersburg,_Florida",
+    image: {
+      src: "/locations/st-petersburg.webp",
+      alt: "Sailboats in the downtown St. Petersburg marina on Tampa Bay at dusk",
+    },
     seoTitle: "St. Petersburg Web Design — Ali Samadi Agency",
     metaDescription:
       "St. Petersburg web design with actual design taste — custom-coded websites for St. Pete's creative businesses, galleries, restaurants, and local services.",
@@ -286,6 +310,10 @@ export const cities: City[] = [
     region: "South Florida",
     populationNote: "~182,000 residents, yachting capital of the world",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Fort_Lauderdale,_Florida",
+    image: {
+      src: "/locations/fort-lauderdale.webp",
+      alt: "Sunset over the Intracoastal Waterway and the Fort Lauderdale skyline",
+    },
     seoTitle: "Fort Lauderdale Web Design & Development — Ali Samadi Agency",
     metaDescription:
       "Fort Lauderdale web design for marine, luxury, and professional businesses. Custom-coded websites that match a high-end clientele — no templates.",
@@ -338,6 +366,10 @@ export const cities: City[] = [
     region: "South Florida",
     populationNote: "Florida's sixth-largest city, ~220,000 residents",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Hialeah,_Florida",
+    image: {
+      src: "/locations/hialeah.webp",
+      alt: "Calle Ocho tile mosaic in Little Havana — the Cuban heart of greater Miami",
+    },
     seoTitle: "Hialeah Website Design — Ali Samadi Agency",
     metaDescription:
       "Hialeah website design for family businesses ready to grow online. Bilingual-ready, custom-coded sites at honest prices — built to bring in local customers.",
@@ -389,6 +421,10 @@ export const cities: City[] = [
     region: "North Florida",
     populationNote: "Florida's capital, ~200,000 residents",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Tallahassee,_Florida",
+    image: {
+      src: "/locations/tallahassee.webp",
+      alt: "Church steeples and downtown Tallahassee towers in warm evening light",
+    },
     seoTitle: "Tallahassee Web Design & Development — Ali Samadi Agency",
     metaDescription:
       "Tallahassee web design for firms, associations, and businesses in Florida's capital. Credible, accessible, custom-coded websites — no templates.",
@@ -440,6 +476,10 @@ export const cities: City[] = [
     region: "Southwest Florida",
     populationNote: "~220,000 residents, 400 miles of canals",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Cape_Coral,_Florida",
+    image: {
+      src: "/locations/cape-coral.webp",
+      alt: "Palm-lined waterway winding through Cape Coral",
+    },
     seoTitle: "Cape Coral Website Design — Ali Samadi Agency",
     metaDescription:
       "Cape Coral website design for contractors, marine services, and local businesses riding Southwest Florida's growth. Custom-coded, fast, built to rank.",
@@ -492,6 +532,10 @@ export const cities: City[] = [
     region: "Treasure Coast",
     populationNote: "~240,000 residents, among the fastest-growing US cities",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Port_St._Lucie,_Florida",
+    image: {
+      src: "/locations/port-st-lucie.webp",
+      alt: "Sailboats docked at a Port St. Lucie marina under summer clouds",
+    },
     seoTitle: "Port St. Lucie Web Design — Ali Samadi Agency",
     metaDescription:
       "Port St. Lucie web design for Treasure Coast businesses. Custom-coded sites that capture the wave of new residents searching for local services.",
@@ -543,6 +587,10 @@ export const cities: City[] = [
     region: "South Florida",
     populationNote: "~170,000 residents in suburban Broward",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Pembroke_Pines,_Florida",
+    image: {
+      src: "/locations/pembroke-pines.webp",
+      alt: "Royal palms surrounding a fountain plaza in Pembroke Pines",
+    },
     seoTitle: "Pembroke Pines Web Design — Ali Samadi Agency",
     metaDescription:
       "Pembroke Pines web design for family-focused businesses in suburban Broward. Custom sites that win the local searches parents make every day.",
@@ -594,6 +642,10 @@ export const cities: City[] = [
     region: "South Florida",
     populationNote: "~153,000 residents between Miami and Fort Lauderdale",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Hollywood,_Florida",
+    image: {
+      src: "/locations/hollywood.webp",
+      alt: "Hollywood Beach Broadwalk with palms along the Atlantic shoreline",
+    },
     seoTitle: "Hollywood FL Web Design — Ali Samadi Agency",
     metaDescription:
       "Hollywood, Florida web design — custom-coded sites for beach-to-boulevard businesses competing between two major metros. No templates, honest pricing.",
@@ -646,6 +698,10 @@ export const cities: City[] = [
     region: "North Central Florida",
     populationNote: "~145,000 residents, home of the University of Florida",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Gainesville,_Florida",
+    image: {
+      src: "/locations/gainesville.webp",
+      alt: "A street beneath live oaks draped in Spanish moss — classic North Florida",
+    },
     seoTitle: "Gainesville Web Design & Development — Ali Samadi Agency",
     metaDescription:
       "Gainesville web design for startups, practices, and businesses in UF's orbit. Modern, custom-coded websites — built fast, priced plainly.",
@@ -698,6 +754,10 @@ export const cities: City[] = [
     region: "South Florida",
     populationNote: "~120,000 residents, seat of Palm Beach County",
     wikipediaUrl: "https://en.wikipedia.org/wiki/West_Palm_Beach,_Florida",
+    image: {
+      src: "/locations/west-palm-beach.webp",
+      alt: "West Palm Beach skyline across the Intracoastal Waterway",
+    },
     seoTitle: "West Palm Beach Web Design — Ali Samadi Agency",
     metaDescription:
       "West Palm Beach web design for finance, professional, and luxury-adjacent businesses. Custom-coded sites polished enough for Palm Beach County clientele.",
@@ -749,6 +809,10 @@ export const cities: City[] = [
     region: "Southwest Florida",
     populationNote: "~57,000 in the city, ~840,000 metro on the Gulf Coast",
     wikipediaUrl: "https://en.wikipedia.org/wiki/Sarasota,_Florida",
+    image: {
+      src: "/locations/sarasota.webp",
+      alt: "Sarasota bayfront with sailboats and the Ringling Bridge at dusk",
+    },
     seoTitle: "Sarasota Web Design & Development — Ali Samadi Agency",
     metaDescription:
       "Sarasota web design with the taste this arts town expects. Custom-coded websites for Gulf Coast businesses, galleries, and professional practices.",

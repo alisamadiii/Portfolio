@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
-import SimpleFooter from "../../components/SimpleFooter.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
 import { cities } from "../../data/cities";
 
 const SITE = "https://agency.alisamadii.com";
@@ -146,7 +146,7 @@ const regions = [...new Set(cities.map((c) => c.region))].map((region) => ({
     </div>
   </section>
 
-  <SimpleFooter />
+  <HomeFooter />
 </Layout>
 
 <style is:global>

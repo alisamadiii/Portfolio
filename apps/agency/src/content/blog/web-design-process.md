@@ -1,14 +1,20 @@
 ---
-title: "The Web Design Process: How I Take a Website From Idea to Live in Four Steps"
-description: "A plain-English walk through my web design process — the four steps that turn a first conversation into a fast, live website you can edit yourself. Discovery, Strategy, Execution, and Launch, plus how long it really takes and how AI fits in."
+title: "The Web Design Process: Four Steps From Idea to Live"
+description: "My web design process in four steps — Discovery, Strategy, Execution, Launch — plus how long a website really takes and where AI fits in."
 keyword: "web design process"
 publishDate: 2026-08-05
+updatedDate: 2026-08-20
 heroImage: "/blog/process-hero.webp"
 heroImageAlt: "A designer's desk with a notebook, pen, and phone — planning a website"
 heroCredit:
   name: "Negative Space"
   url: "https://www.pexels.com/@negativespace"
   pexelsUrl: "https://www.pexels.com/photo/iphone-dark-notebook-pen-34140/"
+author:
+  name: "Ali Samadi"
+  title: "Web Developer & Founder, Ali Samadi Agency"
+  avatar: "https://cdn.alisamadii.com/avatar.jpeg"
+  url: "https://www.alisamadii.com/"
 tags: ["process", "web development", "how we work"]
 ---
 
@@ -16,7 +22,18 @@ Most people think building a website starts with picking a colour. It doesn't. I
 
 So here's how I actually work, minus the mystery.
 
-> **The short version:** The web design process is the set of stages a website goes through from first idea to live site. Mine has four: **Discovery, Strategy, Execution, and Launch & Scale.** Discovery figures out what the site is _for_. Strategy decides its shape. Execution builds it in real code. Launch puts it live and hands you the keys.
+## The Direct Answer
+
+<div class="direct-answer">
+
+The web design process is the set of stages a website goes through from first idea to live site. Mine has four: **Discovery, Strategy, Execution, and Launch & Scale.** A typical custom website takes **six to twelve weeks**; a simple, well-scoped site built my way can be live in about a day.
+
+1. **Discovery** — figure out what the site is _for_, who it's talking to, and what job it's being hired to do
+2. **Strategy** — decide its shape: sitemap, user journey, wireframes, creative direction
+3. **Execution** — build and test it in real code, AI-assisted, human-reviewed
+4. **Launch & Scale** — put it live and hand you the keys, CMS included
+
+</div>
 
 That's the whole map. The rest of this post is the detail — including how long it really takes, where AI fits in, and the one thing I do differently from almost every agency: I hand you a site you can edit yourself, no developer required, no ransom notes.
 
@@ -52,7 +69,7 @@ Strategy covers four things.
 
 **Wireframes.** Before colour and typography enter the chat, I map the layout of the key pages in grey boxes. Headline here. Proof there. Button where the thumb can reach it. Working on the layout without the visual distraction is how you catch a bad structure early, while it still costs nothing to fix.
 
-**The creative direction.** The overall feel — typography, colour, tone — gets set here so the whole site holds together instead of turning into a patchwork of nice-looking pieces that clearly don't belong on the same website. Consistency is what makes a site feel designed instead of assembled.
+**The creative direction.** The overall feel — typography, colour, tone — gets set here so the whole site holds together instead of turning into a patchwork of nice-looking pieces that clearly don't belong on the same website. Consistency is what makes a site feel designed instead of assembled. (If you already have a logo, it's made half these decisions for you — I've written up exactly [how a website's colors get derived from a logo](/blog/match-website-colors-to-logo).)
 
 There's also a quiet third partner in this step that nobody likes talking about: **content.** Words are part of the design, not a thing you pour in at the end like petrol into a car that's already on the highway. If we know roughly what each page needs to _say_ during Strategy, the design gets built around real messaging instead of "lorem ipsum" placeholder that everyone forgets to replace until it's live and a customer emails you asking what "dolor sit amet" means.
 
@@ -136,6 +153,10 @@ What you skip: the heavy Strategy phase, the endless wireframe rounds, the disco
 
 The trade is simple: less process, less cost, live in a day — in exchange for a smaller scope. When your business grows and the site needs to do more, we add the missing steps then. You don't pay for Strategy you don't need yet.
 
+## What all this costs
+
+The four steps describe the work; the invoice describes the scope. My [pricing is public](/pricing) — flat numbers, no "book a call to find out" — and if you want the full market picture first, I've broken down [what a website actually costs](/blog/how-much-does-a-website-cost-jacksonville), from DIY builders to five-figure agency quotes, with my own numbers sitting in plain sight next to everyone else's. Short version: the process you just read doesn't change with the price. A one-day site and a three-week site go through the same hands and the same testing — one of them just has more pages to test.
+
 ## When you should not hire me
 
 I'm going to do the thing agencies never do and talk you _out_ of a sale, because it saves us both a headache.
@@ -159,6 +180,9 @@ If that's how you'd want your own site built, have a look at [my pricing](/prici
 **What is the web design process?**
 It's the set of stages a website moves through from first idea to live site. Most agencies break it into somewhere between four and eight steps. Mine has four — Discovery (work out what the site is for), Strategy (decide its structure and content), Execution (build and test it in real code), and Launch & Scale (put it live and hand it over). The point of having a process at all is to prevent scope creep, missed goals, and a finished site nobody actually agreed on.
 
+**How many steps are in the web design process?**
+Anywhere from four to eight, depending on who's counting — the top guides use seven or eight, I use four. Nobody's wrong; the bigger counts just split the same work into thinner slices. What matters is that goals, structure, build, testing, and launch all happen, in that order.
+
 **What are the steps of web design, exactly?**
 Whatever the count, the same work happens in every good process: define goals, research the audience and competitors, map the site structure with a sitemap and wireframes, design the visuals, write and place the content, build it, test it across devices and browsers, launch, and keep improving after. I group that into my four steps, but if someone sells you an eight-step version, they're describing the same road with more signposts.
 
@@ -180,3 +204,76 @@ Yes, and that's the whole point. You get a dashboard where you can change text, 
 ---
 
 **Image credits:** Photos by [Negative Space](https://www.pexels.com/@negativespace), [Jakub Zerdzicki](https://www.pexels.com/@jakubzerdzicki), [picjumbo.com](https://www.pexels.com/@picjumbo-com-55570), [Seraphfim Gallery](https://www.pexels.com/@seraphfim), [Vlad Bagacian](https://www.pexels.com/@vladbagacian), and [Michaela](https://www.pexels.com/@michaela-87369) on [Pexels](https://www.pexels.com).
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the web design process?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It's the set of stages a website moves through from first idea to live site. Most agencies break it into somewhere between four and eight steps. Mine has four — Discovery (work out what the site is for), Strategy (decide its structure and content), Execution (build and test it in real code), and Launch & Scale (put it live and hand it over). The point of a process is to prevent scope creep, missed goals, and a finished site nobody actually agreed on."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How many steps are in the web design process?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Anywhere from four to eight, depending on who's counting — the top guides use seven or eight, I use four. Nobody's wrong; the bigger counts just split the same work into thinner slices. What matters is that goals, structure, build, testing, and launch all happen, in that order."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the steps of web design, exactly?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Whatever the count, the same work happens in every good process: define goals, research the audience and competitors, map the site structure with a sitemap and wireframes, design the visuals, write and place the content, build it, test it across devices and browsers, launch, and keep improving after. I group that into four steps; an eight-step version is the same road with more signposts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's the first step in web design?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Discovery — figuring out what the site needs to do and who it's for, ideally written down as a brief. It's not the fun step, but it's the one that makes every other step cheaper. Start with a colour palette instead and you'll redo the whole thing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does it take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Six to twelve weeks for a typical custom site, and as little as a day for a simple, well-scoped one built the way I build. The variable that moves the timeline most isn't the design — it's how quickly you supply content and feedback."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I always need all four steps?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Big builds with a real job to do get the full process. A small business that just needs a clean, professional site gets Discovery and Strategy compressed into a short conversation, so a well-scoped site can be live in about a day — still a proper tested build, with the CMS and full ownership. When the business grows, we add the missing steps then."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's the difference between web design and web development?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Design is how it looks and how a visitor moves through it — layout, typography, the journey. Development is the code that makes it actually work in a browser. Some people split those across two hires. I do both, which is part of why the timeline is shorter — nothing gets lost in the handoff."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I really edit the site myself after launch?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, and that's the whole point. You get a dashboard where you can change text, swap images, and add pages, and it publishes in about a minute. You can't break anything, because the CMS only touches content, never code. If you'd rather not touch it at all, managed hosting has you covered — the option is yours."
+      }
+    }
+  ]
+}
+</script>

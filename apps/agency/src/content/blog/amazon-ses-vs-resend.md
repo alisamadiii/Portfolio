@@ -1,14 +1,20 @@
 ---
-title: "Amazon SES vs Resend: How My Clients Send Email for a Tenth of a Cent"
-description: "Amazon SES vs Resend, compared by an agency that runs client email on SES — real per-email pricing, what the emails look like, and who should pick which."
+title: "Amazon SES vs Resend: Real Pricing From an Agency"
+description: "One charges a tenth of a cent per email, the other $20 a month. I run client email on SES — here's the real cost math and who should pick which."
 keyword: "amazon ses vs resend"
 publishDate: 2026-08-09
+updatedDate: 2026-08-20
 heroImage: "/blog/ses-hero.webp"
 heroImageAlt: "An open laptop showing an email inbox on a desk"
 heroCredit:
   name: "cottonbro studio"
   url: "https://www.pexels.com/@cottonbro"
   pexelsUrl: "https://www.pexels.com/photo/person-using-a-laptop-on-a-table-7439136/"
+author:
+  name: "Ali Samadi"
+  title: "Web Developer & Founder, Ali Samadi Agency"
+  avatar: "https://cdn.alisamadii.com/avatar.jpeg"
+  url: "https://www.alisamadii.com/"
 tags: ["email", "pricing", "how we work"]
 ---
 
@@ -16,16 +22,22 @@ I once watched a small business pay $240 a year to send about forty emails a mon
 
 That's the whole reason this post exists. Email sending is one of those invisible parts of a website — the contact form, the booking confirmation, the "your application was approved" note — and most businesses have no idea what it costs or how it works. So here's how I do it for my clients, and why the answer is Amazon SES and not the trendier option.
 
-> **The short version:** Amazon SES charges $0.10 per 1,000 emails with no monthly fee. Resend charges $20/month once you outgrow its free tier. SES is roughly four times cheaper per email; the trade is a genuinely painful setup. My clients get the SES price without ever touching the setup — the first 1,000 emails every month are free, and every email goes out from their own domain with no watermark.
+## The Direct Answer
 
-**Amazon SES vs Resend in one paragraph:** both are services that send email on behalf of your website — contact-form notifications, receipts, status updates. SES is Amazon's raw infrastructure: $0.10 per 1,000 emails, pay-as-you-go, no monthly minimum, but a setup process only a developer could love. Resend is the developer-friendly wrapper: quicker to start, nicer dashboard, and about four times the per-email price once you're past the free tier.
+<div class="direct-answer">
 
-What that means in practice:
+**Amazon SES vs Resend:** both are services that send email on behalf of your website — contact-form notifications, receipts, status updates. SES is Amazon's raw infrastructure: **$0.10 per 1,000 emails**, pay-as-you-go, no monthly minimum, but a setup process only a developer could love. Resend is the developer-friendly wrapper: quicker to start, nicer dashboard, and about four times the per-email price once you're past the free tier.
 
-- **Price per email:** SES $0.0001 — Resend $0.0004 on the paid plan
-- **Monthly minimum:** SES none — Resend $20/month after the free tier
-- **Free tier:** Resend gives 3,000 emails/month (capped at 100/day)
-- **Setup:** Resend takes an afternoon — SES takes a developer
+|                 | Amazon SES        | Resend                                |
+| --------------- | ----------------- | ------------------------------------- |
+| Price per email | $0.0001           | $0.0004 on the paid plan              |
+| Monthly minimum | none              | $20/month after the free tier         |
+| Free tier       | —                 | 3,000 emails/month, capped at 100/day |
+| Setup           | takes a developer | takes an afternoon                    |
+
+My clients get the SES price without ever touching the setup — **the first 1,000 emails every month are free**, and every email goes out from their own domain with no watermark.
+
+</div>
 
 ![A calculator and money on a desk, working out costs](/blog/email-pricing.webp)
 
@@ -37,7 +49,7 @@ Amazon SES charges **$0.10 per 1,000 emails**. Not per month — per thousand se
 
 Resend's paid plan is **$20 a month for up to 50,000 emails**. That's a fine price *if you send anywhere near 50,000 emails*. Almost no small business does. So in practice you're paying $240 a year for capacity you'll never touch — the gym membership model, except the gym is a mail server. (Resend does have a free tier of 3,000 emails a month, capped at 100 a day, and honestly for a lot of small sites that's enough. More on when Resend is the right call later — I'm not here to pretend it's a scam. It's just priced for startups, not for the local bakery.)
 
-One detail worth knowing with SES: it charges **per recipient, not per message**. Send one email to 100 people, that's 100 billable emails. At these prices it's a rounding error, but it's the honest fine print.
+One detail worth knowing with SES: it charges **per recipient, not per message**. Send one email to 100 people, that's 100 billable emails. At these prices it's a rounding error, but it's the honest fine print. (Amazon has also started selling SES in named plans — the "Essentials" tier starts at $0.16 per 1,000 — but the classic pay-as-you-go rate above is still there and still what a small business should be on.)
 
 For my clients, the arrangement is simpler than either: **the first 1,000 emails every month are free.** Past that, you're into fractions of a cent per email. Nobody is paying $20 a month to receive their own contact form.
 
@@ -110,7 +122,13 @@ Send enough email that it should look professional; send too little to justify $
 
 ## What this costs you with me: usually nothing
 
-To put it all in one place — email sending on my client sites means: sent through Amazon SES from your own domain, first 1,000 emails a month free, fractions of a cent after, no watermark, a designed template (standard or custom to your brand), spam-filtered and locked to your inbox, and every email archived and exportable from your dashboard.
+To put it all in one place — email sending on my client sites means:
+
+- Sent through Amazon SES from your own domain
+- First 1,000 emails a month free, fractions of a cent after
+- No watermark — a designed template, standard or custom to your brand
+- Spam-filtered and locked to your inbox
+- Every email archived and exportable from your dashboard
 
 If your current website's contact form goes to a Gmail address, or worse, goes nowhere and you've been wondering why it's so quiet — [get in touch](/#contact). The form on my site uses exactly the system described above, so consider your first message a product demo. If it doesn't arrive, I owe you a very awkward apology.
 
@@ -134,6 +152,85 @@ A live log in their Client Hub dashboard: every email sent, searchable and filte
 **Can the contact form on my site be abused to spam people?**
 Not this one. The endpoint only delivers to your own inbox — the recipient isn't something the form can change — and it's rate-limited to five submissions per ten minutes per visitor, which stops most bots at the door.
 
+**Is Resend built on top of Amazon SES?**
+Resend doesn't publish its full plumbing, and early on much of its mail reportedly rode on the same AWS infrastructure. Which is really the point of the comparison: with Resend you're paying for the developer experience wrapped around commodity sending, not for different pipes.
+
+**Can Amazon SES suspend my account?**
+It can pause your sending if your bounce or complaint rates climb too high — that's Amazon protecting its shared reputation, and it applies to every sender. On my setup it's a non-issue: the forms are rate-limited, bounces are handled, and the volumes are far below anything that raises flags.
+
 ---
 
 **Image credits:** Photos by [cottonbro studio](https://www.pexels.com/@cottonbro), [Tara Winstead](https://www.pexels.com/@tara-winstead), [Brett Sayles](https://www.pexels.com/@brett-sayles), [Gustavo Fring](https://www.pexels.com/@gustavo-fring), and [Zulfugar Karimov](https://www.pexels.com/@zulfugarkarimov) on [Pexels](https://www.pexels.com). The contact-email screenshot is our own template.
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Which is cheaper, Amazon SES or Resend?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SES, by roughly four times per email: $0.10 per 1,000 versus Resend's $20/month for 50,000 ($0.40 per 1,000). But if your volume is small and nobody is handling SES setup for you, Resend's free tier (3,000/month) can make it cheaper in practice — your time counts as money."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Amazon SES really $0.10 per 1,000 emails?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — pay-as-you-go, no monthly minimum. It bills per recipient, so one email to 100 people counts as 100 emails. Extras like dedicated IPs cost more, but a small business needs none of them."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why not just send email from Gmail or my hosting provider?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Automated email from a personal Gmail hits spam filters fast and looks unprofessional. Cheap hosting mail servers share reputation with every spammer on the same box. Proper sending services authenticate your domain (SPF, DKIM, DMARC) so inboxes trust the mail — that's the difference between arriving and vanishing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do the emails have a \"sent via\" watermark?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not on my setup. Every email comes from your domain with your template and nothing else. Watermarks are how free email tools advertise themselves; they're the first thing to get rid of when the emails represent a real business."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does the client actually see?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A live log in their Client Hub dashboard: every email sent, searchable and filterable, with the exact delivered email viewable in full, and any date range exportable as a PDF."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can the contact form on my site be abused to spam people?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not this one. The endpoint only delivers to your own inbox — the recipient isn't something the form can change — and it's rate-limited to five submissions per ten minutes per visitor, which stops most bots at the door."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Resend built on top of Amazon SES?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Resend doesn't publish its full plumbing, and early on much of its mail reportedly rode on the same AWS infrastructure. Which is really the point of the comparison: with Resend you're paying for the developer experience wrapped around commodity sending, not for different pipes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Amazon SES suspend my account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It can pause your sending if your bounce or complaint rates climb too high — that's Amazon protecting its shared reputation, and it applies to every sender. On my setup it's a non-issue: the forms are rate-limited, bounces are handled, and the volumes are far below anything that raises flags."
+      }
+    }
+  ]
+}
+</script>

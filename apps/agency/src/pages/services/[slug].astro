@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
-import SimpleFooter from "../../components/SimpleFooter.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
 import { services, type Service } from "../../data/services";
 
 export function getStaticPaths() {
@@ -16,7 +16,7 @@ const { service } = Astro.props as { service: Service };
 const SITE = "https://agency.alisamadii.com";
 const pageUrl = `${SITE}/services/${service.slug}`;
 
-const schema = [
+const schema: Record<string, unknown>[] = [
   {
     "@type": "BreadcrumbList",
     "@id": `${pageUrl}#breadcrumb`,
@@ -42,6 +42,18 @@ const schema = [
     areaServed: "US",
   },
 ];
+
+// Google retired FAQ rich results (May 2026), but AI answer engines
+// (ChatGPT, Perplexity, AI Overviews) still parse FAQPage.
+schema.push({
+  "@type": "FAQPage",
+  "@id": `${pageUrl}#faq`,
+  mainEntity: service.faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+});
 
 const relatedServices = service.related
   .map((slug) => services.find((s) => s.slug === slug))
@@ -451,7 +463,7 @@ const relatedServices = service.related
     </div>
   </section>
 
-  <SimpleFooter />
+  <HomeFooter />
 </Layout>
 
 <style is:global>

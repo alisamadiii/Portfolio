@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
-import SimpleFooter from "../../components/SimpleFooter.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
 
 const SITE = "https://agency.alisamadii.com";
 const pageUrl = `${SITE}/blog`;
@@ -126,7 +126,7 @@ const schema = [
     }
   </section>
 
-  <SimpleFooter />
+  <HomeFooter />
 </Layout>
 
 <style is:global>

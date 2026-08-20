@@ -1,0 +1,43 @@
+---
+import type { Project } from "../data/projects";
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<a
+  href={project.url}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
+>
+  <div class="aspect-[16/10] overflow-hidden">
+    <img
+      src={project.image!.src}
+      alt={project.image!.alt}
+      width="1120"
+      height="700"
+      class="h-full w-full object-cover"
+      loading="lazy"
+    />
+  </div>
+  <div class="p-6">
+    <div
+      class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
+    >
+      {project.category}
+    </div>
+    <div class="mt-2.5 flex items-center justify-between gap-4">
+      <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
+        {project.name}
+      </h3>
+      <span class="text-accent">&#8599;</span>
+    </div>
+    <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+      {project.description}
+    </p>
+  </div>
+</a>

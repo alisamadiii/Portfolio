@@ -1,0 +1,77 @@
+{
+  "jacksonville": {
+    "name": "Mike Jones",
+    "url": "https://www.pexels.com/@jacksonvillepixels",
+    "pexelsUrl": "https://www.pexels.com/photo/modern-buildings-near-bridge-in-waterfront-city-15058860/"
+  },
+  "miami": {
+    "name": "Nicola Vidali",
+    "url": "https://www.pexels.com/@nicola-vidali-115811554",
+    "pexelsUrl": "https://www.pexels.com/photo/glass-modern-buildings-in-city-waterfront-9768488/"
+  },
+  "tampa": {
+    "name": "Vinícius Gianelli Braido",
+    "url": "https://www.pexels.com/@vinicius-gianelli-braido-447210400",
+    "pexelsUrl": "https://www.pexels.com/photo/skyline-of-downtown-tampa-with-river-and-bridges-38724259/"
+  },
+  "orlando": {
+    "name": "Simon Steiner",
+    "url": "https://www.pexels.com/@simon-steiner-1108932161",
+    "pexelsUrl": "https://www.pexels.com/photo/scenic-view-of-orlando-skyline-from-lake-eola-34936498/"
+  },
+  "st-petersburg": {
+    "name": "Neil Cabacang",
+    "url": "https://www.pexels.com/@neil-cabacang-33524025",
+    "pexelsUrl": "https://www.pexels.com/photo/city-skyline-across-body-of-water-during-night-10634719/"
+  },
+  "fort-lauderdale": {
+    "name": "Blue Arauz",
+    "url": "https://www.pexels.com/@blue",
+    "pexelsUrl": "https://www.pexels.com/photo/city-of-fort-lauderdale-in-florida-9867744/"
+  },
+  "hialeah": {
+    "name": "Diego Ferrari",
+    "url": "https://www.pexels.com/@diego-ferrari-33201434",
+    "pexelsUrl": "https://www.pexels.com/photo/calle-8-mosaic-sign-in-little-havana-miami-35895668/"
+  },
+  "tallahassee": {
+    "name": "Connor Scott McManus",
+    "url": "https://www.pexels.com/@connorscottmcmanus",
+    "pexelsUrl": "https://www.pexels.com/photo/cars-at-a-parking-lot-14474228/"
+  },
+  "cape-coral": {
+    "name": "DΛVΞ GΛRCIΛ",
+    "url": "https://www.pexels.com/@davegarcia",
+    "pexelsUrl": "https://www.pexels.com/photo/lush-university-campus-canal-view-in-florida-31039045/"
+  },
+  "port-st-lucie": {
+    "name": "Jacob Evans",
+    "url": "https://www.pexels.com/@jacob-evans-615198245",
+    "pexelsUrl": "https://www.pexels.com/photo/a-marina-with-boats-docked-in-the-water-27379289/"
+  },
+  "pembroke-pines": {
+    "name": "DΛVΞ GΛRCIΛ",
+    "url": "https://www.pexels.com/@davegarcia",
+    "pexelsUrl": "https://www.pexels.com/photo/stunning-fountain-and-palm-trees-at-coral-gables-campus-31070787/"
+  },
+  "hollywood": {
+    "name": "Esteban Carriazo",
+    "url": "https://www.pexels.com/@esteban-carriazo-2153373740",
+    "pexelsUrl": "https://www.pexels.com/photo/relaxing-walk-on-hollywood-beach-boardwalk-florida-32981362/"
+  },
+  "gainesville": {
+    "name": "Dominik Gryzbon",
+    "url": "https://www.pexels.com/@gryziu",
+    "pexelsUrl": "https://www.pexels.com/photo/scenic-drive-through-spanish-moss-laden-oaks-31361526/"
+  },
+  "west-palm-beach": {
+    "name": "Blue Arauz",
+    "url": "https://www.pexels.com/@blue",
+    "pexelsUrl": "https://www.pexels.com/photo/city-skyline-by-the-river-9867776/"
+  },
+  "sarasota": {
+    "name": "Jeffrey Eisen",
+    "url": "https://www.pexels.com/@jeffrey-eisen-1257101",
+    "pexelsUrl": "https://www.pexels.com/photo/scenic-view-of-sarasota-waterfront-and-bridge-31780174/"
+  }
+}

@@ -46,6 +46,12 @@ const QUERIES = {
   "email-setup": "network cables server room closeup",
   "email-legit": "person reading phone coffee cafe smiling",
   "email-records": "organized files archive folders shelf",
+  "jax-cost-hero": "calculator notebook budget planning desk",
+  "cost-snapshot": "price tags wooden table closeup",
+  "cost-levers": "sticky notes laptop planning project scope",
+  "hidden-costs": "person reviewing invoices receipts desk",
+  "published-prices": "laptop screen pricing page clean minimal",
+  "walk-away-owning": "handing keys hands ownership closeup",
 };
 
 // key → exact Pexels photo id. Overrides the search query for that key.

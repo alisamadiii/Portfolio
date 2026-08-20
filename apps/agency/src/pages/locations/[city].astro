@@ -1,10 +1,14 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
-import SimpleFooter from "../../components/SimpleFooter.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
+import FloridaFlag from "../../components/FloridaFlag.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
 import { cities, type City } from "../../data/cities";
 import { services } from "../../data/services";
+import { CLIENT_PROJECTS } from "../../data/projects";
 import { fmtPrice, PRICING } from "../../data/pricing";
+import locationCredits from "../../data/location-image-credits.json";
 
 export function getStaticPaths() {
   return cities.map((city) => ({
@@ -77,11 +81,30 @@ if (city.isHeadquarters) {
   });
 }
 
+// Google retired FAQ rich results (May 2026), but AI answer engines
+// (ChatGPT, Perplexity, AI Overviews) still parse FAQPage.
+schema.push({
+  "@type": "FAQPage",
+  "@id": `${pageUrl}#faq`,
+  mainEntity: city.faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+});
+
 const nearbyCities = city.nearby
   .map((slug) => cities.find((c) => c.slug === slug))
   .filter(Boolean) as City[];
 
 const industriesLine = city.industries.join(", ");
+
+const imageCredit = (
+  locationCredits as Record<
+    string,
+    { name: string; url: string; pexelsUrl: string }
+  >
+)[city.slug];
 ---
 
 <Layout
@@ -92,6 +115,7 @@ const industriesLine = city.industries.join(", ");
     title: city.seoTitle,
     description: city.metaDescription,
     url: pageUrl,
+    image: `/og/locations/${city.slug}.png`,
     twitterDescription: city.metaDescription,
   }}
   schema={schema}
@@ -105,9 +129,11 @@ const industriesLine = city.industries.join(", ");
       <div
         class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>Locations &mdash; {
-          city.name
-        }, Florida
+        <span class="h-px w-[26px] bg-accent"></span>
+        <FloridaFlag
+          class="h-[13px] w-auto rounded-[2px] ring-1 ring-charcoal/10"
+        />
+        Locations &mdash; {city.name}, Florida
       </div>
       <h1
         class="max-w-[22ch] text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
@@ -155,6 +181,49 @@ const industriesLine = city.industries.join(", ");
       </div>
     </div>
   </section>
+
+  <!-- ==================== CITY IMAGE ==================== -->
+  {
+    city.image && (
+      <section class="mx-auto max-w-[1200px] px-6 pb-16 md:px-10 md:pb-20">
+        <figure>
+          <div class="img-wrap overflow-hidden rounded-[22px]">
+            <img
+              src={city.image.src}
+              alt={city.image.alt}
+              width="1600"
+              height="686"
+              class="aspect-[21/9] w-full object-cover"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+          {imageCredit && (
+            <figcaption class="mt-2 text-right text-[11.5px] text-muted">
+              Photo by
+              <a
+                href={imageCredit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
+              >
+                {imageCredit.name}
+              </a>
+              on
+              <a
+                href={imageCredit.pexelsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
+              >
+                Pexels
+              </a>
+            </figcaption>
+          )}
+        </figure>
+      </section>
+    )
+  }
 
   <!-- ==================== LOCAL INTRO ==================== -->
   <section
@@ -235,6 +304,44 @@ const industriesLine = city.industries.join(", ");
         ))
       }
     </div>
+  </section>
+
+  <!-- ==================== RECENT WORK ==================== -->
+  <section
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+  >
+    <h2
+      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    >
+      Work we've shipped for businesses like yours
+    </h2>
+    <p
+      class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
+    >
+      Live websites we've designed and built for real clients &mdash; each one
+      shipped, launched, and in use today.
+    </p>
+    <div class="stagger mt-10 grid grid-cols-1 gap-[22px] md:grid-cols-3">
+      {CLIENT_PROJECTS.map((project) => <ProjectCard project={project} />)}
+    </div>
+    <a
+      href="/work"
+      class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+    >
+      See all our work
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+      </svg>
+    </a>
   </section>
 
   <!-- ==================== HOW WE WORK ==================== -->
@@ -489,7 +596,7 @@ const industriesLine = city.industries.join(", ");
     </div>
   </section>
 
-  <SimpleFooter />
+  <HomeFooter />
 </Layout>
 
 <style is:global>
