@@ -8,6 +8,7 @@ import {
   FileText,
   Globe,
   House,
+  Newspaper,
   SlidersHorizontal,
 } from "lucide-react";
 
@@ -16,6 +17,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
+import { BlogPanel } from "@/components/settings/blog-panel";
 import { DomainsPanel } from "@/components/settings/domains-panel";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { VariablesPanel } from "@/components/settings/variables-panel";
@@ -26,6 +28,7 @@ const GENERAL = "$general";
 const VARIABLES = "$variables";
 const BILLING = "$billing";
 const DOMAIN = "$domain";
+const BLOG = "$blog";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
@@ -46,7 +49,8 @@ export function SettingsMode() {
     selected === GENERAL ||
     selected === VARIABLES ||
     selected === BILLING ||
-    selected === DOMAIN
+    selected === DOMAIN ||
+    selected === BLOG
       ? null
       : (pageRows.find((page) => page.path === selected) ?? null);
 
@@ -80,6 +84,12 @@ export function SettingsMode() {
           label="Domain"
           active={selected === DOMAIN}
           onClick={() => setSelected(DOMAIN)}
+        />
+        <NavRow
+          icon={<Newspaper className="size-4" />}
+          label="Blog"
+          active={selected === BLOG}
+          onClick={() => setSelected(BLOG)}
         />
 
         <p className="text-muted-foreground mt-3 px-2 py-1.5 text-xs font-semibold tracking-wide">
@@ -119,6 +129,8 @@ export function SettingsMode() {
           <ProjectBillingPanel />
         ) : selected === DOMAIN ? (
           <DomainsPanel />
+        ) : selected === BLOG ? (
+          <BlogPanel />
         ) : (
           <GeneralSettingsPanel seo={seo} />
         )}

@@ -8,6 +8,7 @@ import { HEALTH_LAST_KEY, type HealthResult } from "./lib/health.js";
 import { capture } from "./lib/posthog.js";
 import type { AppEnv } from "./middleware/auth.js";
 import { requireAdmin } from "./middleware/auth.js";
+import { content } from "./routes/content.js";
 import { emailLogsRoute } from "./routes/email-logs.js";
 import { emails } from "./routes/emails.js";
 import { envs } from "./routes/envs.js";
@@ -101,6 +102,8 @@ const v1 = new Hono<AppEnv>();
 v1.route("/me", me);
 v1.route("/uploads", uploads);
 v1.route("/emails", emails);
+// No key: published blog content for client-site GitHub Actions (see route).
+v1.route("/content", content);
 
 // Admin: one guard on the whole group — routes inside stay guard-free.
 const admin = new Hono<AppEnv>();

@@ -17,6 +17,10 @@ export const COMMANDS = [
     name: "collection",
     summary: "Add a collection to cms.json interactively",
   },
+  {
+    name: "blog",
+    summary: "Scaffold the hub blog-sync workflow (--repo-id <id>)",
+  },
 ] as const;
 
 /** Obsolete `cms:*` scripts init cleans up when it owns their exact value. */

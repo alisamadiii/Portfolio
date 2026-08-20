@@ -1,0 +1,35 @@
+# Mirrors published blog posts from the hub into src/content/blog/.
+# Triggered by the hub's "Publish to site" button (repository_dispatch) or
+# manually from the Actions tab. Blog posts are edited in the hub only —
+# manual edits to the synced files are overwritten on the next publish.
+name: Blog sync
+on:
+  repository_dispatch:
+    types: [blog-sync]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync posts from hub
+        run: node .github/scripts/blog-sync.mjs
+      - name: Commit and push
+        run: |
+          if [ -n "$(git status --porcelain src/content/blog)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/content/blog
+            git commit -m "content(blog): sync from hub"
+            git push
+          else
+            echo "No changes."
+          fi

@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -149,6 +150,13 @@ export const hubProject = pgTable(
     // GitHub link (GET /v9/projects → link.repoId === repoId). Also absent from
     // syncOrgRepos' onConflict set() so it survives GitHub webhook re-syncs.
     vercelProjectId: text("vercel_project_id"),
+    // Blog sync state: the Blog tab shows an "unpublished changes" banner when
+    // blogEditedAt > blogPublishedAt. Edited is stamped on every blog CRUD
+    // mutation (including deletes, which max(updatedAt) could never detect);
+    // published is stamped when the Publish button fires the blog-sync
+    // repository_dispatch. Also absent from syncOrgRepos' onConflict set().
+    blogEditedAt: timestamp("blog_edited_at"),
+    blogPublishedAt: timestamp("blog_published_at"),
   },
   (table) => ({
     uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),
@@ -195,6 +203,47 @@ export const hubDomain = pgTable(
       sql`lower(${table.domain})`
     ),
     idxHubDomainRepoId: index("idx_hub_domain_repo_id").on(table.repoId),
+  })
+);
+
+// Blog posts authored in the hub and mirrored into the client repo's
+// src/content/blog/ by the repo's blog-sync GitHub Action (repository_dispatch
+// fired from cms.blog.publish). The DB is the editing store; git stays the
+// deployed source of truth.
+export const BLOG_POST_STATUS_VALUES = ["draft", "published"] as const;
+
+export type BlogPostStatus = (typeof BLOG_POST_STATUS_VALUES)[number];
+
+export const hubBlogPost = pgTable(
+  "hub_blog_post",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // = hubProject.repoId (GitHub-stable)
+    repoId: integer("repo_id").notNull(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    // v1: plain URL string
+    coverImage: text("cover_image"),
+    coverImageAlt: text("cover_image_alt"),
+    // Markdown
+    body: text("body").notNull().default(""),
+    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    // Plain text (not pgEnum): drizzle-kit push mishandles enum columns.
+    status: text("status").$type<BlogPostStatus>().notNull().default("draft"),
+    // First time the post flipped to published — the stable frontmatter
+    // publishDate (later edits move updatedAt, not this).
+    publishedAt: timestamp("published_at"),
+    createdBy: text("created_by").references(() => user.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqHubBlogPostRepoSlugCi: uniqueIndex("uq_hub_blog_post_repo_slug_ci").on(
+      table.repoId,
+      sql`lower(${table.slug})`
+    ),
+    idxHubBlogPostRepoId: index("idx_hub_blog_post_repo_id").on(table.repoId),
   })
 );
 

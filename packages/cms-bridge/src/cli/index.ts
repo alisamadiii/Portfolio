@@ -4,6 +4,7 @@
  *   cms-bridge init          wire pages to the CMS (idempotent)
  *   cms-bridge check         validate the v2 contract, exit 1 if work remains
  *   cms-bridge collection    add a collection to cms.json interactively
+ *   cms-bridge blog          scaffold the hub blog-sync workflow
  */
 
 import mri from "mri";
@@ -24,11 +25,13 @@ ${USAGE}
 
 Flags:
   init:   --dry-run  --verbose
+  blog:   --repo-id <id>  --force
 `;
 
 async function main(): Promise<number> {
   const argv = mri(process.argv.slice(2), {
-    boolean: ["dry-run", "verbose", "help"],
+    boolean: ["dry-run", "verbose", "help", "force"],
+    string: ["repo-id"],
   });
   const command = argv._[0];
 
@@ -51,6 +54,13 @@ async function main(): Promise<number> {
     case "collection": {
       const { collectionCommand } = await import("./commands/collection.js");
       return collectionCommand(root);
+    }
+    case "blog": {
+      const { blogCommand } = await import("./commands/blog.js");
+      return blogCommand(root, {
+        repoId: argv["repo-id"],
+        force: argv.force,
+      });
     }
     default:
       console.error(`${pc.red("Unknown command:")} ${command}`);

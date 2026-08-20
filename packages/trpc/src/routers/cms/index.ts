@@ -1,4 +1,5 @@
 import { createTRPCRouter } from "../../init";
+import { blogRouter } from "./blog";
 import { branchesRouter } from "./branches";
 import { cacheRouter } from "./cache";
 import { collaboratorsRouter } from "./collaborators";
@@ -17,6 +18,7 @@ import { versionRouter } from "./version";
 
 export const cmsRouter = createTRPCRouter({
   repos: reposRouter,
+  blog: blogRouter,
   branches: branchesRouter,
   collections: collectionsRouter,
   entries: entriesRouter,
