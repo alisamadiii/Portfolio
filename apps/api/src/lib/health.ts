@@ -8,6 +8,12 @@ import type { Env } from "../env.js";
 // Neon Postgres (auth lookups), Workers KV (contact rate limiter), AWS SES
 // (email sending) and R2 (uploads). Used by the cron in scheduled.ts and by
 // GET /v1/admin/health for live inspection.
+//
+// The cron passes { includeDb: false }: a synthetic `select 1` every 10 min
+// keeps Neon's compute from auto-suspending, and warm compute-time is what Neon
+// bills. Real DB outages already surface on live request paths (auth lookups
+// 500 + PostHog), so the cron skips the DB probe. The admin route still runs it
+// on demand.
 
 export type CheckResult = {
   ok: boolean;
@@ -115,14 +121,20 @@ function checkR2(env: Env): Promise<CheckResult> {
   });
 }
 
-export async function runHealthChecks(env: Env): Promise<HealthResult> {
-  const [db, kv, ses, r2] = await Promise.all([
-    checkDb(env),
+export async function runHealthChecks(
+  env: Env,
+  { includeDb = true }: { includeDb?: boolean } = {}
+): Promise<HealthResult> {
+  // Skip the DB probe when includeDb is false (the cron) so it never wakes
+  // Neon; keep every probe running in parallel.
+  const [kv, ses, r2, db] = await Promise.all([
     checkKv(env),
     checkSes(env),
     checkR2(env),
+    includeDb ? checkDb(env) : Promise.resolve(null),
   ]);
-  const checks = { db, kv, ses, r2 };
+  const checks: Record<string, CheckResult> = { kv, ses, r2 };
+  if (db) checks.db = db;
   return {
     ok: Object.values(checks).every((c) => c.ok),
     timestamp: new Date().toISOString(),

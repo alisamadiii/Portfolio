@@ -50,7 +50,10 @@ export async function scheduled(
   env: Env,
   _ctx: ExecutionContext
 ): Promise<void> {
-  const result = await runHealthChecks(env);
+  // includeDb: false — the DB probe is skipped so the cron never wakes Neon's
+  // auto-suspending compute (warm compute-time is billed). Real DB failures
+  // surface on live request paths instead.
+  const result = await runHealthChecks(env, { includeDb: false });
 
   await env.RATE_LIMIT_KV.put(HEALTH_LAST_KEY, JSON.stringify(result));
 

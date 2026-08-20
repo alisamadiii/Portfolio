@@ -33,7 +33,9 @@ simple = { limit = 300, period = 60 }
 #   AWS_BUCKET_ORIGIN      SES region (e.g. us-east-1); optional, defaults us-east-1
 #   EMAIL_FROM             default sender address; optional
 
-# Health cron (src/scheduled.ts): deep-checks DB/KV/SES/R2 every 10 minutes,
-# stores the result in KV for GET /health, alerts once per incident.
+# Health cron (src/scheduled.ts): checks KV/SES/R2 every 10 minutes, stores the
+# result in KV for GET /health, alerts once per incident. It deliberately skips
+# the DB probe (runHealthChecks includeDb:false) — a `select 1` every 10 min
+# keeps Neon's compute from auto-suspending, and warm compute-time is billed.
 [triggers]
 crons = ["*/10 * * * *"]
