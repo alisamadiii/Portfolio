@@ -63,23 +63,9 @@ const schema: Record<string, unknown>[] = [
   },
 ];
 
-if (city.isHeadquarters) {
-  schema.push({
-    "@type": "ProfessionalService",
-    "@id": `${SITE}/#localbusiness`,
-    name: "Ali Samadi Agency",
-    url: SITE,
-    telephone: "+19713828969",
-    parentOrganization: { "@id": `${SITE}/#organization` },
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Jacksonville",
-      addressRegion: "FL",
-      addressCountry: "US",
-    },
-    areaServed: { "@type": "State", name: "Florida" },
-  });
-}
+// The sitewide #organization node (Layout.astro) is dual-typed
+// Organization + ProfessionalService with the Jacksonville NAP, so the
+// HQ page no longer needs its own #localbusiness entity.
 
 // Google retired FAQ rich results (May 2026), but AI answer engines
 // (ChatGPT, Perplexity, AI Overviews) still parse FAQPage.

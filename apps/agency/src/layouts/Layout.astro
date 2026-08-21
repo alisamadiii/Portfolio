@@ -48,7 +48,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
+      "@type": ["Organization", "ProfessionalService"],
       "@id": `${SITE}/#organization`,
       name: "Ali Samadi Agency",
       url: SITE,
@@ -59,15 +59,29 @@ const jsonLd = {
         height: 512,
       },
       description:
-        "Creative agency specializing in brand identity, web development, and digital strategy.",
+        "Web design and development agency in Jacksonville, FL building custom websites and web apps for businesses across Florida.",
       email: "agency@alisamadii.com",
       telephone: "+19713828969",
+      priceRange: "$$",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Jacksonville",
         addressRegion: "FL",
         addressCountry: "US",
       },
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: 30.3322,
+        longitude: -81.6557,
+      },
+      areaServed: [
+        {
+          "@type": "City",
+          name: "Jacksonville",
+          sameAs: "https://en.wikipedia.org/wiki/Jacksonville,_Florida",
+        },
+        { "@type": "State", name: "Florida" },
+      ],
       founder: { "@id": `${SITE}/#person-ali` },
     },
     {

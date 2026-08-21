@@ -6,20 +6,63 @@ import PricingCards from "../components/PricingCards.astro";
 import Testimonial from "../components/Testimonial.astro";
 import ReviewPopup from "../components/ReviewPopup.astro";
 import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
+import { cities } from "../data/cities";
+import { PRICING, fmtPrice } from "../data/pricing";
+
+const SITE = "https://agency.alisamadii.com";
+
+const faqs = [
+  {
+    q: "How much does a website cost?",
+    a: `A custom one-time build starts at ${fmtPrice(PRICING.upfront.basePrice)} for a single page, plus ${fmtPrice(PRICING.upfront.perExtraPage)} per additional page. Or choose the all-inclusive plan at ${fmtPrice(PRICING.monthly)}/month, which covers design, development, hosting, and ongoing updates.`,
+  },
+  {
+    q: "How long does it take to launch?",
+    a: "Most single-page sites go from concept to launch in one day. Larger multi-page sites and web apps typically take one to two weeks, since one team handles design and development without hand-offs.",
+  },
+  {
+    q: "Do you only work with Jacksonville businesses?",
+    a: "No. We're headquartered in Jacksonville and serve businesses across Florida — Miami, Tampa, Orlando, and beyond — as well as remote clients anywhere in the US. Everything is handled online if you prefer.",
+  },
+  {
+    q: "Why custom code instead of a website builder?",
+    a: "Every site is hand-built with Next.js and React — no WordPress, Wix, or templates. Custom code loads faster, scores better on Google's Core Web Vitals, and can grow into a full web app without a rebuild.",
+  },
+  {
+    q: "What's included in the monthly plan?",
+    a: `The ${fmtPrice(PRICING.monthly)}/month plan includes design, development, hosting, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs.`,
+  },
+];
+
+const schema = [
+  {
+    "@type": "FAQPage",
+    "@id": `${SITE}/#faq`,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
+];
+
+const hq = cities.find((c) => c.isHeadquarters);
+const otherCities = cities.filter((c) => !c.isHeadquarters);
 ---
 
 <Layout
-  title="Ali Samadi — Creative Agency | Web Design & Development"
-  description="Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results."
+  title="Jacksonville Web Design & Development Agency | Ali Samadi"
+  description="Ali Samadi Agency builds custom-coded websites and web apps for Jacksonville, FL businesses. Design + development in-house, transparent pricing, fast delivery."
   canonical="https://agency.alisamadii.com"
   og={{
-    title: "Ali Samadi — Creative Agency",
+    title: "Jacksonville Web Design & Development — Ali Samadi Agency",
     description:
-      "Creative agency specializing in brand identity, web development, and digital strategy. We build digital experiences that drive results.",
+      "Custom websites and web apps for businesses in Jacksonville and across Florida. One team owns design, code, SEO, and hosting — fast, transparent, no templates.",
     url: "https://agency.alisamadii.com",
     twitterDescription:
-      "Creative agency specializing in brand identity, web development, and digital strategy.",
+      "Custom websites and web apps for Jacksonville, FL businesses — design and development under one roof.",
   }}
+  schema={schema}
   bodyClass="noise bg-cream text-charcoal selection:bg-accent/25 font-sans"
 >
   <HomeNav />
@@ -33,11 +76,16 @@ import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Creative Agency
+        <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Web Design
+        Agency &middot; Jacksonville, FL
       </div>
       <h1
         class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
       >
+        <span
+          class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
+          >Jacksonville web design &amp; development</span
+        >
         We build digital
         <span class="text-accent" id="scrambleTarget">experiences</span><span
           class="scramble-cursor"></span>
@@ -45,8 +93,9 @@ import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
       <p
         class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
       >
-        A creative agency specializing in brand identity, web development, and
-        digital strategy that drives real, measurable results.
+        A Jacksonville, FL web design and development agency creating brand
+        identities, custom websites, and web apps that drive real, measurable
+        results.
       </p>
       <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
         <a
@@ -140,8 +189,9 @@ import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
       </h2>
       <div>
         <p class="reveal text-[17px] leading-[1.6] text-warmgray">
-          Ali Samadi Agency is a small, focused studio building websites and web
-          apps for startups and small businesses. We design and develop every
+          Ali Samadi Agency is a small, focused studio based in Jacksonville,
+          Florida, building websites and web apps for startups and small
+          businesses. We design and develop every
           project from scratch on a modern stack — Next.js, React, and Postgres
           — so your site is fast, custom, and genuinely yours, never a recycled
           template. From brand and UI design through development, SEO, and
@@ -355,8 +405,8 @@ import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
             SEO &amp; Analytics
           </h3>
           <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
-            Data-driven optimization to boost visibility, traffic and meaningful
-            engagement.
+            Data-driven optimization to boost visibility and traffic —
+            including local SEO for Jacksonville and Florida businesses.
           </p>
           <a
             href="/services/seo-analytics"
@@ -757,7 +807,8 @@ import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
       </h2>
       <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
         A selection of live websites we've designed and built for real
-        businesses &mdash; each one shipped, launched, and in use today.
+        businesses, in Jacksonville and beyond &mdash; each one shipped,
+        launched, and in use today.
       </p>
     </div>
 
@@ -847,6 +898,94 @@ import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
         Compare plans in detail
         <span class="text-accent">&#8599;</span>
       </a>
+    </div>
+  </section>
+
+  <!-- ==================== AREAS WE SERVE ==================== -->
+  <section
+    id="areas"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+  >
+    <div
+      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+    >
+      <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Areas We Serve
+    </div>
+    <div
+      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+    >
+      <h2
+        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Web design across <span class="text-accent">Florida</span>
+      </h2>
+      <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+        Headquartered in Jacksonville, we work with businesses across the
+        state — everything from strategy calls to launch happens online, so
+        distance never slows a project down.
+      </p>
+    </div>
+    <div class="stagger flex flex-wrap gap-2.5">
+      {
+        hq && (
+          <a
+            href={`/locations/${hq.slug}`}
+            class="reveal inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[14.5px] font-medium text-white transition-colors duration-300 hover:bg-charcoal"
+          >
+            {hq.name}
+            <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase opacity-80">
+              HQ
+            </span>
+          </a>
+        )
+      }
+      {
+        otherCities.map((c) => (
+          <a
+            href={`/locations/${c.slug}`}
+            class="reveal inline-flex items-center rounded-full border border-charcoal/[0.14] px-5 py-2.5 text-[14.5px] font-medium transition-colors duration-300 hover:border-accent hover:text-accent"
+          >
+            {c.name}
+          </a>
+        ))
+      }
+      <a
+        href="/locations"
+        class="reveal inline-flex items-center gap-1.5 rounded-full border border-dashed border-charcoal/[0.2] px-5 py-2.5 text-[14.5px] font-medium text-warmgray transition-colors duration-300 hover:border-accent hover:text-accent"
+      >
+        All locations <span class="text-accent">&rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================== FAQ ==================== -->
+  <section
+    id="faq"
+    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+  >
+    <div
+      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+    >
+      <span class="h-px w-[26px] bg-accent"></span>09 &mdash; FAQ
+    </div>
+    <h2
+      class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+    >
+      Common questions
+    </h2>
+    <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+      {
+        faqs.map((faq) => (
+          <div class="reveal">
+            <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+              {faq.q}
+            </h3>
+            <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+              {faq.a}
+            </p>
+          </div>
+        ))
+      }
     </div>
   </section>
 
