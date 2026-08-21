@@ -1,6 +1,6 @@
 ---
 title: "How Much Does a Website Cost in Jacksonville? Real Numbers"
-description: "Real 2026 website costs in Jacksonville, FL: what local agencies charge, which fees are padding, and the exact prices I publish for my own builds."
+description: "Real 2026 website costs in Jacksonville, FL: what local agencies charge, which fees are padding, and the honest numbers behind my own plans."
 keyword: "how much does a website cost in jacksonville fl"
 publishDate: 2026-08-20
 heroImage: "/blog/jax-cost-hero.webp"
@@ -15,7 +15,6 @@ author:
   avatar: "https://cdn.alisamadii.com/avatar.jpeg"
   url: "https://www.alisamadii.com/"
 tags: ["pricing", "jacksonville", "how we work"]
-draft: true
 ---
 
 Somewhere in Jacksonville right now, a business owner is asking a web agency what a website costs, and the agency is answering "it depends." It's the industry's favorite phrase. Technically true, completely unhelpful — the pricing equivalent of a weather forecast that says "weather."
@@ -26,13 +25,13 @@ I build websites here, so I'll do the thing agencies apparently aren't supposed 
 
 <div class="direct-answer">
 
-**How much does a website cost in Jacksonville, FL?** A typical small-business website costs **$500–$10,000 upfront** from a local developer or agency, depending on page count, custom design, and features. E-commerce and large builds run $5,000–$25,000+, and ongoing costs add roughly $30–$200 a month. The price arrives in one of three shapes:
+**How much does a website cost in Jacksonville, FL?** A typical small-business website costs **$2,000–$10,000 upfront** from a local developer or agency, depending on page count, custom design, and features. E-commerce and large builds run $5,000–$25,000+, and ongoing costs add roughly $30–$200 a month. The price arrives in one of three shapes:
 
 1. One-time project fee, then small monthly costs for hosting and upkeep
 2. Monthly subscription that bundles design, hosting, and maintenance
 3. Hourly billing, usually $50–$150/hr for professional work
 
-My own published prices, for calibration: **$500 for a one-page build plus $200 per extra page, or $284/mo all-inclusive** with hosting, edits, and management bundled in.
+My own pricing, for calibration: **from $349/mo all-inclusive** — design, hosting, edits, and management bundled, and for most projects that's exactly the number — or a **one-time build you own outright**, scoped per project (a typical local build lands around **$2,500–$5,000**) with five months of hosting included.
 
 </div>
 
@@ -50,11 +49,11 @@ Here's the honest range, assembled from what local shops charge and what the wid
 | Basic professional site (1–5 pages)   | $500–$2,000            |
 | Custom business site (5–20 pages)     | $2,000–$10,000         |
 | E-commerce store                      | $5,000–$25,000+        |
-| Subscription plan (site + everything) | $100–$300/mo           |
+| Subscription plan (site + everything) | $100–$400/mo           |
 
 Those aren't hypothetical. One Jacksonville agency's rate sheet this summer listed $2,800 for a single scrolling page, $5,800 for a 12–24 page site, and $14,000 for a large or e-commerce build. A Florida-wide pricing guide puts basic professional sites at $500–$2,000 and custom business sites at $2,000–$10,000. Both are real, current, and wildly far apart — which tells you the useful question isn't "what's the average" but "what moves the number."
 
-(It also tells you someone in this town is charging $2,800 for one page. I have thoughts. We'll get there.)
+(It also tells you someone in this town is charging $2,800 for one scrolling page — and won't tell you that until you've booked the call. We'll get to why that matters.)
 
 ![Sticky notes and a laptop — mapping out what changes a website quote](/blog/cost-levers.webp)
 
@@ -62,7 +61,7 @@ Those aren't hypothetical. One Jacksonville agency's rate sheet this summer list
 
 Every quote you'll collect in Jacksonville is some mix of these levers:
 
-- **Page count.** More pages, more design and writing work. This is why I price per page — it's the closest thing web design has to an honest unit.
+- **Page count.** More pages, more design and writing work. It's the biggest single lever in any quote, which is why an honest quote names the page count it's based on.
 - **Custom vs. template.** A template site is assembled; a custom site is designed for your business. Custom costs more and is usually worth it once real customers are judging you against competitors.
 - **Features.** A contact form is cheap. Online booking, payments, a content editor you can use yourself, customer accounts — each adds real build time, so each should appear on the quote as its own number.
 - **Who builds it.** A freelancer might charge $2,000–$8,000 for the same scope an agency quotes at $10,000+. The agency isn't necessarily better; it has more salaries to cover. You're sometimes paying for their office, not your website.
@@ -76,38 +75,38 @@ What doesn't move the price, despite appearing on quotes: "brand discovery works
 The build fee is the loud number. These are the quiet ones, and over a few years they often add up to more:
 
 - **Domain name — $10–$20/year.** You buy this yourself, in your own account. Not your agency, not me. I wrote a whole post on [who should own your domain name](/blog/who-should-own-your-domain-name), and the answer is: you, always.
-- **Hosting — $5–$50/mo.** What keeps the site online. Mine is $20/mo on upfront builds, included on the monthly plan.
+- **Hosting — $5–$50/mo.** What keeps the site online. My one-time builds include the first five months, then it's an optional renewal; the monthly plan includes it always.
 - **SSL certificate — should be $0.** The padlock in the browser bar has been free for years. If it's a paid line on your quote, ask what else on the quote is decorative.
 - **Email sending — nearly free at small volume.** Contact-form and notification emails cost fractions of a cent. I include 1,000 emails a month and charge $1 per extra thousand.
 - **Maintenance — $50–$200/mo** is the going market rate for updates, backups, and security. On a subscription plan this is baked in; on a one-time build it's optional until something breaks, at which point it's very much not.
-- **Edits.** The sneaky one. Agencies commonly bill $50–$150/hr to change a phone number. If you'll want regular changes, either get a CMS so you can edit the site yourself (mine is a $30/mo add-on on upfront builds) or pick a plan where edits are included.
+- **Edits.** The sneaky one. Agencies commonly bill $50–$150/hr to change a phone number. If you'll want regular changes, either get a CMS so you can edit the site yourself (included in both of my plans) or pick a plan where edits are made for you.
 
 **Rule of thumb: budget the first year at the build price plus about $500–$1,500 in running costs,** then compare quotes on the full year — not the sticker. Two quotes that look $2,000 apart can land within a few hundred dollars of each other once the monthly lines are counted.
 
 ## Do the math on year one, not day one
 
-Quotes lie by omission, so compare them the way your accountant would: total cost over the first year. Here's the worked example with my own numbers, for a five-page site:
+Quotes lie by omission, so compare them the way your accountant would: total cost over the first year. Here's the worked example with my own numbers, using a representative $3,500 five-page build:
 
-| Route          | Upfront                        | Monthly                           | First year        | Year two+ |
-| -------------- | ------------------------------ | --------------------------------- | ----------------- | --------- |
-| One-time build | $1,300 ($500 + $200 × 4 pages) | $20 hosting, +$30 CMS if you edit | **$1,540–$1,900** | $240–$600 |
-| Monthly plan   | $0                             | $284 all-inclusive                | **$3,408**        | $3,408    |
+| Route          | Upfront          | Monthly                                     | First year  | Year two+ |
+| -------------- | ---------------- | ------------------------------------------- | ----------- | --------- |
+| One-time build | ~$3,500 (scoped) | $0 for 5 months, then optional hosting ~$20 | **~$3,640** | ~$240     |
+| Monthly plan   | $0               | from $349 all-inclusive                     | **~$4,188** | ~$4,188   |
 
-On raw arithmetic, the upfront build wins, and for a site you'll mostly leave alone, it's the right call. The monthly plan earns its keep when the site is a moving target — you want changes made for you continuously, new pages as the business shifts, someone else holding the pager. You're not buying a website at that point; you're renting a web department. Which one you need depends on whether "update the website" is a task you want to exist in your life.
+On raw arithmetic, the one-time build wins over time, and for a site you'll mostly leave alone, it's the right call. The monthly plan earns its keep when the site is a moving target — you want changes made for you continuously, new pages as the business shifts, someone else holding the pager — and it gets you a professionally built site with no capital outlay at all. You're not buying a website at that point; you're renting a web department. Which one you need depends on whether "update the website" is a task you want to exist in your life.
 
 Run the same two-route math on every quote you collect. **A $2,000 build with a mandatory $150/mo "care plan" is a $3,800 first year** — more than some quotes that looked pricier on the sticker. And a quote whose monthly lines aren't written down at all isn't a cheaper quote; it's an unfinished one.
 
 ![A clean pricing page displayed on a laptop screen](/blog/published-prices.webp)
 
-## My prices, in public, on purpose
+## My numbers, in public, on purpose
 
-Here's mine, the same numbers that sit on my [pricing page](/pricing) for anyone to read:
+Here's mine, the same structure that sits on my [pricing page](/pricing) for anyone to read:
 
-- **Upfront build: $500 for the first page, $200 for each page after.** A five-page site is $1,300, flat. Design, development, and SEO included. Hosting is $20/mo, and a CMS so you can edit everything yourself is $30/mo.
-- **Monthly plan: $284/mo, all-inclusive.** Design, development, hosting, CMS, email, SEO, and ongoing changes — fully managed. No build fee.
+- **Monthly plan: from $349/mo, all-inclusive.** Design, development, hosting, CMS, email, SEO, and ongoing changes — fully managed, no build fee. The price flexes with scope, but for the majority of projects, $349 is the number.
+- **One-time build: scoped per project, and you own it.** Design, development, and SEO included, plus your first five months of hosting. A typical local-business build lands around **$2,500–$5,000** — I'll put your exact number in writing before any work starts.
 - Simple sites go live in about a day once we've confirmed the project. Bigger builds take one to three weeks, following [my four-step web design process](/blog/web-design-process).
 
-Now the opinion, and I'll back it with numbers: **an agency that won't publish a price is charging you what they think you'll pay, not what the work costs.** The spread proves it — $500 and $2,800 both buy a one-page website in this market. The work didn't change fivefold between those quotes; the pricing strategy did. There are honest reasons a complex project needs a scoped quote. There is no honest reason a basic five-page site is unpriceable until you've booked a call.
+Now the opinion, and I'll back it with numbers: **an agency that hides every number until you've booked a call is charging you what they think you'll pay, not what the work costs.** Scoping a custom build before naming its exact price is honest — every project is different. Refusing to publish even a range, an anchor, or a starting point is not. That's why my monthly price and my typical build range are right here in writing: you should be able to rule me in or out before we ever talk.
 
 So when you're collecting quotes — from me or anyone — ask for the number in writing, itemized, before work starts. Anyone who reacts badly to that request has answered a more important question than the one you asked.
 
@@ -137,13 +136,13 @@ Every plan I offer works that way by default, and it's the standard I'd hold any
 
 ## Straight answers
 
-**How much does a website cost for a small business in Jacksonville?** Between $500 and $10,000 upfront for most small businesses, or $100–$300/mo on a bundled plan. The low end buys a few professionally built pages; the high end buys a large custom site. E-commerce runs $5,000–$25,000+.
+**How much does a website cost for a small business in Jacksonville?** Between $2,000 and $10,000 upfront for most small businesses, or $100–$400/mo on a bundled plan. The low end buys a few professionally built pages; the high end buys a large custom site. E-commerce runs $5,000–$25,000+.
 
 **How much should I pay someone to build a website?** For a basic site, $500–$2,000 is fair; a skilled freelancer or small studio charges $2,000–$8,000 for custom multi-page work. Agency quotes of $10,000+ are buying overhead as much as output. Hourly work should sit around $50–$150/hr.
 
 **Can I build a website for free?** Nearly. DIY builders run $10–$99/mo and your weekends. Reasonable for a brand-new business testing the waters; limiting once you need speed, rankings, or custom features.
 
-**How much does website maintenance cost per month?** Market rate is $50–$200/mo for hosting, backups, updates, and small changes. On my upfront plan the required part is $20/mo hosting; the monthly plan includes everything.
+**How much does website maintenance cost per month?** Market rate is $50–$200/mo for hosting, backups, updates, and small changes. My one-time builds include five months of hosting with an optional renewal after; the monthly plan includes everything.
 
 **Do I own my website?** Only if the deal is structured that way — check before you sign, not after. You should hold the domain in your own account and have full access to the site itself. If the agency owns either, you're renting.
 
@@ -167,7 +166,7 @@ That's the whole answer — the market's numbers, my numbers, and the fine print
       "name": "How much does a website cost for a small business in Jacksonville?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Between $500 and $10,000 upfront for most small businesses, or $100–$300/mo on a bundled plan. The low end buys a few professionally built pages; the high end buys a large custom site. E-commerce runs $5,000–$25,000+."
+        "text": "Between $2,000 and $10,000 upfront for most small businesses, or $100–$400/mo on a bundled plan. The low end buys a few professionally built pages; the high end buys a large custom site. E-commerce runs $5,000–$25,000+."
       }
     },
     {
@@ -191,7 +190,7 @@ That's the whole answer — the market's numbers, my numbers, and the fine print
       "name": "How much does website maintenance cost per month?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Market rate is $50–$200/mo for hosting, backups, updates, and small changes. On my upfront plan the required part is $20/mo hosting; the monthly plan includes everything."
+        "text": "Market rate is $50–$200/mo for hosting, backups, updates, and small changes. My one-time builds include five months of hosting with an optional renewal after; the monthly plan includes everything."
       }
     },
     {

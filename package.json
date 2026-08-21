@@ -25,7 +25,6 @@
     "android": "expo run:android",
     "api:key": "pnpm --filter api admin:key",
     "sync:plans": "tsx packages/auth/scripts/sync-plans.ts",
-    "sync:agency-prices": "tsx packages/trpc/scripts/sync-agency-prices.ts",
     "webhooks:check": "tsx packages/auth/scripts/check-webhooks.ts"
   },
   "devDependencies": {

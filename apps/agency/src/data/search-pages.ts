@@ -23,9 +23,16 @@ export const SEARCH_PAGES: SearchPage[] = [
     keywords: ["homepage", "start", "agency", "ali samadi"],
   },
   {
+    title: "Get a Quote",
+    description:
+      "Tell us about your project — scope, timeline, and a clear price within a day.",
+    url: "/quote",
+    keywords: ["quote", "estimate", "price", "start", "project", "request"],
+  },
+  {
     title: "Pricing",
     description:
-      "Monthly plan, one-time upfront build, or fully custom — compare plans.",
+      "All-inclusive monthly plan, one-time own-it build, or fully custom — compare plans.",
     url: "/pricing",
     keywords: [
       "cost",

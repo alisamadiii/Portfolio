@@ -407,13 +407,13 @@ const imageCredit = (
     <h2
       class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
     >
-      Plain pricing, published upfront
+      Plain pricing, no surprises
     </h2>
     <p
       class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
     >
-      The same flat prices for every client in every city — no
-      quotes-by-salesperson.
+      The same honest pricing for every client in every city — a published
+      monthly anchor, and project builds scoped in the open.
     </p>
     <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-3">
       <div
@@ -422,16 +422,17 @@ const imageCredit = (
         <div
           class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
         >
-          Monthly
+          Website-as-a-Service
         </div>
         <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
+          <span class="text-[15px] font-normal text-warmgray">from</span>
           {fmtPrice(PRICING.monthly)}<span
             class="text-[15px] font-normal text-warmgray">/mo</span
           >
         </div>
         <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
           All-inclusive — design, development, CMS, email, SEO, and managed
-          hosting in one plan.
+          hosting in one plan. For most projects this is the price.
         </p>
       </div>
       <div
@@ -440,19 +441,14 @@ const imageCredit = (
         <div
           class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
         >
-          Upfront build
+          Own-it build
         </div>
         <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
-          {fmtPrice(PRICING.upfront.basePrice)}<span
-            class="text-[15px] font-normal text-warmgray"
-          >
-            one-time</span
-          >
+          Per project
         </div>
         <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-          First page included, {fmtPrice(PRICING.upfront.perExtraPage)} per additional
-          page. Optional hosting {fmtPrice(PRICING.hosting)}/mo, CMS
-          {fmtPrice(PRICING.cms)}/mo.
+          A one-time build you own outright — 5 months of hosting included,
+          priced around your project's scope.
         </p>
       </div>
       <div

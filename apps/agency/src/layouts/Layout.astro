@@ -169,11 +169,6 @@ const jsonLd = {
          in the frontmatter) — no render-blocking Google Fonts request. -->
 
     <ClientRouter />
-    <!-- Loaded on every page: ClientRouter runs swapped-in external scripts
-         async, so a per-page include races the rerun inline scripts that
-         read PRICING/fmtPrice. Loading it here guarantees the globals exist
-         before any client-side navigation. -->
-    <script is:inline src="/pricing.js"></script>
     <script is:inline>
       // scroll-smooth would animate ClientRouter's scroll reset on every
       // navigation — strip it during the swap, restore after.

@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import HomeNav from "../components/HomeNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
 import PricingCards from "../components/PricingCards.astro";
+import QuoteForm from "../components/QuoteForm.astro";
 import Testimonial from "../components/Testimonial.astro";
 import ReviewPopup from "../components/ReviewPopup.astro";
 import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
@@ -14,7 +15,7 @@ const SITE = "https://agency.alisamadii.com";
 const faqs = [
   {
     q: "How much does a website cost?",
-    a: `A custom one-time build starts at ${fmtPrice(PRICING.upfront.basePrice)} for a single page, plus ${fmtPrice(PRICING.upfront.perExtraPage)} per additional page. Or choose the all-inclusive plan at ${fmtPrice(PRICING.monthly)}/month, which covers design, development, hosting, and ongoing updates.`,
+    a: `Choose the all-inclusive plan from ${fmtPrice(PRICING.monthly)}/month — where most projects land — covering design, development, hosting, and ongoing updates. Or go with a one-time build you own outright, priced per project after we scope it together.`,
   },
   {
     q: "How long does it take to launch?",
@@ -30,7 +31,7 @@ const faqs = [
   },
   {
     q: "What's included in the monthly plan?",
-    a: `The ${fmtPrice(PRICING.monthly)}/month plan includes design, development, hosting, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs.`,
+    a: `From ${fmtPrice(PRICING.monthly)}/month you get design, development, hosting, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs. Pricing varies with scope, but for most projects this is the price.`,
   },
 ];
 
@@ -72,52 +73,59 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
     id="hero"
     class="mx-auto max-w-[1200px] px-6 pt-[128px] pb-20 md:px-10"
   >
-    <div class="stagger">
-      <div
-        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Web Design
-        Agency &middot; Jacksonville, FL
+    <div
+      class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.25fr_1fr] lg:gap-16"
+    >
+      <div class="stagger">
+        <div
+          class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        >
+          <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Web Design
+          Agency &middot; Jacksonville, FL
+        </div>
+        <h1
+          class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
+        >
+          <span
+            class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
+            >Jacksonville web design &amp; development</span
+          >
+          We build digital
+          <span class="text-accent" id="scrambleTarget">experiences</span><span
+            class="scramble-cursor"></span>
+        </h1>
+        <p
+          class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
+        >
+          A Jacksonville, FL web design and development agency creating brand
+          identities, custom websites, and web apps that drive real, measurable
+          results.
+        </p>
+        <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
+          <a
+            href="https://cal.com/alisamadii"
+            target="_blank"
+            class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-medium text-white shadow-[0_8px_24px_rgba(252,132,100,0.32)] hover:bg-charcoal"
+          >
+            Start a Project
+            <span>&#8599;</span>
+          </a>
+          <a
+            href="/pricing"
+            class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15.5px] font-medium hover:border-accent hover:text-accent"
+          >
+            Pricing
+          </a>
+          <a
+            href="https://portal.alisamadii.com"
+            target="_blank"
+            class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
+            >I am a customer</a
+          >
+        </div>
       </div>
-      <h1
-        class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
-      >
-        <span
-          class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
-          >Jacksonville web design &amp; development</span
-        >
-        We build digital
-        <span class="text-accent" id="scrambleTarget">experiences</span><span
-          class="scramble-cursor"></span>
-      </h1>
-      <p
-        class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
-      >
-        A Jacksonville, FL web design and development agency creating brand
-        identities, custom websites, and web apps that drive real, measurable
-        results.
-      </p>
-      <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
-        <a
-          href="https://cal.com/alisamadii"
-          target="_blank"
-          class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-medium text-white shadow-[0_8px_24px_rgba(252,132,100,0.32)] hover:bg-charcoal"
-        >
-          Start a Project
-          <span>&#8599;</span>
-        </a>
-        <a
-          href="/pricing"
-          class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15.5px] font-medium hover:border-accent hover:text-accent"
-        >
-          Pricing
-        </a>
-        <a
-          href="https://portal.alisamadii.com"
-          target="_blank"
-          class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
-          >I am a customer</a
-        >
+      <div>
+        <QuoteForm compact />
       </div>
     </div>
   </section>
@@ -883,8 +891,8 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
         Simple, transparent pricing
       </h2>
       <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
-        One all-inclusive monthly plan, a one-time upfront build, or a fully
-        custom project — no hidden fees, cancel anytime.
+        One all-inclusive monthly plan, a one-time build you own outright, or a
+        fully custom project — no hidden fees, cancel anytime.
       </p>
     </div>
 
@@ -1014,10 +1022,10 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
         </p>
         <div class="reveal mt-9">
           <a
-            href="mailto:agency@alisamadii.com"
+            href="/quote"
             class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-accent px-[26px] py-[15px] text-base font-medium text-white shadow-[0_10px_30px_rgba(252,132,100,0.35)] hover:bg-white hover:text-charcoal"
           >
-            Start a Conversation
+            Get a Quote
             <span>&#8599;</span>
           </a>
         </div>

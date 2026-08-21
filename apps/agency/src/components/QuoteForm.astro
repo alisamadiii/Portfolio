@@ -1,0 +1,257 @@
+---
+// Public "Get a Quote" form — the single shared lead-capture component, used
+// on /quote, /contact, the homepage hero, and anywhere else. Multiple
+// instances per page are fine: the script binds each `.quote-form` by class
+// and reads fields via form.elements, no ids. Pricing cards deep-link with
+// ?plan=waas|onetime|custom, which preselects the plan <select> on load.
+// Submits to the portfolio quote API, which relays to agency@alisamadii.com
+// via the SES contact backend (recipient fixed server-side).
+import { PRICING, fmtPrice } from "../data/pricing";
+
+interface Props {
+  // Compact mode: tighter paddings + no intro copy, for the hero column.
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+
+const inputClass =
+  "w-full rounded-xl border border-charcoal/[0.08] bg-white px-4 py-3.5 text-sm text-charcoal transition-all focus:border-accent/30 focus:ring-2 focus:ring-accent/30 focus:outline-none";
+const labelClass =
+  "mb-2 block text-xs font-medium tracking-[0.1em] text-warmgray uppercase";
+---
+
+<div
+  class="quote-form-card rounded-[18px] bg-charcoal/[0.03] p-1.5 ring-1 ring-charcoal/[0.04]"
+>
+  <div
+    class:list={[
+      "rounded-[14px] bg-white text-charcoal",
+      compact ? "p-6" : "p-8",
+    ]}
+  >
+    {
+      !compact && (
+        <>
+          <div class="mb-2 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase">
+            <span class="h-px w-[26px] bg-accent" />
+            Get a Quote
+          </div>
+          <h3 class="text-2xl font-semibold tracking-[-0.02em] text-charcoal">
+            Tell us about your project
+          </h3>
+          <p class="mt-2 max-w-[52ch] text-sm leading-relaxed text-warmgray">
+            Share a few details and we'll come back with scope, timeline, and a
+            clear price — usually within a day.
+          </p>
+        </>
+      )
+    }
+    {
+      compact && (
+        <h3 class="text-lg font-semibold tracking-[-0.02em] text-charcoal">
+          Get a free quote
+        </h3>
+      )
+    }
+
+    <form
+      class:list={["quote-form space-y-5", compact ? "mt-5" : "mt-8"]}
+      novalidate
+    >
+      <div
+        class:list={[
+          "grid grid-cols-1 gap-5",
+          compact ? "" : "sm:grid-cols-2",
+        ]}
+      >
+        <div>
+          <span class={labelClass}>Name</span>
+          <input
+            name="name"
+            type="text"
+            required
+            maxlength="200"
+            autocomplete="name"
+            aria-label="Name"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <span class={labelClass}>Email</span>
+          <input
+            name="email"
+            type="email"
+            required
+            maxlength="200"
+            autocomplete="email"
+            aria-label="Email"
+            class={inputClass}
+          />
+        </div>
+      </div>
+
+      {
+        !compact && (
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <span class={labelClass}>
+                Business <span class="text-muted normal-case">(optional)</span>
+              </span>
+              <input
+                name="business"
+                type="text"
+                maxlength="200"
+                autocomplete="organization"
+                aria-label="Business (optional)"
+                class={inputClass}
+              />
+            </div>
+            <div>
+              <span class={labelClass}>
+                Phone <span class="text-muted normal-case">(optional)</span>
+              </span>
+              <input
+                name="phone"
+                type="tel"
+                maxlength="40"
+                autocomplete="tel"
+                aria-label="Phone (optional)"
+                class={inputClass}
+              />
+            </div>
+          </div>
+        )
+      }
+
+      <div>
+        <span class={labelClass}>I'm interested in</span>
+        <select name="plan" aria-label="I'm interested in" class={inputClass}>
+          <option value="waas"
+            >Website-as-a-Service — from {fmtPrice(PRICING.monthly)}/mo</option
+          >
+          <option value="onetime">Own-it build — priced per project</option>
+          <option value="custom">Custom / not sure yet</option>
+        </select>
+      </div>
+
+      <div>
+        <span class={labelClass}>Project details</span>
+        <textarea
+          name="message"
+          rows={compact ? "3" : "4"}
+          required
+          maxlength="2000"
+          aria-label="Project details"
+          placeholder="What are you building? Pages, features, timeline — anything helps."
+          class={`${inputClass} resize-none`}></textarea>
+      </div>
+
+      <div class="flex flex-col gap-3 pt-1">
+        <button
+          type="submit"
+          class:list={[
+            "quote-submit mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60",
+            compact ? "" : "sm:w-auto sm:px-8",
+          ]}
+        >
+          <span class="quote-submit-label">Request a Quote</span>
+        </button>
+        <p class="quote-status hidden text-sm" role="status"></p>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const API_BASE =
+      location.hostname === "127.0.0.1" || location.hostname === "localhost"
+        ? "http://localhost:3000"
+        : "https://www.alisamadii.com";
+    const QUOTE_API = `${API_BASE}/api/agency/quote`;
+
+    const plan = new URLSearchParams(location.search).get("plan");
+
+    document.querySelectorAll(".quote-form").forEach((form) => {
+      if (form.dataset.bound) return;
+      form.dataset.bound = "true";
+
+      const fields = form.elements;
+      const btn = form.querySelector(".quote-submit");
+      const label = form.querySelector(".quote-submit-label");
+      const status = form.querySelector(".quote-status");
+
+      // Preselect the plan from ?plan=waas|onetime|custom (pricing card CTAs).
+      if (plan && fields.plan.querySelector(`option[value="${plan}"]`)) {
+        fields.plan.value = plan;
+      }
+
+      const setStatus = (msg, ok) => {
+        status.textContent = msg;
+        status.classList.remove("hidden", "text-emerald-700", "text-red-600");
+        status.classList.add(ok ? "text-emerald-700" : "text-red-600");
+      };
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const name = fields.name.value.trim();
+        const email = fields.email.value.trim();
+        const message = fields.message.value.trim();
+        const business = fields.business?.value.trim() ?? "";
+        const phone = fields.phone?.value.trim() ?? "";
+
+        if (!name) return setStatus("Please enter your name.", false);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+          return setStatus("Please enter a valid email address.", false);
+        if (!message)
+          return setStatus("Tell us a little about your project.", false);
+
+        btn.disabled = true;
+        label.textContent = "Sending…";
+        status.classList.add("hidden");
+
+        try {
+          const res = await fetch(QUOTE_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              email,
+              message,
+              plan: fields.plan.value,
+              ...(business && { business }),
+              ...(phone && { phone }),
+            }),
+          });
+
+          if (res.status === 429) {
+            setStatus(
+              "Looks like you've sent a few requests already — give it a little while and try again, or email agency@alisamadii.com directly.",
+              false
+            );
+            return;
+          }
+          const payload = await res.json().catch(() => null);
+          if (!res.ok || !payload?.ok) {
+            throw new Error(payload?.error || "Failed to send.");
+          }
+
+          form.reset();
+          setStatus("Thanks — we'll reply within a day.", true);
+          label.textContent = "Sent";
+        } catch {
+          setStatus(
+            "Something went wrong sending your request. Please try again, or email agency@alisamadii.com.",
+            false
+          );
+        } finally {
+          if (label.textContent !== "Sent") {
+            label.textContent = "Request a Quote";
+          }
+          btn.disabled = false;
+        }
+      });
+    });
+  })();
+</script>

@@ -5,8 +5,8 @@ import PricingCards from "../components/PricingCards.astro";
 import HomeFooter from "../components/HomeFooter.astro";
 import { PRICING, fmtPrice } from "../data/pricing";
 
-// Prices are rendered into the HTML at build time so crawlers/LLMs see real
-// numbers. public/pricing.js still mirrors these for runtime checkout.
+// The monthly anchor is rendered into the HTML at build time so crawlers/LLMs
+// see a real number. The one-time build is quote-only — no figure anywhere.
 const SITE = "https://agency.alisamadii.com";
 // Page-specific structured data — prices sourced from src/data/pricing.ts so
 // the schema can never drift from the visible page or from Stripe.
@@ -36,9 +36,9 @@ const pricingSchema = [
       itemListElement: [
         {
           "@type": "Offer",
-          name: "Monthly (All-Inclusive)",
+          name: "Website-as-a-Service (All-Inclusive)",
           description:
-            "Design, development, CMS, email, SEO, and hosting — fully managed.",
+            "From $349/mo, varies by scope — design, development, CMS, email, SEO, and hosting, fully managed. For most projects this is the price.",
           price: String(PRICING.monthly),
           priceCurrency: "USD",
           priceSpecification: {
@@ -50,10 +50,9 @@ const pricingSchema = [
         },
         {
           "@type": "Offer",
-          name: "Upfront (One-Time Build)",
-          description: `First page ${fmtPrice(PRICING.upfront.basePrice)}, each additional page ${fmtPrice(PRICING.upfront.perExtraPage)}. Design, development, and SEO included.`,
-          price: String(PRICING.upfront.basePrice),
-          priceCurrency: "USD",
+          name: "One-Time Build (Own It)",
+          description:
+            "A one-time build you own outright — includes 5 months of hosting. Priced per project. Contact for a quote.",
         },
         {
           "@type": "Offer",
@@ -68,15 +67,15 @@ const pricingSchema = [
 
 <Layout
   title="Pricing — Ali Samadi | Creative Agency"
-  description="Simple, transparent pricing. Choose an all-inclusive monthly plan, a one-time upfront build, or a fully custom project — web design, hosting, CMS, and more."
+  description="Simple, honest pricing. An all-inclusive plan from $349/mo, a one-time build you own outright, or a fully custom project — web design, hosting, CMS, and more."
   canonical="https://agency.alisamadii.com/pricing"
   og={{
     title: "Pricing — Ali Samadi",
     description:
-      "Simple, transparent pricing. Choose an all-inclusive monthly plan, a one-time upfront build, or a fully custom project.",
+      "Simple, honest pricing. An all-inclusive plan from $349/mo, a one-time build you own outright, or a fully custom project.",
     url: "https://agency.alisamadii.com/pricing",
     twitterDescription:
-      "Simple, transparent pricing. All-inclusive monthly, upfront build, or fully custom.",
+      "Simple, honest pricing. All-inclusive from $349/mo, own-it build, or fully custom.",
   }}
   schema={pricingSchema}
   bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
@@ -101,8 +100,9 @@ const pricingSchema = [
       <p
         class="reveal mt-6 max-w-[55ch] text-base leading-relaxed text-warmgray md:text-lg"
       >
-        Pick the plan that fits — an all-inclusive monthly plan, a one-time
-        upfront build with light monthly add-ons, or a fully custom project
+        Pick the plan that fits — an all-inclusive monthly plan from {
+          fmtPrice(PRICING.monthly)
+        }/mo, a one-time build you own outright, or a fully custom project
         scoped together.
       </p>
       <div class="reveal mt-8">
@@ -156,7 +156,8 @@ const pricingSchema = [
           class="reveal mt-4 max-w-[55ch] text-base leading-relaxed text-warmgray"
         >
           Go all-inclusive with a managed monthly plan, own your build with a
-          one-time payment, or reach out for something fully custom.
+          one-time project priced around your scope, or reach out for something
+          fully custom. Every plan starts with a quote.
         </p>
       </div>
 
@@ -171,8 +172,8 @@ const pricingSchema = [
        leaking top-level consts into the persistent global scope. -->
   <script is:inline data-astro-rerun>
     (() => {
-      // Prices are server-rendered from src/data/pricing.ts and the checkout
-      // action ships with <PricingCards /> — this block only wires reveals.
+      // Prices are server-rendered from src/data/pricing.ts and every card
+      // links to the quote form — this block only wires reveals.
 
       const observer = new IntersectionObserver(
         (entries) => {

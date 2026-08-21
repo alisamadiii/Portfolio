@@ -1,8 +1,8 @@
 ---
-// The three plan cards (Monthly / Upfront / Custom) — single source of truth,
-// rendered on /pricing and the homepage #pricing section. Prices come from
-// src/data/pricing.ts at build time; the checkout handler script below ships
-// with the component so any page using it gets a working Start button.
+// The three plan cards (Website-as-a-Service / Own-it build / Custom) — single
+// source of truth, rendered on /pricing and the homepage #pricing section. The
+// monthly anchor comes from src/data/pricing.ts at build time. Every card CTA
+// routes to the "Get a Quote" form (/contact#quote) — no self-serve checkout.
 import { PRICING, fmtPrice } from "../data/pricing";
 
 const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
@@ -23,13 +23,20 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
             >Recommended</span
           >
         </div>
-        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Monthly</h3>
+        <h3 class="text-2xl font-semibold tracking-[-0.02em]">
+          Website-as-a-Service
+        </h3>
         <div class="mt-3">
+          <span class="text-xs text-warmgray">from</span>
           <span class="price-monthly text-3xl font-bold tracking-tight"
             >{fmtPrice(PRICING.monthly)}</span
           >
           <span class="text-base font-normal text-warmgray">/mo</span>
         </div>
+        <p class="mt-1 text-xs text-warmgray">
+          Pricing varies with scope, but for most projects this is where we
+          land.
+        </p>
         <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
           Everything included, one flat price — design, development, CMS, email,
           SEO, and hosting. Fully managed for you.
@@ -94,10 +101,10 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 d="M5 13l4 4L19 7"></path>
             </svg>
             <span
-              >SEO &amp; analytics setup
-              <span
-                class="ml-1 inline-flex translate-y-[-1px] items-center rounded-full border border-amber-300/60 bg-amber-50 px-2 py-0.5 align-middle font-mono text-[10px] tracking-[0.1em] text-amber-700 uppercase"
-                >Experimenting</span
+              >Essential SEO included
+              <span class="block text-xs text-muted"
+                >Titles, meta descriptions, AI-ready schema markup, keyword
+                checks &amp; blog setup</span
               ></span
             >
           </li>
@@ -118,12 +125,11 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           </li>
         </ul>
         <div class="mt-auto pt-8">
-          <button
-            id="monthlyStartBtn"
-            onclick="startMonthly()"
-            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+          <a
+            href="/quote?plan=waas"
+            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent"
           >
-            <span id="monthlyStartLabel">Start</span>
+            Get a Quote
             <svg
               class="h-4 w-4"
               fill="none"
@@ -136,13 +142,13 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 stroke-linejoin="round"
                 d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
             </svg>
-          </button>
+          </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Upfront Card -->
+  <!-- Own-it Build Card -->
   <div class="reveal">
     <div
       class="package-card flex h-full flex-col rounded-[18px] bg-charcoal/[0.03] p-1.5 ring-1 ring-charcoal/[0.04]"
@@ -154,34 +160,14 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
             >One-time</span
           >
         </div>
-        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Upfront</h3>
+        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Own-it Build</h3>
         <div class="mt-3">
-          <span class="text-xs text-warmgray">from</span>
-          <span class="price-upfront text-3xl font-bold tracking-tight"
-            >{fmtPrice(PRICING.upfront.basePrice)}</span
-          >
-          <span class="ml-1 text-xs text-warmgray">one-time</span>
+          <span class="text-3xl font-bold tracking-tight">Priced per project</span>
         </div>
-        <p class="price-upfront-extra mt-1 text-xs text-warmgray">
-          + {fmtPrice(PRICING.upfront.perExtraPage)} per extra page
-        </p>
         <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
-          Pay once for your website — design, development, and SEO included. Add
-          pages anytime. Keep it running with light monthly add-ons.
+          A one-time build you own outright — includes 5 months of hosting,
+          then optional renewal. Scoped and priced around your project.
         </p>
-        <div
-          class="mt-4 rounded-xl border border-charcoal/[0.06] bg-charcoal/[0.02] p-3.5"
-        >
-          <p class="text-xs leading-relaxed text-warmgray">
-            <span class="font-medium text-charcoal">You pay per page.</span> A page
-            is anything with its own address — Home, About, Contact — and a long scrolling
-            page still counts as one. Your first page is {
-              fmtPrice(PRICING.upfront.basePrice)
-            }, each page after is {fmtPrice(PRICING.upfront.perExtraPage)}.
-            Terms &amp; privacy pages are always free. You confirm the final
-            page count at checkout before any work begins.
-          </p>
-        </div>
         <ul class="mt-6 space-y-3 text-sm text-warmgray">
           <li class="flex items-start gap-3">
             <svg
@@ -212,9 +198,9 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 d="M5 13l4 4L19 7"></path>
             </svg>
             <span
-              >1 page included — add more anytime
+              >You own the site — code, content, everything
               <span class="block text-xs text-muted"
-                >Terms &amp; privacy pages free</span
+                >Clean handover, no lock-in</span
               ></span
             >
           </li>
@@ -232,10 +218,10 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 d="M5 13l4 4L19 7"></path>
             </svg>
             <span
-              >SEO &amp; analytics included
-              <span
-                class="ml-1 inline-flex translate-y-[-1px] items-center rounded-full border border-amber-300/60 bg-amber-50 px-2 py-0.5 align-middle font-mono text-[10px] tracking-[0.1em] text-amber-700 uppercase"
-                >Experimenting</span
+              >Essential SEO included
+              <span class="block text-xs text-muted"
+                >Titles, meta descriptions, AI-ready schema markup &amp;
+                keyword checks</span
               ></span
             >
           </li>
@@ -253,9 +239,9 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 d="M5 13l4 4L19 7"></path>
             </svg>
             <span
-              >Managed hosting
-              <span class="price-hosting-note font-medium text-charcoal"
-                >— {fmtPrice(PRICING.hosting)}/mo</span
+              >5 months of managed hosting included
+              <span class="block text-xs text-muted"
+                >Optional renewal after that</span
               ></span
             >
           </li>
@@ -272,12 +258,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 stroke-linejoin="round"
                 d="M5 13l4 4L19 7"></path>
             </svg>
-            <span
-              >Optional CMS access
-              <span class="price-cms-note font-medium text-charcoal"
-                >— {fmtPrice(PRICING.cms)}/mo</span
-              ></span
-            >
+            <span>CMS access included — edit anything</span>
           </li>
           <li class="flex items-start gap-3">
             <svg
@@ -297,10 +278,10 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
         </ul>
         <div class="mt-auto pt-8">
           <a
-            href="/onboarding"
+            href="/quote?plan=onetime"
             class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
           >
-            Start
+            Get a Quote
             <svg
               class="h-4 w-4"
               fill="none"
@@ -403,10 +384,10 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
         </ul>
         <div class="mt-auto pt-8">
           <a
-            href="/contact"
+            href="/quote?plan=custom"
             class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
           >
-            Contact Us
+            Get a Quote
             <svg
               class="h-4 w-4"
               fill="none"
@@ -425,29 +406,6 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
     </div>
   </div>
 </div>
-
-<!-- Checkout wiring for the Monthly card. createCheckout comes from
-     /pricing.js, loaded globally in Layout. data-astro-rerun + IIFE so it
-     re-binds after every ClientRouter swap. -->
-<script is:inline data-astro-rerun>
-  (() => {
-    const startMonthly = async () => {
-      const btn = document.getElementById("monthlyStartBtn");
-      const label = document.getElementById("monthlyStartLabel");
-      btn.disabled = true;
-      label.textContent = "Redirecting…";
-      try {
-        await createCheckout({ plan: "monthly" });
-      } catch (e) {
-        btn.disabled = false;
-        label.textContent = "Start";
-        alert("Something went wrong starting checkout. Please try again.");
-      }
-    };
-    // onclick="startMonthly()" in the markup needs the global.
-    window.startMonthly = startMonthly;
-  })();
-</script>
 
 <style is:global>
   .package-card {

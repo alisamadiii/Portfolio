@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import BackNav from "../components/BackNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
+import QuoteForm from "../components/QuoteForm.astro";
 
 const SITE = "https://agency.alisamadii.com";
 const pageUrl = `${SITE}/contact`;
@@ -88,13 +89,23 @@ const channels = [
       </p>
       <div class="mt-9">
         <a
-          href="mailto:agency@alisamadii.com"
+          href="#quote"
           class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-accent px-[26px] py-[15px] text-base font-medium text-white shadow-[0_10px_30px_rgba(252,132,100,0.35)] hover:bg-charcoal"
         >
-          Start a Conversation
+          Get a Quote
           <span>&#8599;</span>
         </a>
       </div>
+    </div>
+  </section>
+
+  <!-- ==================== QUOTE FORM ==================== -->
+  <section
+    id="quote"
+    class="mx-auto max-w-[1200px] scroll-mt-24 border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+  >
+    <div class="mx-auto max-w-[720px]">
+      <QuoteForm />
     </div>
   </section>
 

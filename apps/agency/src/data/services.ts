@@ -226,7 +226,7 @@ export const services: Service[] = [
     faqs: [
       {
         q: "How much does a website cost?",
-        a: "Our upfront build starts at $500 for the first page and $200 per additional page, with optional hosting at $20/mo and CMS access at $30/mo. There's also an all-inclusive monthly plan — see the pricing page for current numbers.",
+        a: "Our all-inclusive plan starts at $349/mo — where most projects land — covering design, development, hosting, CMS, and updates. Or choose a one-time build you own outright, priced per project after we scope it. See the pricing page for details.",
       },
       {
         q: "Why Astro instead of WordPress or Wix?",
@@ -531,7 +531,7 @@ export const services: Service[] = [
       },
       {
         q: "What does website management cost?",
-        a: "Managed hosting is $20/mo and CMS access is $30/mo as add-ons to an upfront build — or everything is included in the all-inclusive monthly plan. Current numbers are on the pricing page.",
+        a: "Everything — hosting, CMS, updates, and support — is included in the all-inclusive plan from $349/mo. One-time builds include 5 months of managed hosting, with optional renewal after. Current numbers are on the pricing page.",
       },
       {
         q: "What if I break something?",
