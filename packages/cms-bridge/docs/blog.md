@@ -49,12 +49,34 @@ only** (drafts never leave the hub).
   handled server-side); the script writes them verbatim.
 - Frontmatter fields: `title`, `description`, `publishDate`, `updatedDate?`,
   `coverImage?`, `coverImageAlt?`, `tags`.
-- Pushes are made by `github-actions[bot]`. GitHub's loop protection means the
-  bot push does not trigger other workflows in the repo, but it **does**
-  trigger the Vercel deploy (webhook-based).
+- Pushes made with the default `GITHUB_TOKEN` do **not** trigger other
+  workflows — and in practice they do **not** trigger the Vercel git
+  integration either (verified: the bot commit lands, no deployment is
+  created). To get automatic Vercel deploys, add a `BLOG_SYNC_TOKEN` secret
+  (fine-grained PAT with Contents read/write on the client repos — an
+  org-level secret covers every client repo at once). The workflow's checkout
+  uses `token: ${{ secrets.BLOG_SYNC_TOKEN || github.token }}`, so the push
+  then counts as a normal user push and Vercel deploys it. Without the
+  secret, the sync still commits — you just have to trigger the deploy
+  yourself.
 
 ## Cost
 
 The sync job takes well under a minute of Actions time per publish. Private
 repos consume from the org's shared free pool (2,000 min/month on the Free
 plan) — negligible at any realistic publish frequency.
+
+## Write a post locally
+
+```
+npx @alisamadiillc/cms-bridge blog new "My post title"
+```
+
+Creates `src/content/blog/my-post-title.md` with the hub-contract frontmatter
+(`title`, `description`, `publishDate` = today, `coverImage`, `coverImageAlt`,
+`tags`) so you can start typing immediately. Refuses to overwrite an existing
+file (`--force` to overwrite).
+
+If the repo's blog is managed by the hub, import the finished post into the
+hub before publishing — the sync mirror overwrites and deletes local posts it
+doesn't know about.

@@ -59,6 +59,80 @@ function loadRawTemplate(name: string): string {
   throw new Error(`Template "${name}" missing from the cms-bridge package.`);
 }
 
+/** Mirror of the hub's slugifyTitle (packages/trpc/src/lib/cms/slug.ts). */
+function slugifyTitle(title: string): string {
+  return title
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * `cms-bridge blog new "My post title"` — scaffold a hub-contract blog post
+ * at src/content/blog/<slug>.md so you can start typing immediately. The
+ * frontmatter keys match what the hub's blog-sync writes (title, description,
+ * publishDate, coverImage, coverImageAlt, tags).
+ */
+export function blogNewCommand(
+  root: string,
+  title: string,
+  options: { force?: boolean } = {}
+): number {
+  const trimmed = title.trim();
+  if (!trimmed) {
+    console.log(
+      `${pc.red("✗")} Pass a title: ${pc.bold('cms-bridge blog new "My post title"')}`
+    );
+    return 1;
+  }
+
+  const slug = slugifyTitle(trimmed);
+  if (!slug) {
+    console.log(`${pc.red("✗")} Title produced an empty slug — use letters or numbers.`);
+    return 1;
+  }
+
+  const target = path.join("src", "content", "blog", `${slug}.md`);
+  const targetPath = path.join(root, target);
+  const exists = fs.existsSync(targetPath);
+  if (exists && !options.force) {
+    console.log(
+      `${pc.yellow("!")} ${target} exists — left untouched (re-run with --force to overwrite)`
+    );
+    return 1;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const content = `---
+title: ${JSON.stringify(trimmed)}
+description: ""
+publishDate: ${today}
+coverImage: ""
+coverImageAlt: ""
+tags: []
+---
+
+Start writing here.
+`;
+
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.writeFileSync(targetPath, content);
+  console.log(`${pc.green("✓")} ${exists ? "updated" : "created"} ${target}`);
+
+  console.log(`
+${pc.bold("Next steps")}
+  1. Write your content below the frontmatter; fill in ${pc.bold("description")}
+     (and ${pc.bold("coverImage")}/${pc.bold("tags")} if you have them).
+  2. If this repo's blog is managed by the hub, import the post there before
+     publishing — the ${pc.bold("blog-sync")} mirror overwrites and deletes local
+     posts it doesn't know about.
+`);
+
+  return 0;
+}
+
 export function blogCommand(
   root: string,
   options: { repoId?: string | number; force?: boolean } = {}

@@ -19,7 +19,12 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # BLOG_SYNC_TOKEN (fine-grained PAT, Contents read/write) makes the push
+      # count as a normal user push so Vercel's git integration deploys it.
+      # Pushes made with the default GITHUB_TOKEN do NOT trigger Vercel.
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BLOG_SYNC_TOKEN || github.token }}
       - name: Sync posts from hub
         run: node .github/scripts/blog-sync.mjs
       - name: Commit and push

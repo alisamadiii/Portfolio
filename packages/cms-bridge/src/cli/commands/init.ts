@@ -99,15 +99,21 @@ export async function initCommand(
     root,
     COMMANDS.map((command) => ({
       key: `cms:${command.name}`,
-      command: `cms-bridge ${command.name}`,
-      // Upgrade the old `npx cms-bridge …` form (which 404s on the scoped name).
-      replaces: [`npx cms-bridge ${command.name}`],
+      // npx with the scoped name works even when the package isn't a local
+      // dependency (plain `npx cms-bridge` would 404 — the name is scoped).
+      command: `npx @alisamadiillc/cms-bridge ${command.name}`,
+      // Upgrade both stale forms we previously generated.
+      replaces: [`npx cms-bridge ${command.name}`, `cms-bridge ${command.name}`],
     })),
     {
       dryRun,
       remove: OBSOLETE_COMMANDS.map((name) => ({
         key: `cms:${name}`,
-        values: [`npx cms-bridge ${name}`, `cms-bridge ${name}`],
+        values: [
+          `npx @alisamadiillc/cms-bridge ${name}`,
+          `npx cms-bridge ${name}`,
+          `cms-bridge ${name}`,
+        ],
       })),
     }
   );

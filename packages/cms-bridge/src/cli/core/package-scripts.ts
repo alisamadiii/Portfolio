@@ -5,10 +5,10 @@
  * its value matches a form we generated. The file's indentation + trailing
  * newline are preserved.
  *
- * Scripts use the bare `cms-bridge` bin (resolved from node_modules/.bin when
- * npm/pnpm runs the script) — NOT `npx cms-bridge`, which would try to fetch
- * the unscoped package name from the registry and 404 (the real package is
- * scoped: @alisamadiillc/cms-bridge).
+ * Scripts use `npx @alisamadiillc/cms-bridge <cmd>` — the scoped name works
+ * whether or not the package is a local dependency (npx runs the package's
+ * single bin). Plain `npx cms-bridge` would 404 (unscoped name isn't ours),
+ * and the bare `cms-bridge` bin breaks when the package isn't installed.
  */
 
 import fs from "node:fs";

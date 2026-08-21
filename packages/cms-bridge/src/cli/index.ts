@@ -26,6 +26,7 @@ ${USAGE}
 Flags:
   init:   --dry-run  --verbose
   blog:   --repo-id <id>  --force
+  blog new "Title":  scaffold src/content/blog/<slug>.md  (--force overwrites)
 `;
 
 async function main(): Promise<number> {
@@ -56,7 +57,13 @@ async function main(): Promise<number> {
       return collectionCommand(root);
     }
     case "blog": {
-      const { blogCommand } = await import("./commands/blog.js");
+      const { blogCommand, blogNewCommand } = await import("./commands/blog.js");
+      // `cms-bridge blog new "My title"` — scaffold a post template.
+      if (argv._[1] === "new") {
+        return blogNewCommand(root, argv._.slice(2).join(" "), {
+          force: argv.force,
+        });
+      }
       return blogCommand(root, {
         repoId: argv["repo-id"],
         force: argv.force,

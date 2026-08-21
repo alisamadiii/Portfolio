@@ -19,7 +19,8 @@ export const COMMANDS = [
   },
   {
     name: "blog",
-    summary: "Scaffold the hub blog-sync workflow (--repo-id <id>)",
+    summary:
+      'Scaffold the hub blog-sync workflow (--repo-id <id>) or a post template (blog new "Title")',
   },
 ] as const;
 
