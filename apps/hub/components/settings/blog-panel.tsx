@@ -277,8 +277,18 @@ const PostEditor = ({
   const [title, setTitle] = useState(post.title);
   const [slug, setSlug] = useState(post.slug);
   const [description, setDescription] = useState(post.description);
-  const [coverImage, setCoverImage] = useState(post.coverImage ?? "");
-  const [coverImageAlt, setCoverImageAlt] = useState(post.coverImageAlt ?? "");
+  const [keyword, setKeyword] = useState(post.keyword);
+  const [heroImage, setHeroImage] = useState(post.heroImage ?? "");
+  const [heroImageAlt, setHeroImageAlt] = useState(post.heroImageAlt ?? "");
+  const [creditName, setCreditName] = useState(post.heroCredit?.name ?? "");
+  const [creditUrl, setCreditUrl] = useState(post.heroCredit?.url ?? "");
+  const [creditPexelsUrl, setCreditPexelsUrl] = useState(
+    post.heroCredit?.pexelsUrl ?? ""
+  );
+  const [authorName, setAuthorName] = useState(post.author?.name ?? "");
+  const [authorTitle, setAuthorTitle] = useState(post.author?.title ?? "");
+  const [authorAvatar, setAuthorAvatar] = useState(post.author?.avatar ?? "");
+  const [authorUrl, setAuthorUrl] = useState(post.author?.url ?? "");
   const [tags, setTags] = useState(post.tags.join(", "));
   const [body, setBody] = useState(post.body);
   const [published, setPublished] = useState(post.status === "published");
@@ -307,6 +317,24 @@ const PostEditor = ({
   const slugChanged = slug !== post.slug;
 
   const save = () => {
+    // Credit needs all three fields to be meaningful; author just a name.
+    const heroCredit =
+      creditName.trim() && creditUrl.trim() && creditPexelsUrl.trim()
+        ? {
+            name: creditName.trim(),
+            url: creditUrl.trim(),
+            pexelsUrl: creditPexelsUrl.trim(),
+          }
+        : null;
+    const author = authorName.trim()
+      ? {
+          name: authorName.trim(),
+          title: authorTitle.trim(),
+          avatar: authorAvatar.trim(),
+          url: authorUrl.trim(),
+        }
+      : null;
+
     updateMutation.mutate({
       owner,
       repo,
@@ -314,8 +342,11 @@ const PostEditor = ({
       title: title.trim(),
       slug: slug.trim(),
       description,
-      coverImage: coverImage.trim() || null,
-      coverImageAlt: coverImageAlt.trim() || null,
+      keyword: keyword.trim(),
+      heroImage: heroImage.trim() || null,
+      heroImageAlt: heroImageAlt.trim() || null,
+      heroCredit,
+      author,
       body,
       tags: tags
         .split(",")
@@ -390,23 +421,122 @@ const PostEditor = ({
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="post-keyword">Target keyword</Label>
+          <Input
+            id="post-keyword"
+            value={keyword}
+            placeholder="e.g. amazon ses vs resend"
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+          <p className="text-muted-foreground text-[13px]">
+            Put the exact keyword in the title only — the description should
+            paraphrase it.
+          </p>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="post-cover">Cover image URL</Label>
+            <Label htmlFor="post-hero">Hero image URL</Label>
             <Input
-              id="post-cover"
-              value={coverImage}
+              id="post-hero"
+              value={heroImage}
               placeholder="https://…"
-              onChange={(event) => setCoverImage(event.target.value)}
+              onChange={(event) => setHeroImage(event.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="post-cover-alt">Cover image alt text</Label>
+            <Label htmlFor="post-hero-alt">Hero image alt text</Label>
             <Input
-              id="post-cover-alt"
-              value={coverImageAlt}
-              onChange={(event) => setCoverImageAlt(event.target.value)}
+              id="post-hero-alt"
+              value={heroImageAlt}
+              onChange={(event) => setHeroImageAlt(event.target.value)}
             />
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-lg border p-4">
+          <div>
+            <p className="text-[14px] font-semibold">Hero image credit</p>
+            <p className="text-muted-foreground text-[13px]">
+              Optional — photographer attribution (e.g. Pexels). Saved only
+              when all three fields are filled.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="post-credit-name">Name</Label>
+              <Input
+                id="post-credit-name"
+                value={creditName}
+                placeholder="cottonbro studio"
+                onChange={(event) => setCreditName(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="post-credit-url">Profile URL</Label>
+              <Input
+                id="post-credit-url"
+                value={creditUrl}
+                placeholder="https://www.pexels.com/@…"
+                onChange={(event) => setCreditUrl(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="post-credit-photo-url">Photo URL</Label>
+              <Input
+                id="post-credit-photo-url"
+                value={creditPexelsUrl}
+                placeholder="https://www.pexels.com/photo/…"
+                onChange={(event) => setCreditPexelsUrl(event.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-lg border p-4">
+          <div>
+            <p className="text-[14px] font-semibold">Author</p>
+            <p className="text-muted-foreground text-[13px]">
+              Optional — leave the name empty and the site shows no byline.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="post-author-name">Name</Label>
+              <Input
+                id="post-author-name"
+                value={authorName}
+                onChange={(event) => setAuthorName(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="post-author-title">Title</Label>
+              <Input
+                id="post-author-title"
+                value={authorTitle}
+                placeholder="Web Developer & Founder"
+                onChange={(event) => setAuthorTitle(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="post-author-avatar">Avatar URL</Label>
+              <Input
+                id="post-author-avatar"
+                value={authorAvatar}
+                placeholder="https://…"
+                onChange={(event) => setAuthorAvatar(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="post-author-url">Website URL</Label>
+              <Input
+                id="post-author-url"
+                value={authorUrl}
+                placeholder="https://…"
+                onChange={(event) => setAuthorUrl(event.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -438,6 +568,12 @@ const PostEditor = ({
             <p className="text-muted-foreground text-[13px]">
               Draft posts never appear on your website, even after Publish to
               site.
+            </p>
+            <p className="text-muted-foreground text-[13px]">
+              {post.publishedAt
+                ? `First published ${new Date(post.publishedAt).toLocaleString()} · `
+                : ""}
+              Last edited {new Date(post.updatedAt).toLocaleString()}
             </p>
           </div>
           <Switch checked={published} onCheckedChange={setPublished} />

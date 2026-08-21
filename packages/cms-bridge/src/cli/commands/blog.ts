@@ -30,10 +30,22 @@ const CONTENT_CONFIG_SNIPPET = `const blog = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
+    keyword: z.string().optional(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    coverImage: z.string().optional(),
-    coverImageAlt: z.string().optional(),
+    heroImage: z.string().optional(),
+    heroImageAlt: z.string().optional(),
+    heroCredit: z
+      .object({ name: z.string(), url: z.string(), pexelsUrl: z.string() })
+      .optional(),
+    author: z
+      .object({
+        name: z.string(),
+        title: z.string(),
+        avatar: z.string(),
+        url: z.string(),
+      })
+      .optional(),
     tags: z.array(z.string()).default([]),
   }),
 });`;
@@ -104,13 +116,15 @@ export function blogNewCommand(
     return 1;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Full ISO timestamp — the site decides how much precision to display.
+  const now = new Date().toISOString();
   const content = `---
 title: ${JSON.stringify(trimmed)}
 description: ""
-publishDate: ${today}
-coverImage: ""
-coverImageAlt: ""
+keyword: ""
+publishDate: ${JSON.stringify(now)}
+heroImage: ""
+heroImageAlt: ""
 tags: []
 ---
 

@@ -63,8 +63,11 @@ const postFields = {
   slug: hubBlogPost.slug,
   title: hubBlogPost.title,
   description: hubBlogPost.description,
-  coverImage: hubBlogPost.coverImage,
-  coverImageAlt: hubBlogPost.coverImageAlt,
+  keyword: hubBlogPost.keyword,
+  heroImage: hubBlogPost.heroImage,
+  heroImageAlt: hubBlogPost.heroImageAlt,
+  heroCredit: hubBlogPost.heroCredit,
+  author: hubBlogPost.author,
   body: hubBlogPost.body,
   tags: hubBlogPost.tags,
   status: hubBlogPost.status,
@@ -148,8 +151,26 @@ export const blogRouter = createTRPCRouter({
           )
           .optional(),
         description: z.string().optional(),
-        coverImage: z.string().nullable().optional(),
-        coverImageAlt: z.string().nullable().optional(),
+        keyword: z.string().optional(),
+        heroImage: z.string().nullable().optional(),
+        heroImageAlt: z.string().nullable().optional(),
+        heroCredit: z
+          .object({
+            name: z.string().trim().min(1),
+            url: z.string().trim().min(1),
+            pexelsUrl: z.string().trim().min(1),
+          })
+          .nullable()
+          .optional(),
+        author: z
+          .object({
+            name: z.string().trim().min(1),
+            title: z.string(),
+            avatar: z.string(),
+            url: z.string(),
+          })
+          .nullable()
+          .optional(),
         body: z.string().optional(),
         tags: z.array(z.string().trim().min(1)).optional(),
         status: z.enum(BLOG_POST_STATUS_VALUES).optional(),
@@ -173,10 +194,14 @@ export const blogRouter = createTRPCRouter({
       if (input.slug !== undefined) changes.slug = input.slug;
       if (input.description !== undefined)
         changes.description = input.description;
-      if (input.coverImage !== undefined)
-        changes.coverImage = input.coverImage || null;
-      if (input.coverImageAlt !== undefined)
-        changes.coverImageAlt = input.coverImageAlt || null;
+      if (input.keyword !== undefined) changes.keyword = input.keyword;
+      if (input.heroImage !== undefined)
+        changes.heroImage = input.heroImage || null;
+      if (input.heroImageAlt !== undefined)
+        changes.heroImageAlt = input.heroImageAlt || null;
+      if (input.heroCredit !== undefined)
+        changes.heroCredit = input.heroCredit;
+      if (input.author !== undefined) changes.author = input.author;
       if (input.body !== undefined) changes.body = input.body;
       if (input.tags !== undefined) changes.tags = input.tags;
       if (input.status !== undefined) {

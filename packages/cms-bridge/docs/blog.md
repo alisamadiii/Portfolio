@@ -47,8 +47,10 @@ only** (drafts never leave the hub).
   deleted. Blog content is edited in the hub only.
 - Markdown files are fully rendered by the API (frontmatter escaping is
   handled server-side); the script writes them verbatim.
-- Frontmatter fields: `title`, `description`, `publishDate`, `updatedDate?`,
-  `coverImage?`, `coverImageAlt?`, `tags`.
+- Frontmatter fields: `title`, `description`, `keyword?`, `publishDate`
+  (full ISO timestamp), `updatedDate?` (full ISO), `heroImage?`,
+  `heroImageAlt?`, `heroCredit? { name, url, pexelsUrl }`,
+  `author? { name, title, avatar, url }`, `tags`.
 - Pushes made with the default `GITHUB_TOKEN` do **not** trigger other
   workflows — and in practice they do **not** trigger the Vercel git
   integration either (verified: the bot commit lands, no deployment is
@@ -73,9 +75,9 @@ npx @alisamadiillc/cms-bridge blog new "My post title"
 ```
 
 Creates `src/content/blog/my-post-title.md` with the hub-contract frontmatter
-(`title`, `description`, `publishDate` = today, `coverImage`, `coverImageAlt`,
-`tags`) so you can start typing immediately. Refuses to overwrite an existing
-file (`--force` to overwrite).
+(`title`, `description`, `keyword`, `publishDate` = now as a full ISO
+timestamp, `heroImage`, `heroImageAlt`, `tags`) so you can start typing
+immediately. Refuses to overwrite an existing file (`--force` to overwrite).
 
 If the repo's blog is managed by the hub, import the finished post into the
 hub before publishing — the sync mirror overwrites and deletes local posts it

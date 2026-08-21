@@ -26,9 +26,13 @@ describe("blog new", () => {
     const content = fs.readFileSync(path.join(root, POST), "utf8");
     expect(content).toContain('title: "Hello, World!"');
     expect(content).toContain('description: ""');
-    expect(content).toMatch(/publishDate: \d{4}-\d{2}-\d{2}/);
-    expect(content).toContain('coverImage: ""');
-    expect(content).toContain('coverImageAlt: ""');
+    expect(content).toContain('keyword: ""');
+    // Full ISO timestamp, quoted.
+    expect(content).toMatch(
+      /publishDate: "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"/
+    );
+    expect(content).toContain('heroImage: ""');
+    expect(content).toContain('heroImageAlt: ""');
     expect(content).toContain("tags: []");
     expect(content.startsWith("---\n")).toBe(true);
   });

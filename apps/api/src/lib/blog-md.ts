@@ -14,15 +14,32 @@ export function renderBlogMarkdown(post: BlogPostRow): {
   const lines: string[] = ["---"];
   lines.push(`title: ${JSON.stringify(post.title)}`);
   lines.push(`description: ${JSON.stringify(post.description)}`);
+  if (post.keyword) {
+    lines.push(`keyword: ${JSON.stringify(post.keyword)}`);
+  }
+  // Full ISO timestamps — the client site decides how much precision to show.
   lines.push(`publishDate: ${JSON.stringify(publishDate.toISOString())}`);
   if (post.updatedAt > publishDate) {
     lines.push(`updatedDate: ${JSON.stringify(post.updatedAt.toISOString())}`);
   }
-  if (post.coverImage) {
-    lines.push(`coverImage: ${JSON.stringify(post.coverImage)}`);
-    if (post.coverImageAlt) {
-      lines.push(`coverImageAlt: ${JSON.stringify(post.coverImageAlt)}`);
+  if (post.heroImage) {
+    lines.push(`heroImage: ${JSON.stringify(post.heroImage)}`);
+    if (post.heroImageAlt) {
+      lines.push(`heroImageAlt: ${JSON.stringify(post.heroImageAlt)}`);
     }
+  }
+  if (post.heroCredit) {
+    lines.push("heroCredit:");
+    lines.push(`  name: ${JSON.stringify(post.heroCredit.name)}`);
+    lines.push(`  url: ${JSON.stringify(post.heroCredit.url)}`);
+    lines.push(`  pexelsUrl: ${JSON.stringify(post.heroCredit.pexelsUrl)}`);
+  }
+  if (post.author) {
+    lines.push("author:");
+    lines.push(`  name: ${JSON.stringify(post.author.name)}`);
+    lines.push(`  title: ${JSON.stringify(post.author.title)}`);
+    lines.push(`  avatar: ${JSON.stringify(post.author.avatar)}`);
+    lines.push(`  url: ${JSON.stringify(post.author.url)}`);
   }
   lines.push(
     `tags: [${post.tags.map((tag) => JSON.stringify(tag)).join(", ")}]`

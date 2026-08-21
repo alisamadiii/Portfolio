@@ -223,9 +223,25 @@ export const hubBlogPost = pgTable(
     slug: text("slug").notNull(),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
-    // v1: plain URL string
-    coverImage: text("cover_image"),
-    coverImageAlt: text("cover_image_alt"),
+    // Primary target keyword (exact keyword goes in the title only; the
+    // description paraphrases).
+    keyword: text("keyword").notNull().default(""),
+    // Plain URL string
+    heroImage: text("hero_image"),
+    heroImageAlt: text("hero_image_alt"),
+    // Photo credit, e.g. a Pexels attribution.
+    heroCredit: jsonb("hero_credit").$type<{
+      name: string;
+      url: string;
+      pexelsUrl: string;
+    }>(),
+    // Optional byline; omitted → the client site renders no author block.
+    author: jsonb("author").$type<{
+      name: string;
+      title: string;
+      avatar: string;
+      url: string;
+    }>(),
     // Markdown
     body: text("body").notNull().default(""),
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),

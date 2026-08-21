@@ -17,8 +17,11 @@ function makePost(overrides: Record<string, unknown> = {}) {
     slug: "hello-world",
     title: "Hello World",
     description: "First post.",
-    coverImage: null,
-    coverImageAlt: null,
+    keyword: "",
+    heroImage: null,
+    heroImageAlt: null,
+    heroCredit: null,
+    author: null,
     body: "# Hello\n\nBody text.",
     tags: ["seo"],
     status: "published",
@@ -60,12 +63,12 @@ describe("GET /v1/content/blog", () => {
     );
   });
 
-  it("escapes quotes/colons in frontmatter and adds updatedDate + cover", async () => {
+  it("escapes quotes/colons in frontmatter and adds updatedDate + hero", async () => {
     dbQueue.push([
       makePost({
         title: 'He said: "hi"',
-        coverImage: "https://cdn.acme.com/a.jpg",
-        coverImageAlt: "A photo",
+        heroImage: "https://cdn.acme.com/a.jpg",
+        heroImageAlt: "A photo",
         updatedAt: new Date("2026-08-10T00:00:00Z"),
       }),
     ]);
@@ -79,8 +82,77 @@ describe("GET /v1/content/blog", () => {
     const content: string = body.files[0].content;
     expect(content).toContain('title: "He said: \\"hi\\""');
     expect(content).toContain('updatedDate: "2026-08-10T00:00:00.000Z"');
-    expect(content).toContain('coverImage: "https://cdn.acme.com/a.jpg"');
-    expect(content).toContain('coverImageAlt: "A photo"');
+    expect(content).toContain('heroImage: "https://cdn.acme.com/a.jpg"');
+    expect(content).toContain('heroImageAlt: "A photo"');
+  });
+
+  it("emits keyword, heroCredit, and author blocks when present", async () => {
+    dbQueue.push([
+      makePost({
+        keyword: "amazon ses vs resend",
+        heroImage: "https://cdn.acme.com/ses.webp",
+        heroImageAlt: "An inbox",
+        heroCredit: {
+          name: "cottonbro studio",
+          url: "https://www.pexels.com/@cottonbro",
+          pexelsUrl: "https://www.pexels.com/photo/7439136/",
+        },
+        author: {
+          name: "Ali Samadi",
+          title: "Web Developer & Founder, Ali Samadi Agency",
+          avatar: "https://cdn.alisamadii.com/avatar.jpeg",
+          url: "https://www.alisamadii.com/",
+        },
+      }),
+    ]);
+    const res = await app.request(
+      "/v1/content/blog?repoId=123",
+      {},
+      testEnv,
+      testCtx
+    );
+    const body = await json(res);
+    const content: string = body.files[0].content;
+    expect(content).toContain('keyword: "amazon ses vs resend"');
+    expect(content).toContain(
+      [
+        "heroCredit:",
+        '  name: "cottonbro studio"',
+        '  url: "https://www.pexels.com/@cottonbro"',
+        '  pexelsUrl: "https://www.pexels.com/photo/7439136/"',
+      ].join("\n")
+    );
+    expect(content).toContain(
+      [
+        "author:",
+        '  name: "Ali Samadi"',
+        '  title: "Web Developer & Founder, Ali Samadi Agency"',
+        '  avatar: "https://cdn.alisamadii.com/avatar.jpeg"',
+        '  url: "https://www.alisamadii.com/"',
+      ].join("\n")
+    );
+    // keyword sits between description and publishDate
+    expect(content.indexOf("keyword:")).toBeGreaterThan(
+      content.indexOf("description:")
+    );
+    expect(content.indexOf("keyword:")).toBeLessThan(
+      content.indexOf("publishDate:")
+    );
+  });
+
+  it("omits keyword/heroCredit/author when empty", async () => {
+    dbQueue.push([makePost()]);
+    const res = await app.request(
+      "/v1/content/blog?repoId=123",
+      {},
+      testEnv,
+      testCtx
+    );
+    const body = await json(res);
+    const content: string = body.files[0].content;
+    expect(content).not.toContain("keyword:");
+    expect(content).not.toContain("heroCredit:");
+    expect(content).not.toContain("author:");
   });
 
   it("rejects a missing or non-integer repoId", async () => {
