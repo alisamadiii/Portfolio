@@ -81,221 +81,226 @@ const steps = [
 >
   <BackNav backHref="/" backLabel="Back to Home" fixed />
 
-  <!-- ==================== HERO ==================== -->
-  <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-    <div class="mx-auto max-w-[1200px]">
-      <div
-        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>About Us
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
+      <div class="mx-auto max-w-[1200px]">
+        <div
+          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        >
+          <span class="h-px w-[26px] bg-accent"></span>About Us
+        </div>
+        <h1
+          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+        >
+          A small studio that builds like a
+          <span class="text-accent">big one</span>
+        </h1>
+        <p
+          class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+        >
+          Ali Samadi Agency is a founder-led web design and development studio
+          based in Jacksonville, Florida. We build websites and web apps for
+          startups and small businesses — every project designed and developed
+          from scratch on a modern stack, never a recycled template.
+        </p>
       </div>
-      <h1
-        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-      >
-        A small studio that builds like a
-        <span class="text-accent">big one</span>
-      </h1>
-      <p
-        class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-      >
-        Ali Samadi Agency is a founder-led web design and development studio
-        based in Jacksonville, Florida. We build websites and web apps for
-        startups and small businesses — every project designed and developed
-        from scratch on a modern stack, never a recycled template.
-      </p>
-    </div>
-  </section>
+    </section>
 
-  <!-- ==================== STATS ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-14 md:px-10"
-  >
-    <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
-      {
-        stats.map((s) => (
-          <div class="reveal py-2">
-            <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-              {s.value}
-              {s.suffix && <span class="text-accent">{s.suffix}</span>}
+    <!-- ==================== STATS ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-14 md:px-10"
+    >
+      <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
+        {
+          stats.map((s) => (
+            <div class="reveal py-2">
+              <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
+                {s.value}
+                {s.suffix && <span class="text-accent">{s.suffix}</span>}
+              </div>
+              <div class="mt-2.5 text-sm text-warmgray">{s.label}</div>
             </div>
-            <div class="mt-2.5 text-sm text-warmgray">{s.label}</div>
-          </div>
-        ))
-      }
-    </div>
-  </section>
+          ))
+        }
+      </div>
+    </section>
 
-  <!-- ==================== STORY ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div class="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.4fr] md:gap-14">
+    <!-- ==================== STORY ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div class="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.4fr] md:gap-14">
+        <h2
+          class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        >
+          Why the studio exists
+        </h2>
+        <div class="space-y-5 text-[16.5px] leading-[1.65] text-warmgray">
+          <p class="reveal">
+            Most small businesses get one of two things: an expensive agency
+            that treats them as a small account, or a cheap template that looks
+            like everyone else's website. We started Ali Samadi Agency to close
+            that gap — agency-quality design and engineering, sized and priced
+            for startups and small businesses.
+          </p>
+          <p class="reveal">
+            Because the studio is founder-led, the person you talk to is the
+            person who designs and builds your site. From brand identity and UI
+            design through development, SEO, and hosting, one team owns the
+            whole build — which keeps the work consistent and the timeline
+            short.
+          </p>
+          <p class="reveal">
+            Everything ships on the stack we'd choose for our own products:
+            Next.js, React, and Postgres, with a CMS so you can edit your own
+            content. Fast, custom, and genuinely yours.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FOUNDER ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal grid grid-cols-1 gap-8 rounded-[22px] border border-charcoal/[0.09] bg-white p-8 md:grid-cols-[1fr_1.6fr] md:gap-12 md:p-11"
+      >
+        <div>
+          <div
+            class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            <span class="h-px w-[26px] bg-accent"></span>Founder
+          </div>
+          <h2 class="text-[28px] font-semibold tracking-[-0.02em]">
+            Ali Samadi
+          </h2>
+          <p class="mt-1 text-[15px] text-warmgray">Founder &amp; Developer</p>
+          <div class="mt-5 flex flex-wrap gap-4 text-[14.5px]">
+            <a
+              href="https://x.com/alisamadii_"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-warmgray transition-colors duration-300 hover:text-accent"
+              >X / Twitter</a
+            >
+            <a
+              href="https://github.com/alisamadiii"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-warmgray transition-colors duration-300 hover:text-accent"
+              >GitHub</a
+            >
+            <a
+              href="https://www.linkedin.com/in/alireza17/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-warmgray transition-colors duration-300 hover:text-accent"
+              >LinkedIn</a
+            >
+          </div>
+        </div>
+        <p class="text-[16px] leading-[1.65] text-warmgray">
+          Ali is a full-stack developer and designer with 5+ years of experience
+          building for the web — from open-source animation work used by
+          thousands of developers to production apps for real businesses. He
+          leads every project personally: scoping, design, code, and the
+          follow-through after launch.
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== HOW WE WORK ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal mb-10 text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        How we work
+      </h2>
+      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-4">
+        {
+          steps.map((step, i) => (
+            <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-6">
+              <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
+                0{i + 1}
+              </div>
+              <h3 class="mt-3 text-[18px] font-semibold tracking-[-0.02em]">
+                {step.title}
+              </h3>
+              <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+                {step.text}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="reveal mt-8 text-[15px] text-warmgray">
+        See everything we offer on the
+        <a href="/services" class="text-accent hover:underline">services page</a
+        >.
+      </p>
+    </section>
+
+    <!-- ==================== VALUES ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal mb-10 text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        What makes us different
+      </h2>
+      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
+        {
+          values.map((v) => (
+            <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
+              <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
+                {v.title}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.6] text-warmgray">
+                {v.text}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== CTA ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] text-center md:px-10"
+    >
       <h2
         class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
       >
-        Why the studio exists
+        Want to see it in practice?
       </h2>
-      <div class="space-y-5 text-[16.5px] leading-[1.65] text-warmgray">
-        <p class="reveal">
-          Most small businesses get one of two things: an expensive agency that
-          treats them as a small account, or a cheap template that looks like
-          everyone else's website. We started Ali Samadi Agency to close that
-          gap — agency-quality design and engineering, sized and priced for
-          startups and small businesses.
-        </p>
-        <p class="reveal">
-          Because the studio is founder-led, the person you talk to is the
-          person who designs and builds your site. From brand identity and UI
-          design through development, SEO, and hosting, one team owns the whole
-          build — which keeps the work consistent and the timeline short.
-        </p>
-        <p class="reveal">
-          Everything ships on the stack we'd choose for our own products:
-          Next.js, React, and Postgres, with a CMS so you can edit your own
-          content. Fast, custom, and genuinely yours.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== FOUNDER ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal grid grid-cols-1 gap-8 rounded-[22px] border border-charcoal/[0.09] bg-white p-8 md:grid-cols-[1fr_1.6fr] md:gap-12 md:p-11"
-    >
-      <div>
-        <div
-          class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      <div class="reveal mt-8 flex flex-wrap justify-center gap-3.5">
+        <a
+          href="/work"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
         >
-          <span class="h-px w-[26px] bg-accent"></span>Founder
-        </div>
-        <h2 class="text-[28px] font-semibold tracking-[-0.02em]">Ali Samadi</h2>
-        <p class="mt-1 text-[15px] text-warmgray">Founder &amp; Developer</p>
-        <div class="mt-5 flex flex-wrap gap-4 text-[14.5px]">
-          <a
-            href="https://x.com/alisamadii_"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-warmgray transition-colors duration-300 hover:text-accent"
-            >X / Twitter</a
-          >
-          <a
-            href="https://github.com/alisamadiii"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-warmgray transition-colors duration-300 hover:text-accent"
-            >GitHub</a
-          >
-          <a
-            href="https://www.linkedin.com/in/alireza17/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-warmgray transition-colors duration-300 hover:text-accent"
-            >LinkedIn</a
-          >
-        </div>
+          See our work
+          <span>&#8599;</span>
+        </a>
+        <a
+          href="/pricing"
+          class="mag-btn inline-flex items-center rounded-full border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
+        >
+          View pricing
+        </a>
+        <a
+          href="/contact"
+          class="mag-btn inline-flex items-center rounded-full border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
+        >
+          Get in touch
+        </a>
       </div>
-      <p class="text-[16px] leading-[1.65] text-warmgray">
-        Ali is a full-stack developer and designer with 5+ years of experience
-        building for the web — from open-source animation work used by thousands
-        of developers to production apps for real businesses. He leads every
-        project personally: scoping, design, code, and the follow-through after
-        launch.
-      </p>
-    </div>
-  </section>
-
-  <!-- ==================== HOW WE WORK ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal mb-10 text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      How we work
-    </h2>
-    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-4">
-      {
-        steps.map((step, i) => (
-          <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-6">
-            <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-              0{i + 1}
-            </div>
-            <h3 class="mt-3 text-[18px] font-semibold tracking-[-0.02em]">
-              {step.title}
-            </h3>
-            <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-              {step.text}
-            </p>
-          </div>
-        ))
-      }
-    </div>
-    <p class="reveal mt-8 text-[15px] text-warmgray">
-      See everything we offer on the
-      <a href="/services" class="text-accent hover:underline">services page</a>.
-    </p>
-  </section>
-
-  <!-- ==================== VALUES ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal mb-10 text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      What makes us different
-    </h2>
-    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
-      {
-        values.map((v) => (
-          <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
-            <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
-              {v.title}
-            </h3>
-            <p class="mt-2.5 text-[15px] leading-[1.6] text-warmgray">
-              {v.text}
-            </p>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- ==================== CTA ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] text-center md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      Want to see it in practice?
-    </h2>
-    <div class="reveal mt-8 flex flex-wrap justify-center gap-3.5">
-      <a
-        href="/work"
-        class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
-      >
-        See our work
-        <span>&#8599;</span>
-      </a>
-      <a
-        href="/pricing"
-        class="mag-btn inline-flex items-center rounded-full border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
-      >
-        View pricing
-      </a>
-      <a
-        href="/contact"
-        class="mag-btn inline-flex items-center rounded-full border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
-      >
-        Get in touch
-      </a>
-    </div>
-  </section>
-
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

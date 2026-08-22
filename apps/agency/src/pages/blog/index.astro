@@ -45,7 +45,7 @@ const schema = [
 ---
 
 <Layout
-  title="Blog — Web Design, Development & SEO Tips | Ali Samadi Agency"
+  title="Blog — Web Design, Development & SEO Tips | Ali Samadi"
   description="Practical articles on how websites get built — design process, development, SEO, and managing your own site — from Ali Samadi Agency."
   canonical={pageUrl}
   og={{
@@ -61,71 +61,73 @@ const schema = [
 >
   <BackNav backHref="/" backLabel="Back to Home" fixed />
 
-  <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-    <div class="mx-auto max-w-[1200px]">
-      <div
-        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>Blog
-      </div>
-      <h1
-        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-      >
-        Notes on building <span class="text-accent">better websites</span>
-      </h1>
-      <p
-        class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-      >
-        How websites actually get built — process, development, SEO, and how to
-        run your own site once it's live. Written from real projects, no fluff.
-      </p>
-    </div>
-  </section>
-
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    {
-      posts.length === 0 ? (
-        <p class="text-warmgray">No posts yet — check back soon.</p>
-      ) : (
-        <div class="grid grid-cols-1 gap-[22px] md:grid-cols-2">
-          {posts.map((post) => (
-            <a
-              href={`/blog/${post.id}`}
-              class="img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-            >
-              <div class="aspect-[16/9] overflow-hidden">
-                <img
-                  src={post.data.heroImage}
-                  alt={post.data.heroImageAlt}
-                  width="1600"
-                  height="900"
-                  class="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div class="p-7">
-                <div class="font-mono text-[11.5px] tracking-[0.08em] text-muted uppercase">
-                  {dateFmt(post.data.publishDate)}
-                </div>
-                <div class="mt-2.5 flex items-start justify-between gap-4">
-                  <h2 class="text-[22px] leading-[1.2] font-semibold tracking-[-0.02em]">
-                    {post.data.title}
-                  </h2>
-                  <span class="shrink-0 text-accent">&#8599;</span>
-                </div>
-                <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-                  {post.data.description}
-                </p>
-              </div>
-            </a>
-          ))}
+  <main>
+    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
+      <div class="mx-auto max-w-[1200px]">
+        <div
+          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        >
+          <span class="h-px w-[26px] bg-accent"></span>Blog
         </div>
-      )
-    }
-  </section>
+        <h1
+          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+        >
+          Notes on building <span class="text-accent">better websites</span>
+        </h1>
+        <p
+          class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+        >
+          How websites actually get built — process, development, SEO, and how
+          to run your own site once it's live. Written from real projects, no
+          fluff.
+        </p>
+      </div>
+    </section>
 
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      {
+        posts.length === 0 ? (
+          <p class="text-warmgray">No posts yet — check back soon.</p>
+        ) : (
+          <div class="grid grid-cols-1 gap-[22px] md:grid-cols-2">
+            {posts.map((post) => (
+              <a
+                href={`/blog/${post.id}`}
+                class="img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
+              >
+                <div class="aspect-[16/9] overflow-hidden">
+                  <img
+                    src={post.data.heroImage}
+                    alt={post.data.heroImageAlt}
+                    width="1600"
+                    height="900"
+                    class="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="p-7">
+                  <div class="font-mono text-[11.5px] tracking-[0.08em] text-muted uppercase">
+                    {dateFmt(post.data.publishDate)}
+                  </div>
+                  <div class="mt-2.5 flex items-start justify-between gap-4">
+                    <h2 class="text-[22px] leading-[1.2] font-semibold tracking-[-0.02em]">
+                      {post.data.title}
+                    </h2>
+                    <span class="shrink-0 text-accent">&#8599;</span>
+                  </div>
+                  <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
+                    {post.data.description}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

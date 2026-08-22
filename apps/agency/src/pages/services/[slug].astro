@@ -75,44 +75,256 @@ const relatedServices = service.related
 >
   <BackNav backHref="/services" backLabel="All Services" fixed />
 
-  <!-- ==================== HERO ==================== -->
-  <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-    <div class="mx-auto max-w-[1200px]">
-      <div
-        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
+      <div class="mx-auto max-w-[1200px]">
+        <div
+          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        >
+          <span class="h-px w-[26px] bg-accent"></span>{service.eyebrow} &mdash; {
+            service.name
+          }
+        </div>
+        <div
+          class="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14"
+        >
+          <div>
+            {
+              service.experimenting && (
+                <span class="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3.5 py-1.5 font-mono text-[11.5px] tracking-[0.12em] text-amber-700 uppercase">
+                  <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
+                  Experimenting
+                </span>
+              )
+            }
+            <h1
+              class="text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
+            >
+              {service.h1}
+            </h1>
+            <p
+              class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+            >
+              {service.heroSub}
+            </p>
+            <div class="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href={service.cta.href}
+                class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+              >
+                {service.cta.label}
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+                </svg>
+              </a>
+              <a
+                href="/pricing"
+                class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
+                >View pricing</a
+              >
+            </div>
+          </div>
+          <figure>
+            <div
+              class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08]"
+            >
+              <img
+                src={service.image.src}
+                alt={service.image.alt}
+                width="1600"
+                height="1000"
+                class="h-full w-full object-cover"
+                fetchpriority="high"
+              />
+            </div>
+            <figcaption class="mt-2 text-right text-[11.5px] text-muted">
+              Photo by
+              <a
+                href={service.image.credit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
+                >{service.image.credit.name}</a
+              >
+              on
+              <a
+                href={service.image.credit.pexelsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
+                >Pexels</a
+              >
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== EXPERIMENTING (honest-signal banner) ==================== -->
+    {
+      service.experimenting && (
+        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
+          <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
+            <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
+              <span class="h-px w-[26px] bg-amber-500" />
+              Full Transparency
+            </div>
+            <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
+              Experimenting
+            </h2>
+            <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
+              Honest note: analytics is a solid part of our workflow, but SEO is
+              a craft we're still building deep experience in. We're actively
+              running SEO for local-business clients right now — measuring what
+              moves rankings, keeping what works, and dropping what doesn't. You
+              get real effort and real data, not overpromises.
+            </p>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- ==================== INTRO ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
+    >
+      <p
+        class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
       >
-        <span class="h-px w-[26px] bg-accent"></span>{service.eyebrow} &mdash; {
-          service.name
+        {service.intro}
+      </p>
+    </section>
+
+    <!-- ==================== NOTICE (prominent amber banner) ==================== -->
+    {
+      service.notice && (
+        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
+          <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
+            <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
+              <span class="h-px w-[26px] bg-amber-500" />
+              {service.notice.label}
+            </div>
+            <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
+              {service.notice.title}
+            </h2>
+            <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
+              {service.notice.text}
+            </p>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- ==================== BENEFITS ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        What you get with our {service.name.toLowerCase()}
+      </h2>
+      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
+        {
+          service.benefits.map((b) => (
+            <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
+              <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
+                {b.title}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.6] text-warmgray">
+                {b.text}
+              </p>
+            </div>
+          ))
         }
       </div>
-      <div
-        class="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14"
-      >
-        <div>
-          {
-            service.experimenting && (
-              <span class="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3.5 py-1.5 font-mono text-[11.5px] tracking-[0.12em] text-amber-700 uppercase">
-                <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
-                Experimenting
-              </span>
-            )
-          }
-          <h1
-            class="text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
-          >
-            {service.h1}
-          </h1>
-          <p
-            class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-          >
-            {service.heroSub}
-          </p>
-          <div class="mt-8 flex flex-wrap items-center gap-4">
+    </section>
+
+    <!-- ==================== SHOWCASE (product screenshots, optional) ==================== -->
+    {
+      service.showcase && (
+        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
+          <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
+            {service.showcase.heading}
+          </h2>
+          {service.showcase.sub && (
+            <p class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray">
+              {service.showcase.sub}
+            </p>
+          )}
+          <div class="mt-12 space-y-16 md:space-y-20">
+            {service.showcase.items.map((item, i) => (
+              <div
+                class={`reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-14 ${
+                  i % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""
+                }`}
+              >
+                <div>
+                  <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
+                    0{i + 1}
+                  </div>
+                  <h3 class="mt-2 text-[21px] font-semibold tracking-[-0.02em]">
+                    {item.title}
+                  </h3>
+                  <p class="mt-3 max-w-[48ch] text-[15.5px] leading-[1.65] text-warmgray">
+                    {item.text}
+                  </p>
+                </div>
+                <div class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white">
+                  <img
+                    src={item.image.src}
+                    alt={item.image.alt}
+                    width="1600"
+                    height="1000"
+                    loading="lazy"
+                    class="h-full w-full object-cover"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- ==================== PROCESS (optional) ==================== -->
+    {
+      service.process && (
+        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
+          <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
+            How we deliver {service.name.toLowerCase()}
+          </h2>
+          <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-4">
+            {service.process.map((step, i) => (
+              <div class="reveal">
+                <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
+                  0{i + 1}
+                </div>
+                <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
+                  {step.title}
+                </h3>
+                <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+                  {step.text}
+                </p>
+              </div>
+            ))}
+          </div>
+          {service.processCta && (
             <a
-              href={service.cta.href}
-              class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+              href={service.processCta.href}
+              class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
             >
-              {service.cta.label}
+              {service.processCta.label}
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -123,346 +335,135 @@ const relatedServices = service.related
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                />
               </svg>
             </a>
-            <a
-              href="/pricing"
-              class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
-              >View pricing</a
-            >
-          </div>
-        </div>
-        <figure>
-          <div
-            class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08]"
-          >
-            <img
-              src={service.image.src}
-              alt={service.image.alt}
-              width="1600"
-              height="1000"
-              class="h-full w-full object-cover"
-              fetchpriority="high"
-            />
-          </div>
-          <figcaption class="mt-2 text-right text-[11.5px] text-muted">
-            Photo by
-            <a
-              href={service.image.credit.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-              >{service.image.credit.name}</a
-            >
-            on
-            <a
-              href={service.image.credit.pexelsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-              >Pexels</a
-            >
-          </figcaption>
-        </figure>
-      </div>
-    </div>
-  </section>
+          )}
+        </section>
+      )
+    }
 
-  <!-- ==================== EXPERIMENTING (honest-signal banner) ==================== -->
-  {
-    service.experimenting && (
-      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
-        <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
-          <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
-            <span class="h-px w-[26px] bg-amber-500" />
-            Full Transparency
-          </div>
-          <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
-            Experimenting
-          </h2>
-          <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
-            Honest note: analytics is a solid part of our workflow, but SEO is a
-            craft we're still building deep experience in. We're actively
-            running SEO for local-business clients right now — measuring what
-            moves rankings, keeping what works, and dropping what doesn't. You
-            get real effort and real data, not overpromises.
-          </p>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- ==================== INTRO ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-  >
-    <p
-      class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
+    <!-- ==================== FAQ ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
     >
-      {service.intro}
-    </p>
-  </section>
-
-  <!-- ==================== NOTICE (prominent amber banner) ==================== -->
-  {
-    service.notice && (
-      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
-        <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
-          <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
-            <span class="h-px w-[26px] bg-amber-500" />
-            {service.notice.label}
-          </div>
-          <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
-            {service.notice.title}
-          </h2>
-          <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
-            {service.notice.text}
-          </p>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- ==================== BENEFITS ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      What you get with our {service.name.toLowerCase()}
-    </h2>
-    <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
-      {
-        service.benefits.map((b) => (
-          <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
-            <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
-              {b.title}
-            </h3>
-            <p class="mt-2.5 text-[15px] leading-[1.6] text-warmgray">
-              {b.text}
-            </p>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- ==================== SHOWCASE (product screenshots, optional) ==================== -->
-  {
-    service.showcase && (
-      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
-        <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
-          {service.showcase.heading}
-        </h2>
-        {service.showcase.sub && (
-          <p class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray">
-            {service.showcase.sub}
-          </p>
-        )}
-        <div class="mt-12 space-y-16 md:space-y-20">
-          {service.showcase.items.map((item, i) => (
-            <div
-              class={`reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-14 ${
-                i % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""
-              }`}
-            >
-              <div>
-                <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-                  0{i + 1}
-                </div>
-                <h3 class="mt-2 text-[21px] font-semibold tracking-[-0.02em]">
-                  {item.title}
-                </h3>
-                <p class="mt-3 max-w-[48ch] text-[15.5px] leading-[1.65] text-warmgray">
-                  {item.text}
-                </p>
-              </div>
-              <div class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white">
-                <img
-                  src={item.image.src}
-                  alt={item.image.alt}
-                  width="1600"
-                  height="1000"
-                  loading="lazy"
-                  class="h-full w-full object-cover"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    )
-  }
-
-  <!-- ==================== PROCESS (optional) ==================== -->
-  {
-    service.process && (
-      <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
-        <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
-          How it works
-        </h2>
-        <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-4">
-          {service.process.map((step, i) => (
-            <div class="reveal">
-              <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-                0{i + 1}
-              </div>
-              <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-                {step.title}
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        Common questions
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+        {
+          service.faqs.map((faq) => (
+            <div>
+              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+                {faq.q}
               </h3>
-              <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-                {step.text}
+              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+                {faq.a}
               </p>
             </div>
-          ))}
-        </div>
-        {service.processCta && (
-          <a
-            href={service.processCta.href}
-            class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-          >
-            {service.processCta.label}
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-              />
-            </svg>
-          </a>
-        )}
-      </section>
-    )
-  }
+          ))
+        }
+      </div>
+    </section>
 
-  <!-- ==================== FAQ ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    <!-- ==================== RESOURCES + RELATED ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
     >
-      Common questions
-    </h2>
-    <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
-      {
-        service.faqs.map((faq) => (
-          <div>
-            <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
-              {faq.q}
-            </h3>
-            <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
-              {faq.a}
-            </p>
-          </div>
-        ))
-      }
-    </div>
-  </section>
+      <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
+        <div>
+          <h2
+            class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            Helpful resources
+          </h2>
+          <ul class="mt-5 space-y-3">
+            {
+              service.externalLinks.map((link) => (
+                <li>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+                  >
+                    {link.label}
+                    <span class="text-[12px] text-accent">&#8599;</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div>
+          <h2
+            class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            Related services
+          </h2>
+          <ul class="mt-5 space-y-3">
+            {
+              relatedServices.map((rel) => (
+                <li>
+                  <a
+                    href={`/services/${rel.slug}`}
+                    class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+                  >
+                    {rel.name}
+                    <span class="text-[12px] text-accent">&rarr;</span>
+                  </a>
+                </li>
+              ))
+            }
+            <li>
+              <a
+                href="/pricing"
+                class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+              >
+                Pricing
+                <span class="text-[12px] text-accent">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
-  <!-- ==================== RESOURCES + RELATED ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-  >
-    <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
-      <div>
+    <!-- ==================== FINAL CTA ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
         <h2
-          class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
         >
-          Helpful resources
+          Ready to get started?
         </h2>
-        <ul class="mt-5 space-y-3">
-          {
-            service.externalLinks.map((link) => (
-              <li>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-                >
-                  {link.label}
-                  <span class="text-[12px] text-accent">&#8599;</span>
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-      <div>
-        <h2
-          class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        <p
+          class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
         >
-          Related services
-        </h2>
-        <ul class="mt-5 space-y-3">
-          {
-            relatedServices.map((rel) => (
-              <li>
-                <a
-                  href={`/services/${rel.slug}`}
-                  class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-                >
-                  {rel.name}
-                  <span class="text-[12px] text-accent">&rarr;</span>
-                </a>
-              </li>
-            ))
-          }
-          <li>
-            <a
-              href="/pricing"
-              class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-            >
-              Pricing
-              <span class="text-[12px] text-accent">&rarr;</span>
-            </a>
-          </li>
-        </ul>
+          Simple, transparent pricing — and a real person on the other end.
+          Simple sites ship in one day once your project is confirmed.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href={service.cta.href}
+            class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-charcoal transition-all duration-300 hover:bg-cream hover:text-charcoal"
+          >
+            {service.cta.label}
+          </a>
+          <a
+            href="/#contact"
+            class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
+            >Ask a question</a
+          >
+        </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ==================== FINAL CTA ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
-      <h2
-        class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Ready to get started?
-      </h2>
-      <p
-        class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
-      >
-        Simple, transparent pricing — and a real person on the other end. Simple
-        sites ship in one day once your project is confirmed.
-      </p>
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <a
-          href={service.cta.href}
-          class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300 hover:bg-cream hover:text-charcoal"
-        >
-          {service.cta.label}
-        </a>
-        <a
-          href="/#contact"
-          class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
-          >Ask a question</a
-        >
-      </div>
-    </div>
-  </section>
-
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

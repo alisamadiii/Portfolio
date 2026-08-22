@@ -79,9 +79,9 @@ export const services: Service[] = [
       "visual identity",
       "brand colors",
     ],
-    seoTitle: "Brand Identity Design Built From Your Logo — Ali Samadi Agency",
+    seoTitle: "Brand Identity Design Built From Your Logo | Ali Samadi",
     metaDescription:
-      "Brand identity design that starts with your logo — you pick the mark you love, and we turn its colors and character into your buttons, forms, and entire website theme.",
+      "Brand identity design that starts with your logo — we turn its colors and character into your buttons, forms, and entire website theme.",
     h1: "Brand identity design that starts with your logo",
     heroSub:
       "Pick a logo you love, and we design everything else from it — the colors, typography, buttons, and forms of your website all carry its theme.",
@@ -178,10 +178,9 @@ export const services: Service[] = [
       "landing page",
       "developer",
     ],
-    seoTitle:
-      "Astro Web Development Agency — Fast Local Business Sites | Ali Samadi Agency",
+    seoTitle: "Astro Web Development Agency — Fast Local Business Sites",
     metaDescription:
-      "Web development agency building fast, static websites on Astro — instant page loads, SEO built in, and content you edit yourself. Custom Next.js builds available. From $500.",
+      "Web development agency building fast, static websites on Astro — instant page loads, SEO built in, and content you edit yourself. From $500.",
     h1: "A web development agency that builds fast Astro websites",
     heroSub:
       "Local-business websites built on Astro — pre-rendered static pages, instant navigation, and SEO baked in. Custom projects get Next.js, React, and Postgres.",
@@ -350,10 +349,9 @@ export const services: Service[] = [
       "google search",
       "seo",
     ],
-    seoTitle:
-      "Small Business SEO Services & Analytics Setup — Ali Samadi Agency",
+    seoTitle: "Small Business SEO Services & Analytics Setup | Ali Samadi",
     metaDescription:
-      "Small business SEO services built into every site: technical SEO, structured data, Core Web Vitals, AI-search readiness, and analytics you can actually read.",
+      "Small business SEO services built into every site: technical SEO, structured data, Core Web Vitals, AI-search readiness, and analytics you can read.",
     h1: "Small business SEO that's built in, not bolted on",
     heroSub:
       "Technical SEO, structured data, fast Core Web Vitals, and clean analytics — shipped with your site from day one.",
@@ -428,8 +426,7 @@ export const services: Service[] = [
       "content editing",
       "manage website",
     ],
-    seoTitle:
-      "Edit Your Own Website — Client Hub Dashboard & Managed Care | Ali Samadi Agency",
+    seoTitle: "Edit Your Own Website — Client Hub Dashboard & Managed Care",
     metaDescription:
       "Edit your own website from one dashboard: change text, images, and pages, monitor your site's uptime, and see every email it sends — no developer needed.",
     h1: "Edit your own website — no developer needed",
@@ -583,8 +580,7 @@ export const services: Service[] = [
       "saas",
       "user accounts",
     ],
-    seoTitle:
-      "Custom Web App Development — Dashboards, Auth, Databases | Ali Samadi Agency",
+    seoTitle: "Custom Web App Development — Dashboards, Auth, Databases",
     metaDescription:
       "Custom web app development on Next.js and Postgres: admin dashboards, user accounts, databases, and internal tools — scoped and quoted per project.",
     h1: "Custom web app development, scoped to what you need",

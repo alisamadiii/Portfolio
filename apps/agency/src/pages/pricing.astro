@@ -67,7 +67,7 @@ const pricingSchema = [
 
 <Layout
   title="Pricing — Ali Samadi | Creative Agency"
-  description="Simple, honest pricing. An all-inclusive plan from $349/mo, a one-time build you own outright, or a fully custom project — web design, hosting, CMS, and more."
+  description="Simple, honest pricing. An all-inclusive plan from $349/mo, a one-time build you own outright, or a fully custom project — web design, hosting, and CMS."
   canonical="https://agency.alisamadii.com/pricing"
   og={{
     title: "Pricing — Ali Samadi",
@@ -82,89 +82,93 @@ const pricingSchema = [
 >
   <BackNav backHref="/" backLabel="Back to Home" fixed />
 
-  <!-- ==================== HERO ==================== -->
-  <section id="heroSection" class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28">
-    <div class="stagger mx-auto max-w-[1400px]">
-      <div class="reveal">
-        <span
-          class="mb-6 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
-          >Pricing</span
-        >
-      </div>
-      <h1
-        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-      >
-        Build Your<br />
-        <span class="text-accent">Project</span>
-      </h1>
-      <p
-        class="reveal mt-6 max-w-[55ch] text-base leading-relaxed text-warmgray md:text-lg"
-      >
-        Pick the plan that fits — an all-inclusive monthly plan from {
-          fmtPrice(PRICING.monthly)
-        }/mo, a one-time build you own outright, or a fully custom project
-        scoped together.
-      </p>
-      <div class="reveal mt-8">
-        <div
-          class="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-5 py-2.5 ring-1 ring-emerald-200/60"
-        >
-          <svg
-            class="h-5 w-5 shrink-0 text-emerald-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="1.5"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-            ></path>
-          </svg>
-          <span class="text-sm font-semibold text-emerald-800"
-            >1-Day Delivery</span
-          >
-          <span class="text-xs text-emerald-600/80"
-            >once your project is confirmed</span
-          >
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== PLANS ==================== -->
-  <section
-    id="packageSelection"
-    class="border-t border-charcoal/[0.06] px-4 py-20 md:px-8 md:py-28"
-  >
-    <div class="mx-auto max-w-[1400px]">
-      <div class="stagger mb-12">
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section
+      id="heroSection"
+      class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28"
+    >
+      <div class="stagger mx-auto max-w-[1400px]">
         <div class="reveal">
           <span
-            class="mb-4 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
-            >Choose Your Path</span
+            class="mb-6 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
+            >Pricing</span
           >
         </div>
-        <h2
-          class="reveal mt-2 text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        <h1
+          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
         >
-          How Would You Like<br />to
-          <span class="text-accent">Get Started</span>?
-        </h2>
+          Build Your<br />
+          <span class="text-accent">Project</span>
+        </h1>
         <p
-          class="reveal mt-4 max-w-[55ch] text-base leading-relaxed text-warmgray"
+          class="reveal mt-6 max-w-[55ch] text-base leading-relaxed text-warmgray md:text-lg"
         >
-          Go all-inclusive with a managed monthly plan, own your build with a
-          one-time project priced around your scope, or reach out for something
-          fully custom. Every plan starts with a quote.
+          Pick the plan that fits — an all-inclusive monthly plan from {
+            fmtPrice(PRICING.monthly)
+          }/mo, a one-time build you own outright, or a fully custom project
+          scoped together.
         </p>
+        <div class="reveal mt-8">
+          <div
+            class="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-5 py-2.5 ring-1 ring-emerald-200/60"
+          >
+            <svg
+              class="h-5 w-5 shrink-0 text-emerald-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+              ></path>
+            </svg>
+            <span class="text-sm font-semibold text-emerald-800"
+              >1-Day Delivery</span
+            >
+            <span class="text-xs text-emerald-800"
+              >once your project is confirmed</span
+            >
+          </div>
+        </div>
       </div>
+    </section>
 
-      <PricingCards />
-    </div>
-  </section>
+    <!-- ==================== PLANS ==================== -->
+    <section
+      id="packageSelection"
+      class="border-t border-charcoal/[0.06] px-4 py-20 md:px-8 md:py-28"
+    >
+      <div class="mx-auto max-w-[1400px]">
+        <div class="stagger mb-12">
+          <div class="reveal">
+            <span
+              class="mb-4 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
+              >Choose Your Path</span
+            >
+          </div>
+          <h2
+            class="reveal mt-2 text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+          >
+            How Would You Like<br />to
+            <span class="text-accent">Get Started</span>?
+          </h2>
+          <p
+            class="reveal mt-4 max-w-[55ch] text-base leading-relaxed text-warmgray"
+          >
+            Go all-inclusive with a managed monthly plan, own your build with a
+            one-time project priced around your scope, or reach out for
+            something fully custom. Every plan starts with a quote.
+          </p>
+        </div>
 
+        <PricingCards />
+      </div>
+    </section>
+  </main>
   <HomeFooter />
 
   <!-- ==================== JAVASCRIPT ==================== -->

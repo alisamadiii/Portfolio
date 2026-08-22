@@ -101,7 +101,7 @@ const imageCredit = (
     title: city.seoTitle,
     description: city.metaDescription,
     url: pageUrl,
-    image: `/og/locations/${city.slug}.png`,
+    image: `/og/locations/${city.slug}.jpg`,
     twitterDescription: city.metaDescription,
   }}
   schema={schema}
@@ -109,475 +109,479 @@ const imageCredit = (
 >
   <BackNav backHref="/locations" backLabel="All Locations" fixed />
 
-  <!-- ==================== HERO ==================== -->
-  <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-    <div class="mx-auto max-w-[1200px]">
-      <div
-        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>
-        <FloridaFlag
-          class="h-[13px] w-auto rounded-[2px] ring-1 ring-charcoal/10"
-        />
-        Locations &mdash; {city.name}, Florida
-      </div>
-      <h1
-        class="max-w-[22ch] text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
-      >
-        {city.h1}
-      </h1>
-      <p
-        class="mt-6 max-w-[56ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-      >
-        {city.heroSub}
-      </p>
-      <div class="mt-8 flex flex-wrap items-center gap-4">
-        <a
-          href="/pricing"
-          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
+      <div class="mx-auto max-w-[1200px]">
+        <div
+          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
         >
-          See pricing
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-          </svg>
-        </a>
-        <a
-          href="/#contact"
-          class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
-          >Start a conversation</a
+          <span class="h-px w-[26px] bg-accent"></span>
+          <FloridaFlag
+            class="h-[13px] w-auto rounded-[2px] ring-1 ring-charcoal/10"
+          />
+          Locations &mdash; {city.name}, Florida
+        </div>
+        <h1
+          class="max-w-[22ch] text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
         >
-      </div>
-      <div
-        class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[12px] tracking-[0.08em] text-muted uppercase"
-      >
-        <span>{city.county}</span>
-        <span class="text-accent">&middot;</span>
-        <span>{city.region}</span>
-        <span class="text-accent">&middot;</span>
-        <span>{city.populationNote}</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== CITY IMAGE ==================== -->
-  {
-    city.image && (
-      <section class="mx-auto max-w-[1200px] px-6 pb-16 md:px-10 md:pb-20">
-        <figure>
-          <div class="img-wrap overflow-hidden rounded-[22px]">
-            <img
-              src={city.image.src}
-              alt={city.image.alt}
-              width="1600"
-              height="686"
-              class="aspect-[21/9] w-full object-cover"
-              loading="eager"
-              fetchpriority="high"
-            />
-          </div>
-          {imageCredit && (
-            <figcaption class="mt-2 text-right text-[11.5px] text-muted">
-              Photo by
-              <a
-                href={imageCredit.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-              >
-                {imageCredit.name}
-              </a>
-              on
-              <a
-                href={imageCredit.pexelsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-              >
-                Pexels
-              </a>
-            </figcaption>
-          )}
-        </figure>
-      </section>
-    )
-  }
-
-  <!-- ==================== LOCAL INTRO ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-  >
-    <p
-      class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
-    >
-      {city.intro}
-    </p>
-  </section>
-
-  <!-- ==================== LOCAL CONTEXT ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      Who we build for in {city.name}
-    </h2>
-    <p
-      class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray"
-    >
-      {city.localContext}
-    </p>
-    <p
-      class="reveal mt-4 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray"
-    >
-      From {industriesLine} businesses to everything in between — if your customers
-      are searching in {city.name}, we build the site they find.
-    </p>
-  </section>
-
-  <!-- ==================== SERVICES GRID ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      Everything a {city.name} business needs online
-    </h2>
-    <p
-      class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
-    >
-      One team, one modern stack — from first logo to ongoing management, every
-      service below is available to {city.name} clients.
-    </p>
-    <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
-      {
-        services.map((s) => (
+          {city.h1}
+        </h1>
+        <p
+          class="mt-6 max-w-[56ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+        >
+          {city.heroSub}
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-4">
           <a
-            href={`/services/${s.slug}`}
-            class="reveal group block rounded-[18px] border border-charcoal/[0.08] bg-white p-7 transition-colors duration-300 hover:border-accent/40"
+            href="/pricing"
+            class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
           >
-            <div class="flex items-center justify-between gap-4">
-              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
-                {s.eyebrow}
-              </div>
-              {s.experimenting && (
-                <span class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase">
-                  <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
-                  Experimenting
-                </span>
-              )}
-            </div>
-            <div class="mt-2.5 flex items-center justify-between gap-4">
-              <h3 class="text-[20px] font-semibold tracking-[-0.02em]">
-                {s.name}
-              </h3>
-              <span class="text-accent">&#8599;</span>
-            </div>
-            <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-              {s.heroSub}
-            </p>
+            See pricing
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
           </a>
-        ))
-      }
-    </div>
-  </section>
+          <a
+            href="/#contact"
+            class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
+            >Start a conversation</a
+          >
+        </div>
+        <div
+          class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[12px] tracking-[0.08em] text-muted uppercase"
+        >
+          <span>{city.county}</span>
+          <span class="text-accent">&middot;</span>
+          <span>{city.region}</span>
+          <span class="text-accent">&middot;</span>
+          <span>{city.populationNote}</span>
+        </div>
+      </div>
+    </section>
 
-  <!-- ==================== RECENT WORK ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      Work we've shipped for businesses like yours
-    </h2>
-    <p
-      class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
-    >
-      Live websites we've designed and built for real clients &mdash; each one
-      shipped, launched, and in use today.
-    </p>
-    <div class="stagger mt-10 grid grid-cols-1 gap-[22px] md:grid-cols-3">
-      {CLIENT_PROJECTS.map((project) => <ProjectCard project={project} />)}
-    </div>
-    <a
-      href="/work"
-      class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-    >
-      See all our work
-      <svg
-        class="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-      </svg>
-    </a>
-  </section>
-
-  <!-- ==================== HOW WE WORK ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-    >
-      How we work with {city.name} businesses
-    </h2>
+    <!-- ==================== CITY IMAGE ==================== -->
     {
-      city.isHeadquarters ? (
-        <p class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray">
-          Jacksonville is home — Ali Samadi Agency is headquartered right here
-          in Duval County. Local clients get the best of both: face-to-face
-          meetings when a conversation deserves one, and our Client Hub for
-          everything else — live previews of your site as it's built, a place to
-          leave feedback, and the tools to edit your own content after launch.
-        </p>
-      ) : (
-        <p class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray">
-          We're headquartered in Jacksonville and work with {city.name} clients
-          remotely — same state, same time zone, no office markup baked into
-          your invoice. Calls happen over video, and everything else lives in
-          our Client Hub: live previews of your site as it's built, a place to
-          leave feedback directly on the work, and the tools to edit your own
-          content after launch. No fake local office, no middlemen — just the
-          team that does the work.
-        </p>
+      city.image && (
+        <section class="mx-auto max-w-[1200px] px-6 pb-16 md:px-10 md:pb-20">
+          <figure>
+            <div class="img-wrap overflow-hidden rounded-[22px]">
+              <img
+                src={city.image.src}
+                alt={city.image.alt}
+                width="1600"
+                height="686"
+                class="aspect-[21/9] w-full object-cover"
+                loading="eager"
+                fetchpriority="high"
+              />
+            </div>
+            {imageCredit && (
+              <figcaption class="mt-2 text-right text-[11.5px] text-muted">
+                Photo by
+                <a
+                  href={imageCredit.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
+                >
+                  {imageCredit.name}
+                </a>
+                on
+                <a
+                  href={imageCredit.pexelsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
+                >
+                  Pexels
+                </a>
+              </figcaption>
+            )}
+          </figure>
+        </section>
       )
     }
-    <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-3">
-      <div class="reveal">
-        <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-          01
-        </div>
-        <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-          Talk it through
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-          A video call to understand your business, your customers, and what the
-          site needs to do. You get a clear scope and a flat price.
-        </p>
-      </div>
-      <div class="reveal">
-        <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-          02
-        </div>
-        <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-          Watch it get built
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-          Follow progress in the Client Hub with live previews. Simple sites
-          ship in one day once the project is confirmed.
-        </p>
-      </div>
-      <div class="reveal">
-        <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-          03
-        </div>
-        <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-          Own it after launch
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-          Edit your own text, images, and pages anytime — or let us manage it.
-          The code is yours either way, never locked to us.
-        </p>
-      </div>
-    </div>
-  </section>
 
-  <!-- ==================== PRICING SUMMARY ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    <!-- ==================== LOCAL INTRO ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
     >
-      Plain pricing, no surprises
-    </h2>
-    <p
-      class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
-    >
-      The same honest pricing for every client in every city — a published
-      monthly anchor, and project builds scoped in the open.
-    </p>
-    <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-3">
-      <div
-        class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+      <p
+        class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
       >
-        <div
-          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-        >
-          Website-as-a-Service
-        </div>
-        <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
-          <span class="text-[15px] font-normal text-warmgray">from</span>
-          {fmtPrice(PRICING.monthly)}<span
-            class="text-[15px] font-normal text-warmgray">/mo</span
-          >
-        </div>
-        <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-          All-inclusive — design, development, CMS, email, SEO, and managed
-          hosting in one plan. For most projects this is the price.
-        </p>
-      </div>
-      <div
-        class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
-      >
-        <div
-          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-        >
-          Own-it build
-        </div>
-        <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
-          Per project
-        </div>
-        <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-          A one-time build you own outright — 5 months of hosting included,
-          priced around your project's scope.
-        </p>
-      </div>
-      <div
-        class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
-      >
-        <div
-          class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase"
-        >
-          Custom
-        </div>
-        <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
-          Scoped
-        </div>
-        <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-          Web apps, dashboards, auth, databases — fully custom projects priced
-          per scope.
-        </p>
-      </div>
-    </div>
-    <a
-      href="/pricing"
-      class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-    >
-      Compare plans in detail
-      <svg
-        class="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-      </svg>
-    </a>
-  </section>
+        {city.intro}
+      </p>
+    </section>
 
-  <!-- ==================== FAQ ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <h2
-      class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+    <!-- ==================== LOCAL CONTEXT ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
     >
-      Questions from {city.name} businesses
-    </h2>
-    <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
-      {
-        city.faqs.map((faq) => (
-          <div>
-            <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
-              {faq.q}
-            </h3>
-            <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
-              {faq.a}
-            </p>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- ==================== NEARBY CITIES ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-  >
-    <h2 class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase">
-      Also serving nearby
-    </h2>
-    <ul class="mt-5 flex flex-wrap gap-x-8 gap-y-3">
-      {
-        nearbyCities.map((n) => (
-          <li>
-            <a
-              href={`/locations/${n.slug}`}
-              class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-            >
-              {n.name}, FL
-              <span class="text-[12px] text-accent">&rarr;</span>
-            </a>
-          </li>
-        ))
-      }
-      <li>
-        <a
-          href="/locations"
-          class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-        >
-          All Florida cities
-          <span class="text-[12px] text-accent">&rarr;</span>
-        </a>
-      </li>
-    </ul>
-  </section>
-
-  <!-- ==================== FINAL CTA ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
       <h2
-        class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
       >
-        Ready to stand out in {city.name}?
+        Who we build for in {city.name}
       </h2>
       <p
-        class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
+        class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray"
       >
-        Simple, transparent pricing — and a real person on the other end. Simple
-        sites ship in one day once your project is confirmed.
+        {city.localContext}
       </p>
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <a
-          href="/pricing"
-          class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300 hover:bg-cream hover:text-charcoal"
-        >
-          See pricing
-        </a>
-        <a
-          href="/#contact"
-          class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
-          >Ask a question</a
-        >
-      </div>
-    </div>
-  </section>
+      <p
+        class="reveal mt-4 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray"
+      >
+        From {industriesLine} businesses to everything in between — if your customers
+        are searching in {city.name}, we build the site they find.
+      </p>
+    </section>
 
+    <!-- ==================== SERVICES GRID ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        Everything a {city.name} business needs online
+      </h2>
+      <p
+        class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
+      >
+        One team, one modern stack — from first logo to ongoing management,
+        every service below is available to {city.name} clients.
+      </p>
+      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
+        {
+          services.map((s) => (
+            <a
+              href={`/services/${s.slug}`}
+              class="reveal group block rounded-[18px] border border-charcoal/[0.08] bg-white p-7 transition-colors duration-300 hover:border-accent/40"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
+                  {s.eyebrow}
+                </div>
+                {s.experimenting && (
+                  <span class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase">
+                    <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
+                    Experimenting
+                  </span>
+                )}
+              </div>
+              <div class="mt-2.5 flex items-center justify-between gap-4">
+                <h3 class="text-[20px] font-semibold tracking-[-0.02em]">
+                  {s.name}
+                </h3>
+                <span class="text-accent">&#8599;</span>
+              </div>
+              <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+                {s.heroSub}
+              </p>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== RECENT WORK ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        Work we've shipped for businesses like yours
+      </h2>
+      <p
+        class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
+      >
+        Live websites we've designed and built for real clients &mdash; each one
+        shipped, launched, and in use today.
+      </p>
+      <div class="stagger mt-10 grid grid-cols-1 gap-[22px] md:grid-cols-3">
+        {CLIENT_PROJECTS.map((project) => <ProjectCard project={project} />)}
+      </div>
+      <a
+        href="/work"
+        class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+      >
+        See all our work
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+        </svg>
+      </a>
+    </section>
+
+    <!-- ==================== HOW WE WORK ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        How we work with {city.name} businesses
+      </h2>
+      {
+        city.isHeadquarters ? (
+          <p class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray">
+            Jacksonville is home — Ali Samadi Agency is headquartered right here
+            in Duval County. Local clients get the best of both: face-to-face
+            meetings when a conversation deserves one, and our Client Hub for
+            everything else — live previews of your site as it's built, a place
+            to leave feedback, and the tools to edit your own content after
+            launch.
+          </p>
+        ) : (
+          <p class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray">
+            We're headquartered in Jacksonville and work with {city.name}{" "}
+            clients remotely — same state, same time zone, no office markup
+            baked into your invoice. Calls happen over video, and everything
+            else lives in our Client Hub: live previews of your site as it's
+            built, a place to leave feedback directly on the work, and the tools
+            to edit your own content after launch. No fake local office, no
+            middlemen — just the team that does the work.
+          </p>
+        )
+      }
+      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-3">
+        <div class="reveal">
+          <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
+            01
+          </div>
+          <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
+            Talk it through
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+            A video call to understand your business, your customers, and what
+            the site needs to do. You get a clear scope and a flat price.
+          </p>
+        </div>
+        <div class="reveal">
+          <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
+            02
+          </div>
+          <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
+            Watch it get built
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+            Follow progress in the Client Hub with live previews. Simple sites
+            ship in one day once the project is confirmed.
+          </p>
+        </div>
+        <div class="reveal">
+          <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
+            03
+          </div>
+          <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
+            Own it after launch
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+            Edit your own text, images, and pages anytime — or let us manage it.
+            The code is yours either way, never locked to us.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PRICING SUMMARY ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        Plain pricing, no surprises
+      </h2>
+      <p
+        class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
+      >
+        The same honest pricing for every client in every city — a published
+        monthly anchor, and project builds scoped in the open.
+      </p>
+      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-3">
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <div
+            class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase"
+          >
+            Website-as-a-Service
+          </div>
+          <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
+            <span class="text-[15px] font-normal text-warmgray">from</span>
+            {fmtPrice(PRICING.monthly)}<span
+              class="text-[15px] font-normal text-warmgray">/mo</span
+            >
+          </div>
+          <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
+            All-inclusive — design, development, CMS, email, SEO, and managed
+            hosting in one plan. For most projects this is the price.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <div
+            class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase"
+          >
+            Own-it build
+          </div>
+          <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
+            Per project
+          </div>
+          <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
+            A one-time build you own outright — 5 months of hosting included,
+            priced around your project's scope.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <div
+            class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase"
+          >
+            Custom
+          </div>
+          <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
+            Scoped
+          </div>
+          <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
+            Web apps, dashboards, auth, databases — fully custom projects priced
+            per scope.
+          </p>
+        </div>
+      </div>
+      <a
+        href="/pricing"
+        class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+      >
+        Compare plans in detail
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+        </svg>
+      </a>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <h2
+        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+      >
+        Questions from {city.name} businesses
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+        {
+          city.faqs.map((faq) => (
+            <div>
+              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+                {faq.q}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+                {faq.a}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== NEARBY CITIES ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
+    >
+      <h2
+        class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        Also serving nearby
+      </h2>
+      <ul class="mt-5 flex flex-wrap gap-x-8 gap-y-3">
+        {
+          nearbyCities.map((n) => (
+            <li>
+              <a
+                href={`/locations/${n.slug}`}
+                class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+              >
+                {n.name}, FL
+                <span class="text-[12px] text-accent">&rarr;</span>
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a
+            href="/locations"
+            class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+          >
+            All Florida cities
+            <span class="text-[12px] text-accent">&rarr;</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ==================== FINAL CTA ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
+        <h2
+          class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        >
+          Ready to stand out in {city.name}?
+        </h2>
+        <p
+          class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
+        >
+          Simple, transparent pricing — and a real person on the other end.
+          Simple sites ship in one day once your project is confirmed.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href="/pricing"
+            class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-charcoal transition-all duration-300 hover:bg-cream hover:text-charcoal"
+          >
+            See pricing
+          </a>
+          <a
+            href="/#contact"
+            class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
+            >Ask a question</a
+          >
+        </div>
+      </div>
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

@@ -13,8 +13,6 @@ export default defineConfig({
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   integrations: [
     sitemap({
-      // leave-a-review is noindex — keep it out of the sitemap.
-      filter: (page) => !page.includes("/leave-a-review"),
       // Emit a build-date lastmod so crawlers get a real freshness signal.
       serialize: (item) => ({ ...item, lastmod: new Date().toISOString() }),
     }),

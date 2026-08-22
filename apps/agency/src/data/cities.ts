@@ -57,7 +57,7 @@ export const cities: City[] = [
     isHeadquarters: true,
     seoTitle: "Jacksonville Web Design & Development — Ali Samadi Agency",
     metaDescription:
-      "Jacksonville web design agency based right here in Duval County. Custom-coded sites on Next.js — not templates — with transparent pricing and fast launches.",
+      "Jacksonville web design agency based here in Duval County. Custom-coded sites on Next.js — not templates — with transparent pricing and fast launches.",
     h1: "Web design & development in Jacksonville, Florida",
     heroSub:
       "We're not a directory listing with a Jacksonville filter — this is home. Custom-coded websites for Duval County businesses, built by the agency that lives here.",
@@ -159,7 +159,7 @@ export const cities: City[] = [
     },
     seoTitle: "Tampa Website Design & Development — Ali Samadi Agency",
     metaDescription:
-      "Tampa website design built with custom code, not drag-and-drop templates. Fast, modern sites for Tampa Bay businesses — transparent pricing, quick launches.",
+      "Tampa website design built with custom code, not drag-and-drop templates. Fast sites for Tampa Bay businesses — transparent pricing, quick launches.",
     h1: "Website design & development for Tampa businesses",
     heroSub:
       "Tampa Bay is growing faster than almost any metro in the country. We build the kind of website that keeps up — custom-coded, fast, and easy to update yourself.",
@@ -372,7 +372,7 @@ export const cities: City[] = [
     },
     seoTitle: "Hialeah Website Design — Ali Samadi Agency",
     metaDescription:
-      "Hialeah website design for family businesses ready to grow online. Bilingual-ready, custom-coded sites at honest prices — built to bring in local customers.",
+      "Hialeah website design for family businesses ready to grow. Bilingual-ready, custom-coded sites at honest prices — built to bring in local customers.",
     h1: "Website design for Hialeah businesses",
     heroSub:
       "Hialeah runs on family businesses that earned their reputation the hard way. A real website makes sure new customers can find what the neighborhood already knows.",

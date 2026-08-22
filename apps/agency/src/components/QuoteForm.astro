@@ -11,8 +11,10 @@ import { PRICING, fmtPrice } from "../data/pricing";
 interface Props {
   // Compact mode: tighter paddings + no intro copy, for the hero column.
   compact?: boolean;
+  // Per-page heading so pages sharing the form don't emit duplicate <h2>s.
+  heading?: string;
 }
-const { compact = false } = Astro.props;
+const { compact = false, heading = "Tell us about your project" } = Astro.props;
 
 const inputClass =
   "w-full rounded-xl border border-charcoal/[0.08] bg-white px-4 py-3.5 text-sm text-charcoal transition-all focus:border-accent/30 focus:ring-2 focus:ring-accent/30 focus:outline-none";
@@ -36,9 +38,9 @@ const labelClass =
             <span class="h-px w-[26px] bg-accent" />
             Get a Quote
           </div>
-          <h3 class="text-2xl font-semibold tracking-[-0.02em] text-charcoal">
-            Tell us about your project
-          </h3>
+          <h2 class="text-2xl font-semibold tracking-[-0.02em] text-charcoal">
+            {heading}
+          </h2>
           <p class="mt-2 max-w-[52ch] text-sm leading-relaxed text-warmgray">
             Share a few details and we'll come back with scope, timeline, and a
             clear price — usually within a day.
@@ -48,9 +50,9 @@ const labelClass =
     }
     {
       compact && (
-        <h3 class="text-lg font-semibold tracking-[-0.02em] text-charcoal">
+        <h2 class="text-lg font-semibold tracking-[-0.02em] text-charcoal">
           Get a free quote
-        </h3>
+        </h2>
       )
     }
 
@@ -59,10 +61,7 @@ const labelClass =
       novalidate
     >
       <div
-        class:list={[
-          "grid grid-cols-1 gap-5",
-          compact ? "" : "sm:grid-cols-2",
-        ]}
+        class:list={["grid grid-cols-1 gap-5", compact ? "" : "sm:grid-cols-2"]}
       >
         <div>
           <span class={labelClass}>Name</span>

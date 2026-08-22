@@ -47,97 +47,99 @@ const schema = [
 >
   <BackNav backHref="/" backLabel="Back to Home" fixed />
 
-  <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-    <div class="mx-auto max-w-[1200px]">
-      <div
-        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>Services
-      </div>
-      <h1
-        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-      >
-        Everything we <span class="text-accent">do</span>
-      </h1>
-      <p
-        class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-      >
-        Ali Samadi Agency designs and builds websites end to end — from brand
-        identity through development, SEO, and ongoing management. Every service
-        below is delivered by the same small team, on the same modern stack.
-      </p>
-    </div>
-  </section>
-
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
-      {
-        services.map((s) => (
-          <a
-            href={`/services/${s.slug}`}
-            class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-          >
-            <div class="aspect-[16/9] overflow-hidden">
-              <img
-                src={s.image.src}
-                alt={s.image.alt}
-                width="1600"
-                height="1000"
-                class="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div class="p-7">
-              <div class="flex items-center justify-between gap-4">
-                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
-                  {s.eyebrow}
-                </div>
-                {s.experimenting && (
-                  <span class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase">
-                    <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
-                    Experimenting
-                  </span>
-                )}
-              </div>
-              <div class="mt-2.5 flex items-center justify-between gap-4">
-                <h2 class="text-[22px] font-semibold tracking-[-0.02em]">
-                  {s.name}
-                </h2>
-                <span class="text-accent">&#8599;</span>
-              </div>
-              <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-                {s.heroSub}
-              </p>
-            </div>
-          </a>
-        ))
-      }
-    </div>
-
-    <div class="mt-12 text-center">
-      <a
-        href="/pricing"
-        class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
-      >
-        See pricing
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
+  <main>
+    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
+      <div class="mx-auto max-w-[1200px]">
+        <div
+          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-        </svg>
-      </a>
-    </div>
-  </section>
+          <span class="h-px w-[26px] bg-accent"></span>Services
+        </div>
+        <h1
+          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+        >
+          Everything we <span class="text-accent">do</span>
+        </h1>
+        <p
+          class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+        >
+          Ali Samadi Agency designs and builds websites end to end — from brand
+          identity through development, SEO, and ongoing management. Every
+          service below is delivered by the same small team, on the same modern
+          stack.
+        </p>
+      </div>
+    </section>
 
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
+        {
+          services.map((s) => (
+            <a
+              href={`/services/${s.slug}`}
+              class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
+            >
+              <div class="aspect-[16/9] overflow-hidden">
+                <img
+                  src={s.image.src}
+                  alt={s.image.alt}
+                  width="1600"
+                  height="1000"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-7">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
+                    {s.eyebrow}
+                  </div>
+                  {s.experimenting && (
+                    <span class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase">
+                      <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
+                      Experimenting
+                    </span>
+                  )}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between gap-4">
+                  <h2 class="text-[22px] font-semibold tracking-[-0.02em]">
+                    {s.name}
+                  </h2>
+                  <span class="text-accent">&#8599;</span>
+                </div>
+                <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
+                  {s.heroSub}
+                </p>
+              </div>
+            </a>
+          ))
+        }
+      </div>
+
+      <div class="mt-12 text-center">
+        <a
+          href="/pricing"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+        >
+          See pricing
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+          </svg>
+        </a>
+      </div>
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

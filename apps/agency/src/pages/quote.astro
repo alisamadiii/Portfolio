@@ -21,7 +21,7 @@ const schema = [
 
 <Layout
   title="Get a Quote — Ali Samadi Agency | Free Project Estimate"
-  description="Tell us about your project and get a clear scope, timeline, and price — usually within a day. Website-as-a-Service from $349/mo or a one-time build you own."
+  description="Tell us about your project and get a scope, timeline, and price — usually within a day. Website-as-a-Service from $349/mo or a one-time build you own."
   canonical={pageUrl}
   og={{
     title: "Get a Quote — Ali Samadi Agency",
@@ -36,74 +36,75 @@ const schema = [
 >
   <BackNav backHref="/" backLabel="Back to Home" fixed />
 
-  <!-- ==================== HERO ==================== -->
-  <section class="px-4 pt-32 pb-12 md:px-8 md:pt-40 md:pb-16">
-    <div class="mx-auto max-w-[1200px]">
-      <div
-        class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>Get a Quote
-      </div>
-      <h1
-        class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-      >
-        Let's price your <span class="text-accent">project</span>
-      </h1>
-      <p
-        class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-      >
-        Share a few details and we'll come back with scope, timeline, and a
-        clear price in writing — usually within a day. No calls required, no
-        obligation.
-      </p>
-    </div>
-  </section>
-
-  <!-- ==================== FORM ==================== -->
-  <section
-    id="quote"
-    class="mx-auto max-w-[1200px] scroll-mt-24 px-6 pb-[70px] md:px-10"
-  >
-    <div class="mx-auto max-w-[720px]">
-      <QuoteForm />
-    </div>
-  </section>
-
-  <!-- ==================== WHAT HAPPENS NEXT ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div class="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.4fr] md:gap-14">
-      <h2
-        class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        What happens next
-      </h2>
-      <div class="space-y-5 text-[16.5px] leading-[1.65] text-warmgray">
-        <p class="reveal">
-          We read your request the same day and reply with a plan — scope,
-          timeline, and a clear price. Most projects fit the
-          <a href="/pricing" class="text-accent hover:underline"
-            >all-inclusive plan</a
-          >; one-time builds get a written number before any work starts.
-        </p>
-        <p class="reveal">
-          Prefer to talk it through?
-          <a
-            href="https://cal.com/alisamadii"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-accent hover:underline">Book a meeting</a
-          > or email
-          <a
-            href="mailto:agency@alisamadii.com"
-            class="text-accent hover:underline">agency@alisamadii.com</a
-          > directly.
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section class="px-4 pt-32 pb-12 md:px-8 md:pt-40 md:pb-16">
+      <div class="mx-auto max-w-[1200px]">
+        <div
+          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        >
+          <span class="h-px w-[26px] bg-accent"></span>Get a Quote
+        </div>
+        <h1
+          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+        >
+          Let's price your <span class="text-accent">project</span>
+        </h1>
+        <p
+          class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+        >
+          Share a few details and we'll come back with scope, timeline, and a
+          clear price in writing — usually within a day. No calls required, no
+          obligation.
         </p>
       </div>
-    </div>
-  </section>
+    </section>
 
+    <!-- ==================== FORM ==================== -->
+    <section
+      id="quote"
+      class="mx-auto max-w-[1200px] scroll-mt-24 px-6 pb-[70px] md:px-10"
+    >
+      <div class="mx-auto max-w-[720px]">
+        <QuoteForm />
+      </div>
+    </section>
+
+    <!-- ==================== WHAT HAPPENS NEXT ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div class="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.4fr] md:gap-14">
+        <h2
+          class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        >
+          What happens next
+        </h2>
+        <div class="space-y-5 text-[16.5px] leading-[1.65] text-warmgray">
+          <p class="reveal">
+            We read your request the same day and reply with a plan — scope,
+            timeline, and a clear price. Most projects fit the
+            <a href="/pricing" class="text-accent hover:underline"
+              >all-inclusive plan</a
+            >; one-time builds get a written number before any work starts.
+          </p>
+          <p class="reveal">
+            Prefer to talk it through?
+            <a
+              href="https://cal.com/alisamadii"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent hover:underline">Book a meeting</a
+            > or email
+            <a
+              href="mailto:agency@alisamadii.com"
+              class="text-accent hover:underline">agency@alisamadii.com</a
+            > directly.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

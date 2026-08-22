@@ -6,7 +6,8 @@
 //
 // Text is rasterized from SVG by librsvg, which only sees system fonts —
 // the woff2 Geist in node_modules can't be loaded, so a system sans stands in
-// (fine at OG size). Output is PNG because OG images must be png/jpg.
+// (fine at OG size). Output is JPEG — photo content compresses ~5x smaller
+// than PNG and OG images must be png/jpg.
 import sharp from "sharp";
 import { mkdir, access } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
@@ -49,13 +50,13 @@ for (const city of cities) {
     console.warn(`skip ${city.slug} — no ${src} (run locations:images first)`);
     continue;
   }
-  const out = resolve(appRoot, `public/og/locations/${city.slug}.png`);
+  const out = resolve(appRoot, `public/og/locations/${city.slug}.jpg`);
   await sharp(src)
     .resize(W, H, { fit: "cover" })
     .composite([{ input: Buffer.from(overlay(city.name)) }])
-    .png({ compressionLevel: 9, palette: true })
+    .jpeg({ quality: 80, mozjpeg: true })
     .toFile(out);
-  console.log(`og/locations/${city.slug}.png`);
+  console.log(`og/locations/${city.slug}.jpg`);
 }
 
 console.log("done");

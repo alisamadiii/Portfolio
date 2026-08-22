@@ -5,13 +5,6 @@ import { services } from "../data/services";
 const year = new Date().getFullYear();
 ---
 
-<!-- TrustBox script -->
-<script
-  is:inline
-  type="text/javascript"
-  src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"
-  async></script>
-<!-- End TrustBox script -->
 <footer class="mx-auto max-w-[1200px] px-6 pt-9 pb-14 md:px-10">
   <div class="grid grid-cols-2 gap-10 md:grid-cols-4">
     <!-- Brand -->
@@ -20,6 +13,9 @@ const year = new Date().getFullYear();
         <img
           src="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
           alt="alisamadii logo"
+          width="22"
+          height="22"
+          loading="lazy"
           class="h-[22px] w-[22px]"
         />
         alisamadii
@@ -32,37 +28,22 @@ const year = new Date().getFullYear();
         <a
           href="https://x.com/alisamadii_"
           target="_blank"
+          rel="noopener noreferrer"
           class="transition-colors duration-300 hover:text-accent">Twitter</a
         >
         <a
           href="https://github.com/alisamadiii"
           target="_blank"
+          rel="noopener noreferrer"
           class="transition-colors duration-300 hover:text-accent">GitHub</a
         >
         <a
           href="https://www.linkedin.com/in/alireza17/"
           target="_blank"
+          rel="noopener noreferrer"
           class="transition-colors duration-300 hover:text-accent">LinkedIn</a
         >
       </div>
-
-      <!-- TrustBox widget - Review Collector -->
-      <div
-        class="trustpilot-widget mt-6"
-        data-locale="en-US"
-        data-template-id="56278e9abfbbba0bdcd568bc"
-        data-businessunit-id="6a5c4109105cd997a6a88f07"
-        data-style-height="52px"
-        data-style-width="100%"
-        data-token="f84feb9e-8e2f-48bc-bbec-38d71da27964"
-      >
-        <a
-          href="https://www.trustpilot.com/review/alisamadii.com"
-          target="_blank"
-          rel="noopener">Trustpilot</a
-        >
-      </div>
-      <!-- End TrustBox widget -->
     </div>
 
     <!-- Navigation -->
@@ -159,7 +140,7 @@ const year = new Date().getFullYear();
       </p>
       <a
         href="mailto:agency@alisamadii.com"
-        class="mag-btn inline-flex items-center gap-2 rounded-[9px] bg-charcoal px-[17px] py-[9px] text-[13.5px] font-medium text-white hover:bg-accent"
+        class="mag-btn inline-flex items-center gap-2 rounded-[9px] bg-charcoal px-[17px] py-[9px] text-[13.5px] font-medium text-cream hover:bg-accent"
       >
         Get in Touch
         <span class="text-[12px]">&#8599;</span>

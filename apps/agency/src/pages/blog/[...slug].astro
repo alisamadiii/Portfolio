@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
 import HomeFooter from "../../components/HomeFooter.astro";
+import QuoteForm from "../../components/QuoteForm.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -68,7 +69,7 @@ const schema = [
 ---
 
 <Layout
-  title={`${data.title} — Ali Samadi Agency`}
+  title={data.title}
   description={data.description}
   canonical={pageUrl}
   og={{
@@ -83,169 +84,181 @@ const schema = [
 >
   <BackNav backHref="/blog" backLabel="All Posts" fixed />
 
-  <article class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-    <div class="mx-auto max-w-[760px]">
-      <!-- Meta -->
+  <main>
+    <article class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
       <div
-        class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12.5px] tracking-[0.08em] text-muted uppercase"
+        class="mx-auto max-w-[1236px] lg:grid lg:grid-cols-[minmax(0,760px)_420px] lg:gap-14"
       >
-        <time datetime={data.publishDate.toISOString()}
-          >{dateFmt(data.publishDate)}</time
-        >
-        <span class="text-accent">&middot;</span>
-        <span>{readingTime} min read</span>
-      </div>
-
-      <h1
-        class="text-[clamp(30px,4.4vw,52px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-      >
-        {data.title}
-      </h1>
-      <p class="mt-5 text-[18px] leading-[1.55] text-warmgray">
-        {data.description}
-      </p>
-
-      <!-- Author byline -->
-      <div class="mt-7 flex items-center gap-3.5">
-        <img
-          src={data.author.avatar}
-          alt={data.author.name}
-          width="44"
-          height="44"
-          loading="lazy"
-          class="h-11 w-11 rounded-full border border-charcoal/[0.08] object-cover"
-        />
-        <div class="leading-tight">
-          <a
-            href={data.author.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-[15px] font-medium text-charcoal underline decoration-charcoal/30 underline-offset-[3px] transition-colors duration-200 hover:text-accent hover:decoration-accent"
+        <div class="mx-auto w-full max-w-[760px] lg:mx-0 lg:max-w-none">
+          <!-- Meta -->
+          <div
+            class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12.5px] tracking-[0.08em] text-muted uppercase"
           >
-            {data.author.name}
-          </a>
-          <p class="mt-0.5 text-[13px] text-muted">{data.author.title}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hero image -->
-    <figure class="mx-auto mt-10 max-w-[980px]">
-      <div
-        class="aspect-[16/9] overflow-hidden rounded-[20px] border border-charcoal/[0.08]"
-      >
-        <img
-          src={data.heroImage}
-          alt={data.heroImageAlt}
-          width="1600"
-          height="900"
-          class="h-full w-full object-cover"
-          fetchpriority="high"
-        />
-      </div>
-      {
-        data.heroCredit && (
-          <figcaption class="mt-2 text-right text-[11.5px] text-muted">
-            Photo by{" "}
-            <a
-              href={data.heroCredit.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="underline underline-offset-2 hover:text-charcoal"
+            <time datetime={data.publishDate.toISOString()}
+              >{dateFmt(data.publishDate)}</time
             >
-              {data.heroCredit.name}
-            </a>{" "}
-            on{" "}
-            <a
-              href={data.heroCredit.pexelsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="underline underline-offset-2 hover:text-charcoal"
-            >
-              Pexels
-            </a>
-          </figcaption>
-        )
-      }
-    </figure>
+            <span class="text-accent">&middot;</span>
+            <span>{readingTime} min read</span>
+          </div>
 
-    <!-- Table of contents -->
-    {
-      toc.length > 2 && (
-        <nav
-          aria-label="Table of contents"
-          class="mx-auto mt-12 max-w-[760px] rounded-[16px] border border-charcoal/[0.08] p-6 md:p-7"
-        >
-          <p class="font-mono text-[11.5px] tracking-[0.1em] text-muted uppercase">
-            On this page
+          <h1
+            class="text-[clamp(30px,4.4vw,52px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+          >
+            {data.title}
+          </h1>
+          <p class="mt-5 text-[18px] leading-[1.55] text-warmgray">
+            {data.description}
           </p>
-          <ul class="mt-4 space-y-2.5">
-            {toc.map((h) => (
-              <li class={h.depth === 3 ? "pl-4" : ""}>
-                <a
-                  href={`#${h.slug}`}
-                  class="text-[15px] leading-snug text-warmgray transition-colors duration-200 hover:text-accent"
-                >
-                  {h.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )
-    }
 
-    <!-- Body -->
-    <div class="mx-auto prose mt-12 max-w-[760px]">
-      <Content />
-    </div>
+          <!-- Author byline -->
+          <div class="mt-7 flex items-center gap-3.5">
+            <img
+              src={data.author.avatar}
+              alt={data.author.name}
+              width="44"
+              height="44"
+              loading="lazy"
+              class="h-11 w-11 rounded-full border border-charcoal/[0.08] object-cover"
+            />
+            <div class="leading-tight">
+              <a
+                href={data.author.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-[15px] font-medium text-charcoal underline decoration-charcoal/30 underline-offset-[3px] transition-colors duration-200 hover:text-accent hover:decoration-accent"
+              >
+                {data.author.name}
+              </a>
+              <p class="mt-0.5 text-[13px] text-muted">{data.author.title}</p>
+            </div>
+          </div>
 
-    <!-- Tags -->
-    {
-      data.tags.length > 0 && (
-        <div class="mx-auto mt-12 flex max-w-[760px] flex-wrap gap-2">
-          {data.tags.map((tag) => (
-            <span class="rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.06em] text-warmgray uppercase">
-              {tag}
-            </span>
-          ))}
+          <!-- Hero image -->
+          <figure class="mt-10">
+            <div
+              class="aspect-[16/9] overflow-hidden rounded-[20px] border border-charcoal/[0.08]"
+            >
+              <img
+                src={data.heroImage}
+                alt={data.heroImageAlt}
+                width="1600"
+                height="900"
+                class="h-full w-full object-cover"
+                fetchpriority="high"
+              />
+            </div>
+            {
+              data.heroCredit && (
+                <figcaption class="mt-2 text-right text-[11.5px] text-muted">
+                  Photo by{" "}
+                  <a
+                    href={data.heroCredit.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline underline-offset-2 hover:text-charcoal"
+                  >
+                    {data.heroCredit.name}
+                  </a>{" "}
+                  on{" "}
+                  <a
+                    href={data.heroCredit.pexelsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline underline-offset-2 hover:text-charcoal"
+                  >
+                    Pexels
+                  </a>
+                </figcaption>
+              )
+            }
+          </figure>
+
+          <!-- Table of contents -->
+          {
+            toc.length > 2 && (
+              <nav
+                aria-label="Table of contents"
+                class="mt-12 rounded-[16px] border border-charcoal/[0.08] p-6 md:p-7"
+              >
+                <p class="font-mono text-[11.5px] tracking-[0.1em] text-muted uppercase">
+                  On this page
+                </p>
+                <ul class="mt-4 space-y-2.5">
+                  {toc.map((h) => (
+                    <li class={h.depth === 3 ? "pl-4" : ""}>
+                      <a
+                        href={`#${h.slug}`}
+                        class="text-[15px] leading-snug text-warmgray transition-colors duration-200 hover:text-accent"
+                      >
+                        {h.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )
+          }
+
+          <!-- Body -->
+          <div class="prose mt-12 max-w-none">
+            <Content />
+          </div>
+
+          <!-- Tags -->
+          {
+            data.tags.length > 0 && (
+              <div class="mt-12 flex flex-wrap gap-2">
+                {data.tags.map((tag) => (
+                  <span class="rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.06em] text-warmgray uppercase">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )
+          }
         </div>
-      )
-    }
-  </article>
 
-  <!-- CTA -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
-      <h2
-        class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Want a website built this way?
-      </h2>
-      <p
-        class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
-      >
-        Simple, transparent pricing — and a real person on the other end. Simple
-        sites ship in one day once your project is confirmed.
-      </p>
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <a
-          href="/pricing"
-          class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-white transition-all duration-300 hover:bg-cream hover:text-charcoal"
-        >
-          See pricing
-        </a>
-        <a
-          href="/#contact"
-          class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
-          >Start a project</a
-        >
+        <!-- Sticky quote form rail (desktop only) -->
+        <aside class="hidden lg:block">
+          <div class="sticky top-28">
+            <QuoteForm compact />
+          </div>
+        </aside>
       </div>
-    </div>
-  </section>
+    </article>
 
+    <!-- CTA -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
+        <h2
+          class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        >
+          Want a website built this way?
+        </h2>
+        <p
+          class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
+        >
+          Simple, transparent pricing — and a real person on the other end.
+          Simple sites ship in one day once your project is confirmed.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href="/pricing"
+            class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-charcoal transition-all duration-300 hover:bg-cream hover:text-charcoal"
+          >
+            See pricing
+          </a>
+          <a
+            href="/#contact"
+            class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
+            >Start a project</a
+          >
+        </div>
+      </div>
+    </section>
+  </main>
   <HomeFooter />
 </Layout>
 

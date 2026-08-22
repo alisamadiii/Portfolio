@@ -6,10 +6,26 @@
   --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
   --color-cream: #f6f5f3;
   --color-charcoal: #1b1a17;
-  --color-warmgray: #6f6a63;
-  --color-muted: #8a847c;
+  --color-warmgray: #67625a;
+  --color-muted: #6b665d;
   --color-ink: #171512;
   --color-accent: #fc8464;
+  /* Darker accent for text on light surfaces — #fc8464 fails WCAG on cream.
+     Bright accent is kept for fills, borders, and text on dark surfaces. */
+  --color-accent-ink: #c2451f;
+}
+
+/* Accent text defaults to the readable ink shade on light backgrounds; the
+   bright accent is restored for text sitting on dark (ink/charcoal) surfaces. */
+@layer utilities {
+  .text-accent {
+    color: var(--color-accent-ink);
+  }
+  .bg-ink .text-accent,
+  .bg-charcoal .text-accent,
+  .text-cream .text-accent {
+    color: var(--color-accent);
+  }
 }
 
 /* Fire hover styles on touch devices too, like Tailwind v3 did — the pages

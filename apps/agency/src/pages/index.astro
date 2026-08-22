@@ -5,7 +5,6 @@ import HomeFooter from "../components/HomeFooter.astro";
 import PricingCards from "../components/PricingCards.astro";
 import QuoteForm from "../components/QuoteForm.astro";
 import Testimonial from "../components/Testimonial.astro";
-import ReviewPopup from "../components/ReviewPopup.astro";
 import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
 import { cities } from "../data/cities";
 import { PRICING, fmtPrice } from "../data/pricing";
@@ -53,7 +52,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
 
 <Layout
   title="Jacksonville Web Design & Development Agency | Ali Samadi"
-  description="Ali Samadi Agency builds custom-coded websites and web apps for Jacksonville, FL businesses. Design + development in-house, transparent pricing, fast delivery."
+  description="Ali Samadi Agency builds custom-coded websites and web apps for Jacksonville, FL businesses. Design + development in-house, transparent pricing."
   canonical="https://agency.alisamadii.com"
   og={{
     title: "Jacksonville Web Design & Development — Ali Samadi Agency",
@@ -68,322 +67,285 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
 >
   <HomeNav />
 
-  <!-- ==================== HERO ==================== -->
-  <section
-    id="hero"
-    class="mx-auto max-w-[1200px] px-6 pt-[128px] pb-20 md:px-10"
-  >
-    <div
-      class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.25fr_1fr] lg:gap-16"
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section
+      id="hero"
+      class="mx-auto max-w-[1200px] px-6 pt-[128px] pb-20 md:px-10"
     >
-      <div class="stagger">
-        <div
-          class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Web Design
-          Agency &middot; Jacksonville, FL
-        </div>
-        <h1
-          class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
-        >
-          <span
-            class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
-            >Jacksonville web design &amp; development</span
-          >
-          We build digital
-          <span class="text-accent" id="scrambleTarget">experiences</span><span
-            class="scramble-cursor"></span>
-        </h1>
-        <p
-          class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
-        >
-          A Jacksonville, FL web design and development agency creating brand
-          identities, custom websites, and web apps that drive real, measurable
-          results.
-        </p>
-        <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
-          <a
-            href="https://cal.com/alisamadii"
-            target="_blank"
-            class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-medium text-white shadow-[0_8px_24px_rgba(252,132,100,0.32)] hover:bg-charcoal"
-          >
-            Start a Project
-            <span>&#8599;</span>
-          </a>
-          <a
-            href="/pricing"
-            class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15.5px] font-medium hover:border-accent hover:text-accent"
-          >
-            Pricing
-          </a>
-          <a
-            href="https://portal.alisamadii.com"
-            target="_blank"
-            class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
-            >I am a customer</a
-          >
-        </div>
-      </div>
-      <div>
-        <QuoteForm compact />
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== MARQUEE ==================== -->
-  <div
-    class="overflow-hidden border-y border-charcoal/[0.08] bg-[#f1efec] py-[18px]"
-  >
-    <div class="marquee-track flex w-max whitespace-nowrap">
-      <span class="font-mono text-[15px] tracking-[0.02em] text-[#a49d94]">
-        Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
-      </span>
-      <span class="font-mono text-[15px] tracking-[0.02em] text-[#a49d94]">
-        Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
-      </span>
-    </div>
-  </div>
-
-  <!-- ==================== STATS ==================== -->
-  <section class="mx-auto max-w-[1200px] px-6 py-14 md:px-10">
-    <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          8<span class="text-accent">+</span>
-        </div>
-        <div class="mt-2.5 text-sm text-warmgray">Projects Delivered</div>
-      </div>
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          100<span class="text-accent">%</span>
-        </div>
-        <div class="mt-2.5 text-sm text-warmgray">
-          Custom-Built, No Templates
-        </div>
-      </div>
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          5<span class="text-accent">+</span>
-        </div>
-        <div class="mt-2.5 text-sm text-warmgray">Years Experience</div>
-      </div>
-      <div class="reveal py-2">
-        <div class="text-[44px] leading-none font-semibold tracking-[-0.03em]">
-          1
-        </div>
-        <div class="mt-2.5 text-sm text-warmgray">Focused Team</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== ABOUT ==================== -->
-  <section
-    id="about"
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>02 &mdash; About Us
-    </div>
-    <div
-      class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.2fr_1fr] md:gap-14"
-    >
-      <h2
-        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-      >
-        We craft digital products that people
-        <span class="text-accent">love</span> to use
-      </h2>
-      <div>
-        <p class="reveal text-[17px] leading-[1.6] text-warmgray">
-          Ali Samadi Agency is a small, focused studio based in Jacksonville,
-          Florida, building websites and web apps for startups and small
-          businesses. We design and develop every
-          project from scratch on a modern stack — Next.js, React, and Postgres
-          — so your site is fast, custom, and genuinely yours, never a recycled
-          template. From brand and UI design through development, SEO, and
-          hosting, one team owns the whole build, which keeps the work
-          consistent and the timeline short.
-        </p>
-        <a
-          href="/about"
-          class="reveal mt-5 inline-flex items-center gap-2 text-[15px] font-medium transition-colors duration-300 hover:text-accent"
-        >
-          More about the studio
-          <span class="text-accent">&#8599;</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== SERVICES ==================== -->
-  <section
-    id="services"
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>03 &mdash; Our Services
-    </div>
-
-    <div
-      class="grid grid-cols-1 gap-[18px] md:auto-rows-[minmax(210px,auto)] md:grid-cols-6"
-    >
-      <!-- Brand Identity -->
       <div
-        data-spot
-        class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-[30px] md:col-span-3"
+        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.25fr_1fr] lg:gap-16"
       >
-        <div
-          data-glow
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
-        >
-        </div>
-        <div class="relative flex h-full flex-col">
+        <div class="stagger">
           <div
-            class="inline-flex size-11 items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
+            class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
           >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
-              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
-              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
-              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
-              <path
-                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2Z"
-              ></path>
-            </svg>
+            <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Web Design
+            Agency &middot; Jacksonville, FL
           </div>
-          <h3 class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]">
-            Brand Identity
-          </h3>
+          <h1
+            class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
+          >
+            <span
+              class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
+              >Jacksonville web design &amp; development</span
+            >
+            We build digital
+            <span class="text-accent" id="scrambleTarget">experiences</span
+            ><span class="scramble-cursor"></span>
+          </h1>
           <p
-            class="mt-2.5 max-w-[38ch] text-[15px] leading-[1.55] text-warmgray"
+            class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
           >
-            Crafting distinctive visual identities that resonate with your
-            audience and set you apart from the competition.
+            A Jacksonville, FL web design and development agency creating brand
+            identities, custom websites, and web apps that drive real,
+            measurable results.
           </p>
-          <a
-            href="/services/brand-identity"
-            class="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-            >Learn more <span>&rarr;</span></a
-          >
-        </div>
-      </div>
-
-      <!-- Web Development -->
-      <div
-        data-spot
-        class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-[30px] md:col-span-3"
-      >
-        <div
-          data-glow
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
-        >
-        </div>
-        <div class="relative flex h-full flex-col">
-          <div
-            class="inline-flex size-11 items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
+            <a
+              href="https://cal.com/alisamadii"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-medium text-charcoal shadow-[0_8px_24px_rgba(252,132,100,0.32)] hover:bg-charcoal hover:text-cream"
             >
-              <path d="m16 18 6-6-6-6"></path>
-              <path d="m8 6-6 6 6 6"></path>
-            </svg>
-          </div>
-          <h3 class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]">
-            Web Development
-          </h3>
-          <p
-            class="mt-2.5 max-w-[38ch] text-[15px] leading-[1.55] text-warmgray"
-          >
-            Clean, fast websites built on Next.js, React, and Postgres &mdash;
-            production-grade code, not page-builder templates. Everything a
-            simple site needs, nothing it doesn't.
-          </p>
-          <a
-            href="/services/web-development"
-            class="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-            >Learn more <span>&rarr;</span></a
-          >
-        </div>
-      </div>
-
-      <!-- UI/UX Design -->
-      <div
-        data-spot
-        class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-7 md:col-span-2"
-      >
-        <div
-          data-glow
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
-        >
-        </div>
-        <div class="relative flex h-full flex-col">
-          <div
-            class="inline-flex size-[42px] items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
-          >
-            <svg
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              Start a Project
+              <span>&#8599;</span>
+            </a>
+            <a
+              href="https://hub.alisamadii.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
+              >I am a customer</a
             >
-              <path d="m12 19 7-7 3 3-7 7-3-3z"></path>
-              <path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-              <path d="m2 2 7.586 7.586"></path>
-              <circle cx="11" cy="11" r="2"></circle>
-            </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
-            UI/UX Design
-          </h3>
-          <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
-            Intuitive, user-centered interfaces that drive engagement and
-            conversions.
-          </p>
-          <a
-            href="/services/ui-ux-design"
-            class="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-            >Learn more <span>&rarr;</span></a
-          >
+        </div>
+        <div>
+          <QuoteForm compact />
         </div>
       </div>
+    </section>
 
-      <!-- SEO & Analytics -->
-      <div
-        data-spot
-        class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-7 md:col-span-2"
-      >
-        <div
-          data-glow
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
-        >
+    <!-- ==================== MARQUEE ==================== -->
+    <div
+      class="overflow-hidden border-y border-charcoal/[0.08] bg-[#f1efec] py-[18px]"
+    >
+      <div class="marquee-track flex w-max whitespace-nowrap">
+        <span class="font-mono text-[15px] tracking-[0.02em] text-[#6b665d]">
+          Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
+        </span>
+        <span class="font-mono text-[15px] tracking-[0.02em] text-[#6b665d]">
+          Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
+        </span>
+      </div>
+    </div>
+
+    <!-- ==================== STATS ==================== -->
+    <section class="mx-auto max-w-[1200px] px-6 py-14 md:px-10">
+      <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
+        <div class="reveal py-2">
+          <div
+            class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
+          >
+            8<span class="text-accent">+</span>
+          </div>
+          <div class="mt-2.5 text-sm text-warmgray">Projects Delivered</div>
         </div>
-        <div class="relative flex h-full flex-col">
-          <div class="flex items-start justify-between gap-4">
+        <div class="reveal py-2">
+          <div
+            class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
+          >
+            100<span class="text-accent">%</span>
+          </div>
+          <div class="mt-2.5 text-sm text-warmgray">
+            Custom-Built, No Templates
+          </div>
+        </div>
+        <div class="reveal py-2">
+          <div
+            class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
+          >
+            5<span class="text-accent">+</span>
+          </div>
+          <div class="mt-2.5 text-sm text-warmgray">Years Experience</div>
+        </div>
+        <div class="reveal py-2">
+          <div
+            class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
+          >
+            1
+          </div>
+          <div class="mt-2.5 text-sm text-warmgray">Focused Team</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ABOUT ==================== -->
+    <section
+      id="about"
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>02 &mdash; About Us
+      </div>
+      <div
+        class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.2fr_1fr] md:gap-14"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          We craft digital products that people
+          <span class="text-accent">love</span> to use
+        </h2>
+        <div>
+          <p class="reveal text-[17px] leading-[1.6] text-warmgray">
+            Ali Samadi Agency is a small, focused studio based in Jacksonville,
+            Florida, building websites and web apps for startups and small
+            businesses. We design and develop every project from scratch on a
+            modern stack — Next.js, React, and Postgres — so your site is fast,
+            custom, and genuinely yours, never a recycled template. From brand
+            and UI design through development, SEO, and hosting, one team owns
+            the whole build, which keeps the work consistent and the timeline
+            short.
+          </p>
+          <a
+            href="/about"
+            class="reveal mt-5 inline-flex items-center gap-2 text-[15px] font-medium transition-colors duration-300 hover:text-accent"
+          >
+            More about the studio
+            <span class="text-accent">&#8599;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SERVICES ==================== -->
+    <section
+      id="services"
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>03 &mdash; Our Services
+      </div>
+
+      <div
+        class="grid grid-cols-1 gap-[18px] md:auto-rows-[minmax(210px,auto)] md:grid-cols-6"
+      >
+        <!-- Brand Identity -->
+        <div
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-[30px] md:col-span-3"
+        >
+          <div
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          >
+          </div>
+          <div class="relative flex h-full flex-col">
+            <div
+              class="inline-flex size-11 items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+                <path
+                  d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2Z"
+                ></path>
+              </svg>
+            </div>
+            <h3
+              class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]"
+            >
+              Brand Identity
+            </h3>
+            <p
+              class="mt-2.5 max-w-[38ch] text-[15px] leading-[1.55] text-warmgray"
+            >
+              Crafting distinctive visual identities that resonate with your
+              audience and set you apart from the competition.
+            </p>
+            <a
+              href="/services/brand-identity"
+              class="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+              >Learn more <span>&rarr;</span></a
+            >
+          </div>
+        </div>
+
+        <!-- Web Development -->
+        <div
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-[30px] md:col-span-3"
+        >
+          <div
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          >
+          </div>
+          <div class="relative flex h-full flex-col">
+            <div
+              class="inline-flex size-11 items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m16 18 6-6-6-6"></path>
+                <path d="m8 6-6 6 6 6"></path>
+              </svg>
+            </div>
+            <h3
+              class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]"
+            >
+              Web Development
+            </h3>
+            <p
+              class="mt-2.5 max-w-[38ch] text-[15px] leading-[1.55] text-warmgray"
+            >
+              Clean, fast websites built on Next.js, React, and Postgres &mdash;
+              production-grade code, not page-builder templates. Everything a
+              simple site needs, nothing it doesn't.
+            </p>
+            <a
+              href="/services/web-development"
+              class="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+              >Learn more <span>&rarr;</span></a
+            >
+          </div>
+        </div>
+
+        <!-- UI/UX Design -->
+        <div
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-7 md:col-span-2"
+        >
+          <div
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          >
+          </div>
+          <div class="relative flex h-full flex-col">
             <div
               class="inline-flex size-[42px] items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
             >
@@ -397,98 +359,100 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
-                <path d="m19 9-5 5-4-4-3 3"></path>
+                <path d="m12 19 7-7 3 3-7 7-3-3z"></path>
+                <path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                <path d="m2 2 7.586 7.586"></path>
+                <circle cx="11" cy="11" r="2"></circle>
               </svg>
             </div>
-            <span
-              class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase"
+            <h3
+              class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]"
             >
-              <span class="size-1.5 animate-pulse rounded-full bg-amber-500"
-              ></span>
-              Experimenting
-            </span>
+              UI/UX Design
+            </h3>
+            <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
+              Intuitive, user-centered interfaces that drive engagement and
+              conversions.
+            </p>
+            <a
+              href="/services/ui-ux-design"
+              class="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+              >Learn more <span>&rarr;</span></a
+            >
           </div>
-          <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
-            SEO &amp; Analytics
-          </h3>
-          <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
-            Data-driven optimization to boost visibility and traffic —
-            including local SEO for Jacksonville and Florida businesses.
-          </p>
-          <a
-            href="/services/seo-analytics"
-            class="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-            >Learn more <span>&rarr;</span></a
-          >
         </div>
-      </div>
 
-      <!-- Edit Your Own Site -->
-      <div
-        data-spot
-        class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-7 md:col-span-2"
-      >
+        <!-- SEO & Analytics -->
         <div
-          data-glow
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-7 md:col-span-2"
         >
-        </div>
-        <div class="relative flex h-full flex-col">
           <div
-            class="inline-flex size-[42px] items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
           >
-            <svg
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
-              ></path>
-              <path d="m15 5 4 4"></path>
-            </svg>
           </div>
-          <h3 class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]">
-            Edit Your Own Site
-          </h3>
-          <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
-            CMS access plus a GitHub collaborator invite &mdash; update text,
-            images, and pages yourself, anytime.
-          </p>
-          <a
-            href="/services/website-management"
-            class="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-            >Learn more <span>&rarr;</span></a
-          >
+          <div class="relative flex h-full flex-col">
+            <div class="flex items-start justify-between gap-4">
+              <div
+                class="inline-flex size-[42px] items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
+              >
+                <svg
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                  <path d="m19 9-5 5-4-4-3 3"></path>
+                </svg>
+              </div>
+              <span
+                class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase"
+              >
+                <span class="size-1.5 animate-pulse rounded-full bg-amber-500"
+                ></span>
+                Experimenting
+              </span>
+            </div>
+            <h3
+              class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]"
+            >
+              SEO &amp; Analytics
+            </h3>
+            <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
+              Data-driven optimization to boost visibility and traffic —
+              including local SEO for Jacksonville and Florida businesses.
+            </p>
+            <a
+              href="/services/seo-analytics"
+              class="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+              >Learn more <span>&rarr;</span></a
+            >
+          </div>
         </div>
-      </div>
 
-      <!-- Need Something Custom? (wide, dark) -->
-      <div
-        data-spot
-        class="reveal relative overflow-hidden rounded-[18px] border border-white/[0.08] bg-ink p-[34px] text-cream md:col-span-6"
-      >
+        <!-- Edit Your Own Site -->
         <div
-          data-glow
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-7 md:col-span-2"
         >
-        </div>
-        <div
-          class="relative flex flex-wrap items-center justify-between gap-10"
-        >
-          <div class="max-w-[52ch]">
+          <div
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          >
+          </div>
+          <div class="relative flex h-full flex-col">
             <div
-              class="inline-flex size-11 items-center justify-center rounded-xl bg-accent/[0.18] text-accent"
+              class="inline-flex size-[42px] items-center justify-center rounded-xl bg-accent/[0.12] text-accent"
             >
               <svg
-                width="22"
-                height="22"
+                width="21"
+                height="21"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -497,606 +461,666 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
                 stroke-linejoin="round"
               >
                 <path
-                  d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"
+                  d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
                 ></path>
-                <path
-                  d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"
-                ></path>
-                <path
-                  d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"
-                ></path>
+                <path d="m15 5 4 4"></path>
               </svg>
             </div>
-            <h3 class="mt-[18px] text-[26px] font-semibold tracking-[-0.02em]">
-              Need Something Custom?
+            <h3
+              class="mt-auto pt-8 text-[21px] font-semibold tracking-[-0.02em]"
+            >
+              Edit Your Own Site
             </h3>
-            <p class="mt-2.5 text-[15.5px] leading-[1.6] text-[#b8b2a9]">
-              Looking for more than a landing page? We also build fully custom
-              websites — authentication, databases, admin dashboards, web apps —
-              scoped and priced per project.
-              <a
-                href="/services/custom-web-apps"
-                class="text-accent transition-colors duration-300 hover:text-white"
-                >About custom web apps &rarr;</a
-              >
-              <a
-                href="#contact"
-                class="text-accent transition-colors duration-300 hover:text-white"
-                >Get in touch &rarr;</a
-              >
+            <p class="mt-2.5 text-[14.5px] leading-[1.55] text-warmgray">
+              CMS access plus a GitHub collaborator invite &mdash; update text,
+              images, and pages yourself, anytime.
             </p>
-          </div>
-          <div class="flex max-w-[280px] flex-wrap gap-2.5">
-            <span
-              class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
+            <a
+              href="/services/website-management"
+              class="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
+              >Learn more <span>&rarr;</span></a
             >
-              Authentication
-            </span>
-            <span
-              class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
-            >
-              Database
-            </span>
-            <span
-              class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
-            >
-              Admin Panel
-            </span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ==================== PROCESS ==================== -->
-  <section
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-11 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>04 &mdash; Our Process
-    </div>
-
-    <div
-      class="stagger grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-4"
-    >
-      <!-- Step 1 -->
-      <div class="reveal flex flex-col">
+        <!-- Need Something Custom? (wide, dark) -->
         <div
-          class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-white/[0.08] bg-ink p-[34px] text-cream md:col-span-6"
         >
-          <img
-            src="https://cdn.alisamadii.com/marketing/discovery.png"
-            alt="Discovery phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >01</span
+          <div
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
           >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Discovery
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-          Understanding your goals, audience, and competitive landscape through
-          deep research.
-        </p>
-      </div>
-      <!-- Step 2 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/strategy.png"
-            alt="Strategy phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >02</span
+          </div>
+          <div
+            class="relative flex flex-wrap items-center justify-between gap-10"
           >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Strategy
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-          Defining the roadmap, architecture, and creative direction for maximum
-          impact.
-        </p>
-      </div>
-      <!-- Step 3 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/execution.png"
-            alt="Execution phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >03</span
-          >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Execution
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-          Bringing the vision to life with meticulous design and robust
-          engineering.
-        </p>
-      </div>
-      <!-- Step 4 -->
-      <div class="reveal flex flex-col">
-        <div
-          class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-        >
-          <img
-            src="https://cdn.alisamadii.com/marketing/launch-scale.png"
-            alt="Launch phase illustration"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <span
-            class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-            >04</span
-          >
-        </div>
-        <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-          Launch &amp; Scale
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-          Deploying, monitoring, and iterating to ensure sustained growth and
-          performance.
-        </p>
-      </div>
-    </div>
-
-    <div class="reveal mt-7">
-      <a
-        href="/blog/web-design-process"
-        class="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-      >
-        Read the full process on the blog <span>&#8594;</span>
-      </a>
-    </div>
-
-    <!-- Fast-track callout -->
-    <div
-      class="reveal mt-[22px] rounded-[14px] border border-charcoal/[0.08] bg-charcoal/[0.02] px-6 py-6 md:flex md:items-center md:justify-between md:gap-8 md:px-8"
-    >
-      <div class="max-w-[720px]">
-        <h3 class="text-[18px] font-semibold tracking-[-0.02em]">
-          Just need a simple site?
-        </h3>
-        <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-          Small business, no website yet, nothing huge? We skip Discovery and
-          Strategy and go straight to build &mdash; a beautiful, custom site
-          live in about a day. You edit the text and images yourself through the
-          CMS, no developer required.
-        </p>
-      </div>
-      <a
-        href="/pricing"
-        class="mt-4 inline-flex shrink-0 items-center gap-1.5 text-[14px] font-medium text-accent transition-colors duration-300 hover:text-charcoal md:mt-0"
-      >
-        See pricing <span class="text-accent">&#8594;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ==================== WORK ==================== -->
-  <section
-    id="work"
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>05 &mdash; Our Work
-    </div>
-    <div
-      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
-    >
-      <h2
-        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-      >
-        Selected projects
-      </h2>
-      <div class="reveal">
-        <p class="text-[15.5px] leading-[1.6] text-warmgray">
-          Every project is built from scratch — no templates, no shortcuts.
-          These mock-ups showcase our capabilities; your project will be fully
-          custom to your brand and goals.
-        </p>
-        <div
-          class="mt-5 inline-flex items-center gap-3 rounded-full border border-emerald-200/60 bg-emerald-50 px-4 py-2"
-        >
-          <svg
-            class="size-4 shrink-0 text-emerald-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="1.5"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-            ></path>
-          </svg>
-          <span class="text-[13.5px] font-medium text-emerald-800"
-            >1-Day Delivery</span
-          >
-          <span class="font-mono text-[11.5px] text-emerald-600/80"
-            >concept &rarr; launch</span
-          >
-        </div>
-      </div>
-    </div>
-
-    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
-      {
-        CONCEPT_PROJECTS.map((project) => (
-          <a
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-tilt
-            class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-          >
-            <div class="aspect-[16/10] overflow-hidden">
-              <img
-                src={project.image!.src}
-                alt={project.image!.alt}
-                width="1120"
-                height="700"
-                class="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div class="p-6">
-              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
-                {project.category}
+            <div class="max-w-[52ch]">
+              <div
+                class="inline-flex size-11 items-center justify-center rounded-xl bg-accent/[0.18] text-accent"
+              >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"
+                  ></path>
+                  <path
+                    d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"
+                  ></path>
+                  <path
+                    d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"
+                  ></path>
+                </svg>
               </div>
-              <div class="mt-2.5 flex items-center justify-between gap-4">
-                <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-                  {project.name}
-                </h3>
-                <span class="text-accent">&#8599;</span>
-              </div>
-              <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-                {project.description}
+              <h3
+                class="mt-[18px] text-[26px] font-semibold tracking-[-0.02em]"
+              >
+                Need Something Custom?
+              </h3>
+              <p class="mt-2.5 text-[15.5px] leading-[1.6] text-[#b8b2a9]">
+                Looking for more than a landing page? We also build fully custom
+                websites — authentication, databases, admin dashboards, web apps
+                — scoped and priced per project.
+                <a
+                  href="/services/custom-web-apps"
+                  class="text-accent transition-colors duration-300 hover:text-white"
+                  >About custom web apps &rarr;</a
+                >
+                <a
+                  href="#contact"
+                  class="text-accent transition-colors duration-300 hover:text-white"
+                  >Get in touch &rarr;</a
+                >
               </p>
             </div>
-          </a>
-        ))
-      }
-    </div>
-
-    <div class="reveal mt-9 text-center">
-      <a
-        href="#contact"
-        class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
-      >
-        Have a project in mind?
-        <span class="text-accent">&#8599;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ==================== CLIENT WORK ==================== -->
-  <!-- Real client projects (distinct from the demo concepts in "Our Work"
-       above). Cards are driven by CLIENT_PROJECTS in src/data/projects.ts;
-       screenshots come from scripts/fetch-client-screenshots.mjs. -->
-  <section
-    id="clients"
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>06 &mdash; Client Work
-    </div>
-    <div
-      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
-    >
-      <h2
-        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-      >
-        Real projects, real clients
-      </h2>
-      <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
-        A selection of live websites we've designed and built for real
-        businesses, in Jacksonville and beyond &mdash; each one shipped,
-        launched, and in use today.
-      </p>
-    </div>
-
-    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-3">
-      {
-        CLIENT_PROJECTS.map((project) => (
-          <a
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-          >
-            <div class="aspect-[16/10] overflow-hidden">
-              <img
-                src={project.image!.src}
-                alt={project.image!.alt}
-                width="1120"
-                height="700"
-                class="h-full w-full object-cover"
-                loading="lazy"
-              />
+            <div class="flex max-w-[280px] flex-wrap gap-2.5">
+              <span
+                class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
+              >
+                Authentication
+              </span>
+              <span
+                class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
+              >
+                Database
+              </span>
+              <span
+                class="flex items-center rounded-full border border-white/[0.14] px-3.5 py-2 font-mono text-[12.5px] text-[#d9d3ca]"
+              >
+                Admin Panel
+              </span>
             </div>
-            <div class="p-6">
-              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#a49d94] uppercase">
-                {project.category}
-              </div>
-              <div class="mt-2.5 flex items-center justify-between gap-4">
-                <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
-                  {project.name}
-                </h3>
-                <span class="text-accent">&#8599;</span>
-              </div>
-              <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-                {project.description}
-              </p>
-            </div>
-          </a>
-        ))
-      }
-    </div>
-
-    <Testimonial />
-
-    <div class="reveal mt-9 text-center">
-      <a
-        href="/work"
-        class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
-      >
-        See all work
-        <span class="text-accent">&#8599;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ==================== PRICING ==================== -->
-  <section
-    id="pricing"
-    class="mx-auto max-w-[1440px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Pricing
-    </div>
-
-    <div
-      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
-    >
-      <h2
-        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-      >
-        Simple, transparent pricing
-      </h2>
-      <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
-        One all-inclusive monthly plan, a one-time build you own outright, or a
-        fully custom project — no hidden fees, cancel anytime.
-      </p>
-    </div>
-
-    <PricingCards />
-
-    <div class="reveal mt-8 text-center">
-      <a
-        href="/pricing"
-        class="inline-flex items-center gap-2 text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-accent"
-      >
-        Compare plans in detail
-        <span class="text-accent">&#8599;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ==================== AREAS WE SERVE ==================== -->
-  <section
-    id="areas"
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Areas We Serve
-    </div>
-    <div
-      class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
-    >
-      <h2
-        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-      >
-        Web design across <span class="text-accent">Florida</span>
-      </h2>
-      <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
-        Headquartered in Jacksonville, we work with businesses across the
-        state — everything from strategy calls to launch happens online, so
-        distance never slows a project down.
-      </p>
-    </div>
-    <div class="stagger flex flex-wrap gap-2.5">
-      {
-        hq && (
-          <a
-            href={`/locations/${hq.slug}`}
-            class="reveal inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[14.5px] font-medium text-white transition-colors duration-300 hover:bg-charcoal"
-          >
-            {hq.name}
-            <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase opacity-80">
-              HQ
-            </span>
-          </a>
-        )
-      }
-      {
-        otherCities.map((c) => (
-          <a
-            href={`/locations/${c.slug}`}
-            class="reveal inline-flex items-center rounded-full border border-charcoal/[0.14] px-5 py-2.5 text-[14.5px] font-medium transition-colors duration-300 hover:border-accent hover:text-accent"
-          >
-            {c.name}
-          </a>
-        ))
-      }
-      <a
-        href="/locations"
-        class="reveal inline-flex items-center gap-1.5 rounded-full border border-dashed border-charcoal/[0.2] px-5 py-2.5 text-[14.5px] font-medium text-warmgray transition-colors duration-300 hover:border-accent hover:text-accent"
-      >
-        All locations <span class="text-accent">&rarr;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ==================== FAQ ==================== -->
-  <section
-    id="faq"
-    class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-  >
-    <div
-      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-    >
-      <span class="h-px w-[26px] bg-accent"></span>09 &mdash; FAQ
-    </div>
-    <h2
-      class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-    >
-      Common questions
-    </h2>
-    <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
-      {
-        faqs.map((faq) => (
-          <div class="reveal">
-            <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
-              {faq.q}
-            </h3>
-            <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
-              {faq.a}
-            </p>
           </div>
-        ))
-      }
-    </div>
-  </section>
+        </div>
+      </div>
+    </section>
 
-  <!-- ==================== CTA / CONTACT ==================== -->
-  <section
-    id="contact"
-    class="relative mx-3 mt-[70px] mb-6 overflow-hidden rounded-[26px] bg-ink text-cream md:mx-6"
-  >
-    <div class="relative mx-auto max-w-[1160px] px-6 py-16 md:px-10 md:py-20">
-      <div class="stagger">
-        <div
-          class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-[#c9a08d] uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>Get in Touch
-        </div>
-        <h2
-          class="reveal max-w-[16ch] text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-        >
-          Let's create something <span class="text-accent">amazing</span>
-        </h2>
-        <p
-          class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-[#b8b2a9] md:text-lg"
-        >
-          Ready to elevate your digital presence? We'd love to hear about your
-          project and explore how we can help.
-        </p>
-        <div class="reveal mt-9">
-          <a
-            href="/quote"
-            class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-accent px-[26px] py-[15px] text-base font-medium text-white shadow-[0_10px_30px_rgba(252,132,100,0.35)] hover:bg-white hover:text-charcoal"
-          >
-            Get a Quote
-            <span>&#8599;</span>
-          </a>
-        </div>
+    <!-- ==================== PROCESS ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-11 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>04 &mdash; Our Process
       </div>
 
       <div
-        class="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-9 md:grid-cols-4"
+        class="stagger grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-4"
       >
-        <a href="mailto:agency@alisamadii.com" class="group block">
+        <!-- Step 1 -->
+        <div class="reveal flex flex-col">
           <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
           >
-            Email
+            <img
+              src="https://cdn.alisamadii.com/marketing/discovery.png"
+              alt="Discovery phase illustration"
+              width="1200"
+              height="896"
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <span
+              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
+              >01</span
+            >
           </div>
+          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
+            Discovery
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Understanding your goals, audience, and competitive landscape
+            through deep research.
+          </p>
+        </div>
+        <!-- Step 2 -->
+        <div class="reveal flex flex-col">
           <div
-            class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
+            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
           >
-            agency@alisamadii.com
+            <img
+              src="https://cdn.alisamadii.com/marketing/strategy.png"
+              alt="Strategy phase illustration"
+              width="1200"
+              height="896"
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <span
+              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
+              >02</span
+            >
           </div>
-        </a>
+          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
+            Strategy
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Defining the roadmap, architecture, and creative direction for
+            maximum impact.
+          </p>
+        </div>
+        <!-- Step 3 -->
+        <div class="reveal flex flex-col">
+          <div
+            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
+          >
+            <img
+              src="https://cdn.alisamadii.com/marketing/execution.png"
+              alt="Execution phase illustration"
+              width="1200"
+              height="896"
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <span
+              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
+              >03</span
+            >
+          </div>
+          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
+            Execution
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Bringing the vision to life with meticulous design and robust
+            engineering.
+          </p>
+        </div>
+        <!-- Step 4 -->
+        <div class="reveal flex flex-col">
+          <div
+            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
+          >
+            <img
+              src="https://cdn.alisamadii.com/marketing/launch-scale.png"
+              alt="Launch phase illustration"
+              width="1200"
+              height="896"
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <span
+              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
+              >04</span
+            >
+          </div>
+          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
+            Launch &amp; Scale
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Deploying, monitoring, and iterating to ensure sustained growth and
+            performance.
+          </p>
+        </div>
+      </div>
+
+      <div class="reveal mt-7">
         <a
-          href="https://cal.com/alisamadii"
-          target="_blank"
-          class="group block"
+          href="/blog/web-design-process"
+          class="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
         >
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
-          >
-            Schedule
-          </div>
-          <div
-            class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
-          >
-            Book a Meeting
-          </div>
-        </a>
-        <a href="tel:+19713828969" class="group block">
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
-          >
-            Phone
-          </div>
-          <div
-            class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
-          >
-            +1 (971) 382-8969
-          </div>
-        </a>
-        <a
-          href="https://maps.google.com/?q=Jacksonville,+FL"
-          target="_blank"
-          class="group block"
-        >
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
-          >
-            Location
-          </div>
-          <div
-            class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
-          >
-            Jacksonville, FL
-          </div>
+          Read the full process on the blog <span>&#8594;</span>
         </a>
       </div>
-    </div>
-  </section>
 
+      <!-- Fast-track callout -->
+      <div
+        class="reveal mt-[22px] rounded-[14px] border border-charcoal/[0.08] bg-charcoal/[0.02] px-6 py-6 md:flex md:items-center md:justify-between md:gap-8 md:px-8"
+      >
+        <div class="max-w-[720px]">
+          <h3 class="text-[18px] font-semibold tracking-[-0.02em]">
+            Just need a simple site?
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Small business, no website yet, nothing huge? We skip Discovery and
+            Strategy and go straight to build &mdash; a beautiful, custom site
+            live in about a day. You edit the text and images yourself through
+            the CMS, no developer required.
+          </p>
+        </div>
+        <a
+          href="/pricing"
+          class="mt-4 inline-flex shrink-0 items-center gap-1.5 text-[14px] font-medium text-accent transition-colors duration-300 hover:text-charcoal md:mt-0"
+        >
+          See pricing <span class="text-accent">&#8594;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ==================== WORK ==================== -->
+    <section
+      id="work"
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>05 &mdash; Our Work
+      </div>
+      <div
+        class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Selected projects
+        </h2>
+        <div class="reveal">
+          <p class="text-[15.5px] leading-[1.6] text-warmgray">
+            Every project is built from scratch — no templates, no shortcuts.
+            These mock-ups showcase our capabilities; your project will be fully
+            custom to your brand and goals.
+          </p>
+          <div
+            class="mt-5 inline-flex items-center gap-3 rounded-full border border-emerald-200/60 bg-emerald-50 px-4 py-2"
+          >
+            <svg
+              class="size-4 shrink-0 text-emerald-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+              ></path>
+            </svg>
+            <span class="text-[13.5px] font-medium text-emerald-800"
+              >1-Day Delivery</span
+            >
+            <span class="font-mono text-[11.5px] text-emerald-600/80"
+              >concept &rarr; launch</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
+        {
+          CONCEPT_PROJECTS.map((project) => (
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-tilt
+              class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
+            >
+              <div class="aspect-[16/10] overflow-hidden">
+                <img
+                  src={project.image!.src}
+                  alt={project.image!.alt}
+                  width="1120"
+                  height="700"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-6">
+                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
+                  {project.category}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between gap-4">
+                  <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
+                    {project.name}
+                  </h3>
+                  <span class="text-accent">&#8599;</span>
+                </div>
+                <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+                  {project.description}
+                </p>
+              </div>
+            </a>
+          ))
+        }
+      </div>
+
+      <div class="reveal mt-9 text-center">
+        <a
+          href="#contact"
+          class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
+        >
+          Have a project in mind?
+          <span class="text-accent">&#8599;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ==================== CLIENT WORK ==================== -->
+    <!-- Real client projects (distinct from the demo concepts in "Our Work"
+       above). Cards are driven by CLIENT_PROJECTS in src/data/projects.ts;
+       screenshots come from scripts/fetch-client-screenshots.mjs. -->
+    <section
+      id="clients"
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>06 &mdash; Client Work
+      </div>
+      <div
+        class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Real projects, real clients
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          A selection of live websites we've designed and built for real
+          businesses, in Jacksonville and beyond &mdash; each one shipped,
+          launched, and in use today.
+        </p>
+      </div>
+
+      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-3">
+        {
+          CLIENT_PROJECTS.map((project) => (
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
+            >
+              <div class="aspect-[16/10] overflow-hidden">
+                <img
+                  src={project.image!.src}
+                  alt={project.image!.alt}
+                  width="1120"
+                  height="700"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-6">
+                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
+                  {project.category}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between gap-4">
+                  <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
+                    {project.name}
+                  </h3>
+                  <span class="text-accent">&#8599;</span>
+                </div>
+                <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+                  {project.description}
+                </p>
+              </div>
+            </a>
+          ))
+        }
+      </div>
+
+      <Testimonial />
+
+      <div class="reveal mt-9 text-center">
+        <a
+          href="/work"
+          class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
+        >
+          See all work
+          <span class="text-accent">&#8599;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ==================== PRICING ==================== -->
+    <section
+      id="pricing"
+      class="mx-auto max-w-[1440px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Pricing
+      </div>
+
+      <div
+        class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Simple, transparent pricing
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          One all-inclusive monthly plan, a one-time build you own outright, or
+          a fully custom project — no hidden fees, cancel anytime.
+        </p>
+      </div>
+
+      <PricingCards />
+
+      <div class="reveal mt-8 text-center">
+        <a
+          href="/pricing"
+          class="inline-flex items-center gap-2 text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-accent"
+        >
+          Compare plans in detail
+          <span class="text-accent">&#8599;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ==================== AREAS WE SERVE ==================== -->
+    <section
+      id="areas"
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Areas We Serve
+      </div>
+      <div
+        class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Web design across <span class="text-accent">Florida</span>
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          Headquartered in Jacksonville, we work with businesses across the
+          state — everything from strategy calls to launch happens online, so
+          distance never slows a project down.
+        </p>
+      </div>
+      <div class="stagger flex flex-wrap gap-2.5">
+        {
+          hq && (
+            <a
+              href={`/locations/${hq.slug}`}
+              class="reveal inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[14.5px] font-medium text-charcoal transition-colors duration-300 hover:bg-charcoal hover:text-cream"
+            >
+              {hq.name}
+              <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase opacity-80">
+                HQ
+              </span>
+            </a>
+          )
+        }
+        {
+          otherCities.map((c) => (
+            <a
+              href={`/locations/${c.slug}`}
+              class="reveal inline-flex items-center rounded-full border border-charcoal/[0.14] px-5 py-2.5 text-[14.5px] font-medium transition-colors duration-300 hover:border-accent hover:text-accent"
+            >
+              {c.name}
+            </a>
+          ))
+        }
+        <a
+          href="/locations"
+          class="reveal inline-flex items-center gap-1.5 rounded-full border border-dashed border-charcoal/[0.2] px-5 py-2.5 text-[14.5px] font-medium text-warmgray transition-colors duration-300 hover:border-accent hover:text-accent"
+        >
+          All locations <span class="text-accent">&rarr;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section
+      id="faq"
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>09 &mdash; FAQ
+      </div>
+      <h2
+        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Common questions
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+        {
+          faqs.map((faq) => (
+            <div class="reveal">
+              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+                {faq.q}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+                {faq.a}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== CTA / CONTACT ==================== -->
+    <section
+      id="contact"
+      class="relative mx-3 mt-[70px] mb-6 overflow-hidden rounded-[26px] bg-ink text-cream md:mx-6"
+    >
+      <div class="relative mx-auto max-w-[1160px] px-6 py-16 md:px-10 md:py-20">
+        <div class="stagger">
+          <div
+            class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-[#c9a08d] uppercase"
+          >
+            <span class="h-px w-[26px] bg-accent"></span>Get in Touch
+          </div>
+          <h2
+            class="reveal max-w-[16ch] text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+          >
+            Let's create something <span class="text-accent">amazing</span>
+          </h2>
+          <p
+            class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-[#b8b2a9] md:text-lg"
+          >
+            Ready to elevate your digital presence? We'd love to hear about your
+            project and explore how we can help.
+          </p>
+          <div class="reveal mt-9">
+            <a
+              href="/quote"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-accent px-[26px] py-[15px] text-base font-medium text-charcoal shadow-[0_10px_30px_rgba(252,132,100,0.35)] hover:bg-white hover:text-charcoal"
+            >
+              Get a Quote
+              <span>&#8599;</span>
+            </a>
+          </div>
+        </div>
+
+        <div
+          class="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-9 md:grid-cols-4"
+        >
+          <a href="mailto:agency@alisamadii.com" class="group block">
+            <div
+              class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            >
+              Email
+            </div>
+            <div
+              class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
+            >
+              agency@alisamadii.com
+            </div>
+          </a>
+          <a
+            href="https://cal.com/alisamadii"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group block"
+          >
+            <div
+              class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            >
+              Schedule
+            </div>
+            <div
+              class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
+            >
+              Book a Meeting
+            </div>
+          </a>
+          <a href="tel:+19713828969" class="group block">
+            <div
+              class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            >
+              Phone
+            </div>
+            <div
+              class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
+            >
+              +1 (971) 382-8969
+            </div>
+          </a>
+          <a
+            href="https://maps.google.com/?q=Jacksonville,+FL"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group block"
+          >
+            <div
+              class="font-mono text-[11.5px] tracking-[0.08em] text-[#8a827a] uppercase"
+            >
+              Location
+            </div>
+            <div
+              class="mt-2 text-[15.5px] text-cream transition-colors duration-300 group-hover:text-accent"
+            >
+              Jacksonville, FL
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
   <HomeFooter />
-
-  <ReviewPopup />
 
   <!-- ==================== FLOATING WELCOME VIDEO ==================== -->
   <div
