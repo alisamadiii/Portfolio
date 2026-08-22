@@ -57,6 +57,47 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 
 - **Repeated content** — wrap a mapped list in `<Group field="…">` with each
   item in `<Item index={i}>` so the canvas can add/remove/reorder.
+- **Collection-driven region** — wrap a region rendered from a `cms.json`
+  collection in `<Collection collection="…">`. The canvas draws a purple outline
+  and a "✎ Edit collection" button that opens that collection's editor. `collection`
+  is required. Unlike `<Group>`, entries are edited on the collection page, not inline.
+- **Canvas outline legend** — in edit mode the bridge outlines content by kind:
+  **green** = inline-editable field/group, **purple** = a `<Collection>` region,
+  **red** (faint, persistent) = text with no `data-cms-*` wiring, i.e. not editable.
+  Red is a hint to wire the element, never shown on the live site.
+- **Typed field paths** — the package types `field` as a plain `string`; it does
+  not constrain paths. A site that wants autocompleted, typo-checked paths adds a
+  tiny typed helper of its own and passes its result into `field`:
+
+  ```ts
+  // src/lib/cms.ts — page-relative dot-path builder over the site's pages.json
+  import pages from "../data/pages.json";
+  type DotPaths<T> = T extends readonly (infer E)[]
+    ? `${number}` | `${number}.${DotPaths<E>}`
+    : T extends object
+      ? { [K in Extract<keyof T, string>]: K | `${K}.${DotPaths<T[K]>}` }[Extract<keyof T, string>]
+      : never;
+  export function field<P extends keyof typeof pages>(_page: P) {
+    return <K extends DotPaths<(typeof pages)[P]>>(path: K): K => path;
+  }
+  ```
+  ```astro
+  ---
+  import { field } from "../lib/cms";
+  const f = field("about");            // paths scoped to the about page
+  ---
+  <Image field={f("story.image")} value={about.story.image} alt={about.story.imageAlt} />
+  <Text  field={f(`items.${i}.name`)} value={svc.name} />
+  ```
+  Compile-time only — `field` stays a plain string at runtime. The helper lives in
+  the site, not the package, so each site owns its own field vocabulary.
+
+  > **Maintainer note.** Component props (and the required-prop checks for
+  > `<Collection collection>`, `<Item index>`, `<Text field>`, etc.) are typed
+  > from `components/index.d.ts` — the `types` target of the `./components`
+  > export. It exists because Astro does **not** generate prop types for `.astro`
+  > components imported from `node_modules` (it only worked while the package was
+  > `pnpm link`ed). Keep that file in sync with each `*.astro` `Props`.
 - **Inline emphasis** — in a text value, `` `word` `` → `.cms-hl` (accent) and
   `**word**` → `.cms-mark` (mark; style once, override per field with
   `markClass`). Both round-trip through canvas editing.

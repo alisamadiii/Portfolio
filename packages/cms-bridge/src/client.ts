@@ -43,6 +43,12 @@ const EDITABLE_ATTR = "data-cms-editable";
 const MEDIA_ATTR = "data-cms-media";
 const LINK_ATTR = "data-cms-link";
 const GROUP_ATTR = "data-cms-group";
+/** Authored: a page region driven by a CMS collection (`<Collection name>`). */
+const COLLECTION_ATTR = "data-cms-collection";
+/** Runtime marker set only in edit mode, so the outline never shows on live sites. */
+const COLLECTION_EDIT_ATTR = "data-cms-collection-edit";
+/** Runtime marker (edit-mode only): a text leaf not wired to the CMS — shows a red outline. */
+const LOCKED_ATTR = "data-cms-locked";
 /** Bridge-injected UI (group add button, item move/remove pills) — never content. */
 const UI_ATTR = "data-cms-ui";
 const UI_ACTION_ATTR = "data-cms-ui-action";
@@ -68,8 +74,11 @@ const NON_TEXT_TAGS = new Set([
  * arrives — until then every tagged leaf is armed (back-compat with CMS builds
  * that never send it). Once set, a path in none of the sets stays inert.
  */
-let editable: { arm: Set<string>; media: Set<string>; link: Set<string> } | null =
-  null;
+let editable: {
+  arm: Set<string>;
+  media: Set<string>;
+  link: Set<string>;
+} | null = null;
 
 let booted = false;
 let mode: BridgeMode = "highlight";
@@ -99,7 +108,11 @@ function injectStyle(): void {
   style.textContent =
     // Accent = the hub dashboard's primary green (oklch). Held in a var so the
     // whole overlay recolors from one place; alpha variants use oklch's `/ a`.
-    `:root{--cms-accent:oklch(0.60 0.13 163);}` +
+    `:root{--cms-accent:oklch(0.60 0.13 163);--cms-collection:oklch(0.55 0.24 300);--cms-locked:oklch(0.58 0.22 27);}` +
+    // Locked (red): text with no CMS wiring — persistent + low alpha so a page of
+    // static text isn't overwhelming. Edit-mode only (marker stripped on disarm).
+    `[${LOCKED_ATTR}]{outline:1px dashed oklch(0.58 0.22 27 / .35);outline-offset:2px;` +
+    `background:oklch(0.58 0.22 27 / .07);}` +
     `.${HIGHLIGHT_CLASS}{outline:2px solid var(--cms-accent);outline-offset:3px;border-radius:2px;` +
     `animation:cms-preview-pulse 1.2s ease-out;}` +
     `@keyframes cms-preview-pulse{0%{box-shadow:0 0 0 0 oklch(0.60 0.13 163 / .5);}` +
@@ -109,6 +122,13 @@ function injectStyle(): void {
     `[${MEDIA_ATTR}]:hover{outline:2px dashed oklch(0.60 0.13 163 / .7);outline-offset:2px;cursor:pointer;}` +
     `[${LINK_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .5);outline-offset:3px;}` +
     `[${GROUP_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .55);outline-offset:4px;cursor:pointer;}` +
+    // Collection region (purple). Marker is edit-mode-only so live sites stay clean.
+    `[${COLLECTION_EDIT_ATTR}]{outline:2px dashed var(--cms-collection);outline-offset:4px;cursor:pointer;}` +
+    `[${UI_ATTR}="collection-tools"]{position:absolute;top:8px;right:8px;z-index:2147483001;` +
+    `display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;}` +
+    `[${COLLECTION_EDIT_ATTR}]>[${UI_ATTR}="collection-tools"]{opacity:1;pointer-events:auto;}` +
+    `[${UI_ATTR}="collection-tools"] button{border:0;border-radius:9999px;background:var(--cms-collection);` +
+    `color:#fff;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);}` +
     // Group structural-edit UI. Host tools (✎ Edit content + '+ Add') sit in one
     // flex toolbar at the host's top-right so they never overlap each other; the
     // per-item move/remove pill sits at the item's top-LEFT so it never overlaps
@@ -238,10 +258,7 @@ function armEditables(): void {
     // Outside groups: only the top-level tagged element of a cluster is
     // interactive. A tagged descendant is edited via its ancestor's popover —
     // EXCEPT component-declared elements (`data-cms-kind`), which always arm.
-    if (
-      !declaredKind(host) &&
-      host.parentElement?.closest(`[${FIELD_ATTR}]`)
-    ) {
+    if (!declaredKind(host) && host.parentElement?.closest(`[${FIELD_ATTR}]`)) {
       continue;
     }
     switch (kindOf(host, path)) {
@@ -286,7 +303,9 @@ function armEditables(): void {
 
 function disarmEditables(): void {
   removeGroupControls();
-  for (const el of Array.from(document.querySelectorAll(`[${EDITABLE_ATTR}]`))) {
+  for (const el of Array.from(
+    document.querySelectorAll(`[${EDITABLE_ATTR}]`)
+  )) {
     el.removeAttribute("contenteditable");
     el.removeAttribute(EDITABLE_ATTR);
   }
@@ -366,7 +385,8 @@ function collectGroupMembers(host: HTMLElement): GroupMember[] {
     out.push({ path, kind });
   };
   push(host);
-  for (const el of Array.from(host.querySelectorAll(`[${FIELD_ATTR}]`))) push(el);
+  for (const el of Array.from(host.querySelectorAll(`[${FIELD_ATTR}]`)))
+    push(el);
   return out;
 }
 
@@ -455,7 +475,10 @@ function reindexGroup(host: HTMLElement, path: string): void {
   const prefix = `${path}.`;
   groupItems(host).forEach((item, index) => {
     item.setAttribute(ITEM_ATTR, String(index));
-    const tagged = [item, ...Array.from(item.querySelectorAll(`[${FIELD_ATTR}]`))];
+    const tagged = [
+      item,
+      ...Array.from(item.querySelectorAll(`[${FIELD_ATTR}]`)),
+    ];
     for (const el of tagged) {
       const field = el.getAttribute(FIELD_ATTR);
       if (!field || !field.startsWith(prefix)) continue;
@@ -502,19 +525,21 @@ function applyGroupOp(msg: {
   if (mode === "edit") {
     armEditables();
     attachGroupControls();
+    markLocked();
   }
 }
 
 /** Build the host's top-right toolbar with the given [label, action] buttons. */
 function addGroupTools(
   host: HTMLElement,
-  actions: ReadonlyArray<readonly [string, string]>
+  actions: ReadonlyArray<readonly [string, string]>,
+  uiName = "group-tools"
 ): void {
   if (getComputedStyle(host).position === "static")
     host.style.position = "relative";
-  if (host.querySelector(`:scope > [${UI_ATTR}="group-tools"]`)) return;
+  if (host.querySelector(`:scope > [${UI_ATTR}="${uiName}"]`)) return;
   const tools = document.createElement("div");
-  tools.setAttribute(UI_ATTR, "group-tools");
+  tools.setAttribute(UI_ATTR, uiName);
   for (const [label, action] of actions) {
     const button = document.createElement("button");
     button.type = "button";
@@ -571,17 +596,84 @@ function attachGroupControls(): void {
     if (!(host instanceof HTMLElement)) continue;
     addGroupTools(host, [["✎ Edit content", "edit"]]);
   }
+  // Collection regions: purple outline + a button that opens the collection page.
+  for (const host of Array.from(
+    document.querySelectorAll(`[${COLLECTION_ATTR}]`)
+  )) {
+    if (!(host instanceof HTMLElement)) continue;
+    host.setAttribute(COLLECTION_EDIT_ATTR, "");
+    addGroupTools(
+      host,
+      [["✎ Edit collection", "open-collection"]],
+      "collection-tools"
+    );
+  }
 }
 
 function removeGroupControls(): void {
   for (const el of Array.from(document.querySelectorAll(`[${UI_ATTR}]`)))
     el.remove();
+  for (const el of Array.from(
+    document.querySelectorAll(`[${COLLECTION_EDIT_ATTR}]`)
+  ))
+    el.removeAttribute(COLLECTION_EDIT_ATTR);
+}
+
+/** True when the element has a direct, non-whitespace text node child. */
+function hasOwnText(el: Element): boolean {
+  for (const node of Array.from(el.childNodes))
+    if (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
+      return true;
+  return false;
+}
+
+/**
+ * Flag every text leaf that is NOT wired to the CMS with a red outline, so the
+ * editor can see at a glance what can't be changed. Runs after armEditables()
+ * so all CMS markers already exist. Skips anything tagged, bridge-injected, or
+ * living inside a CMS-managed region (field/group/collection) — that content is
+ * editable, just not here.
+ */
+function markLocked(): void {
+  if (mode !== "edit") return;
+  if (!document.body) return;
+  for (const el of Array.from(document.body.querySelectorAll("*"))) {
+    if (!(el instanceof HTMLElement)) continue;
+    if (
+      el.hasAttribute(FIELD_ATTR) ||
+      el.hasAttribute(KIND_ATTR) ||
+      el.hasAttribute(EDITABLE_ATTR) ||
+      el.hasAttribute(MEDIA_ATTR) ||
+      el.hasAttribute(LINK_ATTR) ||
+      el.hasAttribute(GROUP_ATTR) ||
+      el.hasAttribute(COLLECTION_ATTR) ||
+      el.hasAttribute(ITEM_ATTR) ||
+      el.hasAttribute(UI_ATTR)
+    )
+      continue;
+    if (
+      el.closest(
+        `[${FIELD_ATTR}],[${KIND_ATTR}="group"],[${COLLECTION_ATTR}],[${UI_ATTR}]`
+      )
+    )
+      continue;
+    if (!isEditableCandidate(el)) continue;
+    if (!hasOwnText(el)) continue;
+    el.setAttribute(LOCKED_ATTR, "");
+  }
 }
 
 /** Route a click on injected group UI to the matching `group-op`. */
 function handleUiAction(el: HTMLElement): void {
   const action = el.getAttribute(UI_ACTION_ATTR);
   if (!action) return;
+  // Collection button: ask the hub to open that collection's editor.
+  if (action === "open-collection") {
+    const host = el.closest(`[${COLLECTION_ATTR}]`);
+    const name = host?.getAttribute(COLLECTION_ATTR);
+    if (name) post({ type: "collection-open", collection: name });
+    return;
+  }
   // The edit badge just opens the CMS group dialog — no structural op. It lives
   // on declared AND implicit group hosts, so resolve either.
   if (action === "edit") {
@@ -808,6 +900,7 @@ function setMode(next: BridgeMode): void {
   if (mode === "edit") {
     armEditables();
     attachGroupControls();
+    markLocked();
   } else {
     disarmEditables();
   }
@@ -851,6 +944,7 @@ function onMessage(event: MessageEvent): void {
         disarmEditables();
         armEditables();
         attachGroupControls();
+        markLocked();
       }
       break;
     }
@@ -889,11 +983,7 @@ function collectFieldsV2(): FieldInfo[] {
     const declared = declaredKind(el);
     const kind =
       declared ??
-      (el.tagName === "IMG"
-        ? "media"
-        : el.tagName === "A"
-          ? "link"
-          : "text");
+      (el.tagName === "IMG" ? "media" : el.tagName === "A" ? "link" : "text");
     out.push({ path, kind: kind as FieldInfo["kind"], declared: !!declared });
   }
   return out;
@@ -908,8 +998,7 @@ function collectGroups(): GroupInfo[] {
     const path = el.getAttribute(FIELD_ATTR);
     if (!path) continue;
     const count = Array.from(el.querySelectorAll(`[${ITEM_ATTR}]`)).filter(
-      (item) =>
-        item.parentElement?.closest(`[${KIND_ATTR}="group"]`) === el
+      (item) => item.parentElement?.closest(`[${KIND_ATTR}="group"]`) === el
     ).length;
     out.push({ path, count });
   }
@@ -937,6 +1026,7 @@ function scan(): void {
   if (mode === "edit") {
     armEditables();
     attachGroupControls();
+    markLocked();
   }
   announce();
 }

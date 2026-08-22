@@ -150,6 +150,19 @@ export interface GroupOpMessage {
   toIndex?: number;
 }
 
+/**
+ * A collection region (`<Collection name>`) was clicked. The hub opens that
+ * collection's editor (the in-canvas CMS overlay). No inline editing — unlike
+ * a group, the entries live on a dedicated collection page.
+ */
+export interface CollectionOpenMessage {
+  cms: 1;
+  v: number;
+  type: "collection-open";
+  /** The collection name (`data-cms-collection`), matched against cms.json. */
+  collection: string;
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
@@ -157,7 +170,8 @@ export type BridgeToCmsMessage =
   | FieldFocusMessage
   | FieldActivateMessage
   | LinkInfoMessage
-  | GroupOpMessage;
+  | GroupOpMessage
+  | CollectionOpenMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge

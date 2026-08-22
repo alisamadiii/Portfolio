@@ -774,6 +774,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
             msg.rect
           );
           break;
+        case "collection-open":
+          setCmsOverlay({ open: true, collection: msg.collection });
+          break;
         case "link-info": {
           const href = msg.href;
           toast(`Links to ${href || "(no href)"}`, {

@@ -12,10 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
-import { TextField } from "@/components/ui/mui";
-import { useMediaLibrary } from "@/components/media/media-library-context";
 
 import type { GroupMember } from "@/lib/bridge-messages";
+
+import { TextField } from "@/components/ui/mui";
+import { useMediaLibrary } from "@/components/media/media-library-context";
 
 export type GroupEditorFieldRow = {
   path: string;
@@ -70,28 +71,20 @@ export function GroupEditorDialog({
     onClose();
   };
   return (
-    // `modal={false}` so opening the panel never traps focus or inerts the
-    // selected iframe; `disablePointerDismissal` so a click outside never
-    // closes it — only Cancel / ✕ / Escape.
     <Dialog
       open={open}
-      modal={false}
-      disablePointerDismissal
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto bg-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit content</DialogTitle>
         </DialogHeader>
         {hasRows ? (
           <div className="flex flex-col gap-5">
             {sections.map((section, index) => (
-              <div
-                key={section.title ?? index}
-                className="flex flex-col gap-3"
-              >
+              <div key={section.title ?? index} className="flex flex-col gap-3">
                 {section.title && (
                   <span className="text-muted-foreground text-xs font-medium">
                     {section.title}
@@ -130,7 +123,9 @@ export function GroupEditorDialog({
                       value={drafts[row.path] ?? ""}
                       size="small"
                       fullWidth
-                      onChange={(event) => setField(row.path, event.target.value)}
+                      onChange={(event) =>
+                        setField(row.path, event.target.value)
+                      }
                     />
                   )
                 )}
