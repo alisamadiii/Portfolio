@@ -35,6 +35,7 @@ import {
   formatDiffValue,
   type EntryDiffRow,
 } from "@/lib/entry-diff";
+import { JsonDiffView } from "@/components/publish/json-diff-view";
 import { handleCmsError } from "@/lib/trpc-errors";
 import { getSchemaByName } from "@workspace/cms-core/schema";
 import {
@@ -155,10 +156,6 @@ export function PublishDialog({
       // (matched by identity) so removing/reordering one item doesn't cascade
       // into every later item — see computeArrayCollectionDiff below.
       const isArrayDraft = isV2 && Array.isArray(draft.values);
-      const itemFields = isArrayDraft
-        ? ((inferFields({ items: draft.values })[0]?.fields ??
-            []) as unknown as Field[])
-        : [];
       const schema = isV2
         ? null
         : getSchemaByName(config.object, draft.schemaName);
@@ -206,6 +203,17 @@ export function PublishDialog({
           if (entryData.sha !== draft.sha) isStale = true;
         }
       }
+
+      // Infer item fields from the union of old + draft items so a field
+      // deleted from every draft item still shows up in the diff.
+      const itemFields = isArrayDraft
+        ? ((inferFields({
+            items: [
+              ...(Array.isArray(oldContent) ? oldContent : []),
+              ...(draft.values as unknown[]),
+            ],
+          })[0]?.fields ?? []) as unknown as Field[])
+        : [];
 
       const diff = isArrayDraft
         ? computeArrayCollectionDiff(
@@ -567,19 +575,38 @@ function EntryReviewCard({
   );
 }
 
+const isComposite = (value: unknown) =>
+  value !== null && typeof value === "object";
+
 function DiffRow({ row }: { row: EntryDiffRow }) {
+  // Objects/arrays (added, removed or edited items) get the full GitHub-style
+  // line diff; scalar changes keep the compact -/+ pair below.
+  const composite = isComposite(row.old) || isComposite(row.new);
+
   return (
     <div className="overflow-hidden rounded-md border text-sm">
       <div className="bg-muted/40 text-muted-foreground border-b px-2.5 py-1 text-xs font-medium">
         {row.label}
       </div>
+      {composite ? (
+        <JsonDiffView oldValue={row.old} newValue={row.new} />
+      ) : (
+        <ScalarDiff row={row} />
+      )}
+    </div>
+  );
+}
+
+function ScalarDiff({ row }: { row: EntryDiffRow }) {
+  return (
+    <>
       {row.kind !== "added" && (
         <div className="flex gap-2 bg-red-500/10 px-2.5 py-1.5">
           <span className="shrink-0 font-mono text-red-700 select-none dark:text-red-400">
             −
           </span>
           <span className="min-w-0 break-words whitespace-pre-wrap text-red-700 dark:text-red-400">
-            {formatDiffValue(row.old)}
+            {formatDiffValue(row.old, Infinity)}
           </span>
         </div>
       )}
@@ -589,10 +616,10 @@ function DiffRow({ row }: { row: EntryDiffRow }) {
             +
           </span>
           <span className="min-w-0 break-words whitespace-pre-wrap text-green-700 dark:text-green-400">
-            {formatDiffValue(row.new)}
+            {formatDiffValue(row.new, Infinity)}
           </span>
         </div>
       )}
-    </div>
+    </>
   );
 }
