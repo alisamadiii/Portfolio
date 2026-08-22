@@ -1,0 +1,179 @@
+---
+// Live Lighthouse scores for real client sites — the "proof, not promises"
+// block. Used on the homepage and, in compact form, on every blog post.
+// Scores come from each project's `lighthouse` field in src/data/projects.ts.
+// Rings are pure CSS (conic-gradient), so they stay crisp and need no images;
+// every card links to the live site so anyone can re-run the test themselves.
+import { CLIENT_PROJECTS } from "../data/projects";
+
+interface Props {
+  eyebrow?: string;
+  heading?: string;
+  subhead?: string;
+  // Blog band vs full homepage section — trims vertical rhythm.
+  compact?: boolean;
+}
+
+const {
+  eyebrow = "Measured Results",
+  heading = "Real sites. Real scores.",
+  subhead = "Live Google Lighthouse scores for sites we've built — and numbers you can check yourself in about 30 seconds.",
+  compact = false,
+} = Astro.props;
+
+const clients = CLIENT_PROJECTS.filter((p) => p.lighthouse);
+const testedOn = clients[0]?.lighthouse?.testedOn ?? "";
+
+const metrics = [
+  { key: "performance", label: "Performance" },
+  { key: "accessibility", label: "Accessibility" },
+  { key: "bestPractices", label: "Best Practices" },
+  { key: "seo", label: "SEO" },
+] as const;
+
+// Lighthouse's own thresholds: 90+ green, 50–89 amber, <50 red. These exact
+// hexes are intentional — they mirror the real report so the scores read as
+// authentic, which is the whole point of this block.
+const ringColor = (n: number) =>
+  n >= 90 ? "#0cce6b" : n >= 50 ? "#ffa400" : "#eb3323";
+
+const fmtDate = (d: string) =>
+  d
+    ? new Date(d + "T00:00:00Z").toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : "";
+---
+
+<section
+  class:list={[
+    "mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 md:px-10",
+    compact ? "py-[60px]" : "py-[70px]",
+  ]}
+>
+  <div
+    class="mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+  >
+    <span class="h-px w-[26px] bg-accent"></span>{eyebrow}
+  </div>
+
+  <div
+    class="mb-11 grid grid-cols-1 items-end gap-6 md:grid-cols-[1.1fr_1fr] md:gap-12"
+  >
+    <h2
+      class="text-[clamp(28px,3.4vw,44px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+    >
+      {heading}
+    </h2>
+    <p class="text-[15.5px] leading-[1.6] text-warmgray">{subhead}</p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-[22px] md:grid-cols-3">
+    {
+      clients.map((p) => (
+        <div class="flex flex-col rounded-[18px] border border-charcoal/[0.08] bg-white p-6">
+          <div class="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <div class="font-mono text-[11px] tracking-[0.08em] text-muted uppercase">
+                {p.category}
+              </div>
+              <h3 class="mt-1.5 text-[18px] font-semibold tracking-[-0.02em]">
+                {p.name}
+              </h3>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            {metrics.map((m) => {
+              const v = p.lighthouse![m.key];
+              return (
+                <div class="flex flex-col items-center gap-2">
+                  <div
+                    class="lh-ring"
+                    style={`--score:${v};--ring:${ringColor(v)}`}
+                  >
+                    <span class="lh-ring-num">{v}</span>
+                  </div>
+                  <span class="text-center font-mono text-[9.5px] leading-[1.2] tracking-[0.03em] text-muted uppercase">
+                    {m.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div class="mt-6 flex items-center gap-4 border-t border-charcoal/[0.06] pt-4 text-[13px]">
+            <a
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 font-medium text-charcoal transition-colors duration-200 hover:text-accent"
+            >
+              Visit site <span class="text-accent">&#8599;</span>
+            </a>
+            {p.caseStudy && (
+              <a
+                href={`/blog/${p.caseStudy}`}
+                class="inline-flex items-center gap-1 text-warmgray transition-colors duration-200 hover:text-accent"
+              >
+                See how we did it &rarr;
+              </a>
+            )}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- The trust mechanism: teach visitors to verify the numbers themselves. -->
+  <div
+    class="mt-8 flex flex-col gap-3 rounded-[14px] bg-charcoal/[0.03] px-6 py-5 text-[14px] leading-[1.6] text-warmgray md:flex-row md:items-center md:justify-between"
+  >
+    <p>
+      <span class="font-medium text-charcoal">Don't take our word for it.</span>
+      Open any site &rarr; right-click &rarr; <span class="text-charcoal"
+        >Inspect</span
+      > &rarr; the <span class="text-charcoal">Lighthouse</span> tab &rarr;
+      <span class="text-charcoal">Analyze page load</span>. Takes about 30
+      seconds.
+    </p>
+    {
+      testedOn && (
+        <p class="shrink-0 font-mono text-[11.5px] tracking-[0.04em] text-muted uppercase">
+          Tested {fmtDate(testedOn)} · Lighthouse (mobile)
+        </p>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .lh-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: clamp(52px, 15vw, 64px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: conic-gradient(var(--ring) calc(var(--score) * 1%), #eceae7 0);
+  }
+  .lh-ring::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .lh-ring-num {
+    position: relative;
+    z-index: 1;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1b1a17;
+    font-variant-numeric: tabular-nums;
+  }
+</style>

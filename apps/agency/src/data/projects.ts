@@ -16,6 +16,17 @@ export interface Project {
   description: string;
   url: string;
   image?: { src: string; alt: string };
+  // Live Google Lighthouse scores (mobile). Rendered as proof on the homepage
+  // and blog. Re-test and update testedOn when a client site changes.
+  lighthouse?: {
+    performance: number;
+    accessibility: number;
+    bestPractices: number;
+    seo: number;
+    testedOn: string;
+  };
+  // Slug of a case-study blog post about this project, if one exists.
+  caseStudy?: string;
 }
 
 export const PROJECTS: Project[] = [
@@ -32,6 +43,14 @@ export const PROJECTS: Project[] = [
       src: "/clients/hazara-oregon.webp",
       alt: "Hazara Community of Oregon website",
     },
+    lighthouse: {
+      performance: 93,
+      accessibility: 100,
+      bestPractices: 100,
+      seo: 92,
+      testedOn: "2026-08-22",
+    },
+    caseStudy: "hazara-oregon-speed-case-study",
   },
   {
     slug: "empowerher-initiative",
@@ -45,6 +64,13 @@ export const PROJECTS: Project[] = [
       src: "/clients/empowerher-initiative.webp",
       alt: "EmpowerHer Initiative website",
     },
+    lighthouse: {
+      performance: 99,
+      accessibility: 96,
+      bestPractices: 100,
+      seo: 100,
+      testedOn: "2026-08-22",
+    },
   },
   {
     slug: "mohammad-samadi",
@@ -57,6 +83,13 @@ export const PROJECTS: Project[] = [
     image: {
       src: "/clients/mohammad-samadi.webp",
       alt: "Mohammad Samadi website",
+    },
+    lighthouse: {
+      performance: 99,
+      accessibility: 98,
+      bestPractices: 100,
+      seo: 100,
+      testedOn: "2026-08-22",
     },
   },
 

@@ -123,5 +123,20 @@
     "name": "RDNE Stock project",
     "url": "https://www.pexels.com/@rdne",
     "pexelsUrl": "https://www.pexels.com/photo/a-couple-holding-their-keys-8292853/"
+  },
+  "slow-culprits": {
+    "name": "panumas nikhomkhai",
+    "url": "https://www.pexels.com/@cookiecutter",
+    "pexelsUrl": "https://www.pexels.com/photo/close-up-of-a-blue-server-rack-in-datacenter-37730211/"
+  },
+  "platform-tax": {
+    "name": "Tranmautritam",
+    "url": "https://www.pexels.com/@tranmautritam",
+    "pexelsUrl": "https://www.pexels.com/photo/macbook-pro-displaying-website-version-2-on-table-285814/"
+  },
+  "mobile-speed": {
+    "name": "Michael Burrows",
+    "url": "https://www.pexels.com/@michael-burrows",
+    "pexelsUrl": "https://www.pexels.com/photo/crop-man-chatting-on-smartphone-on-urban-road-7129174/"
   }
 }

@@ -5,6 +5,7 @@ import HomeFooter from "../components/HomeFooter.astro";
 import PricingCards from "../components/PricingCards.astro";
 import QuoteForm from "../components/QuoteForm.astro";
 import Testimonial from "../components/Testimonial.astro";
+import ClientResults from "../components/ClientResults.astro";
 import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
 import { cities } from "../data/cities";
 import { PRICING, fmtPrice } from "../data/pricing";
@@ -895,6 +896,15 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       </div>
     </section>
 
+    <!-- ==================== MEASURED RESULTS ==================== -->
+    <!-- Live client Lighthouse scores as proof; component + data live in
+       ClientResults.astro / projects.ts. -->
+    <ClientResults
+      eyebrow="07 — Measured Results"
+      heading="Real sites. Real scores."
+      subhead="Live Google Lighthouse scores for sites we've built for real clients — and numbers you can check yourself in about 30 seconds."
+    />
+
     <!-- ==================== PRICING ==================== -->
     <section
       id="pricing"
@@ -903,7 +913,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Pricing
+        <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Pricing
       </div>
 
       <div
@@ -941,7 +951,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Areas We Serve
+        <span class="h-px w-[26px] bg-accent"></span>09 &mdash; Areas We Serve
       </div>
       <div
         class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -998,7 +1008,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>09 &mdash; FAQ
+        <span class="h-px w-[26px] bg-accent"></span>10 &mdash; FAQ
       </div>
       <h2
         class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"

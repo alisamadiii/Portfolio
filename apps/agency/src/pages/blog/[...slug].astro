@@ -4,6 +4,7 @@ import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
 import HomeFooter from "../../components/HomeFooter.astro";
 import QuoteForm from "../../components/QuoteForm.astro";
+import ClientResults from "../../components/ClientResults.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -227,6 +228,14 @@ const schema = [
       </div>
     </article>
 
+    <!-- Measured-results proof band — live client Lighthouse scores -->
+    <ClientResults
+      compact
+      eyebrow="Proof, not promises"
+      heading="We practice what we write."
+      subhead="These are live Google Lighthouse scores for real client sites — the same standard behind every post here. Check any of them yourself."
+    />
+
     <!-- CTA -->
     <section
       class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
@@ -251,7 +260,7 @@ const schema = [
             See pricing
           </a>
           <a
-            href="/#contact"
+            href="/quote"
             class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
             >Start a project</a
           >
