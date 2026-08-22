@@ -47,6 +47,9 @@ export function collectionSchema(
     ...(field.type === "select" && field.options
       ? { options: { values: field.options } }
       : {}),
+    ...(field.type === "image" && field.multiple
+      ? { options: { multiple: field.multiple } }
+      : {}),
   }));
   const primary =
     declared.find((field) => field.type === "string")?.name ??
@@ -87,6 +90,9 @@ export function arrayItemSchema(
     required: field.required,
     ...(field.type === "select" && field.options
       ? { options: { values: field.options } }
+      : {}),
+    ...(field.type === "image" && field.multiple
+      ? { options: { multiple: field.multiple } }
       : {}),
   }));
   const primary =

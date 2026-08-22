@@ -31,6 +31,7 @@ export type ManifestData = {
         label?: string;
         required?: boolean;
         options?: string[];
+        multiple?: boolean | { max?: number };
       }>;
     }>;
     paths: { manifest: string; pages: string; variables: string; seo: string };

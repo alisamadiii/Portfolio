@@ -17,6 +17,8 @@ export type CollectionField = {
   label?: string;
   required?: boolean;
   options?: string[];
+  /** Image fields only: opt into the multi-image gallery widget (value is string[]). */
+  multiple?: boolean | { max?: number };
 };
 
 export type CollectionDef = {

@@ -36,6 +36,10 @@ const CollectionFieldSchema = z.object({
   label: z.string().optional(),
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(),
+  // Image fields only: opt into the multi-image gallery widget (value is string[]).
+  multiple: z
+    .union([z.boolean(), z.object({ max: z.number().optional() })])
+    .optional(),
 });
 
 const CollectionSchema = z.object({
