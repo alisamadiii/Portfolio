@@ -16,9 +16,13 @@ import { useTRPC } from "@workspace/trpc/client";
 const EXPORT_LIMIT = 5000; // router max — the PDF covers the whole range
 
 export function ExportEmailsPdfButton({
+  owner,
+  repo,
   input,
   meta,
 }: {
+  owner: string;
+  repo: string;
   // The list filters without pagination — the export refetches everything.
   input: { from?: string; to?: string; search?: string; type?: string };
   meta: Pick<EmailLogsData, "clientName" | "company" | "rangeLabel">;
@@ -31,7 +35,12 @@ export function ExportEmailsPdfButton({
     setIsExporting(true);
     try {
       const { items } = await queryClient.fetchQuery(
-        trpc.emails.list.queryOptions({ ...input, limit: EXPORT_LIMIT })
+        trpc.emails.list.queryOptions({
+          owner,
+          repo,
+          ...input,
+          limit: EXPORT_LIMIT,
+        })
       );
 
       const data: EmailLogsData = {

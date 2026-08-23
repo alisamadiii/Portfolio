@@ -31,6 +31,10 @@ function readCache(owner?: string, repo?: string): Cached | null {
 
 function writeCache(owner: string, repo: string, url: string | null) {
   if (typeof window === "undefined") return;
+  // Only cache a resolved URL. Caching a `null` (domain not linked / not yet
+  // synced) would let a transient "missing" shadow a later real value for the
+  // whole TTL, so previews would stay broken until something else refetched.
+  if (!url) return;
   try {
     const value: Cached = { url, ts: Date.now() };
     window.localStorage.setItem(cacheKey(owner, repo), JSON.stringify(value));
@@ -46,10 +50,13 @@ export type WebsiteUrlStatus = "loading" | "ready" | "missing";
  * resolve root-relative image paths like `/favicon.ico` against the deployed
  * site.
  *
- * localStorage-first: a fresh cached value (< 20 min old) is used directly and
- * the network query never runs. Only on a cache miss / expiry do we hit
- * `vercel.domains.list`, then write the result back. React Query dedupes by
- * key, so many callers on one screen share a single request.
+ * localStorage-first for speed, but never localStorage-*only*: a fresh cached
+ * URL (< 20 min old) seeds `initialData` so there's an instant value and no
+ * spinner, and `staleTime` keeps the network query from actually running while
+ * that seed is fresh. The query stays **enabled** regardless, so a cache miss
+ * (or a project whose domain was linked/synced after the last visit) resolves
+ * on its own — without needing the Domains panel to fetch first. React Query
+ * dedupes by key, so many callers on one screen share a single request.
  */
 export function useWebsiteUrl(): {
   websiteUrl: string | null;
@@ -61,13 +68,12 @@ export function useWebsiteUrl(): {
   const repo = config?.repo;
 
   const cached = readCache(owner, repo);
-  const hasFreshCache = cached !== null;
 
-  const { data, isSuccess } = useQuery(
+  const { data, isSuccess, isError } = useQuery(
     trpc.vercel.domains.list.queryOptions(
       { owner: owner ?? "", repo: repo ?? "" },
       {
-        enabled: !!owner && !!repo && !hasFreshCache,
+        enabled: !!owner && !!repo,
         staleTime: TTL_MS,
         retry: false,
         ...(cached
@@ -84,21 +90,23 @@ export function useWebsiteUrl(): {
     )
   );
 
-  // Persist freshly-fetched results (skip when served from the initial cache).
-  useEffect(() => {
-    if (!owner || !repo || !isSuccess || hasFreshCache) return;
-    writeCache(owner, repo, data?.websiteUrl ?? null);
-  }, [owner, repo, isSuccess, hasFreshCache, data?.websiteUrl]);
+  const websiteUrl = data?.websiteUrl ?? null;
 
-  const websiteUrl = cached ? cached.url : (data?.websiteUrl ?? null);
+  // Persist resolved URLs (writeCache ignores null) so the next visit is instant.
+  useEffect(() => {
+    if (!owner || !repo || !isSuccess) return;
+    writeCache(owner, repo, websiteUrl);
+  }, [owner, repo, isSuccess, websiteUrl]);
 
   const status: WebsiteUrlStatus = !owner || !repo
     ? "loading"
-    : hasFreshCache || isSuccess
+    : isSuccess
       ? websiteUrl
         ? "ready"
         : "missing"
-      : "loading";
+      : isError
+        ? "missing"
+        : "loading";
 
   return { websiteUrl, status };
 }

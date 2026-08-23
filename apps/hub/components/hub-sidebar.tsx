@@ -13,7 +13,6 @@ import {
   HelpCircle,
   House,
   LogOut,
-  Mail,
   Settings,
 } from "@/components/icon";
 
@@ -60,11 +59,6 @@ const accountPages = [
     title: "Billing",
     url: "/billing",
     icon: CreditCard,
-  },
-  {
-    title: "Emails",
-    url: "/emails",
-    icon: Mail,
   },
   {
     title: "Guide",

@@ -62,6 +62,10 @@ export function Ban(props: LucideProps) {
   return <Lucide.Ban {...props} />;
 }
 
+export function BarChart3(props: LucideProps) {
+  return <Lucide.BarChart3 {...props} />;
+}
+
 export function Blocks(props: LucideProps) {
   return (
     <svg
@@ -717,6 +721,10 @@ export function TextCursorInput(props: LucideProps) {
 
 export function Trash2(props: LucideProps) {
   return <Lucide.Trash2 {...props} />;
+}
+
+export function TrendingUp(props: LucideProps) {
+  return <Lucide.TrendingUp {...props} />;
 }
 
 export function TriangleAlert(props: LucideProps) {

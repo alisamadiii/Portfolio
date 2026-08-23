@@ -19,6 +19,8 @@ import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
 import { BlogPanel } from "@/components/settings/blog-panel";
 import { DomainsPanel } from "@/components/settings/domains-panel";
+import { EmailsPanel } from "@/components/settings/emails-panel";
+import { EnvelopeMark } from "@/components/emails/envelope-mark";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { VariablesPanel } from "@/components/settings/variables-panel";
 import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
@@ -29,6 +31,7 @@ const VARIABLES = "$variables";
 const BILLING = "$billing";
 const DOMAIN = "$domain";
 const BLOG = "$blog";
+const EMAILS = "$emails";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
@@ -69,7 +72,8 @@ export function SettingsMode() {
     selected === VARIABLES ||
     selected === BILLING ||
     selected === DOMAIN ||
-    selected === BLOG
+    selected === BLOG ||
+    selected === EMAILS
       ? null
       : (pageRows.find((page) => page.path === selected) ?? null);
 
@@ -120,6 +124,12 @@ export function SettingsMode() {
           active={selected === BLOG}
           onClick={() => setSelected(BLOG)}
         />
+        <NavRow
+          icon={<EnvelopeMark className="size-4" />}
+          label="Emails"
+          active={selected === EMAILS}
+          onClick={() => setSelected(EMAILS)}
+        />
 
         <p className="text-muted-foreground mt-3 px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
           Page Settings
@@ -156,6 +166,8 @@ export function SettingsMode() {
           <DomainsPanel />
         ) : selected === BLOG ? (
           <BlogPanel />
+        ) : selected === EMAILS ? (
+          <EmailsPanel />
         ) : (
           <GeneralSettingsPanel seo={seo} />
         )}
