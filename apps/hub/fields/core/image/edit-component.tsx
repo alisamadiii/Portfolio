@@ -351,7 +351,7 @@ const EditComponent = forwardRef(
         <p className="text-muted-foreground bg-muted rounded-md px-3 py-2">
           No media configuration found.{" "}
           <a
-            href={`/${config.repo}/settings`}
+            href={`//configuration`}
             className="hover:text-foreground underline"
           >
             Check your settings

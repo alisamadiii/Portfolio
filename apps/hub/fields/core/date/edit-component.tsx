@@ -65,7 +65,7 @@ const EditComponent = forwardRef(
               variant="outline"
               disabled={field?.readonly}
               className={cn(
-                "w-48 justify-start text-left font-normal",
+                "bg-card w-48 justify-start text-left font-normal",
                 !selectedDate && "text-muted-foreground"
               )}
             >

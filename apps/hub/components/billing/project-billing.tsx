@@ -294,8 +294,8 @@ const FREE_FOR_LIFE_PERKS = [
 
 export const FreeForLifePanel = () => (
   <div className="bg-card overflow-hidden rounded-lg border">
-    <div className="from-status-success-bg to-accent/40 relative bg-gradient-to-br px-6 py-12 text-center">
-      <div className="bg-status-success text-status-success-bg mx-auto grid size-16 place-items-center rounded-2xl shadow-sm">
+    <div className="from-primary/10 to-accent/40 relative bg-gradient-to-br px-6 py-12 text-center">
+      <div className="bg-primary text-primary-foreground mx-auto grid size-16 place-items-center rounded-2xl shadow-sm">
         <Gift className="size-8" />
       </div>
       <h3 className="mt-6 text-[26px] font-extrabold tracking-tight">
@@ -310,7 +310,7 @@ export const FreeForLifePanel = () => (
     <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 px-6 py-6 sm:grid-cols-4">
       {FREE_FOR_LIFE_PERKS.map((perk) => (
         <div key={perk} className="flex items-center gap-2 text-[13.5px]">
-          <Check className="text-status-success size-4 shrink-0" />
+          <Check className="text-primary size-4 shrink-0" />
           {perk}
         </div>
       ))}
@@ -318,7 +318,7 @@ export const FreeForLifePanel = () => (
 
     <div className="border-rule flex items-center justify-between gap-3 border-t px-6 py-5">
       <p className="text-muted-foreground flex items-center gap-1.5 text-[13px]">
-        <Heart className="text-status-success size-3.5" />
+        <Heart className="text-primary size-3.5" />
         With gratitude, from AliSamadii.LLC
       </p>
       <RequestDialog>

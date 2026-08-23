@@ -41,7 +41,6 @@
   --chart-3: oklch(0.735 0.15 40);
   --chart-4: oklch(0.66 0.15 38);
   --chart-5: oklch(0.56 0.13 36);
-  --radius: 0.5rem;
   --sidebar: var(--background);
   --sidebar-foreground: oklch(0.205 0.004 60);
   --sidebar-primary: oklch(0.735 0.15 40);
@@ -49,7 +48,7 @@
   --sidebar-accent: oklch(0.935 0.004 85);
   --sidebar-accent-foreground: oklch(0.28 0.005 60);
   --sidebar-border: oklch(0.905 0.004 80);
-  --sidebar-ring: oklch(0.70 0.145 168);
+  --sidebar-ring: oklch(0.7 0.145 168);
 }
 
 .dark {
@@ -98,7 +97,7 @@
 [data-slot="textarea"],
 [data-slot="select-trigger"],
 [data-slot="input-group"] {
-  background-color: var(--background);
+  background-color: var(--card);
 }
 
 .dark [data-slot="input"],

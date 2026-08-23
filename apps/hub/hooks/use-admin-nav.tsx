@@ -59,7 +59,7 @@ export function useAdminNavItems(): NavItem[] {
       items.push({
         key: "admin-settings",
         label: "Settings",
-        href: `/${config.repo}/settings`,
+        href: `//configuration`,
         icon: <SlidersHorizontal className="size-4" />,
       });
     }

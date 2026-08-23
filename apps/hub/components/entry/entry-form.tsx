@@ -1143,7 +1143,7 @@ const SingleField = ({
             return (
               <FormItem
                 data-field-path={fieldName}
-                className="grid grid-cols-[180px_1fr] items-start gap-x-5 gap-y-1 border-t pt-5 first:border-t-0 first:pt-0"
+                className="grid grid-cols-[180px_1fr] items-start gap-x-6 gap-y-1"
               >
                 <div className="pt-1.5">
                   {field.label !== false && (
@@ -1413,7 +1413,7 @@ const EntryForm = ({
           <div
             className={cn(
               isSettings
-                ? "flex flex-col px-6 py-5"
+                ? "flex flex-col gap-6 px-6 py-6"
                 : "grid gap-6 rounded-xl p-5 md:p-6"
             )}
           >

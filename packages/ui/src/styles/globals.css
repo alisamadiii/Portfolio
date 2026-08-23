@@ -145,37 +145,54 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 0 0 1px rgba(9, 9, 11, 0.07),
+  --shadow-card:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 0 0 1px rgba(9, 9, 11, 0.07),
     0 0.7px 0.9px -1px rgba(9, 9, 11, 0.08), 0 3px 4px -2px rgba(9, 9, 11, 0.14);
-  --shadow-card-inside: 0px 1px 0px 0px #fff inset, 0px 1px 0px 0px var(--black-4, rgba(2, 2, 3, 0.04)),
-    0px 0px 0px 1px var(--black-7, rgba(2, 2, 3, 0.07)), 0px 15px 6px -3px rgba(0, 0, 0, 0.01),
-    0px 6px 5px -2px rgba(0, 0, 0, 0.02), 0px 3px 3px -1px rgba(0, 0, 0, 0.04),
-    0px 1px 2px -0.5px rgba(0, 0, 0, 0.04);
-  --shadow-dropdown: 0 0 0 1px rgba(25, 28, 33, 0.08), 0 16px 36px -6px color-mix(in srgb, black calc(0.07 * 100%), transparent),
+  --shadow-card-inside:
+    0px 1px 0px 0px #fff inset,
+    0px 1px 0px 0px var(--black-4, rgba(2, 2, 3, 0.04)),
+    0px 0px 0px 1px var(--black-7, rgba(2, 2, 3, 0.07)),
+    0px 15px 6px -3px rgba(0, 0, 0, 0.01), 0px 6px 5px -2px rgba(0, 0, 0, 0.02),
+    0px 3px 3px -1px rgba(0, 0, 0, 0.04), 0px 1px 2px -0.5px rgba(0, 0, 0, 0.04);
+  --shadow-dropdown:
+    0 0 0 1px rgba(25, 28, 33, 0.08),
+    0 16px 36px -6px color-mix(in srgb, black calc(0.07 * 100%), transparent),
     0 6px 16px -2px color-mix(in srgb, black calc(0.2 * 100%), transparent);
-  --shadow-dialog: 0 32px 72px -12px rgba(25, 28, 33, 0.2), 0 16px 32px -6px color-mix(in srgb, black calc(0.2 * 100%), transparent);
-  --shadow-dialog-body: 0 1px 2px rgba(25, 28, 33, 0.06), 0 0 2px color-mix(in srgb, black calc(0.08 * 100%), transparent);
-  --shadow-toast-save: inset 0 0 0 1px #2f3037, inset 0 2px 0 color-mix(in srgb, white calc(0.12 * 100%), transparent),
-    inset 0 0 2px 2px color-mix(in srgb, white calc(0.06 * 100%), transparent), 0 16px 36px -6px color-mix(in srgb, black calc(0.36 * 100%), transparent),
+  --shadow-dialog:
+    0 32px 72px -12px rgba(25, 28, 33, 0.2),
+    0 16px 32px -6px color-mix(in srgb, black calc(0.2 * 100%), transparent);
+  --shadow-dialog-body:
+    0 1px 2px rgba(25, 28, 33, 0.06),
+    0 0 2px color-mix(in srgb, black calc(0.08 * 100%), transparent);
+  --shadow-toast-save:
+    inset 0 0 0 1px #2f3037,
+    inset 0 2px 0 color-mix(in srgb, white calc(0.12 * 100%), transparent),
+    inset 0 0 2px 2px color-mix(in srgb, white calc(0.06 * 100%), transparent),
+    0 16px 36px -6px color-mix(in srgb, black calc(0.36 * 100%), transparent),
     0 6px 16px -2px color-mix(in srgb, black calc(0.2 * 100%), transparent);
 
-  --animate-rotate: rotate .5s ease-in-out forwards;
-  --animate-dialog-in: dialog-in .5s cubic-bezier(0.785, 0.135, 0.15, 0.86) forwards;
-  --animate-popover-in: popover-in .4s forwards;
+  --animate-rotate: rotate 0.5s ease-in-out forwards;
+  --animate-dialog-in: dialog-in 0.5s cubic-bezier(0.785, 0.135, 0.15, 0.86)
+    forwards;
+  --animate-popover-in: popover-in 0.4s forwards;
   --animate-dots-rotate: dotsRotate 10s linear infinite;
   --animate-dots-width: dotsWidth 1.5s ease-in-out infinite;
   --animate-text-intro: textIntro 2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 
-  --animate-badge-loading: badge-loading 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-  --animate-badge-shining: badge-shining 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  --animate-badge-loading: badge-loading 2s cubic-bezier(0.4, 0, 0.2, 1)
+    infinite alternate;
+  --animate-badge-shining: badge-shining 2s cubic-bezier(0.4, 0, 0.2, 1)
+    infinite;
 
   @keyframes badge-loading {
     0% {
-      transform: translateY(40px) scale(1.3) rotateY(0deg) rotateX(180deg) rotate(180deg);
+      transform: translateY(40px) scale(1.3) rotateY(0deg) rotateX(180deg)
+        rotate(180deg);
     }
 
     100% {
-      transform: translateY(0px) scale(1.3) rotateY(360deg) rotateX(180deg) rotate(180deg);
+      transform: translateY(0px) scale(1.3) rotateY(360deg) rotateX(180deg)
+        rotate(180deg);
     }
   }
 
@@ -292,7 +309,6 @@
   }
 
   @supports not (overflow-x: clip) {
-
     html,
     body {
       overflow-x: hidden;

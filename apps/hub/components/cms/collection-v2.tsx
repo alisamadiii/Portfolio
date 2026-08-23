@@ -1,27 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useConfig } from "@/contexts/config-context";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Plus, Search } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { useConfig } from "@/contexts/config-context";
-import { useDrafts } from "@/lib/store/drafts";
+
 import {
   collectionSchema,
   entryMetaFromFilename,
   type ManifestCollection,
 } from "@/lib/engine/collections";
+import { useDrafts } from "@/lib/store/drafts";
 
-import { EntrySheet, type EntrySheetMode } from "@/components/cms/entry-sheet";
+import { EntryEditor } from "@/components/cms/entry-editor";
+import type { EntrySheetMode } from "@/components/cms/entry-sheet";
+import { FileText, Plus, Search } from "@/components/icon";
 
 /**
  * CMS v2 collection panel: lists a manifest-declared collection's Markdown
  * entries (plus local new-entry drafts), with search, a New entry button and
- * the shared EntrySheet (synthetic schema from the cms.json declaration).
+ * a right-side EntryEditor panel (synthetic schema from the cms.json
+ * declaration) that keeps the entry list visible while editing.
  */
 export function CollectionV2({
   collection,
@@ -31,8 +34,7 @@ export function CollectionV2({
   const { config } = useConfig();
   const trpc = useTRPC();
   const [search, setSearch] = useState("");
-  const [sheetMode, setSheetMode] = useState<EntrySheetMode | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<EntrySheetMode | null>(null);
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
@@ -120,70 +122,79 @@ export function CollectionV2({
         </div>
         <Button
           size="sm"
-          onClick={() => {
-            setSheetMode({ kind: "new", takenPaths });
-            setSheetOpen(true);
-          }}
+          onClick={() => setEditing({ kind: "new", takenPaths })}
         >
           <Plus className="size-4" />
           New entry
         </Button>
       </div>
 
-      <div className="scrollbar flex-1 overflow-y-auto p-4 md:p-6">
-        {listQuery.isLoading ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            Loading entries…
-          </p>
-        ) : rows.length === 0 ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            No entries yet — create the first one.
-          </p>
-        ) : (
-          <div className="divide-y rounded-lg border">
-            {rows.map((row) => (
-              <button
-                key={row.path}
-                type="button"
-                onClick={() => {
-                  setSheetMode({ kind: "edit", path: row.path });
-                  setSheetOpen(true);
-                }}
-                className="hover:bg-muted/50 flex w-full items-center gap-3 px-4 py-3 text-left"
-              >
-                <FileText className="text-muted-foreground size-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                  {row.title}
-                </span>
-                {row.isDraft && (
-                  <span className="bg-draft-bg text-draft-fg inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
-                    <span className="bg-draft size-[5px] rounded-full" />
-                    {row.isNew ? "New draft" : "Draft"}
+      <div className="flex min-h-0 flex-1">
+        <div className="scrollbar min-w-0 flex-1 overflow-y-auto px-5 pb-10">
+          {listQuery.isLoading ? (
+            <p className="text-muted-foreground py-12 text-center text-sm">
+              Loading entries…
+            </p>
+          ) : rows.length === 0 ? (
+            <p className="text-muted-foreground py-12 text-center text-sm">
+              No entries yet — create the first one.
+            </p>
+          ) : (
+            <div>
+              <div className="text-muted-foreground bg-card sticky top-0 z-[2] grid grid-cols-[1fr_140px_110px] gap-4 border-b px-2.5 py-2.5 text-[10.5px] font-bold tracking-[0.07em] uppercase">
+                <span>Title</span>
+                <span>Date</span>
+                <span>Status</span>
+              </div>
+              {rows.map((row) => (
+                <button
+                  key={row.path}
+                  type="button"
+                  onClick={() => setEditing({ kind: "edit", path: row.path })}
+                  className={`hover:bg-muted/40 grid w-full grid-cols-[1fr_140px_110px] items-center gap-4 border-t px-2.5 py-2.5 text-left transition-colors ${
+                    editing?.kind === "edit" && editing.path === row.path
+                      ? "bg-muted/60"
+                      : ""
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <FileText className="text-muted-foreground size-4 shrink-0" />
+                    <span className="truncate text-[12.5px] font-semibold">
+                      {row.title}
+                    </span>
                   </span>
-                )}
-                {row.date && (
-                  <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                    {row.date}
+                  <span className="text-muted-foreground text-[12px] tabular-nums">
+                    {row.date ?? "—"}
                   </span>
-                )}
-              </button>
-            ))}
+                  <span>
+                    {row.isDraft ? (
+                      <span className="bg-draft-bg text-draft-fg inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+                        <span className="bg-draft size-[5px] rounded-full" />
+                        {row.isNew ? "New" : "Draft"}
+                      </span>
+                    ) : (
+                      <span className="bg-status-success-bg text-status-success rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+                        Published
+                      </span>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {editing && (
+          <div className="w-[430px] shrink-0 border-l">
+            <EntryEditor
+              schemaName={collection.name}
+              mode={editing}
+              schemaOverride={schema}
+              onClose={() => setEditing(null)}
+            />
           </div>
         )}
       </div>
-
-      {sheetMode && (
-        <EntrySheet
-          open={sheetOpen}
-          onOpenChange={setSheetOpen}
-          onOpenChangeComplete={(next) => {
-            if (!next) setSheetMode(null);
-          }}
-          schemaName={collection.name}
-          mode={sheetMode}
-          schemaOverride={schema}
-        />
-      )}
     </div>
   );
 }

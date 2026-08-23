@@ -3,8 +3,8 @@
 import { forwardRef, useId, type ReactNode, type Ref } from "react";
 
 import { Input } from "@workspace/ui/components/input";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { Label } from "@workspace/ui/components/label";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 
 /**
@@ -60,9 +60,14 @@ function FieldShell({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", fullWidth !== false && "w-full")}>
+    <div
+      className={cn("flex flex-col gap-1.5", fullWidth !== false && "w-full")}
+    >
       {label != null && label !== false && (
-        <Label htmlFor={id} className="text-muted-foreground text-xs font-medium">
+        <Label
+          htmlFor={id}
+          className="text-muted-foreground text-xs font-medium"
+        >
           {label}
           {required && <span className="text-destructive ml-0.5">*</span>}
         </Label>
@@ -134,7 +139,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       >
         {startAdornment ? (
           <div className="relative">
-            <span className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 flex -translate-y-1/2 items-center">
+            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 flex -translate-y-1/2 items-center">
               {startAdornment}
             </span>
             {input}

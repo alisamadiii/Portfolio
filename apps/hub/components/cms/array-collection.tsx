@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useConfig } from "@/contexts/config-context";
 import {
   closestCenter,
   DndContext,
@@ -23,22 +23,20 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Trash2 } from "@/components/icon";
+import { useQuery } from "@tanstack/react-query";
+import { initializeState } from "@workspace/cms-core/schema";
 import { toast } from "sonner";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@workspace/ui/components/sheet";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { useConfig } from "@/contexts/config-context";
+
+import {
+  arrayItemSchema,
+  type ManifestCollection,
+} from "@/lib/engine/collections";
 import {
   draftKey,
   getDraft,
@@ -46,13 +44,9 @@ import {
   useDrafts,
   useDraftsStore,
 } from "@/lib/store/drafts";
-import { initializeState } from "@workspace/cms-core/schema";
-import {
-  arrayItemSchema,
-  type ManifestCollection,
-} from "@/lib/engine/collections";
 
 import { EntryForm } from "@/components/entry/entry-form";
+import { GripVertical, Plus, Trash2, X } from "@/components/icon";
 
 type Item = Record<string, unknown>;
 
@@ -72,7 +66,6 @@ export function ArrayCollection({
   const trpc = useTRPC();
   const deleteDraftFromStore = useDraftsStore((state) => state.deleteDraft);
   const [editing, setEditing] = useState<number | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
@@ -88,8 +81,9 @@ export function ArrayCollection({
         enabled: Boolean(owner && repo && branch),
         staleTime: 30_000,
         retry: (failureCount, error) =>
-          !/not found/i.test(String((error as { message?: string })?.message)) &&
-          failureCount < 2,
+          !/not found/i.test(
+            String((error as { message?: string })?.message)
+          ) && failureCount < 2,
       }
     )
   );
@@ -97,7 +91,9 @@ export function ArrayCollection({
   // The collection file may not exist yet — a 404 means an empty collection.
   const fileMissing = Boolean(
     fileQuery.isError &&
-      /not found/i.test(String((fileQuery.error as { message?: string })?.message))
+    /not found/i.test(
+      String((fileQuery.error as { message?: string })?.message)
+    )
   );
   const remoteSha = fileQuery.data?.sha ?? null;
   const remoteItems = useMemo<Item[]>(() => {
@@ -150,17 +146,18 @@ export function ArrayCollection({
     const next = [blank, ...items];
     commitItems(next);
     setEditing(0);
-    setSheetOpen(true);
   };
 
   const handleDelete = (index: number) => {
     commitItems(items.filter((_, i) => i !== index));
+    // Indices shift — the open editor could now point at the wrong item.
+    setEditing(null);
   };
 
   const handleSubmitItem = (index: number, values: Record<string, unknown>) => {
     commitItems(items.map((item, i) => (i === index ? values : item)));
     toast.success("Saved on this device — publish to go live");
-    setSheetOpen(false);
+    setEditing(null);
   };
 
   const sensors = useSensors(
@@ -175,6 +172,8 @@ export function ArrayCollection({
     const to = Number(over.id);
     if (Number.isNaN(from) || Number.isNaN(to)) return;
     commitItems(arrayMove(items, from, to));
+    // Indices shift — the open editor could now point at the wrong item.
+    setEditing(null);
   };
 
   const label = collection.label ?? collection.name;
@@ -195,65 +194,67 @@ export function ArrayCollection({
         </Button>
       </div>
 
-      <div className="scrollbar flex-1 overflow-y-auto p-4 md:p-6">
-        {fileQuery.isLoading ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            Loading items…
-          </p>
-        ) : items.length === 0 ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            No items yet — add the first one.
-          </p>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={items.map((_, i) => String(i))}
-              strategy={verticalListSortingStrategy}
+      <div className="flex min-h-0 flex-1">
+        <div className="scrollbar min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
+          {fileQuery.isLoading ? (
+            <p className="text-muted-foreground py-12 text-center text-sm">
+              Loading items…
+            </p>
+          ) : items.length === 0 ? (
+            <p className="text-muted-foreground py-12 text-center text-sm">
+              No items yet — add the first one.
+            </p>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+              onDragEnd={handleDragEnd}
             >
-              <div className="divide-y rounded-lg border">
-                {items.map((item, index) => (
-                  <SortableRow
-                    key={index}
-                    id={String(index)}
-                    label={rowLabel(item, index)}
-                    onOpen={() => {
-                      setEditing(index);
-                      setSheetOpen(true);
-                    }}
-                    onDelete={() => handleDelete(index)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
-      </div>
+              <SortableContext
+                items={items.map((_, i) => String(i))}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="divide-y rounded-lg border">
+                  {items.map((item, index) => (
+                    <SortableRow
+                      key={index}
+                      id={String(index)}
+                      label={rowLabel(item, index)}
+                      active={editing === index}
+                      onOpen={() => setEditing(index)}
+                      onDelete={() => handleDelete(index)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
 
-      <Sheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onOpenChangeComplete={(next) => {
-          if (!next) setEditing(null);
-        }}
-      >
-        <SheetContent
-          side="right"
-          className="z-50 w-full overflow-x-hidden overflow-y-auto sm:max-w-xl"
-        >
-          <SheetHeader>
-            <SheetTitle>{label}</SheetTitle>
-            <SheetDescription>
-              Saved on this device until you publish.
-            </SheetDescription>
-          </SheetHeader>
-          {editingItem && editing !== null ? (
-            <>
-              <div className="px-4 pb-24">
+        {editing !== null && editingItem && (
+          <div className="flex w-[430px] shrink-0 flex-col border-l">
+            <div className="flex shrink-0 items-start gap-3 border-b px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">
+                  {rowLabel(editingItem, editing)}
+                </p>
+                <p className="text-muted-foreground truncate text-xs">
+                  Saved on this device until you publish.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-mr-1.5 size-7 shrink-0"
+                onClick={() => setEditing(null)}
+                aria-label="Close editor"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+            <div className="scrollbar flex-1 overflow-y-auto">
+              <div className="px-4 py-4">
                 <EntryForm
                   key={editing}
                   formId="array-item-form"
@@ -262,19 +263,18 @@ export function ArrayCollection({
                   onSubmit={(values) => handleSubmitItem(editing, values)}
                 />
               </div>
-              <div className="bg-background sticky bottom-0 border-t p-4">
-                <Button type="submit" form="array-item-form" className="w-full">
-                  Save item
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="text-muted-foreground py-16 text-center text-sm">
-              Select an item to edit.
             </div>
-          )}
-        </SheetContent>
-      </Sheet>
+            <div className="bg-background flex shrink-0 gap-2 border-t p-4">
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" form="array-item-form" className="flex-1">
+                Save item
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -282,11 +282,13 @@ export function ArrayCollection({
 function SortableRow({
   id,
   label,
+  active,
   onOpen,
   onDelete,
 }: {
   id: string;
   label: string;
+  active: boolean;
   onOpen: () => void;
   onDelete: () => void;
 }) {
@@ -299,6 +301,7 @@ function SortableRow({
       style={{ transform: CSS.Transform.toString(transform) }}
       className={cn(
         "bg-background flex items-center gap-2 px-2 py-2",
+        active && "bg-muted/60",
         isDragging && "opacity-60"
       )}
     >

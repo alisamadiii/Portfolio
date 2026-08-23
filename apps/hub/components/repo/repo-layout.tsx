@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { ArrowLeft } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 
@@ -12,6 +11,7 @@ import { repoPath } from "@/lib/paths";
 import { trackVisit } from "@/lib/tracker";
 
 import { CommandPaletteProvider } from "@/components/chrome/command-palette-provider";
+import { ArrowLeft } from "@/components/icon";
 import { PublishProvider } from "@/components/publish/publish-context";
 import {
   RepoHeaderProvider,

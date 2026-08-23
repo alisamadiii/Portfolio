@@ -1437,9 +1437,9 @@ export function Collection({
           ) : (
             <Link
               className={buttonVariants({ variant: "default" })}
-              href={`/${config.repo}/settings`}
+              href={`/${config.repo}/configuration`}
             >
-              Go to settings
+              Go to configuration
             </Link>
           )}
         </EmptyContent>

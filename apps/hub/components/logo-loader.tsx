@@ -1,4 +1,3 @@
-import { logos } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 export function LogoLoader({ className }: { className?: string }) {
@@ -10,7 +9,7 @@ export function LogoLoader({ className }: { className?: string }) {
       )}
     >
       <img
-        src={logos.green}
+        src="/agency-icon.png"
         alt="Loading"
         className="animate-logo-breathe size-12 rounded-full"
       />

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -16,6 +15,7 @@ import {
 import type { GroupMember } from "@/lib/bridge-messages";
 
 import { TextField } from "@/components/ui/form-fields";
+import { Image as ImageIcon } from "@/components/icon";
 import { useMediaLibrary } from "@/components/media/media-library-context";
 
 export type GroupEditorFieldRow = {
@@ -77,18 +77,19 @@ export function GroupEditorDialog({
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-h-[85dvh] overflow-y-auto bg-white sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto bg-white p-0 sm:max-w-md">
+        <DialogHeader className="p-6 pb-1">
           <DialogTitle>Edit content</DialogTitle>
         </DialogHeader>
         {hasRows ? (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2 p-2">
             {sections.map((section, index) => (
-              <div key={section.title ?? index} className="flex flex-col gap-3">
+              <div
+                key={section.title ?? index}
+                className="bg-muted/50 flex flex-col gap-3 rounded-lg border p-4"
+              >
                 {section.title && (
-                  <span className="text-muted-foreground text-xs font-medium">
-                    {section.title}
-                  </span>
+                  <span className="text-base font-medium">{section.title}</span>
                 )}
                 {section.rows.map((row) =>
                   row.kind === "media" ? (
@@ -137,7 +138,7 @@ export function GroupEditorDialog({
             No editable fields in this section.
           </p>
         )}
-        <DialogFooter>
+        <DialogFooter className="bg-card sticky bottom-0 mx-0">
           <DialogClose render={<Button variant="secondary">Cancel</Button>} />
           <Button type="button" disabled={!dirty} onClick={save}>
             Save

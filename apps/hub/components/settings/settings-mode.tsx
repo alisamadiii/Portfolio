@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Blocks,
   CreditCard,
@@ -36,7 +35,7 @@ const BLOG = "$blog";
  * the right. Base-path/advanced config still lives on the standalone route.
  */
 export function SettingsMode() {
-  const { pages, repoBase } = useCanvasEditor();
+  const { pages } = useCanvasEditor();
   const seo = useSeoDraft();
   const [selected, setSelected] = useState<string>(GENERAL);
 
@@ -110,13 +109,6 @@ export function SettingsMode() {
             onClick={() => setSelected(page.path)}
           />
         ))}
-
-        <Link
-          href={`${repoBase}/settings`}
-          className="text-muted-foreground hover:text-foreground mt-4 block px-2 py-1.5 text-xs underline underline-offset-2"
-        >
-          Advanced settings →
-        </Link>
       </aside>
 
       {/* Content */}

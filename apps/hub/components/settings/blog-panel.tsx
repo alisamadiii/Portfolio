@@ -27,12 +27,14 @@ import { Label } from "@workspace/ui/components/label";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { useConfig } from "@/contexts/config-context";
 
+import { Editor } from "@/components/ui/editor";
 import { PanelError } from "@/components/settings/panel-error";
 
 type BlogList = RouterOutputs["cms"]["blog"]["list"];
@@ -87,7 +89,7 @@ export const BlogPanel = () => {
       new Date(data.blogEditedAt) > new Date(data.blogPublishedAt));
 
   return (
-    <div className="mx-auto w-full max-w-screen-md p-6">
+    <div className="w-full p-6">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-[22px] font-extrabold tracking-tight">Blog</h2>
@@ -287,6 +289,7 @@ const PostEditor = ({
 }) => {
   const trpc = useTRPC();
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [title, setTitle] = useState(post.title);
   const [slug, setSlug] = useState(post.slug);
@@ -371,226 +374,260 @@ const PostEditor = ({
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack}>
+    <div className="space-y-4">
+      {/* Top bar */}
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="sm" onClick={onBack}>
           <ArrowLeft className="size-4" />
           All posts
         </Button>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive"
-            onClick={() => setRemoveOpen(true)}
+        <span className="text-[13px] font-bold">Edit post</span>
+        {published ? (
+          <span className="bg-status-success-bg text-status-success rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+            Published
+          </span>
+        ) : (
+          <span className="bg-draft-bg text-draft-fg rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+            Draft
+          </span>
+        )}
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          onClick={save}
+          disabled={!title.trim() || !slug.trim() || updateMutation.isPending}
+          isLoading={updateMutation.isPending}
+        >
+          Save draft
+        </Button>
+      </div>
+
+      {/* Banner */}
+      <div className="relative min-h-[180px] overflow-hidden rounded-xl border">
+        {heroImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroImage}
+            alt={heroImageAlt}
+            className="h-[220px] w-full object-cover"
+          />
+        ) : (
+          <div className="from-primary/30 to-primary/5 h-[220px] w-full bg-gradient-to-br" />
+        )}
+        <span className="absolute left-3.5 top-3 rounded-md bg-black/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white/90">
+          Banner · 1600 × 480
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="post-hero" className="text-muted-foreground text-xs">
+            Banner image URL
+          </Label>
+          <Input
+            id="post-hero"
+            value={heroImage}
+            placeholder="https://…"
+            onChange={(event) => setHeroImage(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label
+            htmlFor="post-hero-alt"
+            className="text-muted-foreground text-xs"
           >
-            <Trash2 className="size-4" />
-            Delete
-          </Button>
-          <Button
-            size="sm"
-            className="rounded-full px-5"
-            onClick={save}
-            disabled={!title.trim() || !slug.trim() || updateMutation.isPending}
-            isLoading={updateMutation.isPending}
-          >
-            Save
-          </Button>
+            Banner alt text
+          </Label>
+          <Input
+            id="post-hero-alt"
+            value={heroImageAlt}
+            onChange={(event) => setHeroImageAlt(event.target.value)}
+          />
         </div>
       </div>
 
-      <div className="bg-card space-y-4 rounded-lg border p-5">
-        <div className="space-y-2">
-          <Label htmlFor="post-title">Title</Label>
+      {/* Content + settings */}
+      <div className="grid items-start gap-5 lg:grid-cols-[1fr_320px]">
+        {/* Left: content */}
+        <div className="space-y-4">
           <Input
-            id="post-title"
+            aria-label="Post title"
             value={title}
+            placeholder="Post title"
+            className="!h-11 !text-[17px] font-bold"
             onChange={(event) => setTitle(event.target.value)}
           />
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="post-description"
+              className="text-muted-foreground text-xs"
+            >
+              Description{" "}
+              <span className="font-normal">shown on the blog listing</span>
+            </Label>
+            <Textarea
+              id="post-description"
+              value={description}
+              rows={2}
+              placeholder="Short summary shown in post lists and search results."
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs">Body</Label>
+            <Editor
+              format="markdown"
+              value={body}
+              onChange={setBody}
+              editorClassName="min-h-[320px]"
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="post-slug">Slug</Label>
-          <Input
-            id="post-slug"
-            value={slug}
-            onChange={(event) => setSlug(event.target.value)}
-          />
-          {slugChanged && post.status === "published" && (
-            <p className="text-status-warning text-[13px]">
-              Changing the slug of a published post changes its URL — old
-              links and search results will stop working.
-            </p>
-          )}
-        </div>
+        {/* Right: post settings */}
+        <div className="bg-card space-y-4 rounded-lg border p-4">
+          <p className="text-[12.5px] font-bold">Post settings</p>
 
-        <div className="space-y-2">
-          <Label htmlFor="post-description">Description</Label>
-          <Textarea
-            id="post-description"
-            value={description}
-            rows={2}
-            placeholder="Short summary shown in post lists and search results."
-            onChange={(event) => setDescription(event.target.value)}
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs">URL</Label>
+            <div className="border-input flex h-8 items-center overflow-hidden rounded-sm border">
+              <span className="bg-muted text-muted-foreground border-input flex h-full items-center border-r px-2 font-mono text-[11px]">
+                /blog/
+              </span>
+              <input
+                value={slug}
+                onChange={(event) => setSlug(event.target.value)}
+                className="h-full min-w-0 flex-1 bg-transparent px-2 font-mono text-[11.5px] outline-none"
+              />
+            </div>
+            {slugChanged && post.status === "published" && (
+              <p className="text-status-warning text-[11.5px]">
+                Changing a published post&apos;s slug changes its URL — old
+                links stop working.
+              </p>
+            )}
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="post-keyword">Target keyword</Label>
-          <Input
-            id="post-keyword"
-            value={keyword}
-            placeholder="e.g. amazon ses vs resend"
-            onChange={(event) => setKeyword(event.target.value)}
-          />
-          <p className="text-muted-foreground text-[13px]">
-            Put the exact keyword in the title only — the description should
-            paraphrase it.
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="post-author-name"
+              className="text-muted-foreground text-xs"
+            >
+              Author
+            </Label>
+            <Input
+              id="post-author-name"
+              value={authorName}
+              onChange={(event) => setAuthorName(event.target.value)}
+            />
+          </div>
+
+          <div className="flex items-start justify-between gap-3 border-t pt-3">
+            <div>
+              <p className="text-[13px] font-semibold">Published</p>
+              <p className="text-muted-foreground text-[11px]">
+                Draft posts never appear on your website.
+              </p>
+            </div>
+            <Switch checked={published} onCheckedChange={setPublished} />
+          </div>
+
+          <p className="text-muted-foreground border-t pt-3 text-[11px] leading-relaxed">
+            Saving keeps this post as a draft on this device. It goes live when
+            you Publish to site.
           </p>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="post-hero">Hero image URL</Label>
-            <Input
-              id="post-hero"
-              value={heroImage}
-              placeholder="https://…"
-              onChange={(event) => setHeroImage(event.target.value)}
+          {/* Advanced */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((open) => !open)}
+            className="text-muted-foreground hover:text-foreground flex w-full items-center gap-1.5 border-t pt-3 text-[12px] font-semibold"
+          >
+            <ChevronRight
+              className={cn(
+                "size-3.5 transition-transform",
+                showAdvanced && "rotate-90"
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="post-hero-alt">Hero image alt text</Label>
-            <Input
-              id="post-hero-alt"
-              value={heroImageAlt}
-              onChange={(event) => setHeroImageAlt(event.target.value)}
-            />
-          </div>
-        </div>
+            Advanced
+          </button>
+          {showAdvanced && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="post-keyword"
+                  className="text-muted-foreground text-xs"
+                >
+                  Target keyword
+                </Label>
+                <Input
+                  id="post-keyword"
+                  value={keyword}
+                  placeholder="e.g. amazon ses vs resend"
+                  onChange={(event) => setKeyword(event.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="post-tags"
+                  className="text-muted-foreground text-xs"
+                >
+                  Tags
+                </Label>
+                <Input
+                  id="post-tags"
+                  value={tags}
+                  placeholder="seo, web-design"
+                  onChange={(event) => setTags(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2 border-t pt-3">
+                <p className="text-[12px] font-semibold">Hero image credit</p>
+                <Input
+                  value={creditName}
+                  placeholder="Credit name (e.g. cottonbro studio)"
+                  onChange={(event) => setCreditName(event.target.value)}
+                />
+                <Input
+                  value={creditUrl}
+                  placeholder="Profile URL"
+                  onChange={(event) => setCreditUrl(event.target.value)}
+                />
+                <Input
+                  value={creditPexelsUrl}
+                  placeholder="Photo URL"
+                  onChange={(event) => setCreditPexelsUrl(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2 border-t pt-3">
+                <p className="text-[12px] font-semibold">Author details</p>
+                <Input
+                  value={authorTitle}
+                  placeholder="Title (e.g. Founder)"
+                  onChange={(event) => setAuthorTitle(event.target.value)}
+                />
+                <Input
+                  value={authorAvatar}
+                  placeholder="Avatar URL"
+                  onChange={(event) => setAuthorAvatar(event.target.value)}
+                />
+                <Input
+                  value={authorUrl}
+                  placeholder="Website URL"
+                  onChange={(event) => setAuthorUrl(event.target.value)}
+                />
+              </div>
+            </div>
+          )}
 
-        <div className="space-y-3 rounded-lg border p-4">
-          <div>
-            <p className="text-[14px] font-semibold">Hero image credit</p>
-            <p className="text-muted-foreground text-[13px]">
-              Optional — photographer attribution (e.g. Pexels). Saved only
-              when all three fields are filled.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="post-credit-name">Name</Label>
-              <Input
-                id="post-credit-name"
-                value={creditName}
-                placeholder="cottonbro studio"
-                onChange={(event) => setCreditName(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="post-credit-url">Profile URL</Label>
-              <Input
-                id="post-credit-url"
-                value={creditUrl}
-                placeholder="https://www.pexels.com/@…"
-                onChange={(event) => setCreditUrl(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="post-credit-photo-url">Photo URL</Label>
-              <Input
-                id="post-credit-photo-url"
-                value={creditPexelsUrl}
-                placeholder="https://www.pexels.com/photo/…"
-                onChange={(event) => setCreditPexelsUrl(event.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3 rounded-lg border p-4">
-          <div>
-            <p className="text-[14px] font-semibold">Author</p>
-            <p className="text-muted-foreground text-[13px]">
-              Optional — leave the name empty and the site shows no byline.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="post-author-name">Name</Label>
-              <Input
-                id="post-author-name"
-                value={authorName}
-                onChange={(event) => setAuthorName(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="post-author-title">Title</Label>
-              <Input
-                id="post-author-title"
-                value={authorTitle}
-                placeholder="Web Developer & Founder"
-                onChange={(event) => setAuthorTitle(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="post-author-avatar">Avatar URL</Label>
-              <Input
-                id="post-author-avatar"
-                value={authorAvatar}
-                placeholder="https://…"
-                onChange={(event) => setAuthorAvatar(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="post-author-url">Website URL</Label>
-              <Input
-                id="post-author-url"
-                value={authorUrl}
-                placeholder="https://…"
-                onChange={(event) => setAuthorUrl(event.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="post-tags">Tags</Label>
-          <Input
-            id="post-tags"
-            value={tags}
-            placeholder="seo, web-design"
-            onChange={(event) => setTags(event.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="post-body">Content (Markdown)</Label>
-          <Textarea
-            id="post-body"
-            value={body}
-            rows={18}
-            className="font-mono text-[13px]"
-            placeholder="Write your post in Markdown…"
-            onChange={(event) => setBody(event.target.value)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-          <div>
-            <p className="text-[14px] font-semibold">Published</p>
-            <p className="text-muted-foreground text-[13px]">
-              Draft posts never appear on your website, even after Publish to
-              site.
-            </p>
-            <p className="text-muted-foreground text-[13px]">
-              {post.publishedAt
-                ? `First published ${new Date(post.publishedAt).toLocaleString()} · `
-                : ""}
-              Last edited {new Date(post.updatedAt).toLocaleString()}
-            </p>
-          </div>
-          <Switch checked={published} onCheckedChange={setPublished} />
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive w-full border-t"
+            onClick={() => setRemoveOpen(true)}
+          >
+            <Trash2 className="size-4" />
+            Delete post
+          </Button>
         </div>
       </div>
 

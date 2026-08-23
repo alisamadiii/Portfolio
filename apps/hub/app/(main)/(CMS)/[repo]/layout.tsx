@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfigProvider } from "@/contexts/config-context";
 import { RepoProvider } from "@/contexts/repo-context";
+import { DEFAULT_MEDIA_PROVIDER } from "@workspace/cms-core/media-providers";
+import type { Config } from "@workspace/cms-core/types/config";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -13,13 +15,12 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
-import type { Config } from "@workspace/cms-core/types/config";
-import { DEFAULT_MEDIA_PROVIDER } from "@workspace/cms-core/media-providers";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
+
 import { getServerSession } from "@/lib/session-server";
 
-import { RepoLayout } from "@/components/repo/repo-layout";
 import { MediaLibraryProvider } from "@/components/media/media-library-panel";
+import { RepoLayout } from "@/components/repo/repo-layout";
 
 /** Standalone error card (no repo/config providers available yet). */
 function ErrorCard({
