@@ -24,6 +24,7 @@ import {
   type LegacyFieldFocusMessage,
 } from "./protocol";
 import { HL_CLASS, readRich, renderRich } from "./rich";
+import { REGION_COLORS } from "./colors";
 
 const PARAM = "cms-preview";
 const MODE_KEY = "cms-bridge-mode";
@@ -47,6 +48,14 @@ const GROUP_ATTR = "data-cms-group";
 const COLLECTION_ATTR = "data-cms-collection";
 /** Runtime marker set only in edit mode, so the outline never shows on live sites. */
 const COLLECTION_EDIT_ATTR = "data-cms-collection-edit";
+/** Authored: a variant region (any component's `variant` prop). Value = the name (or ""). */
+const VARIANT_ATTR = "data-cms-variant";
+/** Runtime marker (edit-mode only): a variant region — green outline, click opens it. */
+const VARIANT_EDIT_ATTR = "data-cms-variant-edit";
+/** Authored: a blog region (`<Region type="blog">`). */
+const BLOG_ATTR = "data-cms-blog";
+/** Runtime marker (edit-mode only): a blog region — yellow outline, click opens Blog settings. */
+const BLOG_EDIT_ATTR = "data-cms-blog-edit";
 /** Runtime marker (edit-mode only): a text leaf not wired to the CMS — shows a red outline. */
 const LOCKED_ATTR = "data-cms-locked";
 /** Bridge-injected UI (group add button, item move/remove pills) — never content. */
@@ -108,7 +117,19 @@ function injectStyle(): void {
   style.textContent =
     // Accent = the hub dashboard's primary green (oklch). Held in a var so the
     // whole overlay recolors from one place; alpha variants use oklch's `/ a`.
-    `:root{--cms-accent:oklch(0.60 0.13 163);--cms-collection:oklch(0.55 0.24 300);--cms-locked:oklch(0.58 0.22 27);}` +
+    // Region-type colors come from the shared `REGION_COLORS` map so the iframe
+    // markers match the hub's icons exactly. --cms-accent stays the variant green
+    // (used by the hover/flash rules below).
+    `:root{--cms-accent:${REGION_COLORS.variant};--cms-variant:${REGION_COLORS.variant};` +
+    `--cms-collection:${REGION_COLORS.collection};--cms-blog:${REGION_COLORS.blog};` +
+    `--cms-locked:oklch(0.58 0.22 27);}` +
+    // Variant region (green): a component flagged with `variant`. Persistent in
+    // edit mode + clickable; marker stripped on disarm so live sites stay clean.
+    `[${VARIANT_EDIT_ATTR}]{outline:2px solid var(--cms-variant);outline-offset:2px;` +
+    `background:color-mix(in oklch,var(--cms-variant) 8%,transparent);border-radius:2px;cursor:pointer;}` +
+    // Blog region (yellow): `<Region type="blog">` — click opens Blog settings.
+    `[${BLOG_EDIT_ATTR}]{outline:2px solid var(--cms-blog);outline-offset:2px;` +
+    `background:color-mix(in oklch,var(--cms-blog) 12%,transparent);border-radius:2px;cursor:pointer;}` +
     // Locked (red): text with no CMS wiring — persistent + low alpha so a page of
     // static text isn't overwhelming. Edit-mode only (marker stripped on disarm).
     `[${LOCKED_ATTR}]{outline:1px dashed oklch(0.58 0.22 27 / .35);outline-offset:2px;` +
@@ -247,6 +268,10 @@ function armEditables(): void {
     const host = el as HTMLElement;
     const path = host.getAttribute(FIELD_ATTR);
     if (!path) continue;
+    // A variant region is edited via its variant editor (a click opens it), so
+    // it never arms as inline text / media / link — variant wins over the field.
+    if (host.hasAttribute(VARIANT_ATTR) || host.hasAttribute(BLOG_ATTR))
+      continue;
     // Anything inside a `<Group>` host is edited ONLY through that group's CMS
     // dialog — never inline. So a descendant of a `[data-cms-kind="group"]`
     // element never arms individually (no contenteditable / media / link
@@ -608,6 +633,18 @@ function attachGroupControls(): void {
       "collection-tools"
     );
   }
+  // Variant regions: green outline, clickable (handled in onClick — no button).
+  for (const host of Array.from(
+    document.querySelectorAll(`[${VARIANT_ATTR}]`)
+  )) {
+    if (!(host instanceof HTMLElement)) continue;
+    host.setAttribute(VARIANT_EDIT_ATTR, "");
+  }
+  // Blog regions: yellow outline, clickable (handled in onClick — no button).
+  for (const host of Array.from(document.querySelectorAll(`[${BLOG_ATTR}]`))) {
+    if (!(host instanceof HTMLElement)) continue;
+    host.setAttribute(BLOG_EDIT_ATTR, "");
+  }
 }
 
 function removeGroupControls(): void {
@@ -617,6 +654,12 @@ function removeGroupControls(): void {
     document.querySelectorAll(`[${COLLECTION_EDIT_ATTR}]`)
   ))
     el.removeAttribute(COLLECTION_EDIT_ATTR);
+  for (const el of Array.from(
+    document.querySelectorAll(`[${VARIANT_EDIT_ATTR}]`)
+  ))
+    el.removeAttribute(VARIANT_EDIT_ATTR);
+  for (const el of Array.from(document.querySelectorAll(`[${BLOG_EDIT_ATTR}]`)))
+    el.removeAttribute(BLOG_EDIT_ATTR);
 }
 
 /** True when the element has a direct, non-whitespace text node child. */
@@ -648,12 +691,14 @@ function markLocked(): void {
       el.hasAttribute(GROUP_ATTR) ||
       el.hasAttribute(COLLECTION_ATTR) ||
       el.hasAttribute(ITEM_ATTR) ||
+      el.hasAttribute(VARIANT_ATTR) ||
+      el.hasAttribute(BLOG_ATTR) ||
       el.hasAttribute(UI_ATTR)
     )
       continue;
     if (
       el.closest(
-        `[${FIELD_ATTR}],[${KIND_ATTR}="group"],[${COLLECTION_ATTR}],[${UI_ATTR}]`
+        `[${FIELD_ATTR}],[${KIND_ATTR}="group"],[${COLLECTION_ATTR}],[${VARIANT_ATTR}],[${BLOG_ATTR}],[${UI_ATTR}]`
       )
     )
       continue;
@@ -793,6 +838,24 @@ function onClick(event: MouseEvent): void {
     event.preventDefault();
     event.stopPropagation();
     handleUiAction(uiAction);
+    return;
+  }
+  // A blog region opens the Blog settings page. Precedes field/media/link.
+  const blog = target.closest(`[${BLOG_ATTR}]`);
+  if (blog instanceof HTMLElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    post({ type: "blog-open" });
+    return;
+  }
+  // A variant region opens its variant editor — takes precedence over inline
+  // field editing, media/link/group. `<Text field=… variant=…>` opens the
+  // variant, not the caret. Value is the variant name ("" for a boolean flag).
+  const variant = target.closest(`[${VARIANT_ATTR}]`);
+  if (variant instanceof HTMLElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    post({ type: "variant-open", variant: variant.getAttribute(VARIANT_ATTR) ?? "" });
     return;
   }
   // Clicking an image opens the media picker.
@@ -1012,7 +1075,7 @@ function announce(): void {
     path: location.pathname,
     mode,
     fields: collectFields(),
-    caps: ["text", "media", "link", "group", "group-ops"],
+    caps: ["text", "media", "link", "group", "group-ops", "variant", "blog"],
     fieldsV2: collectFieldsV2(),
     groups: collectGroups(),
   });

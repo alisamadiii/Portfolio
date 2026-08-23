@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Frame } from "@/components/icon";
 
 import { CmsOverlay } from "@/components/cms/cms-overlay";
@@ -34,9 +34,15 @@ export function EditorShell() {
 }
 
 function ShellBody() {
-  const { pages, selectedPath, pagesError, cmsOverlay, setCmsOverlay } =
+  const { pages, selectedPath, pagesError, cmsOverlay, setCmsOverlay, settingsRequest } =
     useCanvasEditor();
   const [mode, setMode] = useState<ShellMode>("canvas");
+
+  // A settings request (e.g. a variant click) flips the shell into Settings
+  // mode; settings-mode then selects the section + flashes the field.
+  useEffect(() => {
+    if (settingsRequest) setMode("settings");
+  }, [settingsRequest]);
   const [docsOpen, setDocsOpen] = useState(true);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
   const [reloadNonce, setReloadNonce] = useState(0);

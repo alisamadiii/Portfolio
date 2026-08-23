@@ -17,7 +17,15 @@ import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
  * page — company name, logo, contact details, socials. Editing one updates it
  * everywhere it's bound.
  */
-export function VariablesPanel() {
+export function VariablesPanel({
+  focusField,
+  focusKey,
+}: {
+  /** Field path to scroll to + flash (from a variant click). */
+  focusField?: string;
+  /** Bumps to re-trigger the flash when the same field is clicked again. */
+  focusKey?: number;
+} = {}) {
   const { globalEntry, getGlobalValues, handleSiteConfigSave, copiesVersion } =
     useCanvasEditor();
   void copiesVersion; // re-read values after edits elsewhere
@@ -39,6 +47,8 @@ export function VariablesPanel() {
             fields={(globalEntry.schema.fields ?? []) as Field[]}
             contentObject={getGlobalValues() ?? {}}
             onSubmit={handleSiteConfigSave}
+            focusField={focusField}
+            focusKey={focusKey}
           />
           <div className="flex justify-start border-t px-6 py-3">
             <Button type="submit" form="variables-form">

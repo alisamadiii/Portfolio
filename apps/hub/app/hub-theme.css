@@ -85,6 +85,27 @@
   animation: logo-breathe 1.8s ease-in-out infinite;
 }
 
+/* Soft primary-tinted flash used to point the user at a field (e.g. after a
+   variant click). A calm ring + fill that eases out — no harsh amber. */
+@keyframes cms-field-flash {
+  0% {
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 55%, transparent);
+    background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+  }
+  60% {
+    background-color: color-mix(in oklch, var(--primary) 8%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 0%, transparent);
+    background-color: transparent;
+  }
+}
+
+@utility field-flash {
+  animation: cms-field-flash 1.9s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: calc(var(--radius) + 4px);
+}
+
 /* the title strip at the top of a settings card */
 @utility card-head {
   border-bottom: 1px solid var(--rule);

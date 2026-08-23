@@ -22,6 +22,8 @@ export type {
   GroupMember,
   GroupOpMessage,
   LinkInfoMessage,
+  VariantOpenMessage,
+  BlogOpenMessage,
 } from "@alisamadiillc/cms-bridge";
 
 /**

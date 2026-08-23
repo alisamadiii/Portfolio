@@ -1,0 +1,65 @@
+---
+/**
+ * Marks a page region for the CMS editor — Slot-style (merges the marker onto
+ * its single root child, like Radix `<Slot>`; NO wrapper element). The `type`
+ * prop selects the kind of region and its required prop:
+ *
+ *   <Region type="variant" variantName="phone">
+ *     <a href={telHref}>{phone}</a>
+ *   </Region>
+ *
+ *   <Region type="collection" name="projects">
+ *     <div class="grid">{projects.map((p) => <ProjectCard {...p} />)}</div>
+ *   </Region>
+ *
+ * Requires a SINGLE root child. The child renders normally on the live site; the
+ * marker only lights up in the CMS canvas (`?cms-preview=edit`). Put layout
+ * classes on the child — `<Region>` only injects the marker attribute.
+ *
+ * To add a type: add a TYPE_CONFIG entry here AND a `RegionProps` union member
+ * in `index.d.ts`.
+ */
+interface Props {
+  /** Region kind — selects the required prop + marker (see TYPE_CONFIG). */
+  type: string;
+  [key: string]: unknown;
+}
+
+const TYPE_CONFIG: Record<
+  string,
+  { attr: string; prop: string | null }
+> = {
+  variant: { attr: "data-cms-variant", prop: "variantName" },
+  collection: { attr: "data-cms-collection", prop: "name" },
+  // Prop-less: there is one blog. Emits an empty marker; clicking opens Blog settings.
+  blog: { attr: "data-cms-blog", prop: null },
+};
+
+const { type, ...rest } = Astro.props;
+
+const cfg = type ? TYPE_CONFIG[type] : undefined;
+if (!cfg)
+  throw new Error(
+    `cms-bridge <Region>: unknown or missing \`type\` "${type}". ` +
+      `Expected one of: ${Object.keys(TYPE_CONFIG).join(", ")}.`
+  );
+
+// Prop-less types (e.g. blog) emit an empty marker; typed ones require their prop.
+const value = cfg.prop ? rest[cfg.prop] : "";
+if (cfg.prop && (value == null || value === ""))
+  throw new Error(
+    `cms-bridge <Region type="${type}"> requires a \`${cfg.prop}\` prop.`
+  );
+
+const attr = ` ${cfg.attr}="${String(value).replace(/"/g, "&quot;")}"`;
+
+const slotHtml = (await Astro.slots.render("default")).trim();
+// Inject the marker onto the first element's opening tag (skips leading
+// text/comments). No `/g` — only the root element is tagged.
+const html = slotHtml.replace(
+  /<([a-zA-Z][\w-]*)(\s|\/|>)/,
+  (_m, tag, after) => `<${tag}${attr}${after}`
+);
+---
+
+<Fragment set:html={html} />

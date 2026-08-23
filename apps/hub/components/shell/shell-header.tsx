@@ -16,6 +16,7 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
+import { REGION_COLORS } from "@alisamadiillc/cms-bridge";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 
@@ -124,6 +125,7 @@ export function ShellHeader({
             label="CMS"
             active={cmsActive}
             onClick={onOpenCms}
+            iconColor={REGION_COLORS.collection}
           />
           {canManage && (
             <SegButton
@@ -179,11 +181,14 @@ function SegButton({
   label,
   active,
   onClick,
+  iconColor,
 }: {
   icon: (props: LucideProps) => React.ReactNode;
   label: string;
   active: boolean;
   onClick: () => void;
+  /** Tint the icon with a region-type color (CMS = purple). */
+  iconColor?: string;
 }) {
   return (
     <button
@@ -197,7 +202,7 @@ function SegButton({
           : "text-muted-foreground hover:text-foreground"
       )}
     >
-      <Icon className="size-4" />
+      <Icon className="size-4" style={iconColor ? { color: iconColor } : undefined} />
       <span className="max-md:hidden">{label}</span>
     </button>
   );

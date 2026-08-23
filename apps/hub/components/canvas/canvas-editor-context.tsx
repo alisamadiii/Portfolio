@@ -55,6 +55,9 @@ import { repoPath } from "@/lib/paths";
 /** Controlled state for the full-screen CMS entry-management overlay. */
 export type CmsOverlayState = { open: boolean; collection?: string };
 
+/** A jump into Settings mode, optionally flashing one field's input. */
+export type SettingsRequest = { section: string; field?: string };
+
 /**
  * Headless editing engine for the single-page editor. This is the edit
  * controller lifted verbatim out of the old pan/zoom `Canvas`: it owns the
@@ -128,6 +131,11 @@ type CanvasEditorValue = {
   // CMS overlay (opened from the header + page-tree collection rows).
   cmsOverlay: CmsOverlayState;
   setCmsOverlay: (state: CmsOverlayState) => void;
+
+  // A request to jump into Settings (e.g. a variant click) — the shell flips to
+  // Settings mode and highlights `field` in that section's form.
+  settingsRequest: SettingsRequest | null;
+  setSettingsRequest: (state: SettingsRequest | null) => void;
 
   // Site (global) settings — consumed by the Settings mode site panel.
   globalEntry: EntryRoute | null;
@@ -258,6 +266,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const [linkEditor, setLinkEditor] = useState<LinkEditorState>(null);
   const [groupEditor, setGroupEditor] = useState<GroupEditorState>(null);
   const [cmsOverlay, setCmsOverlay] = useState<CmsOverlayState>({ open: false });
+  const [settingsRequest, setSettingsRequest] = useState<SettingsRequest | null>(
+    null
+  );
 
   // Prefetch every mapped entry (content + sha) so commits can build drafts.
   // v2 repos skip this — their content arrives via the two getContent queries.
@@ -779,6 +790,19 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         case "collection-open":
           setCmsOverlay({ open: true, collection: msg.collection });
           break;
+        case "variant-open":
+          // Jump into Settings › Variables and flash the matching input (the
+          // variant name IS the variable field path). Unnamed variant just
+          // opens the section.
+          setSettingsRequest({
+            section: "variables",
+            field: msg.variant || undefined,
+          });
+          break;
+        case "blog-open":
+          // A blog region → open the Blog settings page.
+          setSettingsRequest({ section: "blog" });
+          break;
         case "link-info": {
           const href = msg.href;
           toast(`Links to ${href || "(no href)"}`, {
@@ -943,6 +967,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       commitNonText,
       cmsOverlay,
       setCmsOverlay,
+      settingsRequest,
+      setSettingsRequest,
       globalEntry,
       getGlobalValues,
       handleSiteConfigSave,
@@ -970,6 +996,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       groupEditor,
       commitNonText,
       cmsOverlay,
+      settingsRequest,
       globalEntry,
       getGlobalValues,
       handleSiteConfigSave,

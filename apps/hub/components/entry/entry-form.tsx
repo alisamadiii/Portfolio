@@ -138,6 +138,15 @@ type NestedFieldProps = {
   keyPrefix?: string;
 };
 
+/** Play the soft primary flash on a field, restarting it if already running. */
+const flashField = (el: HTMLElement): void => {
+  el.classList.remove("field-flash");
+  // Force a reflow so re-adding the class restarts the CSS animation.
+  void el.offsetWidth;
+  el.classList.add("field-flash");
+  window.setTimeout(() => el.classList.remove("field-flash"), 2000);
+};
+
 const hasFieldPathError = (errors: unknown, fieldName: string): boolean => {
   let current: unknown = errors;
   for (const part of fieldName.split(".")) {
@@ -1203,6 +1212,8 @@ const EntryForm = ({
   resetSignal,
   formId = "entry-form",
   variant = "stacked",
+  focusField,
+  focusKey,
 }: {
   fields: Field[];
   contentObject?: Record<string, unknown>;
@@ -1218,6 +1229,10 @@ const EntryForm = ({
   formId?: string;
   /** "settings" renders top-level scalars as 190px label-left rows. */
   variant?: "stacked" | "settings";
+  /** Field path to scroll to + flash (e.g. from a variant click). */
+  focusField?: string;
+  /** Bump to re-trigger the flash for the same `focusField`. */
+  focusKey?: number;
 }) => {
   const zodSchema = useMemo(() => {
     return generateZodSchema(fields);
@@ -1282,12 +1297,7 @@ const EntryForm = ({
       if (match) {
         window.clearInterval(interval);
         match.scrollIntoView({ block: "center", behavior: "smooth" });
-        const flashClasses = ["rounded-lg", "ring-2", "ring-amber-400"];
-        match.classList.add(...flashClasses);
-        window.setTimeout(
-          () => match.classList.remove(...flashClasses),
-          2500
-        );
+        flashField(match);
         router.replace(pathname, { scroll: false });
       } else if (tries > 20) {
         window.clearInterval(interval);
@@ -1296,6 +1306,33 @@ const EntryForm = ({
     }, 150);
     return () => window.clearInterval(interval);
   }, [focusParam, pathname, router]);
+
+  // Prop-driven flash (e.g. a variant click routes here): same scroll + amber
+  // ring as the URL deep-link, minus the URL cleanup. `focusKey` re-triggers it
+  // when the same field is requested again.
+  useEffect(() => {
+    if (!focusField) return;
+    const normalize = (path: string) => path.replace(/\.\d+(?=\.|$)/g, "");
+    const target = normalize(focusField);
+    let tries = 0;
+    const interval = window.setInterval(() => {
+      tries += 1;
+      const nodes = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-field-path]")
+      );
+      const match =
+        nodes.find((node) => node.dataset.fieldPath === focusField) ??
+        nodes.find((node) => normalize(node.dataset.fieldPath ?? "") === target);
+      if (match) {
+        window.clearInterval(interval);
+        match.scrollIntoView({ block: "center", behavior: "smooth" });
+        flashField(match);
+      } else if (tries > 20) {
+        window.clearInterval(interval);
+      }
+    }, 150);
+    return () => window.clearInterval(interval);
+  }, [focusField, focusKey]);
 
   const beforeSubmitHooksRef = useRef<Map<string, BeforeSubmitHook>>(new Map());
 

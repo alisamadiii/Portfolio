@@ -11,6 +11,7 @@ import {
   useCanvasEditor,
   type CanvasPageInfo,
 } from "@/components/canvas/canvas-editor-context";
+import { isBlogCollection } from "@/lib/engine/blog-schema";
 
 /**
  * Left sidebar: the site's pages as a flat list (Framer-style). A page that
@@ -27,10 +28,20 @@ export function PageTree() {
     selectedPath,
     setSelectedPath,
     setCmsOverlay,
+    setSettingsRequest,
     pagesLoading,
     dirtyPagePaths,
   } = useCanvasEditor();
   const trpc = useTRPC();
+
+  // Blog is managed on its own Settings page, not the generic CMS overlay.
+  const openCollection = (name?: string) => {
+    if (isBlogCollection({ name: name ?? "" })) {
+      setSettingsRequest({ section: "blog" });
+    } else {
+      setCmsOverlay({ open: true, collection: name });
+    }
+  };
 
   const pageRows = useMemo(
     () => pages.filter((page) => page.kind !== "collection"),
@@ -116,12 +127,7 @@ export function PageTree() {
                   key={collection.path}
                   label={collection.title}
                   count={countByName.get(collection.collection ?? "")}
-                  onClick={() =>
-                    setCmsOverlay({
-                      open: true,
-                      collection: collection.collection,
-                    })
-                  }
+                  onClick={() => openCollection(collection.collection)}
                   indented
                 />
               ))}
@@ -134,9 +140,7 @@ export function PageTree() {
             key={collection.path}
             label={collection.title}
             count={countByName.get(collection.collection ?? "")}
-            onClick={() =>
-              setCmsOverlay({ open: true, collection: collection.collection })
-            }
+            onClick={() => openCollection(collection.collection)}
           />
         ))}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Blocks,
   CreditCard,
@@ -12,6 +12,7 @@ import {
 } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
+import { REGION_COLORS } from "@alisamadiillc/cms-bridge";
 
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
@@ -35,14 +36,33 @@ const BLOG = "$blog";
  * the right. Base-path/advanced config still lives on the standalone route.
  */
 export function SettingsMode() {
-  const { pages } = useCanvasEditor();
+  const { pages, settingsRequest, setSettingsRequest } = useCanvasEditor();
   const seo = useSeoDraft();
   const [selected, setSelected] = useState<string>(GENERAL);
+  // Field to scroll-to + flash in the Variables form (from a variant click).
+  const [focusField, setFocusField] = useState<{ field: string; key: number } | null>(
+    null
+  );
+  const focusKey = useRef(0);
 
   const pageRows = useMemo(
     () => pages.filter((page) => page.kind !== "collection"),
     [pages]
   );
+
+  // A variant click (or any settings request) selects the section and, when a
+  // field is named, flashes its input so the user knows what to edit.
+  useEffect(() => {
+    if (!settingsRequest) return;
+    if (settingsRequest.section === "variables") {
+      setSelected(VARIABLES);
+      if (settingsRequest.field)
+        setFocusField({ field: settingsRequest.field, key: ++focusKey.current });
+    } else if (settingsRequest.section === "blog") {
+      setSelected(BLOG);
+    }
+    setSettingsRequest(null);
+  }, [settingsRequest, setSettingsRequest]);
 
   const selectedPage =
     selected === GENERAL ||
@@ -67,7 +87,12 @@ export function SettingsMode() {
           onClick={() => setSelected(GENERAL)}
         />
         <NavRow
-          icon={<Blocks className="size-4" />}
+          icon={
+            <Blocks
+              className="size-4"
+              style={{ color: REGION_COLORS.variant }}
+            />
+          }
           label="Variables"
           active={selected === VARIABLES}
           onClick={() => setSelected(VARIABLES)}
@@ -85,7 +110,12 @@ export function SettingsMode() {
           onClick={() => setSelected(DOMAIN)}
         />
         <NavRow
-          icon={<Newspaper className="size-4" />}
+          icon={
+            <Newspaper
+              className="size-4"
+              style={{ color: REGION_COLORS.blog }}
+            />
+          }
           label="Blog"
           active={selected === BLOG}
           onClick={() => setSelected(BLOG)}
@@ -116,7 +146,10 @@ export function SettingsMode() {
         {selectedPage ? (
           <PageSettingsPanel page={selectedPage} seo={seo} />
         ) : selected === VARIABLES ? (
-          <VariablesPanel />
+          <VariablesPanel
+            focusField={focusField?.field}
+            focusKey={focusField?.key}
+          />
         ) : selected === BILLING ? (
           <ProjectBillingPanel />
         ) : selected === DOMAIN ? (

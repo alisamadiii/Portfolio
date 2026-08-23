@@ -17,7 +17,14 @@ export type BridgeMode = "highlight" | "edit";
  * v3 adds "media" (click an image → CMS media picker) and "link" (edit an
  * anchor's href).
  */
-export type BridgeCapability = "text" | "media" | "link" | "group" | "group-ops";
+export type BridgeCapability =
+  | "text"
+  | "media"
+  | "link"
+  | "group"
+  | "group-ops"
+  | "variant"
+  | "blog";
 
 // ---------------------------------------------------------------------------
 // Bridge → CMS
@@ -163,6 +170,28 @@ export interface CollectionOpenMessage {
   collection: string;
 }
 
+/**
+ * A variant region (any component's `variant` prop) was clicked in edit mode.
+ * The hub opens that variant. `variant` is the declared name, or `""` when the
+ * prop was a boolean flag (`variant` with no value).
+ */
+export interface VariantOpenMessage {
+  cms: 1;
+  v: number;
+  type: "variant-open";
+  variant: string;
+}
+
+/**
+ * A blog region (`<Region type="blog">`) was clicked in edit mode. The hub opens
+ * the Blog settings page.
+ */
+export interface BlogOpenMessage {
+  cms: 1;
+  v: number;
+  type: "blog-open";
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
@@ -171,7 +200,9 @@ export type BridgeToCmsMessage =
   | FieldActivateMessage
   | LinkInfoMessage
   | GroupOpMessage
-  | CollectionOpenMessage;
+  | CollectionOpenMessage
+  | VariantOpenMessage
+  | BlogOpenMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge

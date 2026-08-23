@@ -4,7 +4,7 @@
  * The components themselves are `.astro` files. Astro's language server does
  * NOT generate prop types for `.astro` files imported from `node_modules`, so
  * consumers would otherwise get no autocomplete, no typo-checking, and no
- * required-prop errors on `<Text field=…>` / `<Collection collection=…>` — the
+ * required-prop errors on `<Text field=…>` / `<Region type=…>` — the
  * types only "worked" while the package was `pnpm link`ed (a symlink realpath
  * resolves outside node_modules, which Astro does type-check).
  *
@@ -75,14 +75,16 @@ interface ItemProps {
   [key: string]: unknown;
 }
 
-interface CollectionProps {
-  /** Required, non-empty collection name — the region's entries are edited on
-   *  that collection's page. */
-  collection: string;
-  as?: string;
-  class?: string;
-  [key: string]: unknown;
-}
+/**
+ * A CMS region marker (Slot-style — merges onto its single root child). `type`
+ * is required and selects the required prop. Add types as union members here
+ * (and a matching TYPE_CONFIG entry in `Region.astro`), e.g.
+ * `| { type: "collection"; name: string }`.
+ */
+type RegionProps =
+  | { type: "variant"; variantName: string }
+  | { type: "collection"; name: string }
+  | { type: "blog" };
 
 export declare const Heading1: Component<FieldProps>;
 export declare const Heading2: Component<FieldProps>;
@@ -92,7 +94,7 @@ export declare const Image: Component<ImageProps>;
 export declare const Link: Component<LinkProps>;
 export declare const Group: Component<GroupProps>;
 export declare const Item: Component<ItemProps>;
-export declare const Collection: Component<CollectionProps>;
+export declare const Region: Component<RegionProps>;
 
 export type {
   FieldProps,
@@ -101,6 +103,6 @@ export type {
   LinkProps,
   GroupProps,
   ItemProps,
-  CollectionProps,
+  RegionProps,
   LinkValue,
 };

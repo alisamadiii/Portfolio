@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
-import { Ban, ImageOff, Loader } from "@/components/icon";
+import { Ban, Globe, ImageOff, Loader } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 
 import { getRawUrl } from "@/lib/github-image";
+import { useWebsiteUrl } from "@/hooks/use-website-url";
 import { isAbsoluteMediaUrl } from "@workspace/cms-core/utils/file";
 
 export function Thumbnail({
@@ -34,22 +35,36 @@ export function Thumbnail({
   // CDN / external / data URLs render directly — never resolved via GitHub.
   const isAbsolute = !!path && isAbsoluteMediaUrl(path);
 
+  // Root-relative paths (e.g. `/favicon.ico`) are site-root assets — resolve
+  // them against the project's live domain, not GitHub raw.
+  const isRootRelative = !!path && !isAbsolute && path.startsWith("/");
+  const { websiteUrl, status: domainStatus } = useWebsiteUrl();
+
   const rawUrlQuery = useQuery({
     queryKey: ["raw-url", owner, repo, branch, name ?? "", path ?? ""],
     queryFn: () => getRawUrl(owner, repo, branch, name!, path!, isPrivate),
-    enabled: !!path && !isAbsolute && !!name,
+    enabled: !!path && !isAbsolute && !isRootRelative && !!name,
     staleTime: 30_000,
     retry: false,
   });
 
-  const rawUrl = isAbsolute ? path : (rawUrlQuery.data ?? null);
+  const rawUrl = isAbsolute
+    ? path
+    : isRootRelative
+      ? domainStatus === "ready"
+        ? `${websiteUrl}${path}`
+        : null
+      : (rawUrlQuery.data ?? null);
+
+  // No live domain linked → root-relative assets can't be previewed.
+  const noDomain = isRootRelative && domainStatus === "missing";
   const error = rawUrl && failedUrl === rawUrl
     ? "Image failed to load"
     : rawUrlQuery.error
       ? rawUrlQuery.error instanceof Error
         ? rawUrlQuery.error.message
         : "Unknown error"
-      : path && !isAbsolute && (!name || (rawUrlQuery.isSuccess && !rawUrlQuery.data))
+      : path && !isAbsolute && !isRootRelative && (!name || (rawUrlQuery.isSuccess && !rawUrlQuery.data))
         ? "Image could not be resolved"
         : null;
 
@@ -61,7 +76,14 @@ export function Thumbnail({
       )}
     >
       {path ? (
-        error ? (
+        noDomain ? (
+          <div
+            className="text-muted-foreground absolute inset-0 flex items-center justify-center"
+            title="Connect a domain to preview this image"
+          >
+            <Globe className="h-4 w-4" />
+          </div>
+        ) : error ? (
           <div
             className="text-muted-foreground absolute inset-0 flex items-center justify-center"
             title={error}
