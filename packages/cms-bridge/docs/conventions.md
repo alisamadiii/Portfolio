@@ -57,14 +57,22 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 
 - **Repeated content** — wrap a mapped list in `<Group field="…">` with each
   item in `<Item index={i}>` so the canvas can add/remove/reorder.
-- **Collection-driven region** — wrap a region rendered from a `cms.json`
-  collection in `<Collection collection="…">`. The canvas draws a purple outline
-  and a "✎ Edit collection" button that opens that collection's editor. `collection`
-  is required. Unlike `<Group>`, entries are edited on the collection page, not inline.
+- **Region markers** — mark a whole region with `<Region type="…">`. It is
+  **Slot-style**: it renders its single root child and merges a `data-cms-*` marker
+  onto that child's opening tag — no wrapper element. Requires one root child.
+  - `<Region type="collection" name="…">` — a region rendered from a `cms.json`
+    collection. Purple outline + a "✎ Edit collection" button that opens the
+    collection's editor; entries are edited on the collection page, not inline
+    (unlike `<Group>`). `name` required.
+  - `<Region type="variant" variantName="…">` — green outline. Clicking it opens
+    Settings › Variables and flashes the variable whose path equals `variantName`.
+  - `<Region type="blog">` — yellow outline. Clicking it opens the Blog settings
+    page. Prop-less (there is one blog).
 - **Canvas outline legend** — in edit mode the bridge outlines content by kind:
-  **green** = inline-editable field/group, **purple** = a `<Collection>` region,
-  **red** (faint, persistent) = text with no `data-cms-*` wiring, i.e. not editable.
-  Red is a hint to wire the element, never shown on the live site.
+  **green** = inline-editable field/group + a `variant` region, **purple** = a
+  `collection` region, **yellow** = a `blog` region, **red** (faint, persistent) =
+  text with no `data-cms-*` wiring, i.e. not editable (a hint to wire the element,
+  never shown on the live site).
 - **Typed field paths** — the package types `field` as a plain `string`; it does
   not constrain paths. A site that wants autocompleted, typo-checked paths adds a
   tiny typed helper of its own and passes its result into `field`:
@@ -93,7 +101,7 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
   the site, not the package, so each site owns its own field vocabulary.
 
   > **Maintainer note.** Component props (and the required-prop checks for
-  > `<Collection collection>`, `<Item index>`, `<Text field>`, etc.) are typed
+  > `<Region type>`, `<Item index>`, `<Text field>`, etc.) are typed
   > from `components/index.d.ts` — the `types` target of the `./components`
   > export. It exists because Astro does **not** generate prop types for `.astro`
   > components imported from `node_modules` (it only worked while the package was
