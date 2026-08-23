@@ -45,6 +45,14 @@ import {
   useDraftsStore,
 } from "@/lib/store/drafts";
 
+import {
+  buildColumns,
+  CollectionCell,
+  CollectionTableHeader,
+  gridTemplate,
+  withFallback,
+  type ColumnDef,
+} from "@/components/cms/collection-table";
 import { EntryForm } from "@/components/entry/entry-form";
 import { GripVertical, Plus, Trash2, X } from "@/components/icon";
 
@@ -177,6 +185,8 @@ export function ArrayCollection({
   };
 
   const label = collection.label ?? collection.name;
+  const columns = useMemo(() => buildColumns(collection), [collection]);
+  const template = gridTemplate(columns, "40px");
   const editingItem =
     editing !== null && editing < items.length ? items[editing] : null;
 
@@ -195,7 +205,7 @@ export function ArrayCollection({
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="scrollbar min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="scrollbar min-w-0 flex-1 overflow-y-auto px-5 pb-10">
           {fileQuery.isLoading ? (
             <p className="text-muted-foreground py-12 text-center text-sm">
               Loading items…
@@ -215,12 +225,19 @@ export function ArrayCollection({
                 items={items.map((_, i) => String(i))}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="divide-y rounded-lg border">
+                <div>
+                  <CollectionTableHeader
+                    columns={columns}
+                    template={template}
+                  />
                   {items.map((item, index) => (
                     <SortableRow
                       key={index}
                       id={String(index)}
-                      label={rowLabel(item, index)}
+                      item={item}
+                      columns={columns}
+                      template={template}
+                      fallbackLabel={rowLabel(item, index)}
                       active={editing === index}
                       onOpen={() => setEditing(index)}
                       onDelete={() => handleDelete(index)}
@@ -254,15 +271,13 @@ export function ArrayCollection({
               </Button>
             </div>
             <div className="scrollbar flex-1 overflow-y-auto">
-              <div className="px-4 py-4">
-                <EntryForm
-                  key={editing}
-                  formId="array-item-form"
-                  fields={schema.fields}
-                  contentObject={editingItem}
-                  onSubmit={(values) => handleSubmitItem(editing, values)}
-                />
-              </div>
+              <EntryForm
+                key={editing}
+                formId="array-item-form"
+                fields={schema.fields}
+                contentObject={editingItem}
+                onSubmit={(values) => handleSubmitItem(editing, values)}
+              />
             </div>
             <div className="bg-background flex shrink-0 gap-2 border-t p-4">
               <Button variant="outline" onClick={() => setEditing(null)}>
@@ -281,13 +296,19 @@ export function ArrayCollection({
 
 function SortableRow({
   id,
-  label,
+  item,
+  columns,
+  template,
+  fallbackLabel,
   active,
   onOpen,
   onDelete,
 }: {
   id: string;
-  label: string;
+  item: Item;
+  columns: ColumnDef[];
+  template: string;
+  fallbackLabel: string;
   active: boolean;
   onOpen: () => void;
   onDelete: () => void;
@@ -298,34 +319,52 @@ function SortableRow({
     <div
       ref={setNodeRef}
       // No `transition` — rows snap to their new position on drop (no slide).
-      style={{ transform: CSS.Transform.toString(transform) }}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        gridTemplateColumns: template,
+      }}
       className={cn(
-        "bg-background flex items-center gap-2 px-2 py-2",
+        "bg-background hover:bg-muted/40 grid w-full cursor-pointer items-center gap-4 border-t px-2.5 py-2.5 transition-colors",
         active && "bg-muted/60",
         isDragging && "opacity-60"
       )}
+      onClick={onOpen}
     >
-      <button
-        type="button"
-        className="text-muted-foreground hover:text-foreground cursor-grab px-1"
-        {...attributes}
-        {...listeners}
-        aria-label="Drag to reorder"
-      >
-        <GripVertical className="size-4" />
-      </button>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="hover:bg-muted/50 min-w-0 flex-1 truncate rounded px-2 py-1 text-left text-sm font-medium"
-      >
-        {label}
-      </button>
+      {columns.map((column, index) =>
+        index === 0 ? (
+          <span key={column.key} className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground -ml-1 shrink-0 cursor-grab"
+              {...attributes}
+              {...listeners}
+              onClick={(event) => event.stopPropagation()}
+              aria-label="Drag to reorder"
+            >
+              <GripVertical className="size-4" />
+            </button>
+            <CollectionCell
+              column={column}
+              value={withFallback(item[column.key], fallbackLabel)}
+              primary
+            />
+          </span>
+        ) : (
+          <CollectionCell
+            key={column.key}
+            column={column}
+            value={item[column.key]}
+          />
+        )
+      )}
       <Button
         size="icon"
         variant="ghost"
-        className="text-muted-foreground hover:text-destructive size-8"
-        onClick={onDelete}
+        className="text-muted-foreground hover:text-destructive size-7 justify-self-end"
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete();
+        }}
         aria-label="Delete item"
       >
         <Trash2 className="size-4" />

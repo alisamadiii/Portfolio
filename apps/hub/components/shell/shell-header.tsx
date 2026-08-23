@@ -1,6 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRepo } from "@/contexts/repo-context";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
+import { Button } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
+
+import { roleAtLeast } from "@/lib/authz-shared";
+
+import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import {
   ArrowLeft,
   GitBranch,
@@ -11,16 +30,9 @@ import {
   UploadCloud,
   type LucideProps,
 } from "@/components/icon";
-
-import { cn } from "@workspace/ui/lib/utils";
-import { Button } from "@workspace/ui/components/button";
-
-import { useRepo } from "@/contexts/repo-context";
-import { roleAtLeast } from "@/lib/authz-shared";
 import { usePublish } from "@/components/publish/publish-context";
-import { User } from "@/components/user";
-import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { InviteButton } from "@/components/shell/invite-button";
+import { User } from "@/components/user";
 
 export type ShellMode = "canvas" | "settings";
 
@@ -41,6 +53,8 @@ export function ShellHeader({
   onOpenCms: () => void;
   onToggleDocs: () => void;
 }) {
+  const router = useRouter();
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const { owner, repo, branch, cmsOverlay } = useCanvasEditor();
   const { draftCount, openPublishDialog } = usePublish();
   const { myRole } = useRepo();
@@ -59,12 +73,30 @@ export function ShellHeader({
           variant="ghost"
           size="icon-sm"
           aria-label="Back to projects"
-          render={
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-            </Link>
-          }
-        />
+          onClick={() => setLeaveOpen(true)}
+        >
+          <ArrowLeft className="size-4" />
+        </Button>
+        <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Leave the editor?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {draftCount > 0
+                  ? `You have ${draftCount} unpublished ${
+                      draftCount === 1 ? "draft" : "drafts"
+                    }. ${draftCount === 1 ? "It stays" : "They stay"} saved on this device — publish when you're back.`
+                  : "You'll return to your projects list."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Stay</AlertDialogCancel>
+              <AlertDialogAction onClick={() => router.push("/")}>
+                Leave
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="flex items-center gap-2 px-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -119,8 +151,9 @@ export function ShellHeader({
           size="icon-sm"
           onClick={onToggleDocs}
           aria-label="Toggle guide"
+          className="text-muted-foreground hover:text-foreground"
         >
-          <PanelRight className="size-4" />
+          <PanelRight className="size-5" />
         </Button>
         <User align="end" />
         <InviteButton owner={owner} repo={repo} />

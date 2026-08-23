@@ -16,6 +16,13 @@ import {
 } from "@/lib/engine/collections";
 import { useDrafts } from "@/lib/store/drafts";
 
+import {
+  buildColumns,
+  CollectionCell,
+  CollectionTableHeader,
+  gridTemplate,
+  withFallback,
+} from "@/components/cms/collection-table";
 import { EntryEditor } from "@/components/cms/entry-editor";
 import type { EntrySheetMode } from "@/components/cms/entry-sheet";
 import { FileText, Plus, Search } from "@/components/icon";
@@ -57,10 +64,15 @@ export function CollectionV2({
         .filter(([, draft]) => draft.path.startsWith(prefix))
         .map(([key, draft]) => [draft.path, { key, draft }] as const)
     );
+    const draftFields = (draft?: { values: unknown }) =>
+      draft && draft.values && typeof draft.values === "object"
+        ? (draft.values as Record<string, unknown>)
+        : null;
     const out: Array<{
       path: string;
       title: string;
       date: string | null;
+      fields: Record<string, unknown>;
       isDraft: boolean;
       isNew: boolean;
     }> = [];
@@ -71,6 +83,9 @@ export function CollectionV2({
         path: entry.path,
         title: draft?.draft.title || meta.title,
         date: meta.date,
+        // Local draft values override what's on GitHub — the table should
+        // show what the user will publish, not what's published.
+        fields: draftFields(draft?.draft) ?? entry.fields ?? {},
         isDraft: Boolean(draft),
         isNew: false,
       });
@@ -83,6 +98,7 @@ export function CollectionV2({
         path,
         title: draft.title || meta.title,
         date: meta.date,
+        fields: draftFields(draft) ?? {},
         isDraft: true,
         isNew: true,
       });
@@ -103,6 +119,8 @@ export function CollectionV2({
   }, [listQuery.data, drafts]);
 
   const label = collection.label ?? collection.name;
+  const columns = useMemo(() => buildColumns(collection), [collection]);
+  const template = gridTemplate(columns, "110px");
 
   return (
     <div className="flex h-full flex-col">
@@ -141,31 +159,47 @@ export function CollectionV2({
             </p>
           ) : (
             <div>
-              <div className="text-muted-foreground bg-card sticky top-0 z-[2] grid grid-cols-[1fr_140px_110px] gap-4 border-b px-2.5 py-2.5 text-[10.5px] font-bold tracking-[0.07em] uppercase">
-                <span>Title</span>
-                <span>Date</span>
-                <span>Status</span>
-              </div>
+              <CollectionTableHeader
+                columns={columns}
+                template={template}
+                trailingLabel="Status"
+              />
               {rows.map((row) => (
                 <button
                   key={row.path}
                   type="button"
                   onClick={() => setEditing({ kind: "edit", path: row.path })}
-                  className={`hover:bg-muted/40 grid w-full grid-cols-[1fr_140px_110px] items-center gap-4 border-t px-2.5 py-2.5 text-left transition-colors ${
+                  className={`hover:bg-muted/40 grid w-full items-center gap-4 border-t px-2.5 py-2.5 text-left transition-colors ${
                     editing?.kind === "edit" && editing.path === row.path
                       ? "bg-muted/60"
                       : ""
                   }`}
+                  style={{ gridTemplateColumns: template }}
                 >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <FileText className="text-muted-foreground size-4 shrink-0" />
-                    <span className="truncate text-[12.5px] font-semibold">
-                      {row.title}
-                    </span>
-                  </span>
-                  <span className="text-muted-foreground text-[12px] tabular-nums">
-                    {row.date ?? "—"}
-                  </span>
+                  {columns.map((column, index) =>
+                    index === 0 ? (
+                      <span
+                        key={column.key}
+                        className="flex min-w-0 items-center gap-2"
+                      >
+                        <FileText className="text-muted-foreground size-4 shrink-0" />
+                        <CollectionCell
+                          column={column}
+                          value={withFallback(
+                            row.fields[column.key],
+                            row.title
+                          )}
+                          primary
+                        />
+                      </span>
+                    ) : (
+                      <CollectionCell
+                        key={column.key}
+                        column={column}
+                        value={row.fields[column.key]}
+                      />
+                    )
+                  )}
                   <span>
                     {row.isDraft ? (
                       <span className="bg-draft-bg text-draft-fg inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold">

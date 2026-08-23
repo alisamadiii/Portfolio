@@ -1,6 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import z from "zod";
-
 import { readFns } from "@workspace/cms-core/fields/registry";
 import {
   deepMap,
@@ -15,6 +13,7 @@ import {
   normalizePath,
   serializedTypes,
 } from "@workspace/cms-core/utils/file";
+import z from "zod";
 
 import { cmsProcedure, cmsWriteProcedure, createTRPCRouter } from "../../init";
 import {
@@ -24,7 +23,6 @@ import {
 } from "../../lib/cms/commit-message";
 import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
-import { getManifest } from "../../lib/cms/manifest-store";
 import { requireFeatureAccess } from "../../lib/cms/feature-access";
 import {
   getBranchHeadSha,
@@ -32,6 +30,7 @@ import {
   setBranchHeadSha,
   updateFileCache,
 } from "../../lib/cms/github-cache-file";
+import { getManifest } from "../../lib/cms/manifest-store";
 import { createOctokitInstance } from "../../lib/cms/octokit";
 import { getRepoReadContext } from "../../lib/cms/repo-context";
 import { parse, stringify } from "../../lib/cms/serialization";
@@ -201,9 +200,10 @@ const parseContents = (
 
 export const collectionsRouter = createTRPCRouter({
   /**
-   * CMS v2: list a manifest-declared collection's Markdown entries. No
-   * schema, no content parsing — just the folder listing (name/path/sha);
-   * the entry sheet fetches individual files via `entries.getContent`.
+   * CMS v2: list a manifest-declared collection's Markdown entries. Folder
+   * listing (name/path/sha) plus each entry's first few declared field values
+   * (parsed frontmatter) for the collection table columns; the entry editor
+   * still fetches the full file via `entries.getContent`.
    */
   listV2: cmsProcedure
     .input(z.object({ branch: z.string(), name: z.string() }))
@@ -230,8 +230,13 @@ export const collectionsRouter = createTRPCRouter({
           );
 
         const octokit = createOctokitInstance(ctx.token);
-        let entries: Array<{ name: string; path: string; sha: string; size: number }> =
-          [];
+        let entries: Array<{
+          name: string;
+          path: string;
+          sha: string;
+          size: number;
+          fields: Record<string, unknown>;
+        }> = [];
         try {
           const response = await octokit.rest.repos.getContent({
             owner: input.owner,
@@ -240,17 +245,52 @@ export const collectionsRouter = createTRPCRouter({
             ref: input.branch,
           });
           if (Array.isArray(response.data)) {
-            entries = response.data
-              .filter(
-                (item) =>
-                  item.type === "file" && /\.(md|mdx|json)$/.test(item.name)
-              )
-              .map((item) => ({
-                name: item.name,
-                path: item.path,
-                sha: item.sha,
-                size: item.size,
-              }));
+            const files = response.data.filter(
+              (item) =>
+                item.type === "file" && /\.(md|mdx|json)$/.test(item.name)
+            );
+            // The collection table shows the first few declared fields as
+            // columns, so each entry's frontmatter is fetched and reduced to
+            // just those keys. A file that fails to fetch or parse still
+            // lists — its cells just render empty.
+            const columnKeys = collection.fields
+              .filter((field) => field.name !== "body")
+              .slice(0, 3)
+              .map((field) => field.name);
+            entries = await Promise.all(
+              files.map(async (item) => {
+                let fields: Record<string, unknown> = {};
+                try {
+                  const blob = await octokit.rest.git.getBlob({
+                    owner: input.owner,
+                    repo: input.repo,
+                    file_sha: item.sha,
+                  });
+                  const content = Buffer.from(
+                    blob.data.content,
+                    "base64"
+                  ).toString();
+                  const parsed = item.name.endsWith(".json")
+                    ? JSON.parse(content)
+                    : parse(content, { format: "yaml-frontmatter" });
+                  if (parsed && typeof parsed === "object") {
+                    for (const key of columnKeys) {
+                      if (key in parsed)
+                        fields[key] = (parsed as Record<string, unknown>)[key];
+                    }
+                  }
+                } catch {
+                  fields = {};
+                }
+                return {
+                  name: item.name,
+                  path: item.path,
+                  sha: item.sha,
+                  size: item.size,
+                  fields,
+                };
+              })
+            );
           }
         } catch (error: any) {
           // Missing folder = empty collection (first entry creates it).
@@ -437,7 +477,6 @@ export const collectionsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-
         const user = ctx.user;
         const token = ctx.token;
 
@@ -565,7 +604,11 @@ export const collectionsRouter = createTRPCRouter({
           return {
             message: "Nothing to reorder.",
             commitSha: null as string | null,
-            updated: [] as { path: string; sha: string | null; value: number }[],
+            updated: [] as {
+              path: string;
+              sha: string | null;
+              value: number;
+            }[],
           };
         }
 
