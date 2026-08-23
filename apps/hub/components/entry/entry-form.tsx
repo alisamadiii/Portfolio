@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  createContext,
   forwardRef,
   memo,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useMemo,
@@ -45,7 +47,7 @@ import {
   Search,
   Trash2,
   X,
-} from "lucide-react";
+} from "@/components/icon";
 import {
   useFieldArray,
   useForm,
@@ -97,6 +99,14 @@ import {
 
 import { useChangedField } from "./changed-fields-context";
 import { usePreview } from "./preview-context";
+
+/**
+ * Form layout. "stacked" (default) = label-above, used by the CMS entry drawer
+ * and standalone entry pages. "settings" = a 190px label-left / field-right
+ * grid for top-level scalar fields, used by the settings-mode SEO / Variables
+ * cards (Canvas Editor v2 design).
+ */
+const FormLayoutContext = createContext<"stacked" | "settings">("stacked");
 
 type BeforeSubmitHook = () => void | Promise<void>;
 type RegisterBeforeSubmitHook = (
@@ -981,6 +991,7 @@ const SingleField = ({
     control,
     formState: { errors },
   } = useFormContext();
+  const layout = useContext(FormLayoutContext);
   const { focusField } = usePreview();
   const changedMatch = useChangedField(fieldName);
   const isRichTextField = field.type === "rich-text";
@@ -1069,78 +1080,111 @@ const SingleField = ({
       FieldComponent = editComponents["text"];
     }
 
+    // Settings-mode 2-col row: only top-level scalar fields (no nested paths).
+    const settingsRow = layout === "settings" && !fieldName.includes(".");
+    // In a settings row the label lives in the left column, so strip the
+    // field's own (floating/inline) label to avoid a duplicate.
+    const controlField = settingsRow ? { ...field, label: false } : field;
+
+    const metaRow = (
+      <div className="flex min-h-6 items-center justify-between gap-x-2">
+        <div className="flex min-w-0 items-center gap-x-2">
+          {field.label !== false && (
+            <FormLabel>{field.label || field.name}</FormLabel>
+          )}
+          {field.required && (
+            <Badge variant="secondary" className="text-muted-foreground">
+              <Asterisk className="-mr-0.5 -ml-1" />
+              Required
+            </Badge>
+          )}
+          {hasExplicitReadonly(field) && (
+            <Badge variant="secondary" className="text-muted-foreground">
+              <Ban className="-ml-0.5" />
+              Readonly
+            </Badge>
+          )}
+        </div>
+        {showLabelSlot && <div id={labelSlotId} className="shrink-0" />}
+      </div>
+    );
+
     return (
       <FormField
         name={fieldName}
         control={control}
-        render={({ field: rhfManagedFieldProps }) => (
-          <FormItem data-field-path={fieldName}>
-            {shouldShowFieldMeta && (
-              <div className="flex min-h-6 items-center justify-between gap-x-2">
-                <div className="flex min-w-0 items-center gap-x-2">
+        render={({ field: rhfManagedFieldProps }) => {
+          const sharedProps = {
+            ...rhfManagedFieldProps,
+            field: controlField,
+            onFocusCapture: () => focusField(fieldName),
+          };
+          const controlNode = (
+            <FormControl>
+              {field.type === "rich-text" ? (
+                <FieldComponent
+                  {...sharedProps}
+                  labelSlotId={showLabelSlot ? labelSlotId : undefined}
+                  registerBeforeSubmitHook={registerBeforeSubmitHook}
+                  onChangeRegistered={onChangeRegistered}
+                />
+              ) : (
+                <FieldComponent {...sharedProps} />
+              )}
+            </FormControl>
+          );
+          const wrappedControl = changedMatch ? (
+            <div className={changedFieldFrameClass}>{controlNode}</div>
+          ) : (
+            controlNode
+          );
+
+          if (settingsRow) {
+            return (
+              <FormItem
+                data-field-path={fieldName}
+                className="grid grid-cols-[180px_1fr] items-start gap-x-5 gap-y-1 border-t pt-5 first:border-t-0 first:pt-0"
+              >
+                <div className="pt-1.5">
                   {field.label !== false && (
-                    <FormLabel>{field.label || field.name}</FormLabel>
+                    <FormLabel className="text-foreground text-[13px] font-semibold">
+                      {field.label || field.name}
+                      {field.required && (
+                        <span className="text-destructive ml-0.5">*</span>
+                      )}
+                    </FormLabel>
                   )}
-                  {field.required && (
-                    <Badge
-                      variant="secondary"
-                      className="text-muted-foreground"
-                    >
-                      <Asterisk className="-mr-0.5 -ml-1" />
-                      Required
-                    </Badge>
-                  )}
-                  {hasExplicitReadonly(field) && (
-                    <Badge
-                      variant="secondary"
-                      className="text-muted-foreground"
-                    >
-                      <Ban className="-ml-0.5" />
-                      Readonly
-                    </Badge>
+                  {field.description && (
+                    <p className="text-muted-foreground mt-0.5 text-[11.5px] leading-relaxed">
+                      {field.description}
+                    </p>
                   )}
                 </div>
-                {showLabelSlot && <div id={labelSlotId} className="shrink-0" />}
-              </div>
-            )}
-            {(() => {
-              const controlNode = (
-                <FormControl>
-                  {(() => {
-                    const sharedProps = {
-                      ...rhfManagedFieldProps,
-                      field,
-                      onFocusCapture: () => focusField(fieldName),
-                    };
-                    if (field.type === "rich-text") {
-                      return (
-                        <FieldComponent
-                          {...sharedProps}
-                          labelSlotId={showLabelSlot ? labelSlotId : undefined}
-                          registerBeforeSubmitHook={registerBeforeSubmitHook}
-                          onChangeRegistered={onChangeRegistered}
-                        />
-                      );
-                    }
-                    return <FieldComponent {...sharedProps} />;
-                  })()}
-                </FormControl>
-              );
-              return changedMatch ? (
-                <div className={changedFieldFrameClass}>{controlNode}</div>
-              ) : (
-                controlNode
-              );
-            })()}
-            {changedMatch && changedMatch.kind !== "descendant" && (
-              <ChangedFieldNote old={changedMatch.old} />
-            )}
-            {field.description && (
-              <FormDescription>{field.description}</FormDescription>
-            )}
-            <FormMessage />
-          </FormItem>
-        )}
+                <div className="min-w-0">
+                  {wrappedControl}
+                  {changedMatch && changedMatch.kind !== "descendant" && (
+                    <ChangedFieldNote old={changedMatch.old} />
+                  )}
+                  <FormMessage />
+                </div>
+              </FormItem>
+            );
+          }
+
+          return (
+            <FormItem data-field-path={fieldName}>
+              {shouldShowFieldMeta && metaRow}
+              {wrappedControl}
+              {changedMatch && changedMatch.kind !== "descendant" && (
+                <ChangedFieldNote old={changedMatch.old} />
+              )}
+              {field.description && (
+                <FormDescription>{field.description}</FormDescription>
+              )}
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
     );
   }
@@ -1158,6 +1202,7 @@ const EntryForm = ({
   onValuesChange,
   resetSignal,
   formId = "entry-form",
+  variant = "stacked",
 }: {
   fields: Field[];
   contentObject?: Record<string, unknown>;
@@ -1171,6 +1216,8 @@ const EntryForm = ({
   resetSignal?: number;
   /** Override when several EntryForms can be mounted at once (default "entry-form"). */
   formId?: string;
+  /** "settings" renders top-level scalars as 190px label-left rows. */
+  variant?: "stacked" | "settings";
 }) => {
   const zodSchema = useMemo(() => {
     return generateZodSchema(fields);
@@ -1353,29 +1400,39 @@ const EntryForm = ({
     [form, handleSubmit, runBeforeValidationHooks]
   );
 
+  const isSettings = variant === "settings";
+
   return (
-    <Form {...form}>
-      <form
-        id={formId}
-        onSubmit={handleFormSubmit}
-        className="mx-auto w-full max-w-screen-md"
-      >
-        <div className="grid gap-6 rounded-xl p-5 md:p-6">
-          {filePath && (
-            <div className="space-y-2 overflow-hidden">
-              <FormLabel>Filename</FormLabel>
-              {filePath}
-            </div>
-          )}
-          {renderFields(
-            fields,
-            undefined,
-            registerBeforeSubmitHook,
-            runBeforeValidationHooks
-          )}
-        </div>
-      </form>
-    </Form>
+    <FormLayoutContext.Provider value={variant}>
+      <Form {...form}>
+        <form
+          id={formId}
+          onSubmit={handleFormSubmit}
+          className={cn("w-full", !isSettings && "mx-auto max-w-screen-md")}
+        >
+          <div
+            className={cn(
+              isSettings
+                ? "flex flex-col px-6 py-5"
+                : "grid gap-6 rounded-xl p-5 md:p-6"
+            )}
+          >
+            {filePath && (
+              <div className="space-y-2 overflow-hidden">
+                <FormLabel>Filename</FormLabel>
+                {filePath}
+              </div>
+            )}
+            {renderFields(
+              fields,
+              undefined,
+              registerBeforeSubmitHook,
+              runBeforeValidationHooks
+            )}
+          </div>
+        </form>
+      </Form>
+    </FormLayoutContext.Provider>
   );
 };
 

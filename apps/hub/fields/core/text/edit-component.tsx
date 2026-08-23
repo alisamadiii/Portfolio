@@ -2,7 +2,7 @@
 
 import { forwardRef, useImperativeHandle, useRef } from "react";
 
-import { TextArea } from "@/components/ui/mui";
+import { TextArea } from "@/components/ui/form-fields";
 
 /**
  * Multiline text field — Google/Material outlined textarea. Self-labels from the

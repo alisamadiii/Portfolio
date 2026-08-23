@@ -2,7 +2,7 @@
 
 import { forwardRef, useState } from "react";
 import { format, isValid, parse } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import { Calendar } from "@workspace/ui/components/calendar";

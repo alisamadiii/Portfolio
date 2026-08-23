@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Loader } from "lucide-react";
+import { Loader } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import { buttonVariants } from "@workspace/ui/components/button";

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ExternalLink, Globe } from "lucide-react";
+import { ExternalLink, Globe } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";

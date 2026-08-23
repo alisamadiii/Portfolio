@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  ChevronRight,
   Newspaper,
   Trash2,
   UploadCloud,
-} from "lucide-react";
+} from "@/components/icon";
 import { toast } from "sonner";
 
 import {
@@ -20,7 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog";
-import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
@@ -169,26 +169,40 @@ export const BlogPanel = () => {
                 <button
                   key={post.id}
                   type="button"
-                  className="hover:bg-muted/40 flex w-full items-center gap-3 px-5 py-4 text-left transition-colors"
+                  className="hover:bg-muted/40 flex w-full items-center gap-3.5 px-4 py-3 text-left transition-colors"
                   onClick={() => setEditingId(post.id)}
                 >
+                  <div className="bg-muted h-[52px] w-[104px] shrink-0 overflow-hidden rounded-md">
+                    {post.heroImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={post.heroImage}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="from-primary/25 to-primary/5 h-full w-full bg-gradient-to-br" />
+                    )}
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold">
+                    <p className="truncate text-[13px] font-semibold">
                       {post.title}
                     </p>
-                    <p className="text-muted-foreground mt-0.5 truncate text-[13px]">
-                      /{post.slug} · updated{" "}
+                    <p className="text-muted-foreground mt-0.5 truncate text-[11.5px]">
+                      /blog/{post.slug} · updated{" "}
                       {new Date(post.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <Badge
-                    variant={
-                      post.status === "published" ? "default" : "secondary"
-                    }
-                    className="shrink-0"
-                  >
-                    {post.status === "published" ? "Published" : "Draft"}
-                  </Badge>
+                  {post.status === "published" ? (
+                    <span className="bg-status-success-bg text-status-success shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+                      Published
+                    </span>
+                  ) : (
+                    <span className="bg-draft-bg text-draft-fg shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+                      Draft
+                    </span>
+                  )}
+                  <ChevronRight className="text-muted-foreground/50 size-4 shrink-0" />
                 </button>
               ))}
             </div>

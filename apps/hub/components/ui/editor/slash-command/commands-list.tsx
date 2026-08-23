@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import type { Editor } from "@tiptap/core";
-import type { LucideIcon } from "lucide-react";
-import { Ban } from "lucide-react";
+import type { LucideIcon } from "@/components/icon";
+import { Ban } from "@/components/icon";
 
 export type SlashItem = {
   title: string;

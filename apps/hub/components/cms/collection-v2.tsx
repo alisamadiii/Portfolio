@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Plus, Search } from "lucide-react";
+import { FileText, Plus, Search } from "@/components/icon";
 
-import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 
@@ -157,9 +156,10 @@ export function CollectionV2({
                   {row.title}
                 </span>
                 {row.isDraft && (
-                  <Badge variant="secondary">
+                  <span className="bg-draft-bg text-draft-fg inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+                    <span className="bg-draft size-[5px] rounded-full" />
                     {row.isNew ? "New draft" : "Draft"}
-                  </Badge>
+                  </span>
                 )}
                 {row.date && (
                   <span className="text-muted-foreground shrink-0 text-xs tabular-nums">

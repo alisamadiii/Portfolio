@@ -10,7 +10,7 @@ import {
   startOfDay,
   subDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Mail, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Mail, Search } from "@/components/icon";
 import { useDebounce } from "use-debounce";
 
 import { Button } from "@workspace/ui/components/button";

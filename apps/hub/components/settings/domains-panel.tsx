@@ -12,7 +12,7 @@ import {
   Globe,
   MoreHorizontal,
   RefreshCw,
-} from "lucide-react";
+} from "@/components/icon";
 import { toast } from "sonner";
 
 import {

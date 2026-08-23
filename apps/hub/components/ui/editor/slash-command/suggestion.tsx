@@ -12,7 +12,7 @@ import {
   Pilcrow,
   Quote,
   Table,
-} from "lucide-react";
+} from "@/components/icon";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
 import CommandsList, {

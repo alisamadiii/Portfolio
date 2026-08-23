@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
-import { Loader } from "lucide-react";
+import { Loader } from "@/components/icon";
 import { flushSync } from "react-dom";
 
 import type { FileSaveData } from "@/types/api";

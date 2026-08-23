@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { FileStack, FileText, FolderOpen, Settings, Users } from "lucide-react";
+import { FileStack, FileText, FolderOpen, Settings, Users } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 

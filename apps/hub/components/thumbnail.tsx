@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
-import { Ban, ImageOff, Loader } from "lucide-react";
+import { Ban, ImageOff, Loader } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 

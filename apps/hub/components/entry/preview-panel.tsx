@@ -14,7 +14,7 @@ import {
   Plus,
   RefreshCw,
   X,
-} from "lucide-react";
+} from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";

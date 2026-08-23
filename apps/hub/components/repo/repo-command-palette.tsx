@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Search, TextCursorInput } from "lucide-react";
+import { ChevronRight, Search, TextCursorInput } from "@/components/icon";
 
 import {
   Dialog,

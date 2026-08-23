@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Home } from "lucide-react";
+import { Home } from "@/components/icon";
 
 import {
   Breadcrumb,

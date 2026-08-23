@@ -13,7 +13,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { viewComponents } from "@/fields/registry";
-import { EllipsisVertical, FolderPlus, Plus, Search, Trash2 } from "lucide-react";
+import { EllipsisVertical, FolderPlus, Plus, Search, Trash2 } from "@/components/icon";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";

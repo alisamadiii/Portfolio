@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
-import { Loader as LucideLoader } from "lucide-react";
+import { Loader as LucideLoader } from "@/components/icon";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { BookText } from "lucide-react";
+import { BookText } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {

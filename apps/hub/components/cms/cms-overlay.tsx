@@ -6,7 +6,7 @@ import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
-import { ChevronRight, Database, X } from "lucide-react";
+import { ChevronRight, Database, X } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {

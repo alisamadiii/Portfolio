@@ -19,7 +19,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowUpRight, FolderOpen, Trash2, Upload } from "lucide-react";
+import { ArrowUpRight, FolderOpen, Trash2, Upload } from "@/components/icon";
 
 import type { FileSaveData } from "@/types/api";
 import type { Config } from "@workspace/cms-core/types/config";

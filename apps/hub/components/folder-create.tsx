@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 
 import { handleCmsError } from "@/lib/trpc-errors";
 import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";

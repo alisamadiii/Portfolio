@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { Globe, LockKeyhole } from "lucide-react";
+import { Globe, LockKeyhole } from "@/components/icon";
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";

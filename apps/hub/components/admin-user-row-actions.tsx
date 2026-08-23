@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, MoreHorizontal } from "lucide-react";
+import { LogOut, MoreHorizontal } from "@/components/icon";
 
 import {
   AlertDialog,

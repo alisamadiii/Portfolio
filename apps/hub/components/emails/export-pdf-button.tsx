@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { pdf } from "@react-pdf/renderer";
 import { format } from "date-fns";
-import { FileDown } from "lucide-react";
+import { FileDown } from "@/components/icon";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";

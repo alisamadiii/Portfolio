@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRepo } from "@/contexts/repo-context";
-import { ArrowUpRight, BookOpen, ChevronsUpDown } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChevronsUpDown } from "@/components/icon";
 
 import {
   Avatar,

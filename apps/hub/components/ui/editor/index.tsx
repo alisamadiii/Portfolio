@@ -31,7 +31,7 @@ import {
   Underline as UnderlineIcon,
   X,
   type LucideIcon,
-} from "lucide-react";
+} from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 

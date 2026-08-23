@@ -34,7 +34,7 @@ import {
   GripVertical,
   Trash2,
   Upload,
-} from "lucide-react";
+} from "@/components/icon";
 
 import type { FileSaveData } from "@/types/api";
 import type { Config } from "@workspace/cms-core/types/config";

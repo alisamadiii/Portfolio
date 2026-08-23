@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { TextArea } from "@/components/ui/mui";
+import { TextArea } from "@/components/ui/form-fields";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";

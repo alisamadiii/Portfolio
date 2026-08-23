@@ -34,7 +34,7 @@ export function PageSettingsPanel({
         </p>
       </div>
 
-      <section className="bg-background rounded-xl border">
+      <section className="bg-card rounded-xl border shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-sm font-semibold">Page Settings</h2>
         </div>
@@ -45,11 +45,12 @@ export function PageSettingsPanel({
         <EntryForm
           key={pageKey}
           formId="page-seo-form"
+          variant="settings"
           fields={PAGE_SEO_FIELDS}
           contentObject={seo.pageSeo(pageKey)}
           onSubmit={(values) => seo.savePage(pageKey, values)}
         />
-        <div className="flex justify-end border-t px-6 py-3">
+        <div className="flex justify-start border-t px-6 py-3">
           <Button type="submit" form="page-seo-form">
             Save draft
           </Button>

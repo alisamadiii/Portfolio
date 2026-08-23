@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "@/components/icon";
 import { toast } from "sonner";
 
 import {

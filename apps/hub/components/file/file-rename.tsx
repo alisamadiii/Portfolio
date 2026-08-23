@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 
 import { handleCmsError } from "@/lib/trpc-errors";
 import { getSchemaByName } from "@workspace/cms-core/schema";

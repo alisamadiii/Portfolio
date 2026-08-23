@@ -50,7 +50,7 @@ import {
   FolderOpen,
   GripVertical,
   Loader,
-} from "lucide-react";
+} from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -15,7 +15,7 @@ import {
 
 import type { GroupMember } from "@/lib/bridge-messages";
 
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 import { useMediaLibrary } from "@/components/media/media-library-context";
 
 export type GroupEditorFieldRow = {

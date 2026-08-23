@@ -1,10 +1,9 @@
 "use client";
 
 import { forwardRef, type ComponentType } from "react";
-import InputAdornment from "@mui/material/InputAdornment";
-import { Link2, Mail, Phone } from "lucide-react";
+import { Link2, Mail, Phone } from "@/components/icon";
 
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 
 const typeIcons: Record<string, ComponentType<{ className?: string }>> = {
   url: Link2,
@@ -39,15 +38,7 @@ const EditComponent = forwardRef(
         slotProps={{
           input: {
             readOnly: Boolean(field?.readonly),
-            ...(Icon
-              ? {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Icon className="size-4" />
-                    </InputAdornment>
-                  ),
-                }
-              : {}),
+            ...(Icon ? { startAdornment: <Icon className="size-4" /> } : {}),
           },
         }}
       />

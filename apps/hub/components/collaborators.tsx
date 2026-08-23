@@ -9,7 +9,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookText, EllipsisVertical, Loader } from "lucide-react";
+import { BookText, EllipsisVertical, Loader } from "@/components/icon";
 import { toast } from "sonner";
 
 import {
@@ -59,7 +59,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { TextArea } from "@/components/ui/mui";
+import { TextArea } from "@/components/ui/form-fields";
 import {
   Tooltip,
   TooltipContent,

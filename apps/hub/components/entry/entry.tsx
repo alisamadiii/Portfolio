@@ -24,7 +24,7 @@ import {
   LockOpen,
   Save,
   TriangleAlert,
-} from "lucide-react";
+} from "@/components/icon";
 import { toast } from "sonner";
 
 import type { EntryData, FileSaveData } from "@/types/api";

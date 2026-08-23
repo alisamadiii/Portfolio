@@ -1,7 +1,7 @@
 "use client";
 
 import { format, isValid, parse } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "@/components/icon";
 
 import { Field } from "@workspace/cms-core/types/field";
 

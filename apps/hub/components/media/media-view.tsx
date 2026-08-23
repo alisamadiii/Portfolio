@@ -24,7 +24,7 @@ import {
   FolderPlus,
   House,
   Upload,
-} from "lucide-react";
+} from "@/components/icon";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 

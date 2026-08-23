@@ -13,7 +13,7 @@ import {
   Globe,
   Heart,
   Sparkles,
-} from "lucide-react";
+} from "@/components/icon";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";

@@ -11,7 +11,7 @@ import {
   Plus,
   Search,
   Sparkles,
-} from "lucide-react";
+} from "@/components/icon";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";

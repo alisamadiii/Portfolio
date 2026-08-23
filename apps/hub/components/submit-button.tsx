@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader } from "lucide-react";
+import { Loader } from "@/components/icon";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@workspace/ui/components/button";

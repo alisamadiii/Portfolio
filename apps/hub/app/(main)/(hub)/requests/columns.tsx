@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
-import { Eye, EyeOff, FileIcon, Loader2 } from "lucide-react";
+import { Eye, EyeOff, FileIcon, Loader2 } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {

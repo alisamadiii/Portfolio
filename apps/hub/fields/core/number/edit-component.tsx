@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 
 const EditComponent = forwardRef(
   (props: any, ref: React.Ref<HTMLInputElement>) => {

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Check, Copy, ExternalLink, Mail, Send } from "lucide-react";
+import { ArrowLeft, Check, Copy, ExternalLink, Mail, Send } from "@/components/icon";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";

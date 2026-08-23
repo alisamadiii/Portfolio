@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { BookText, RefreshCcw, Trash2 } from "lucide-react";
+import { BookText, RefreshCcw, Trash2 } from "@/components/icon";
 import { toast } from "sonner";
 
 import {

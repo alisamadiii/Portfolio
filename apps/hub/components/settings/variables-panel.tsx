@@ -32,14 +32,15 @@ export function VariablesPanel() {
       </div>
 
       {globalEntry ? (
-        <section className="bg-background rounded-xl border">
+        <section className="bg-card rounded-xl border shadow-sm">
           <EntryForm
             formId="variables-form"
+            variant="settings"
             fields={(globalEntry.schema.fields ?? []) as Field[]}
             contentObject={getGlobalValues() ?? {}}
             onSubmit={handleSiteConfigSave}
           />
-          <div className="flex justify-end border-t px-6 py-3">
+          <div className="flex justify-start border-t px-6 py-3">
             <Button type="submit" form="variables-form">
               Save draft
             </Button>

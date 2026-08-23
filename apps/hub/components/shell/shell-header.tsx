@@ -9,8 +9,10 @@ import {
   Settings2,
   Table2,
   UploadCloud,
-} from "lucide-react";
+  type LucideProps,
+} from "@/components/icon";
 
+import { cn } from "@workspace/ui/lib/utils";
 import { Button } from "@workspace/ui/components/button";
 
 import { useRepo } from "@/contexts/repo-context";
@@ -23,9 +25,10 @@ import { InviteButton } from "@/components/shell/invite-button";
 export type ShellMode = "canvas" | "settings";
 
 /**
- * Docked top bar (white). Left: back arrow (home) + Canvas / CMS / Settings
- * toggle (settings = full access). Center: project name + branch. Right: user
- * menu, Invite (full access), Publish (content editor+).
+ * Docked top bar (warm off-white). Left: back arrow (home) + agency brand mark
+ * + a segmented Canvas / CMS / Settings toggle (settings = full access).
+ * Center: project name + branch. Right: guide toggle, user menu, Invite (full
+ * access), Publish (content editor+).
  */
 export function ShellHeader({
   mode,
@@ -44,10 +47,14 @@ export function ShellHeader({
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canManage = (myRole ?? "full-access") === "full-access";
 
+  const canvasActive = mode === "canvas" && !cmsOverlay.open;
+  const cmsActive = cmsOverlay.open;
+  const settingsActive = mode === "settings" && !cmsOverlay.open;
+
   return (
-    <header className="bg-background relative flex h-12 shrink-0 items-center gap-1 border-b px-2">
+    <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">
       {/* Left */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -58,42 +65,49 @@ export function ShellHeader({
             </Link>
           }
         />
-        <div className="bg-border mx-1 h-5 w-px" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onModeChange("canvas")}
-          data-active={mode === "canvas" && !cmsOverlay.open}
-        >
-          <LayoutGrid className="size-4" />
-          <span className="max-md:hidden">Canvas</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onOpenCms}
-          data-active={cmsOverlay.open}
-        >
-          <Table2 className="size-4" />
-          <span className="max-md:hidden">CMS</span>
-        </Button>
-        {canManage && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onModeChange("settings")}
-            data-active={mode === "settings" && !cmsOverlay.open}
-          >
-            <Settings2 className="size-4" />
-            <span className="max-md:hidden">Settings</span>
-          </Button>
-        )}
+        <div className="flex items-center gap-2 px-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/agency-icon.png"
+            alt=""
+            className="size-5 rounded-md"
+            width={20}
+            height={20}
+          />
+          <span className="text-[13px] font-bold tracking-tight">Canvas</span>
+        </div>
+
+        <div className="bg-border mx-0.5 h-5 w-px" />
+
+        {/* Mode segmented control */}
+        <div className="bg-muted flex items-center gap-0.5 rounded-lg p-0.5">
+          <SegButton
+            icon={LayoutGrid}
+            label="Canvas"
+            active={canvasActive}
+            onClick={() => onModeChange("canvas")}
+          />
+          <SegButton
+            icon={Table2}
+            label="CMS"
+            active={cmsActive}
+            onClick={onOpenCms}
+          />
+          {canManage && (
+            <SegButton
+              icon={Settings2}
+              label="Settings"
+              active={settingsActive}
+              onClick={() => onModeChange("settings")}
+            />
+          )}
+        </div>
       </div>
 
       {/* Center */}
-      <div className="text-muted-foreground pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-sm">
+      <div className="text-muted-foreground pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-[12.5px]">
         <span className="text-foreground font-medium">{repo}</span>
-        <span className="text-muted-foreground/60">·</span>
+        <span className="text-muted-foreground/50">·</span>
         <GitBranch className="size-3.5" />
         <span>{branch || "main"}</span>
       </div>
@@ -123,5 +137,35 @@ export function ShellHeader({
         )}
       </div>
     </header>
+  );
+}
+
+/** One pill in the mode segmented control. Active = raised card surface. */
+function SegButton({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: (props: LucideProps) => React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-active={active}
+      className={cn(
+        "flex h-[26px] items-center gap-1.5 rounded-md px-2.5 text-[12.5px] font-semibold transition-colors",
+        active
+          ? "bg-card text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <Icon className="size-4" />
+      <span className="max-md:hidden">{label}</span>
+    </button>
   );
 }

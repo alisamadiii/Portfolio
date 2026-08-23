@@ -15,7 +15,7 @@ import {
   LogOut,
   Mail,
   Settings,
-} from "lucide-react";
+} from "@/components/icon";
 
 import {
   Sidebar,

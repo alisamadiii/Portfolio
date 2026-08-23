@@ -26,7 +26,7 @@ export function GeneralSettingsPanel({
         </p>
       </div>
 
-      <section className="bg-background rounded-xl border">
+      <section className="bg-card rounded-xl border shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-sm font-semibold">Site SEO</h2>
           <p className="text-muted-foreground text-xs">
@@ -35,11 +35,12 @@ export function GeneralSettingsPanel({
         </div>
         <EntryForm
           formId="site-seo-form"
+          variant="settings"
           fields={SITE_SEO_FIELDS}
           contentObject={seo.site}
           onSubmit={seo.saveSite}
         />
-        <div className="flex justify-end border-t px-6 py-3">
+        <div className="flex justify-start border-t px-6 py-3">
           <Button type="submit" form="site-seo-form">
             Save draft
           </Button>

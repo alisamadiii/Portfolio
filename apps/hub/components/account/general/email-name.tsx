@@ -19,7 +19,7 @@ import {
 } from "@workspace/ui/components/card";
 import { FieldError } from "@workspace/ui/components/field";
 
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 
 import { useResendEmailVerification } from "@workspace/auth/hooks/use-functions";
 import { useCurrentUser, useUpdateUser } from "@workspace/auth/hooks/use-user";

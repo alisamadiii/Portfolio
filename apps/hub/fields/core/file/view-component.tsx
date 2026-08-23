@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { File } from "lucide-react";
+import { File } from "@/components/icon";
 
 import { Field } from "@workspace/cms-core/types/field";
 

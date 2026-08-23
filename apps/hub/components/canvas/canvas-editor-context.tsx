@@ -106,6 +106,8 @@ type CanvasEditorValue = {
   manifest: ManifestData | null;
   entryMap: CanvasEntryMap;
   copiesVersion: number;
+  /** Page paths with unpublished edits (route-matched entries only). */
+  dirtyPagePaths: Set<string>;
 
   selectedPath: string | null;
   setSelectedPath: (path: string | null) => void;
@@ -893,6 +895,25 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   void drafts;
   void copiesVersion;
 
+  // Page paths carrying unpublished edits — used for the page-tree draft dots.
+  // Globals (site header/footer) are excluded so a site-wide edit doesn't light
+  // up every page; only route-matched entries count toward a page's dot.
+  const dirtyPagePaths = useMemo(() => {
+    const globalSet = new Set(entryMap.globals);
+    const result = new Set<string>();
+    for (const page of pages) {
+      if (page.kind === "collection") continue;
+      const dirty = candidatesFor(entryMap, page.path).some(
+        (entry) =>
+          !globalSet.has(entry.name) && dirtyRef.current.has(entry.name)
+      );
+      if (dirty) result.add(page.path);
+    }
+    return result;
+    // dirtyRef is a ref; copiesVersion bumps whenever it changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages, entryMap, copiesVersion]);
+
   const value = useMemo<CanvasEditorValue>(
     () => ({
       owner,
@@ -908,6 +929,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       manifest,
       entryMap,
       copiesVersion,
+      dirtyPagePaths,
       selectedPath,
       setSelectedPath,
       registerFrame,
@@ -939,6 +961,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       manifest,
       entryMap,
       copiesVersion,
+      dirtyPagePaths,
       selectedPath,
       registerFrame,
       editSrcFor,

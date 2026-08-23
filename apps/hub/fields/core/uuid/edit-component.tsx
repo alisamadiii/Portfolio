@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 
-import { TextField } from "@/components/ui/mui";
+import { TextField } from "@/components/ui/form-fields";
 
 const EditComponent = forwardRef(
   (props: any, ref: React.Ref<HTMLInputElement>) => {

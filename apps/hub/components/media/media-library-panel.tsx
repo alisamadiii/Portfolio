@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FolderOpen, X } from "lucide-react";
+import { FolderOpen, X } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 

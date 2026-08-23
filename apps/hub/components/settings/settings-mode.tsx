@@ -10,7 +10,7 @@ import {
   House,
   Newspaper,
   SlidersHorizontal,
-} from "lucide-react";
+} from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -58,7 +58,7 @@ export function SettingsMode() {
     <div className="flex min-h-0 flex-1">
       {/* Left nav */}
       <aside className="bg-background w-64 shrink-0 overflow-y-auto border-r p-2">
-        <p className="text-muted-foreground px-2 py-1.5 text-xs font-semibold tracking-wide">
+        <p className="text-muted-foreground px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
           Site Settings
         </p>
         <NavRow
@@ -92,7 +92,7 @@ export function SettingsMode() {
           onClick={() => setSelected(BLOG)}
         />
 
-        <p className="text-muted-foreground mt-3 px-2 py-1.5 text-xs font-semibold tracking-wide">
+        <p className="text-muted-foreground mt-3 px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
           Page Settings
         </p>
         {pageRows.map((page) => (

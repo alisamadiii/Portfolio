@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { ChevronsUpDown, LockKeyhole, RefreshCw, Search } from "lucide-react";
+import { ChevronsUpDown, LockKeyhole, RefreshCw, Search } from "@/components/icon";
 import { useDebounce } from "use-debounce";
 
 import { Button } from "@workspace/ui/components/button";

@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { ChevronRight, Ellipsis, Folder, Pencil } from "lucide-react";
+import { ChevronRight, Ellipsis, Folder, Pencil } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {

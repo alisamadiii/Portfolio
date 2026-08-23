@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
-import { ArrowUp, Loader2, X } from "lucide-react";
+import { ArrowUp, Loader2, X } from "@/components/icon";
 import { toast } from "sonner";
 
 import {

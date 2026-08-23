@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { queryClient, trpcProxy } from "@workspace/trpc/client";
-import { Loader } from "lucide-react";
+import { Loader } from "@/components/icon";
 
 import {
   Combobox,

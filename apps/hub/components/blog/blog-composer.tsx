@@ -13,7 +13,7 @@ import { useConfig, ConfigProvider } from "@/contexts/config-context";
 import { useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { ArrowLeft, ChevronDown, Loader2, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, X } from "@/components/icon";
 import { toast } from "sonner";
 
 import type { Config } from "@workspace/cms-core/types/config";
@@ -40,7 +40,7 @@ import {
 import { joinPathSegments } from "@workspace/cms-core/utils/file";
 
 import { editComponents } from "@/fields/registry";
-import { TextArea, TextField as MuiTextField } from "@/components/ui/mui";
+import { TextArea, TextField as MuiTextField } from "@/components/ui/form-fields";
 import { BLOG_FIELDS, buildBlogSchema } from "@/lib/engine/blog-schema";
 import { isBlogCollection } from "@/lib/engine/blog-schema";
 import type { ManifestCollection } from "@/lib/engine/collections";

@@ -21,6 +21,11 @@
 
   /* subtle inner divider between rows inside a card */
   --rule: oklch(0.94 0.002 48);
+
+  /* unpublished-draft indicator (page-tree dot, guide banner, publish diff) */
+  --draft: #e8a13c;
+  --draft-bg: #fdf6e7;
+  --draft-fg: #8a5f0e;
 }
 
 .dark {
@@ -38,6 +43,10 @@
   --status-neutral-bg: oklch(0.28 0.006 56);
 
   --rule: oklch(1 0 0 / 8%);
+
+  --draft: #e0a94a;
+  --draft-bg: oklch(0.32 0.05 70);
+  --draft-fg: #f0c877;
 }
 
 @theme inline {
@@ -54,6 +63,9 @@
   --color-status-neutral: var(--status-neutral);
   --color-status-neutral-bg: var(--status-neutral-bg);
   --color-rule: var(--rule);
+  --color-draft: var(--draft);
+  --color-draft-bg: var(--draft-bg);
+  --color-draft-fg: var(--draft-fg);
 }
 
 /* gentle breathing pulse for the loading-screen logo */

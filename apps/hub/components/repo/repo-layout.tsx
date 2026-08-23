@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 

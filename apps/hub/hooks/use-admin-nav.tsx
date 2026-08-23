@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useUser } from "@/contexts/user-context";
-import { Database, Settings, SlidersHorizontal, Users } from "lucide-react";
+import { Database, Settings, SlidersHorizontal, Users } from "@/components/icon";
 
 import { isAdminUser } from "@/lib/authz-shared";
 import { isCacheEnabled, isConfigEnabled } from "@workspace/cms-core/config";

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowRight, Bot, Globe } from "lucide-react";
+import { ArrowRight, Bot, Globe } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";

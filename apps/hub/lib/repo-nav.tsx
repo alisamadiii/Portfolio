@@ -1,4 +1,4 @@
-import { FileStack, FileText, FolderOpen } from "lucide-react";
+import { FileStack, FileText, FolderOpen } from "@/components/icon";
 
 import { Config } from "@workspace/cms-core/types/config";
 

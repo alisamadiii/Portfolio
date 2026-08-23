@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot } from "lucide-react";
+import { Bot } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 import {

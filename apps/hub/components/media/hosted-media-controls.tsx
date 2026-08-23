@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderOpen } from "lucide-react";
+import { FolderOpen } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
 

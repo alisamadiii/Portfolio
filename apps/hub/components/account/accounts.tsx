@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { KeyRound } from "lucide-react";
+import { KeyRound } from "@/components/icon";
 
 import { Badge } from "@workspace/ui/components/badge";
 import {
