@@ -164,7 +164,11 @@ export const placeholderFromFields = (
   for (const field of fields) {
     if (!field?.name) continue;
     item[field.name] =
-      field.type in FIELD_DEFAULTS ? FIELD_DEFAULTS[field.type] : "";
+      field.type === "image" && field.multiple
+        ? []
+        : field.type in FIELD_DEFAULTS
+          ? FIELD_DEFAULTS[field.type]
+          : "";
   }
   return item;
 };

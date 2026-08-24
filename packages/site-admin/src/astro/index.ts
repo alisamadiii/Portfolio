@@ -20,9 +20,36 @@
 import { createAdminHandler } from "../core/handler";
 import type { AdminConfig } from "../core/types";
 
-/** import.meta.env first (Astro/Vite), process.env fallback (node runtimes). */
-export const readEnv = (name: string): string | undefined => {
-  const fromImportMeta = (import.meta as any)?.env?.[name];
+type EnvName =
+  | "CLERK_SECRET_KEY"
+  | "PUBLIC_CLERK_PUBLISHABLE_KEY"
+  | "ADMIN_GITHUB_REPO"
+  | "ADMIN_GITHUB_BRANCH";
+
+/**
+ * import.meta.env first (Astro/Vite), process.env fallback (node runtimes).
+ * Accesses MUST be static property reads — Vite's module runner rejects
+ * dynamic `import.meta.env[name]` indexing.
+ */
+const readImportMetaEnv = (name: EnvName): unknown => {
+  try {
+    switch (name) {
+      case "CLERK_SECRET_KEY":
+        return (import.meta as any).env?.CLERK_SECRET_KEY;
+      case "PUBLIC_CLERK_PUBLISHABLE_KEY":
+        return (import.meta as any).env?.PUBLIC_CLERK_PUBLISHABLE_KEY;
+      case "ADMIN_GITHUB_REPO":
+        return (import.meta as any).env?.ADMIN_GITHUB_REPO;
+      case "ADMIN_GITHUB_BRANCH":
+        return (import.meta as any).env?.ADMIN_GITHUB_BRANCH;
+    }
+  } catch {
+    return undefined;
+  }
+};
+
+export const readEnv = (name: EnvName): string | undefined => {
+  const fromImportMeta = readImportMetaEnv(name);
   if (typeof fromImportMeta === "string" && fromImportMeta) {
     return fromImportMeta;
   }
@@ -33,7 +60,7 @@ export const readEnv = (name: string): string | undefined => {
   return undefined;
 };
 
-const requireEnv = (name: string): string => {
+const requireEnv = (name: EnvName): string => {
   const value = readEnv(name);
   if (!value) {
     throw new Error(
