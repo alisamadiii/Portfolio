@@ -9,6 +9,7 @@
     "preview": "astro preview --port 3004",
     "services:images": "node scripts/fetch-service-images.mjs",
     "locations:images": "node scripts/fetch-location-images.mjs",
+    "audiences:images": "node scripts/fetch-audience-images.mjs",
     "locations:og": "node --experimental-strip-types scripts/generate-location-og.mjs",
     "blog:images": "node scripts/fetch-blog-images.mjs",
     "clients:screenshots": "node --experimental-strip-types scripts/fetch-client-screenshots.mjs",

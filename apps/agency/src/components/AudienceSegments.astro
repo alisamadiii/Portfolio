@@ -1,0 +1,158 @@
+---
+// "Who We Build For" — lets a visitor self-identify by segment before they hit
+// Services/Pricing. Full orange band, dark cards, one "Get a quote" CTA each.
+// Photos are self-hosted webp (public/audiences/<slug>.webp) fetched from Pexels
+// via scripts/fetch-audience-images.mjs; credits come from the JSON it writes.
+import credits from "../data/audience-image-credits.json";
+
+interface Props {
+  eyebrow?: string;
+  heading?: string;
+  subhead?: string;
+}
+
+const {
+  eyebrow = "03 — Who We Build For",
+  heading = "Built for the people too busy to build it themselves",
+  subhead = "Whatever kind of business you run, the deal is the same: you send the request, we handle the website — design, hosting, and every change.",
+} = Astro.props;
+
+const imageCredits = credits as Record<
+  string,
+  { name: string; url: string; pexelsUrl: string }
+>;
+
+const SEGMENTS = [
+  {
+    slug: "trades",
+    label: "Local service pros",
+    keyMessage: "We handle your website, you handle the jobs",
+    problem:
+      "You're on jobs all day with no time to build or fix a site that brings in calls.",
+    solution:
+      'We build, host, and manage it end-to-end — plus local city pages that rank for "near me" searches.',
+    image: {
+      src: "/audiences/trades.webp",
+      alt: "Service technician working out of a van on a job",
+    },
+  },
+  {
+    slug: "founders",
+    label: "Startup founders",
+    keyMessage: "Launch-ready site, updated on request, no dev hire",
+    problem:
+      "You need a fast-changing marketing site and blog but can't afford a $5k agency or fight page builders.",
+    solution:
+      "One low monthly price — we ship new sections, changes, and blog posts whenever you ask.",
+    image: {
+      src: "/audiences/founders.webp",
+      alt: "Startup founder working on a laptop",
+    },
+  },
+  {
+    slug: "small-business",
+    label: "Established businesses",
+    keyMessage: "Hand us your old site — we keep it fresh",
+    problem:
+      "Your site is stale, nobody in-house can update it, and the original builder is long gone.",
+    solution:
+      "We take over hosting and maintenance completely, refresh it, and make every edit for you.",
+    image: {
+      src: "/audiences/small-business.webp",
+      alt: "Small business owner in their storefront",
+    },
+  },
+];
+---
+
+<section class="bg-accent">
+  <div class="mx-auto max-w-[1200px] px-6 py-[80px] md:px-10">
+    <div
+      class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-ink/70 uppercase"
+    >
+      <span class="h-px w-[26px] bg-ink"></span>{eyebrow}
+    </div>
+
+    <div
+      class="mb-11 grid grid-cols-1 items-end gap-6 md:grid-cols-[1.1fr_1fr] md:gap-12"
+    >
+      <h2
+        class="reveal text-[clamp(28px,3.4vw,44px)] leading-[1.08] font-semibold tracking-[-0.03em] text-ink"
+      >
+        {heading}
+      </h2>
+      <p class="reveal text-[15.5px] leading-[1.6] text-ink/80">{subhead}</p>
+    </div>
+
+    <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-3">
+      {
+        SEGMENTS.map((segment) => {
+          const credit = imageCredits[segment.slug];
+          return (
+            <div class="reveal img-wrap flex flex-col overflow-hidden rounded-[18px] bg-ink">
+              <div class="aspect-[16/10] overflow-hidden">
+                <img
+                  src={segment.image.src}
+                  alt={segment.image.alt}
+                  width="1600"
+                  height="1000"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div class="flex flex-1 flex-col p-6">
+                <div class="font-mono text-[11.5px] tracking-[0.08em] text-cream/70 uppercase">
+                  {segment.label}
+                </div>
+                <h3 class="mt-2.5 text-[19px] leading-[1.2] font-semibold tracking-[-0.02em] text-cream">
+                  {segment.keyMessage}
+                </h3>
+                <p class="mt-3.5 text-[14.5px] leading-[1.55] text-cream/75">
+                  <span class="font-medium text-cream">The problem —</span>{" "}
+                  {segment.problem}
+                </p>
+                <p class="mt-2.5 text-[14.5px] leading-[1.55] text-cream/75">
+                  <span class="font-medium text-cream">What we do —</span>{" "}
+                  {segment.solution}
+                </p>
+
+                <div class="mt-auto pt-6">
+                  <a
+                    href="/quote"
+                    class="mag-btn inline-flex items-center gap-2 rounded-[11px] border border-cream/25 px-5 py-3 text-[14.5px] font-medium text-cream transition-colors duration-200 hover:border-accent hover:text-accent"
+                  >
+                    Get a quote
+                    <span class="text-accent">&#8599;</span>
+                  </a>
+                </div>
+
+                {credit && (
+                  <p class="mt-4 text-[11px] text-cream/50">
+                    Photo by{" "}
+                    <a
+                      href={credit.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="underline underline-offset-2 transition-colors duration-300 hover:text-cream"
+                    >
+                      {credit.name}
+                    </a>{" "}
+                    on{" "}
+                    <a
+                      href={credit.pexelsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="underline underline-offset-2 transition-colors duration-300 hover:text-cream"
+                    >
+                      Pexels
+                    </a>
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>
