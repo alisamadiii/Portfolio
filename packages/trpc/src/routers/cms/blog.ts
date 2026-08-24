@@ -64,6 +64,8 @@ const postFields = {
   title: hubBlogPost.title,
   description: hubBlogPost.description,
   keyword: hubBlogPost.keyword,
+  synonyms: hubBlogPost.synonyms,
+  relatedKeywords: hubBlogPost.relatedKeywords,
   heroImage: hubBlogPost.heroImage,
   heroImageAlt: hubBlogPost.heroImageAlt,
   heroCredit: hubBlogPost.heroCredit,
@@ -152,6 +154,8 @@ export const blogRouter = createTRPCRouter({
           .optional(),
         description: z.string().optional(),
         keyword: z.string().optional(),
+        synonyms: z.array(z.string().trim().min(1)).optional(),
+        relatedKeywords: z.array(z.string().trim().min(1)).optional(),
         heroImage: z.string().nullable().optional(),
         heroImageAlt: z.string().nullable().optional(),
         heroCredit: z
@@ -195,6 +199,9 @@ export const blogRouter = createTRPCRouter({
       if (input.description !== undefined)
         changes.description = input.description;
       if (input.keyword !== undefined) changes.keyword = input.keyword;
+      if (input.synonyms !== undefined) changes.synonyms = input.synonyms;
+      if (input.relatedKeywords !== undefined)
+        changes.relatedKeywords = input.relatedKeywords;
       if (input.heroImage !== undefined)
         changes.heroImage = input.heroImage || null;
       if (input.heroImageAlt !== undefined)

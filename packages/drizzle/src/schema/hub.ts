@@ -226,6 +226,13 @@ export const hubBlogPost = pgTable(
     // Primary target keyword (exact keyword goes in the title only; the
     // description paraphrases).
     keyword: text("keyword").notNull().default(""),
+    // SEO analysis (premium checks): synonyms count as keyphrase matches;
+    // related keywords each get their own coverage check.
+    synonyms: text("synonyms").array().notNull().default(sql`'{}'::text[]`),
+    relatedKeywords: text("related_keywords")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     // Plain URL string
     heroImage: text("hero_image"),
     heroImageAlt: text("hero_image_alt"),

@@ -1,14 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useConfig } from "@/contexts/config-context";
+import { fieldStatus } from "@alisamadiillc/seo-analysis";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  ChevronRight,
-  Newspaper,
-  Trash2,
-  UploadCloud,
-} from "@/components/icon";
 import { toast } from "sonner";
 
 import {
@@ -32,13 +27,25 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { useConfig } from "@/contexts/config-context";
-
 import { Editor } from "@/components/ui/editor";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Newspaper,
+  Trash2,
+  UploadCloud,
+} from "@/components/icon";
 import { PanelError } from "@/components/settings/panel-error";
+import { SeoAnalysisPanel } from "@/components/settings/seo-analysis-panel";
 
 type BlogList = RouterOutputs["cms"]["blog"]["list"];
 type BlogPost = BlogList["posts"][number];
+
+const splitList = (value: string) =>
+  value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 // ─── Panel (in-shell, rendered from Site Settings › Blog) ────────
 // Posts live in the hub database, not the repository. Saving only stores
@@ -90,30 +97,37 @@ export const BlogPanel = () => {
 
   return (
     <div className="w-full p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-[22px] font-extrabold tracking-tight">Blog</h2>
-          <p className="text-muted-foreground mt-1 text-[14px]">
-            Write and manage your website&apos;s blog posts.
-          </p>
-        </div>
-        <Button
-          className="rounded-full px-5"
-          disabled={publishMutation.isPending || !data?.posts.length}
-          isLoading={publishMutation.isPending}
-          onClick={() => publishMutation.mutate({ owner, repo })}
-        >
-          <UploadCloud className="size-4" />
-          Publish to site
-        </Button>
-      </div>
+      {/* Header + publish only on the list view — the editor has its own bar. */}
+      {!editingPost && (
+        <>
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-[22px] font-extrabold tracking-tight">
+                Blog
+              </h2>
+              <p className="text-muted-foreground mt-1 text-[14px]">
+                Write and manage your website&apos;s blog posts.
+              </p>
+            </div>
+            <Button
+              className="rounded-full px-5"
+              disabled={publishMutation.isPending || !data?.posts.length}
+              isLoading={publishMutation.isPending}
+              onClick={() => publishMutation.mutate({ owner, repo })}
+            >
+              <UploadCloud className="size-4" />
+              Publish to site
+            </Button>
+          </div>
 
-      {hasUnpublishedChanges && (
-        <div className="border-status-warning/40 bg-status-warning/10 mb-6 rounded-lg border px-4 py-3 text-[13.5px]">
-          You have unpublished blog changes. Saving here only stores drafts —
-          click <span className="font-semibold">Publish to site</span> to
-          update your website.
-        </div>
+          {hasUnpublishedChanges && (
+            <div className="border-status-warning/40 bg-status-warning/10 mb-6 rounded-lg border px-4 py-3 text-[13.5px]">
+              You have unpublished blog changes. Saving here only stores drafts
+              — click <span className="font-semibold">Publish to site</span> to
+              update your website.
+            </div>
+          )}
+        </>
       )}
 
       {error ? (
@@ -133,6 +147,13 @@ export const BlogPanel = () => {
           owner={owner}
           repo={repo}
           post={editingPost}
+          otherPosts={data.posts
+            .filter((post) => post.id !== editingPost.id)
+            .map((post) => ({
+              title: post.title,
+              slug: post.slug,
+              keyword: post.keyword,
+            }))}
           onBack={() => setEditingId(null)}
           onChanged={invalidateList}
           onDeleted={() => {
@@ -161,8 +182,8 @@ export const BlogPanel = () => {
               </h3>
               <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14.5px]">
                 Write your first post above. Posts are saved here as drafts —
-                when you&apos;re ready, mark them as published and click
-                Publish to site to put them on your website.
+                when you&apos;re ready, mark them as published and click Publish
+                to site to put them on your website.
               </p>
             </div>
           ) : (
@@ -276,6 +297,7 @@ const PostEditor = ({
   owner,
   repo,
   post,
+  otherPosts,
   onBack,
   onChanged,
   onDeleted,
@@ -283,6 +305,7 @@ const PostEditor = ({
   owner: string;
   repo: string;
   post: BlogPost;
+  otherPosts: { title: string; slug: string; keyword: string }[];
   onBack: () => void;
   onChanged: () => void;
   onDeleted: () => void;
@@ -295,6 +318,10 @@ const PostEditor = ({
   const [slug, setSlug] = useState(post.slug);
   const [description, setDescription] = useState(post.description);
   const [keyword, setKeyword] = useState(post.keyword);
+  const [synonyms, setSynonyms] = useState(post.synonyms.join(", "));
+  const [relatedKeywords, setRelatedKeywords] = useState(
+    post.relatedKeywords.join(", ")
+  );
   const [heroImage, setHeroImage] = useState(post.heroImage ?? "");
   const [heroImageAlt, setHeroImageAlt] = useState(post.heroImageAlt ?? "");
   const [creditName, setCreditName] = useState(post.heroCredit?.name ?? "");
@@ -325,7 +352,9 @@ const PostEditor = ({
       onSuccess: () => {
         setRemoveOpen(false);
         onDeleted();
-        toast.success("Post deleted. Publish to site to remove it from your website.");
+        toast.success(
+          "Post deleted. Publish to site to remove it from your website."
+        );
       },
       onError: (error) => toast.error(error.message),
     })
@@ -360,15 +389,14 @@ const PostEditor = ({
       slug: slug.trim(),
       description,
       keyword: keyword.trim(),
+      synonyms: splitList(synonyms),
+      relatedKeywords: splitList(relatedKeywords),
       heroImage: heroImage.trim() || null,
       heroImageAlt: heroImageAlt.trim() || null,
       heroCredit,
       author,
       body,
-      tags: tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      tags: splitList(tags),
       status: published ? "published" : "draft",
     });
   };
@@ -414,7 +442,7 @@ const PostEditor = ({
         ) : (
           <div className="from-primary/30 to-primary/5 h-[220px] w-full bg-gradient-to-br" />
         )}
-        <span className="absolute left-3.5 top-3 rounded-md bg-black/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white/90">
+        <span className="absolute top-3 left-3.5 rounded-md bg-black/30 px-2 py-1 text-[10px] font-bold tracking-wide text-white/90 uppercase">
           Banner · 1600 × 480
         </span>
       </div>
@@ -471,6 +499,18 @@ const PostEditor = ({
               placeholder="Short summary shown in post lists and search results."
               onChange={(event) => setDescription(event.target.value)}
             />
+            <p
+              className={cn(
+                "text-[11.5px]",
+                {
+                  bad: "text-status-danger",
+                  ok: "text-status-warning",
+                  good: "text-status-success",
+                }[fieldStatus.descriptionLength(description)]
+              )}
+            >
+              {description.trim().length} / 120–156 characters
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs">Body</Label>
@@ -483,151 +523,197 @@ const PostEditor = ({
           </div>
         </div>
 
-        {/* Right: post settings */}
-        <div className="bg-card space-y-4 rounded-lg border p-4">
-          <p className="text-[12.5px] font-bold">Post settings</p>
+        {/* Right: post settings + SEO analysis */}
+        <div className="space-y-4">
+          <div className="bg-card space-y-4 rounded-lg border p-4">
+            <p className="text-[12.5px] font-bold">Post settings</p>
 
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs">URL</Label>
-            <div className="border-input flex h-8 items-center overflow-hidden rounded-sm border">
-              <span className="bg-muted text-muted-foreground border-input flex h-full items-center border-r px-2 font-mono text-[11px]">
-                /blog/
-              </span>
-              <input
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-                className="h-full min-w-0 flex-1 bg-transparent px-2 font-mono text-[11.5px] outline-none"
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs">URL</Label>
+              <div className="border-input flex h-8 items-center overflow-hidden rounded-sm border">
+                <span className="bg-muted text-muted-foreground border-input flex h-full items-center border-r px-2 font-mono text-[11px]">
+                  /blog/
+                </span>
+                <input
+                  value={slug}
+                  onChange={(event) => setSlug(event.target.value)}
+                  className="h-full min-w-0 flex-1 bg-transparent px-2 font-mono text-[11.5px] outline-none"
+                />
+              </div>
+              {slugChanged && post.status === "published" && (
+                <p className="text-status-warning text-[11.5px]">
+                  Changing a published post&apos;s slug changes its URL — old
+                  links stop working.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="post-author-name"
+                className="text-muted-foreground text-xs"
+              >
+                Author
+              </Label>
+              <Input
+                id="post-author-name"
+                value={authorName}
+                onChange={(event) => setAuthorName(event.target.value)}
               />
             </div>
-            {slugChanged && post.status === "published" && (
-              <p className="text-status-warning text-[11.5px]">
-                Changing a published post&apos;s slug changes its URL — old
-                links stop working.
-              </p>
-            )}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label
-              htmlFor="post-author-name"
-              className="text-muted-foreground text-xs"
+            <div className="flex items-start justify-between gap-3 border-t pt-3">
+              <div>
+                <p className="text-[13px] font-semibold">Published</p>
+                <p className="text-muted-foreground text-[11px]">
+                  Draft posts never appear on your website.
+                </p>
+              </div>
+              <Switch checked={published} onCheckedChange={setPublished} />
+            </div>
+
+            <p className="text-muted-foreground border-t pt-3 text-[11px] leading-relaxed">
+              Saving keeps this post as a draft on this device. It goes live
+              when you Publish to site.
+            </p>
+
+            {/* Advanced */}
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((open) => !open)}
+              className="text-muted-foreground hover:text-foreground flex w-full items-center gap-1.5 border-t pt-3 text-[12px] font-semibold"
             >
-              Author
-            </Label>
-            <Input
-              id="post-author-name"
-              value={authorName}
-              onChange={(event) => setAuthorName(event.target.value)}
-            />
+              <ChevronRight
+                className={cn(
+                  "size-3.5 transition-transform",
+                  showAdvanced && "rotate-90"
+                )}
+              />
+              Advanced
+            </button>
+            {showAdvanced && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="post-keyword"
+                    className="text-muted-foreground text-xs"
+                  >
+                    Target keyword
+                  </Label>
+                  <Input
+                    id="post-keyword"
+                    value={keyword}
+                    placeholder="e.g. amazon ses vs resend"
+                    onChange={(event) => setKeyword(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="post-synonyms"
+                    className="text-muted-foreground text-xs"
+                  >
+                    Keyword synonyms
+                  </Label>
+                  <Input
+                    id="post-synonyms"
+                    value={synonyms}
+                    placeholder="ses vs resend, amazon ses comparison"
+                    onChange={(event) => setSynonyms(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="post-related-keywords"
+                    className="text-muted-foreground text-xs"
+                  >
+                    Related keywords
+                  </Label>
+                  <Input
+                    id="post-related-keywords"
+                    value={relatedKeywords}
+                    placeholder="email deliverability, smtp pricing"
+                    onChange={(event) => setRelatedKeywords(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="post-tags"
+                    className="text-muted-foreground text-xs"
+                  >
+                    Tags
+                  </Label>
+                  <Input
+                    id="post-tags"
+                    value={tags}
+                    placeholder="seo, web-design"
+                    onChange={(event) => setTags(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-[12px] font-semibold">Hero image credit</p>
+                  <Input
+                    value={creditName}
+                    placeholder="Credit name (e.g. cottonbro studio)"
+                    onChange={(event) => setCreditName(event.target.value)}
+                  />
+                  <Input
+                    value={creditUrl}
+                    placeholder="Profile URL"
+                    onChange={(event) => setCreditUrl(event.target.value)}
+                  />
+                  <Input
+                    value={creditPexelsUrl}
+                    placeholder="Photo URL"
+                    onChange={(event) => setCreditPexelsUrl(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-[12px] font-semibold">Author details</p>
+                  <Input
+                    value={authorTitle}
+                    placeholder="Title (e.g. Founder)"
+                    onChange={(event) => setAuthorTitle(event.target.value)}
+                  />
+                  <Input
+                    value={authorAvatar}
+                    placeholder="Avatar URL"
+                    onChange={(event) => setAuthorAvatar(event.target.value)}
+                  />
+                  <Input
+                    value={authorUrl}
+                    placeholder="Website URL"
+                    onChange={(event) => setAuthorUrl(event.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive w-full border-t"
+              onClick={() => setRemoveOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Delete post
+            </Button>
           </div>
 
-          <div className="flex items-start justify-between gap-3 border-t pt-3">
-            <div>
-              <p className="text-[13px] font-semibold">Published</p>
-              <p className="text-muted-foreground text-[11px]">
-                Draft posts never appear on your website.
-              </p>
-            </div>
-            <Switch checked={published} onCheckedChange={setPublished} />
-          </div>
-
-          <p className="text-muted-foreground border-t pt-3 text-[11px] leading-relaxed">
-            Saving keeps this post as a draft on this device. It goes live when
-            you Publish to site.
-          </p>
-
-          {/* Advanced */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced((open) => !open)}
-            className="text-muted-foreground hover:text-foreground flex w-full items-center gap-1.5 border-t pt-3 text-[12px] font-semibold"
-          >
-            <ChevronRight
-              className={cn(
-                "size-3.5 transition-transform",
-                showAdvanced && "rotate-90"
-              )}
-            />
-            Advanced
-          </button>
-          {showAdvanced && (
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="post-keyword"
-                  className="text-muted-foreground text-xs"
-                >
-                  Target keyword
-                </Label>
-                <Input
-                  id="post-keyword"
-                  value={keyword}
-                  placeholder="e.g. amazon ses vs resend"
-                  onChange={(event) => setKeyword(event.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="post-tags"
-                  className="text-muted-foreground text-xs"
-                >
-                  Tags
-                </Label>
-                <Input
-                  id="post-tags"
-                  value={tags}
-                  placeholder="seo, web-design"
-                  onChange={(event) => setTags(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2 border-t pt-3">
-                <p className="text-[12px] font-semibold">Hero image credit</p>
-                <Input
-                  value={creditName}
-                  placeholder="Credit name (e.g. cottonbro studio)"
-                  onChange={(event) => setCreditName(event.target.value)}
-                />
-                <Input
-                  value={creditUrl}
-                  placeholder="Profile URL"
-                  onChange={(event) => setCreditUrl(event.target.value)}
-                />
-                <Input
-                  value={creditPexelsUrl}
-                  placeholder="Photo URL"
-                  onChange={(event) => setCreditPexelsUrl(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2 border-t pt-3">
-                <p className="text-[12px] font-semibold">Author details</p>
-                <Input
-                  value={authorTitle}
-                  placeholder="Title (e.g. Founder)"
-                  onChange={(event) => setAuthorTitle(event.target.value)}
-                />
-                <Input
-                  value={authorAvatar}
-                  placeholder="Avatar URL"
-                  onChange={(event) => setAuthorAvatar(event.target.value)}
-                />
-                <Input
-                  value={authorUrl}
-                  placeholder="Website URL"
-                  onChange={(event) => setAuthorUrl(event.target.value)}
-                />
-              </div>
-            </div>
-          )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive w-full border-t"
-            onClick={() => setRemoveOpen(true)}
-          >
-            <Trash2 className="size-4" />
-            Delete post
-          </Button>
+          <SeoAnalysisPanel
+            title={title}
+            slug={slug}
+            description={description}
+            keyword={keyword}
+            synonyms={splitList(synonyms)}
+            relatedKeywords={splitList(relatedKeywords)}
+            body={body}
+            heroImage={heroImage}
+            heroImageAlt={heroImageAlt}
+            otherKeywords={otherPosts
+              .map((other) => other.keyword)
+              .filter(Boolean)}
+            otherPosts={otherPosts}
+          />
         </div>
       </div>
 

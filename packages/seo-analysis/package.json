@@ -1,0 +1,50 @@
+{
+  "name": "@alisamadiillc/seo-analysis",
+  "version": "0.1.0",
+  "description": "Yoast-style SEO analysis for blog posts — headless, zero-dependency. Feed it title/slug/description/keyword/markdown body, get back problems, improvements, good results, and a traffic-light score.",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@workspace/typescript-config": "workspace:*",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "seo",
+    "seo-analysis",
+    "yoast",
+    "content-analysis",
+    "markdown"
+  ],
+  "license": "MIT"
+}

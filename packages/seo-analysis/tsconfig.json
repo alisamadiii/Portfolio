@@ -1,0 +1,11 @@
+{
+  "extends": "@workspace/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist",
+    "declaration": true,
+    "lib": ["ES2018"]
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}
