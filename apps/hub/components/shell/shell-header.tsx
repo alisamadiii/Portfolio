@@ -160,7 +160,11 @@ export function ShellHeader({
         <User align="end" />
         <InviteButton owner={owner} repo={repo} />
         {canEdit && (
-          <Button size="sm" onClick={openPublishDialog}>
+          <Button
+            size="sm"
+            variant={draftCount > 0 ? "default" : "outline"}
+            onClick={openPublishDialog}
+          >
             <UploadCloud className="size-4" />
             Publish
             {draftCount > 0 && (

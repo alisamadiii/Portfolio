@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { fieldStatus } from "@alisamadiillc/seo-analysis";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,13 @@ import {
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Spinner } from "@workspace/ui/components/spinner";
@@ -27,13 +34,14 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { Editor } from "@/components/ui/editor";
+import { Editor, type ImagePickerContext } from "@/components/ui/editor";
+import { useMediaLibrary } from "@/components/media/media-library-context";
 import {
   ArrowLeft,
   ChevronRight,
+  Globe,
   Newspaper,
   Trash2,
-  UploadCloud,
 } from "@/components/icon";
 import { PanelError } from "@/components/settings/panel-error";
 import { SeoAnalysisPanel } from "@/components/settings/seo-analysis-panel";
@@ -115,15 +123,16 @@ export const BlogPanel = () => {
               isLoading={publishMutation.isPending}
               onClick={() => publishMutation.mutate({ owner, repo })}
             >
-              <UploadCloud className="size-4" />
-              Publish to site
+              <Globe className="size-4" />
+              Publish blog to site
             </Button>
           </div>
 
           {hasUnpublishedChanges && (
             <div className="border-status-warning/40 bg-status-warning/10 mb-6 rounded-lg border px-4 py-3 text-[13.5px]">
               You have unpublished blog changes. Saving here only stores drafts
-              — click <span className="font-semibold">Publish to site</span> to
+              — click{" "}
+              <span className="font-semibold">Publish blog to site</span> to
               update your website.
             </div>
           )}
@@ -183,7 +192,7 @@ export const BlogPanel = () => {
               <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14.5px]">
                 Write your first post above. Posts are saved here as drafts —
                 when you&apos;re ready, mark them as published and click Publish
-                to site to put them on your website.
+                blog to site to put them on your website.
               </p>
             </div>
           ) : (
@@ -311,6 +320,7 @@ const PostEditor = ({
   onDeleted: () => void;
 }) => {
   const trpc = useTRPC();
+  const mediaLibrary = useMediaLibrary();
   const [removeOpen, setRemoveOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -336,6 +346,64 @@ const PostEditor = ({
   const [tags, setTags] = useState(post.tags.join(", "));
   const [body, setBody] = useState(post.body);
   const [published, setPublished] = useState(post.status === "published");
+
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const pendingImageRef = useRef<{
+    resolve: (
+      result: { kind: "url"; src: string; alt?: string } | null
+    ) => void;
+    settled: boolean;
+  } | null>(null);
+
+  const resolvePendingImage = useCallback(
+    (result: { kind: "url"; src: string; alt?: string } | null) => {
+      const pending = pendingImageRef.current;
+      pendingImageRef.current = null;
+      setImageDialogOpen(false);
+      if (pending && !pending.settled) {
+        pending.settled = true;
+        pending.resolve(result);
+      }
+    },
+    []
+  );
+
+  const handleRequestImage = useCallback((context: ImagePickerContext) => {
+    // Detach editor focus so the dialog inputs take the caret cleanly.
+    context.editor.commands.blur();
+    resolvePendingImage(null);
+    setImageUrl("");
+    setImageAlt("");
+    setImageDialogOpen(true);
+    return new Promise<{ kind: "url"; src: string; alt?: string } | null>(
+      (resolve) => {
+        pendingImageRef.current = { resolve, settled: false };
+      }
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submitImage = () => {
+    const src = imageUrl.trim();
+    const alt = imageAlt.trim();
+    // Alt text is required — bail rather than inserting an inaccessible image.
+    if (!src || !alt) return;
+    resolvePendingImage({ kind: "url", src, alt });
+  };
+
+  const browseMediaLibrary = (
+    setter: (url: string) => void,
+    title: string
+  ) => {
+    mediaLibrary.open({
+      maxSelected: 1,
+      title,
+      onInsert: ([url]) => {
+        if (url) setter(url);
+      },
+    });
+  };
 
   const updateMutation = useMutation(
     trpc.cms.blog.update.mutationOptions({
@@ -448,9 +516,20 @@ const PostEditor = ({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="post-hero" className="text-muted-foreground text-xs">
-            Banner image URL
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="post-hero" className="text-muted-foreground text-xs">
+              Banner image URL
+            </Label>
+            {mediaLibrary.isAvailable && (
+              <button
+                type="button"
+                onClick={() => browseMediaLibrary(setHeroImage, "Banner image")}
+                className="text-primary text-xs font-medium hover:underline"
+              >
+                Browse media library
+              </button>
+            )}
+          </div>
           <Input
             id="post-hero"
             value={heroImage}
@@ -518,7 +597,8 @@ const PostEditor = ({
               format="markdown"
               value={body}
               onChange={setBody}
-              editorClassName="min-h-[320px]"
+              onRequestImage={handleRequestImage}
+              editorClassName="bg-card min-h-[320px]"
             />
           </div>
         </div>
@@ -738,6 +818,86 @@ const PostEditor = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={imageDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) resolvePendingImage(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Insert image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="body-image-url" className="text-xs">
+                  Image URL
+                </Label>
+                {mediaLibrary.isAvailable && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      browseMediaLibrary(setImageUrl, "Insert image")
+                    }
+                    className="text-primary text-xs font-medium hover:underline"
+                  >
+                    Browse media library
+                  </button>
+                )}
+              </div>
+              <Input
+                id="body-image-url"
+                autoFocus
+                value={imageUrl}
+                placeholder="https://…"
+                onChange={(event) => setImageUrl(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitImage();
+                  }
+                }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="body-image-alt" className="text-xs">
+                Alt text <span className="text-status-danger">*</span>
+              </Label>
+              <Input
+                id="body-image-alt"
+                value={imageAlt}
+                placeholder="Describe the image"
+                onChange={(event) => setImageAlt(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitImage();
+                  }
+                }}
+              />
+              <p className="text-muted-foreground text-[11px]">
+                Required for accessibility and SEO.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => resolvePendingImage(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={submitImage}
+              disabled={!imageUrl.trim() || !imageAlt.trim()}
+            >
+              Insert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

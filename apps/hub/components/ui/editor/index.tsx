@@ -1000,10 +1000,18 @@ export function Editor({
           const hasEditorFocus =
             view.hasFocus() || element.contains(document.activeElement);
           if (!hasEditorFocus) return false;
+          // In a table the cursor is often in an empty cell (nothing to
+          // select), so show the toolbar on cursor-in-table too — otherwise the
+          // row/column controls are unreachable.
+          const inTable =
+            bubbleEditor.isActive("table") ||
+            bubbleEditor.isActive("tableCell") ||
+            bubbleEditor.isActive("tableHeader");
           return (
             showLinkInput ||
             showTableActions ||
             showAltInput ||
+            inTable ||
             (!bubbleEditor.state.selection.empty && from !== to)
           );
         }}

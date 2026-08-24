@@ -111,3 +111,160 @@
 [data-slot="input-group"] [data-slot="input"] {
   background-color: transparent;
 }
+
+/*
+ * TipTap editor content spacing — preflight zeroes all margins, so the
+ * editor renders headings/paragraphs flush together without this.
+ */
+.tiptap > * + * {
+  margin-top: 0.75rem;
+}
+
+.tiptap > h1,
+.tiptap > h2 {
+  margin-top: 1.75rem;
+}
+
+.tiptap > h3 {
+  margin-top: 1.5rem;
+}
+
+.tiptap h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tiptap h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.tiptap h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tiptap > :first-child {
+  margin-top: 0;
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding-left: 1.25rem;
+}
+
+.tiptap ul {
+  list-style: disc;
+}
+
+.tiptap ol {
+  list-style: decimal;
+}
+
+.tiptap li + li {
+  margin-top: 0.25rem;
+}
+
+.tiptap li > ul,
+.tiptap li > ol {
+  margin-top: 0.25rem;
+}
+
+/* Links — blue + underline, matches the rendered site. */
+.tiptap a {
+  color: var(--status-info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Inline marks (preflight strips bold/italic/strike). */
+.tiptap strong {
+  font-weight: 700;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+.tiptap s,
+.tiptap del {
+  text-decoration: line-through;
+}
+
+.tiptap u {
+  text-decoration: underline;
+}
+
+/* Inline code. */
+.tiptap code {
+  background-color: var(--muted);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875em;
+}
+
+/* Code block — the <pre> owns the chrome; reset the nested <code>. */
+.tiptap pre {
+  background-color: var(--muted);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+.tiptap pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Blockquote. */
+.tiptap blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* Horizontal rule. */
+.tiptap hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Tables. */
+.tiptap table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+}
+
+.tiptap th,
+.tiptap td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tiptap th {
+  background-color: var(--muted);
+  font-weight: 600;
+}
+
+/* Editor images. */
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
