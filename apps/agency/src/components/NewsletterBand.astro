@@ -1,0 +1,192 @@
+---
+// Site-wide newsletter signup band — rendered at the top of HomeFooter.
+// Double opt-in: POST to the portfolio API sends a confirmation email;
+// the contact only joins the Resend segment after clicking the link.
+---
+
+<section id="newsletter" class="mx-auto max-w-[1200px] px-6 pt-14 md:px-10">
+  <div
+    class="relative overflow-hidden rounded-[22px] bg-ink p-9 text-cream md:p-12"
+  >
+    <div
+      class="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full bg-accent/[0.14] blur-3xl"
+    >
+    </div>
+    <div
+      class="relative grid grid-cols-1 items-center gap-8 md:grid-cols-[1.15fr_1fr] md:gap-14"
+    >
+      <div>
+        <div
+          class="mb-5 inline-flex items-center gap-2.5 font-mono text-[12px] tracking-[0.12em] text-cream/60 uppercase"
+        >
+          <span class="size-1.5 animate-pulse rounded-full bg-accent"></span>
+          Newsletter
+        </div>
+        <h2
+          class="text-[clamp(24px,2.8vw,34px)] leading-[1.12] font-semibold tracking-[-0.02em]"
+        >
+          Follow what the studio <span class="text-accent">ships</span>
+        </h2>
+        <p class="mt-3 max-w-[46ch] text-[14.5px] leading-[1.65] text-cream/65">
+          New launches, client showcases, product updates, and lessons from
+          running the agency — straight to your inbox, no fluff.
+        </p>
+      </div>
+
+      <div>
+        <form class="newsletter-form" novalidate>
+          <div
+            class="flex items-center gap-1.5 rounded-full border border-cream/[0.14] bg-cream/[0.07] p-1.5 transition-colors duration-300 focus-within:border-accent/60"
+          >
+            <input
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="you@company.com"
+              aria-label="Email address"
+              class="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-[15px] text-cream placeholder:text-cream/35 focus:outline-none"
+            />
+            <!-- Honeypot -->
+            <input
+              type="text"
+              name="company"
+              tabindex="-1"
+              autocomplete="off"
+              aria-hidden="true"
+              class="absolute -left-[9999px] h-px w-px opacity-0"
+            />
+            <button
+              type="submit"
+              class="mag-btn inline-flex shrink-0 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[14.5px] font-medium text-charcoal transition-all duration-300 hover:bg-cream"
+            >
+              <span class="newsletter-btn-label">Subscribe</span>
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+              </svg>
+            </button>
+          </div>
+          <p
+            class="newsletter-note mt-3 font-mono text-[11.5px] tracking-[0.04em] text-cream/40"
+          >
+            No spam. Unsubscribe anytime.
+          </p>
+          <p
+            class="newsletter-error mt-3 hidden text-[13.5px] text-accent"
+            role="alert"
+          >
+          </p>
+        </form>
+
+        <div class="newsletter-success hidden" role="status">
+          <div class="flex items-start gap-3.5">
+            <span
+              class="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/[0.16] text-accent"
+            >
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+            </span>
+            <div>
+              <p class="text-[15px] font-medium">
+                Check your inbox — confirmation on its way to
+                <span class="newsletter-success-email text-accent"></span>
+              </p>
+              <p class="mt-1.5 text-[13.5px] leading-[1.6] text-cream/60">
+                Click the link in the email to finish subscribing. Don't see it
+                in a couple of minutes? Check your spam folder.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const API_BASE =
+      location.hostname === "127.0.0.1" || location.hostname === "localhost"
+        ? "http://localhost:3000"
+        : "https://www.alisamadii.com";
+    const NEWSLETTER_API = `${API_BASE}/api/agency/newsletter`;
+
+    document.querySelectorAll(".newsletter-form").forEach((form) => {
+      if (form.dataset.bound) return;
+      form.dataset.bound = "1";
+
+      const wrap = form.closest("#newsletter") ?? document;
+      const errorEl = form.querySelector(".newsletter-error");
+      const noteEl = form.querySelector(".newsletter-note");
+      const button = form.querySelector("button[type=submit]");
+      const label = form.querySelector(".newsletter-btn-label");
+      const successEl = wrap.querySelector(".newsletter-success");
+      const successEmail = wrap.querySelector(".newsletter-success-email");
+
+      const showError = (msg) => {
+        errorEl.textContent = msg;
+        errorEl.classList.remove("hidden");
+        noteEl.classList.add("hidden");
+      };
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorEl.classList.add("hidden");
+        noteEl.classList.remove("hidden");
+
+        const email = form.email.value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          showError("Please enter a valid email address.");
+          return;
+        }
+
+        button.disabled = true;
+        label.textContent = "Sending…";
+
+        try {
+          const res = await fetch(NEWSLETTER_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, company: form.company.value }),
+          });
+
+          if (res.status === 429) {
+            showError("Too many attempts — try again in a few minutes.");
+            return;
+          }
+          if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            showError(data?.error ?? "Something went wrong — try again.");
+            return;
+          }
+
+          successEmail.textContent = email;
+          form.classList.add("hidden");
+          successEl.classList.remove("hidden");
+        } catch {
+          showError("Network error — check your connection and try again.");
+        } finally {
+          button.disabled = false;
+          label.textContent = "Subscribe";
+        }
+      });
+    });
+  })();
+</script>

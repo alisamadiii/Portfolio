@@ -1,0 +1,150 @@
+---
+// Double-opt-in landing page — the confirm API route redirects here after
+// adding the contact to the Resend segment. ?status=invalid|error swaps the
+// copy client-side (static page). Not indexed.
+import Layout from "../../layouts/Layout.astro";
+import BackNav from "../../components/BackNav.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
+---
+
+<Layout
+  title="You're in — Ali Samadi Agency Newsletter"
+  description="Subscription confirmed — welcome to the Ali Samadi Agency newsletter."
+  robots="noindex, nofollow"
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <main
+    class="flex min-h-[72vh] items-center justify-center px-6 pt-32 pb-16 md:pt-36"
+  >
+    <!-- Success -->
+    <div class="nl-state-success stagger max-w-[52ch] text-center">
+      <div
+        class="reveal mx-auto mb-8 flex size-16 items-center justify-center rounded-full bg-accent/[0.14] text-accent"
+      >
+        <svg
+          class="nl-check h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M5 13l4 4L19 7"
+            pathLength="100"></path>
+        </svg>
+      </div>
+      <h1
+        class="reveal text-[clamp(36px,5vw,56px)] leading-[1.05] font-semibold tracking-[-0.03em]"
+      >
+        You're <span class="text-accent">in.</span>
+      </h1>
+      <p class="reveal mt-5 text-[16.5px] leading-[1.65] text-warmgray">
+        Subscription confirmed — the next update lands straight in your inbox.
+        New launches, client showcases, product updates, and lessons from
+        running the studio.
+      </p>
+      <div class="reveal mt-9">
+        <a
+          href="/"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+        >
+          Back to the site
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Invalid / expired link -->
+    <div class="nl-state-invalid hidden max-w-[52ch] text-center">
+      <div
+        class="mx-auto mb-8 flex size-16 items-center justify-center rounded-full bg-charcoal/[0.06] text-warmgray"
+      >
+        <svg
+          class="h-7 w-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v4m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z"></path>
+        </svg>
+      </div>
+      <h1
+        class="text-[clamp(32px,4.4vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        This link has expired
+      </h1>
+      <p class="mt-5 text-[16.5px] leading-[1.65] text-warmgray">
+        Confirmation links are valid for 24 hours. No worries — sign up again
+        below and we'll send you a fresh one.
+      </p>
+      <div class="mt-9">
+        <a
+          href="/#newsletter"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+          >Sign up again</a
+        >
+      </div>
+    </div>
+  </main>
+  <HomeFooter />
+</Layout>
+
+<style>
+  .nl-check path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: nl-draw 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s forwards;
+  }
+  @keyframes nl-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nl-check path {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const status = new URLSearchParams(location.search).get("status");
+    if (status === "invalid" || status === "error") {
+      document.querySelector(".nl-state-success")?.classList.add("hidden");
+      document.querySelector(".nl-state-invalid")?.classList.remove("hidden");
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  })();
+</script>

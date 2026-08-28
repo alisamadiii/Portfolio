@@ -1,9 +1,12 @@
 ---
 // The single site-wide footer — used on the homepage and every inner page.
+import NewsletterBand from "./NewsletterBand.astro";
 import { services } from "../data/services";
 
 const year = new Date().getFullYear();
 ---
+
+<NewsletterBand />
 
 <footer class="mx-auto max-w-[1200px] px-6 pt-9 pb-14 md:px-10">
   <div class="grid grid-cols-2 gap-10 md:grid-cols-4">

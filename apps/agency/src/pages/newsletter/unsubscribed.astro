@@ -1,0 +1,62 @@
+---
+// Unsubscribe landing page — the unsubscribe API route redirects here after
+// marking the contact unsubscribed in Resend. Not indexed.
+import Layout from "../../layouts/Layout.astro";
+import BackNav from "../../components/BackNav.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
+---
+
+<Layout
+  title="Unsubscribed — Ali Samadi Agency Newsletter"
+  description="You've been unsubscribed from the Ali Samadi Agency newsletter."
+  robots="noindex, nofollow"
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <main
+    class="flex min-h-[72vh] items-center justify-center px-6 pt-32 pb-16 md:pt-36"
+  >
+    <div class="max-w-[52ch] text-center">
+      <div
+        class="mx-auto mb-8 flex size-16 items-center justify-center rounded-full bg-charcoal/[0.06] text-warmgray"
+      >
+        <svg
+          class="h-7 w-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.478 3.488M2.25 9v.906a2.25 2.25 0 001.183 1.981l6.478 3.488m8.839 2.51l-4.66-2.51m0 0l-1.023-.55a2.25 2.25 0 00-2.134 0l-1.022.55m0 0l-4.661 2.51m16.5 1.615a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75a2.25 2.25 0 012.25-2.25h15a2.25 2.25 0 012.25 2.25v11.865zM3.3 3.3l17.4 17.4"
+          ></path>
+        </svg>
+      </div>
+      <h1
+        class="text-[clamp(32px,4.4vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        You're unsubscribed
+      </h1>
+      <p class="mt-5 text-[16.5px] leading-[1.65] text-warmgray">
+        Done — no more newsletter emails from us. Changed your mind? You can
+        rejoin anytime from the signup form in the footer.
+      </p>
+      <div class="mt-9 flex flex-wrap items-center justify-center gap-4">
+        <a
+          href="/#newsletter"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+          >Resubscribe</a
+        >
+        <a
+          href="/"
+          class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
+          >Back to Home</a
+        >
+      </div>
+    </div>
+  </main>
+  <HomeFooter />
+</Layout>

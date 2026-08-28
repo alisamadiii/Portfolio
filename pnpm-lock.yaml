@@ -794,6 +794,9 @@ importers:
       react-hook-form:
         specifier: ^7.71.2
         version: 7.83.0(react@19.2.7)
+      resend:
+        specifier: ^6.9.1
+        version: 6.18.0(@react-email/render@2.1.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -8007,6 +8010,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
