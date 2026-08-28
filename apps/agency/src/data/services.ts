@@ -32,7 +32,8 @@ export interface Service {
   /** Honest-signal flag: service offered while we build deep experience in it.
       Renders an "Experimenting" badge + banner on the service page and cards. */
   experimenting?: boolean;
-  benefits: { title: string; text: string }[];
+  /** icon = BenefitGlyph key rendered in the card's coral tile. */
+  benefits: { title: string; text: string; icon?: string }[];
   process?: { title: string; text: string }[];
   processCta?: { label: string; href: string };
   /** Product screenshot walkthrough — alternating image + explanation rows. */
@@ -90,18 +91,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Your logo leads",
+        icon: "target",
         text: "The logo is the source of truth. We pull its colors and personality into a theme, and every part of your site inherits it — no guesswork, no mismatched styles.",
       },
       {
         title: "You choose, we build",
+        icon: "spectrum",
         text: "Instead of endless abstract revisions, you pick from a range of logo concepts. The one you choose is the one we design your entire site around.",
       },
       {
         title: "Everything matches",
+        icon: "grid-match",
         text: "Buttons, forms, headings, and pages all themed from the same mark — your site looks like one brand made it, because one logo drove all of it.",
       },
       {
         title: "Assets you own",
+        icon: "package",
         text: "You get the full package: logo files in every format, color codes, font choices, and a simple usage guide. No lock-in, no per-use fees.",
       },
     ],
@@ -189,18 +194,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Fast because it's static",
+        icon: "bolt",
         text: "Astro pre-renders every page to plain HTML with near-zero JavaScript, served from a global CDN. Core Web Vitals are treated as a launch requirement, not an afterthought.",
       },
       {
         title: "SEO built in",
+        icon: "sitemap",
         text: "Clean semantic HTML, full meta and social tags, structured data that auto-upgrades to LocalBusiness for local companies, an auto-generated sitemap, and an llms.txt for AI engines — included, not an upsell.",
       },
       {
         title: "Edit it yourself",
+        icon: "cursor",
         text: "Your content lives in a simple git-based CMS: change text and images from a dashboard, and every save deploys the site automatically. No developer needed for updates.",
       },
       {
         title: "You own everything",
+        icon: "shield",
         text: "Code in your repository, content in your CMS, domain in your name. Leave anytime and take it all with you.",
       },
     ],
@@ -287,18 +296,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Designed for the next click",
+        icon: "cursor",
         text: "Every page has one job. We design layouts around the action you want visitors to take, and remove everything that competes with it.",
       },
       {
         title: "Accessible by standard",
+        icon: "contrast",
         text: "Readable contrast, keyboard navigation, touch-friendly targets, and reduced-motion support — accessibility guidelines applied as defaults, not add-ons.",
       },
       {
         title: "Designer and developer are the same team",
+        icon: "flow",
         text: "No handoff gap. The person designing the interface builds it, so the shipped site matches the approved design exactly.",
       },
       {
         title: "Grounded in evidence",
+        icon: "chart",
         text: "Layout and interaction decisions follow published usability research, not aesthetic guesswork.",
       },
     ],
@@ -361,18 +374,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Technical SEO from day one",
+        icon: "sitemap",
         text: "Sitemaps, robots rules, canonical tags, meta descriptions, and structured data ship with the build — the foundation Google expects, done once and done right.",
       },
       {
         title: "Ready for AI search",
+        icon: "sparkle-ai",
         text: "Content structured so AI engines — Google AI Overviews, ChatGPT, Perplexity — can read and cite your business, not just classic search.",
       },
       {
         title: "Speed as a ranking signal",
+        icon: "gauge",
         text: "Core Web Vitals are part of how Google ranks pages. Our static-first builds pass them by design.",
       },
       {
         title: "Analytics without the noise",
+        icon: "chart",
         text: "Privacy-respecting analytics that answer the questions that matter: where visitors come from, what they do, and what converts.",
       },
     ],
@@ -437,18 +454,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Change anything, anytime",
+        icon: "cursor",
         text: "Text, images, and pages editable from a clean, form-based dashboard. Every save commits and deploys automatically — live in about a minute.",
       },
       {
         title: "Your files stay yours",
+        icon: "package",
         text: "Images and files live in your own ImageKit account — free for most use cases — connected right inside the dashboard. We never hold your media hostage; you keep full control even if we part ways.",
       },
       {
         title: "More than a CMS",
+        icon: "radar",
         text: "Client Hub also shows whether your site is live and how fast it responds, plus a searchable log of every email it sends. Email marketing is coming next.",
       },
       {
         title: "Impossible to break",
+        icon: "rollback",
         text: "The editor only exposes content — never code or layout. Every change is version-controlled, so anything can be rolled back. You also get a GitHub collaborator invite, so the code is never locked away from you.",
       },
     ],
@@ -592,18 +613,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Keep Shopify, lose the template",
+        icon: "flow",
         text: "Shopify stays your engine — products, inventory, orders, and checkout all keep running there. We only replace the storefront your customers see, so nothing about running your business changes.",
       },
       {
         title: "Feels instant",
+        icon: "bolt",
         text: "Pages stream in as customers browse and the next page loads before they click. No full-page reloads between products — the store feels like an app, not a website.",
       },
       {
         title: "Your brand, not a theme",
+        icon: "spectrum",
         text: "Designed from scratch around your brand — typography, color, and layout that no theme store sells. Customers stop seeing a template and start seeing you.",
       },
       {
         title: "Checkout customers already trust",
+        icon: "cart",
         text: "Buying still happens on Shopify's secure, PCI-compliant checkout — the same flow your customers know, with all your payment methods and shipping rules intact.",
       },
     ],
@@ -695,18 +720,22 @@ export const services: Service[] = [
     benefits: [
       {
         title: "Real software, small-team speed",
+        icon: "nodes",
         text: "Authentication, databases, dashboards, and payments — the same engineering patterns large products use, delivered without agency overhead.",
       },
       {
         title: "Scoped before it's priced",
+        icon: "scope",
         text: "We define what the app does, what it won't do, and what it costs — in writing — before development starts. No open-ended billing.",
       },
       {
         title: "Built to hand over",
+        icon: "package",
         text: "Standard stack, clean code, your repository. If you grow into an in-house team someday, they inherit a codebase they'll recognize.",
       },
       {
         title: "Starts as small as you need",
+        icon: "spark",
         text: "A v1 with the core feature beats a year-long spec. We ship the essential version first, then grow it against real usage.",
       },
     ],

@@ -1,0 +1,815 @@
+---
+// Animated abstract-geometric hero illustration, one composition per service.
+// Replaces the Pexels hero photo on /services/<slug>. Charcoal (currentColor)
+// + coral (#fc8464) line art on the white hero card. Pure CSS animation:
+// [data-draw] strokes draw in once when the surrounding .reveal gets .visible
+// (existing IntersectionObserver); ambient loops (pulse/float/dash) run on
+// their own. Everything stops under prefers-reduced-motion.
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+
+const CORAL = "#fc8464";
+
+const svgAttrs = {
+  class: "si-illus h-full w-full",
+  viewBox: "0 0 640 400",
+  width: "640",
+  height: "400",
+  fill: "none",
+  role: "img",
+  preserveAspectRatio: "xMidYMid meet",
+};
+const line = {
+  stroke: "currentColor",
+  "stroke-width": "2",
+  "stroke-linecap": "round" as const,
+  "stroke-linejoin": "round" as const,
+};
+---
+
+{
+  slug === "brand-identity" && (
+    <svg
+      {...svgAttrs}
+      aria-label="Logo mark radiating its theme into buttons, swatches, and forms"
+    >
+      {/* logo tile */}
+      <rect {...line} x="64" y="124" width="150" height="150" rx="26" />
+      <circle cx="139" cy="199" r="30" fill={CORAL} class="si-pulse" />
+      <path {...line} d="M139 155a44 44 0 0 1 0 88" stroke-width="2.5" />
+      {/* connectors branching right */}
+      <path
+        {...line}
+        d="M214 199h50c30 0 30-88 60-88h30"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+      />
+      <path
+        {...line}
+        d="M264 199h60"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+        style="animation-delay:.25s"
+      />
+      <path
+        {...line}
+        d="M214 199h50c30 0 30 90 60 90h30"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+        style="animation-delay:.5s"
+      />
+      <circle cx="264" cy="199" r="4" fill={CORAL} class="si-pulse" />
+      {/* swatch row */}
+      <g class="si-float">
+        <rect x="404" y="92" width="38" height="38" rx="10" fill={CORAL} />
+        <rect
+          x="452"
+          y="92"
+          width="38"
+          height="38"
+          rx="10"
+          fill="currentColor"
+          opacity="0.85"
+        />
+        <rect
+          x="500"
+          y="92"
+          width="38"
+          height="38"
+          rx="10"
+          fill="currentColor"
+          opacity="0.35"
+        />
+        <rect {...line} x="548" y="92" width="38" height="38" rx="10" />
+      </g>
+      {/* button */}
+      <g class="si-float" style="animation-delay:.6s">
+        <rect x="404" y="177" width="150" height="46" rx="23" fill={CORAL} />
+        <path
+          d="M436 200h66"
+          stroke="#fff"
+          stroke-width="5"
+          stroke-linecap="round"
+          opacity="0.9"
+        />
+      </g>
+      {/* form field */}
+      <g class="si-float" style="animation-delay:1.2s">
+        <rect {...line} x="404" y="266" width="196" height="48" rx="13" />
+        <path {...line} d="M424 290h72" opacity="0.35" stroke-width="4" />
+        <path
+          d="M508 279v22"
+          stroke={CORAL}
+          stroke-width="2.5"
+          class="si-blink"
+        />
+      </g>
+    </svg>
+  )
+}
+{
+  slug === "web-development" && (
+    <svg {...svgAttrs} aria-label="Browser wireframe assembling from code">
+      {/* browser frame */}
+      <rect {...line} x="92" y="68" width="456" height="264" rx="18" />
+      <path {...line} d="M92 110h456" opacity="0.3" />
+      <circle cx="120" cy="89" r="5" fill={CORAL} class="si-pulse" />
+      <circle cx="140" cy="89" r="5" fill="currentColor" opacity="0.25" />
+      <circle cx="160" cy="89" r="5" fill="currentColor" opacity="0.25" />
+      {/* code column */}
+      <g stroke-linecap="round">
+        <path
+          d="M124 148h84"
+          stroke="currentColor"
+          stroke-width="6"
+          opacity="0.3"
+          pathLength="100"
+          data-draw
+        />
+        <path
+          d="M140 174h110"
+          stroke={CORAL}
+          stroke-width="6"
+          opacity="0.85"
+          pathLength="100"
+          data-draw
+          style="animation-delay:.15s"
+        />
+        <path
+          d="M140 200h72"
+          stroke="currentColor"
+          stroke-width="6"
+          opacity="0.5"
+          pathLength="100"
+          data-draw
+          style="animation-delay:.3s"
+        />
+        <path
+          d="M156 226h94"
+          stroke="currentColor"
+          stroke-width="6"
+          opacity="0.3"
+          pathLength="100"
+          data-draw
+          style="animation-delay:.45s"
+        />
+        <path
+          d="M140 252h56"
+          stroke={CORAL}
+          stroke-width="6"
+          opacity="0.6"
+          pathLength="100"
+          data-draw
+          style="animation-delay:.6s"
+        />
+        <path
+          d="M124 278h100"
+          stroke="currentColor"
+          stroke-width="6"
+          opacity="0.45"
+          pathLength="100"
+          data-draw
+          style="animation-delay:.75s"
+        />
+      </g>
+      <path d="M238 273v11" stroke={CORAL} stroke-width="3" class="si-blink" />
+      {/* assembling layout */}
+      <g class="si-float">
+        <rect {...line} x="330" y="140" width="188" height="34" rx="9" />
+        <circle cx="349" cy="157" r="6" fill={CORAL} />
+      </g>
+      <g class="si-float" style="animation-delay:.8s">
+        <rect
+          {...line}
+          x="330"
+          y="190"
+          width="88"
+          height="110"
+          rx="9"
+          opacity="0.7"
+        />
+        <path
+          {...line}
+          d="M346 218h56M346 240h40"
+          opacity="0.3"
+          stroke-width="4"
+        />
+      </g>
+      <g class="si-float" style="animation-delay:1.6s">
+        <rect
+          x="430"
+          y="190"
+          width="88"
+          height="110"
+          rx="9"
+          fill={CORAL}
+          opacity="0.14"
+        />
+        <rect
+          {...line}
+          x="430"
+          y="190"
+          width="88"
+          height="110"
+          rx="9"
+          opacity="0.7"
+        />
+        <path
+          {...line}
+          d="M446 218h56M446 240h32"
+          opacity="0.3"
+          stroke-width="4"
+        />
+      </g>
+    </svg>
+  )
+}
+{
+  slug === "ui-ux-design" && (
+    <svg
+      {...svgAttrs}
+      aria-label="Design frames with alignment guides and selection handles"
+    >
+      {/* alignment guides */}
+      <path
+        d="M60 176H580"
+        stroke={CORAL}
+        stroke-width="1.5"
+        stroke-dasharray="7 7"
+        opacity="0.55"
+        class="si-dash"
+      />
+      <path
+        d="M182 48v304"
+        stroke={CORAL}
+        stroke-width="1.5"
+        stroke-dasharray="7 7"
+        opacity="0.55"
+        class="si-dash"
+      />
+      {/* desktop frame */}
+      <rect {...line} x="112" y="84" width="296" height="232" rx="16" />
+      <path {...line} d="M112 120h296" opacity="0.3" />
+      {/* selected element + handles */}
+      <rect
+        {...line}
+        x="182"
+        y="176"
+        width="150"
+        height="88"
+        rx="8"
+        stroke={CORAL}
+        stroke-width="2.5"
+        pathLength="100"
+        data-draw
+      />
+      <path
+        {...line}
+        d="M204 200h84M204 222h56"
+        opacity="0.35"
+        stroke-width="4"
+      />
+      <rect
+        x="176"
+        y="170"
+        width="12"
+        height="12"
+        rx="3"
+        fill="#fff"
+        stroke={CORAL}
+        stroke-width="2"
+        class="si-pulse"
+      />
+      <rect
+        x="326"
+        y="170"
+        width="12"
+        height="12"
+        rx="3"
+        fill="#fff"
+        stroke={CORAL}
+        stroke-width="2"
+        class="si-pulse"
+        style="animation-delay:.4s"
+      />
+      <rect
+        x="176"
+        y="258"
+        width="12"
+        height="12"
+        rx="3"
+        fill="#fff"
+        stroke={CORAL}
+        stroke-width="2"
+        class="si-pulse"
+        style="animation-delay:.8s"
+      />
+      <rect
+        x="326"
+        y="258"
+        width="12"
+        height="12"
+        rx="3"
+        fill="#fff"
+        stroke={CORAL}
+        stroke-width="2"
+        class="si-pulse"
+        style="animation-delay:1.2s"
+      />
+      {/* mobile frame */}
+      <g class="si-float">
+        <rect {...line} x="456" y="108" width="120" height="204" rx="20" />
+        <path {...line} d="M492 132h48" opacity="0.35" stroke-width="4" />
+        <rect
+          x="476"
+          y="156"
+          width="80"
+          height="52"
+          rx="8"
+          fill={CORAL}
+          opacity="0.16"
+        />
+        <path
+          {...line}
+          d="M476 232h80M476 254h52"
+          opacity="0.3"
+          stroke-width="4"
+        />
+      </g>
+      {/* cursor */}
+      <g class="si-drift-cursor">
+        <path
+          d="m352 276 7 21 4.5-8 8.5 8-4-9.5 9-1.5z"
+          fill="currentColor"
+          stroke="#fff"
+          stroke-width="1.5"
+        />
+      </g>
+    </svg>
+  )
+}
+{
+  slug === "seo-analytics" && (
+    <svg
+      {...svgAttrs}
+      aria-label="Rising analytics chart under a magnifying lens"
+    >
+      {/* axes */}
+      <path {...line} d="M104 64v264h440" opacity="0.25" />
+      {/* ghost bars */}
+      <rect
+        x="144"
+        y="262"
+        width="56"
+        height="66"
+        rx="6"
+        fill="currentColor"
+        opacity="0.07"
+      />
+      <rect
+        x="240"
+        y="228"
+        width="56"
+        height="100"
+        rx="6"
+        fill="currentColor"
+        opacity="0.07"
+      />
+      <rect
+        x="336"
+        y="180"
+        width="56"
+        height="148"
+        rx="6"
+        fill="currentColor"
+        opacity="0.07"
+      />
+      <rect
+        x="432"
+        y="120"
+        width="56"
+        height="208"
+        rx="6"
+        fill="currentColor"
+        opacity="0.07"
+      />
+      {/* trend line */}
+      <path
+        {...line}
+        d="M120 296 220 240l84 26 112-76 188-88"
+        stroke-width="3"
+        pathLength="100"
+        data-draw
+      />
+      <circle cx="604" cy="102" r="7" fill={CORAL} class="si-pulse" />
+      {/* magnifier */}
+      <g class="si-float" opacity="0.75">
+        <circle {...line} cx="392" cy="196" r="52" stroke-width="2.5" />
+        <path {...line} d="m430 233 34 34" stroke-width="5" />
+      </g>
+      {/* ranking ticks */}
+      <path
+        d="M144 92h34"
+        stroke={CORAL}
+        stroke-width="5"
+        stroke-linecap="round"
+        opacity="0.8"
+      />
+      <path {...line} d="M144 112h58" opacity="0.25" stroke-width="5" />
+      <path {...line} d="M144 132h44" opacity="0.25" stroke-width="5" />
+    </svg>
+  )
+}
+{
+  slug === "website-management" && (
+    <svg {...svgAttrs} aria-label="Content dashboard with live editing toggle">
+      {/* dashboard frame */}
+      <rect {...line} x="100" y="70" width="440" height="260" rx="18" />
+      <path {...line} d="M196 70v260" opacity="0.25" />
+      {/* sidebar */}
+      <rect
+        x="116"
+        y="100"
+        width="64"
+        height="26"
+        rx="8"
+        fill={CORAL}
+        opacity="0.2"
+      />
+      <path
+        d="M126 113h36"
+        stroke={CORAL}
+        stroke-width="5"
+        stroke-linecap="round"
+      />
+      <path
+        {...line}
+        d="M126 150h44M126 176h36M126 202h44"
+        opacity="0.3"
+        stroke-width="5"
+      />
+      {/* heading + toggle */}
+      <path
+        {...line}
+        d="M224 108h120"
+        opacity="0.7"
+        stroke-width="7"
+        pathLength="100"
+        data-draw
+      />
+      <g>
+        <rect
+          x="452"
+          y="94"
+          width="60"
+          height="30"
+          rx="15"
+          fill={CORAL}
+          opacity="0.9"
+        />
+        <circle cx="497" cy="109" r="11" fill="#fff" class="si-slide" />
+      </g>
+      {/* content rows */}
+      <g class="si-float">
+        <rect
+          {...line}
+          x="224"
+          y="146"
+          width="288"
+          height="62"
+          rx="10"
+          opacity="0.8"
+        />
+        <rect
+          x="238"
+          y="160"
+          width="34"
+          height="34"
+          rx="8"
+          fill={CORAL}
+          opacity="0.16"
+        />
+        <path
+          {...line}
+          d="M286 168h110M286 190h72"
+          opacity="0.3"
+          stroke-width="4"
+        />
+      </g>
+      <g class="si-float" style="animation-delay:1s">
+        <rect
+          {...line}
+          x="224"
+          y="224"
+          width="288"
+          height="62"
+          rx="10"
+          opacity="0.8"
+        />
+        <rect
+          x="238"
+          y="238"
+          width="34"
+          height="34"
+          rx="8"
+          fill="currentColor"
+          opacity="0.08"
+        />
+        <path
+          {...line}
+          d="M286 246h84M286 268h120"
+          opacity="0.3"
+          stroke-width="4"
+        />
+      </g>
+      {/* edit cursor */}
+      <g class="si-drift-cursor">
+        <path
+          d="m492 252 7 21 4.5-8 8.5 8-4-9.5 9-1.5z"
+          fill="currentColor"
+          stroke="#fff"
+          stroke-width="1.5"
+        />
+      </g>
+    </svg>
+  )
+}
+{
+  slug === "ecommerce" && (
+    <svg {...svgAttrs} aria-label="Product cards flowing to a trusted checkout">
+      {/* product cards */}
+      <g class="si-float">
+        <rect {...line} x="96" y="96" width="152" height="196" rx="15" />
+        <rect
+          x="110"
+          y="110"
+          width="124"
+          height="94"
+          rx="9"
+          fill="currentColor"
+          opacity="0.07"
+        />
+        <path {...line} d="M110 226h84" opacity="0.35" stroke-width="5" />
+        <path
+          d="M110 252h44"
+          stroke={CORAL}
+          stroke-width="5"
+          stroke-linecap="round"
+        />
+      </g>
+      <g class="si-float" style="animation-delay:1.2s">
+        <rect {...line} x="272" y="96" width="152" height="196" rx="15" />
+        <rect
+          x="286"
+          y="110"
+          width="124"
+          height="94"
+          rx="9"
+          fill={CORAL}
+          opacity="0.13"
+        />
+        <path {...line} d="M286 226h84" opacity="0.35" stroke-width="5" />
+        <path
+          d="M286 252h44"
+          stroke={CORAL}
+          stroke-width="5"
+          stroke-linecap="round"
+        />
+      </g>
+      {/* flow to cart */}
+      <path
+        d="M440 194h56"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-dasharray="7 7"
+        opacity="0.5"
+        class="si-dash"
+      />
+      <path {...line} d="m488 186 10 8-10 8" opacity="0.5" />
+      {/* Shopify store */}
+      <circle {...line} cx="552" cy="194" r="48" pathLength="100" data-draw />
+      <g transform="translate(529.2 171.2) scale(1.9)">
+        <path
+          fill="#95BF47"
+          d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zM11.71 11.305s-.81-.424-1.774-.424c-1.447 0-1.504.906-1.504 1.141 0 1.232 3.24 1.715 3.24 4.629 0 2.295-1.44 3.76-3.406 3.76-2.354 0-3.54-1.465-3.54-1.465l.646-2.086s1.245 1.066 2.28 1.066c.675 0 .975-.545.975-.932 0-1.619-2.654-1.694-2.654-4.359-.034-2.237 1.571-4.416 4.827-4.416 1.257 0 1.875.361 1.875.361l-.945 2.715-.02.01zM11.17.83c.136 0 .271.038.405.135-.984.465-2.064 1.639-2.508 3.992-.656.213-1.293.405-1.889.578C7.697 3.75 8.951.84 11.17.84V.83zm1.235 2.949v.135c-.754.232-1.583.484-2.394.736.466-1.777 1.333-2.645 2.085-2.971.193.501.309 1.176.309 2.1zm.539-2.234c.694.074 1.141.867 1.429 1.755-.349.114-.735.231-1.158.366v-.252c0-.752-.096-1.371-.271-1.871v.002zm2.992 1.289c-.02 0-.06.021-.078.021s-.289.075-.714.21c-.423-1.233-1.176-2.37-2.508-2.37h-.115C12.135.209 11.669 0 11.265 0 8.159 0 6.675 3.877 6.21 5.846c-1.194.365-2.063.636-2.16.674-.675.213-.694.232-.772.87-.075.462-1.83 14.063-1.83 14.063L15.009 24l.927-21.166z"
+        />
+      </g>
+      <circle cx="588" cy="158" r="13" fill={CORAL} class="si-pulse" />
+      <path
+        d="m582 158 4 4 7-8"
+        stroke="#fff"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      {/* checkout bar */}
+      <g class="si-float" style="animation-delay:.6s">
+        <rect
+          x="96"
+          y="322"
+          width="328"
+          height="8"
+          rx="4"
+          fill="currentColor"
+          opacity="0.08"
+        />
+        <rect
+          x="96"
+          y="322"
+          width="196"
+          height="8"
+          rx="4"
+          fill={CORAL}
+          opacity="0.75"
+        />
+      </g>
+    </svg>
+  )
+}
+{
+  slug === "custom-web-apps" && (
+    <svg {...svgAttrs} aria-label="Connected app modules linking around a core">
+      {/* connectors */}
+      <path
+        {...line}
+        d="M256 174 194 156"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+      />
+      <path
+        {...line}
+        d="M344 172l74-38"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+        style="animation-delay:.25s"
+      />
+      <path
+        {...line}
+        d="M262 214l-48 46"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+        style="animation-delay:.5s"
+      />
+      <path
+        {...line}
+        d="M342 216l70 50"
+        opacity="0.4"
+        pathLength="100"
+        data-draw
+        style="animation-delay:.75s"
+      />
+      {/* core */}
+      <circle cx="300" cy="194" r="20" fill={CORAL} class="si-pulse" />
+      <circle {...line} cx="300" cy="194" r="34" opacity="0.3" />
+      {/* module: code */}
+      <g class="si-float">
+        <rect {...line} x="108" y="92" width="96" height="96" rx="17" />
+        <path
+          {...line}
+          d="m142 128-12 12 12 12M170 128l12 12-12 12"
+          stroke-width="2.5"
+        />
+      </g>
+      {/* module: data */}
+      <g class="si-float" style="animation-delay:.8s">
+        <rect {...line} x="416" y="76" width="104" height="104" rx="17" />
+        <ellipse {...line} cx="468" cy="110" rx="26" ry="9" />
+        <path {...line} d="M442 110v36c0 5 12 9 26 9s26-4 26-9v-36" />
+      </g>
+      {/* module: users */}
+      <g class="si-float" style="animation-delay:1.6s">
+        <rect {...line} x="128" y="240" width="88" height="88" rx="17" />
+        <circle {...line} cx="172" cy="272" r="12" />
+        <path {...line} d="M152 306c3-12 11-17 20-17s17 5 20 17" />
+      </g>
+      {/* module: automation */}
+      <g class="si-float" style="animation-delay:2.4s">
+        <rect {...line} x="410" y="240" width="96" height="96" rx="17" />
+        <circle {...line} cx="458" cy="288" r="18" />
+        <path
+          {...line}
+          d="M458 262v8M458 306v8M432 288h8M476 288h8M440 270l6 6M476 270l-6 6M440 306l6-6M476 306l-6-6"
+          class="si-spin-slow"
+        />
+      </g>
+    </svg>
+  )
+}
+
+<style is:global>
+  .si-illus {
+    display: block;
+  }
+  /* one-time draw-in, fired by the page's IntersectionObserver via .reveal */
+  .si-illus [data-draw] {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+  .reveal.visible .si-illus [data-draw] {
+    animation: si-draw 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  @keyframes si-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* ambient loops */
+  @keyframes si-pulse-kf {
+    from {
+      opacity: 0.55;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .si-pulse {
+    animation: si-pulse-kf 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) infinite
+      alternate;
+  }
+  @keyframes si-float-kf {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-5px);
+    }
+  }
+  .si-float {
+    animation: si-float-kf 5s ease-in-out infinite alternate;
+  }
+  @keyframes si-dash-kf {
+    to {
+      stroke-dashoffset: -56;
+    }
+  }
+  .si-dash {
+    animation: si-dash-kf 5s linear infinite;
+  }
+  @keyframes si-blink-kf {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    55%,
+    100% {
+      opacity: 0;
+    }
+  }
+  .si-blink {
+    animation: si-blink-kf 1.1s step-end infinite;
+  }
+  @keyframes si-slide-kf {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-30px);
+    }
+  }
+  .si-slide {
+    animation: si-slide-kf 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite
+      alternate;
+    animation-delay: 1s;
+  }
+  @keyframes si-drift-cursor-kf {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(-14px, -10px);
+    }
+  }
+  .si-drift-cursor {
+    animation: si-drift-cursor-kf 3.4s ease-in-out infinite alternate;
+  }
+  @keyframes si-spin-slow-kf {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .si-spin-slow {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: si-spin-slow-kf 14s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .si-illus *,
+    .reveal.visible .si-illus [data-draw] {
+      animation: none !important;
+    }
+    .si-illus [data-draw] {
+      stroke-dashoffset: 0;
+    }
+    .si-illus .si-blink {
+      opacity: 1;
+    }
+  }
+</style>

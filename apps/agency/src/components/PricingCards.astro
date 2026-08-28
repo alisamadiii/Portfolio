@@ -308,20 +308,20 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
   <!-- E-commerce Storefront Card (Shopify green) -->
   <div class="reveal">
     <div
-      class="package-card flex h-full flex-col rounded-[18px] bg-[#008060]/[0.06] p-1.5 ring-1 ring-[#008060]/[0.12]"
+      class="package-card flex h-full flex-col rounded-[18px] bg-[#95BF47]/[0.10] p-1.5 ring-1 ring-[#95BF47]/[0.35]"
     >
       <div
-        class="relative flex flex-1 flex-col overflow-hidden rounded-[14px] bg-[#008060] p-8 text-white"
+        class="relative flex flex-1 flex-col overflow-hidden rounded-[14px] bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c] p-8 text-charcoal"
       >
         <ShopifyLogo
           variant="mono"
-          class="pointer-events-none absolute -top-6 -right-5 h-32 w-32 text-white/[0.16]"
+          class="pointer-events-none absolute -top-6 -right-5 h-32 w-32 text-white/[0.25]"
         />
         <div class="relative mb-6 flex items-center gap-3">
           <span
-            class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.12] px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-white uppercase"
+            class="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/[0.3] px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-charcoal uppercase"
           >
-            <ShopifyLogo variant="mono" class="h-3 w-3 text-white" /> Shopify
+            <ShopifyLogo variant="mono" class="h-3 w-3 text-charcoal" /> Shopify
           </span>
         </div>
         <h3 class="relative text-2xl font-semibold tracking-[-0.02em]">
@@ -331,20 +331,22 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           <span class="text-3xl font-bold tracking-tight"
             >{fmtPrice(PRICING.ecommerce.setup)}</span
           >
-          <span class="text-base font-normal text-white/70">setup +</span>
+          <span class="text-base font-normal text-charcoal/60">setup +</span>
           <span class="text-3xl font-bold tracking-tight"
             >{fmtPrice(PRICING.ecommerce.monthly)}</span
           >
-          <span class="text-base font-normal text-white/70">/mo</span>
+          <span class="text-base font-normal text-charcoal/60">/mo</span>
         </div>
-        <p class="relative mt-3 max-w-[40ch] text-sm leading-relaxed text-white/80">
+        <p
+          class="relative mt-3 max-w-[40ch] text-sm leading-relaxed text-charcoal/75"
+        >
           A unique website for your Shopify store — custom storefront, instant
           navigation, same secure Shopify checkout.
         </p>
-        <ul class="relative mt-6 space-y-3 text-sm text-white/85">
+        <ul class="relative mt-6 space-y-3 text-sm text-charcoal/85">
           <li class="flex items-start gap-3">
             <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              class="mt-0.5 h-4 w-4 shrink-0 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -359,7 +361,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           </li>
           <li class="flex items-start gap-3">
             <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              class="mt-0.5 h-4 w-4 shrink-0 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -372,14 +374,14 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
             </svg>
             <span
               >Built on your existing Shopify
-              <span class="block text-xs text-white/60"
+              <span class="block text-xs text-charcoal/55"
                 >Products, inventory &amp; checkout stay in Shopify</span
               ></span
             >
           </li>
           <li class="flex items-start gap-3">
             <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              class="mt-0.5 h-4 w-4 shrink-0 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -394,7 +396,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           </li>
           <li class="flex items-start gap-3">
             <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              class="mt-0.5 h-4 w-4 shrink-0 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -409,7 +411,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           </li>
           <li class="flex items-start gap-3">
             <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              class="mt-0.5 h-4 w-4 shrink-0 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -426,7 +428,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
         <div class="relative mt-auto pt-8">
           <a
             href="/quote?plan=ecommerce"
-            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-[#008060] transition-all duration-300 hover:bg-charcoal hover:text-cream"
+            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-white hover:text-charcoal"
           >
             Get a Quote
             <svg

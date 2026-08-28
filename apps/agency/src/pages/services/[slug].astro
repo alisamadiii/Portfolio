@@ -1,7 +1,9 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import BackNav from "../../components/BackNav.astro";
+import BenefitGlyph from "../../components/BenefitGlyph.astro";
 import HomeFooter from "../../components/HomeFooter.astro";
+import ServiceIllustration from "../../components/ServiceIllustration.astro";
 import { services, type Service } from "../../data/services";
 
 export function getStaticPaths() {
@@ -134,37 +136,12 @@ const relatedServices = service.related
               >
             </div>
           </div>
-          <figure>
+          <figure class="reveal">
             <div
-              class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08]"
+              class="aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white text-charcoal"
             >
-              <img
-                src={service.image.src}
-                alt={service.image.alt}
-                width="1600"
-                height="1000"
-                class="h-full w-full object-cover"
-                fetchpriority="high"
-              />
+              <ServiceIllustration slug={service.slug} />
             </div>
-            <figcaption class="mt-2 text-right text-[11.5px] text-muted">
-              Photo by
-              <a
-                href={service.image.credit.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-                >{service.image.credit.name}</a
-              >
-              on
-              <a
-                href={service.image.credit.pexelsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-                >Pexels</a
-              >
-            </figcaption>
           </figure>
         </div>
       </div>
@@ -238,6 +215,11 @@ const relatedServices = service.related
         {
           service.benefits.map((b) => (
             <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
+              {b.icon && (
+                <div class="mb-5 flex size-11 items-center justify-center rounded-[12px] bg-accent/[0.12] text-accent">
+                  <BenefitGlyph icon={b.icon} />
+                </div>
+              )}
               <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
                 {b.title}
               </h3>

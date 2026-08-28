@@ -80,7 +80,9 @@ const schema = [
 
   <main>
     <!-- ==================== HERO ==================== -->
-    <section class="mx-auto max-w-[1200px] px-6 pt-32 pb-[70px] md:px-10 md:pt-40">
+    <section
+      class="mx-auto max-w-[1200px] px-6 pt-32 pb-[70px] md:px-10 md:pt-40"
+    >
       <div
         class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16"
       >
@@ -88,13 +90,14 @@ const schema = [
           <div
             class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
           >
-            <span class="h-px w-[26px] bg-[#95BF47]"></span>E-commerce Storefront
+            <span class="h-px w-[26px] bg-[#95BF47]"></span>E-commerce
+            Storefront
           </div>
           <h1
             class="reveal max-w-[16ch] text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
           >
             A unique website for your
-            <span class="text-[#008060]">Shopify</span> store
+            <span class="text-[#5e8e3e]">Shopify</span> store
           </h1>
           <p
             class="reveal mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
@@ -106,7 +109,7 @@ const schema = [
           <div class="reveal mt-9 flex flex-wrap items-center gap-3.5">
             <a
               href="/quote?plan=ecommerce"
-              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-[#008060] px-6 py-3.5 text-[15.5px] font-medium text-white shadow-[0_8px_24px_rgba(0,128,96,0.32)] hover:bg-charcoal hover:text-cream"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c] px-6 py-3.5 text-[15.5px] font-medium text-charcoal shadow-[0_8px_24px_rgba(149,191,71,0.4)] hover:bg-charcoal hover:bg-none hover:text-cream"
             >
               Get a Quote
               <span>&#8599;</span>
@@ -153,7 +156,7 @@ const schema = [
         class="reveal max-w-[24ch] text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
       >
         Themes look like everyone. Custom looks like
-        <span class="text-[#008060]">you</span>
+        <span class="text-[#5e8e3e]">you</span>
       </h2>
 
       <div class="stagger mt-11 grid grid-cols-1 gap-[18px] md:grid-cols-2">
@@ -196,17 +199,19 @@ const schema = [
 
         <!-- Custom storefront -->
         <div
-          class="reveal rounded-[18px] border border-[#00805f] bg-[#008060] p-[30px] text-white"
+          class="reveal rounded-[18px] border border-[#7fa93c]/60 bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c] p-[30px] text-charcoal"
         >
           <div
-            class="font-mono text-[12.5px] tracking-[0.12em] text-white/70 uppercase"
+            class="font-mono text-[12.5px] tracking-[0.12em] text-charcoal/70 uppercase"
           >
             Your store, custom-built
           </div>
-          <ul class="mt-6 space-y-4 text-[15px] leading-[1.55] text-white/85">
+          <ul
+            class="mt-6 space-y-4 text-[15px] leading-[1.55] text-charcoal/85"
+          >
             <li class="flex items-start gap-3">
               <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -221,7 +226,7 @@ const schema = [
             </li>
             <li class="flex items-start gap-3">
               <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -236,7 +241,7 @@ const schema = [
             </li>
             <li class="flex items-start gap-3">
               <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -251,7 +256,7 @@ const schema = [
             </li>
             <li class="flex items-start gap-3">
               <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -297,7 +302,9 @@ const schema = [
         <div
           class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
         >
-          <span class="font-mono text-[32px] font-medium text-[#008060]">01</span>
+          <span class="font-mono text-[32px] font-medium text-[#5e8e3e]"
+            >01</span
+          >
           <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
             You keep Shopify
           </h3>
@@ -309,27 +316,30 @@ const schema = [
         <div
           class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
         >
-          <span class="font-mono text-[32px] font-medium text-[#008060]">02</span>
+          <span class="font-mono text-[32px] font-medium text-[#5e8e3e]"
+            >02</span
+          >
           <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
             We build the storefront
           </h3>
           <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
             A custom website connected straight to your store's catalog —
-            product pages, collections, search, cart, and customer accounts,
-            all designed around your brand.
+            product pages, collections, search, cart, and customer accounts, all
+            designed around your brand.
           </p>
         </div>
         <div
           class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
         >
-          <span class="font-mono text-[32px] font-medium text-[#008060]">03</span>
+          <span class="font-mono text-[32px] font-medium text-[#5e8e3e]"
+            >03</span
+          >
           <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
             Checkout stays Shopify
           </h3>
           <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
             At the moment of purchase, the cart hands off to Shopify's secure
-            checkout — same payment methods, shipping rules, and taxes as
-            today.
+            checkout — same payment methods, shipping rules, and taxes as today.
           </p>
         </div>
       </div>
@@ -350,7 +360,7 @@ const schema = [
         <h2
           class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
         >
-          Built to feel <span class="text-[#008060]">instant</span>
+          Built to feel <span class="text-[#5e8e3e]">instant</span>
         </h2>
         <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
           Slow stores lose sales — shoppers leave before the page finishes
@@ -396,9 +406,9 @@ const schema = [
             Core Web Vitals as a requirement
           </h3>
           <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
-            Google's speed metrics affect both rankings and conversion. We
-            treat passing them as part of launch — and you can verify the
-            scores yourself.
+            Google's speed metrics affect both rankings and conversion. We treat
+            passing them as part of launch — and you can verify the scores
+            yourself.
           </p>
         </div>
       </div>
@@ -438,20 +448,23 @@ const schema = [
 
         <div class="reveal">
           <div
-            class="package-card flex h-full flex-col rounded-[18px] bg-[#008060]/[0.06] p-1.5 ring-1 ring-[#008060]/[0.12]"
+            class="package-card flex h-full flex-col rounded-[18px] bg-[#95BF47]/[0.10] p-1.5 ring-1 ring-[#95BF47]/[0.35]"
           >
             <div
-              class="relative flex flex-1 flex-col overflow-hidden rounded-[14px] bg-[#008060] p-8 text-white"
+              class="relative flex flex-1 flex-col overflow-hidden rounded-[14px] bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c] p-8 text-charcoal"
             >
               <ShopifyLogo
                 variant="mono"
-                class="pointer-events-none absolute -top-6 -right-5 h-32 w-32 text-white/[0.16]"
+                class="pointer-events-none absolute -top-6 -right-5 h-32 w-32 text-white/[0.25]"
               />
               <div class="mb-6 flex items-center gap-3">
                 <span
-                  class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.12] px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-white uppercase"
+                  class="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/[0.3] px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-charcoal uppercase"
                 >
-                  <ShopifyLogo variant="mono" class="h-3.5 w-3.5 text-white" /> For Shopify stores
+                  <ShopifyLogo
+                    variant="mono"
+                    class="h-3.5 w-3.5 text-charcoal"
+                  /> For Shopify stores
                 </span>
               </div>
               <h3 class="text-2xl font-semibold tracking-[-0.02em]">
@@ -459,15 +472,16 @@ const schema = [
               </h3>
               <div class="mt-3 flex flex-wrap items-baseline gap-x-2">
                 <span class="text-3xl font-bold tracking-tight">{setup}</span>
-                <span class="text-base font-normal text-white/70">setup</span>
-                <span class="text-white/70">+</span>
+                <span class="text-base font-normal text-charcoal/60">setup</span
+                >
+                <span class="text-charcoal/60">+</span>
                 <span class="text-3xl font-bold tracking-tight">{monthly}</span>
-                <span class="text-base font-normal text-white/70">/mo</span>
+                <span class="text-base font-normal text-charcoal/60">/mo</span>
               </div>
-              <ul class="relative mt-6 space-y-3 text-sm text-white/85">
+              <ul class="relative mt-6 space-y-3 text-sm text-charcoal/85">
                 <li class="flex items-start gap-3">
                   <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -482,7 +496,7 @@ const schema = [
                 </li>
                 <li class="flex items-start gap-3">
                   <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -497,7 +511,7 @@ const schema = [
                 </li>
                 <li class="flex items-start gap-3">
                   <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -512,7 +526,7 @@ const schema = [
                 </li>
                 <li class="flex items-start gap-3">
                   <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -527,7 +541,7 @@ const schema = [
                 </li>
                 <li class="flex items-start gap-3">
                   <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -544,7 +558,7 @@ const schema = [
               <div class="relative mt-auto pt-8">
                 <a
                   href="/quote?plan=ecommerce"
-                  class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-[#008060] transition-all duration-300 hover:bg-charcoal hover:text-cream"
+                  class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-white hover:text-charcoal"
                 >
                   Get a Quote
                   <svg
@@ -597,7 +611,7 @@ const schema = [
       </div>
       <p class="reveal mt-9 text-[15px] text-warmgray">
         More detail on the service itself?
-        <a href="/services/ecommerce" class="text-[#008060] hover:underline"
+        <a href="/services/ecommerce" class="text-[#5e8e3e] hover:underline"
           >Read about our e-commerce website development &rarr;</a
         >
       </p>
@@ -605,23 +619,23 @@ const schema = [
 
     <!-- ==================== CTA ==================== -->
     <section
-      class="relative mx-3 mt-[70px] mb-6 overflow-hidden rounded-[26px] bg-[#008060] text-white md:mx-6"
+      class="relative mx-3 mt-[70px] mb-6 overflow-hidden rounded-[26px] bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c] text-charcoal md:mx-6"
     >
       <div class="relative mx-auto max-w-[1160px] px-6 py-16 md:px-10 md:py-20">
         <div class="stagger">
           <div
-            class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-white/70 uppercase"
+            class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-charcoal/70 uppercase"
           >
-            <span class="h-px w-[26px] bg-[#95BF47]"></span>Get Started
+            <span class="h-px w-[26px] bg-charcoal/50"></span>Get Started
           </div>
           <h2
-            class="reveal max-w-[18ch] text-[clamp(34px,4.5vw,60px)] leading-[1.04] font-semibold tracking-[-0.035em]"
+            class="reveal max-w-[18ch] text-[clamp(34px,4.5vw,60px)] leading-[1.04] font-semibold tracking-[-0.035em] text-white"
           >
             Your store deserves better than a
-            <span class="text-[#95BF47]">theme</span>
+            <span class="text-charcoal">theme</span>
           </h2>
           <p
-            class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-white/80"
+            class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-charcoal/80"
           >
             Send us your store's link — we'll reply with what a custom
             storefront would look like for your brand, and a clear price in
@@ -630,7 +644,7 @@ const schema = [
           <div class="reveal mt-9">
             <a
               href="/quote?plan=ecommerce"
-              class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-white px-[26px] py-[15px] text-base font-medium text-[#008060] shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:bg-charcoal hover:text-cream"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-charcoal px-[26px] py-[15px] text-base font-medium text-cream shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:bg-white hover:text-charcoal"
             >
               Get a Quote
               <span>&#8599;</span>

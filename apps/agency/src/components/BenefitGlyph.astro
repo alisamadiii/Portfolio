@@ -1,0 +1,496 @@
+---
+// Small animated geometric glyphs for the service-page benefit cards.
+// Rendered inside the coral size-11 tile in [slug].astro — strokes inherit
+// currentColor (accent). Pure CSS animation, paused under reduced motion.
+interface Props {
+  icon: string;
+}
+const { icon } = Astro.props;
+
+const common = {
+  class: "bg-glyph size-[26px]",
+  viewBox: "0 0 48 48",
+  fill: "none",
+  "aria-hidden": "true",
+};
+const stroke = {
+  stroke: "currentColor",
+  "stroke-width": "2.5",
+  "stroke-linecap": "round" as const,
+  "stroke-linejoin": "round" as const,
+};
+---
+
+{
+  icon === "target" && (
+    <svg {...common}>
+      <circle {...stroke} cx="24" cy="24" r="17" opacity="0.35" />
+      <circle {...stroke} cx="24" cy="24" r="10" opacity="0.7" />
+      <circle class="bg-pulse" cx="24" cy="24" r="4" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "spectrum" && (
+    <svg {...common}>
+      <path {...stroke} d="M10 38a28 28 0 0 1 28-28" class="bg-shim" />
+      <path
+        {...stroke}
+        d="M10 38a19 19 0 0 1 19-19"
+        class="bg-shim"
+        style="animation-delay:.5s"
+      />
+      <path
+        {...stroke}
+        d="M10 38a10 10 0 0 1 10-10"
+        class="bg-shim"
+        style="animation-delay:1s"
+      />
+      <circle class="bg-pulse" cx="10" cy="38" r="3.5" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "grid-match" && (
+    <svg {...common}>
+      <rect {...stroke} x="8" y="8" width="14" height="14" rx="3.5" />
+      <rect {...stroke} x="26" y="8" width="14" height="14" rx="3.5" />
+      <rect {...stroke} x="8" y="26" width="14" height="14" rx="3.5" />
+      <rect {...stroke} x="26" y="26" width="14" height="14" rx="3.5" />
+      <rect
+        class="bg-hl"
+        x="8"
+        y="8"
+        width="14"
+        height="14"
+        rx="3.5"
+        fill="currentColor"
+      />
+      <rect
+        class="bg-hl"
+        x="26"
+        y="8"
+        width="14"
+        height="14"
+        rx="3.5"
+        fill="currentColor"
+        style="animation-delay:1.2s"
+      />
+      <rect
+        class="bg-hl"
+        x="26"
+        y="26"
+        width="14"
+        height="14"
+        rx="3.5"
+        fill="currentColor"
+        style="animation-delay:2.4s"
+      />
+      <rect
+        class="bg-hl"
+        x="8"
+        y="26"
+        width="14"
+        height="14"
+        rx="3.5"
+        fill="currentColor"
+        style="animation-delay:3.6s"
+      />
+    </svg>
+  )
+}
+{
+  icon === "package" && (
+    <svg {...common}>
+      <rect
+        {...stroke}
+        x="12"
+        y="26"
+        width="24"
+        height="12"
+        rx="3"
+        opacity="0.4"
+      />
+      <rect
+        {...stroke}
+        x="10"
+        y="17"
+        width="28"
+        height="12"
+        rx="3"
+        opacity="0.7"
+      />
+      <rect
+        {...stroke}
+        x="8"
+        y="8"
+        width="32"
+        height="12"
+        rx="3"
+        class="bg-float"
+      />
+    </svg>
+  )
+}
+{
+  icon === "bolt" && (
+    <svg {...common}>
+      <path
+        {...stroke}
+        d="M26 6 12 27h9l-3 15 16-22h-10z"
+        pathLength="100"
+        class="bg-draw"
+      />
+    </svg>
+  )
+}
+{
+  icon === "sitemap" && (
+    <svg {...common}>
+      <rect {...stroke} x="17" y="6" width="14" height="10" rx="3" />
+      <path
+        {...stroke}
+        d="M24 16v7M24 23H10v6M24 23h14v6M24 23v6"
+        opacity="0.5"
+      />
+      <circle class="bg-pulse" cx="10" cy="35" r="4" fill="currentColor" />
+      <circle
+        class="bg-pulse"
+        cx="24"
+        cy="35"
+        r="4"
+        fill="currentColor"
+        style="animation-delay:.4s"
+      />
+      <circle
+        class="bg-pulse"
+        cx="38"
+        cy="35"
+        r="4"
+        fill="currentColor"
+        style="animation-delay:.8s"
+      />
+    </svg>
+  )
+}
+{
+  icon === "cursor" && (
+    <svg {...common}>
+      <path {...stroke} d="M8 30h32" opacity="0.35" />
+      <path {...stroke} d="M8 39h18" opacity="0.35" />
+      <path
+        {...stroke}
+        d="m26 8 4.5 13.5L34 16l5.5 5.5L34 16l-3.5 5.5z"
+        fill="currentColor"
+        class="bg-float"
+      />
+      <path {...stroke} d="M8 21h14" pathLength="100" class="bg-draw" />
+    </svg>
+  )
+}
+{
+  icon === "shield" && (
+    <svg {...common}>
+      <path
+        {...stroke}
+        d="M24 5 8 11v12c0 10 7 17 16 20 9-3 16-10 16-20V11Z"
+        opacity="0.6"
+      />
+      <path {...stroke} d="m16 24 6 6 10-12" pathLength="100" class="bg-draw" />
+    </svg>
+  )
+}
+{
+  icon === "sparkle-ai" && (
+    <svg {...common}>
+      <path
+        {...stroke}
+        d="M24 8c1.5 8 4.5 11 12.5 12.5C28.5 22 25.5 25 24 33c-1.5-8-4.5-11-12.5-12.5C19.5 19 22.5 16 24 8Z"
+        class="bg-breathe"
+      />
+      <circle class="bg-pulse" cx="38" cy="36" r="3.5" fill="currentColor" />
+      <circle
+        class="bg-pulse"
+        cx="10"
+        cy="38"
+        r="2.5"
+        fill="currentColor"
+        style="animation-delay:.7s"
+      />
+    </svg>
+  )
+}
+{
+  icon === "gauge" && (
+    <svg {...common}>
+      <path {...stroke} d="M8 36a16 16 0 0 1 32 0" opacity="0.45" />
+      <path
+        {...stroke}
+        d="M24 36 32 22"
+        class="bg-sweep"
+        style="transform-origin:24px 36px"
+      />
+      <circle cx="24" cy="36" r="3.5" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "chart" && (
+    <svg {...common}>
+      <path {...stroke} d="M8 8v32h32" opacity="0.35" />
+      <path
+        {...stroke}
+        d="m13 32 8-8 6 4 12-13"
+        pathLength="100"
+        class="bg-draw"
+      />
+      <circle class="bg-pulse" cx="39" cy="15" r="3.5" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "radar" && (
+    <svg {...common}>
+      <circle {...stroke} cx="24" cy="24" r="17" opacity="0.4" />
+      <circle {...stroke} cx="24" cy="24" r="9" opacity="0.25" />
+      <path
+        {...stroke}
+        d="M24 24 24 7"
+        class="bg-spin"
+        style="transform-origin:24px 24px"
+      />
+      <circle class="bg-pulse" cx="32" cy="17" r="3" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "rollback" && (
+    <svg {...common}>
+      <path {...stroke} d="M40 24a16 16 0 1 1-5-11.5" opacity="0.7" />
+      <path {...stroke} d="M35 5v8h-8" />
+      <circle class="bg-pulse" cx="24" cy="24" r="3.5" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "flow" && (
+    <svg {...common}>
+      <rect {...stroke} x="5" y="17" width="14" height="14" rx="4" />
+      <rect {...stroke} x="29" y="17" width="14" height="14" rx="4" />
+      <path {...stroke} d="M19 24h10" pathLength="100" class="bg-dash" />
+      <circle class="bg-pulse" cx="24" cy="24" r="2.5" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "contrast" && (
+    <svg {...common}>
+      <circle {...stroke} cx="24" cy="24" r="16" />
+      <path
+        d="M24 8a16 16 0 0 1 0 32Z"
+        fill="currentColor"
+        class="bg-breathe"
+      />
+    </svg>
+  )
+}
+{
+  icon === "cart" && (
+    <svg {...common}>
+      <path {...stroke} d="M6 8h5l5 22h19l5-16H14" />
+      <circle class="bg-pulse" cx="18" cy="39" r="3" fill="currentColor" />
+      <circle
+        class="bg-pulse"
+        cx="34"
+        cy="39"
+        r="3"
+        fill="currentColor"
+        style="animation-delay:.5s"
+      />
+    </svg>
+  )
+}
+{
+  icon === "nodes" && (
+    <svg {...common}>
+      <rect {...stroke} x="6" y="6" width="12" height="12" rx="3.5" />
+      <rect {...stroke} x="30" y="12" width="12" height="12" rx="3.5" />
+      <rect {...stroke} x="16" y="30" width="12" height="12" rx="3.5" />
+      <path
+        {...stroke}
+        d="m18 14 12 5M22 30l-3-12M27 31l7-7"
+        opacity="0.5"
+        pathLength="100"
+        class="bg-dash"
+      />
+    </svg>
+  )
+}
+{
+  icon === "scope" && (
+    <svg {...common}>
+      <path
+        {...stroke}
+        d="M16 8h-6a3 3 0 0 0-3 3v26a3 3 0 0 0 3 3h6"
+        class="bg-nudge-l"
+      />
+      <path
+        {...stroke}
+        d="M32 8h6a3 3 0 0 1 3 3v26a3 3 0 0 1-3 3h-6"
+        class="bg-nudge-r"
+      />
+      <circle class="bg-pulse" cx="24" cy="24" r="4" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "spark" && (
+    <svg {...common}>
+      <path {...stroke} d="M24 40V22" pathLength="100" class="bg-draw" />
+      <path
+        {...stroke}
+        d="M24 30c-7 0-9-4-9-9 5 0 9 2 9 9Zm0-4c0-9 4-12 10-12 0 7-3 12-10 12Z"
+        opacity="0.7"
+      />
+      <circle class="bg-pulse" cx="24" cy="12" r="3.5" fill="currentColor" />
+    </svg>
+  )
+}
+
+<style is:global>
+  .bg-glyph {
+    display: block;
+  }
+  @keyframes bg-pulse-kf {
+    from {
+      opacity: 0.3;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .bg-pulse {
+    animation: bg-pulse-kf 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite
+      alternate;
+  }
+  @keyframes bg-draw-kf {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .bg-draw {
+    stroke-dasharray: 100;
+    animation: bg-draw-kf 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite alternate;
+  }
+  @keyframes bg-dash-kf {
+    from {
+      stroke-dashoffset: 0;
+    }
+    to {
+      stroke-dashoffset: -48;
+    }
+  }
+  .bg-dash {
+    stroke-dasharray: 8 4;
+    animation: bg-dash-kf 3.2s linear infinite;
+  }
+  @keyframes bg-hl-kf {
+    0%,
+    72%,
+    100% {
+      opacity: 0;
+    }
+    12%,
+    32% {
+      opacity: 0.85;
+    }
+  }
+  .bg-hl {
+    opacity: 0;
+    animation: bg-hl-kf 4.8s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+  }
+  @keyframes bg-float-kf {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-2px);
+    }
+  }
+  .bg-float {
+    animation: bg-float-kf 2.4s ease-in-out infinite alternate;
+  }
+  @keyframes bg-sweep-kf {
+    from {
+      transform: rotate(-52deg);
+    }
+    to {
+      transform: rotate(38deg);
+    }
+  }
+  .bg-sweep {
+    transform-box: view-box;
+    animation: bg-sweep-kf 3.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite
+      alternate;
+  }
+  @keyframes bg-spin-kf {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .bg-spin {
+    transform-box: view-box;
+    animation: bg-spin-kf 7s linear infinite;
+  }
+  @keyframes bg-breathe-kf {
+    from {
+      transform: scale(1);
+      opacity: 0.75;
+    }
+    to {
+      transform: scale(1.07);
+      opacity: 1;
+    }
+  }
+  .bg-breathe {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: bg-breathe-kf 2.6s ease-in-out infinite alternate;
+  }
+  @keyframes bg-nudge-l-kf {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-1.5px);
+    }
+  }
+  @keyframes bg-nudge-r-kf {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(1.5px);
+    }
+  }
+  .bg-nudge-l {
+    animation: bg-nudge-l-kf 2.4s ease-in-out infinite alternate;
+  }
+  .bg-nudge-r {
+    animation: bg-nudge-r-kf 2.4s ease-in-out infinite alternate;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-glyph * {
+      animation: none !important;
+    }
+    .bg-glyph .bg-draw {
+      stroke-dashoffset: 0;
+    }
+    .bg-glyph .bg-hl {
+      opacity: 0;
+    }
+  }
+</style>
