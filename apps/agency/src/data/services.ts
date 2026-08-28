@@ -565,6 +565,110 @@ export const services: Service[] = [
     cta: { label: "See pricing", href: "/pricing" },
   },
 
+  // ── E-commerce Websites ────────────────────────────────────────
+  {
+    slug: "ecommerce",
+    name: "E-commerce Websites",
+    eyebrow: "Engineering",
+    keyword: "ecommerce website development",
+    searchKeywords: [
+      "shopify",
+      "online store",
+      "storefront",
+      "shop",
+      "headless",
+      "ecommerce",
+      "e-commerce",
+      "store speed",
+    ],
+    seoTitle: "E-commerce Website Development for Shopify Stores | Ali Samadi",
+    metaDescription:
+      "We rebuild the storefront your Shopify customers see — a custom-designed, genuinely fast online store. Shopify keeps running checkout, inventory, and orders.",
+    h1: "E-commerce website development that makes Shopify feel custom",
+    heroSub:
+      "A unique website for your Shopify store — custom-designed to your brand, with instant page navigation. Shopify keeps handling products, inventory, and secure checkout.",
+    intro:
+      "Ali Samadi Agency offers ecommerce website development for businesses already selling on Shopify. Most Shopify stores run on a theme — and it shows: the same layouts as thousands of other shops, pages that reload on every click, and a design that never quite matches the brand. We replace only the storefront your customers see with a custom-built website on Next.js, the same technology behind major retail sites. Your Shopify admin, product catalog, inventory, and secure checkout keep working exactly as they do today — your team changes nothing about how they run the store. Customers just get a faster, better-looking place to buy.",
+    benefits: [
+      {
+        title: "Keep Shopify, lose the template",
+        text: "Shopify stays your engine — products, inventory, orders, and checkout all keep running there. We only replace the storefront your customers see, so nothing about running your business changes.",
+      },
+      {
+        title: "Feels instant",
+        text: "Pages stream in as customers browse and the next page loads before they click. No full-page reloads between products — the store feels like an app, not a website.",
+      },
+      {
+        title: "Your brand, not a theme",
+        text: "Designed from scratch around your brand — typography, color, and layout that no theme store sells. Customers stop seeing a template and start seeing you.",
+      },
+      {
+        title: "Checkout customers already trust",
+        text: "Buying still happens on Shopify's secure, PCI-compliant checkout — the same flow your customers know, with all your payment methods and shipping rules intact.",
+      },
+    ],
+    process: [
+      {
+        title: "Store audit",
+        text: "We review your current theme, products, and brand, and map what the custom storefront needs — pages, collections, search, accounts.",
+      },
+      {
+        title: "Design",
+        text: "The storefront is designed around your brand, not adapted from a theme — you review real page designs before anything is built.",
+      },
+      {
+        title: "Build on your Shopify",
+        text: "We connect the new storefront to your existing store. Products, prices, and inventory sync automatically; your team keeps working in the same Shopify admin.",
+      },
+      {
+        title: "Launch & care",
+        text: "Your domain points to the new storefront and Shopify keeps powering checkout. We host, monitor, and update it from there — content changes included.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Do I have to leave Shopify?",
+        a: "No — that's the point. Shopify keeps managing your products, inventory, orders, and checkout. We only replace the storefront your customers see with a custom-built, faster website connected to your existing store.",
+      },
+      {
+        q: "Does checkout change?",
+        a: "No. Customers still pay through Shopify's secure checkout — the same payment methods, shipping rules, and taxes you have configured today. We hand the cart to Shopify at the moment of purchase.",
+      },
+      {
+        q: "What happens to my Shopify apps?",
+        a: "Back-office apps — inventory, fulfillment, accounting, email — keep working, because they live in your Shopify admin. Theme apps (page builders, popups, review widgets embedded in the theme) are replaced by features built directly into the new storefront.",
+      },
+      {
+        q: "What does a custom Shopify storefront cost?",
+        a: "A one-time $1,500 setup covers the design and build, then $349/month covers hosting, monitoring, updates, and content changes — the same care as our Website-as-a-Service plan. Larger catalogs or custom features are quoted before we start.",
+      },
+      {
+        q: "How long does it take?",
+        a: "Most storefronts launch in three to four weeks: about a week of design, one to two weeks of build and Shopify integration, and a final week of content, testing, and launch.",
+      },
+      {
+        q: "Will it actually be faster than my theme?",
+        a: "Yes — measurably. Themes render in Shopify's template system and reload on every click. The custom storefront pre-renders pages, streams them in, serves next-gen image formats, and preloads the next page before it's clicked. We treat Google's Core Web Vitals as a launch requirement.",
+      },
+    ],
+    externalLinks: [
+      {
+        label: "Shopify — Storefront API overview",
+        url: "https://shopify.dev/docs/api/storefront",
+      },
+      {
+        label: "web.dev — how speed affects e-commerce conversion",
+        url: "https://web.dev/case-studies/milliseconds-make-millions",
+      },
+    ],
+    related: ["web-development", "website-management"],
+    image: img(
+      "ecommerce",
+      "Laptop surrounded by shopping bags and boxes from online orders"
+    ),
+    cta: { label: "Get a quote", href: "/quote?plan=ecommerce" },
+  },
+
   // ── Custom Web Apps ────────────────────────────────────────────
   {
     slug: "custom-web-apps",

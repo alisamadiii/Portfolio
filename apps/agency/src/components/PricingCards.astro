@@ -1,9 +1,12 @@
 ---
-// The three plan cards (Website-as-a-Service / Own-it build / Custom) — single
-// source of truth, rendered on /pricing and the homepage #pricing section. The
-// monthly anchor comes from src/data/pricing.ts at build time. Every card CTA
-// routes to the "Get a Quote" form (/contact#quote) — no self-serve checkout.
+// The four plan cards (Website-as-a-Service / Own-it build / E-commerce
+// Storefront / Custom) — single source of truth, rendered on /pricing and the
+// homepage #pricing section. Price anchors come from src/data/pricing.ts at
+// build time. Every card CTA routes to the "Get a Quote" form — no self-serve
+// checkout (the e-commerce Stripe subscription is pending; keep its CTA on
+// /quote?plan=ecommerce until Ali wires it).
 import { PRICING, fmtPrice } from "../data/pricing";
+import ShopifyLogo from "./ShopifyLogo.astro";
 
 const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
 ---
@@ -302,27 +305,172 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
     </div>
   </div>
 
-  <!-- Custom Card -->
-  <div class:list={["reveal"]}>
+  <!-- E-commerce Storefront Card (Shopify green) -->
+  <div class="reveal">
+    <div
+      class="package-card flex h-full flex-col rounded-[18px] bg-[#008060]/[0.06] p-1.5 ring-1 ring-[#008060]/[0.12]"
+    >
+      <div
+        class="relative flex flex-1 flex-col overflow-hidden rounded-[14px] bg-[#008060] p-8 text-white"
+      >
+        <ShopifyLogo
+          variant="mono"
+          class="pointer-events-none absolute -top-6 -right-5 h-32 w-32 text-white/[0.16]"
+        />
+        <div class="relative mb-6 flex items-center gap-3">
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.12] px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-white uppercase"
+          >
+            <ShopifyLogo variant="mono" class="h-3 w-3 text-white" /> Shopify
+          </span>
+        </div>
+        <h3 class="relative text-2xl font-semibold tracking-[-0.02em]">
+          E-commerce Storefront
+        </h3>
+        <div class="relative mt-3 flex flex-wrap items-baseline gap-x-1.5">
+          <span class="text-3xl font-bold tracking-tight"
+            >{fmtPrice(PRICING.ecommerce.setup)}</span
+          >
+          <span class="text-base font-normal text-white/70">setup +</span>
+          <span class="text-3xl font-bold tracking-tight"
+            >{fmtPrice(PRICING.ecommerce.monthly)}</span
+          >
+          <span class="text-base font-normal text-white/70">/mo</span>
+        </div>
+        <p class="relative mt-3 max-w-[40ch] text-sm leading-relaxed text-white/80">
+          A unique website for your Shopify store — custom storefront, instant
+          navigation, same secure Shopify checkout.
+        </p>
+        <ul class="relative mt-6 space-y-3 text-sm text-white/85">
+          <li class="flex items-start gap-3">
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Custom storefront design matched to your brand
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span
+              >Built on your existing Shopify
+              <span class="block text-xs text-white/60"
+                >Products, inventory &amp; checkout stay in Shopify</span
+              ></span
+            >
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Instant page navigation &amp; sub-second loads
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Product pages, collections, search &amp; accounts
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            Hosting, monitoring, updates &amp; content edits included
+          </li>
+        </ul>
+        <div class="relative mt-auto pt-8">
+          <a
+            href="/quote?plan=ecommerce"
+            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-[#008060] transition-all duration-300 hover:bg-charcoal hover:text-cream"
+          >
+            Get a Quote
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Card (full-width row) -->
+  <div class="reveal lg:col-span-2 xl:col-span-3">
     <div
       class="package-card flex h-full flex-col rounded-[18px] bg-charcoal/[0.03] p-1.5 ring-1 ring-charcoal/[0.04]"
     >
-      <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
-        <div class="mb-6 flex items-center gap-3">
+      <div
+        class="flex flex-1 flex-wrap items-center justify-between gap-x-12 gap-y-8 rounded-[14px] bg-white p-8"
+      >
+        <div class="max-w-[46ch]">
           <span
             class="inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
             >Tailored</span
           >
+          <h3 class="mt-5 text-2xl font-semibold tracking-[-0.02em]">
+            Custom &mdash; <span class="font-bold">Let's talk</span>
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed text-warmgray">
+            Bigger scope? Admin panels, user accounts, databases, or something
+            unique — we scope it together and quote it fairly.
+          </p>
         </div>
-        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Custom</h3>
-        <div class="mt-3">
-          <span class="text-3xl font-bold tracking-tight">Let's talk</span>
-        </div>
-        <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
-          Bigger scope? Admin panels, user accounts, databases, or something
-          unique — we scope it together and quote it fairly.
-        </p>
-        <ul class="mt-6 space-y-3 text-sm text-warmgray">
+        <ul
+          class="grid grid-cols-1 gap-x-10 gap-y-3 text-sm text-warmgray sm:grid-cols-2"
+        >
           <li class="flex items-start gap-3">
             <svg
               class="mt-0.5 h-4 w-4 shrink-0 text-accent"
@@ -384,26 +532,24 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
             Personal quote, no surprises
           </li>
         </ul>
-        <div class="mt-auto pt-8">
-          <a
-            href="/quote?plan=custom"
-            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
+        <a
+          href="/quote?plan=custom"
+          class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-6 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream lg:w-auto"
+        >
+          Get a Quote
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            Get a Quote
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-            </svg>
-          </a>
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+          </svg>
+        </a>
       </div>
     </div>
   </div>

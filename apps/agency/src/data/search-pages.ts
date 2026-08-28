@@ -99,6 +99,21 @@ export const SEARCH_PAGES: SearchPage[] = [
     keywords: ["what we do", "offerings", "capabilities", "help"],
   },
   {
+    title: "E-commerce Storefront",
+    description:
+      "A unique website for your Shopify store — custom design, instant navigation, same secure checkout.",
+    url: "/ecommerce",
+    keywords: [
+      "shopify",
+      "online store",
+      "storefront",
+      "shop",
+      "ecommerce",
+      "e-commerce",
+      "sell online",
+    ],
+  },
+  {
     title: "Locations",
     description:
       "Florida cities we serve — Jacksonville, Miami, Tampa, Orlando, and more.",

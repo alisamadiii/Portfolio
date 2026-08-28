@@ -7,6 +7,7 @@ import QuoteForm from "../components/QuoteForm.astro";
 import Testimonial from "../components/Testimonial.astro";
 import ClientResults from "../components/ClientResults.astro";
 import AudienceSegments from "../components/AudienceSegments.astro";
+import ShopifyLogo from "../components/ShopifyLogo.astro";
 import { CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
 import { cities } from "../data/cities";
 import { PRICING, fmtPrice } from "../data/pricing";
@@ -491,10 +492,50 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
           </div>
         </div>
 
-        <!-- Need Something Custom? (wide, dark) -->
+        <!-- E-commerce Websites (Shopify light green) -->
         <div
           data-spot
-          class="reveal relative overflow-hidden rounded-[18px] border border-white/[0.08] bg-ink p-[34px] text-cream md:col-span-6"
+          class="reveal relative overflow-hidden rounded-[18px] border border-[#95BF47]/40 bg-gradient-to-br from-white via-[#f0f7e6] to-[#dcedc8] p-[30px] shadow-[0_18px_44px_rgba(94,142,62,0.16)] md:col-span-3"
+        >
+          <div
+            data-glow
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400"
+          >
+          </div>
+          <ShopifyLogo
+            class="pointer-events-none absolute -top-5 -right-4 h-36 w-36 drop-shadow-[0_16px_32px_rgba(94,142,62,0.35)]"
+          />
+          <div class="relative flex h-full flex-col">
+            <span
+              class="inline-flex w-fit items-center gap-2 rounded-full border border-[#5E8E3E]/30 bg-white px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-[#5E8E3E] uppercase"
+            >
+              <ShopifyLogo class="h-3 w-3" />
+              Shopify
+            </span>
+            <h3
+              class="mt-auto pt-8 text-[23px] font-semibold tracking-[-0.02em]"
+            >
+              E-commerce Websites
+            </h3>
+            <p
+              class="mt-2.5 max-w-[38ch] text-[15px] leading-[1.55] text-warmgray"
+            >
+              A unique, fast storefront for your Shopify store &mdash; custom
+              design matching your brand, while Shopify keeps running checkout
+              and inventory.
+            </p>
+            <a
+              href="/services/ecommerce"
+              class="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#008060] transition-colors duration-300 hover:text-charcoal"
+              >Learn more <span>&rarr;</span></a
+            >
+          </div>
+        </div>
+
+        <!-- Need Something Custom? (dark) -->
+        <div
+          data-spot
+          class="reveal relative overflow-hidden rounded-[18px] border border-white/[0.08] bg-ink p-[34px] text-cream md:col-span-3"
         >
           <div
             data-glow
@@ -572,6 +613,117 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       </div>
     </section>
 
+    <!-- ==================== E-COMMERCE / SHOPIFY ==================== -->
+    <!-- Productized Shopify storefront offer — full page at /ecommerce,
+       service detail at /services/ecommerce, pricing in src/data/pricing.ts. -->
+    <section
+      id="ecommerce"
+      class="bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c]"
+    >
+      <div class="mx-auto max-w-[1200px] px-6 py-[70px] md:px-10">
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-white/90 uppercase"
+      >
+        <span class="h-px w-[26px] bg-white"></span>05 &mdash; E-commerce
+      </div>
+
+      <div
+        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16"
+      >
+        <div>
+          <h2
+            class="reveal max-w-[18ch] text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em] text-white"
+          >
+            Unique website for your <span class="text-charcoal">Shopify</span>
+          </h2>
+          <p
+            class="reveal mt-5 max-w-[52ch] text-[16px] leading-[1.6] text-[#1f3608]"
+          >
+            Already selling on Shopify? Keep it — we replace only the theme
+            your customers see with a custom-built storefront that matches your
+            brand and feels instant to browse.
+          </p>
+          <ul class="stagger mt-7 space-y-3.5 text-[15px] text-[#1f3608]">
+            <li class="reveal flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Custom design &mdash; your brand, not a theme
+            </li>
+            <li class="reveal flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Instant navigation &mdash; no page reloads between products
+            </li>
+            <li class="reveal flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Shopify keeps running checkout, inventory &amp; orders
+            </li>
+          </ul>
+          <div class="reveal mt-9 flex flex-wrap items-center gap-5">
+            <a
+              href="/ecommerce"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream shadow-[0_10px_28px_rgba(47,68,22,0.35)] hover:bg-white hover:text-charcoal"
+            >
+              Explore the offer
+              <span>&#8599;</span>
+            </a>
+            <span class="font-mono text-[12.5px] text-[#1f3608]"
+              >{fmtPrice(PRICING.ecommerce.setup)} setup + {
+                fmtPrice(PRICING.ecommerce.monthly)
+              }/mo</span
+            >
+          </div>
+        </div>
+
+        <!-- Big Shopify mark -->
+        <div class="reveal">
+          <div
+            class="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[22px] bg-white shadow-[0_30px_70px_rgba(47,68,22,0.3)] lg:aspect-square"
+          >
+            <ShopifyLogo
+              class="h-[56%] w-[56%] drop-shadow-[0_24px_48px_rgba(94,142,62,0.4)]"
+            />
+            <span
+              class="absolute bottom-5 font-mono text-[11.5px] tracking-[0.12em] text-muted uppercase"
+              >Built on your Shopify</span
+            >
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
     <!-- ==================== PROCESS ==================== -->
     <section
       class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
@@ -579,7 +731,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-11 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>05 &mdash; Our Process
+        <span class="h-px w-[26px] bg-accent"></span>06 &mdash; Our Process
       </div>
 
       <div
@@ -732,7 +884,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>06 &mdash; Our Work
+        <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Our Work
       </div>
       <div
         class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -835,7 +987,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Client Work
+        <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Client Work
       </div>
       <div
         class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -907,7 +1059,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
     <!-- Live client Lighthouse scores as proof; component + data live in
        ClientResults.astro / projects.ts. -->
     <ClientResults
-      eyebrow="08 — Measured Results"
+      eyebrow="09 — Measured Results"
       heading="Real sites. Real scores."
       subhead="Live Google Lighthouse scores for sites we've built for real clients — and numbers you can check yourself in about 30 seconds."
     />
@@ -920,7 +1072,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>09 &mdash; Pricing
+        <span class="h-px w-[26px] bg-accent"></span>10 &mdash; Pricing
       </div>
 
       <div
@@ -958,7 +1110,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>10 &mdash; Areas We Serve
+        <span class="h-px w-[26px] bg-accent"></span>11 &mdash; Areas We Serve
       </div>
       <div
         class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -1015,7 +1167,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>11 &mdash; FAQ
+        <span class="h-px w-[26px] bg-accent"></span>12 &mdash; FAQ
       </div>
       <h2
         class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"

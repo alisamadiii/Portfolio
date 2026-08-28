@@ -14,6 +14,11 @@ export const PRICING = {
   // All-inclusive Website-as-a-Service plan ($/mo) — published anchor.
   monthly: 349,
 
+  // E-commerce Storefront plan — one-time setup + monthly care. Published as
+  // "from $1,500 setup + $349/mo". Stripe products not created yet; every CTA
+  // routes to /quote?plan=ecommerce until Ali wires the subscription.
+  ecommerce: { setup: 1500, monthly: 349 },
+
   // Email usage — informational only.
   email: { freePerMonth: 1000, perExtraThousand: 1 },
 };

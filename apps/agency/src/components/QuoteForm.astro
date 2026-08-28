@@ -3,7 +3,8 @@
 // on /quote, /contact, the homepage hero, and anywhere else. Multiple
 // instances per page are fine: the script binds each `.quote-form` by class
 // and reads fields via form.elements, no ids. Pricing cards deep-link with
-// ?plan=waas|onetime|custom, which preselects the plan <select> on load.
+// ?plan=waas|onetime|ecommerce|custom, which preselects the plan <select> on
+// load.
 // Submits to the portfolio quote API, which relays to agency@alisamadii.com
 // via the SES contact backend (recipient fixed server-side).
 import { PRICING, fmtPrice } from "../data/pricing";
@@ -129,6 +130,11 @@ const labelClass =
             >Website-as-a-Service — from {fmtPrice(PRICING.monthly)}/mo</option
           >
           <option value="onetime">Own-it build — priced per project</option>
+          <option value="ecommerce"
+            >E-commerce Storefront (Shopify) — {
+              fmtPrice(PRICING.ecommerce.setup)
+            } setup + {fmtPrice(PRICING.ecommerce.monthly)}/mo</option
+          >
           <option value="custom">Custom / not sure yet</option>
         </select>
       </div>

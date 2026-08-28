@@ -1,0 +1,698 @@
+---
+// Offer page for the E-commerce Storefront plan — a custom headless storefront
+// on the client's existing Shopify. Distinct from /services/ecommerce (the SEO
+// service page): this one sells the productized plan. Pricing comes from
+// src/data/pricing.ts; every CTA routes to /quote?plan=ecommerce until the
+// Stripe subscription is wired up.
+import Layout from "../layouts/Layout.astro";
+import BackNav from "../components/BackNav.astro";
+import HomeFooter from "../components/HomeFooter.astro";
+import ShopifyLogo from "../components/ShopifyLogo.astro";
+import { PRICING, fmtPrice } from "../data/pricing";
+
+const SITE = "https://agency.alisamadii.com";
+const pageUrl = `${SITE}/ecommerce`;
+
+const setup = fmtPrice(PRICING.ecommerce.setup);
+const monthly = fmtPrice(PRICING.ecommerce.monthly);
+
+const faqs = [
+  {
+    q: "Do I have to leave Shopify?",
+    a: "No — that's the point. Shopify keeps managing your products, inventory, orders, and checkout. We only replace the storefront your customers see with a custom-built, faster website connected to your existing store.",
+  },
+  {
+    q: "Does checkout change?",
+    a: "No. Customers still pay through Shopify's secure checkout — the same payment methods, shipping rules, and taxes you have configured today. We hand the cart to Shopify at the moment of purchase.",
+  },
+  {
+    q: "What does it cost?",
+    a: `A one-time ${setup} setup covers the design and build, then ${monthly}/month covers hosting, monitoring, updates, and content changes. Larger catalogs or custom features are quoted before we start.`,
+  },
+  {
+    q: "How long does it take?",
+    a: "Most storefronts launch in three to four weeks: about a week of design, one to two weeks of build and Shopify integration, and a final week of content, testing, and launch.",
+  },
+];
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "E-commerce Storefront",
+        item: pageUrl,
+      },
+    ],
+  },
+  {
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
+];
+---
+
+<Layout
+  title="Custom Shopify Storefront — A Unique Website for Your Shopify Store"
+  description={`Replace your Shopify theme with a fast, custom-designed storefront. Shopify keeps running checkout and inventory — customers get a store that feels instant. ${setup} setup + ${monthly}/mo.`}
+  canonical={pageUrl}
+  og={{
+    title: "Unique Website for Your Shopify — Ali Samadi Agency",
+    description:
+      "We replace your Shopify theme with a custom-built, genuinely fast storefront. Shopify keeps powering checkout, inventory, and orders.",
+    url: pageUrl,
+    twitterDescription:
+      "A custom storefront on your existing Shopify — instant navigation, your brand, same secure checkout.",
+  }}
+  schema={schema}
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section class="mx-auto max-w-[1200px] px-6 pt-32 pb-[70px] md:px-10 md:pt-40">
+      <div
+        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16"
+      >
+        <div class="stagger">
+          <div
+            class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            <span class="h-px w-[26px] bg-[#95BF47]"></span>E-commerce Storefront
+          </div>
+          <h1
+            class="reveal max-w-[16ch] text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+          >
+            A unique website for your
+            <span class="text-[#008060]">Shopify</span> store
+          </h1>
+          <p
+            class="reveal mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+          >
+            Your Shopify keeps running products, inventory, and secure checkout.
+            We replace the theme your customers see with a custom-designed
+            storefront that matches your brand and feels instant to browse.
+          </p>
+          <div class="reveal mt-9 flex flex-wrap items-center gap-3.5">
+            <a
+              href="/quote?plan=ecommerce"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-[#008060] px-6 py-3.5 text-[15.5px] font-medium text-white shadow-[0_8px_24px_rgba(0,128,96,0.32)] hover:bg-charcoal hover:text-cream"
+            >
+              Get a Quote
+              <span>&#8599;</span>
+            </a>
+            <a
+              href="#pricing"
+              class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
+              >See pricing &darr;</a
+            >
+          </div>
+          <p class="reveal mt-6 font-mono text-[12.5px] text-muted">
+            {setup} setup &middot; {monthly}/mo &middot; live in 3&ndash;4 weeks
+          </p>
+        </div>
+
+        <!-- Big Shopify mark -->
+        <div class="reveal">
+          <div
+            class="relative flex aspect-square items-center justify-center overflow-hidden rounded-[26px] border border-[#7fa93c]/60 bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c] shadow-[0_24px_60px_rgba(149,191,71,0.45)]"
+          >
+            <ShopifyLogo
+              variant="mono"
+              class="h-[52%] w-[52%] text-white drop-shadow-[0_24px_48px_rgba(63,90,26,0.35)]"
+            />
+            <span
+              class="absolute bottom-5 font-mono text-[11.5px] tracking-[0.12em] text-white/85 uppercase"
+              >Built on your Shopify</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== THEME VS CUSTOM ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-[#95BF47]"></span>The Difference
+      </div>
+      <h2
+        class="reveal max-w-[24ch] text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Themes look like everyone. Custom looks like
+        <span class="text-[#008060]">you</span>
+      </h2>
+
+      <div class="stagger mt-11 grid grid-cols-1 gap-[18px] md:grid-cols-2">
+        <!-- Theme store -->
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-charcoal/[0.02] p-[30px]"
+        >
+          <div
+            class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            Your store on a theme
+          </div>
+          <ul class="mt-6 space-y-4 text-[15px] leading-[1.55] text-warmgray">
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Same layout as thousands of other Shopify stores
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Full page reload on every click — browsing feels slow
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Brand squeezed into someone else's design decisions
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Theme apps stacking scripts that slow the store further
+            </li>
+          </ul>
+        </div>
+
+        <!-- Custom storefront -->
+        <div
+          class="reveal rounded-[18px] border border-[#00805f] bg-[#008060] p-[30px] text-white"
+        >
+          <div
+            class="font-mono text-[12.5px] tracking-[0.12em] text-white/70 uppercase"
+          >
+            Your store, custom-built
+          </div>
+          <ul class="mt-6 space-y-4 text-[15px] leading-[1.55] text-white/85">
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Designed from scratch around your brand
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Instant navigation — the next page loads before the click
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Shopify keeps powering checkout, inventory &amp; orders
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Popups, reviews &amp; sections built in — no script soup
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== HOW IT WORKS ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-[#95BF47]"></span>How It Works
+      </div>
+      <div
+        class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Shopify stays the engine
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          Nothing changes about how you run your store. Your team keeps working
+          in the same Shopify admin — we connect a new storefront in front of
+          it.
+        </p>
+      </div>
+
+      <div class="stagger mt-11 grid grid-cols-1 gap-[22px] md:grid-cols-3">
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <span class="font-mono text-[32px] font-medium text-[#008060]">01</span>
+          <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
+            You keep Shopify
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Products, prices, inventory, orders, and apps stay in the Shopify
+            admin you already know. No migration, no re-entering data.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <span class="font-mono text-[32px] font-medium text-[#008060]">02</span>
+          <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
+            We build the storefront
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            A custom website connected straight to your store's catalog —
+            product pages, collections, search, cart, and customer accounts,
+            all designed around your brand.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <span class="font-mono text-[32px] font-medium text-[#008060]">03</span>
+          <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
+            Checkout stays Shopify
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            At the moment of purchase, the cart hands off to Shopify's secure
+            checkout — same payment methods, shipping rules, and taxes as
+            today.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PERFORMANCE ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-[#95BF47]"></span>Speed That Sells
+      </div>
+      <div
+        class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Built to feel <span class="text-[#008060]">instant</span>
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          Slow stores lose sales — shoppers leave before the page finishes
+          loading. Every technique below ships as standard, not as an add-on.
+        </p>
+      </div>
+
+      <div
+        class="stagger mt-11 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2"
+      >
+        <div class="reveal">
+          <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+            Pages ready before the click
+          </h3>
+          <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+            Product pages are pre-rendered and preloaded while shoppers browse,
+            so moving between products feels like swiping through an app — no
+            white flash, no waiting.
+          </p>
+        </div>
+        <div class="reveal">
+          <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+            Images in next-gen formats
+          </h3>
+          <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+            Product photos are served as AVIF and WebP, automatically sized for
+            each screen — sharp on a desktop monitor, light on a phone
+            connection.
+          </p>
+        </div>
+        <div class="reveal">
+          <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+            A cart that never makes you wait
+          </h3>
+          <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+            Add to cart, change quantities, remove items — the interface
+            responds instantly while the update syncs to Shopify in the
+            background.
+          </p>
+        </div>
+        <div class="reveal">
+          <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+            Core Web Vitals as a requirement
+          </h3>
+          <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+            Google's speed metrics affect both rankings and conversion. We
+            treat passing them as part of launch — and you can verify the
+            scores yourself.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PRICING ==================== -->
+    <section
+      id="pricing"
+      class="mx-auto max-w-[1200px] scroll-mt-24 border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-[#95BF47]"></span>Pricing
+      </div>
+
+      <div class="grid grid-cols-1 gap-[18px] lg:grid-cols-[1.1fr_1fr]">
+        <div class="reveal">
+          <h2
+            class="max-w-[20ch] text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+          >
+            One setup, one flat monthly
+          </h2>
+          <p
+            class="mt-5 max-w-[52ch] text-[15.5px] leading-[1.6] text-warmgray"
+          >
+            The setup covers design and the full storefront build on your
+            existing Shopify. The monthly covers everything after launch —
+            hosting, monitoring, updates, and content changes. Larger catalogs
+            or custom features are quoted in writing before we start.
+          </p>
+          <p class="mt-5 text-[15.5px] leading-[1.6] text-warmgray">
+            Your Shopify subscription stays with Shopify — this replaces your
+            theme, not your store.
+          </p>
+        </div>
+
+        <div class="reveal">
+          <div
+            class="package-card flex h-full flex-col rounded-[18px] bg-[#008060]/[0.06] p-1.5 ring-1 ring-[#008060]/[0.12]"
+          >
+            <div
+              class="relative flex flex-1 flex-col overflow-hidden rounded-[14px] bg-[#008060] p-8 text-white"
+            >
+              <ShopifyLogo
+                variant="mono"
+                class="pointer-events-none absolute -top-6 -right-5 h-32 w-32 text-white/[0.16]"
+              />
+              <div class="mb-6 flex items-center gap-3">
+                <span
+                  class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.12] px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-white uppercase"
+                >
+                  <ShopifyLogo variant="mono" class="h-3.5 w-3.5 text-white" /> For Shopify stores
+                </span>
+              </div>
+              <h3 class="text-2xl font-semibold tracking-[-0.02em]">
+                E-commerce Storefront
+              </h3>
+              <div class="mt-3 flex flex-wrap items-baseline gap-x-2">
+                <span class="text-3xl font-bold tracking-tight">{setup}</span>
+                <span class="text-base font-normal text-white/70">setup</span>
+                <span class="text-white/70">+</span>
+                <span class="text-3xl font-bold tracking-tight">{monthly}</span>
+                <span class="text-base font-normal text-white/70">/mo</span>
+              </div>
+              <ul class="relative mt-6 space-y-3 text-sm text-white/85">
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Custom storefront design matched to your brand
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Product pages, collections, search &amp; accounts
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Shopify keeps checkout, inventory &amp; orders
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Hosting, monitoring &amp; updates included
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg
+                    class="mt-0.5 h-4 w-4 shrink-0 text-[#95BF47]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Content &amp; section edits included
+                </li>
+              </ul>
+              <div class="relative mt-auto pt-8">
+                <a
+                  href="/quote?plan=ecommerce"
+                  class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-[#008060] transition-all duration-300 hover:bg-charcoal hover:text-cream"
+                >
+                  Get a Quote
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-[#95BF47]"></span>FAQ
+      </div>
+      <h2
+        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Common questions
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+        {
+          faqs.map((faq) => (
+            <div class="reveal">
+              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+                {faq.q}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+                {faq.a}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="reveal mt-9 text-[15px] text-warmgray">
+        More detail on the service itself?
+        <a href="/services/ecommerce" class="text-[#008060] hover:underline"
+          >Read about our e-commerce website development &rarr;</a
+        >
+      </p>
+    </section>
+
+    <!-- ==================== CTA ==================== -->
+    <section
+      class="relative mx-3 mt-[70px] mb-6 overflow-hidden rounded-[26px] bg-[#008060] text-white md:mx-6"
+    >
+      <div class="relative mx-auto max-w-[1160px] px-6 py-16 md:px-10 md:py-20">
+        <div class="stagger">
+          <div
+            class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-white/70 uppercase"
+          >
+            <span class="h-px w-[26px] bg-[#95BF47]"></span>Get Started
+          </div>
+          <h2
+            class="reveal max-w-[18ch] text-[clamp(34px,4.5vw,60px)] leading-[1.04] font-semibold tracking-[-0.035em]"
+          >
+            Your store deserves better than a
+            <span class="text-[#95BF47]">theme</span>
+          </h2>
+          <p
+            class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-white/80"
+          >
+            Send us your store's link — we'll reply with what a custom
+            storefront would look like for your brand, and a clear price in
+            writing.
+          </p>
+          <div class="reveal mt-9">
+            <a
+              href="/quote?plan=ecommerce"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-white px-[26px] py-[15px] text-base font-medium text-[#008060] shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:bg-charcoal hover:text-cream"
+            >
+              Get a Quote
+              <span>&#8599;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <HomeFooter />
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-gutter: stable;
+  }
+  .mag-btn {
+    transition:
+      transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
+      background-color 0.3s,
+      border-color 0.3s,
+      color 0.3s;
+  }
+  .mag-btn:active {
+    transform: scale(0.97);
+  }
+  .stagger > .reveal:nth-child(1) {
+    transition-delay: 0ms;
+  }
+  .stagger > .reveal:nth-child(2) {
+    transition-delay: 80ms;
+  }
+  .stagger > .reveal:nth-child(3) {
+    transition-delay: 160ms;
+  }
+  .stagger > .reveal:nth-child(4) {
+    transition-delay: 240ms;
+  }
+  .stagger > .reveal:nth-child(5) {
+    transition-delay: 320ms;
+  }
+  .package-card {
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .package-card:hover {
+    transform: translateY(-2px);
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-60px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  })();
+</script>

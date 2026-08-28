@@ -37,6 +37,7 @@ const QUERIES = {
   "ui-ux-design": "ux design wireframe sketch interface",
   "seo-analytics": "analytics dashboard charts data",
   "website-management": "person editing website laptop office",
+  ecommerce: "online business selling clothes laptop",
   "custom-web-apps": "software engineering team whiteboard",
 };
 
