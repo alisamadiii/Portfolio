@@ -20,6 +20,7 @@
     "@workspace/cms-core": "workspace:*",
     "@workspace/drizzle": "workspace:*",
     "@workspace/email": "workspace:*",
+    "@workspace/google-analytics": "workspace:*",
     "@workspace/trpc": "workspace:*",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.5.4",

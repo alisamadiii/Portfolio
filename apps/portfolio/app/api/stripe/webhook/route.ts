@@ -3,6 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import type Stripe from "stripe";
 
 import { stripe } from "@workspace/trpc/lib/stripe";
+import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
 import { hubSubscription, user, webhookEvents } from "@workspace/drizzle/schema";
 
@@ -138,6 +139,47 @@ export async function POST(req: Request) {
 
   if (!customerId) {
     return NextResponse.json({ received: true });
+  }
+
+  // GA4 Monetization: fire a discrete purchase per actual payment — NOT from
+  // the state-sync below, which re-runs on every subscription update. GA
+  // dedupes on transaction_id, so Stripe retries are safe. Fire-and-forget:
+  // trackPurchase never throws, and analytics must never 500 the webhook.
+  if (event.type === "checkout.session.completed") {
+    // Covers one-time payments and the first subscription payment.
+    const session = event.data.object as Stripe.Checkout.Session;
+    if (session.payment_status === "paid" && session.amount_total != null) {
+      const value = session.amount_total / 100;
+      void trackPurchase({
+        clientId: customerId,
+        transactionId: session.id,
+        value,
+        currency: session.currency ?? "usd",
+        items: [
+          { item_name: session.metadata?.plan ?? "unknown", price: value, quantity: 1 },
+        ],
+      });
+    }
+  } else if (event.type === "invoice.paid") {
+    // Renewals only — the first invoice (subscription_create) is already
+    // counted by checkout.session.completed under a different transaction_id.
+    const invoice = event.data.object as Stripe.Invoice;
+    if (invoice.billing_reason !== "subscription_create") {
+      const value = invoice.amount_paid / 100;
+      void trackPurchase({
+        clientId: customerId,
+        transactionId: invoice.id,
+        value,
+        currency: invoice.currency,
+        items: [
+          {
+            item_name: invoice.lines.data[0]?.description ?? "subscription renewal",
+            price: value,
+            quantity: 1,
+          },
+        ],
+      });
+    }
   }
 
   try {

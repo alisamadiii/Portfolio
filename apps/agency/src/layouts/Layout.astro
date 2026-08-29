@@ -3,6 +3,7 @@ import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
+import { GA_MEASUREMENT_ID } from "@workspace/google-analytics/client";
 
 import SearchPalette from "../components/SearchPalette.astro";
 
@@ -38,9 +39,9 @@ const {
   bodyClass,
 } = Astro.props;
 
-// GA4 web analytics (pageviews only). Measurement IDs are public by design —
-// hardcoded, no env needed.
-const GA_ID = "G-XTB2CTLVEH";
+// GA4 web analytics — measurement ID + typed event lib live in
+// @workspace/google-analytics.
+const GA_ID = GA_MEASUREMENT_ID;
 
 const SITE = "https://agency.alisamadii.com";
 const OG_IMAGE = `${SITE}/og-image.png`;
@@ -179,6 +180,9 @@ const jsonLd = {
       function gtag() {
         dataLayer.push(arguments);
       }
+      // define:vars wraps this script in an IIFE — expose gtag for the typed
+      // track() lib (@workspace/google-analytics/client).
+      window.gtag = gtag;
       gtag("js", new Date());
       // auto page_view off — ClientRouter swaps pages without full loads, so
       // pageviews are sent manually on astro:page-load (fires on first load too).
@@ -188,6 +192,27 @@ const jsonLd = {
           page_location: location.href,
           page_title: document.title,
         });
+      });
+    </script>
+    <script>
+      import {
+        track,
+        PLANS,
+        type Plan,
+      } from "@workspace/google-analytics/client";
+
+      // Bridge for is:inline scripts (QuoteForm, NewsletterBand) — they can't
+      // import modules but their window.track?.() calls stay typed.
+      window.track = track;
+
+      // Delegated: every /quote?plan=... CTA site-wide (pricing cards,
+      // ecommerce page, service pages). Fire-and-forget, never blocks nav.
+      document.addEventListener("click", (e) => {
+        const a = (e.target as Element).closest?.('a[href*="/quote?plan="]');
+        if (!(a instanceof HTMLAnchorElement)) return;
+        const plan = new URL(a.href, location.origin).searchParams.get("plan");
+        if (PLANS.includes(plan as Plan))
+          track("select_plan", { plan: plan as Plan });
       });
     </script>
 

@@ -214,6 +214,9 @@ const labelClass =
         if (!message)
           return setStatus("Tell us a little about your project.", false);
 
+        const selectedPlan = fields.plan.value;
+        window.track?.("quote_form_submit", { plan: selectedPlan });
+
         btn.disabled = true;
         label.textContent = "Sending…";
         status.classList.add("hidden");
@@ -233,6 +236,10 @@ const labelClass =
           });
 
           if (res.status === 429) {
+            window.track?.("quote_form_error", {
+              plan: selectedPlan,
+              reason: "rate_limited",
+            });
             setStatus(
               "Looks like you've sent a few requests already — give it a little while and try again, or email agency@alisamadii.com directly.",
               false
@@ -244,10 +251,15 @@ const labelClass =
             throw new Error(payload?.error || "Failed to send.");
           }
 
+          window.track?.("generate_lead", { plan: selectedPlan });
           form.reset();
           setStatus("Thanks — we'll reply within a day.", true);
           label.textContent = "Sent";
         } catch {
+          window.track?.("quote_form_error", {
+            plan: selectedPlan,
+            reason: "request_failed",
+          });
           setStatus(
             "Something went wrong sending your request. Please try again, or email agency@alisamadii.com.",
             false

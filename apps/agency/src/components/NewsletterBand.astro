@@ -157,6 +157,7 @@
           return;
         }
 
+        window.track?.("newsletter_submit");
         button.disabled = true;
         label.textContent = "Sending…";
 
@@ -168,19 +169,23 @@
           });
 
           if (res.status === 429) {
+            window.track?.("newsletter_error", { reason: "rate_limited" });
             showError("Too many attempts — try again in a few minutes.");
             return;
           }
           if (!res.ok) {
+            window.track?.("newsletter_error", { reason: "request_failed" });
             const data = await res.json().catch(() => null);
             showError(data?.error ?? "Something went wrong — try again.");
             return;
           }
 
+          window.track?.("sign_up", { method: "newsletter" });
           successEmail.textContent = email;
           form.classList.add("hidden");
           successEl.classList.remove("hidden");
         } catch {
+          window.track?.("newsletter_error", { reason: "network" });
           showError("Network error — check your connection and try again.");
         } finally {
           button.disabled = false;
