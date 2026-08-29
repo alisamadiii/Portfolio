@@ -46,6 +46,19 @@ export const sourceFile = pgTable("source_file", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const shortLink = pgTable("short_link", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+
+  slug: text("slug").notNull().unique(),
+  url: text("url").notNull(),
+  clicks: integer("clicks").notNull().default(0),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const previousCustomers = pgTable("previous_customers", {
   id: uuid("id")
     .primaryKey()

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { MDXContent } from "@content-collections/mdx/react";
 import { allLegals } from "content-collections";
 import { ArrowLeftIcon } from "lucide-react";
@@ -11,9 +11,8 @@ import { Separator } from "@workspace/ui/components/separator";
 
 import { mdxComponents } from "@/components/mdx";
 
-export default function LegalPage() {
-  const { slug } = useParams<{ slug: string[] }>();
-  const page = allLegals.find((p) => p._meta.path === slug.join("/"));
+export function LegalArticle({ path }: { path: string }) {
+  const page = allLegals.find((p) => p._meta.path === path);
 
   if (!page) {
     return notFound();
