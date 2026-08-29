@@ -127,7 +127,9 @@ const labelClass =
         <span class={labelClass}>I'm interested in</span>
         <select name="plan" aria-label="I'm interested in" class={inputClass}>
           <option value="waas"
-            >Website-as-a-Service — from {fmtPrice(PRICING.monthly)}/mo</option
+            >Website-as-a-Service — {fmtPrice(PRICING.setup)} setup + {
+              fmtPrice(PRICING.monthly)
+            }/mo</option
           >
           <option value="onetime">Own-it build — priced per project</option>
           <option value="ecommerce"

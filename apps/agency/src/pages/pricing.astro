@@ -38,7 +38,7 @@ const pricingSchema = [
           "@type": "Offer",
           name: "Website-as-a-Service (All-Inclusive)",
           description:
-            "From $349/mo, varies by scope — design, development, CMS, email, SEO, and hosting, fully managed. For most projects this is the price.",
+            "$500 setup + $284/mo — design, development, CMS, SEO, and hosting, fully managed. For most projects this is the price.",
           price: String(PRICING.monthly),
           priceCurrency: "USD",
           priceSpecification: {
@@ -52,7 +52,7 @@ const pricingSchema = [
           "@type": "Offer",
           name: "One-Time Build (Own It)",
           description:
-            "A one-time build you own outright — includes 5 months of hosting. Priced per project. Contact for a quote.",
+            "A one-time build you own outright — includes 5 months of hosting and contact email. Priced per project. Contact for a quote.",
         },
         {
           "@type": "Offer",
@@ -67,15 +67,15 @@ const pricingSchema = [
 
 <Layout
   title="Pricing — Ali Samadi | Creative Agency"
-  description="Simple, honest pricing. An all-inclusive plan from $349/mo, a one-time build you own outright, or a fully custom project — web design, hosting, and CMS."
+  description="Simple, honest pricing. An all-inclusive plan at $500 setup + $284/mo, a one-time build you own outright, or a fully custom project — web design, hosting, and CMS."
   canonical="https://agency.alisamadii.com/pricing"
   og={{
     title: "Pricing — Ali Samadi",
     description:
-      "Simple, honest pricing. An all-inclusive plan from $349/mo, a one-time build you own outright, or a fully custom project.",
+      "Simple, honest pricing. An all-inclusive plan at $500 setup + $284/mo, a one-time build you own outright, or a fully custom project.",
     url: "https://agency.alisamadii.com/pricing",
     twitterDescription:
-      "Simple, honest pricing. All-inclusive from $349/mo, own-it build, or fully custom.",
+      "Simple, honest pricing. All-inclusive at $500 setup + $284/mo, own-it build, or fully custom.",
   }}
   schema={pricingSchema}
   bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
@@ -104,10 +104,10 @@ const pricingSchema = [
         <p
           class="reveal mt-6 max-w-[55ch] text-base leading-relaxed text-warmgray md:text-lg"
         >
-          Pick the plan that fits — an all-inclusive monthly plan from {
-            fmtPrice(PRICING.monthly)
-          }/mo, a one-time build you own outright, or a fully custom project
-          scoped together.
+          Pick the plan that fits — an all-inclusive plan at {
+            fmtPrice(PRICING.setup)
+          } setup + {fmtPrice(PRICING.monthly)}/mo, a one-time build you own
+          outright, or a fully custom project scoped together.
         </p>
         <div class="reveal mt-8">
           <div

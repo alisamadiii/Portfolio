@@ -234,7 +234,7 @@ export const services: Service[] = [
     faqs: [
       {
         q: "How much does a website cost?",
-        a: "Our all-inclusive plan starts at $349/mo — where most projects land — covering design, development, hosting, CMS, and updates. Or choose a one-time build you own outright, priced per project after we scope it. See the pricing page for details.",
+        a: "Our all-inclusive plan is $500 setup + $284/mo — where most projects land — covering design, development, hosting, CMS, and updates. Or choose a one-time build you own outright, priced per project after we scope it. See the pricing page for details.",
       },
       {
         q: "Why Astro instead of WordPress or Wix?",
@@ -549,7 +549,7 @@ export const services: Service[] = [
       },
       {
         q: "What does website management cost?",
-        a: "Everything — hosting, CMS, updates, and support — is included in the all-inclusive plan from $349/mo. One-time builds include 5 months of managed hosting, with optional renewal after. Current numbers are on the pricing page.",
+        a: "Everything — hosting, CMS, updates, and support — is included in the all-inclusive plan at $500 setup + $284/mo. One-time builds include 5 months of managed hosting and contact email, with optional renewal after. Current numbers are on the pricing page.",
       },
       {
         q: "What if I break something?",
@@ -647,7 +647,7 @@ export const services: Service[] = [
       },
       {
         title: "Launch & care",
-        text: "Your domain points to the new storefront and Shopify keeps powering checkout. We host, monitor, and update it from there — content changes included.",
+        text: "Your domain points to the new storefront and Shopify keeps powering checkout. We host, monitor, and maintain it from there.",
       },
     ],
     faqs: [
@@ -665,7 +665,7 @@ export const services: Service[] = [
       },
       {
         q: "What does a custom Shopify storefront cost?",
-        a: "A one-time $1,500 setup covers the design and build, then $349/month covers hosting, monitoring, updates, and content changes — the same care as our Website-as-a-Service plan. Larger catalogs or custom features are quoted before we start.",
+        a: "A one-time $1,500 setup covers the design and build, then $120/month covers hosting, monitoring, and maintenance. Larger catalogs or custom features are quoted before we start.",
       },
       {
         q: "How long does it take?",

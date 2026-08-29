@@ -7,20 +7,20 @@
 //
 // The agency site no longer runs self-serve checkout — every plan routes to
 // the "Get a Quote" form. The subscription anchor below is published as
-// "from $349/mo"; the one-time build is quote-only and has NO figure here on
-// purpose, so a stale number can never leak into the page.
+// "$500 setup + $284/mo"; the one-time build is quote-only and has NO figure
+// here on purpose, so a stale number can never leak into the page.
 
 export const PRICING = {
-  // All-inclusive Website-as-a-Service plan ($/mo) — published anchor.
-  monthly: 349,
+  // All-inclusive Website-as-a-Service plan — published anchor:
+  // one-time setup + monthly.
+  setup: 500,
+  monthly: 284,
 
-  // E-commerce Storefront plan — one-time setup + monthly care. Published as
-  // "from $1,500 setup + $349/mo". Stripe products not created yet; every CTA
-  // routes to /quote?plan=ecommerce until Ali wires the subscription.
-  ecommerce: { setup: 1500, monthly: 349 },
-
-  // Email usage — informational only.
-  email: { freePerMonth: 1000, perExtraThousand: 1 },
+  // E-commerce Storefront plan — one-time setup + monthly monitoring &
+  // maintenance. Published as "$1,500 setup + $120/mo". Stripe products not
+  // created yet; every CTA routes to /quote?plan=ecommerce until Ali wires
+  // the subscription.
+  ecommerce: { setup: 1500, monthly: 120 },
 };
 
 // ─── Shared helpers ─────────────────────────────────────────────

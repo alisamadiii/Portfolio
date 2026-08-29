@@ -7,8 +7,6 @@
 // /quote?plan=ecommerce until Ali wires it).
 import { PRICING, fmtPrice } from "../data/pricing";
 import ShopifyLogo from "./ShopifyLogo.astro";
-
-const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/mo free, then ${fmtPrice(PRICING.email.perExtraThousand)} per 1,000`;
 ---
 
 <div
@@ -29,8 +27,11 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
         <h3 class="text-2xl font-semibold tracking-[-0.02em]">
           Website-as-a-Service
         </h3>
-        <div class="mt-3">
-          <span class="text-xs text-warmgray">from</span>
+        <div class="mt-3 flex flex-wrap items-baseline gap-x-1.5">
+          <span class="text-3xl font-bold tracking-tight"
+            >{fmtPrice(PRICING.setup)}</span
+          >
+          <span class="text-base font-normal text-warmgray">setup +</span>
           <span class="price-monthly text-3xl font-bold tracking-tight"
             >{fmtPrice(PRICING.monthly)}</span
           >
@@ -41,8 +42,8 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           land.
         </p>
         <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
-          Everything included, one flat price — design, development, CMS, email,
-          SEO, and hosting. Fully managed for you.
+          Everything included, one flat price — design, development, CMS, SEO,
+          and hosting. Fully managed for you.
         </p>
         <ul class="mt-6 space-y-3 text-sm text-warmgray">
           <li class="flex items-start gap-3">
@@ -88,7 +89,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 stroke-linejoin="round"
                 d="M5 13l4 4L19 7"></path>
             </svg>
-            Email &amp; contact forms included
+            Contact forms included
           </li>
           <li class="flex items-start gap-3">
             <svg
@@ -170,8 +171,9 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
           >
         </div>
         <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
-          A one-time build you own outright — includes 5 months of hosting, then
-          optional renewal. Scoped and priced around your project.
+          A one-time build you own outright — includes 5 months of hosting and
+          contact email, then optional renewal. Scoped and priced around your
+          project.
         </p>
         <ul class="mt-6 space-y-3 text-sm text-warmgray">
           <li class="flex items-start gap-3">
@@ -244,41 +246,11 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 d="M5 13l4 4L19 7"></path>
             </svg>
             <span
-              >5 months of managed hosting included
+              >5 months of managed hosting &amp; contact email included
               <span class="block text-xs text-muted"
                 >Optional renewal after that</span
               ></span
             >
-          </li>
-          <li class="flex items-start gap-3">
-            <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span>CMS access included — edit anything</span>
-          </li>
-          <li class="flex items-start gap-3">
-            <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span class="email-note">{emailNote}</span>
           </li>
         </ul>
         <div class="mt-auto pt-8">
@@ -422,7 +394,7 @@ const emailNote = `${PRICING.email.freePerMonth.toLocaleString("en-US")} emails/
                 stroke-linejoin="round"
                 d="M5 13l4 4L19 7"></path>
             </svg>
-            Hosting, monitoring, updates &amp; content edits included
+            Hosting, monitoring &amp; maintenance included
           </li>
         </ul>
         <div class="relative mt-auto pt-8">
