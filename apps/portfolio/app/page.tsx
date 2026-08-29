@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { FileUser } from "lucide-react";
 
-import { Badge } from "@workspace/ui/components/badge";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
 import { LogoV2 } from "@workspace/ui/icons/logo";
 import {
@@ -103,21 +102,29 @@ const projects = [
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-3xl space-y-20 px-8 pt-20">
-      <div className="shadow-dialog mb-8 flex items-center justify-between gap-8 rounded-xl border bg-zinc-950 p-6 text-zinc-50 backdrop-blur-sm transition-all">
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">Motion UI</h2>
-          <p className="text-muted-foreground text-sm">
-            Explore my collection of animation components and interactive UI
-            elements built with Motion.
-          </p>
+      <a
+        href={urls.agency}
+        className="group relative left-1/2 mb-8 block w-[min(72rem,100vw-2rem)] -translate-x-1/2 rounded-2xl bg-[#fc8464] p-8 text-white shadow-xl shadow-[#fc8464]/30 transition-all duration-300 hover:bg-[#f4744f] hover:shadow-2xl hover:shadow-[#fc8464]/40 md:p-10"
+      >
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-white/80 uppercase">
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" />
+            <span className="relative inline-flex size-2 rounded-full bg-white" />
+          </span>
+          Current focus
         </div>
-        <Link
-          href="https://motion.alisamadii.com/"
-          className={buttonVariants({})}
-        >
-          Visit
-        </Link>
-      </div>
+        <p className="mt-3 text-2xl font-bold tracking-tight text-balance md:text-4xl">
+          Ali Samadii LLC — Web Design &amp; Development Agency
+        </p>
+        <p className="mt-3 max-w-[60ch] text-base leading-relaxed text-white/85 md:text-lg">
+          Custom-coded websites, e-commerce storefronts, managed hosting, CMS,
+          and SEO for small businesses. Looking for the agency? It lives at
+          agency.alisamadii.com.
+        </p>
+        <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#c2451f] transition-transform duration-300 group-hover:translate-x-0.5">
+          Visit the agency site →
+        </span>
+      </a>
       {/* <div className="absolute right-0 top-0 -z-20 h-[100dvh] bg-red-500 opacity-10">
         <video
           src="https://vztpjn0djt.ufs.sh/f/RAHCy45jEybltJ6sRJQSzao8JKyu7h1mvi6bR3WYqeXkUV9Z"
@@ -149,11 +156,7 @@ export default function Home() {
           </div>
         </div>
 
-        <Badge className="mt-7 text-xs">
-          Currently building Motion UI with Motion
-        </Badge>
-
-        <div className="mt-2">
+        <div className="mt-7">
           <h1 className="text-3xl md:text-4xl">
             Building <span className="text-primary">Website</span> is My
             Passion!
