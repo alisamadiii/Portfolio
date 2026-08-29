@@ -16,6 +16,8 @@ type AnalyticsEvents = {
   newsletter_submit: undefined;
   // GA4 recommended event — confirmation email sent (double opt-in start).
   sign_up: { method: "newsletter" };
+  // Double opt-in completed — user clicked the confirm link in their inbox.
+  newsletter_confirmed: undefined;
   newsletter_error: { reason: "rate_limited" | "request_failed" | "network" };
 };
 

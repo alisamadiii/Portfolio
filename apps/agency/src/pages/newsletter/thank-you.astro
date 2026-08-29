@@ -127,6 +127,15 @@ import HomeFooter from "../../components/HomeFooter.astro";
   }
 </style>
 
+<script>
+  import { track } from "@workspace/google-analytics/client";
+
+  // Landing here from the confirm-email link = double opt-in completed.
+  // ?status=invalid|error means the token failed — don't count those.
+  const status = new URLSearchParams(location.search).get("status");
+  if (status !== "invalid" && status !== "error") track("newsletter_confirmed");
+</script>
+
 <script is:inline data-astro-rerun>
   (() => {
     const status = new URLSearchParams(location.search).get("status");
