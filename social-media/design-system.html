@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carousel Design System — Ali Samadii LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Playfair+Display:ital,wght@1,500&display=swap" rel="stylesheet" />
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    /* theme: agency orange (default) */
+    --bg: #8a3113;
+    --bg-deep: #521a08;
+    --ink: #ffffff;
+    --ink-dim: rgba(255, 255, 255, 0.78);
+    --accent: #fc8464;
+    --cta-fg: #0a0a0a;
+
+    --font-sans: "Inter", "Helvetica Neue", sans-serif;
+    --font-serif: "Playfair Display", "Didot", Georgia, serif;
+
+    /* sizes at 1080px canvas width */
+    --display-sans-size: 186px;
+    --display-serif-size: 140px;
+    --meta-size: 26px;
+    --counter-size: 28px;
+    --wordmark-size: 34px;
+    --body-size: 34px;
+    --margin: 64px;
+  }
+  [data-theme="red"]   { --bg:#7c1017; --bg-deep:#4e070d; --accent:#e02b36; }
+  [data-theme="ink"]   { --bg:#1a1a1e; --bg-deep:#0b0b0d; --accent:#fc8464; }
+  [data-theme="royal"] { --bg:#1a2a7c; --bg-deep:#0d1547; --accent:#3b5bff; }
+
+  /* ============ SPEC PAGE CHROME ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    background: #101012;
+    color: #eee;
+    padding: 48px;
+  }
+  h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+  h2 { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #888; margin: 56px 0 20px; }
+  .sub { color: #888; font-size: 14px; margin-top: 8px; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+
+  .swatch { width: 150px; border-radius: 10px; overflow: hidden; border: 1px solid #2a2a2e; }
+  .swatch .chip { height: 84px; }
+  .swatch .label { padding: 10px 12px; font-size: 12px; background: #18181b; }
+  .swatch .label b { display: block; font-size: 12.5px; }
+  .swatch .label span { color: #888; font-family: monospace; font-size: 11px; }
+
+  .specimen { background: #18181b; border: 1px solid #2a2a2e; border-radius: 12px; padding: 28px 32px; }
+  .specimen .cap { font-size: 11.5px; color: #777; margin-top: 10px; font-family: monospace; }
+
+  .themes button {
+    font: 600 13px var(--font-sans); color: #eee; background: #1c1c20;
+    border: 1px solid #333; border-radius: 999px; padding: 8px 18px; cursor: pointer;
+  }
+  .themes button:hover { border-color: #666; }
+  .themes button.active { background: #eee; color: #111; border-color: #eee; }
+
+  /* ============ SLIDE TEMPLATE (1080×1350, scaled preview) ============ */
+  .stage { width: 540px; }
+  .slide {
+    width: 1080px; height: 1350px;
+    transform: scale(0.5); transform-origin: top left;
+    position: relative; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 32%, var(--bg) 0%, var(--bg-deep) 100%);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+
+  /* fixed furniture — every slide */
+  .slide .meta {
+    position: absolute; top: var(--margin); left: var(--margin);
+    font-size: var(--meta-size); line-height: 1.35;
+  }
+  .slide .meta b { display: block; font-weight: 700; }
+  .slide .meta span { color: var(--ink-dim); font-weight: 400; }
+  .slide .counter {
+    position: absolute; top: var(--margin); right: var(--margin);
+    font-size: var(--counter-size); font-weight: 500;
+  }
+  .slide .wordmark {
+    position: absolute; bottom: 56px; left: 0; right: 0;
+    text-align: center; font-size: var(--wordmark-size);
+    font-weight: 700; letter-spacing: -0.02em;
+  }
+  .slide .wordmark em {
+    font-family: var(--font-serif); font-style: italic; font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  /* subject slot — replaced by monochrome image w/ accent prop */
+  .slide .subject {
+    position: absolute; inset: 180px 120px 260px;
+    border-radius: 24px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 30px; line-height: 1.5; text-align: center; padding: 60px;
+  }
+
+  /* headline lockup */
+  .slide .lockup {
+    position: absolute; left: 0; right: 0; top: 56%;
+    text-align: center; z-index: 2;
+  }
+  .slide .lockup .sans {
+    font-size: var(--display-sans-size); font-weight: 800;
+    letter-spacing: -0.035em; line-height: 0.9;
+  }
+  .slide .lockup .serif {
+    font-family: var(--font-serif); font-style: italic; font-weight: 500;
+    font-size: var(--display-serif-size); letter-spacing: -0.01em;
+    line-height: 0.9; margin-top: -0.42em; display: block;
+  }
+  .slide .cta {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--ink); color: var(--cta-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 38px; font-weight: 700; margin-top: 56px;
+  }
+
+  .anatomy { font-family: monospace; font-size: 12.5px; color: #9a9a9a; line-height: 1.9; background: #18181b; border: 1px solid #2a2a2e; border-radius: 12px; padding: 24px 28px; }
+
+  /* ============ SLIDE VARIANTS ============ */
+  /* grain texture (riso print feel) */
+  .slide.grain::after {
+    content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none; opacity: 0.16;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  /* paper (light editorial) theme — overrides ink tokens locally */
+  .slide.paper {
+    --ink: #17130f; --ink-dim: rgba(23, 19, 15, 0.62); --cta-fg: #efe9de;
+    background: #efe9de; color: var(--ink);
+  }
+  .slide.paper .cta { background: #17130f; color: #efe9de; }
+
+  /* smaller preview stage (40%) */
+  .stage-sm { width: 432px; height: 540px; overflow: hidden; }
+  .stage-sm .slide { transform: scale(0.4); }
+
+  /* flowing content area inside a slide (between furniture) */
+  .slide .content {
+    position: absolute; inset: 170px 80px 190px; z-index: 2;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 44px;
+  }
+
+  .slide .badge {
+    display: inline-block; background: #17130f; color: #efe9de;
+    font-size: 30px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 14px 28px; border-radius: 10px; transform: rotate(-2deg);
+  }
+  .slide.paper .badge { background: #17130f; color: #efe9de; }
+
+  /* left-aligned two-tone sans headline */
+  .slide .headline-l {
+    font-size: 118px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.02;
+    text-align: left;
+  }
+  .slide .headline-l .dk { color: var(--accent); }
+  .slide.paper .headline-l .dk { color: #c2451f; }
+
+  /* serif editorial headline (paper covers) */
+  .slide .kicker {
+    font-size: 30px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #c2451f;
+  }
+  .slide .headline-serif {
+    font-family: var(--font-serif); font-style: italic; font-weight: 500;
+    font-size: 128px; line-height: 1.02; letter-spacing: -0.01em; text-align: left;
+  }
+  .slide .headline-serif .or { color: #c2451f; }
+
+  /* rich body paragraph */
+  .slide .body-rich {
+    font-size: 40px; line-height: 1.45; font-weight: 400; color: var(--ink-dim);
+    text-align: left; max-width: 34ch;
+  }
+  .slide .body-rich b { color: var(--ink); font-weight: 700; }
+
+  /* editable media slot — click to upload */
+  .media {
+    position: relative; width: 100%; cursor: pointer;
+    background-size: cover; background-position: center;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .media .ph {
+    font-family: monospace; font-size: 26px; text-align: center; line-height: 1.6;
+    color: var(--ink-dim); padding: 30px;
+  }
+  .media:not(.has-img) { border: 3px dashed color-mix(in srgb, var(--ink) 30%, transparent); }
+  .media.has-img .ph { display: none; }
+
+  /* taped card media (polaroid) */
+  .media.taped {
+    background-color: rgba(255, 255, 255, 0.06); border-radius: 20px;
+    min-height: 420px; transform: rotate(-1.5deg);
+  }
+  .slide.paper .media.taped { background-color: rgba(23, 19, 15, 0.05); }
+  .media.taped::before, .media.taped::after {
+    content: ""; position: absolute; width: 150px; height: 44px;
+    background: rgba(240, 236, 226, 0.45); z-index: 3;
+  }
+  .media.taped::before { top: -18px; left: -30px; transform: rotate(-35deg); }
+  .media.taped::after { bottom: -14px; right: -26px; transform: rotate(-35deg); }
+
+  /* sticker pills */
+  .pills { display: flex; flex-wrap: wrap; gap: 22px; }
+  .pill {
+    background: #fff; color: #17130f; border: 4px solid #17130f; border-radius: 16px;
+    font-size: 34px; font-weight: 800; letter-spacing: -0.01em; text-transform: uppercase;
+    padding: 18px 34px;
+  }
+  .pill:nth-child(odd) { transform: rotate(-3deg); }
+  .pill:nth-child(even) { transform: rotate(2deg); }
+
+  /* numbered list rows (paper content slide) */
+  .rows { width: 100%; text-align: left; border-top: 3px solid #17130f; }
+  .rows .r { display: flex; gap: 24px; padding: 26px 6px; border-bottom: 2px solid rgba(23, 19, 15, 0.25); font-size: 38px; }
+  .rows .r b { white-space: nowrap; }
+  .rows .r span { color: var(--ink-dim); }
+
+  /* swipe hint */
+  .slide .swipe {
+    position: absolute; bottom: 60px; right: var(--margin); z-index: 2;
+    font-family: monospace; font-size: 28px; letter-spacing: 0.14em;
+  }
+
+  [contenteditable]:hover { outline: 2px dashed rgba(252, 132, 100, 0.6); outline-offset: 4px; }
+  [contenteditable]:focus { outline: 2px solid #fc8464; outline-offset: 4px; }
+
+  /* ============ CAROUSEL ARC ============ */
+  .arc-note {
+    font-size: 13.5px; color: #b9b9b9; background: #18181b;
+    border: 1px solid #2a2a2e; border-left: 3px solid #e0a52b;
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; max-width: 860px;
+  }
+  .arc { display: flex; gap: 0; border: 1px solid #2a2a2e; border-radius: 12px; overflow: hidden; }
+  .arc-card { flex: 1; min-width: 160px; padding: 26px 22px 30px; }
+  .arc-card .num { font-family: monospace; font-size: 11.5px; opacity: 0.65; letter-spacing: 0.08em; }
+  .arc-card .word { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; margin: 10px 0 16px; }
+  .arc-card ul { list-style: none; font-family: monospace; font-size: 12px; line-height: 1.7; }
+  .arc-card li { padding-left: 16px; text-indent: -16px; }
+  .arc-card li::before { content: "→ "; }
+  .arc-a { background: #d97757; color: #1a1208; }
+  .arc-b { background: #eae6dc; color: #1c1a16; }
+  .arc-c { background: #17151a; color: #f0ede5; }
+  .arc-flow {
+    display: flex; border-top: 1px solid #2a2a2e; background: #eae6dc; color: #1c1a16;
+    font-family: monospace; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .arc-flow div { flex: 1; padding: 13px 10px; text-align: center; }
+  .arc-flow div + div { border-left: 1px solid rgba(0, 0, 0, 0.12); }
+</style>
+</head>
+<body>
+
+<h1>Instagram Carousel — Design System</h1>
+<p class="sub">Ali Samadii LLC · 1080×1350 (4:5) · derived from grafikcem reference · rules in <b>DESIGN.md</b></p>
+
+<h2>Theme (one hue family per carousel)</h2>
+<div class="row themes" id="themes">
+  <button data-t="" class="active">Agency Orange (default)</button>
+  <button data-t="red">Reference Red</button>
+  <button data-t="ink">Ink</button>
+  <button data-t="royal">Royal</button>
+</div>
+
+<h2>Color tokens</h2>
+<div class="row" id="swatches">
+  <div class="swatch"><div class="chip" style="background:var(--bg)"></div><div class="label"><b>--bg</b><span>background center</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--bg-deep)"></div><div class="label"><b>--bg-deep</b><span>vignette edge</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--accent)"></div><div class="label"><b>--accent</b><span>subject prop only</span></div></div>
+  <div class="swatch"><div class="chip" style="background:#fff"></div><div class="label"><b>--ink</b><span>all text</span></div></div>
+</div>
+
+<h2>Type specimens</h2>
+<div class="row">
+  <div class="specimen" style="flex:1; min-width:420px;">
+    <div style="font-family:var(--font-sans); font-weight:800; font-size:72px; letter-spacing:-0.035em; line-height:0.9;">Premium</div>
+    <div style="font-family:var(--font-serif); font-style:italic; font-weight:500; font-size:54px; margin-top:-0.42em; margin-left: 1.6em;">fonts</div>
+    <div class="cap">lockup · sans 800 / -0.035em over serif italic 500 · serif overlaps -0.42em</div>
+  </div>
+  <div class="specimen" style="min-width:280px;">
+    <div style="font-weight:700; font-size:15px;">Get in touch</div>
+    <div style="font-size:15px; color:#aaa;">a@alisamadii.com</div>
+    <div style="margin-top:16px; font-weight:700; font-size:19px;">alisamadi<em style="font-family:var(--font-serif); font-style:italic; font-weight:500;">llc</em></div>
+    <div class="cap">meta stack + wordmark hybrid</div>
+  </div>
+</div>
+
+<h2>Carousel arc — default narrative</h2>
+<p class="arc-note">
+  <b>Reference, not law.</b> Default 5-slide story: HOOK → PAIN → STEPS → RESULT → JOIN.
+  If the post fits a different arc better (case study, listicle, before/after, announcement),
+  the AI may design its own arc. Two invariants only: slide 1 = scroll-stopping hook, last slide = CTA.
+  PAIN / STEPS may span 2–3 slides each; HOOK and JOIN stay single.
+</p>
+<div>
+  <div class="arc">
+    <div class="arc-card arc-a">
+      <div class="num">01 / COVER</div>
+      <div class="word">HOOK</div>
+      <ul><li>One hero word</li><li>Subline: pain + payoff</li></ul>
+    </div>
+    <div class="arc-card arc-b">
+      <div class="num">02 / PROBLEM</div>
+      <div class="word">PAIN</div>
+      <ul><li>Name the problem directly</li><li>✗-list of what breaks</li></ul>
+    </div>
+    <div class="arc-card arc-c">
+      <div class="num">03 / SYSTEM</div>
+      <div class="word">STEPS</div>
+      <ul><li>The mechanism that solves it</li><li>01 / 02 / 03 numbered list</li></ul>
+    </div>
+    <div class="arc-card arc-b">
+      <div class="num">04 / PROOF</div>
+      <div class="word">RESULT</div>
+      <ul><li>Massive specific number</li><li>✓-checkmark outcomes</li></ul>
+    </div>
+    <div class="arc-card arc-a">
+      <div class="num">05 / CTA</div>
+      <div class="word">JOIN</div>
+      <ul><li>Price + lock-in promise</li><li>Comment keyword: SITE</li></ul>
+    </div>
+  </div>
+  <div class="arc-flow">
+    <div>Grab attention</div><div>Name the pain</div><div>Show the system</div><div>Prove it works</div><div>Drive the action</div>
+  </div>
+</div>
+
+<h2>Hook slide template (1/n) — shown at 50%</h2>
+<div class="row">
+  <div class="stage" style="height:675px;">
+    <div class="slide" id="slide">
+      <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+      <div class="counter">1/7</div>
+      <div class="subject media">
+        <span class="ph">SUBJECT IMAGE · click to upload<br />
+        monochrome B&amp;W · one prop in --accent<br />
+        looks up/off-frame · bleeds behind headline</span>
+      </div>
+      <div class="lockup">
+        <div class="sans" contenteditable>Premium</div>
+        <span class="serif" contenteditable>fonts</span>
+        <div><span class="cta">&#8594;</span></div>
+      </div>
+      <div class="wordmark">alisamadi<em>llc</em></div>
+    </div>
+  </div>
+  <div class="anatomy">
+    CANVAS      1080 × 1350 · margin 64px<br />
+    META        top-left · 26px · bold + dim regular<br />
+    COUNTER     top-right · 28px · n/total<br />
+    SUBJECT     center · ~65–75% height · z-index 1<br />
+    LOCKUP      starts 56% down · z-index 2<br />
+    &nbsp;&nbsp;sans      186px / 800 / -0.035em / lh 0.9<br />
+    &nbsp;&nbsp;serif     140px / 500 italic / overlap -0.42em<br />
+    CTA         76px circle · white · black arrow<br />
+    &nbsp;&nbsp;last slide: pill w/ text instead<br />
+    WORDMARK    bottom-center · 56px up · 34px<br />
+    <br />
+    CONTENT SLIDES (2..n-1)<br />
+    &nbsp;&nbsp;headline 110/85px · body Inter 400 34px<br />
+    &nbsp;&nbsp;lh 1.5 · max 40ch · color --ink-dim<br />
+    <br />
+    EXPORT      PNG sRGB 1080×1350 at 1×<br />
+    &nbsp;&nbsp;content/posts/YYYY-MM-DD-slug/slide-NN.png
+  </div>
+</div>
+
+<h2>Hook cover — variations</h2>
+<p class="arc-note">
+  <b>Interchangeable covers.</b> Variant A = subject template above. Pick per post; furniture (meta, counter, wordmark) never changes.
+  <b>Everything below is tweakable:</b> click any dashed image slot to upload your own image, click any text to edit it inline.
+</p>
+<div class="row">
+  <div class="stage-sm">
+    <div class="slide grain">
+      <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+      <div class="counter">1/7</div>
+      <div class="content">
+        <div class="badge" contenteditable>Jacksonville, FL</div>
+        <div class="headline-l" contenteditable>Websites that <span class="dk">actually sell.</span></div>
+        <p class="body-rich" contenteditable>Your site looks fine — but <b>fine doesn't rank</b> and fine doesn't convert. Here's the <b>5-step system</b> we use.</p>
+        <div class="media taped"><span class="ph">IMAGE / CARD<br />click to upload</span></div>
+      </div>
+      <div class="swipe">SWIPE &#8594;</div>
+      <div class="wordmark">alisamadi<em>llc</em></div>
+    </div>
+  </div>
+  <div class="stage-sm">
+    <div class="slide paper grain">
+      <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+      <div class="counter">1/7</div>
+      <div class="content">
+        <div class="kicker" contenteditable>First, know your enemy</div>
+        <div class="headline-serif" contenteditable>The <span class="or">Template Trap</span></div>
+        <div class="media taped"><span class="ph">SCREENSHOT / MOCKUP<br />click to upload</span></div>
+        <p class="body-rich" contenteditable>Why <b>$40/mo site builders</b> quietly cost you customers every single month.</p>
+      </div>
+      <div class="swipe">SWIPE &#8594;</div>
+      <div class="wordmark">alisamadi<em>llc</em></div>
+    </div>
+  </div>
+  <div class="stage-sm">
+    <div class="slide grain">
+      <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+      <div class="counter">1/7</div>
+      <div class="content">
+        <div class="headline-l" style="font-size: 150px" contenteditable>WEBSITE<span class="dk">?</span></div>
+        <div class="media taped" style="min-height: 480px"><span class="ph">CUTOUT SUBJECT<br />click to upload</span></div>
+        <div class="pills">
+          <div class="pill" contenteditable>Design</div>
+          <div class="pill" contenteditable>SEO</div>
+          <div class="pill" contenteditable>Hosting</div>
+          <div class="pill" contenteditable>$500 setup</div>
+        </div>
+      </div>
+      <div class="swipe">SWIPE &#8594;</div>
+      <div class="wordmark">alisamadi<em>llc</em></div>
+    </div>
+  </div>
+</div>
+
+<h2>Content slide templates (2..n-1)</h2>
+<div class="row">
+  <div class="stage-sm">
+    <div class="slide grain">
+      <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+      <div class="counter">3/7</div>
+      <div class="content">
+        <div class="badge" contenteditable>The system</div>
+        <div class="headline-l" style="font-size: 96px" contenteditable>Show up — <span class="dk">then convert.</span></div>
+        <p class="body-rich" contenteditable><b>Google Business Profile</b> + city pages gets you found. A <b>fast, single-message</b> homepage turns the click into a call.</p>
+        <div class="media taped"><span class="ph">PROOF IMAGE / CHART / CARD<br />click to upload</span></div>
+      </div>
+      <div class="swipe">SWIPE &#8594;</div>
+      <div class="wordmark">alisamadi<em>llc</em></div>
+    </div>
+  </div>
+  <div class="stage-sm">
+    <div class="slide paper grain">
+      <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+      <div class="counter">4/7</div>
+      <div class="content">
+        <div class="kicker" contenteditable>The 4-step fix</div>
+        <div class="headline-serif" style="font-size: 104px" contenteditable>Stop <span class="or">guessing</span></div>
+        <div class="rows">
+          <div class="r"><b>01 · AUDIT</b><span contenteditable>find what leaks money</span></div>
+          <div class="r"><b>02 · REBUILD</b><span contenteditable>fast, single-message pages</span></div>
+          <div class="r"><b>03 · RANK</b><span contenteditable>local SEO + city pages</span></div>
+          <div class="r"><b>04 · MAINTAIN</b><span contenteditable>we run it, you work</span></div>
+        </div>
+        <div class="media taped" style="min-height: 300px"><span class="ph">OPTIONAL IMAGE<br />click to upload</span></div>
+      </div>
+      <div class="swipe">SWIPE &#8594;</div>
+      <div class="wordmark">alisamadi<em>llc</em></div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="imgpick" accept="image/*" style="display: none" />
+
+<script>
+  const btns = document.querySelectorAll("#themes button");
+  btns.forEach((b) =>
+    b.addEventListener("click", () => {
+      btns.forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      if (b.dataset.t) document.documentElement.dataset.theme = b.dataset.t;
+      else delete document.documentElement.dataset.theme;
+    })
+  );
+
+  // click any .media slot → upload your own image
+  const imgpick = document.getElementById("imgpick");
+  let slot = null;
+  document.querySelectorAll(".media").forEach((m) =>
+    m.addEventListener("click", () => {
+      slot = m;
+      imgpick.click();
+    })
+  );
+  imgpick.addEventListener("change", () => {
+    const f = imgpick.files[0];
+    if (f && slot) {
+      slot.style.backgroundImage = `url(${URL.createObjectURL(f)})`;
+      slot.classList.add("has-img");
+    }
+    imgpick.value = "";
+  });
+</script>
+</body>
+</html>

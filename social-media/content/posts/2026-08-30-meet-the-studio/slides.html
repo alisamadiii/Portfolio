@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Post 01 — Meet the Studio · Ali Samadii LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Playfair+Display:ital,wght@1,500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #8a3113;
+    --bg-deep: #521a08;
+    --ink: #ffffff;
+    --ink-dim: rgba(255, 255, 255, 0.78);
+    --accent: #fc8464;
+    --cta-fg: #0a0a0a;
+    --font-sans: "Inter", "Helvetica Neue", sans-serif;
+    --font-serif: "Playfair Display", "Didot", Georgia, serif;
+    --meta-size: 26px;
+    --counter-size: 28px;
+    --wordmark-size: 34px;
+    --margin: 64px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #101012; font-family: var(--font-sans); padding: 40px; display: flex; flex-direction: column; gap: 40px; align-items: flex-start; }
+
+  .slide {
+    width: 1080px; height: 1350px; flex: none;
+    position: relative; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 32%, var(--bg) 0%, var(--bg-deep) 100%);
+    color: var(--ink); font-family: var(--font-sans);
+  }
+  .slide.grain::after {
+    content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none; opacity: 0.16;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  .slide.paper {
+    --ink: #17130f; --ink-dim: rgba(23, 19, 15, 0.62); --cta-fg: #efe9de;
+    background: #efe9de; color: var(--ink);
+  }
+
+  /* furniture */
+  .meta { position: absolute; top: var(--margin); left: var(--margin); font-size: var(--meta-size); line-height: 1.35; z-index: 2; }
+  .meta b { display: block; font-weight: 700; }
+  .meta span { color: var(--ink-dim); font-weight: 400; }
+  .counter { position: absolute; top: var(--margin); right: var(--margin); font-size: var(--counter-size); font-weight: 500; z-index: 2; }
+  .wordmark { position: absolute; bottom: 56px; left: 0; right: 0; text-align: center; font-size: var(--wordmark-size); font-weight: 700; letter-spacing: -0.02em; z-index: 2; }
+  .wordmark em { font-family: var(--font-serif); font-style: italic; font-weight: 500; letter-spacing: 0; }
+  .swipe { position: absolute; bottom: 60px; right: var(--margin); z-index: 2; font-family: monospace; font-size: 28px; letter-spacing: 0.14em; }
+
+  /* content area */
+  .content { position: absolute; inset: 190px 80px 190px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 52px; }
+  .content.center { justify-content: center; }
+
+  .badge { display: inline-block; background: #17130f; color: #efe9de; font-size: 30px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 14px 28px; border-radius: 10px; transform: rotate(-2deg); }
+
+  .headline-l { font-size: 118px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; text-align: left; }
+  .headline-l .dk { color: var(--accent); }
+  .slide.paper .headline-l .dk { color: #c2451f; }
+
+  .kicker { font-size: 30px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c2451f; }
+  .headline-serif { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 128px; line-height: 1.02; letter-spacing: -0.01em; text-align: left; }
+  .headline-serif .or { color: #c2451f; }
+
+  .body-rich { font-size: 40px; line-height: 1.45; font-weight: 400; color: var(--ink-dim); text-align: left; max-width: 34ch; }
+  .body-rich b { color: var(--ink); font-weight: 700; }
+
+  .rows { width: 100%; text-align: left; border-top: 3px solid #17130f; }
+  .slide:not(.paper) .rows { border-top-color: var(--ink); }
+  .rows .r { display: flex; gap: 24px; padding: 30px 6px; border-bottom: 2px solid rgba(23, 19, 15, 0.25); font-size: 38px; align-items: baseline; }
+  .slide:not(.paper) .rows .r { border-bottom-color: rgba(255, 255, 255, 0.25); }
+  .rows .r b { white-space: nowrap; }
+  .rows .r span { color: var(--ink-dim); }
+  .rows .r .x { color: #c2451f; font-weight: 800; }
+
+  /* CTA slide lockup */
+  .lockup { text-align: center; width: 100%; }
+  .lockup .sans { font-size: 170px; font-weight: 800; letter-spacing: -0.035em; line-height: 0.9; }
+  .lockup .serif { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 130px; letter-spacing: -0.01em; line-height: 0.9; margin-top: -0.42em; display: block; }
+  .pillbtn { display: inline-block; background: var(--ink); color: var(--cta-fg); font-size: 40px; font-weight: 700; padding: 26px 54px; border-radius: 999px; margin-top: 72px; }
+  .subcta { margin-top: 34px; font-size: 30px; color: var(--ink-dim); }
+
+  [contenteditable]:hover { outline: 2px dashed rgba(252, 132, 100, 0.6); outline-offset: 4px; }
+  [contenteditable]:focus { outline: 2px solid #fc8464; outline-offset: 4px; }
+</style>
+</head>
+<body>
+
+<!-- 01 · HOOK — announcement, dark + grain -->
+<div class="slide grain" id="s1">
+  <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+  <div class="counter">1/5</div>
+  <div class="content">
+    <div class="badge" contenteditable>New studio &middot; Jacksonville, FL</div>
+    <div class="headline-l" contenteditable>Big-agency websites. <span class="dk">Small-business budget.</span></div>
+    <p class="body-rich" contenteditable>We're <b>Ali Samadii LLC</b> — a founder-led web studio building <b>custom-coded websites</b> for small businesses. Never templates.<br /><br />Here's why we exist &darr;</p>
+  </div>
+  <div class="swipe">SWIPE &#8594;</div>
+  <div class="wordmark">alisamadi<em>llc</em></div>
+</div>
+
+<!-- 02 · PAIN — the unfair choice, paper -->
+<div class="slide paper grain" id="s2">
+  <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+  <div class="counter">2/5</div>
+  <div class="content">
+    <div class="kicker" contenteditable>The problem</div>
+    <div class="headline-serif" contenteditable>An unfair <span class="or">choice</span></div>
+    <p class="body-rich" contenteditable>Small businesses get two options — and <b>both cost you customers:</b></p>
+    <div class="rows">
+      <div class="r"><b class="x">&#10007;</b><span contenteditable><b>The big agency</b> — $20k+ builds, and you're their smallest account</span></div>
+      <div class="r"><b class="x">&#10007;</b><span contenteditable><b>The template</b> — $40/mo builder that looks like everyone else and ranks for nothing</span></div>
+    </div>
+  </div>
+  <div class="swipe">SWIPE &#8594;</div>
+  <div class="wordmark">alisamadi<em>llc</em></div>
+</div>
+
+<!-- 03 · SYSTEM — what we do, dark -->
+<div class="slide grain" id="s3">
+  <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+  <div class="counter">3/5</div>
+  <div class="content">
+    <div class="badge" contenteditable>What we do</div>
+    <div class="headline-l" contenteditable>One team. <span class="dk">Whole build.</span></div>
+    <p class="body-rich" contenteditable>Brand, design, code, SEO, and hosting — <b>handled by the same small team.</b><br /><br />Every site is <b>designed and coded from scratch</b> on a modern stack. Nothing dragged from a theme marketplace. Your website is <b>genuinely yours.</b></p>
+  </div>
+  <div class="swipe">SWIPE &#8594;</div>
+  <div class="wordmark">alisamadi<em>llc</em></div>
+</div>
+
+<!-- 04 · STEPS — how it works, paper list -->
+<div class="slide paper grain" id="s4">
+  <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+  <div class="counter">4/5</div>
+  <div class="content">
+    <div class="kicker" contenteditable>How it works</div>
+    <div class="headline-serif" contenteditable>Four <span class="or">steps</span></div>
+    <div class="rows">
+      <div class="r"><b>01 &middot; DISCOVER</b><span contenteditable>your business + customers first</span></div>
+      <div class="r"><b>02 &middot; DESIGN</b><span contenteditable>real pages, reviewed with you</span></div>
+      <div class="r"><b>03 &middot; DEVELOP</b><span contenteditable>custom code, SEO + CMS wired in</span></div>
+      <div class="r"><b>04 &middot; DELIVER</b><span contenteditable>launch, hosting, ongoing updates</span></div>
+    </div>
+    <p class="body-rich" contenteditable>Most projects go from confirmed concept to launch <b>fast</b> — one focused team, no hand-offs.</p>
+  </div>
+  <div class="swipe">SWIPE &#8594;</div>
+  <div class="wordmark">alisamadi<em>llc</em></div>
+</div>
+
+<!-- 05 · JOIN — CTA, dark -->
+<div class="slide grain" id="s5">
+  <div class="meta"><b>Get in touch</b><span>a@alisamadii.com</span></div>
+  <div class="counter">5/5</div>
+  <div class="content center">
+    <div class="lockup">
+      <div class="sans" contenteditable>Let's build</div>
+      <span class="serif" contenteditable>yours</span>
+      <div><span class="pillbtn" contenteditable>DM &ldquo;SITE&rdquo;</span></div>
+      <div class="subcta" contenteditable>or visit <b style="color:var(--ink)">agency.alisamadii.com</b></div>
+    </div>
+  </div>
+  <div class="wordmark">alisamadi<em>llc</em></div>
+</div>
+
+</body>
+</html>
