@@ -5,6 +5,8 @@ import { cmsProcedure, createTRPCRouter } from "../../init";
 import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
+import { resolveRepoId } from "../../lib/cms/repo-id";
+import { getWebsiteUrlsByRepoId } from "../../lib/vercel/domains";
 
 /**
  * Page discovery for the canvas view. The single source of truth is
@@ -74,6 +76,26 @@ function titleFromPath(pathname: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/**
+ * The project's verified custom production domain from `hub_domain`, or null.
+ * A *.vercel.app result is ignored — it adds nothing over the committed
+ * baseUrl. Non-fatal on purpose: repos without a `hub_project` row (or with
+ * unsynced domains) fall back to the cms.json / settings baseUrl.
+ */
+async function getCustomDomainBaseUrl(
+  owner: string | undefined,
+  repo: string
+): Promise<string | null> {
+  try {
+    const repoId = await resolveRepoId(owner, repo);
+    const url = (await getWebsiteUrlsByRepoId([repoId])).get(repoId) ?? null;
+    if (url && !new URL(url).hostname.endsWith(".vercel.app")) return url;
+  } catch {
+    // Fall through to the committed baseUrl.
+  }
+  return null;
+}
+
 export const pagesRouter = createTRPCRouter({
   list: cmsProcedure
     .input(z.object({ branch: z.string() }))
@@ -93,9 +115,13 @@ export const pagesRouter = createTRPCRouter({
         // testing (e.g. CMS_PREVIEW_BASE_URL=http://localhost:4321), without
         // touching the client's committed cms.json baseUrl.
         const devBaseUrl = process.env.CMS_PREVIEW_BASE_URL;
+        const domainBaseUrl = devBaseUrl
+          ? null
+          : await getCustomDomainBaseUrl(input.owner, input.repo);
 
         if (manifest) {
-          const baseUrl = devBaseUrl || manifest.object.baseUrl;
+          const baseUrl =
+            devBaseUrl || domainBaseUrl || manifest.object.baseUrl;
           const origin = new URL(baseUrl).origin;
           const byPath = new Map<string, CanvasPage>();
 
@@ -152,6 +178,7 @@ export const pagesRouter = createTRPCRouter({
         const settings = config.object?.settings;
         const baseUrl: unknown =
           devBaseUrl ||
+          domainBaseUrl ||
           (settings && typeof settings === "object"
             ? settings.baseUrl
             : undefined);
