@@ -55,6 +55,7 @@ const QUERIES = {
   "hidden-costs": "person reviewing invoices receipts desk",
   "published-prices": "laptop screen pricing page clean minimal",
   "walk-away-owning": "handing keys hands ownership closeup",
+  "dmg-hero": "marketing strategy planning whiteboard sticky notes",
 };
 
 // key → exact Pexels photo id. Overrides the search query for that key.
