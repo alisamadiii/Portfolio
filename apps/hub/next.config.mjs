@@ -1,8 +1,15 @@
+import path from "path";
+
 const HUB = "https://hub.alisamadii.com";
 const PORTAL_HOST = [{ type: "host", value: "portal.alisamadii.com" }];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Self-hosted (Docker/Coolify) deploys use the standalone server bundle;
+  // Vercel ignores these two fields. Tracing root = monorepo root so
+  // workspace deps land in the bundle.
+  output: "standalone",
+  outputFileTracingRoot: path.join(import.meta.dirname, "../../"),
   transpilePackages: [
     "@workspace/ui",
     "@workspace/auth",

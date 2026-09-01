@@ -1,0 +1,13 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+.turbo
+.git
+**/.astro
+.vercel
+**/.vercel
+.pnpm-store
+.playwright-mcp
+output
+*.log
