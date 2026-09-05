@@ -42,6 +42,7 @@ export const polarClient = new Polar({
 });
 
 export const auth = betterAuth({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
