@@ -28,6 +28,7 @@ async function checkOne(target: HttpTarget): Promise<CheckResult> {
       ...base,
       ok,
       detail: `HTTP ${res.status} (${target.url})`,
+      httpStatus: res.status,
       latencyMs,
       hint: ok ? undefined : HTTP_HINT,
     };

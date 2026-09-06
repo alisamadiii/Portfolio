@@ -5,6 +5,8 @@ export interface CheckResult {
   ok: boolean;
   /** Status/error detail shown in alerts and GET /status. */
   detail?: string;
+  /** HTTP status code, when the check is an HTTP probe. */
+  httpStatus?: number;
   latencyMs?: number;
   /** Public URL this check hit (or relevant console URL). */
   url?: string;

@@ -3,6 +3,7 @@ import { sendDownEmail, sendRecoveredEmail } from "./alerts/email.js";
 import { checkCoolify } from "./checks/coolify.js";
 import { checkHttpTargets } from "./checks/http.js";
 import { checkSes } from "./checks/ses.js";
+import { logRunToDb, runDeepProbes, shouldLogRun } from "./dblog.js";
 import { autoHeal } from "./heal.js";
 import { diffIncidents } from "./incidents.js";
 import type { MonitorResult } from "./types.js";
@@ -16,6 +17,12 @@ async function runMonitor(env: Env): Promise<void> {
     checkSes(env),
   ]);
   const checks = [...coolify, ...http, ses];
+
+  // Evidence logging (error/near-miss runs only): fire the deep probes NOW,
+  // while the flap is still happening, then persist alongside the alerts.
+  const dbLog = shouldLogRun(checks)
+    ? runDeepProbes().then((probes) => logRunToDb(env, checks, probes))
+    : Promise.resolve();
 
   const { opened, recovered } = await diffIncidents(env.MONITOR_KV, checks);
 
@@ -44,7 +51,9 @@ async function runMonitor(env: Env): Promise<void> {
   // One batched alert per transition, per channel. Each channel wrapped
   // separately: SES may be the thing that's down, Discord is the backup path
   // (and vice-versa) — a failed alert must not kill the run.
-  const alerts: Promise<void>[] = [];
+  const alerts: Promise<void>[] = [
+    dbLog.catch((err) => console.error("monitor_log db write failed:", err)),
+  ];
   if (opened.length > 0) {
     alerts.push(
       sendDownDiscord(env, opened).catch((err) => console.error("discord down alert failed:", err)),

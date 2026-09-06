@@ -6,4 +6,7 @@ interface Env {
   DISCORD_WEBHOOK_URL: string;
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
+  /** Neon connection string (EmpowerHer usesend db) — failing runs are logged
+   *  to its monitor_log table (src/dblog.ts). */
+  MONITOR_LOG_DB_URL: string;
 }
