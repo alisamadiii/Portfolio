@@ -3,3 +3,5 @@ COOLIFY_API_TOKEN=
 DISCORD_WEBHOOK_URL=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
+# Portfolio Neon (= packages/drizzle DATABASE_URL) — monitor_log evidence table
+MONITOR_LOG_DB_URL=
