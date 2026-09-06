@@ -1,0 +1,5 @@
+{
+	"devDependencies": {
+		"@react-email/preview-server": "5.2.11"
+	}
+}

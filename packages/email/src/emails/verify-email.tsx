@@ -4,13 +4,23 @@ import {
   Head,
   Heading,
   Html,
-  Img,
-  Link,
   Preview,
   Section,
-  Tailwind,
   Text,
 } from "@react-email/components";
+
+import {
+  codeBox,
+  container,
+  EmailFooter,
+  EmailHeader,
+  heading,
+  label,
+  main,
+  mutedText,
+  paragraph,
+  subheading,
+} from "./components/shared";
 
 interface VerifyEmailProps {
   verificationCode?: string;
@@ -20,126 +30,42 @@ export default function VerifyEmail({ verificationCode }: VerifyEmailProps) {
   return (
     <Html>
       <Head />
-      <Tailwind>
-        <Body
-          className="font-sans"
-          style={{ backgroundColor: "#FC8464", margin: 0, padding: 0 }}
-        >
-          <Preview>Dream Website Email Verification</Preview>
-          <Container className="mx-auto max-w-xl px-4 py-12">
-            {/* Brand header */}
-            <Section className="mb-6 text-center">
-              <Img
-                src="https://cdn.alisamadii.com/company/logo-white.png"
-                width="40"
-                height="40"
-                alt="Logo"
-                style={{ margin: "0 auto", display: "block" }}
-              />
-            </Section>
+      <Preview>Dream Website Email Verification</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <EmailHeader />
 
-            {/* Card */}
-            <Section
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                overflow: "hidden",
-              }}
-            >
-              <Section className="px-10 pt-10 pb-6">
-                <Heading
-                  className="mt-0 mb-4 text-2xl font-bold"
-                  style={{ color: "#111111" }}
-                >
-                  Verify your email address
-                </Heading>
-                <Text className="mb-6 text-base leading-6 text-gray-600">
-                  Welcome to Dream Website! To complete your account setup,
-                  please use the verification code below.
-                </Text>
+          <Heading style={heading}>Verify your email address</Heading>
+          <Text style={subheading}>Complete your account setup</Text>
 
-                {/* Code box */}
-                <Section
-                  className="mb-6 p-6 text-center"
-                  style={{
-                    backgroundColor: "#fff5f2",
-                    borderRadius: "8px",
-                    border: "1px solid #fdd5c8",
-                  }}
-                >
-                  <Text
-                    className="mb-1 text-xs font-semibold tracking-widest uppercase"
-                    style={{ color: "#FC8464" }}
-                  >
-                    Verification Code
-                  </Text>
-                  <Text
-                    className="my-2 font-mono text-4xl font-bold"
-                    style={{ color: "#111111", letterSpacing: "0.15em" }}
-                  >
-                    {verificationCode}
-                  </Text>
-                  <Text className="m-0 text-xs text-gray-500">
-                    Valid for 10 minutes
-                  </Text>
-                </Section>
+          <Text style={paragraph}>
+            Welcome to Dream Website! To complete your account setup, please
+            use the verification code below.
+          </Text>
 
-                <Text className="text-sm text-gray-500">
-                  If you didn&apos;t create an account, you can safely ignore
-                  this email.
-                </Text>
-              </Section>
+          <Section style={codeBox}>
+            <Text style={{ ...label, margin: "0 0 8px" }}>
+              Verification Code
+            </Text>
+            <Text style={code}>{verificationCode}</Text>
+            <Text style={{ ...mutedText, margin: 0 }}>
+              Valid for 10 minutes
+            </Text>
+          </Section>
 
-              {/* Footer inside card */}
-              <Section
-                className="px-10 py-6"
-                style={{ borderTop: "1px solid #f0f0f0" }}
-              >
-                <Text className="mb-2 text-xs text-gray-400">
-                  For your security, we will never ask you to verify your
-                  password, credit card, or banking information via email.
-                </Text>
-                <Text className="m-0 text-xs text-gray-400">
-                  Questions?{" "}
-                  <Link
-                    href="mailto:a@alisamadii.com"
-                    style={{ color: "#FC8464" }}
-                    className="no-underline"
-                  >
-                    Contact support
-                  </Link>{" "}
-                  &middot;{" "}
-                  <Link
-                    href="https://www.alisamadii.com/privacy"
-                    style={{ color: "#FC8464" }}
-                    className="no-underline"
-                  >
-                    Privacy
-                  </Link>{" "}
-                  &middot;{" "}
-                  <Link
-                    href="https://www.alisamadii.com/terms"
-                    style={{ color: "#FC8464" }}
-                    className="no-underline"
-                  >
-                    Terms
-                  </Link>
-                </Text>
-              </Section>
-            </Section>
+          <Text style={mutedText}>
+            If you didn&apos;t create an account, you can safely ignore this
+            email.
+          </Text>
 
-            {/* Outer footer */}
-            <Section className="mt-6 text-center">
-              <Text
-                className="m-0 text-xs"
-                style={{ color: "rgba(255,255,255,0.7)" }}
-              >
-                &copy; {new Date().getFullYear()} Dream Website · AliSamadii.LLC
-              </Text>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
+          <Text style={{ ...mutedText, margin: 0 }}>
+            For your security, we will never ask you to verify your password,
+            credit card, or banking information via email.
+          </Text>
+
+          <EmailFooter />
+        </Container>
+      </Body>
     </Html>
   );
 }
@@ -147,3 +73,12 @@ export default function VerifyEmail({ verificationCode }: VerifyEmailProps) {
 VerifyEmail.PreviewProps = {
   verificationCode: "596853",
 } satisfies VerifyEmailProps;
+
+const code: React.CSSProperties = {
+  color: "#111111",
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  fontSize: "36px",
+  fontWeight: 700,
+  letterSpacing: "0.15em",
+  margin: "0 0 8px",
+};

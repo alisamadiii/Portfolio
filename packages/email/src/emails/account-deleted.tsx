@@ -1,16 +1,33 @@
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
+  Hr,
   Html,
-  Img,
   Link,
   Preview,
   Section,
-  Tailwind,
   Text,
 } from "@react-email/components";
+
+import {
+  button,
+  buttonSection,
+  container,
+  EmailFooter,
+  EmailHeader,
+  heading,
+  hr,
+  label,
+  main,
+  mutedText,
+  paragraph,
+  strong,
+  subheading,
+  textLink,
+} from "./components/shared";
 
 interface AccountDeletedProps {
   userName?: string;
@@ -24,167 +41,78 @@ export default function AccountDeleted({
   return (
     <Html>
       <Head />
-      <Tailwind>
-        <Body
-          className="font-sans"
-          style={{ backgroundColor: "#FC8464", margin: 0, padding: 0 }}
-        >
-          <Preview>We&apos;re sorry to see you go - Dream Website</Preview>
-          <Container className="mx-auto max-w-xl px-4 py-12">
-            {/* Brand header */}
-            <Section className="mb-6 text-center">
-              <Img
-                src="https://cdn.alisamadii.com/company/logo-white.png"
-                width="40"
-                height="40"
-                alt="Logo"
-                style={{ margin: "0 auto", display: "block" }}
-              />
-            </Section>
+      <Preview>We&apos;re sorry to see you go - Dream Website</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <EmailHeader />
 
-            {/* Card */}
-            <Section
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                overflow: "hidden",
-              }}
-            >
-              <Section className="px-10 pt-10 pb-6">
-                <Heading
-                  className="mt-0 mb-4 text-2xl font-bold"
-                  style={{ color: "#111111" }}
-                >
-                  We&apos;re sorry to see you go
-                </Heading>
+          <Heading style={heading}>We&apos;re sorry to see you go</Heading>
+          <Text style={subheading}>Your account has been deleted</Text>
 
-                <Text className="mb-4 text-base leading-6 text-gray-600">
-                  Hi {userName},
-                </Text>
-                <Text className="mb-4 text-base leading-6 text-gray-600">
-                  Your account has been successfully deleted as you requested.
-                  We&apos;re genuinely sad to see you leave, and it was a
-                  pleasure having you as part of our community.
-                </Text>
-                <Text className="mb-6 text-base leading-6 text-gray-600">
-                  If there was something we could have done better, we&apos;d
-                  love to hear from you — your feedback helps us improve for
-                  everyone.
-                </Text>
+          <Text style={paragraph}>
+            Hi <span style={strong}>{userName}</span>,
+          </Text>
+          <Text style={paragraph}>
+            Your account has been successfully deleted as you requested.
+            We&apos;re genuinely sad to see you leave, and it was a pleasure
+            having you as part of our community.
+          </Text>
+          <Text style={paragraph}>
+            If there was something we could have done better, we&apos;d love to
+            hear from you — your feedback helps us improve for everyone.
+          </Text>
 
-                {/* CTA */}
-                <Section className="mb-6 text-center">
-                  <Link
-                    href={feedbackLink}
-                    className="inline-block px-8 py-3 text-base font-semibold text-white no-underline"
-                    style={{
-                      backgroundColor: "#FC8464",
-                      borderRadius: "8px",
-                      color: "#ffffff",
-                    }}
-                  >
-                    Share Your Feedback
-                  </Link>
-                </Section>
+          <Section style={buttonSection}>
+            <Button href={feedbackLink} style={button}>
+              Share Your Feedback
+            </Button>
+          </Section>
 
-                {/* What happens now */}
-                <Section
-                  className="mb-6 p-5"
-                  style={{
-                    backgroundColor: "#fff5f2",
-                    borderRadius: "8px",
-                    borderLeft: "4px solid #FC8464",
-                  }}
-                >
-                  <Text
-                    className="mt-0 mb-3 text-sm font-semibold"
-                    style={{ color: "#111111" }}
-                  >
-                    What happens now?
-                  </Text>
-                  <Text className="my-1 text-sm text-gray-600">
-                    &bull; Your account and personal data have been permanently
-                    deleted
-                  </Text>
-                  <Text className="my-1 text-sm text-gray-600">
-                    &bull; Any active subscriptions have been cancelled
-                  </Text>
-                  <Text className="my-1 text-sm text-gray-600">
-                    &bull; You might receive some emails from us
-                  </Text>
-                  <Text className="my-0 text-sm text-gray-600">
-                    &bull; You&apos;re welcome to create a new account anytime
-                    if you change your mind
-                  </Text>
-                </Section>
+          <Text style={{ ...label, margin: "0 0 8px" }}>What happens now?</Text>
+          <Text style={bullet}>
+            &bull; Your account and personal data have been permanently deleted
+          </Text>
+          <Text style={bullet}>
+            &bull; Any active subscriptions have been cancelled
+          </Text>
+          <Text style={bullet}>
+            &bull; You might receive some emails from us
+          </Text>
+          <Text style={{ ...bullet, margin: "0 0 24px" }}>
+            &bull; You&apos;re welcome to create a new account anytime if you
+            change your mind
+          </Text>
 
-                <Text className="mb-4 text-base leading-6 text-gray-600">
-                  If you ever want to come back, you can create a new account
-                  anytime at{" "}
-                  <Link
-                    href="https://hub.alisamadii.com/sign-up"
-                    style={{ color: "#FC8464" }}
-                    className="no-underline"
-                  >
-                    alisamadii.com
-                  </Link>
-                  .
-                </Text>
+          <Text style={paragraph}>
+            If you ever want to come back, you can create a new account anytime
+            at{" "}
+            <Link href="https://hub.alisamadii.com/sign-up" style={textLink}>
+              alisamadii.com
+            </Link>
+            .
+          </Text>
 
-                <Text className="mb-6 text-base leading-6 text-gray-600">
-                  Thank you for giving us a try. We wish you all the best.
-                </Text>
+          <Text style={paragraph}>
+            Thank you for giving us a try. We wish you all the best.
+          </Text>
 
-                <Text className="m-0 text-base leading-6 text-gray-600">
-                  Take care,
-                  <br />
-                  <span style={{ color: "#111111", fontWeight: 600 }}>
-                    The AliSamadii.LLC Team
-                  </span>
-                </Text>
-              </Section>
+          <Text style={{ ...paragraph, margin: 0 }}>
+            Take care,
+            <br />
+            <span style={strong}>The AliSamadii.LLC Team</span>
+          </Text>
 
-              {/* Footer inside card */}
-              <Section
-                className="px-10 py-6"
-                style={{ borderTop: "1px solid #f0f0f0" }}
-              >
-                <Text className="m-0 text-xs text-gray-400">
-                  This is a confirmation email sent by AliSamadii.LLC regarding
-                  your account deletion. If you didn&apos;t request this,
-                  contact our support team immediately. View our{" "}
-                  <Link
-                    href="https://www.alisamadii.com/privacy"
-                    style={{ color: "#FC8464" }}
-                    className="no-underline"
-                  >
-                    Privacy Policy
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="https://www.alisamadii.com/terms"
-                    style={{ color: "#FC8464" }}
-                    className="no-underline"
-                  >
-                    Terms of Service
-                  </Link>
-                  .
-                </Text>
-              </Section>
-            </Section>
+          <Hr style={hr} />
 
-            {/* Outer footer */}
-            <Section className="mt-6 text-center">
-              <Text
-                className="m-0 text-xs"
-                style={{ color: "rgba(255,255,255,0.7)" }}
-              >
-                &copy; {new Date().getFullYear()} Dream Website · AliSamadii.LLC
-              </Text>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
+          <Text style={{ ...mutedText, margin: 0 }}>
+            This is a confirmation email sent by AliSamadii.LLC regarding your
+            account deletion. If you didn&apos;t request this, contact our
+            support team immediately.
+          </Text>
+
+          <EmailFooter />
+        </Container>
+      </Body>
     </Html>
   );
 }
@@ -193,3 +121,10 @@ AccountDeleted.PreviewProps = {
   userName: "John Doe",
   feedbackLink: "https://www.alisamadii.com/feedback",
 } satisfies AccountDeletedProps;
+
+const bullet: React.CSSProperties = {
+  color: "#6b7280",
+  fontSize: "15px",
+  lineHeight: "1.6",
+  margin: "0 0 4px",
+};
