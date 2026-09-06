@@ -8,6 +8,8 @@ const nextConfig = {
     "@workspace/email",
     "@workspace/storage",
   ],
+  // Self-hosted (Docker/Coolify) deploys use the standalone server bundle;
+  output: "standalone",
   cacheComponents: true,
   strictMode: false,
   compiler: {
