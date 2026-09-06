@@ -35,6 +35,6 @@
   //   DISCORD_WEBHOOK_URL     Discord channel → Integrations → Webhooks
   //   AWS_ACCESS_KEY_ID       IAM key with ses:GetAccount + ses:SendEmail
   //   AWS_SECRET_ACCESS_KEY
-  //   MONITOR_LOG_DB_URL      Neon connection string (EmpowerHer usesend db) —
+  //   MONITOR_LOG_DB_URL      Portfolio Neon (= packages/drizzle DATABASE_URL) —
   //                           failing/near-miss runs logged to monitor_log
 }

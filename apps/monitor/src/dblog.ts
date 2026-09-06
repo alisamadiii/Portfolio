@@ -1,11 +1,10 @@
 import { neon } from "@neondatabase/serverless";
 import type { CheckResult } from "./types.js";
 
-// Failing runs are persisted to the `monitor_log` table in the EmpowerHer
-// Neon (usesend db) so intermittent flaps leave queryable evidence — the KV
-// status key only keeps the latest run. Quiet runs are NOT logged. Table
-// created 2026-09-06 via psql (bigserial id, run_at default now(), check_id,
-// name, url, ok, http_status, latency_ms, detail, probes jsonb).
+// Failing runs are persisted to the `monitor_log` table in the portfolio
+// Neon (packages/drizzle DATABASE_URL — schema: packages/drizzle/src/schema/
+// general.ts `monitorLog`) so intermittent flaps leave queryable evidence —
+// the KV status key only keeps the latest run. Quiet runs are NOT logged.
 
 // newsletter.empowerher-initiative.org flaps with ~10s latency while the
 // container, VPS, Traefik and Neon all look healthy. These sub-probes split

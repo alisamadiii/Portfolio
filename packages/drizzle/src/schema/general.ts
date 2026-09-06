@@ -1,7 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+  bigserial,
   boolean,
+  index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -69,6 +72,34 @@ export const previousCustomers = pgTable("previous_customers", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Written by the uptime-monitor Worker (apps/monitor/src/dblog.ts) via raw
+// SQL on failing/near-miss runs only — full check snapshot + deep sub-probes
+// on the flapping target. 30-day retention enforced by the worker.
+export const monitorLog = pgTable(
+  "monitor_log",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    runAt: timestamp("run_at", { withTimezone: true }).notNull().defaultNow(),
+    checkId: text("check_id").notNull(),
+    name: text("name").notNull(),
+    url: text("url"),
+    ok: boolean("ok").notNull(),
+    httpStatus: integer("http_status"),
+    latencyMs: integer("latency_ms"),
+    detail: text("detail"),
+    probes: jsonb("probes").$type<
+      { path: string; status: number | null; latencyMs: number; error?: string }[]
+    >(),
+  },
+  (table) => ({
+    idxMonitorLogRunAt: index("monitor_log_run_at_idx").on(table.runAt.desc()),
+    idxMonitorLogCheck: index("monitor_log_check_idx").on(
+      table.checkId,
+      table.runAt.desc()
+    ),
+  })
+);
 
 // Don't change the order of the values
 export const projectsTypeValues = [
