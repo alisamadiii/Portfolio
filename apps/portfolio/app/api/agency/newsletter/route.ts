@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { API_SITE, corsHeaders, FROM, getResend, signToken } from "./lib";
+import { sendEmail } from "@workspace/email/usesend";
+
+import { API_SITE, corsHeaders, FROM, signToken } from "./lib";
 
 export async function OPTIONS(req: Request) {
   return new Response(null, { status: 200, headers: corsHeaders(req) });
@@ -26,7 +28,7 @@ const isRateLimited = (ip: string) => {
 
 // ─── Subscribe (step 1 of double opt-in) ────────────────────────
 // Sends a confirmation email with a signed link; the contact is only
-// added to the Resend segment when they click it (confirm route).
+// added to the useSend contact book when they click it (confirm route).
 
 const CONFIRM_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -131,14 +133,13 @@ export async function POST(req: Request) {
   const confirmUrl = `${API_SITE}/api/agency/newsletter/confirm?token=${encodeURIComponent(token)}`;
 
   try {
-    const { error } = await getResend().emails.send({
+    await sendEmail({
       from: FROM,
       to: email,
       subject: "Confirm your subscription — Ali Samadi Agency",
       html: confirmEmailHtml(confirmUrl),
       text: confirmEmailText(confirmUrl),
     });
-    if (error) throw error;
   } catch (error) {
     console.error("Newsletter confirmation email failed", error);
     return NextResponse.json(

@@ -1,7 +1,4 @@
-import nodemailer from "nodemailer";
-import { Resend } from "resend";
-
-type MailProvider = "resend" | "smtp" | "agency";
+import { sendEmail as usesendSend } from "@workspace/email/usesend";
 
 type SendEmailInput = {
   to: string | string[];
@@ -10,148 +7,16 @@ type SendEmailInput = {
   text?: string;
 };
 
-type SmtpTransporter = {
-  sendMail: (options: {
-    from: string;
-    to: string | string[];
-    subject: string;
-    html: string;
-    text?: string;
-  }) => Promise<{ rejected?: string[] }>;
-};
-
-let smtpTransporter: SmtpTransporter | null = null;
-
-const getEnv = (name: string) => {
-  const value = process.env[name];
-  if (typeof value !== "string") return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-};
-
-const parseBoolean = (value: string, envName: string) => {
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "true") return true;
-  if (normalized === "false") return false;
-  throw new Error(`${envName} must be "true" or "false" when set.`);
-};
-
-const getFromEmail = () => "Ali Samadi CMS <no-reply@alisamadii.com>";
-
-const getEmailProvider = (): MailProvider => {
-  const configured = getEnv("EMAIL_PROVIDER")?.toLowerCase();
-  if (configured) {
-    if (
-      configured === "resend" ||
-      configured === "smtp" ||
-      configured === "agency"
-    )
-      return configured;
-    throw new Error(
-      `Unsupported EMAIL_PROVIDER "${configured}". Use "resend", "smtp", or "agency".`
-    );
-  }
-
-  if (getEnv("RESEND_API_KEY")) return "resend";
-  if (getEnv("SMTP_HOST")) return "smtp";
-  if (getEnv("AGENCY_API_KEY")) return "agency";
-
-  throw new Error(
-    "No email provider configured. Set EMAIL_PROVIDER=resend|smtp|agency, or define RESEND_API_KEY / SMTP_HOST / AGENCY_API_KEY."
-  );
-};
-
-const getSmtpTransporter = () => {
-  if (smtpTransporter) return smtpTransporter;
-
-  const host = getEnv("SMTP_HOST");
-  if (!host) throw new Error("Missing SMTP_HOST for SMTP email provider.");
-
-  const portRaw = getEnv("SMTP_PORT") || "587";
-  const port = Number(portRaw);
-  if (!Number.isInteger(port) || port <= 0)
-    throw new Error("SMTP_PORT must be a positive integer.");
-
-  const secureRaw = getEnv("SMTP_SECURE");
-  const secure = secureRaw
-    ? parseBoolean(secureRaw, "SMTP_SECURE")
-    : port === 465;
-
-  const user = getEnv("SMTP_USER");
-  const pass = getEnv("SMTP_PASSWORD");
-  if ((user && !pass) || (!user && pass)) {
-    throw new Error("SMTP_USER and SMTP_PASSWORD must be set together.");
-  }
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    ...(user && pass ? { auth: { user, pass } } : {}),
-  });
-  smtpTransporter = transporter;
-
-  return transporter;
-};
-
-export const sendEmail = async ({
-  to,
-  subject,
-  html,
-  text,
-}: SendEmailInput) => {
+export const sendEmail = async ({ to, subject, html, text }: SendEmailInput) => {
   const recipients = Array.isArray(to) ? to : [to];
   if (recipients.length === 0)
     throw new Error("At least one recipient is required.");
 
-  const from = getFromEmail();
-  const provider = getEmailProvider();
-
-  if (provider === "resend") {
-    const apiKey = getEnv("RESEND_API_KEY");
-    if (!apiKey) throw new Error("Missing RESEND_API_KEY for Resend provider.");
-
-    const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
-      from,
-      to: recipients,
-      subject,
-      html,
-      text,
-    });
-
-    if (error) throw new Error(error.message);
-    return;
-  }
-
-  if (provider === "agency") {
-    const apiKey = getEnv("AGENCY_API_KEY");
-    if (!apiKey) throw new Error("Missing AGENCY_API_KEY for agency provider.");
-
-    const { AgencyClient } = await import("@alisamadiillc/agency-api");
-    const agency = new AgencyClient(apiKey);
-    const { error } = await agency.emails.send({
-      from,
-      to: recipients,
-      subject,
-      html,
-      text,
-    });
-
-    if (error) throw new Error(`${error.code}: ${error.message}`);
-    return;
-  }
-
-  const transporter = getSmtpTransporter();
-  const info = await transporter.sendMail({
-    from,
+  await usesendSend({
+    from: "Ali Samadi CMS <no-reply@alisamadii.com>",
     to: recipients,
     subject,
     html,
     text,
   });
-
-  if (Array.isArray(info.rejected) && info.rejected.length > 0) {
-    throw new Error(`SMTP rejected recipients: ${info.rejected.join(", ")}`);
-  }
 };

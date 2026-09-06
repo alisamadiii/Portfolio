@@ -13,6 +13,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
+import { eventTileFor } from "@/components/emails/status-colors";
 import { DocumentTitle } from "@/components/document-title";
 import { Check, Copy, ExternalLink } from "@/components/icon";
 
@@ -67,7 +68,7 @@ export default function EmailByIdPage() {
     trpc.emails.getById.queryOptions({ id }, { enabled: !!id })
   );
 
-  // Presigned URL dies in ~60s — a mutation fetched fresh on view / retry.
+  // HTML fetched fresh from useSend on view / retry — never cached.
   const view = useMutation(trpc.emails.getViewUrlById.mutationOptions());
   const { mutate: loadPreview } = view;
 
@@ -80,8 +81,12 @@ export default function EmailByIdPage() {
     view.mutate(
       { id },
       {
-        onSuccess: ({ url }) => {
-          if (tab) tab.location.href = url;
+        onSuccess: ({ html }) => {
+          if (tab) {
+            tab.location.href = URL.createObjectURL(
+              new Blob([html], { type: "text/html" })
+            );
+          }
         },
         onError: (mutationError) => {
           tab?.close();
@@ -122,7 +127,12 @@ export default function EmailByIdPage() {
         <>
           {/* ── Header ── */}
           <div className="flex items-center gap-4">
-            <div className="bg-status-success-bg text-status-success grid size-14 shrink-0 place-items-center rounded-2xl border border-green-500/50">
+            <div
+              className={cn(
+                "grid size-14 shrink-0 place-items-center rounded-2xl border",
+                eventTileFor(email.lastEvent)
+              )}
+            >
               <EnvelopeMark className="size-6" />
             </div>
             <div className="min-w-0 flex-1">
@@ -171,9 +181,9 @@ export default function EmailByIdPage() {
                 Preview
               </span>
             </div>
-            {view.data?.url ? (
+            {view.data?.html ? (
               <iframe
-                src={view.data.url}
+                srcDoc={view.data.html}
                 title={email.subject}
                 sandbox="allow-same-origin"
                 className="h-[70vh] w-full bg-white"

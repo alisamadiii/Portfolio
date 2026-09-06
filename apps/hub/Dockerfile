@@ -13,7 +13,7 @@ RUN pnpm dlx turbo@2.10.6 prune hub --docker
 FROM base AS builder
 COPY --from=pruner /app/out/json/ .
 # --ignore-scripts: out/json has no src yet, so lifecycle scripts like
-# api-client's `prepare` (tsup) would fail; turbo ^build compiles them later.
+# package `prepare` scripts (tsup) would fail; turbo ^build compiles them later.
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
 COPY --from=pruner /app/out/full/ .

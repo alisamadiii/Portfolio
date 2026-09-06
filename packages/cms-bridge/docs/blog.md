@@ -1,5 +1,12 @@
 # Hub Blog Sync
 
+> **DEFUNCT (2026-09-01):** the content API this flow mirrored from
+> (`api.alisamadii.com`, the agency-api Worker) has been removed from the
+> monorepo and its deployment is being decommissioned. The blog-sync
+> Action/template below no longer has a data source — the flow needs a new
+> public content endpoint (e.g. on the portfolio app, which hosts the hub
+> tRPC APIs) before it can be revived. Kept for reference.
+
 Blog posts are **edited in the hub, not in the repository**. They live in the
 hub database (`hub_blog_post`) and are mirrored into the client repo's
 `src/content/blog/` as markdown files by a GitHub Action whenever someone

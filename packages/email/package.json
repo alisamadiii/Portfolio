@@ -23,7 +23,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@alisamadiillc/agency-api": "workspace:*",
     "@react-email/components": "^1.0.8",
     "@react-email/preview-server": "^5.2.9",
     "@react-email/render": "^2.0.4",

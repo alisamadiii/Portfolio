@@ -1,0 +1,20 @@
+{
+  "name": "@workspace/monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker cron that health-checks the Coolify VPS fleet (HTTP + Coolify API + SES) and alerts via Discord/SES once per incident",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "check-types": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.36.0"
+  }
+}

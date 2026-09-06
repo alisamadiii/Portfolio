@@ -1,22 +1,7 @@
 import type { ReactElement } from "react";
-import { AgencyClient } from "@alisamadiillc/agency-api";
 
+import { sendEmail } from "./usesend";
 import { renderEmail, renderText } from "./utils";
-
-let agencyClient: AgencyClient | null = null;
-
-const getAgencyClient = () => {
-  if (!agencyClient) {
-    const apiKey = process.env.AGENCY_API_KEY;
-
-    if (!apiKey) {
-      throw new Error("Missing AGENCY_API_KEY in environment variables");
-    }
-
-    agencyClient = new AgencyClient(apiKey);
-  }
-  return agencyClient;
-};
 
 type SendOptions = {
   from?: string;
@@ -30,46 +15,13 @@ async function send({ from, to, subject, react }: SendOptions) {
   const html = await renderEmail(react);
   const text = await renderText(react);
 
-  const { error } = await getAgencyClient().emails.send({
-    from: source,
-    to,
-    subject,
-    html,
-    text,
-  });
-
-  if (error) {
+  try {
+    await sendEmail({ from: source, to, subject, html, text });
+  } catch (error) {
     console.error("[email] Send failed:", error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Send failed" };
   }
   return { data: true as const };
 }
 
-async function resend({
-  from,
-  to,
-  subject,
-  html,
-}: {
-  from?: string;
-  to: string | string[];
-  subject: string;
-  html: string;
-}) {
-  const source = from ?? "noreply@alisamadii.com";
-
-  const { error } = await getAgencyClient().emails.send({
-    from: source,
-    to,
-    subject,
-    html,
-  });
-
-  if (error) {
-    console.error("[email] Resend failed:", error);
-    return { error: error.message };
-  }
-  return { data: true as const };
-}
-
-export const email = { send, resend };
+export const email = { send };

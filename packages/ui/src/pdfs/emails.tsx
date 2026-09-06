@@ -26,7 +26,7 @@ export interface EmailLogsPdfRow {
   date: string; // pre-formatted, e.g. "Apr 12, 2026 3:41 PM"
   subject: string;
   recipient: string;
-  kind: string; // "Sent" | "Contact form"
+  kind: string; // delivery status, e.g. "Delivered" | "Opened" | "Bounced"
 }
 
 export interface EmailLogsData {
@@ -171,7 +171,7 @@ export function EmailLogsDocument({ data }: { data: EmailLogsData }) {
           <Label style={{ flex: 1, marginBottom: 0 }}>Subject</Label>
           <Label style={{ width: 140, marginBottom: 0 }}>Recipient</Label>
           <Label style={{ width: 70, textAlign: "right", marginBottom: 0 }}>
-            Type
+            Status
           </Label>
         </View>
 

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { AGENCY_SITE, getResend, verifyToken } from "../lib";
+import { AGENCY_SITE, setSubscription, verifyToken } from "../lib";
 
 // ─── Unsubscribe ────────────────────────────────────────────────
 // Links in broadcasts are generated with signToken(email, 0) — no
 // expiry, so old emails keep working. Marks the contact unsubscribed
-// in Resend (excluded from all broadcasts) and shows the agency page.
+// in useSend (excluded from all campaigns) and shows the agency page.
 
 export async function GET(req: Request) {
   const token = new URL(req.url).searchParams.get("token") ?? "";
@@ -19,11 +19,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { error } = await getResend().contacts.update({
-      email,
-      unsubscribed: true,
-    });
-    if (error) throw error;
+    await setSubscription(email, false);
   } catch (error) {
     console.error("Newsletter unsubscribe failed", error);
     return NextResponse.redirect(

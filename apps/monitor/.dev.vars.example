@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `pnpm dev`. Prod: `wrangler secret put <NAME>`.
+COOLIFY_API_TOKEN=
+DISCORD_WEBHOOK_URL=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=

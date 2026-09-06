@@ -1,30 +1,54 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { Resend } from "resend";
 
+import { UseSendError, usesendFetch } from "@workspace/email/usesend";
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 
 // ─── Newsletter constants ───────────────────────────────────────
 // Double-opt-in newsletter for the agency site. Contacts land in the
-// Resend email-marketing segment below; sends go out from the dedicated
+// useSend contact book below; sends go out from the dedicated
 // newsletter address so quote/transactional reputation stays separate.
 
-export const SEGMENT_ID = "014eed69-39af-4313-8958-6982bfe52236";
 export const FROM = "Ali Samadi Agency <newsletter@alisamadii.com>";
 export const AGENCY_SITE = "https://agency.alisamadii.com";
 export const API_SITE = "https://www.alisamadii.com";
 
-let client: Resend | null = null;
-
-export const getResend = () => {
-  if (!client) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      throw new Error("Missing RESEND_API_KEY in environment variables");
-    }
-    client = new Resend(apiKey);
-  }
-  return client;
+const contactBook = () => {
+  const id = process.env.USESEND_CONTACT_BOOK_ID;
+  if (!id) throw new Error("Missing USESEND_CONTACT_BOOK_ID in environment");
+  return id;
 };
+
+// Upsert-by-email into the newsletter contact book. Create first (covers the
+// common case); an existing contact answers with a conflict, at which point
+// the contactId is resolved by email and patched.
+export async function setSubscription(email: string, subscribed: boolean) {
+  const book = contactBook();
+  const base = `/api/v1/contactBooks/${encodeURIComponent(book)}/contacts`;
+
+  try {
+    await usesendFetch(base, { method: "POST", body: { email, subscribed } });
+    return;
+  } catch (error) {
+    // Anything but a duplicate-contact conflict is a real failure.
+    if (!(error instanceof UseSendError) || error.status >= 500) throw error;
+  }
+
+  const contacts = await usesendFetch<
+    { id: string; email: string }[] | { contacts: { id: string; email: string }[] }
+  >(base, { query: { emails: email } });
+  const list = Array.isArray(contacts) ? contacts : contacts.contacts;
+  const contact = list?.find(
+    (c) => c.email.toLowerCase() === email.toLowerCase()
+  );
+  if (!contact) {
+    throw new Error(`useSend contact not found for ${email}`);
+  }
+
+  await usesendFetch(`${base}/${encodeURIComponent(contact.id)}`, {
+    method: "PATCH",
+    body: { subscribed },
+  });
+}
 
 // ─── Signed tokens (no DB) ──────────────────────────────────────
 // token = base64url(email) + "." + expiryMs + "." + base64url(hmac)

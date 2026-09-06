@@ -24,13 +24,6 @@ import {
   type ChartConfig,
 } from "@workspace/ui/components/chart";
 import { Input } from "@workspace/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { DataTable } from "@workspace/ui/custom/data-table";
 import type { DateRange } from "@workspace/ui/custom/date-range-picker";
@@ -42,6 +35,7 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
 import { ExportEmailsPdfButton } from "@/components/emails/export-pdf-button";
+import { eventPillFor, eventTileFor } from "@/components/emails/status-colors";
 import {
   ArrowLeft,
   Check,
@@ -54,24 +48,6 @@ import {
 
 const PAGE_SIZE = 10;
 
-const TYPE_PILL: Record<string, { label: string; className: string }> = {
-  send: {
-    label: "Sent",
-    className: "bg-status-success-bg text-status-success",
-  },
-  contact: {
-    label: "Contact form",
-    className: "bg-status-review-bg text-status-review",
-  },
-};
-
-// Types are free-form — unknown values get a neutral pill with the raw label.
-const pillFor = (type: string) =>
-  TYPE_PILL[type] ?? {
-    label: type,
-    className: "bg-muted text-muted-foreground",
-  };
-
 const chartConfig = {
   total: { label: "Emails", color: "var(--status-success)" },
 } satisfies ChartConfig;
@@ -80,7 +56,7 @@ const PanelHeading = () => (
   <div>
     <h2 className="text-[22px] font-extrabold tracking-tight">Emails</h2>
     <p className="text-muted-foreground mt-1 text-[14px]">
-      Every email sent from this website — receipts, notifications, and
+      Every email sent from your sending domain — receipts, notifications, and
       contact-form messages.
     </p>
   </div>
@@ -93,13 +69,12 @@ export function EmailsPanel() {
 
   const owner = config?.owner;
   const repo = config?.repo;
-  const enabled = !!owner && !!repo;
+  const hasProject = !!owner && !!repo;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [typeFilter, setTypeFilter] = useState("all");
   const [range, setRange] = useState<DateRange | undefined>(() => ({
     from: startOfDay(subDays(new Date(), 29)),
     to: new Date(),
@@ -118,10 +93,19 @@ export function EmailsPanel() {
       from: range?.from ? startOfDay(range.from).toISOString() : undefined,
       to: range?.to ? endOfDay(range.to).toISOString() : undefined,
       search: debouncedSearch || undefined,
-      type: typeFilter === "all" ? undefined : typeFilter,
     }),
-    [range, debouncedSearch, typeFilter]
+    [range, debouncedSearch]
   );
+
+  // No sending domain configured → nothing is fetched; the tab shows a
+  // setup card instead.
+  const { data: gate, isLoading: gateLoading } = useQuery(
+    trpc.emails.enabled.queryOptions(
+      { owner: owner ?? "", repo: repo ?? "" },
+      { enabled: hasProject }
+    )
+  );
+  const emailsEnabled = hasProject && gate?.enabled === true;
 
   const { data, isLoading, error } = useQuery(
     trpc.emails.list.queryOptions(
@@ -132,7 +116,7 @@ export function EmailsPanel() {
         page,
         limit: PAGE_SIZE,
       },
-      { enabled, placeholderData: keepPreviousData }
+      { enabled: emailsEnabled, placeholderData: keepPreviousData }
     )
   );
 
@@ -144,28 +128,18 @@ export function EmailsPanel() {
         from: filterInput.from,
         to: filterInput.to,
       },
-      { enabled, placeholderData: keepPreviousData }
-    )
-  );
-
-  const { data: typeOptions } = useQuery(
-    trpc.emails.types.queryOptions(
-      { owner: owner ?? "", repo: repo ?? "" },
-      { enabled }
+      { enabled: emailsEnabled, placeholderData: keepPreviousData }
     )
   );
 
   // Zero-fill every day in the range so the chart has no gaps.
   const chartData = useMemo(() => {
     if (!range?.from || !range?.to) return [];
-    const byDate = new Map((stats?.daily ?? []).map((d) => [d.date, d]));
+    const byDate = new Map((stats?.daily ?? []).map((d) => [d.date, d.total]));
     return eachDayOfInterval({ start: range.from, end: range.to }).map(
       (day) => {
         const key = format(day, "yyyy-MM-dd");
-        const bucket = byDate.get(key);
-        const send = bucket?.send ?? 0;
-        const contact = bucket?.contact ?? 0;
-        return { date: key, send, contact, total: send + contact };
+        return { date: key, total: byDate.get(key) ?? 0 };
       }
     );
   }, [stats, range]);
@@ -173,7 +147,7 @@ export function EmailsPanel() {
   const emails = data?.items ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const totals = stats?.totals ?? { total: 0, send: 0, contact: 0 };
+  const totals = stats?.totals ?? { total: 0, delivered: 0, problems: 0 };
 
   const rangeLabel =
     range?.from && range?.to
@@ -181,6 +155,47 @@ export function EmailsPanel() {
       : "All time";
 
   if (!owner || !repo) return null;
+
+  if (gateLoading) {
+    return (
+      <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
+        <PanelHeading />
+        <div className="grid grid-cols-3 gap-3">
+          <Skeleton className="h-[86px] rounded-lg" />
+          <Skeleton className="h-[86px] rounded-lg" />
+          <Skeleton className="h-[86px] rounded-lg" />
+        </div>
+        <Skeleton className="h-[240px] w-full rounded-lg" />
+      </div>
+    );
+  }
+
+  if (!emailsEnabled) {
+    return (
+      <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
+        <PanelHeading />
+        <div className="rounded-lg border border-dashed px-6 py-16 text-center">
+          <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
+            <EnvelopeMark className="size-6" />
+          </div>
+          <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
+            Emails aren&apos;t set up yet
+          </h3>
+          <p className="text-muted-foreground mx-auto mt-2 max-w-[400px] text-[14px]">
+            This project doesn&apos;t have a sending domain connected. Once
+            it&apos;s connected, every email sent from your website will show
+            up here — with delivery, open, and click tracking.
+          </p>
+          <p className="text-muted-foreground mx-auto mt-4 max-w-[400px] text-[13px]">
+            Think something&apos;s off? Some clients get a custom email setup
+            hosted just for them, with its own dashboard at a different URL.
+            If you don&apos;t have that URL — or you&apos;re not sure — contact
+            us and we&apos;ll help you out.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedId) {
     return (
@@ -212,8 +227,7 @@ export function EmailsPanel() {
   }
 
   const isEmpty = !isLoading && total === 0;
-  const isFilteredEmpty =
-    isEmpty && (!!debouncedSearch || typeFilter !== "all");
+  const isFilteredEmpty = isEmpty && !!debouncedSearch;
 
   return (
     <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
@@ -223,14 +237,14 @@ export function EmailsPanel() {
       <div className="grid grid-cols-3 gap-3">
         <StatTile label="Total sent" value={totals.total} />
         <StatTile
-          label="Sent"
-          value={totals.send}
+          label="Delivered"
+          value={totals.delivered}
           dotClassName="bg-status-success"
         />
         <StatTile
-          label="Contact form"
-          value={totals.contact}
-          dotClassName="bg-status-review"
+          label="Problems"
+          value={totals.problems}
+          dotClassName="bg-destructive"
         />
       </div>
 
@@ -305,25 +319,6 @@ export function EmailsPanel() {
             className="pl-9"
           />
         </div>
-        <Select
-          value={typeFilter}
-          onValueChange={(v) => {
-            setTypeFilter(v ?? "all");
-            setPage(0);
-          }}
-        >
-          <SelectTrigger className="h-10 rounded-full px-4">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {(typeOptions ?? []).map((t) => (
-              <SelectItem key={t} value={t}>
-                {pillFor(t).label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <DateRangePicker
           value={range}
           onChange={(next) => {
@@ -362,7 +357,6 @@ export function EmailsPanel() {
               className="mt-5 rounded-full px-5"
               onClick={() => {
                 setSearch("");
-                setTypeFilter("all");
                 setPage(0);
               }}
             >
@@ -381,35 +375,36 @@ export function EmailsPanel() {
                 header: "To",
                 cell: ({ row }) => (
                   <div className="flex items-center gap-3">
-                    <div className="bg-status-success-bg border-status-success/50 text-status-success grid size-9 shrink-0 place-items-center rounded-[10px] border">
+                    <div
+                      className={cn(
+                        "grid size-9 shrink-0 place-items-center rounded-[10px] border",
+                        eventTileFor(row.original.lastEvent)
+                      )}
+                    >
                       <EnvelopeMark className="size-4" />
                     </div>
-                    <div className="min-w-0">
-                      <span className="block max-w-[240px] truncate text-sm font-medium">
-                        {row.original.to.join(", ")}
-                      </span>
-                      {row.original.visitorEmail && (
-                        <span className="text-muted-foreground block max-w-[240px] truncate text-xs">
-                          from {row.original.visitorEmail}
-                        </span>
-                      )}
-                    </div>
+                    <span className="block max-w-[240px] truncate text-sm font-medium">
+                      {row.original.to.join(", ")}
+                    </span>
                   </div>
                 ),
               },
               {
-                id: "status",
-                header: "Status",
-                cell: ({ row }) => (
-                  <span
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap",
-                      pillFor(row.original.type).className
-                    )}
-                  >
-                    {pillFor(row.original.type).label}
-                  </span>
-                ),
+                id: "delivery",
+                header: "Delivery",
+                cell: ({ row }) => {
+                  const pill = eventPillFor(row.original.lastEvent);
+                  return (
+                    <span
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap capitalize",
+                        pill.className
+                      )}
+                    >
+                      {pill.label}
+                    </span>
+                  );
+                },
               },
               {
                 id: "subject",
@@ -584,8 +579,8 @@ function EmailDetail({
     trpc.emails.get.queryOptions({ owner, repo, id }, { enabled: !!id })
   );
 
-  // The presigned URL dies in ~60s, so it's a mutation fetched fresh — once
-  // for the inline preview, and again on every open-in-new-tab / retry.
+  // HTML fetched fresh from useSend — once for the inline preview, and again
+  // on every open-in-new-tab / retry.
   const view = useMutation(trpc.emails.getViewUrl.mutationOptions());
   const { mutate: loadPreview } = view;
 
@@ -599,8 +594,12 @@ function EmailDetail({
     view.mutate(
       { owner, repo, id },
       {
-        onSuccess: ({ url }) => {
-          if (tab) tab.location.href = url;
+        onSuccess: ({ html }) => {
+          if (tab) {
+            tab.location.href = URL.createObjectURL(
+              new Blob([html], { type: "text/html" })
+            );
+          }
         },
         onError: (mutationError) => {
           tab?.close();
@@ -650,7 +649,12 @@ function EmailDetail({
 
       {/* ── Header ── */}
       <div className="flex items-center gap-4">
-        <div className="bg-status-success-bg text-status-success grid size-14 shrink-0 place-items-center rounded-2xl border border-green-500/50">
+        <div
+          className={cn(
+            "grid size-14 shrink-0 place-items-center rounded-2xl border",
+            eventTileFor(email.lastEvent)
+          )}
+        >
           <EnvelopeMark className="size-6" />
         </div>
         <div className="min-w-0 flex-1">
@@ -700,6 +704,11 @@ function EmailDetail({
             {recipient}
           </p>
         </MetaItem>
+        <MetaItem label="Delivery">
+          <p className="capitalize">
+            {eventPillFor(email.lastEvent).label}
+          </p>
+        </MetaItem>
         <MetaItem label="ID">
           <CopyIdChip id={email.id} />
         </MetaItem>
@@ -712,9 +721,9 @@ function EmailDetail({
             Preview
           </Badge>
         </div>
-        {view.data?.url ? (
+        {view.data?.html ? (
           <iframe
-            src={view.data.url}
+            srcDoc={view.data.html}
             title={email.subject}
             sandbox="allow-same-origin"
             className="h-[70vh] w-full bg-white"

@@ -10,7 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@alisamadiillc/agency-api": "workspace:*",
     "@ltd/j-toml": "^1.38.0",
     "@octokit/rest": "^22.0.1",
     "@polar-sh/sdk": "^0.46.2",
@@ -23,6 +22,7 @@
     "@workspace/cms-core": "workspace:*",
     "@workspace/drizzle": "workspace:*",
     "@workspace/email": "workspace:*",
+    "aws4fetch": "^1.0.20",
     "axios": "^1.13.6",
     "client-only": "^0.0.1",
     "date-fns": "^4.1.0",

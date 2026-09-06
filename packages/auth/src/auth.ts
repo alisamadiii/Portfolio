@@ -118,22 +118,6 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // Cache duration in seconds (5 minutes)
     },
   },
-  databaseHooks: {
-    user: {
-      create: {
-        after: async () => {
-          // if (process.env.RESEND_AUDIENCE_GENERAL_ID) {
-          //   await createAudience({
-          //     email: user.email,
-          //     firstName: user.name,
-          //     unsubscribed: false,
-          //     audienceId: process.env.RESEND_AUDIENCE_GENERAL_ID as string,
-          //   });
-          // }
-        },
-      },
-    },
-  },
   plugins: [
     expo(),
     admin(),

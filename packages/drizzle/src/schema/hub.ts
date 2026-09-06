@@ -157,6 +157,12 @@ export const hubProject = pgTable(
     // repository_dispatch. Also absent from syncOrgRepos' onConflict set().
     blogEditedAt: timestamp("blog_edited_at"),
     blogPublishedAt: timestamp("blog_published_at"),
+    // useSend domainId of this project's sending domain — scopes the hub
+    // Emails tab to that domain's sends. Null → tab is admin-only and shows
+    // every send on the instance. Set directly in the DB (no admin UI). Also
+    // absent from syncOrgRepos' onConflict set() so it survives GitHub
+    // webhook re-syncs.
+    usesendDomainId: text("usesend_domain_id"),
   },
   (table) => ({
     uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),

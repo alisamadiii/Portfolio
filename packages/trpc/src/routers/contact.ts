@@ -1,9 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 
+import { email as emailService } from "@workspace/email";
+import ContactFormEmail from "@workspace/email/emails/contact-message";
+
 import { authenticatedProcedure, createTRPCRouter } from "../init";
-import { agency } from "../lib/agency";
 import { rateLimit } from "../middleware/rate-limit";
+
+const CONTACT_TO = "agency@alisamadii.com";
 
 export const contactRouter = createTRPCRouter({
   send: authenticatedProcedure
@@ -18,22 +22,38 @@ export const contactRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // The agency API allows 1 contact per 10 minutes per IP — fail early
-      // with a clearer message instead of round-tripping into its 429.
       await rateLimit(1, 10 * 60 * 1000);
 
       const { email, name } = ctx.session.user;
 
-      const { error } = await agency().emails.sendContact({
-        ...input,
-        name: name || email,
-        email,
+      // Free-form metadata rides along at the end of the message body.
+      const metadataLines = input.metadata
+        ? Object.entries(input.metadata)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join("\n")
+        : "";
+      const message = metadataLines
+        ? `${input.message}\n\n—\n${metadataLines}`
+        : input.message;
+
+      const { error } = await emailService.send({
+        to: CONTACT_TO,
+        subject: input.subject,
+        react: ContactFormEmail({
+          name: name || email,
+          email,
+          subject: input.subject,
+          message,
+          pageUrl: input.source,
+          submittedAt: new Date().toISOString(),
+          clientName: "Ali Samadii LLC",
+        }),
       });
 
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
+          message: error,
         });
       }
 

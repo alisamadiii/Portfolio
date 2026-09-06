@@ -57,7 +57,6 @@ import { SectionNav } from "@/components/section-nav";
 import { StatTile } from "@/components/stat-tile";
 import { StatusBadge } from "@/components/status-badge";
 
-import { Api } from "./api";
 import { Payments } from "./payments";
 import { Profile } from "./profile";
 import { Settings } from "./settings";
@@ -65,7 +64,6 @@ import { Settings } from "./settings";
 const sections = [
   { id: "profile", label: "Profile" },
   { id: "payments", label: "Payments" },
-  { id: "api", label: "API" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -245,10 +243,6 @@ export default function UserDetailPage() {
           <section id="payments" className="scroll-mt-24">
             <h2 className="mb-3 text-base font-semibold">Payments</h2>
             <Payments />
-          </section>
-          <section id="api" className="scroll-mt-24">
-            <h2 className="mb-3 text-base font-semibold">API</h2>
-            <Api />
           </section>
           <section id="settings" className="scroll-mt-24">
             <h2 className="mb-3 text-base font-semibold">Settings</h2>

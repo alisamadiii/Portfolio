@@ -126,7 +126,7 @@ A reusable SaaS landing page template that gets forked and deployed for new exte
 | `@workspace/trpc`    | All tRPC routers and procedures. Procedures: `baseProcedure`, `authenticatedProcedure`, `adminProcedure`, `notificationsProcedure`. Routers cover: admin, agency, motion, payments, user, sessions, discounts, upload, verification, previousCustomer, notifications.                |
 | `@workspace/drizzle` | Drizzle ORM schema + Neon PostgreSQL client. Tables: user, account, session, verification, order, product, subscription, previousCustomers, webhookEvents, agencyProduct, agencySource, agencySourceFile.                                                                            |
 | `@workspace/ui`      | Shared component library built on shadcn/ui. Includes design system components, icons, custom components (DataTable, SuccessPurchaseDialog, TabLineAnimate, BgPattern, RequestDialog), agency-specific components, animation SVGs, providers, hooks, and global CSS/theme variables. |
-| `@workspace/email`   | Resend integration. Templates: email verification, password reset, order confirmation, subscription cancellation.                                                                                                                                                                    |
+| `@workspace/email`   | useSend integration (self-hosted, mail.alisamadii.com). Templates: email verification, password reset, order confirmation, subscription cancellation.                                                                                                                                                                    |
 
 ---
 
@@ -165,7 +165,7 @@ A reusable SaaS landing page template that gets forked and deployed for new exte
 | Database        | Neon PostgreSQL (serverless)                        |
 | Package manager | pnpm workspaces                                     |
 | Build system    | Turborepo                                           |
-| Email           | Resend                                              |
+| Email           | useSend (self-hosted)                               |
 | Payments        | Polar (+ Stripe)                                    |
 | Notifications   | ClickUp integration via tRPC `notifications` router |
 

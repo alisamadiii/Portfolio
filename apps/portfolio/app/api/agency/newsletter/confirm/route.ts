@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { AGENCY_SITE, getResend, SEGMENT_ID, verifyToken } from "../lib";
+import { AGENCY_SITE, setSubscription, verifyToken } from "../lib";
 
 // ─── Confirm (step 2 of double opt-in) ──────────────────────────
 // Human clicks the link from the confirmation email. Valid token →
-// contact created in the newsletter segment → agency thank-you page.
-// Idempotent: an existing contact is resubscribed instead of erroring.
+// contact upserted into the newsletter contact book → agency thank-you
+// page. Idempotent: an existing contact is resubscribed instead of
+// erroring.
 
 export async function GET(req: Request) {
   const token = new URL(req.url).searchParams.get("token") ?? "";
@@ -19,22 +20,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const resend = getResend();
-    const { error } = await resend.contacts.create({
-      email,
-      unsubscribed: false,
-      segments: [{ id: SEGMENT_ID }],
-    });
-
-    if (error) {
-      // Already a contact (re-click / resubscribe) → flip unsubscribed off.
-      const { error: updateError } = await resend.contacts.update({
-        email,
-        unsubscribed: false,
-      });
-      if (updateError)
-        throw new Error(`${error.message} / ${updateError.message}`);
-    }
+    await setSubscription(email, true);
   } catch (error) {
     console.error("Newsletter confirm failed", error);
     return NextResponse.redirect(

@@ -53,3 +53,5 @@ apps/motion/animations
 
 .playwright-mcp
 output
+# private nested repo (own git, pushed to alisamadiii/agency-playbook)
+/agency-playbook/

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { agency } from "@workspace/trpc/lib/agency";
+import { sendEmail, UseSendError } from "@workspace/email/usesend";
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 
 // ─── CORS ───────────────────────────────────────────────────────
@@ -29,8 +29,8 @@ export async function OPTIONS(req: Request) {
 }
 
 // ─── Rate limit ─────────────────────────────────────────────────
-// emails.send() has no per-IP limit (unlike sendContact), so guard this
-// public endpoint ourselves. In-memory: best effort per serverless instance.
+// Guard this public endpoint per IP ourselves.
+// In-memory: best effort per serverless instance.
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -47,7 +47,7 @@ const isRateLimited = (ip: string) => {
 
 // ─── Quote request ──────────────────────────────────────────────
 // Public "Get a Quote" form on the agency site. Renders a branded HTML
-// notification and sends it via the agency email API to the studio inbox.
+// notification and sends it via useSend to the studio inbox.
 
 const FROM = "Free Quote <noreply@alisamadii.com>";
 const TO = "agency@alisamadii.com";
@@ -186,17 +186,17 @@ export async function POST(req: Request) {
   }
   const data = parsed.data;
 
-  const { error } = await agency().emails.send({
-    from: FROM,
-    to: TO,
-    subject: `New quote request from ${data.name}`,
-    html: quoteEmailHtml(data),
-    text: quoteEmailText(data),
-    type: "quote",
-  });
-
-  if (error) {
-    if (error.code === "RATE_LIMIT_EXCEEDED") {
+  try {
+    await sendEmail({
+      from: FROM,
+      to: TO,
+      replyTo: data.email,
+      subject: `New quote request from ${data.name}`,
+      html: quoteEmailHtml(data),
+      text: quoteEmailText(data),
+    });
+  } catch (error) {
+    if (error instanceof UseSendError && error.status === 429) {
       return NextResponse.json(
         { error: "Too many requests — try again in a few minutes." },
         { status: 429, headers }

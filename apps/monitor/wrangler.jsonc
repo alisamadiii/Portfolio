@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "uptime-monitor",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-05",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Vars are plain-text bindings; keep_vars stops redeploys from wiping
+  // dashboard-set values (same lesson as the old agency-api worker).
+  "keep_vars": true,
+
+  "observability": { "enabled": true },
+
+  // Every 10 minutes (src/index.ts scheduled handler).
+  "triggers": { "crons": ["*/10 * * * *"] },
+
+  "kv_namespaces": [
+    {
+      "binding": "MONITOR_KV",
+      // TODO: create with `wrangler kv namespace create MONITOR_KV` and paste the id.
+      "id": "TODO_KV_NAMESPACE_ID"
+    }
+  ],
+
+  "vars": {
+    // TODO: set to the Coolify dashboard's https domain. Workers cannot fetch
+    // non-standard ports, so http://2.25.105.158:8000 will NOT work here.
+    "COOLIFY_URL": "https://TODO-coolify-domain",
+    "SES_REGION": "us-west-2",
+    "ALERT_EMAIL_FROM": "Uptime Monitor <alerts@alisamadii.com>",
+    "ALERT_EMAIL_TO": "agency@alisamadii.com"
+  }
+
+  // Secrets (never here — `wrangler secret put <NAME>`; local dev: .dev.vars):
+  //   COOLIFY_API_TOKEN       Coolify → Keys & Tokens → API token (read-only)
+  //   DISCORD_WEBHOOK_URL     Discord channel → Integrations → Webhooks
+  //   AWS_ACCESS_KEY_ID       IAM key with ses:GetAccount + ses:SendEmail
+  //   AWS_SECRET_ACCESS_KEY
+}

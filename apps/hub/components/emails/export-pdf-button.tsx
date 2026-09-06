@@ -24,7 +24,7 @@ export function ExportEmailsPdfButton({
   owner: string;
   repo: string;
   // The list filters without pagination — the export refetches everything.
-  input: { from?: string; to?: string; search?: string; type?: string };
+  input: { from?: string; to?: string; search?: string };
   meta: Pick<EmailLogsData, "clientName" | "company" | "rangeLabel">;
 }) {
   const trpc = useTRPC();
@@ -50,12 +50,10 @@ export function ExportEmailsPdfButton({
           date: format(new Date(email.createdAt), "MMM d, yyyy h:mm a"),
           subject: email.subject,
           recipient: email.to.join(", "),
+          // Delivery status, capitalized ("Delivered", "Opened", …).
           kind:
-            email.type === "contact"
-              ? "Contact form"
-              : email.type === "send"
-                ? "Sent"
-                : email.type,
+            email.lastEvent.charAt(0).toUpperCase() +
+            email.lastEvent.slice(1).replace(/_/g, " "),
         })),
       };
 

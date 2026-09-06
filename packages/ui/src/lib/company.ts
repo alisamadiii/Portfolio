@@ -38,7 +38,7 @@ export const company = {
   myImage: "https://cdn.alisamadii.com/1780454258377-my-image.png",
 };
 
-export const urls: Record<Lowercase<ProjectType> | "api", string> = {
+export const urls: Record<Lowercase<ProjectType>, string> = {
   portfolio:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
@@ -71,10 +71,6 @@ export const urls: Record<Lowercase<ProjectType> | "api", string> = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173"
       : "https://saaskit.alisamadii.com",
-  api:
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:8787"
-      : "https://api.alisamadii.com",
 };
 
 const ALLOWED_REDIRECT_ORIGINS = new Set(
@@ -206,11 +202,5 @@ export const projectsData: {
     logo: logos.purple,
     description: "My personal portfolio site",
     link: urls.portfolio,
-  },
-  {
-    name: "API",
-    logo: logos.black,
-    description: "Agency API on Cloudflare Workers",
-    link: urls.api,
   },
 ];

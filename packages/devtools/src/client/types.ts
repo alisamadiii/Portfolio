@@ -1,5 +1,5 @@
 export interface ClientConfig {
-  /** API base URL. Default: "https://api.alisamadii.com" */
+  /** API base URL. Default: "https://www.alisamadii.com" */
   baseUrl?: string;
   /** Project API key for authentication */
   token: string;

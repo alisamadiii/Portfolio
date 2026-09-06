@@ -6,9 +6,9 @@ import {
   authenticatedProcedure,
   createTRPCRouter,
 } from "../init";
-import { agency } from "../lib/agency";
+import { deleteObject, listObjects, presignUpload } from "../lib/r2";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB — the agency API ceiling
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 const ALLOWED_CONTENT_TYPES = [
   "image/jpeg",
@@ -23,7 +23,7 @@ const ALLOWED_CONTENT_TYPES = [
 
 /**
  * Non-admins may only write into their own folders. Admins get the whole
- * bucket. `path` is the folder prefix the agency API prepends to the key.
+ * bucket. `path` is the folder prefix prepended to the object key.
  */
 const assertPathAllowed = (path: string | undefined, userId: string) => {
   const normalized = (path ?? "").replace(/^\/+|\/+$/g, "");
@@ -62,16 +62,7 @@ export const uploadsRouter = createTRPCRouter({
         assertPathAllowed(input.path, ctx.session.user.id);
       }
 
-      const { data, error } = await agency().uploads.presign(input);
-
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
-        });
-      }
-
-      return data;
+      return presignUpload(input);
     }),
 
   list: adminProcedure
@@ -81,31 +72,12 @@ export const uploadsRouter = createTRPCRouter({
         cursor: z.string().optional(),
       })
     )
-    .query(async ({ input }) => {
-      const { data, error } = await agency().uploads.list(input);
-
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
-        });
-      }
-
-      return data;
-    }),
+    .query(async ({ input }) => listObjects(input)),
 
   delete: adminProcedure
     .input(z.object({ key: z.string().min(1) }))
     .mutation(async ({ input }) => {
-      const { error } = await agency().uploads.delete(input);
-
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
-        });
-      }
-
+      await deleteObject(input.key);
       return { success: true };
     }),
 });
