@@ -16,6 +16,7 @@ interface SesAccount {
 // up but AWS paused sending (reputation) or the 24h quota is nearly burned.
 export async function checkSes(env: Env): Promise<CheckResult> {
   const id = "ses:account";
+  const consoleUrl = `https://${env.SES_REGION}.console.aws.amazon.com/ses/home?region=${env.SES_REGION}#/account`;
   try {
     const aws = new AwsClient({
       accessKeyId: env.AWS_ACCESS_KEY_ID,
@@ -29,7 +30,14 @@ export async function checkSes(env: Env): Promise<CheckResult> {
     });
     if (!res.ok) {
       const body = await res.text();
-      return { id, name: "AWS SES", ok: false, detail: `GetAccount HTTP ${res.status}: ${body.slice(0, 200)}` };
+      return {
+        id,
+        name: "AWS SES",
+        ok: false,
+        detail: `GetAccount HTTP ${res.status}: ${body.slice(0, 200)}`,
+        url: consoleUrl,
+        hint: "GetAccount call failed — usually bad/rotated AWS keys or IAM policy missing ses:GetAccount.",
+      };
     }
     const account = (await res.json()) as SesAccount;
 
@@ -39,13 +47,34 @@ export async function checkSes(env: Env): Promise<CheckResult> {
     const detail = `sending=${account.SendingEnabled}, enforcement=${account.EnforcementStatus ?? "n/a"}, quota ${sent}/${max} (${Math.round(quotaRatio * 100)}%)`;
 
     if (account.SendingEnabled === false) {
-      return { id, name: "AWS SES", ok: false, detail: `SENDING PAUSED — ${detail}` };
+      return {
+        id,
+        name: "AWS SES",
+        ok: false,
+        detail: `SENDING PAUSED — ${detail}`,
+        url: consoleUrl,
+        hint: "AWS paused sending (usually bounce/complaint rate). Check SES console → Account dashboard → reputation metrics; open an AWS support case to re-enable.",
+      };
     }
     if (quotaRatio >= SES_QUOTA_ALERT_RATIO) {
-      return { id, name: "AWS SES", ok: false, detail: `quota nearly exhausted — ${detail}` };
+      return {
+        id,
+        name: "AWS SES",
+        ok: false,
+        detail: `quota nearly exhausted — ${detail}`,
+        url: consoleUrl,
+        hint: "24h send quota nearly used up — pause campaigns in usesend or request a quota increase in the SES console.",
+      };
     }
-    return { id, name: "AWS SES", ok: true, detail };
+    return { id, name: "AWS SES", ok: true, detail, url: consoleUrl };
   } catch (err) {
-    return { id, name: "AWS SES", ok: false, detail: err instanceof Error ? err.message : String(err) };
+    return {
+      id,
+      name: "AWS SES",
+      ok: false,
+      detail: err instanceof Error ? err.message : String(err),
+      url: consoleUrl,
+      hint: "Couldn't reach the SES API — likely transient AWS/network issue; recheck next run.",
+    };
   }
 }

@@ -6,6 +6,12 @@ export interface CheckResult {
   /** Status/error detail shown in alerts and GET /status. */
   detail?: string;
   latencyMs?: number;
+  /** Public URL this check hit (or relevant console URL). */
+  url?: string;
+  /** Deep link to the resource in the Coolify dashboard (or provider console). */
+  dashboardUrl?: string;
+  /** What to try — shown in alerts as the "Fix" line. */
+  hint?: string;
 }
 
 export interface MonitorResult {

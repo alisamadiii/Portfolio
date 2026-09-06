@@ -3,6 +3,7 @@ import { sendDownEmail, sendRecoveredEmail } from "./alerts/email.js";
 import { checkCoolify } from "./checks/coolify.js";
 import { checkHttpTargets } from "./checks/http.js";
 import { checkSes } from "./checks/ses.js";
+import { autoHeal } from "./heal.js";
 import { diffIncidents } from "./incidents.js";
 import type { MonitorResult } from "./types.js";
 
@@ -16,14 +17,19 @@ async function runMonitor(env: Env): Promise<void> {
   ]);
   const checks = [...coolify, ...http, ses];
 
+  const { opened, recovered } = await diffIncidents(env.MONITOR_KV, checks);
+
+  // Restart mapped Coolify resources for freshly failed HTTP checks BEFORE
+  // alerting and BEFORE persisting status, so both the alert and GET /status
+  // say whether a restart was already attempted.
+  await autoHeal(env, opened);
+
   const result: MonitorResult = {
     ok: checks.every((c) => c.ok),
     timestamp: new Date().toISOString(),
     checks,
   };
   await env.MONITOR_KV.put(STATUS_KEY, JSON.stringify(result));
-
-  const { opened, recovered } = await diffIncidents(env.MONITOR_KV, checks);
 
   console.log(
     JSON.stringify({

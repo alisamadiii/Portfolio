@@ -17,15 +17,14 @@
   "kv_namespaces": [
     {
       "binding": "MONITOR_KV",
-      // TODO: create with `wrangler kv namespace create MONITOR_KV` and paste the id.
-      "id": "TODO_KV_NAMESPACE_ID"
+      "id": "c7982af6b2154be9935a0921f57d8fee"
     }
   ],
 
   "vars": {
-    // TODO: set to the Coolify dashboard's https domain. Workers cannot fetch
-    // non-standard ports, so http://2.25.105.158:8000 will NOT work here.
-    "COOLIFY_URL": "https://TODO-coolify-domain",
+    // Workers cannot fetch non-standard ports, so http://<ip>:8000 will NOT
+    // work here — must stay the https domain.
+    "COOLIFY_URL": "https://coolify.alisamadii.com",
     "SES_REGION": "us-west-2",
     "ALERT_EMAIL_FROM": "Uptime Monitor <alerts@alisamadii.com>",
     "ALERT_EMAIL_TO": "agency@alisamadii.com"

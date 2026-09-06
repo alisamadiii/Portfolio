@@ -1,8 +1,17 @@
-import { HTTP_TARGETS, HTTP_TIMEOUT_MS } from "../config.js";
+import { dashboardLink, HTTP_TARGETS, HTTP_TIMEOUT_MS, type HttpTarget } from "../config.js";
 import type { CheckResult } from "../types.js";
 
-async function checkOne(target: { name: string; url: string }): Promise<CheckResult> {
+const HTTP_HINT =
+  "Site not responding to real requests even if Coolify shows it running. Open the resource in Coolify → Logs. An auto-restart was already attempted (see error above for its outcome).";
+
+async function checkOne(target: HttpTarget): Promise<CheckResult> {
   const id = `http:${target.name}`;
+  const base = {
+    id,
+    name: target.name,
+    url: target.url,
+    dashboardUrl: target.coolify ? dashboardLink(target.coolify.uuid) : undefined,
+  };
   const start = Date.now();
   try {
     const res = await fetch(target.url, {
@@ -14,20 +23,21 @@ async function checkOne(target: { name: string; url: string }): Promise<CheckRes
     // Drain the body so the connection is released cleanly.
     await res.body?.cancel();
     const latencyMs = Date.now() - start;
+    const ok = res.status < 400;
     return {
-      id,
-      name: target.name,
-      ok: res.status < 400,
+      ...base,
+      ok,
       detail: `HTTP ${res.status} (${target.url})`,
       latencyMs,
+      hint: ok ? undefined : HTTP_HINT,
     };
   } catch (err) {
     return {
-      id,
-      name: target.name,
+      ...base,
       ok: false,
       detail: `${err instanceof Error ? err.message : String(err)} (${target.url})`,
       latencyMs: Date.now() - start,
+      hint: HTTP_HINT,
     };
   }
 }
