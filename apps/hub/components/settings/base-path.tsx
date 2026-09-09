@@ -85,7 +85,7 @@ export function BasePath({ owner, repo }: BasePathProps) {
         <CardTitle className="text-sm font-semibold">Base path</CardTitle>
         <CardDescription>
           For monorepos, point Client Hub at the subfolder that holds your{" "}
-          <code>.pages.yml</code> and content (e.g. <code>frontend</code>). All
+          <code>_site.json</code> and content (e.g. <code>frontend</code>). All
           collection and media paths in your configuration are resolved relative
           to it. Leave empty to use the repository root.
         </CardDescription>

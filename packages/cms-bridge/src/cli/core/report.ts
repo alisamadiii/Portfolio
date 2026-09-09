@@ -42,26 +42,34 @@ export function loadConventionsContract(): string {
 
 const FALLBACK_CONTRACT = `## The CMS conventions contract (v2)
 
-Content lives in JSON files under \`src/data/\`: \`cms.json\` (manifest),
-\`pages.json\` (all pages, keyed by page name), \`variables.json\` (global values
-reused on every page), \`seo.json\` (site + per-page SEO). Markup is made
-editable with the bridge components, or a \`data-cms-field\` attribute.
+Content lives in **two JSON files at the repo root**: \`_site.json\` — one config
+file with keys \`cms\` (manifest: version, baseUrl, media, page→route map,
+collections), \`seo\` (site + per-page SEO), and \`variables\` (global values reused
+on every page) — plus \`_pages.json\` (all page content, keyed by page name). Markup
+is made editable with the bridge components, or a \`data-cms-field\` attribute.
+(Legacy repos used four files under \`src/data/\`; the hosted CMS now REQUIRES the
+root \`_site.json\` + \`_pages.json\` — migrate them. \`cms-bridge check\` still
+validates a legacy layout locally.)
 
 Two things must always be the **same string**:
 
-1. the key path inside \`pages.json\` (page-relative) or \`variables.json\` (bare)
+1. the key path inside \`_pages.json\` (page-relative) or \`_site.json\` → \`variables\` (bare)
 2. the component \`field\` prop — or the \`data-cms-field\` attribute value
 
-\`\`\`
-pages.json:            { "home": { "hero": { "heading": "Welcome" } } }
-src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} />
+\`\`\`astro
+---
+// _pages.json:  { "home": { "hero": { "heading": "Welcome" } } }
+import pages from "../../_pages.json";
+const home = pages.home;
+---
+<Heading1 field="hero.heading" value={home.hero.heading} />
 \`\`\`
 
 ### Rules
 
 - **Page fields** use section-prefixed dot paths (\`hero.heading\`); the page is
   implied by its route — NEVER prefix a path with the page name.
-- **Global fields** (\`variables.json\`) use bare paths (\`name\`, \`address.street\`).
+- **Global fields** (\`_site.json\` → \`variables\`) use bare paths (\`name\`, \`address.street\`).
 - **List items append their index**: \`<Text field={\\\`items.\${i}.title\\\`} … />\`.
 - **CTA** — \`{label, link}\` objects, use \`<Link field="hero.cta" value={cta} />\`.
 - **Image** — \`<Image field="hero.image" value={img} alt={imageAlt} />\` (alt is a
@@ -70,10 +78,10 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
   item in \`<Item index={i}>\`.
 - **Inline emphasis** in a text value: \`\\\`word\\\`\` → \`.cms-hl\`, \`**word**\` →
   \`.cms-mark\`. Both round-trip through canvas editing.
-- **SEO** — site + per-page SEO live in \`seo.json\` (\`site\` and \`pages.<key>\`
+- **SEO** — site + per-page SEO live in \`_site.json\` → \`seo\` (\`site\` and \`pages.<key>\`
   slices with \`title\`, \`description\`, \`ogImage\`, …), edited from the Settings
-  view, not in \`variables.json\`.
-- **\`variables.json\`** holds reusable global values. Baseline keys: \`name\`,
+  view, not in \`variables\`.
+- **\`_site.json\` → \`variables\`** holds reusable global values. Baseline keys: \`name\`,
   \`logo\`, \`phone\`, \`email\`, \`address{street,city,region,zip,mapsUrl}\`,
   \`socials[]{label,url}\`.
 - **\`src/data/seo.ts\` is NOT CMS content** — per-client identity config. Leave it.
@@ -94,7 +102,7 @@ export const REASON_RECIPES: Record<ReasonCode, { title: string; recipe: string 
   R0: {
     title: "File reverted — automated edit failed verification",
     recipe:
-      "The codemod aborted this file to avoid breaking it. Apply the conventions manually: replace the plain tags with bridge components (Heading1/Text/Image/Link), add the values to this page's object in pages.json.",
+      "The codemod aborted this file to avoid breaking it. Apply the conventions manually: replace the plain tags with bridge components (Heading1/Text/Image/Link), add the values to this page's object in _pages.json.",
   },
   R1: {
     title: "Expression-driven text",
@@ -104,7 +112,7 @@ content, move it into the page JSON and render it from there:
 \`\`\`astro
 <!-- before -->
 <p>{someComputedThing}</p>
-<!-- after: value now lives in src/data/<entry>.json under about.text -->
+<!-- after: value now lives in _pages.json under <entry>.about.text -->
 <p data-cms-field="about.text">{about.text}</p>
 \`\`\`
 
@@ -120,11 +128,11 @@ client-editable, use a \`rich-text\` field and render with \`set:html\`.`,
   R3: {
     title: "Loop over data",
     recipe: `A \`.map()\` renders a list. Put the array in this page's object in
-pages.json, then wrap the loop in \`<Group>\`/\`<Item>\` with indexed fields:
+_pages.json, then wrap the loop in \`<Group>\`/\`<Item>\` with indexed fields:
 
 \`\`\`astro
 ---
-import pages from "../data/pages.json";
+import pages from "../../_pages.json";
 const content = pages.home;
 ---
 <Group field="features.items">
@@ -137,7 +145,7 @@ const content = pages.home;
 </Group>
 \`\`\`
 
-The field schema is inferred from the pages.json array shape — no separate
+The field schema is inferred from the _pages.json array shape — no separate
 declaration is needed.`,
   },
   R4: {
@@ -161,13 +169,13 @@ const { cmsPath, title, body } = Astro.props;
 \`\`\`
 
 Each page passes its own path: \`<Card cmsPath="features.card" {...content.features.card} />\`.
-If the text is truly global (header/footer), move it to variables.json and use
-bare paths instead.`,
+If the text is truly global (header/footer), move it to _site.json → variables
+and use bare paths instead.`,
   },
   R6: {
     title: "Chrome string (nav / form / button / placeholder / aria)",
     recipe:
-      "UI chrome vs content is a judgment call. Client-facing marketing copy (nav labels, button text like 'Order Online') → usually extract to variables.json. Functional strings (form validation, aria-labels, placeholders) → usually leave hardcoded. When extracting nav arrays, follow the R3 recipe against variables.json with bare paths.",
+      "UI chrome vs content is a judgment call. Client-facing marketing copy (nav labels, button text like 'Order Online') → usually extract to _site.json → variables. Functional strings (form validation, aria-labels, placeholders) → usually leave hardcoded. When extracting nav arrays, follow the R3 recipe against _site.json → variables with bare paths.",
   },
   R7: {
     title: "Static alt on dynamic-src image",
@@ -177,12 +185,12 @@ bare paths instead.`,
   R8: {
     title: "Content-shaped frontmatter const",
     recipe:
-      "A frontmatter const holds an array/object of display strings. Move it into the page JSON (or variables.json if shared), import the JSON, and render with indexed data-cms-field paths (see R3).",
+      "A frontmatter const holds an array/object of display strings. Move it into the page JSON (or _site.json → variables if shared), import the JSON, and render with indexed data-cms-field paths (see R3).",
   },
   R9: {
     title: "Layout SEO props not migratable",
     recipe:
-      "The page passes dynamic title/description to the layout. Ensure this page's object in pages.json has a top-level seo {title, description} and pass <Layout title={content.seo.title} description={content.seo.description}>.",
+      "The page passes dynamic title/description to the layout. Ensure this page's object in _pages.json has a top-level seo {title, description} and pass <Layout title={content.seo.title} description={content.seo.description}>.",
   },
   R10: {
     title: "astro.config not edited",
@@ -198,7 +206,7 @@ export default defineConfig({
   R12: {
     title: "Element could not be safely replaced",
     recipe:
-      "The codemod couldn't verify this element's open/close span (unusual nesting or attribute shape), so it left it untouched. Convert it by hand: swap the tag for the matching bridge component (Heading1/Text/Image/Link), add its value to this page's object in pages.json, and wire the component `value` prop back to it.",
+      "The codemod couldn't verify this element's open/close span (unusual nesting or attribute shape), so it left it untouched. Convert it by hand: swap the tag for the matching bridge component (Heading1/Text/Image/Link), add its value to this page's object in _pages.json, and wire the component `value` prop back to it.",
   },
 };
 

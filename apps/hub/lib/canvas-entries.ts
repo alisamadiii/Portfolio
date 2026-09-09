@@ -1,13 +1,9 @@
-import type { Config } from "@workspace/cms-core/types/config";
-
 /**
  * Canvas-side mapping between site pages and CMS entries.
  *
- * A page shows fields from (a) the entry routed to it via
- * `settings.preview.paths` (or the `home`/`/<name>` default) and (b) "global"
- * entries rendered on every page (header/footer — `settings.preview.global`,
- * defaulting to a file entry named `site`). A field path reported by the
- * bridge is resolved to the first candidate entry whose schema contains it —
+ * The v2 entry map is built by `lib/engine/v2.ts` (`buildV2EntryMap`) from the
+ * root `_site.json` manifest + `_pages.json`. A field path reported by the bridge
+ * is resolved to the first candidate entry whose schema contains it —
  * route-matched entries win over globals.
  */
 
@@ -31,52 +27,6 @@ const normalizeRoute = (pathname: string): string => {
   if (pathname.length > 1 && pathname.endsWith("/")) return pathname.slice(0, -1);
   return pathname || "/";
 };
-
-/** Flatten `content` (groups included) into file-type entry schemas. */
-function flattenFileEntries(content: any[]): Record<string, any>[] {
-  const out: Record<string, any>[] = [];
-  for (const item of content ?? []) {
-    if (!item || typeof item !== "object") continue;
-    if (item.type === "group") {
-      out.push(...flattenFileEntries(item.items ?? []));
-      continue;
-    }
-    if (item.type === "file") out.push(item);
-  }
-  return out;
-}
-
-export function buildEntryMap(config: Config | null): CanvasEntryMap {
-  const object: any = config?.object ?? {};
-  const settings = object.settings && typeof object.settings === "object" ? object.settings : {};
-  const previewPaths: Record<string, string> = settings.preview?.paths ?? {};
-
-  const fileEntries = flattenFileEntries(object.content ?? []);
-  const routes: EntryRoute[] = [];
-  const byName = new Map<string, EntryRoute>();
-
-  for (const schema of fileEntries) {
-    const name: string = schema.name;
-    const template =
-      previewPaths[name] ?? (name === "home" ? "/" : `/${name}`);
-    // Templated (per-entry collection) routes are out of scope for v1.
-    const route = template.includes("{") ? null : normalizeRoute(template);
-    const entry: EntryRoute = {
-      name,
-      filePath: schema.path,
-      schema,
-      route,
-    };
-    routes.push(entry);
-    byName.set(name, entry);
-  }
-
-  const configured: string[] | undefined = settings.preview?.global;
-  const globals =
-    configured ?? (byName.has("site") ? ["site"] : []);
-
-  return { routes, globals, byName };
-}
 
 /**
  * Entries whose fields can appear on `pathname`, in resolution order:

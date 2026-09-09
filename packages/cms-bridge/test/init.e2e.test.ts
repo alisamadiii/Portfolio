@@ -133,4 +133,36 @@ describe("check", () => {
     const { errors } = checkContract(root);
     expect(errors).toEqual([]);
   });
+
+  it("validates the combined root layout (site.json + pages.json)", () => {
+    fs.writeFileSync(
+      path.join(root, "site.json"),
+      JSON.stringify({
+        seo: { site: {}, pages: {} },
+        cms: {
+          version: 1,
+          baseUrl: "https://example.com",
+          pages: { home: { route: "/" } },
+          collections: [],
+        },
+        variables: { name: "Acme" },
+      })
+    );
+    fs.writeFileSync(
+      path.join(root, "pages.json"),
+      JSON.stringify({ home: { hero: { heading: "Hi" } } })
+    );
+    const { errors } = checkContract(root);
+    expect(errors).toEqual([]);
+  });
+
+  it("errors when site.json is missing its cms key", () => {
+    fs.writeFileSync(
+      path.join(root, "site.json"),
+      JSON.stringify({ seo: {}, variables: {} })
+    );
+    fs.writeFileSync(path.join(root, "pages.json"), JSON.stringify({}));
+    const { errors } = checkContract(root);
+    expect(errors.some((e) => e.includes('"cms"'))).toBe(true);
+  });
 });

@@ -24,6 +24,7 @@ import { EnvelopeMark } from "@/components/emails/envelope-mark";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { VariablesPanel } from "@/components/settings/variables-panel";
 import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
+import { PanelError } from "@/components/settings/panel-error";
 
 /** Sentinels for the Site Settings entries in the settings nav. */
 const GENERAL = "$general";
@@ -39,8 +40,13 @@ const EMAILS = "$emails";
  * the right. Base-path/advanced config still lives on the standalone route.
  */
 export function SettingsMode() {
-  const { pages, settingsRequest, setSettingsRequest } = useCanvasEditor();
+  const { pages, settingsRequest, setSettingsRequest, isV2 } =
+    useCanvasEditor();
   const seo = useSeoDraft();
+  // General / Variables / Page Settings all read the root _site.json. Without it
+  // there is no manifest — show an error instead of empty forms. Billing /
+  // Domain / Blog / Emails are repo-level and stay available.
+  const noSite = !isV2;
   const [selected, setSelected] = useState<string>(GENERAL);
   // Field to scroll-to + flash in the Variables form (from a variant click).
   const [focusField, setFocusField] = useState<{ field: string; key: number } | null>(
@@ -153,14 +159,7 @@ export function SettingsMode() {
 
       {/* Content */}
       <main className="bg-shell min-w-0 flex-1 overflow-y-auto">
-        {selectedPage ? (
-          <PageSettingsPanel page={selectedPage} seo={seo} />
-        ) : selected === VARIABLES ? (
-          <VariablesPanel
-            focusField={focusField?.field}
-            focusKey={focusField?.key}
-          />
-        ) : selected === BILLING ? (
+        {selected === BILLING ? (
           <ProjectBillingPanel />
         ) : selected === DOMAIN ? (
           <DomainsPanel />
@@ -168,6 +167,21 @@ export function SettingsMode() {
           <BlogPanel />
         ) : selected === EMAILS ? (
           <EmailsPanel />
+        ) : noSite ? (
+          <div className="mx-auto max-w-2xl p-6">
+            <PanelError
+              title="This project has no _site.json"
+              message="Add a _site.json file to the repo root (with cms, seo, and variables) to manage site settings. Site settings are read from that file — there's nothing to configure until it exists."
+              onRetry={() => window.location.reload()}
+            />
+          </div>
+        ) : selectedPage ? (
+          <PageSettingsPanel page={selectedPage} seo={seo} />
+        ) : selected === VARIABLES ? (
+          <VariablesPanel
+            focusField={focusField?.field}
+            focusKey={focusField?.key}
+          />
         ) : (
           <GeneralSettingsPanel seo={seo} />
         )}

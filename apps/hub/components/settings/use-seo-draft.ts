@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@workspace/trpc/client";
 import { toast } from "sonner";
 
 import type { Field } from "@workspace/cms-core/types/field";
@@ -37,70 +35,64 @@ export const PAGE_SEO_FIELDS = [
 const emptyDoc = (): SeoDocument => ({ site: {}, pages: {} });
 
 /**
- * Loads `src/data/seo.json`, keeps the whole document as a working copy, and
- * persists it to the same localStorage drafts store the publish dialog reads.
- * The draft always holds the ENTIRE `{ site, pages }` object (never a slice),
- * so publishing writes a complete seo.json.
+ * Loads the seo document inline from the root _site.json manifest, keeps the
+ * whole `{ site, pages }` as a working copy, and persists it to the same
+ * localStorage drafts store the publish dialog reads — writing the seo slice
+ * into the shared _site.json draft (alongside any variables slice).
  */
 export function useSeoDraft() {
   const { config } = useConfig();
   const { manifest } = useCanvasEditor();
-  const trpc = useTRPC();
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
   const branch = config?.branch ?? "";
   const seoPath = manifest?.object.paths.seo ?? "";
 
-  const query = useQuery(
-    trpc.cms.entries.getContent.queryOptions(
-      { owner, repo, branch, path: seoPath },
-      {
-        enabled: Boolean(owner && repo && branch && seoPath),
-        staleTime: 30_000,
-        // A repo that hasn't scaffolded seo.json yet 404s — treat as empty.
-        retry: false,
-      }
-    )
-  );
-
   const [doc, setDoc] = useState<SeoDocument | null>(null);
   const shaRef = useRef<string | null>(null);
   const seededRef = useRef(false);
 
-  // Seed once from the stored draft (wins) or the committed file.
+  // Seed once from the stored draft (wins) or the committed file. The shared
+  // _site.json draft holds `{ variables, seo }`, so the seo slice is what we
+  // read/write; committed seo comes inline from the manifest (_site.json).
   useEffect(() => {
-    if (seededRef.current || !seoPath) return;
-    // Wait until the query settles (success or error) before seeding.
-    if (query.isLoading) return;
+    if (seededRef.current || !seoPath || !manifest) return;
     const draft = getDraft(owner, repo, branch, seoPath);
-    if (draft) {
-      const values = draft.values as SeoDocument | undefined;
-      setDoc({
-        site: values?.site ?? {},
-        pages: values?.pages ?? {},
-      });
+    const draftSeo = (draft?.values as Record<string, unknown> | undefined)
+      ?.seo as Partial<SeoDocument> | undefined;
+    if (draft && draftSeo) {
+      setDoc({ site: draftSeo.site ?? {}, pages: draftSeo.pages ?? {} });
       shaRef.current = draft.sha;
       seededRef.current = true;
       return;
     }
-    const base = (query.data?.contentObject as Partial<SeoDocument> | null) ?? null;
+    const base =
+      (manifest.object.seo as Partial<SeoDocument> | undefined) ?? null;
     setDoc({ site: base?.site ?? {}, pages: base?.pages ?? {} });
-    shaRef.current = query.data?.sha ?? null;
+    shaRef.current = manifest.sha ?? null;
     seededRef.current = true;
-  }, [seoPath, owner, repo, branch, query.isLoading, query.data]);
+  }, [seoPath, owner, repo, branch, manifest]);
 
   const persist = useCallback(
     (next: SeoDocument) => {
       if (!seoPath) return;
       try {
+        // Merge our seo slice into the shared _site.json draft so a pending
+        // variables slice survives.
+        const values = {
+          ...((getDraft(owner, repo, branch, seoPath)?.values as
+            | Record<string, unknown>
+            | undefined) ?? {}),
+          seo: next,
+        };
         saveDraftOrThrow(draftKey(owner, repo, branch, seoPath), {
           v: 1,
           path: seoPath,
           schemaName: "$seo",
           sha: shaRef.current,
           isNew: shaRef.current === null,
-          values: next,
+          values,
           savedAt: Date.now(),
           title: "SEO",
         });

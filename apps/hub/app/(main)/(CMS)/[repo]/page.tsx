@@ -1,22 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useConfig } from "@/contexts/config-context";
-import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
-import { isConfigEnabled } from "@workspace/cms-core/config";
 
-import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from "@workspace/ui/components/empty";
 
 import { useTRPC } from "@workspace/trpc/client";
-
 
 import { EditorShell } from "@/components/shell/editor-shell";
 import {
@@ -26,13 +20,10 @@ import {
 
 export default function Page() {
   const { config } = useConfig();
-  const { myRole } = useRepo();
   const trpc = useTRPC();
 
-  // Canvas is the repo root when the site exposes a live preview URL —
-  // either via the legacy .pages.yml `settings.baseUrl` or a v2 cms.json
-  // manifest (which always carries a baseUrl).
-  const legacyBaseUrl = Boolean((config?.object as any)?.settings?.baseUrl);
+  // The canvas needs a root _site.json manifest (which always carries a
+  // baseUrl). No manifest ⇒ this repo has no _site.json — show a hint instead.
   const manifestQuery = useQuery(
     trpc.cms.manifest.get.queryOptions(
       {
@@ -41,22 +32,19 @@ export default function Page() {
         branch: config?.branch ?? "",
       },
       {
-        enabled:
-          !legacyBaseUrl &&
-          Boolean(config?.owner && config?.repo && config?.branch),
+        enabled: Boolean(config?.owner && config?.repo && config?.branch),
         staleTime: 60_000,
       }
     )
   );
-  const hasBaseUrl = legacyBaseUrl || Boolean(manifestQuery.data);
 
-  if (!legacyBaseUrl && manifestQuery.isLoading) {
+  if (manifestQuery.isLoading) {
     return (
       <div className="bg-shell relative -m-4 h-[calc(100vh)] overflow-hidden md:-m-8" />
     );
   }
 
-  if (hasBaseUrl) {
+  if (manifestQuery.data) {
     return (
       <>
         <DocumentTitle
@@ -75,31 +63,18 @@ export default function Page() {
     );
   }
 
-  // No baseUrl: same fullscreen chrome, hint card instead of a canvas.
-  const canConfigure = myRole === "full-access" && isConfigEnabled(config?.object);
-
+  // No manifest: this repo has no root _site.json.
   return (
     <div className="bg-shell relative -m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
       <Empty className="absolute inset-0 rounded-none border-0">
         <EmptyHeader>
-          <EmptyTitle>No site preview yet</EmptyTitle>
+          <EmptyTitle>This project has no _site.json</EmptyTitle>
           <EmptyDescription>
-            Add &quot;settings.baseUrl&quot; to &quot;.pages.yml&quot; with your
-            site&apos;s live URL to see its pages on the canvas.
+            Add a <code>_site.json</code> file to your repo root — with{" "}
+            <code>cms</code>, <code>seo</code>, and <code>variables</code> — so
+            the CMS can load this project&apos;s pages and settings.
           </EmptyDescription>
         </EmptyHeader>
-        {canConfigure && (
-          <EmptyContent>
-            <Button
-              variant="default"
-              render={
-                <Link href={`/${config!.repo}/configuration`}>
-                  Open configuration
-                </Link>
-              }
-            />
-          </EmptyContent>
-        )}
       </Empty>
     </div>
   );

@@ -3,12 +3,16 @@
  * still needs wiring. Never writes anything.
  * Exit 1 when the contract has errors or un-wired content remains (CI-friendly).
  *
- *  - cms.json shape (version, baseUrl, pages, collections)
- *  - every manifest page has a pages.json object (and vice versa)
- *  - page top-level keys don't collide with variables.json keys
+ * Reads the current combined layout (root `_site.json` = { cms, seo, variables }
+ * + root `_pages.json`, collections under `_collections/`) or the legacy
+ * `src/data/*.json` files as a fallback:
+ *
+ *  - cms (_site.json) shape (version, baseUrl, pages, collections)
+ *  - every manifest page has a _pages.json object (and vice versa)
+ *  - page top-level keys don't collide with variables keys
  *  - array collections hold an array with their required fields
  *  - every static field path (data-cms-field / component `field` prop) resolves
- *    into pages.json or variables.json
+ *    into _pages.json or the variables bag
  */
 
 import fs from "node:fs";
@@ -73,55 +77,83 @@ export function checkContract(root: string): {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  const cmsFile = path.join(root, "src/data/cms.json");
-  if (!fs.existsSync(cmsFile)) {
-    return {
-      errors: ["src/data/cms.json not found — run `cms-bridge init` first."],
-      warnings,
-    };
-  }
+  // Combined layout (current): one root _site.json ({ cms, seo, variables }) +
+  // root _pages.json, collections under _collections/. Legacy layout: four files
+  // under src/data. Prefer combined, fall back to legacy so un-migrated repos
+  // still validate.
+  const siteFile = path.join(root, "_site.json");
+  const combined = fs.existsSync(siteFile);
+
   let manifest: any;
-  try {
-    manifest = readJson(cmsFile);
-  } catch (error: any) {
-    return { errors: [`cms.json does not parse: ${error?.message}`], warnings };
-  }
-
-  if (manifest.version !== 1) errors.push(`cms.json: "version" must be 1.`);
-  if (typeof manifest.baseUrl !== "string" || !manifest.baseUrl)
-    errors.push(`cms.json: "baseUrl" is required.`);
-  const manifestPages: Record<string, any> =
-    manifest.pages && typeof manifest.pages === "object" ? manifest.pages : {};
-  for (const [name, page] of Object.entries(manifestPages)) {
-    if (typeof page?.route !== "string")
-      errors.push(`cms.json: pages.${name} is missing "route".`);
-  }
-
   let pages: Record<string, any> = {};
-  try {
-    pages = readJson(path.join(root, "src/data/pages.json"));
-  } catch (error: any) {
-    errors.push(`pages.json does not parse or is missing: ${error?.message}`);
-  }
   let variables: Record<string, any> = {};
-  try {
-    variables = readJson(path.join(root, "src/data/variables.json"));
-  } catch {
-    // Legacy repos may still use the old site.json name.
+
+  if (combined) {
+    let site: any;
     try {
-      variables = readJson(path.join(root, "src/data/site.json"));
+      site = readJson(siteFile);
+    } catch (error: any) {
+      return { errors: [`_site.json does not parse: ${error?.message}`], warnings };
+    }
+    manifest = site.cms && typeof site.cms === "object" ? site.cms : {};
+    variables =
+      site.variables && typeof site.variables === "object"
+        ? site.variables
+        : {};
+    try {
+      pages = readJson(path.join(root, "_pages.json"));
+    } catch (error: any) {
+      errors.push(`_pages.json does not parse or is missing: ${error?.message}`);
+    }
+    if (!site.cms || typeof site.cms !== "object")
+      errors.push(`_site.json: "cms" object is required.`);
+  } else {
+    const cmsFile = path.join(root, "src/data/cms.json");
+    if (!fs.existsSync(cmsFile)) {
+      return {
+        errors: [
+          "No _site.json (root) or src/data/cms.json found — run `cms-bridge init` first.",
+        ],
+        warnings,
+      };
+    }
+    try {
+      manifest = readJson(cmsFile);
+    } catch (error: any) {
+      return { errors: [`cms.json does not parse: ${error?.message}`], warnings };
+    }
+    try {
+      pages = readJson(path.join(root, "src/data/pages.json"));
+    } catch (error: any) {
+      errors.push(`pages.json does not parse or is missing: ${error?.message}`);
+    }
+    try {
+      variables = readJson(path.join(root, "src/data/variables.json"));
     } catch {
       warnings.push(`variables.json missing — global fields won't resolve.`);
     }
   }
 
+  const cmsLabel = combined ? "_site.json (cms)" : "cms.json";
+  const pagesLabel = combined ? "_pages.json" : "pages.json";
+  const varsLabel = combined ? "_site.json (variables)" : "variables.json";
+  if (manifest.version !== 1) errors.push(`${cmsLabel}: "version" must be 1.`);
+  if (typeof manifest.baseUrl !== "string" || !manifest.baseUrl)
+    errors.push(`${cmsLabel}: "baseUrl" is required.`);
+  const manifestPages: Record<string, any> =
+    manifest.pages && typeof manifest.pages === "object" ? manifest.pages : {};
+  for (const [name, page] of Object.entries(manifestPages)) {
+    if (typeof page?.route !== "string")
+      errors.push(`${cmsLabel}: pages.${name} is missing "route".`);
+  }
+
   for (const name of Object.keys(manifestPages))
     if (!(name in pages))
-      errors.push(`pages.json: no "${name}" object (declared in cms.json).`);
+      errors.push(`${pagesLabel}: no "${name}" object (declared in ${cmsLabel}).`);
   for (const name of Object.keys(pages))
     if (!(name in manifestPages))
       warnings.push(
-        `pages.json: "${name}" has no cms.json route — it won't appear on the canvas.`
+        `${pagesLabel}: "${name}" has no ${cmsLabel} route — it won't appear on the canvas.`
       );
 
   const variablesKeys = new Set(Object.keys(variables));
@@ -131,7 +163,7 @@ export function checkContract(root: string): {
       if (key === "seo") continue;
       if (variablesKeys.has(key))
         warnings.push(
-          `Key collision: "${name}.${key}" shadows variables.json "${key}" on that page.`
+          `Key collision: "${name}.${key}" shadows ${varsLabel} "${key}" on that page.`
         );
     }
   }
@@ -140,7 +172,7 @@ export function checkContract(root: string): {
     ? manifest.collections
     : []) {
     if (typeof collection?.name !== "string" || typeof collection?.path !== "string") {
-      errors.push(`cms.json: every collection needs "name" and "path".`);
+      errors.push(`${cmsLabel}: every collection needs "name" and "path".`);
       continue;
     }
     const abs = path.join(root, collection.path);
@@ -183,14 +215,14 @@ export function checkContract(root: string): {
     }
   }
 
-  // Static field paths must resolve into some page object or variables.json.
+  // Static field paths must resolve into some page object or the variables bag.
   const pageObjects = Object.values(pages);
   for (const [file, fields] of collectStaticFields(root)) {
     for (const field of fields) {
       const inPages = pageObjects.some((values) => resolvePath(values, field));
       if (!inPages && !resolvePath(variables, field))
         warnings.push(
-          `${file}: field "${field}" resolves to no value in pages.json or variables.json.`
+          `${file}: field "${field}" resolves to no value in ${pagesLabel} or ${varsLabel}.`
         );
     }
   }

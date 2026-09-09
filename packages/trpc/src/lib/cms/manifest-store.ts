@@ -1,9 +1,12 @@
 /**
  * CMS v2 manifest store.
  *
- * A v2 repo has no `.pages.yml` — instead it ships `src/data/cms.json` (the
- * "manifest"): baseUrl, media config, the page-name → route map and optional
- * collection declarations. This module fetches, validates and caches it.
+ * A v2 repo ships exactly one root `_site.json` (keys `cms` = the manifest:
+ * baseUrl, media, page→route map, collections; plus schema-less `seo` and
+ * `variables` bags) and a root `_pages.json` for page content. Collections live
+ * under a root `_collections/` folder. There is NO fallback: a repo without a
+ * root `_site.json` is simply not a v2 repo, and the hub surfaces that to the
+ * user rather than reading anything under `src/data`.
  *
  * The cache reuses the legacy `hubConfig` table: a repo is either legacy or
  * v2, so the (owner, repo, branch) row is never contested. Rows are
@@ -22,11 +25,15 @@ import { getBasePath, getPublicMediaSettings } from "./repo-settings";
 
 const manifestVersion = "cms-v2.1";
 
-/** Repo-relative (pre-basePath) location of the manifest. */
-const MANIFEST_FILE = "src/data/cms.json";
-const PAGES_FILE = "src/data/pages.json";
-const VARIABLES_FILE = "src/data/variables.json";
-const SEO_FILE = "src/data/seo.json";
+/**
+ * The v2 contract: one config file `_site.json` (keys `cms`, `seo`, `variables`)
+ * plus the page-content file `_pages.json`, both at the basePath ROOT. The
+ * leading underscore groups every CMS-owned artifact (these two + the
+ * `_collections/` folder) at the top of the file tree. Repo-relative
+ * (pre-basePath) locations below.
+ */
+const SITE_FILE = "_site.json";
+const PAGES_FILE = "_pages.json";
 
 const CollectionFieldSchema = z.object({
   name: z.string().min(1),
@@ -65,9 +72,32 @@ const ManifestObjectSchema = z.object({
   collections: z.array(CollectionSchema).default([]),
 });
 
+/**
+ * Combined `_site.json`: the manifest under `cms`, plus schema-less `seo` and
+ * `variables` bags (kept loose on purpose — per-client shapes vary).
+ */
+const SiteFileSchema = z.object({
+  cms: ManifestObjectSchema,
+  seo: z.record(z.string(), z.any()).optional(),
+  variables: z.record(z.string(), z.any()).optional(),
+});
+
+type ManifestPaths = {
+  manifest: string;
+  /** The single root config file (equals `manifest`). */
+  site: string;
+  pages: string;
+  /** variables + seo live inside _site.json, so both resolve to it. */
+  variables: string;
+  seo: string;
+};
+
 type ManifestObject = z.infer<typeof ManifestObjectSchema> & {
   /** Physical (basePath-rebased) paths the hub reads/writes. */
-  paths: { manifest: string; pages: string; variables: string; seo: string };
+  paths: ManifestPaths;
+  /** `seo` + `variables` read inline from _site.json. */
+  seo: Record<string, unknown>;
+  variables: Record<string, unknown>;
 };
 
 type Manifest = {
@@ -93,26 +123,38 @@ const labelize = (key: string): string => {
 const rebase = (basePath: string, path: string): string =>
   normalizePath(basePath ? joinPathSegments([basePath, path]) : path);
 
-/** Validate raw JSON and attach physical paths (collections rebased in place). */
-const normalizeManifest = (
-  raw: unknown,
+/** Rebase a validated manifest's collection + media paths in place. */
+const rebaseCms = (
+  cms: z.infer<typeof ManifestObjectSchema>,
   basePath: string
-): ManifestObject => {
-  const parsed = ManifestObjectSchema.parse(raw);
+) => ({
+  ...cms,
+  collections: cms.collections.map((collection) => ({
+    ...collection,
+    path: rebase(basePath, collection.path),
+  })),
+  media: cms.media
+    ? { ...cms.media, input: rebase(basePath, cms.media.input) }
+    : undefined,
+});
+
+/**
+ * Validate the fetched `_site.json` (`cms`/`seo`/`variables`) and attach physical
+ * paths. seo + variables ride inline; every config path resolves to the one
+ * root _site.json, page content to the root _pages.json.
+ */
+const normalizeManifest = (raw: unknown, basePath: string): ManifestObject => {
+  const site = SiteFileSchema.parse(raw);
   return {
-    ...parsed,
-    collections: parsed.collections.map((collection) => ({
-      ...collection,
-      path: rebase(basePath, collection.path),
-    })),
-    media: parsed.media
-      ? { ...parsed.media, input: rebase(basePath, parsed.media.input) }
-      : undefined,
+    ...rebaseCms(site.cms, basePath),
+    seo: site.seo ?? { site: {}, pages: {} },
+    variables: site.variables ?? {},
     paths: {
-      manifest: rebase(basePath, MANIFEST_FILE),
+      manifest: rebase(basePath, SITE_FILE),
+      site: rebase(basePath, SITE_FILE),
       pages: rebase(basePath, PAGES_FILE),
-      variables: rebase(basePath, VARIABLES_FILE),
-      seo: rebase(basePath, SEO_FILE),
+      variables: rebase(basePath, SITE_FILE),
+      seo: rebase(basePath, SITE_FILE),
     },
   };
 };
@@ -172,6 +214,39 @@ const isCheckDue = (lastCheckedAt?: Date, ttlMs = DEFAULT_MANIFEST_TTL_MS) => {
   return Date.now() - new Date(lastCheckedAt).getTime() > ttlMs;
 };
 
+/** Fetch one repo file as decoded text, or null on 404. */
+const fetchFile = async (
+  octokit: ReturnType<typeof createOctokitInstance>,
+  owner: string,
+  repo: string,
+  path: string,
+  branch: string
+): Promise<{ sha: string; raw: string } | null> => {
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path,
+      ref: branch,
+      headers: { Accept: "application/vnd.github.v3+json" },
+    });
+    if (Array.isArray(response.data) || response.data.type !== "file") {
+      throw new Error(`Expected ${path} to be a file.`);
+    }
+    return {
+      sha: response.data.sha,
+      raw: Buffer.from(response.data.content, "base64").toString(),
+    };
+  } catch (error: any) {
+    if (error?.status === 404) return null;
+    throw error;
+  }
+};
+
+/**
+ * Read the root `_site.json`. Returns null when it doesn't exist — there is no
+ * `src/data` fallback: such a repo is simply not a v2 (_site.json) project.
+ */
 const fetchManifestFromGithub = async (
   owner: string,
   repo: string,
@@ -180,26 +255,20 @@ const fetchManifestFromGithub = async (
   basePath: string
 ): Promise<Pick<Manifest, "sha" | "object"> | null> => {
   const octokit = createOctokitInstance(token);
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: rebase(basePath, MANIFEST_FILE),
-      ref: branch,
-      headers: { Accept: "application/vnd.github.v3+json" },
-    });
-    if (Array.isArray(response.data) || response.data.type !== "file") {
-      throw new Error("Expected cms.json to be a file.");
-    }
-    const raw = Buffer.from(response.data.content, "base64").toString();
-    return {
-      sha: response.data.sha,
-      object: normalizeManifest(JSON.parse(raw), basePath),
-    };
-  } catch (error: any) {
-    if (error?.status === 404) return null;
-    throw error;
-  }
+
+  const site = await fetchFile(
+    octokit,
+    owner,
+    repo,
+    rebase(basePath, SITE_FILE),
+    branch
+  );
+  if (!site) return null;
+
+  return {
+    sha: site.sha,
+    object: normalizeManifest(JSON.parse(site.raw), basePath),
+  };
 };
 
 const manifestSyncInFlight = new Map<string, Promise<Manifest | null>>();
@@ -304,9 +373,7 @@ export {
   labelize,
   manifestVersion,
   ManifestObjectSchema,
-  MANIFEST_FILE,
+  SITE_FILE,
   PAGES_FILE,
-  VARIABLES_FILE,
-  SEO_FILE,
 };
 export type { Manifest, ManifestObject };

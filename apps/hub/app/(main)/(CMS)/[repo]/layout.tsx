@@ -97,9 +97,7 @@ export default async function Layout({
     return (
       <ErrorCard
         title="Empty repository"
-        description={
-          'Create a branch and add a ".pages.yml" file to configure this repository.'
-        }
+        description="Create a branch and add a _site.json file at the repo root to configure this project."
       />
     );
   }
@@ -107,75 +105,24 @@ export default async function Layout({
   const owner = repoInfo.owner;
   const branch = repoInfo.defaultBranch as string;
 
-  let config: Config = {
+  // The v2 canvas reads everything from the root _site.json manifest; the
+  // ConfigProvider only carries the repo coordinates and default media settings.
+  // (ImageKit is the sole media provider and needs no per-repo config.)
+  const config: Config = {
     owner: owner.toLowerCase(),
     repo: repo.toLowerCase(),
     branch,
     sha: "",
     version: "",
     object: {},
+    mediaSettings: { provider: DEFAULT_MEDIA_PROVIDER, config: {} },
   };
-
-  let errorMessage = null;
-
-  try {
-    const syncedConfig = await caller.cms.settings.getConfig.query({
-      owner,
-      repo,
-      branch,
-    });
-
-    if (syncedConfig) {
-      config = {
-        ...syncedConfig,
-        // Dates don't survive JSON serialization over tRPC.
-        lastCheckedAt: syncedConfig.lastCheckedAt
-          ? new Date(syncedConfig.lastCheckedAt)
-          : undefined,
-      };
-    }
-  } catch (error: any) {
-    // tRPC surfaces engine HttpErrors as TRPCClientError with `data.code`
-    // (404 → NOT_FOUND, 403 → FORBIDDEN); the original message is preserved.
-    if (error?.data?.code === "NOT_FOUND") {
-      if (error.message === "Not Found") {
-        // Let downstream pages (especially /configuration via Entry) handle missing .pages.yml.
-      } else {
-        errorMessage = (
-          <ErrorCard
-            title="Repository not found"
-            description="It may have been removed, renamed, or the URL may be incorrect."
-          />
-        );
-      }
-    } else if (error?.data?.code === "FORBIDDEN") {
-      errorMessage = (
-        <ErrorCard
-          title="Access denied"
-          description="You do not have permission to access this repository."
-        />
-      );
-    } else {
-      throw error;
-    }
-  }
-
-  // ImageKit is the sole media provider and needs no per-repo config, so every
-  // repo gets it by default. Without this, a v2 repo (cms.json, no .pages.yml)
-  // falls back to a config with no mediaSettings and image fields render
-  // "No media configuration found". A real value from getConfig wins.
-  if (!config.mediaSettings) {
-    config = {
-      ...config,
-      mediaSettings: { provider: DEFAULT_MEDIA_PROVIDER, config: {} },
-    };
-  }
 
   return (
     <RepoProvider repo={repoInfo}>
       <ConfigProvider value={config}>
         <MediaLibraryProvider>
-          <RepoLayout>{errorMessage ? errorMessage : children}</RepoLayout>
+          <RepoLayout>{children}</RepoLayout>
         </MediaLibraryProvider>
       </ConfigProvider>
     </RepoProvider>

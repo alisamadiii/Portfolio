@@ -61,9 +61,10 @@ export function VariablesPanel({
           <EmptyHeader>
             <EmptyTitle>No variables yet</EmptyTitle>
             <EmptyDescription>
-              This site has no global values file. Add
-              &nbsp;<code>src/data/variables.json</code>&nbsp; to define shared
-              values like the company name, logo, and contact details.
+              This site has no global values yet. Add a
+              &nbsp;<code>variables</code>&nbsp; block to the root
+              &nbsp;<code>_site.json</code>&nbsp; to define shared values like the
+              company name, logo, and contact details.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

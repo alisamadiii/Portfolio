@@ -1,8 +1,8 @@
 # Collections (v2)
 
 Structured, repeating content — blog posts, newsletters, jobs, team members,
-partners, testimonials. Declared in `src/data/cms.json`, edited from the CMS
-collection table.
+partners, testimonials. Declared in the manifest (`_site.json` → `cms.collections`,
+or `src/data/cms.json` on legacy repos), edited from the CMS collection table.
 
 ## Two kinds — the `path` decides
 
@@ -13,17 +13,18 @@ The `path` of a collection is the entire contract for how it's stored:
 | ends in `.json` (a **file**)          | **array**     | one file: `[ {item}, … ]`        |
 | a **directory**                       | **directory** | one file per entry inside it     |
 
-Keep `src/data/` to the core files (`cms.json`, `pages.json`, `variables.json`,
-`seo.json`) — array-collection files live in `src/data/collections/` (e.g.
-`src/data/collections/team.json`). Directory collections can live wherever
-(`src/data/blog`, `src/content/…`).
+The config + page content live at the repo root (`_site.json`, `_pages.json`),
+and collection files live under `_collections/` at the repo root too — the
+leading underscore groups them all together. Array-collection files live in
+`_collections/` (e.g. `_collections/team.json`); directory collections are
+subfolders (`_collections/blog`, `_collections/…`).
 
-- **Array collection** (`"path": "src/data/collections/team.json"`) — the whole collection
+- **Array collection** (`"path": "_collections/team.json"`) — the whole collection
   is a single JSON array file, edited as one draft and published as one commit,
-  exactly like `pages.json` / `variables.json`. **Order is array position** — reorder
+  exactly like `_pages.json`. **Order is array position** — reorder
   moves the item in the array; there is no `sort_order` field. Use this for data
   lists (team, partners, workshops, resources, …). No `route`, no `body`.
-- **Directory collection** (`"path": "src/data/blog"`) — one file per entry, so
+- **Directory collection** (`"path": "_collections/blog"`) — one file per entry, so
   each entry can have a `{slug}` route and a Markdown `body`. Use this for
   routed / long-form content (blog, stories).
 
@@ -32,14 +33,15 @@ Prefer **array** for anything that's just a list of records. Reach for
 
 ## Declaring a collection
 
-Add an entry to `collections` in `cms.json`.
+Add an entry to `cms.collections` in the root `_site.json` (or `collections` in
+`src/data/cms.json` on legacy repos).
 
 **Array collection** (the default for data lists):
 
 ```json
 {
   "name": "team",
-  "path": "src/data/collections/team.json",
+  "path": "_collections/team.json",
   "fields": [
     { "name": "name", "type": "string", "required": true },
     { "name": "role", "type": "string" },
@@ -53,7 +55,7 @@ Add an entry to `collections` in `cms.json`.
 ```json
 {
   "name": "blog",
-  "path": "src/data/blog",
+  "path": "_collections/blog",
   "route": "/blog/{slug}",
   "format": "md",
   "fields": [
@@ -92,7 +94,7 @@ The whole collection is one JSON array. Order top-to-bottom is display order:
 The site imports the file directly and renders it in order — no sort step:
 
 ```ts
-import team from "../data/collections/team.json";
+import team from "../../_collections/team.json";
 ```
 
 ## Directory entry files
@@ -131,8 +133,8 @@ npx cms-bridge collections-to-array             # convert + rewrite cms.json
 ```
 
 It reads every entry (ordered by the old `sort_order`), strips that field,
-writes the ordered array to `src/data/collections/<name>.json`, updates the
+writes the ordered array to `_collections/<name>.json`, updates the
 `cms.json` `path`, and deletes the directory. Markdown / routed directories are
 left untouched. Afterwards, point the site's loader at the array file
-(`import data from "../data/collections/<name>.json"`) and run
+(`import data from "../../_collections/<name>.json"`) and run
 `cms-bridge check`.

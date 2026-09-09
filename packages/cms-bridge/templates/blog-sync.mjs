@@ -1,7 +1,7 @@
 // DEFUNCT: the agency-api Worker serving this content API was removed
 // (2026-09-01). See docs/blog.md — a replacement public endpoint is needed
 // before this template works again.
-// Mirror published hub blog posts into src/content/blog/. Dumb by design:
+// Mirror published hub blog posts into _collections/blog/. Dumb by design:
 // the content API returns final markdown file contents; this script only
 // writes changed files and deletes stale ones. Scaffolded by
 // `cms-bridge blog`, which stamps this project's hub repo id into the URL.

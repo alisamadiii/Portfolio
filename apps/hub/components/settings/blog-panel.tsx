@@ -58,7 +58,7 @@ const splitList = (value: string) =>
 // ─── Panel (in-shell, rendered from Site Settings › Blog) ────────
 // Posts live in the hub database, not the repository. Saving only stores
 // drafts; the "Publish to site" button fires the repo's blog-sync GitHub
-// Action, which mirrors published posts into src/content/blog/ and rebuilds
+// Action, which mirrors published posts into _collections/blog/ and rebuilds
 // the website.
 
 export const BlogPanel = () => {

@@ -11,14 +11,13 @@ import {
   type ReactNode,
 } from "react";
 import { useConfig } from "@/contexts/config-context";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import { toast } from "sonner";
 
 import { useMediaLibrary } from "@/components/media/media-library-context";
 
 import {
-  buildEntryMap,
   candidatesFor,
   classifyEditable,
   flattenTextValues,
@@ -106,6 +105,8 @@ type CanvasEditorValue = {
   pagesLoading: boolean;
   pagesError: Error | null;
   isV2: boolean;
+  /** v2 repo whose root _pages.json is missing/unreadable — edits blocked. */
+  pagesMissing: boolean;
   manifest: ManifestData | null;
   entryMap: CanvasEntryMap;
   copiesVersion: number;
@@ -185,10 +186,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   }, [pages, selectedPath]);
 
   // ------------------------------------------------------------------
-  // CMS v2: a repo with a cms.json manifest is schema-less — the entry map
-  // is built from the manifest + the two content files, with field schemas
-  // inferred from the JSON value shapes. Legacy repos keep the .pages.yml
-  // path below untouched.
+  // The repo's root _site.json manifest is schema-less — the entry map is built
+  // from the manifest + _pages.json, with field schemas inferred from the JSON
+  // value shapes.
   // ------------------------------------------------------------------
   const manifestQuery = useQuery(
     trpc.cms.manifest.get.queryOptions(
@@ -202,34 +202,33 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const pagesContentQuery = useQuery(
     trpc.cms.entries.getContent.queryOptions(
       { owner, repo, branch, path: manifest?.object.paths.pages ?? "" },
-      { enabled: isV2, staleTime: 30_000 }
+      { enabled: isV2, staleTime: 30_000, retry: false }
     )
   );
-  const siteContentQuery = useQuery(
-    trpc.cms.entries.getContent.queryOptions(
-      { owner, repo, branch, path: manifest?.object.paths.variables ?? "" },
-      { enabled: isV2, staleTime: 30_000 }
-    )
-  );
+  // A v2 repo whose root _pages.json is missing/unreadable: edits are blocked and
+  // the canvas shows a warning until the file is added at the repo root.
+  const pagesMissing = isV2 && pagesContentQuery.isError;
+
+  // variables + seo ride inline on the manifest (the root _site.json).
+  const variablesContent: Record<string, unknown> =
+    (manifest?.object.variables as Record<string, unknown> | undefined) ?? {};
+  const variablesSha = manifest?.sha ?? null;
+  const variablesReady = Boolean(manifest);
+
   // Committed base content — the persistV2 draft assembly starts from.
   const pagesBaseRef = useRef<Record<string, unknown> | null>(null);
 
   const entryMap = useMemo(
     () =>
-      isV2
-        ? buildV2EntryMap(
-            manifest,
-            (pagesContentQuery.data?.contentObject as Record<
-              string,
-              unknown
-            > | null) ?? null,
-            (siteContentQuery.data?.contentObject as Record<
-              string,
-              unknown
-            > | null) ?? null
-          )
-        : buildEntryMap(config),
-    [isV2, manifest, pagesContentQuery.data, siteContentQuery.data, config]
+      buildV2EntryMap(
+        manifest,
+        (pagesContentQuery.data?.contentObject as Record<
+          string,
+          unknown
+        > | null) ?? null,
+        variablesContent
+      ),
+    [manifest, pagesContentQuery.data, variablesContent]
   );
 
   // ------------------------------------------------------------------
@@ -270,25 +269,12 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     null
   );
 
-  // Prefetch every mapped entry (content + sha) so commits can build drafts.
-  // v2 repos skip this — their content arrives via the two getContent queries.
-  const legacyRoutes = isV2 ? [] : entryMap.routes;
-  const entryQueries = useQueries({
-    queries: legacyRoutes.map((entry) =>
-      trpc.cms.entries.get.queryOptions(
-        { owner, repo, branch, path: entry.filePath, name: entry.name },
-        { enabled: Boolean(owner && repo && branch), staleTime: 30_000 }
-      )
-    ),
-  });
-
-  // Seed v2 working copies: one per page (a slice of pages.json) + the site
-  // entry. A stored draft (whole pages.json) wins over committed content;
+  // Seed v2 working copies: one per page (a slice of _pages.json) + the site
+  // entry. A stored draft (whole _pages.json) wins over committed content;
   // pages whose draft slice differs from the committed base are marked dirty.
   useEffect(() => {
     if (!isV2 || !manifest) return;
     const pagesData = pagesContentQuery.data;
-    const siteData = siteContentQuery.data;
     let changed = false;
     if (pagesData) {
       const base = pagesData.contentObject as Record<string, unknown>;
@@ -315,7 +301,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         changed = true;
       }
     }
-    if (siteData && !copiesRef.current.has(SITE_ENTRY)) {
+    if (variablesReady && !copiesRef.current.has(SITE_ENTRY)) {
       const siteEntry = entryMap.byName.get(SITE_ENTRY);
       if (siteEntry) {
         const draft = getDraft(
@@ -324,14 +310,17 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           branch,
           manifest.object.paths.variables
         );
+        // The shared _site.json draft holds `{ variables, seo }` — the variables
+        // slice is our working copy.
+        const draftVariables = (
+          draft?.values as Record<string, unknown> | undefined
+        )?.variables as Record<string, unknown> | undefined;
         copiesRef.current.set(SITE_ENTRY, {
           entry: siteEntry,
-          sha: draft?.sha ?? siteData.sha ?? null,
-          values:
-            (draft?.values as Record<string, unknown> | undefined) ??
-            (siteData.contentObject as Record<string, unknown>),
+          sha: draft?.sha ?? variablesSha,
+          values: draftVariables ?? variablesContent ?? {},
         });
-        if (draft) dirtyRef.current.add(SITE_ENTRY);
+        if (draftVariables) dirtyRef.current.add(SITE_ENTRY);
         changed = true;
       }
     }
@@ -340,38 +329,14 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     isV2,
     manifest,
     pagesContentQuery.data,
-    siteContentQuery.data,
+    variablesReady,
+    variablesContent,
+    variablesSha,
     entryMap,
     owner,
     repo,
     branch,
   ]);
-
-  useEffect(() => {
-    let changed = false;
-    legacyRoutes.forEach((entry, index) => {
-      const query = entryQueries[index];
-      const data = query?.data;
-      if (
-        !data ||
-        !("contentObject" in data) ||
-        copiesRef.current.has(entry.name)
-      )
-        return;
-      const draft = getDraft(owner, repo, branch, entry.filePath);
-      copiesRef.current.set(entry.name, {
-        entry,
-        sha: draft?.sha ?? data.sha ?? null,
-        values:
-          (draft?.values as Record<string, unknown> | undefined) ??
-          (data.contentObject as Record<string, unknown>),
-      });
-      if (draft) dirtyRef.current.add(entry.name);
-      changed = true;
-    });
-    if (changed) setCopiesVersion((version) => version + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entryQueries, legacyRoutes, owner, repo, branch]);
 
   /** Push current draft values into one frame (used on ready + remount). */
   const pushDraftsToFrame = useCallback(
@@ -473,7 +438,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
 
   /**
    * Persist an entry's working copy to the drafts store. Legacy: one draft
-   * per content file. v2: page entries are slices of the shared pages.json.
+   * per content file. v2: page entries are slices of the shared _pages.json.
    */
   const persistEntryDraft = useCallback(
     (entry: EntryRoute) => {
@@ -503,16 +468,26 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         });
         return;
       }
-      saveDraftOrThrow(draftKey(owner, repo, branch, entry.filePath), {
-        v: 1,
-        path: entry.filePath,
-        schemaName: isV2 ? SITE_ENTRY : entry.name,
-        sha: copy.sha,
-        isNew: false,
-        values: copy.values,
-        savedAt: Date.now(),
-        ...(isV2 ? { title: "Variables" } : {}),
-      });
+      // Variables share the root _site.json with seo (+ the untouched cms).
+      // Merge our slice into the shared draft so a pending seo slice survives;
+      // publish then merges the whole thing over the live cms.
+      if (isV2 && manifest && entry.name === SITE_ENTRY) {
+        const sitePath = manifest.object.paths.site;
+        const existing =
+          (getDraft(owner, repo, branch, sitePath)?.values as
+            | Record<string, unknown>
+            | undefined) ?? {};
+        saveDraftOrThrow(draftKey(owner, repo, branch, sitePath), {
+          v: 1,
+          path: sitePath,
+          schemaName: SITE_ENTRY,
+          sha: copy.sha,
+          isNew: false,
+          values: { ...existing, variables: copy.values },
+          savedAt: Date.now(),
+          title: "Site",
+        });
+      }
     },
     [isV2, manifest, entryMap, owner, repo, branch]
   );
@@ -523,6 +498,14 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       const resolved = resolveFieldEntry(candidates, fieldPath);
       if (!resolved) return;
       const { entry, field } = resolved;
+      // No root _pages.json → page content can't be edited (variables live in
+      // _site.json, so those still work).
+      if (pagesMissing && entry.name !== SITE_ENTRY) {
+        toast.error(
+          "This project has no _pages.json — add it at the repo root to edit page content."
+        );
+        return;
+      }
       if (!TEXT_FIELD_TYPES.has(field.type) && field.type !== "image") {
         toast.info("This element isn't text-editable yet — use the form view.");
         return;
@@ -556,7 +539,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       setCopiesVersion((version) => version + 1);
       propagate(entry.name, fieldPath, String(value), framePath);
     },
-    [entryMap, persistEntryDraft, propagate]
+    [entryMap, persistEntryDraft, propagate, pagesMissing]
   );
 
   const handleGroupOp = useCallback(
@@ -950,6 +933,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       pagesError:
         pagesQuery.error instanceof Error ? pagesQuery.error : null,
       isV2,
+      pagesMissing,
       manifest,
       entryMap,
       copiesVersion,
@@ -984,6 +968,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       pagesQuery.isLoading,
       pagesQuery.error,
       isV2,
+      pagesMissing,
       manifest,
       entryMap,
       copiesVersion,

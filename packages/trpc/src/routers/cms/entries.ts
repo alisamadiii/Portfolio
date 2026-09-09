@@ -208,8 +208,9 @@ export const entriesRouter = createTRPCRouter({
 
   /**
    * CMS v2: fetch a raw content file with no schema involved. JSON parses to
-   * an object; markdown parses to `{ body, ...frontmatter }`. Path must live
-   * under a `src/data` or `src/content` folder (basePath prefixes allowed).
+   * an object; markdown parses to `{ body, ...frontmatter }`. Allowed: the
+   * root `_pages.json` or any file under `_collections/` (JSON + blog md).
+   * basePath prefixes allowed.
    */
   getContent: cmsProcedure
     .input(
@@ -218,8 +219,8 @@ export const entriesRouter = createTRPCRouter({
         path: z
           .string()
           .regex(
-            /^(?:[A-Za-z0-9._-]+\/)*src\/(?:data|content)\/[A-Za-z0-9._/ -]+\.(?:json|md|mdx)$/,
-            "Path must be a JSON or Markdown file under src/data or src/content."
+            /^(?:[A-Za-z0-9._-]+\/)*(?:_collections\/[A-Za-z0-9._/ -]+\.(?:json|md|mdx)|_pages\.json)$/,
+            "Path must be the root _pages.json or a JSON/Markdown file under _collections."
           ),
       })
     )

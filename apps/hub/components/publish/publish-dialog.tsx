@@ -113,7 +113,7 @@ export function PublishDialog({
   const drafts = useDrafts(owner, repo, branch);
 
   // CMS v2 repos (cms.json manifest present) are schema-less: drafts are the
-  // shared pages.json / site.json objects, fetched raw and published via
+  // shared _pages.json / _site.json objects, fetched raw and published via
   // publishV2 — no entry names, no schema validation.
   const manifestQuery = useQuery(
     trpc.cms.manifest.get.queryOptions(
@@ -290,6 +290,15 @@ export function PublishDialog({
     }
   };
 
+  // After a successful publish, hard-reload shortly after so every working copy
+  // re-reads fresh shas from GitHub. This is the reliable cure for the stale-sha
+  // "Changed on GitHub" badge on rapid back-to-back publishes — especially
+  // _site.json, whose sha rides on the manifest cache that reanchorShas can't
+  // patch directly. The short delay lets the success toast land first.
+  const scheduleReloadAfterPublish = () => {
+    setTimeout(() => window.location.reload(), 2000);
+  };
+
   const handlePublishResult = (
     result:
       | { status: "conflict"; stalePaths: string[]; conflictPaths: string[] }
@@ -337,6 +346,7 @@ export function PublishDialog({
     setForceOverwrite(false);
     setServerFlaggedPaths([]);
     onOpenChange(false);
+    scheduleReloadAfterPublish();
   };
 
   const publishV2Mutation = useMutation(
@@ -397,6 +407,7 @@ export function PublishDialog({
         setForceOverwrite(false);
         setServerFlaggedPaths([]);
         onOpenChange(false);
+        scheduleReloadAfterPublish();
       },
       onError: (error: unknown) => {
         toast.error(handleCmsError(error, "Failed to publish."));

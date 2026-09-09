@@ -61,7 +61,7 @@ type Item = Record<string, unknown>;
 /**
  * CMS v2 ARRAY collection panel: the whole collection is a single JSON file
  * holding `[ {item}, … ]`, edited as one draft and published as one commit
- * (like pages.json / site.json). Order IS array position — reorder just moves
+ * (like _pages.json / _site.json). Order IS array position — reorder just moves
  * the item. Add/edit/delete/reorder all rewrite the whole-array draft keyed by
  * the collection file path; nothing hits GitHub until Publish.
  */

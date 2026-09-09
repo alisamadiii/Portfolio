@@ -18,7 +18,7 @@ import { toTRPCError } from "../../lib/cms/errors";
 
 /**
  * Blog posts authored in the hub (hub_blog_post) and mirrored into the client
- * repo's src/content/blog/ by that repo's blog-sync GitHub Action. CRUD here
+ * repo's _collections/blog/ by that repo's blog-sync GitHub Action. CRUD here
  * only touches the DB; `publish` fires the repository_dispatch that makes the
  * Action fetch the public content API, commit the markdown mirror, and thereby
  * trigger the Vercel deploy.
@@ -259,7 +259,7 @@ export const blogRouter = createTRPCRouter({
 
   // The dedicated "Publish to site" button: fire the client repo's blog-sync
   // Action. The Action fetches the public content API, mirrors
-  // src/content/blog/, and its push triggers the Vercel deploy.
+  // _collections/blog/, and its push triggers the Vercel deploy.
   publish: cmsWriteProcedure.mutation(async ({ ctx, input }) => {
     await requireFeatureAccess(ctx.user, "cms", {
       owner: input.owner,

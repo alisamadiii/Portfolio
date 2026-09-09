@@ -75,8 +75,8 @@ export function CmsOverlay({
   } | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 
-  // CMS v2: collections come from the cms.json manifest instead of the
-  // .pages.yml navigation tree; the panel + sheet run schema-less.
+  // Collections come from the root _site.json manifest (cms.collections); the
+  // panel + sheet run schema-less.
   const trpc = useTRPC();
   const manifestQuery = useQuery(
     trpc.cms.manifest.get.queryOptions(
@@ -254,9 +254,9 @@ export function CmsOverlay({
             <EmptyHeader>
               <EmptyTitle>No collections yet</EmptyTitle>
               <EmptyDescription>
-                Define collections in &quot;cms/collections/&quot; and run
-                &quot;npx cms-bridge collections&quot;, or add them to
-                &quot;.pages.yml&quot; directly.
+                Add a collection to your _site.json manifest
+                (&quot;cms.collections&quot;), or run &quot;npx cms-bridge
+                collection&quot; to scaffold one.
               </EmptyDescription>
             </EmptyHeader>
             {canConfigure && (

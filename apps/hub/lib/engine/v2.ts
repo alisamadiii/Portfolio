@@ -3,9 +3,9 @@
  * consumes, but from the cms.json manifest + the two content files instead of
  * a `.pages.yml` schema. Each manifest page becomes an EntryRoute whose
  * `schema.fields` are INFERRED from the page's JSON values (see infer.ts) and
- * whose `filePath` is the shared pages.json; the global `site` entry maps to
- * site.json. Field paths stay page-relative (`hero.heading`) exactly like
- * legacy — the page prefix only appears when assembling the pages.json draft.
+ * whose `filePath` is the shared _pages.json; the global `site` entry maps to
+ * _site.json. Field paths stay page-relative (`hero.heading`) exactly like
+ * legacy — the page prefix only appears when assembling the _pages.json draft.
  */
 
 import type { CanvasEntryMap, EntryRoute } from "@/lib/canvas-entries";
@@ -34,7 +34,18 @@ export type ManifestData = {
         multiple?: boolean | { max?: number };
       }>;
     }>;
-    paths: { manifest: string; pages: string; variables: string; seo: string };
+    paths: {
+      manifest: string;
+      /** The single root _site.json (equals `manifest`). */
+      site: string;
+      pages: string;
+      /** variables + seo live inside _site.json, so both resolve to it. */
+      variables: string;
+      seo: string;
+    };
+    /** seo + variables ride inline on the manifest (from _site.json). */
+    seo: Record<string, unknown>;
+    variables: Record<string, unknown>;
   };
 };
 
@@ -45,7 +56,7 @@ const normalizeRoute = (pathname: string): string => {
 };
 
 export const SITE_ENTRY = "site";
-/** Reserved entry name for the shared pages.json draft (never a page key). */
+/** Reserved entry name for the shared _pages.json draft (never a page key). */
 export const PAGES_DOC = "$pages";
 
 export function buildV2EntryMap(
@@ -98,7 +109,7 @@ export function buildV2EntryMap(
 }
 
 /**
- * Assemble the full pages.json object for a draft: the committed base content
+ * Assemble the full _pages.json object for a draft: the committed base content
  * overlaid with every page's current working values. Site drafts are just the
  * site entry's values — no assembly needed.
  */

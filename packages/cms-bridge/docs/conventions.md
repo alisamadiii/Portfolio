@@ -1,27 +1,45 @@
 ## The CMS conventions contract (v2)
 
-This project is wired to a git-based CMS. Content lives in JSON files under
-`src/data/` — `cms.json` (manifest), `pages.json` (all pages), `variables.json`
-(global values), and `seo.json` (SEO). Markup is made editable with the bridge
-components (or, as a fallback, a `data-cms-field` attribute). See `pages-cms.md`
-for the full guide.
+This project is wired to a git-based CMS. Content lives in **two JSON files at the
+repo root**:
+
+- **`_site.json`** — one config file with three keys: `cms` (the manifest:
+  `version`, `baseUrl`, `media`, the page→route map, `collections`), `seo` (site +
+  per-page SEO), and `variables` (global values reused on every page).
+- **`_pages.json`** — all page content, keyed by page name.
+
+The leading underscore groups the CMS artifacts (`_site.json`, `_pages.json`,
+`_collections/`) at the top of the repo's file tree.
+
+Markup is made editable with the bridge components (or, as a fallback, a
+`data-cms-field` attribute). See `pages-cms.md` for the full guide.
+
+> **Legacy layout:** older repos used four files under `src/data/` (`cms.json`,
+> `pages.json`, `variables.json`, `seo.json`). The hosted CMS now **requires** the
+> root `_site.json` + `_pages.json` — migrate legacy repos to that layout, or the
+> CMS won't load them. (`npx cms-bridge check` still validates a legacy layout
+> locally.)
 
 Two things must always be the **same string**:
 
-1. the key path inside `pages.json` (page-relative) or `variables.json` (bare)
+1. the key path inside `_pages.json` (page-relative) or `_site.json` → `variables` (bare)
 2. the component `field` prop — or the `data-cms-field` attribute value
 
-```
-pages.json:            { "home": { "hero": { "heading": "Welcome" } } }
-src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} />
+```astro
+---
+// _pages.json:  { "home": { "hero": { "heading": "Welcome" } } }
+import pages from "../../_pages.json";
+const home = pages.home;
+---
+<Heading1 field="hero.heading" value={home.hero.heading} />
 ```
 
 ### Rules
 
 - **Page fields** use section-prefixed dot paths (`hero.heading`). The page is
   implied by its route — NEVER prefix a path with the page name.
-- **Global fields** (`variables.json`) use bare paths (`name`, `address.street`)
-  — resolved on every page.
+- **Global fields** (`_site.json` → `variables`) use bare paths (`name`,
+  `address.street`) — resolved on every page.
 - **List items append their index** inside `.map((item, i) => …)`:
 
   ```astro
@@ -60,8 +78,9 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 - **Region markers** — mark a whole region with `<Region type="…">`. It is
   **Slot-style**: it renders its single root child and merges a `data-cms-*` marker
   onto that child's opening tag — no wrapper element. Requires one root child.
-  - `<Region type="collection" name="…">` — a region rendered from a `cms.json`
-    collection. Purple outline + a "✎ Edit collection" button that opens the
+  - `<Region type="collection" name="…">` — a region rendered from a collection
+    declared in `_site.json` → `cms.collections`. Purple outline + a "✎ Edit
+    collection" button that opens the
     collection's editor; entries are edited on the collection page, not inline
     (unlike `<Group>`). `name` required.
   - `<Region type="variant" variantName="…">` — green outline. Clicking it opens
@@ -78,8 +97,8 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
   tiny typed helper of its own and passes its result into `field`:
 
   ```ts
-  // src/lib/cms.ts — page-relative dot-path builder over the site's pages.json
-  import pages from "../data/pages.json";
+  // src/lib/cms.ts — page-relative dot-path builder over the site's _pages.json
+  import pages from "../../_pages.json";
   type DotPaths<T> = T extends readonly (infer E)[]
     ? `${number}` | `${number}.${DotPaths<E>}`
     : T extends object
@@ -109,11 +128,11 @@ src/pages/index.astro: <Heading1 field="hero.heading" value={home.hero.heading} 
 - **Inline emphasis** — in a text value, `` `word` `` → `.cms-hl` (accent) and
   `**word**` → `.cms-mark` (mark; style once, override per field with
   `markClass`). Both round-trip through canvas editing.
-- **SEO** — site + per-page SEO live in `seo.json` (`site` defaults and a
+- **SEO** — site + per-page SEO live in `_site.json` → `seo` (`site` defaults and a
   `pages.<key>` slice each: `title`, `description`, `ogImage`), edited from the
-  Settings view — not in `variables.json`.
-- **`variables.json`** holds reusable global values. Baseline keys (use these,
-  omit what doesn't apply, extend after): `name`, `logo`, `phone`, `email`,
+  Settings view — not in `variables`.
+- **`_site.json` → `variables`** holds reusable global values. Baseline keys (use
+  these, omit what doesn't apply, extend after): `name`, `logo`, `phone`, `email`,
   `address{street,city,region,zip,mapsUrl}`, `socials[]{label,url}`.
 - **`src/data/seo.ts` is NOT CMS content** — per-client identity config
   (canonical URL, JSON-LD business data). Leave it alone.

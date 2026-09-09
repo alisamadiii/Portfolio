@@ -277,6 +277,40 @@ export const publishRouter = createTRPCRouter({
           .filter((collection) => !collection.path.endsWith(".json"))
           .map((collection) => `${collection.path}/`);
 
+        // variables + seo share one root site.json alongside the `cms` manifest
+        // (which the editor never touches). A publish to it carries only the
+        // drafted slice(s), so merge over the live file to preserve `cms` and
+        // any un-drafted sibling slice.
+        const sitePath = manifest.object.paths.site;
+
+        const octokit = createOctokitInstance(ctx.token);
+
+        const readLiveJson = async (
+          path: string
+        ): Promise<Record<string, unknown>> => {
+          try {
+            const response = await octokit.rest.repos.getContent({
+              owner: input.owner,
+              repo: input.repo,
+              path,
+              ref: input.branch,
+            });
+            if (Array.isArray(response.data) || response.data.type !== "file")
+              return {};
+            const decoded = Buffer.from(
+              response.data.content,
+              "base64"
+            ).toString();
+            const parsed = JSON.parse(decoded);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+              ? (parsed as Record<string, unknown>)
+              : {};
+          } catch (error: any) {
+            if (error?.status === 404) return {};
+            throw error;
+          }
+        };
+
         const entries: CommitFileInput[] = [];
         const seenPaths = new Set<string>();
 
@@ -317,7 +351,16 @@ export const publishRouter = createTRPCRouter({
                 400
               );
             }
-            stringified = JSON.stringify(file.content, null, 2);
+            // site.json: merge the drafted slice(s) over the live file so `cms`
+            // (and any un-drafted slice) survive. Other JSON writes whole.
+            const toWrite =
+              normalizedPath === sitePath && !mustBeArray
+                ? {
+                    ...(await readLiveJson(normalizedPath)),
+                    ...(file.content as Record<string, unknown>),
+                  }
+                : file.content;
+            stringified = JSON.stringify(toWrite, null, 2);
           } else if (
             normalizedPath.endsWith(".md") ||
             normalizedPath.endsWith(".mdx")
@@ -344,8 +387,6 @@ export const publishRouter = createTRPCRouter({
             stringified,
           });
         }
-
-        const octokit = createOctokitInstance(ctx.token);
 
         const editorName = ctx.user.name?.trim() || ctx.user.email;
         const fileNames = entries

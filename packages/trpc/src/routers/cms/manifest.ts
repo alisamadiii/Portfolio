@@ -2,15 +2,12 @@ import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
-import { getConfig } from "../../lib/cms/config-store";
 import { toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
 
 /**
- * CMS v2 manifest access. `detect` tells the hub which engine a repo runs on:
- * a repo with `src/data/cms.json` is v2 (schema-less, canvas-only); a repo
- * with `.pages.yml` is legacy. Manifest presence wins — a migrated repo may
- * briefly keep a stale `.pages.yml` around.
+ * CMS v2 manifest access. `detect` reports whether a repo is a v2 project: a
+ * repo with a root `site.json` is `v2`, anything else is `none`.
  */
 export const manifestRouter = createTRPCRouter({
   get: cmsProcedure
@@ -40,14 +37,7 @@ export const manifestRouter = createTRPCRouter({
           input.branch,
           { getToken: async () => ctx.token }
         );
-        if (manifest) return { engine: "v2" as const };
-
-        const config = await getConfig(input.owner, input.repo, input.branch, {
-          getToken: async () => ctx.token,
-        });
-        if (config) return { engine: "legacy" as const };
-
-        return { engine: "none" as const };
+        return { engine: manifest ? ("v2" as const) : ("none" as const) };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

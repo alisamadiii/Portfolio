@@ -1,0 +1,31 @@
+{
+  "seo": {
+    "site": {
+      "title": "",
+      "description": "",
+      "favicon": "",
+      "ogImage": "",
+      "appleTouchIcon": "",
+      "googleAnalytics": ""
+    },
+    "pages": {}
+  },
+  "cms": {
+    "version": 1,
+    "baseUrl": "",
+    "media": {
+      "input": "public/media",
+      "output": "/media"
+    },
+    "pages": {},
+    "collections": []
+  },
+  "variables": {
+    "name": "",
+    "logo": "",
+    "phone": "",
+    "email": "",
+    "address": { "street": "", "city": "", "region": "", "zip": "", "mapsUrl": "" },
+    "socials": []
+  }
+}
