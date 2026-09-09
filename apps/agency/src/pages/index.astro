@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: "Why custom code instead of a website builder?",
-    a: "Every site is hand-built with Next.js and React — no WordPress, Wix, or templates. Custom code loads faster, scores better on Google's Core Web Vitals, and can grow into a full web app without a rebuild.",
+    a: "Every site is hand-built — no WordPress, Wix, or templates. Most local business sites run on Astro, which ships almost no JavaScript, so pages load fast and score high on Google's Core Web Vitals. When you need a custom API, user login, or an admin and client dashboard, we build on Next.js and React — the same custom foundation, scaled up to a full web app without a rebuild.",
   },
   {
     q: "What's included in the monthly plan?",
@@ -129,23 +129,9 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       </div>
     </section>
 
-    <!-- ==================== MARQUEE ==================== -->
-    <div
-      class="overflow-hidden border-y border-charcoal/[0.08] bg-[#f1efec] py-[18px]"
-    >
-      <div class="marquee-track flex w-max whitespace-nowrap">
-        <span class="font-mono text-[15px] tracking-[0.02em] text-[#6b665d]">
-          Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
-        </span>
-        <span class="font-mono text-[15px] tracking-[0.02em] text-[#6b665d]">
-          Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;Design&nbsp;&nbsp;/&nbsp;&nbsp;Develop&nbsp;&nbsp;/&nbsp;&nbsp;Deliver&nbsp;&nbsp;/&nbsp;&nbsp;Brand&nbsp;&nbsp;/&nbsp;&nbsp;Strategy&nbsp;&nbsp;/&nbsp;&nbsp;Innovate&nbsp;&nbsp;/&nbsp;&nbsp;
-        </span>
-      </div>
-    </div>
-
     <!-- ==================== STATS ==================== -->
     <section class="mx-auto max-w-[1200px] px-6 py-14 md:px-10">
-      <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-4">
+      <div class="stagger grid grid-cols-2 gap-6 md:grid-cols-3">
         <div class="reveal py-2">
           <div
             class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
@@ -171,14 +157,6 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
             5<span class="text-accent">+</span>
           </div>
           <div class="mt-2.5 text-sm text-warmgray">Years Experience</div>
-        </div>
-        <div class="reveal py-2">
-          <div
-            class="text-[44px] leading-none font-semibold tracking-[-0.03em]"
-          >
-            1
-          </div>
-          <div class="mt-2.5 text-sm text-warmgray">Focused Team</div>
         </div>
       </div>
     </section>
@@ -615,258 +593,23 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       </div>
     </section>
 
-    <!-- ==================== E-COMMERCE / SHOPIFY ==================== -->
-    <!-- Productized Shopify storefront offer — full page at /ecommerce,
-       service detail at /services/ecommerce, pricing in src/data/pricing.ts. -->
-    <section
-      id="ecommerce"
-      class="bg-gradient-to-br from-[#a5cc5d] via-[#95BF47] to-[#7fa93c]"
-    >
-      <div class="mx-auto max-w-[1200px] px-6 py-[70px] md:px-10">
-      <div
-        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-white/90 uppercase"
-      >
-        <span class="h-px w-[26px] bg-white"></span>05 &mdash; E-commerce
-      </div>
-
-      <div
-        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16"
-      >
-        <div>
-          <h2
-            class="reveal max-w-[18ch] text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em] text-white"
-          >
-            Unique website for your <span class="text-charcoal">Shopify</span>
-          </h2>
-          <p
-            class="reveal mt-5 max-w-[52ch] text-[16px] leading-[1.6] text-[#1f3608]"
-          >
-            Already selling on Shopify? Keep it — we replace only the theme
-            your customers see with a custom-built storefront that matches your
-            brand and feels instant to browse.
-          </p>
-          <ul class="stagger mt-7 space-y-3.5 text-[15px] text-[#1f3608]">
-            <li class="reveal flex items-start gap-3">
-              <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M5 13l4 4L19 7"></path>
-              </svg>
-              Custom design &mdash; your brand, not a theme
-            </li>
-            <li class="reveal flex items-start gap-3">
-              <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M5 13l4 4L19 7"></path>
-              </svg>
-              Instant navigation &mdash; no page reloads between products
-            </li>
-            <li class="reveal flex items-start gap-3">
-              <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M5 13l4 4L19 7"></path>
-              </svg>
-              Shopify keeps running checkout, inventory &amp; orders
-            </li>
-          </ul>
-          <div class="reveal mt-9 flex flex-wrap items-center gap-5">
-            <a
-              href="/ecommerce"
-              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream shadow-[0_10px_28px_rgba(47,68,22,0.35)] hover:bg-white hover:text-charcoal"
-            >
-              Explore the offer
-              <span>&#8599;</span>
-            </a>
-            <span class="font-mono text-[12.5px] text-[#1f3608]"
-              >{fmtPrice(PRICING.ecommerce.setup)} setup + {
-                fmtPrice(PRICING.ecommerce.monthly)
-              }/mo</span
-            >
-          </div>
-        </div>
-
-        <!-- Big Shopify mark -->
-        <div class="reveal">
-          <div
-            class="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[22px] bg-white shadow-[0_30px_70px_rgba(47,68,22,0.3)] lg:aspect-square"
-          >
-            <ShopifyLogo
-              class="h-[56%] w-[56%] drop-shadow-[0_24px_48px_rgba(94,142,62,0.4)]"
-            />
-            <span
-              class="absolute bottom-5 font-mono text-[11.5px] tracking-[0.12em] text-muted uppercase"
-              >Built on your Shopify</span
-            >
-          </div>
-        </div>
-      </div>
-      </div>
-    </section>
-
-    <!-- ==================== PROCESS ==================== -->
+    <!-- ==================== FAST-TRACK CALLOUT ==================== -->
     <section
       class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
     >
       <div
-        class="reveal mb-11 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        <span class="h-px w-[26px] bg-accent"></span>06 &mdash; Our Process
-      </div>
-
-      <div
-        class="stagger grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-4"
-      >
-        <!-- Step 1 -->
-        <div class="reveal flex flex-col">
-          <div
-            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-          >
-            <img
-              src="https://cdn.alisamadii.com/marketing/discovery.png"
-              alt="Discovery phase illustration"
-              width="1200"
-              height="896"
-              class="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <span
-              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-              >01</span
-            >
-          </div>
-          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-            Discovery
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-            Understanding your goals, audience, and competitive landscape
-            through deep research.
-          </p>
-        </div>
-        <!-- Step 2 -->
-        <div class="reveal flex flex-col">
-          <div
-            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-          >
-            <img
-              src="https://cdn.alisamadii.com/marketing/strategy.png"
-              alt="Strategy phase illustration"
-              width="1200"
-              height="896"
-              class="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <span
-              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-              >02</span
-            >
-          </div>
-          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-            Strategy
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-            Defining the roadmap, architecture, and creative direction for
-            maximum impact.
-          </p>
-        </div>
-        <!-- Step 3 -->
-        <div class="reveal flex flex-col">
-          <div
-            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-          >
-            <img
-              src="https://cdn.alisamadii.com/marketing/execution.png"
-              alt="Execution phase illustration"
-              width="1200"
-              height="896"
-              class="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <span
-              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-              >03</span
-            >
-          </div>
-          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-            Execution
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-            Bringing the vision to life with meticulous design and robust
-            engineering.
-          </p>
-        </div>
-        <!-- Step 4 -->
-        <div class="reveal flex flex-col">
-          <div
-            class="img-wrap relative aspect-[4/3] overflow-hidden rounded-[14px] border border-charcoal/[0.08]"
-          >
-            <img
-              src="https://cdn.alisamadii.com/marketing/launch-scale.png"
-              alt="Launch phase illustration"
-              width="1200"
-              height="896"
-              class="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <span
-              class="absolute right-3.5 bottom-3 font-mono text-[32px] font-medium text-white/70"
-              >04</span
-            >
-          </div>
-          <h3 class="mt-[18px] text-[19px] font-semibold tracking-[-0.02em]">
-            Launch &amp; Scale
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-            Deploying, monitoring, and iterating to ensure sustained growth and
-            performance.
-          </p>
-        </div>
-      </div>
-
-      <div class="reveal mt-7">
-        <a
-          href="/blog/web-design-process"
-          class="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-        >
-          Read the full process on the blog <span>&#8594;</span>
-        </a>
-      </div>
-
-      <!-- Fast-track callout -->
-      <div
-        class="reveal mt-[22px] rounded-[14px] border border-charcoal/[0.08] bg-charcoal/[0.02] px-6 py-6 md:flex md:items-center md:justify-between md:gap-8 md:px-8"
+        class="reveal rounded-[14px] border border-charcoal/[0.08] bg-charcoal/[0.02] px-6 py-6 md:flex md:items-center md:justify-between md:gap-8 md:px-8"
       >
         <div class="max-w-[720px]">
           <h3 class="text-[18px] font-semibold tracking-[-0.02em]">
-            Just need a simple site?
+            A real website, live fast
           </h3>
           <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-            Small business, no website yet, nothing huge? We skip Discovery and
-            Strategy and go straight to build &mdash; a beautiful, custom site
-            live in about a day. You edit the text and images yourself through
-            the CMS, no developer required.
+            No website yet, or starting fresh? We build you a beautiful, fully
+            custom site &mdash; not a template, not a throwaway page &mdash;
+            engineered to win clients and grow your business, live in about a
+            day. You edit the text and images yourself through the CMS, no
+            developer required.
           </p>
         </div>
         <a
@@ -888,7 +631,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Client Work
+        <span class="h-px w-[26px] bg-accent"></span>05 &mdash; Client Work
       </div>
       <div
         class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -960,7 +703,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
     <!-- Live client Lighthouse scores as proof; component + data live in
        ClientResults.astro / projects.ts. -->
     <ClientResults
-      eyebrow="08 — Measured Results"
+      eyebrow="06 — Measured Results"
       heading="Real sites. Real scores."
       subhead="Live Google Lighthouse scores for sites we've built for real clients — and numbers you can check yourself in about 30 seconds."
     />
@@ -973,7 +716,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-9 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>09 &mdash; Pricing
+        <span class="h-px w-[26px] bg-accent"></span>07 &mdash; Pricing
       </div>
 
       <div
@@ -1011,7 +754,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>10 &mdash; Areas We Serve
+        <span class="h-px w-[26px] bg-accent"></span>08 &mdash; Areas We Serve
       </div>
       <div
         class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
@@ -1068,7 +811,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>11 &mdash; FAQ
+        <span class="h-px w-[26px] bg-accent"></span>09 &mdash; FAQ
       </div>
       <h2
         class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
@@ -1443,22 +1186,6 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
   }
   .mag-btn:active {
     transform: scale(0.97);
-  }
-
-  /* Marquee */
-  @keyframes marquee {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
-  }
-  .marquee-track {
-    animation: marquee 26s linear infinite;
-  }
-  .marquee-track:hover {
-    animation-play-state: paused;
   }
 
   /* Menu overlay */

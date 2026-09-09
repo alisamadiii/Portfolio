@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import BackNav from "../components/BackNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
 import Testimonial from "../components/Testimonial.astro";
-import { PROJECTS, CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
+import { PROJECTS, CLIENT_PROJECTS } from "../data/projects";
 
 const SITE = "https://agency.alisamadii.com";
 const pageUrl = `${SITE}/work`;
@@ -163,89 +163,6 @@ const schema = [
       </div>
 
       <Testimonial />
-    </section>
-
-    <!-- ==================== CONCEPT PROJECTS ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div
-        class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
-      >
-        <h2
-          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-        >
-          Concept projects
-        </h2>
-        <div class="reveal">
-          <p class="text-[15.5px] leading-[1.6] text-warmgray">
-            Every project is built from scratch — no templates, no shortcuts.
-            These mock-ups showcase our capabilities; your project will be fully
-            custom to your brand and goals.
-          </p>
-          <div
-            class="mt-5 inline-flex items-center gap-3 rounded-full border border-emerald-200/60 bg-emerald-50 px-4 py-2"
-          >
-            <svg
-              class="size-4 shrink-0 text-emerald-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-              ></path>
-            </svg>
-            <span class="text-[13.5px] font-medium text-emerald-800"
-              >1-Day Delivery</span
-            >
-            <span class="font-mono text-[11.5px] text-emerald-800"
-              >concept &rarr; launch</span
-            >
-          </div>
-        </div>
-      </div>
-
-      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-2">
-        {
-          CONCEPT_PROJECTS.map((project) => (
-            <a
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-            >
-              <div class="aspect-[16/10] overflow-hidden">
-                <img
-                  src={project.image!.src}
-                  alt={project.image!.alt}
-                  width="1120"
-                  height="700"
-                  class="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div class="p-6">
-                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
-                  {project.category}
-                </div>
-                <div class="mt-2.5 flex items-center justify-between gap-4">
-                  <h3 class="text-[22px] font-semibold tracking-[-0.02em]">
-                    {project.name}
-                  </h3>
-                  <span class="text-accent">&#8599;</span>
-                </div>
-                <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-                  {project.description}
-                </p>
-              </div>
-            </a>
-          ))
-        }
-      </div>
     </section>
 
     <!-- ==================== CTA ==================== -->
