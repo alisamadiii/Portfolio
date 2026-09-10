@@ -24,6 +24,13 @@ export type Draft = {
   values: Record<string, unknown> | unknown[];
   savedAt: number;
   title?: string;
+  /**
+   * Marks this path for deletion on publish. The file is removed in the
+   * publish commit instead of being written; discarding the draft before
+   * publish restores it. Never set for new (unpublished) entries — those are
+   * just discarded outright.
+   */
+  deleted?: boolean;
 };
 
 export const draftKey = (

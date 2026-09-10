@@ -27,7 +27,13 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { repoPath } from "@/lib/paths";
-import { draftKey, getDraft, saveDraftOrThrow } from "@/lib/store/drafts";
+import {
+  draftKey,
+  getDraft,
+  saveDraftOrThrow,
+  useDraftsStore,
+} from "@/lib/store/drafts";
+import { entryHasChanges } from "@/lib/entry-diff";
 import { applySeoAutofill } from "@/lib/seo-autofill";
 import {
   generateFilename,
@@ -305,6 +311,7 @@ export function BlogComposer({
         path={path}
         schema={schema}
         content={contentObject ?? {}}
+        published={fetched?.contentObject as Record<string, unknown> | undefined}
         sha={fetched?.sha ?? localDraft?.sha ?? null}
         owner={owner}
         repo={repo}
@@ -331,6 +338,7 @@ function ComposerForm({
   path,
   schema,
   content,
+  published,
   sha,
   owner,
   repo,
@@ -345,6 +353,7 @@ function ComposerForm({
   path?: string;
   schema: Record<string, any>;
   content: Record<string, unknown>;
+  published?: Record<string, unknown>;
   sha: string | null;
   owner: string;
   repo: string;
@@ -409,6 +418,25 @@ function ComposerForm({
         savePath = joinPathSegments([schema.path, generated]);
       }
 
+      // Existing post reverted to its published content → clear the draft rather
+      // than keep a no-op that lights the Draft badge / Publish count.
+      if (
+        isEdit &&
+        published &&
+        !entryHasChanges(
+          schema.fields as Field[],
+          published,
+          values
+        )
+      ) {
+        const key = draftKey(owner, repo, branch, savePath);
+        if (getDraft(owner, repo, branch, savePath))
+          useDraftsStore.getState().deleteDraft(key);
+        form.reset(form.getValues());
+        toast.success("No changes — draft cleared");
+        return;
+      }
+
       saveDraftOrThrow(draftKey(owner, repo, branch, savePath), {
         v: 1,
         path: savePath,
@@ -434,6 +462,7 @@ function ComposerForm({
     onCreated,
     owner,
     path,
+    published,
     repo,
     schema,
     setSaving,

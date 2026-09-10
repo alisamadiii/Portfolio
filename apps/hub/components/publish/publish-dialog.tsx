@@ -89,6 +89,8 @@ type EntryReview = {
   errorMessage?: string;
   deletedUpstream: boolean;
   isStale: boolean;
+  /** This draft removes the entry on publish (not a content edit). */
+  isDeleted: boolean;
   diff: EntryDiffRow[] | null;
 };
 
@@ -150,6 +152,21 @@ export function PublishDialog({
   const reviews = useMemo<EntryReview[]>(() => {
     if (!config) return [];
     return drafts.map(([key, draft], index) => {
+      const isDeleted = Boolean(draft.deleted);
+      // A delete draft removes the file on publish — there's no field diff to
+      // show and the server tolerates an already-gone target, so skip the
+      // fetch/diff machinery and just present it as a pending deletion.
+      if (isDeleted) {
+        return {
+          key,
+          draft,
+          status: "ready" as const,
+          deletedUpstream: false,
+          isStale: serverFlaggedPaths.includes(draft.path),
+          isDeleted: true,
+          diff: null,
+        };
+      }
       // v2 drafts have no schema — infer diff fields from the draft's own
       // value shapes (labels come out of the JSON keys). An ARRAY collection
       // draft is a whole file (`[ {item}, … ]`): it gets an item-level diff
@@ -176,6 +193,7 @@ export function PublishDialog({
             status: "loading" as const,
             deletedUpstream: false,
             isStale,
+            isDeleted: false,
             diff: null,
           };
         }
@@ -194,6 +212,7 @@ export function PublishDialog({
                   : "Failed to fetch entry.",
               deletedUpstream: false,
               isStale,
+              isDeleted: false,
               diff: null,
             };
           }
@@ -233,6 +252,7 @@ export function PublishDialog({
         status: "ready" as const,
         deletedUpstream,
         isStale,
+        isDeleted: false,
         diff,
       };
     });
@@ -494,6 +514,7 @@ export function PublishDialog({
                         content: draft.values,
                         sha: draft.sha,
                         isNew: draft.isNew,
+                        deleted: draft.deleted,
                       })),
                       force: (hasStale && forceOverwrite) || undefined,
                     })
@@ -537,7 +558,21 @@ function EntryReviewCard({
       <div className="flex items-start justify-between gap-2 border-b px-3 py-2">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-sm font-medium">{title}</span>
+            <span
+              className={`truncate text-sm font-medium ${
+                review.isDeleted ? "text-muted-foreground line-through" : ""
+              }`}
+            >
+              {title}
+            </span>
+            {review.isDeleted && (
+              <Badge
+                variant="outline"
+                className="border-destructive/40 bg-destructive/10 text-destructive"
+              >
+                Delete
+              </Badge>
+            )}
             {draft.isNew && <Badge variant="secondary">New</Badge>}
             {review.isStale && (
               <Badge
@@ -564,7 +599,11 @@ function EntryReviewCard({
         </Button>
       </div>
       <div className="p-3">
-        {review.status === "loading" ? (
+        {review.isDeleted ? (
+          <p className="text-destructive text-sm">
+            This entry will be removed from your site.
+          </p>
+        ) : review.status === "loading" ? (
           <div className="flex flex-col gap-2">
             <Skeleton className="h-4 w-2/3" />
             <Skeleton className="h-4 w-full" />

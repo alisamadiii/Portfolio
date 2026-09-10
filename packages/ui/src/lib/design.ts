@@ -12,6 +12,7 @@ export const projectDesign: Record<
   ADMIN: { color: "#95A5A6", label: "Admin" },
   SAASKIT: { color: "#9B59B6", label: "SaaSKit" },
   CMS: { color: "#E17055", label: "CMS" },
+  LEADS: { color: "#0984E3", label: "Leads" },
 };
 
 export function getProjectColor(project?: string | null): string {

@@ -115,19 +115,26 @@ export function CollectionV2({
       fields: Record<string, unknown>;
       isDraft: boolean;
       isNew: boolean;
+      isDeleted: boolean;
     }> = [];
     for (const entry of listQuery.data?.entries ?? []) {
       const meta = entryMetaFromFilename(entry.name);
       const draft = draftByPath.get(entry.path);
+      const isDeleted = Boolean(draft?.draft.deleted);
       out.push({
         path: entry.path,
         title: draft?.draft.title || meta.title,
         date: meta.date,
         // Local draft values override what's on GitHub — the table should
-        // show what the user will publish, not what's published.
-        fields: draftFields(draft?.draft) ?? entry.fields ?? {},
+        // show what the user will publish, not what's published. A delete
+        // draft keeps the published values so the row still reads normally.
+        fields:
+          (isDeleted ? null : draftFields(draft?.draft)) ??
+          entry.fields ??
+          {},
         isDraft: Boolean(draft),
         isNew: false,
+        isDeleted,
       });
       draftByPath.delete(entry.path);
     }
@@ -141,6 +148,7 @@ export function CollectionV2({
         fields: draftFields(draft) ?? {},
         isDraft: true,
         isNew: true,
+        isDeleted: false,
       });
     }
     // Date-prefixed filenames sort newest-first; undated ones go last.
@@ -197,7 +205,7 @@ export function CollectionV2({
                 editing?.kind === "edit" && editing.path === row.path
                   ? "bg-muted/60"
                   : ""
-              }`}
+              } ${row.isDeleted ? "opacity-55" : ""}`}
               style={{ gridTemplateColumns: template }}
             >
               {columns.map((column, index) =>
@@ -222,7 +230,12 @@ export function CollectionV2({
                 )
               )}
               <span>
-                {row.isDraft ? (
+                {row.isDeleted ? (
+                  <span className="bg-destructive/10 text-destructive inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+                    <span className="bg-destructive size-[5px] rounded-full" />
+                    Deleting
+                  </span>
+                ) : row.isDraft ? (
                   <span className="bg-draft-bg text-draft-fg inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold">
                     <span className="bg-draft size-[5px] rounded-full" />
                     {row.isNew ? "New" : "Draft"}

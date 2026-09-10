@@ -35,6 +35,8 @@ import {
 import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";
 
 import { entryFieldsFromValue } from "@/lib/engine/entry-schema";
+import { entryHasChanges } from "@/lib/entry-diff";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import { EntryForm } from "@/components/entry/entry-form";
 
@@ -225,6 +227,29 @@ export function EntrySheet({
       const title = typeof rawTitle === "string" ? rawTitle : undefined;
 
       if (isEdit) {
+        const serverSide =
+          schema.list === true
+            ? { listWrapper: fetched?.contentObject }
+            : ((fetched?.contentObject ?? {}) as Record<string, unknown>);
+        const draftSide =
+          schema.list === true ? { listWrapper: unwrapped } : unwrapped;
+        // Reverted to published content → clear the draft instead of saving a
+        // no-op that keeps the Draft badge / Publish count lit.
+        if (
+          fetched &&
+          !entryHasChanges(
+            entryFields as unknown as Field[],
+            serverSide as Record<string, unknown>,
+            draftSide as Record<string, unknown>
+          )
+        ) {
+          const key = draftKey(config.owner, config.repo, config.branch, editPath);
+          if (getDraft(config.owner, config.repo, config.branch, editPath))
+            deleteDraft(key);
+          toast.success("No changes — draft cleared");
+          setResetSignal((signal) => signal + 1);
+          return;
+        }
         saveDraftOrThrow(
           draftKey(config.owner, config.repo, config.branch, editPath),
           {

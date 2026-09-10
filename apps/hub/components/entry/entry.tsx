@@ -97,6 +97,7 @@ import {
 } from "@workspace/cms-core/schema";
 import {
   draftKey,
+  getDraft,
   listDraftEntries,
   saveDraftOrThrow,
   useDraftsStore,
@@ -747,6 +748,35 @@ export function Entry({
           : undefined;
         if (typeof primaryValue === "string" && primaryValue !== "") {
           draftTitle = primaryValue;
+        }
+      }
+
+      // Existing entry reverted to its published content → don't leave a no-op
+      // draft behind (it would keep the Draft badge / Publish count lit with
+      // nothing real to publish). Drop any stored draft and reset the form.
+      if (path && entry) {
+        const serverSide =
+          schema?.list === true
+            ? { listWrapper: entry.contentObject }
+            : ((entry.contentObject ?? {}) as Record<string, unknown>);
+        const draftSide =
+          schema?.list === true ? { listWrapper: values } : values;
+        const noChange =
+          computeEntryDiff(
+            entryFields as Field[],
+            serverSide as Record<string, unknown>,
+            draftSide as Record<string, unknown>
+          ).length === 0;
+        if (noChange) {
+          const key = draftKey(config.owner, config.repo, config.branch, savePath);
+          if (getDraft(config.owner, config.repo, config.branch, savePath))
+            deleteDraft(key);
+          toast.success("No changes — draft cleared");
+          if (submitStartChangeVersion === changeVersionRef.current) {
+            setHasRegisteredChanges(false);
+            setFormResetSignal((prev) => prev + 1);
+          }
+          return;
         }
       }
 

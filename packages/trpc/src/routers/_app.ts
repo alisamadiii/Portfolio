@@ -7,6 +7,7 @@ import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { domainRouter } from "./domain";
 import { emailsRouter } from "./emails";
+import { leadsRouter } from "./leads";
 import { paymentsRouter } from "./payments";
 import { productsRouter } from "./products";
 import { sourcesRouter } from "./sources";
@@ -29,6 +30,7 @@ export const appRouter = createTRPCRouter({
   cms: cmsRouter,
   domain: domainRouter,
   websites: websitesRouter,
+  leads: leadsRouter,
 });
 
 // export type definition of API

@@ -442,6 +442,26 @@ export const computeArrayCollectionDiff = (
   return rows;
 };
 
+/**
+ * True when the new values genuinely differ from the published content, using
+ * the same normalized diff the publish dialog renders. Used at draft-save sites
+ * to avoid persisting no-op drafts (e.g. an edit reverted back to the original),
+ * which otherwise leave a phantom "unpublished change" behind.
+ */
+export const entryHasChanges = (
+  fields: Field[],
+  oldContentObject: Record<string, unknown> | null | undefined,
+  newValues: Record<string, unknown> | null | undefined
+): boolean => computeEntryDiff(fields, oldContentObject, newValues).length > 0;
+
+/** Array-collection counterpart of `entryHasChanges`. */
+export const arrayCollectionHasChanges = (
+  itemFields: Field[],
+  oldArray: unknown[],
+  newArray: unknown[]
+): boolean =>
+  computeArrayCollectionDiff(itemFields, oldArray, newArray).length > 0;
+
 /** Format a diff value for display (tooltips, diff rows). */
 export const formatDiffValue = (value: unknown, maxLength = 300): string => {
   if (value === undefined || value === null || value === "") return "(empty)";

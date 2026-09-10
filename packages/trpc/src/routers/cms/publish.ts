@@ -230,6 +230,7 @@ export const publishRouter = createTRPCRouter({
               content: z.any(),
               sha: z.string().nullable().optional(),
               isNew: z.boolean().optional(),
+              deleted: z.boolean().optional(),
             })
           )
           .min(1, `"files" must be a non-empty array.`)
@@ -332,6 +333,26 @@ export const publishRouter = createTRPCRouter({
               400
             );
 
+          // A delete carries no content — the file is removed in the commit.
+          // Only directory-collection entries are deletable this way; array
+          // collections drop items by rewriting the whole file, and the shared
+          // page/site JSON is never removed, only rewritten.
+          if (file.deleted) {
+            if (!inCollection)
+              throw createHttpError(
+                `"${normalizedPath}" cannot be deleted — only collection entries can.`,
+                400
+              );
+            entries.push({
+              path: normalizedPath,
+              sha: file.sha ?? null,
+              isNew: false,
+              deleted: true,
+              stringified: "",
+            });
+            continue;
+          }
+
           let stringified: string;
           if (normalizedPath.endsWith(".json")) {
             const mustBeArray = arrayCollectionPaths.has(normalizedPath);
@@ -392,7 +413,10 @@ export const publishRouter = createTRPCRouter({
         const fileNames = entries
           .map((entry) => entry.path.split("/").pop())
           .join(", ");
-        const message = `content: update ${fileNames} — by ${editorName}`;
+        const verb = entries.every((entry) => entry.deleted)
+          ? "remove"
+          : "update";
+        const message = `content: ${verb} ${fileNames} — by ${editorName}`;
 
         const result = await commitFilesAtomic({
           octokit,

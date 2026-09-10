@@ -48,8 +48,29 @@ import {
   getDraft,
   saveDraftOrThrow,
   useDrafts,
+  useDraftsStore,
 } from "@/lib/store/drafts";
 import { repoPath } from "@/lib/paths";
+import { inferFields } from "@/lib/engine/infer";
+import { entryHasChanges } from "@/lib/entry-diff";
+import type { Field } from "@workspace/cms-core/types/field";
+
+/**
+ * True when `next` genuinely differs from the published `base`, using the same
+ * normalized, inference-driven diff the publish dialog renders. Fields are
+ * inferred from the union of both shapes so an added/removed key is still seen.
+ * Used to keep draft/dirty state content-based: a value reverted to its
+ * original leaves nothing behind.
+ */
+const contentDiffers = (
+  base: Record<string, unknown>,
+  next: Record<string, unknown>
+): boolean =>
+  entryHasChanges(
+    inferFields({ ...base, ...next }) as unknown as Field[],
+    base,
+    next
+  );
 
 /** Controlled state for the full-screen CMS entry-management overlay. */
 export type CmsOverlayState = { open: boolean; collection?: string };
@@ -210,8 +231,12 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const pagesMissing = isV2 && pagesContentQuery.isError;
 
   // variables + seo ride inline on the manifest (the root _site.json).
-  const variablesContent: Record<string, unknown> =
-    (manifest?.object.variables as Record<string, unknown> | undefined) ?? {};
+  // Memoized so it's a stable dependency for the hooks that diff against it.
+  const variablesContent: Record<string, unknown> = useMemo(
+    () =>
+      (manifest?.object.variables as Record<string, unknown> | undefined) ?? {},
+    [manifest]
+  );
   const variablesSha = manifest?.sha ?? null;
   const variablesReady = Boolean(manifest);
 
@@ -279,23 +304,31 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     if (pagesData) {
       const base = pagesData.contentObject as Record<string, unknown>;
       pagesBaseRef.current = base;
-      const draft = getDraft(owner, repo, branch, manifest.object.paths.pages);
+      const pagesPath = manifest.object.paths.pages;
+      const draft = getDraft(owner, repo, branch, pagesPath);
+      // Prune a pre-existing draft that no longer differs from published (e.g.
+      // an edit that was reverted before this content-based check existed). Uses
+      // the same whole-file normalized diff as the publish dialog.
+      if (
+        draft &&
+        !contentDiffers(base, draft.values as Record<string, unknown>)
+      ) {
+        useDraftsStore.getState().deleteDraft(draftKey(owner, repo, branch, pagesPath));
+      }
+      const livePagesDraft = getDraft(owner, repo, branch, pagesPath);
       for (const entry of entryMap.routes) {
         if (entry.name === SITE_ENTRY || copiesRef.current.has(entry.name))
           continue;
         const draftSlice = (
-          draft?.values as Record<string, unknown> | undefined
+          livePagesDraft?.values as Record<string, unknown> | undefined
         )?.[entry.name] as Record<string, unknown> | undefined;
         const baseSlice = (base[entry.name] ?? {}) as Record<string, unknown>;
         copiesRef.current.set(entry.name, {
           entry,
-          sha: draft?.sha ?? pagesData.sha ?? null,
+          sha: livePagesDraft?.sha ?? pagesData.sha ?? null,
           values: draftSlice ?? baseSlice,
         });
-        if (
-          draftSlice &&
-          JSON.stringify(draftSlice) !== JSON.stringify(baseSlice)
-        ) {
+        if (draftSlice && contentDiffers(baseSlice, draftSlice)) {
           dirtyRef.current.add(entry.name);
         }
         changed = true;
@@ -304,23 +337,36 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     if (variablesReady && !copiesRef.current.has(SITE_ENTRY)) {
       const siteEntry = entryMap.byName.get(SITE_ENTRY);
       if (siteEntry) {
-        const draft = getDraft(
-          owner,
-          repo,
-          branch,
-          manifest.object.paths.variables
-        );
+        const variablesPath = manifest.object.paths.variables;
+        const draft = getDraft(owner, repo, branch, variablesPath);
         // The shared _site.json draft holds `{ variables, seo }` — the variables
         // slice is our working copy.
-        const draftVariables = (
-          draft?.values as Record<string, unknown> | undefined
-        )?.variables as Record<string, unknown> | undefined;
+        const draftValues = draft?.values as
+          | Record<string, unknown>
+          | undefined;
+        const draftVariables = draftValues?.variables as
+          | Record<string, unknown>
+          | undefined;
+        const variablesChanged = Boolean(
+          draftVariables && contentDiffers(variablesContent, draftVariables)
+        );
+        // Prune a stale site draft whose only content is a reverted (no-op)
+        // variables slice and nothing else pending (no seo).
+        if (
+          draft &&
+          !variablesChanged &&
+          !("seo" in (draftValues ?? {}))
+        ) {
+          useDraftsStore
+            .getState()
+            .deleteDraft(draftKey(owner, repo, branch, variablesPath));
+        }
         copiesRef.current.set(SITE_ENTRY, {
           entry: siteEntry,
           sha: draft?.sha ?? variablesSha,
           values: draftVariables ?? variablesContent ?? {},
         });
-        if (draftVariables) dirtyRef.current.add(SITE_ENTRY);
+        if (variablesChanged) dirtyRef.current.add(SITE_ENTRY);
         changed = true;
       }
     }
@@ -440,10 +486,32 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
    * Persist an entry's working copy to the drafts store. Legacy: one draft
    * per content file. v2: page entries are slices of the shared _pages.json.
    */
+  // Recompute whether a single entry's working copy differs from its published
+  // base, keeping dirtyRef content-based: an edit reverted to the original value
+  // clears the flag (and, via persistEntryDraft, the underlying draft).
+  const recomputeDirty = useCallback(
+    (entry: EntryRoute) => {
+      const copy = copiesRef.current.get(entry.name);
+      if (!copy) return;
+      const base =
+        entry.name === SITE_ENTRY
+          ? variablesContent
+          : ((pagesBaseRef.current?.[entry.name] ?? {}) as Record<
+              string,
+              unknown
+            >);
+      if (contentDiffers(base, copy.values as Record<string, unknown>))
+        dirtyRef.current.add(entry.name);
+      else dirtyRef.current.delete(entry.name);
+    },
+    [variablesContent]
+  );
+
   const persistEntryDraft = useCallback(
     (entry: EntryRoute) => {
       const copy = copiesRef.current.get(entry.name);
       if (!copy) return;
+      const deleteDraft = useDraftsStore.getState().deleteDraft;
       if (isV2 && manifest && entry.name !== SITE_ENTRY) {
         const pageValues = new Map<string, Record<string, unknown>>();
         for (const route of entryMap.routes) {
@@ -456,13 +524,22 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
             pageValues.set(route.name, pageCopy.values);
         }
         const pagesPath = manifest.object.paths.pages;
-        saveDraftOrThrow(draftKey(owner, repo, branch, pagesPath), {
+        const key = draftKey(owner, repo, branch, pagesPath);
+        const base = pagesBaseRef.current ?? {};
+        const assembled = assemblePagesDraft(pagesBaseRef.current, pageValues);
+        // No net difference from published → drop the draft entirely so the
+        // Publish badge, dialog and page dots don't show a phantom change.
+        if (!contentDiffers(base, assembled)) {
+          deleteDraft(key);
+          return;
+        }
+        saveDraftOrThrow(key, {
           v: 1,
           path: pagesPath,
           schemaName: "$pages",
           sha: copy.sha,
           isNew: false,
-          values: assemblePagesDraft(pagesBaseRef.current, pageValues),
+          values: assembled,
           savedAt: Date.now(),
           title: "Pages",
         });
@@ -473,23 +550,35 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       // publish then merges the whole thing over the live cms.
       if (isV2 && manifest && entry.name === SITE_ENTRY) {
         const sitePath = manifest.object.paths.site;
+        const key = draftKey(owner, repo, branch, sitePath);
         const existing =
           (getDraft(owner, repo, branch, sitePath)?.values as
             | Record<string, unknown>
             | undefined) ?? {};
-        saveDraftOrThrow(draftKey(owner, repo, branch, sitePath), {
+        const merged: Record<string, unknown> = { ...existing };
+        // Only carry the variables slice while it actually differs; dropping it
+        // on revert keeps a pending seo slice alive but clears the draft when
+        // nothing is left to publish.
+        if (contentDiffers(variablesContent, copy.values as Record<string, unknown>))
+          merged.variables = copy.values;
+        else delete merged.variables;
+        if (Object.keys(merged).length === 0) {
+          deleteDraft(key);
+          return;
+        }
+        saveDraftOrThrow(key, {
           v: 1,
           path: sitePath,
           schemaName: SITE_ENTRY,
           sha: copy.sha,
           isNew: false,
-          values: { ...existing, variables: copy.values },
+          values: merged,
           savedAt: Date.now(),
           title: "Site",
         });
       }
     },
-    [isV2, manifest, entryMap, owner, repo, branch]
+    [isV2, manifest, entryMap, owner, repo, branch, variablesContent]
   );
 
   const commitEdit = useCallback(
@@ -527,7 +616,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         value = parsed;
       }
       copy.values = setValueAtPath(copy.values, fieldPath, value);
-      dirtyRef.current.add(entry.name);
+      recomputeDirty(entry);
       try {
         persistEntryDraft(entry);
       } catch (error) {
@@ -539,7 +628,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       setCopiesVersion((version) => version + 1);
       propagate(entry.name, fieldPath, String(value), framePath);
     },
-    [entryMap, persistEntryDraft, propagate, pagesMissing]
+    [entryMap, persistEntryDraft, propagate, pagesMissing, recomputeDirty]
   );
 
   const handleGroupOp = useCallback(
@@ -594,7 +683,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
 
       copy.values = setValueAtPath(copy.values, msg.path, next);
-      dirtyRef.current.add(resolved.entry.name);
+      recomputeDirty(resolved.entry);
       try {
         persistEntryDraft(resolved.entry);
       } catch (error) {
@@ -631,7 +720,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [entryMap, siteOrigin, persistEntryDraft]
+    [entryMap, siteOrigin, persistEntryDraft, recomputeDirty]
   );
 
   const reconcileFrameGroups = useCallback(

@@ -15,6 +15,8 @@ type CommitFileInput = {
   sha: string | null;
   isNew: boolean;
   stringified: string;
+  /** Remove this path in the commit instead of writing `stringified`. */
+  deleted?: boolean;
 };
 
 type CommitFilesResult =
@@ -60,6 +62,9 @@ export async function commitFilesAtomic({
   // Conflict check: compare each draft's base sha against the branch tree.
   const stalePaths: string[] = [];
   const conflictPaths: string[] = [];
+  // Delete drafts whose target is already gone upstream — nothing to commit,
+  // but not a conflict either (the desired end state already holds).
+  const skipPaths = new Set<string>();
 
   const baseTreeResponse = await octokit.rest.git.getTree({
     owner,
@@ -89,8 +94,10 @@ export async function commitFilesAtomic({
         }
       } catch (error: any) {
         if (error.status === 404) {
-          // Missing on GitHub: fine for new files, stale for existing ones.
-          if (!entry.isNew) stalePaths.push(entry.path);
+          // Missing on GitHub: fine for new files, already-done for deletes,
+          // stale for existing ones we meant to write.
+          if (entry.deleted) skipPaths.add(entry.path);
+          else if (!entry.isNew) stalePaths.push(entry.path);
         } else {
           throw error;
         }
@@ -106,6 +113,9 @@ export async function commitFilesAtomic({
       const currentSha = blobShaByPath.get(entry.path);
       if (entry.isNew) {
         if (currentSha) conflictPaths.push(entry.path);
+      } else if (entry.deleted && !currentSha) {
+        // Already gone upstream — the delete is a no-op, not a conflict.
+        skipPaths.add(entry.path);
       } else if (currentSha !== entry.sha) {
         stalePaths.push(entry.path);
       }
@@ -116,17 +126,36 @@ export async function commitFilesAtomic({
     return { status: "conflict", stalePaths, conflictPaths };
   }
 
-  // One tree, one commit for all files (inline content — no createBlob).
+  const filesToCommit = files.filter((entry) => !skipPaths.has(entry.path));
+
+  // Every change was a delete of an already-gone file — the branch is already
+  // in the desired state. Return success (no commit) so the drafts still clear.
+  if (filesToCommit.length === 0) {
+    return { status: "success", commitSha: headSha, files: [] };
+  }
+
+  // One tree, one commit for all files (inline content — no createBlob). A
+  // deleted entry is written as a tree node with `sha: null`, which removes the
+  // path from the base tree.
   const newTreeResponse = await octokit.rest.git.createTree({
     owner,
     repo,
     base_tree: baseTreeSha,
-    tree: files.map((entry) => ({
-      path: entry.path,
-      mode: "100644" as const,
-      type: "blob" as const,
-      content: entry.stringified,
-    })),
+    tree: filesToCommit.map((entry) =>
+      entry.deleted
+        ? {
+            path: entry.path,
+            mode: "100644" as const,
+            type: "blob" as const,
+            sha: null,
+          }
+        : {
+            path: entry.path,
+            mode: "100644" as const,
+            type: "blob" as const,
+            content: entry.stringified,
+          }
+    ),
   });
 
   const newCommitResponse = await octokit.rest.git.createCommit({
@@ -173,7 +202,15 @@ export async function commitFilesAtomic({
   const commitTimestamp = Date.now();
   const publishedFiles: Array<{ path: string; sha: string }> = [];
 
-  for (const entry of files) {
+  for (const entry of filesToCommit) {
+    if (entry.deleted) {
+      await updateFileCache("collection", owner, repo, branch, {
+        type: "delete",
+        path: entry.path,
+        commit: { sha: newCommitSha, timestamp: commitTimestamp },
+      });
+      continue;
+    }
     const published = publishedShaByPath.get(entry.path);
     if (!published) continue;
     publishedFiles.push({ path: entry.path, sha: published.sha });

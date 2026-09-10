@@ -71,6 +71,10 @@ export const urls: Record<Lowercase<ProjectType>, string> = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173"
       : "https://saaskit.alisamadii.com",
+  leads:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3008"
+      : "https://leads.alisamadii.com",
 };
 
 const ALLOWED_REDIRECT_ORIGINS = new Set(

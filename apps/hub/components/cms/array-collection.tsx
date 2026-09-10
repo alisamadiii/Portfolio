@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
 import {
   closestCenter,
@@ -28,6 +28,17 @@ import { initializeState } from "@workspace/cms-core/schema";
 import type { Field } from "@workspace/cms-core/types/field";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -45,6 +56,7 @@ import {
 } from "@/lib/engine/collections";
 import { entryFieldsFromValue } from "@/lib/engine/entry-schema";
 import { mergeItems } from "@/lib/engine/infer";
+import { arrayCollectionHasChanges } from "@/lib/entry-diff";
 import {
   draftKey,
   getDraft,
@@ -149,10 +161,29 @@ export function ArrayCollection({
     return [...inferred, ...declaredMissing];
   }, [items, collection, schema]);
 
+  // Self-heal a pre-existing no-op draft: once the published file loads, if the
+  // stored draft is identical to it, discard the draft so the "Draft" badge and
+  // Publish count clear without needing another edit.
+  useEffect(() => {
+    if (!draft || fileMissing || !fileQuery.data) return;
+    if (!Array.isArray(draft.values)) return;
+    if (!arrayCollectionHasChanges(itemFields, remoteItems, draft.values as Item[])) {
+      deleteDraftFromStore(draftKey(owner, repo, branch, collection.path));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, fileMissing, fileQuery.data, remoteItems, itemFields]);
+
   const commitItems = (next: Item[]) => {
     if (!config) return;
     const key = draftKey(owner, repo, branch, collection.path);
     const existing = getDraft(owner, repo, branch, collection.path);
+    // No net difference from the published file → drop the draft so the "Draft"
+    // badge and Publish count don't linger after edits are reverted. New files
+    // (nothing published yet) always keep their draft.
+    if (!fileMissing && !arrayCollectionHasChanges(itemFields, remoteItems, next)) {
+      if (existing) deleteDraftFromStore(key);
+      return;
+    }
     try {
       saveDraftOrThrow(key, {
         v: 1,
@@ -296,6 +327,38 @@ export function ArrayCollection({
         />
       </div>
       <div className="bg-background flex shrink-0 gap-2 border-t p-4">
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive shrink-0"
+                aria-label="Delete item"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            }
+          />
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+              <AlertDialogDescription>
+                It's removed from your site when you publish. Until then you can
+                restore it by discarding the collection draft.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={() => editing !== null && handleDelete(editing)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Button variant="outline" onClick={() => setEditing(null)}>
           Cancel
         </Button>

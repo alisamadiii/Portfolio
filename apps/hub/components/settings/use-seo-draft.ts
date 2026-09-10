@@ -7,7 +7,14 @@ import type { Field } from "@workspace/cms-core/types/field";
 
 import { useConfig } from "@/contexts/config-context";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
-import { draftKey, getDraft, saveDraftOrThrow } from "@/lib/store/drafts";
+import {
+  draftKey,
+  getDraft,
+  saveDraftOrThrow,
+  useDraftsStore,
+} from "@/lib/store/drafts";
+import { entryHasChanges } from "@/lib/entry-diff";
+import { inferFields } from "@/lib/engine/infer";
 
 /** The seo.json shape the hub reads/writes. Both slices are schema-less bags. */
 export type SeoDocument = {
@@ -78,15 +85,47 @@ export function useSeoDraft() {
     (next: SeoDocument) => {
       if (!seoPath) return;
       try {
+        const key = draftKey(owner, repo, branch, seoPath);
+        const existing =
+          (getDraft(owner, repo, branch, seoPath)?.values as
+            | Record<string, unknown>
+            | undefined) ?? {};
+        // Reverted to the committed seo → drop the seo slice; if nothing else
+        // is pending in the shared _site.json draft, remove the draft entirely
+        // so the Publish count doesn't linger with no real change.
+        const committedSeo =
+          (manifest?.object.seo as Record<string, unknown> | undefined) ?? {};
+        const nextSeo = next as unknown as Record<string, unknown>;
+        const seoChanged = entryHasChanges(
+          inferFields({ ...committedSeo, ...nextSeo }) as unknown as Field[],
+          committedSeo,
+          nextSeo
+        );
+        if (!seoChanged) {
+          const rest = { ...existing };
+          delete rest.seo;
+          if (Object.keys(rest).length === 0) {
+            if (getDraft(owner, repo, branch, seoPath))
+              useDraftsStore.getState().deleteDraft(key);
+          } else {
+            saveDraftOrThrow(key, {
+              v: 1,
+              path: seoPath,
+              schemaName: "$seo",
+              sha: shaRef.current,
+              isNew: shaRef.current === null,
+              values: rest,
+              savedAt: Date.now(),
+              title: "SEO",
+            });
+          }
+          toast.success("No changes — draft cleared");
+          return;
+        }
         // Merge our seo slice into the shared _site.json draft so a pending
         // variables slice survives.
-        const values = {
-          ...((getDraft(owner, repo, branch, seoPath)?.values as
-            | Record<string, unknown>
-            | undefined) ?? {}),
-          seo: next,
-        };
-        saveDraftOrThrow(draftKey(owner, repo, branch, seoPath), {
+        const values = { ...existing, seo: next };
+        saveDraftOrThrow(key, {
           v: 1,
           path: seoPath,
           schemaName: "$seo",
@@ -103,7 +142,7 @@ export function useSeoDraft() {
         );
       }
     },
-    [owner, repo, branch, seoPath]
+    [owner, repo, branch, seoPath, manifest]
   );
 
   const saveSite = useCallback(

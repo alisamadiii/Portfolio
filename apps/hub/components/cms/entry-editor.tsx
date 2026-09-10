@@ -16,6 +16,17 @@ import {
 } from "@workspace/cms-core/utils/file";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -30,10 +41,12 @@ import {
 } from "@/lib/store/drafts";
 
 import { entryFieldsFromValue } from "@/lib/engine/entry-schema";
+import { entryHasChanges } from "@/lib/entry-diff";
+import type { Field } from "@workspace/cms-core/types/field";
 
 import type { EntrySheetMode } from "@/components/cms/entry-sheet";
 import { EntryForm } from "@/components/entry/entry-form";
-import { Loader2, X } from "@/components/icon";
+import { Loader2, Trash2, X } from "@/components/icon";
 
 /**
  * Full inline entry editor — takes over the CMS content pane for creating and
@@ -207,6 +220,29 @@ export function EntryEditor({
       const title = typeof rawTitle === "string" ? rawTitle : undefined;
 
       if (isEdit) {
+        const serverSide =
+          schema.list === true
+            ? { listWrapper: fetched?.contentObject }
+            : ((fetched?.contentObject ?? {}) as Record<string, unknown>);
+        const draftSide =
+          schema.list === true ? { listWrapper: unwrapped } : unwrapped;
+        // Reverted to published content → clear the draft instead of saving a
+        // no-op that keeps the Draft badge / Publish count lit.
+        if (
+          fetched &&
+          !entryHasChanges(
+            entryFields as unknown as Field[],
+            serverSide as Record<string, unknown>,
+            draftSide as Record<string, unknown>
+          )
+        ) {
+          const key = draftKey(config.owner, config.repo, config.branch, editPath);
+          if (getDraft(config.owner, config.repo, config.branch, editPath))
+            deleteDraft(key);
+          toast.success("No changes — draft cleared");
+          setResetSignal((signal) => signal + 1);
+          return;
+        }
         saveDraftOrThrow(
           draftKey(config.owner, config.repo, config.branch, editPath),
           {
@@ -281,6 +317,53 @@ export function EntryEditor({
     }
   };
 
+  // A never-published entry (a "new" draft — whether opened via kind:"new" or,
+  // as CollectionV2 does, reopened as kind:"edit") has nothing on GitHub, so
+  // deleting it just drops the local draft. A published entry instead becomes a
+  // "delete draft": removed in the next publish commit, restorable by
+  // discarding the draft before then.
+  const isUnpublishedDraft = isEdit ? editDraft?.isNew === true : true;
+
+  const handleDelete = () => {
+    try {
+      if (isUnpublishedDraft) {
+        const key = isEdit
+          ? draftKey(config.owner, config.repo, config.branch, editPath)
+          : newDraft?.key;
+        if (key) deleteDraft(key);
+        toast.success("Draft discarded");
+        onClose();
+        return;
+      }
+      saveDraftOrThrow(
+        draftKey(config.owner, config.repo, config.branch, editPath),
+        {
+          v: 1,
+          path: editPath,
+          schemaName,
+          sha: editDraft?.sha ?? fetched?.sha ?? null,
+          isNew: false,
+          values: (fetched?.contentObject as Record<string, unknown>) ?? {},
+          savedAt: Date.now(),
+          title: editDraft?.title,
+          deleted: true,
+        }
+      );
+      toast.success("Marked for deletion — publish to remove it");
+      onClose();
+    } catch (error: any) {
+      toast.error(error?.message || "Could not delete this entry.");
+    }
+  };
+
+  // Unpublished drafts are always deletable (just a local discard). A published
+  // entry waits for its fetched sha before it can be staged for deletion. A
+  // brand-new kind:"new" with nothing entered yet has no draft — Cancel covers it.
+  const canDelete =
+    canEdit &&
+    !saving &&
+    (isUnpublishedDraft ? isEdit || Boolean(newDraft) : Boolean(fetched));
+
   const loading =
     (isEdit && (entryQuery.isLoading || entryFields.length === 0) && !contentObject) ||
     (!isEdit && Boolean(templateLoading));
@@ -335,6 +418,37 @@ export function EntryEditor({
 
       {/* Footer */}
       <div className="bg-background flex shrink-0 gap-2 border-t p-4">
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive shrink-0"
+                disabled={!canDelete}
+                aria-label="Delete entry"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            }
+          />
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {isUnpublishedDraft
+                  ? "This unpublished draft will be discarded."
+                  : "It's removed from your site when you publish. Until then you can restore it by discarding the draft."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>

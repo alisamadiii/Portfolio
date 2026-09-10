@@ -111,6 +111,7 @@ export const projectsTypeValues = [
   "ADMIN",
   "SAASKIT",
   "CMS",
+  "LEADS",
 ] as const;
 export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
 
