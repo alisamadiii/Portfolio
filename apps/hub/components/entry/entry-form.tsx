@@ -97,8 +97,18 @@ import {
   sanitizeObject,
 } from "@workspace/cms-core/schema";
 
+import { GalleryField } from "./gallery-field";
 import { useChangedField } from "./changed-fields-context";
 import { usePreview } from "./preview-context";
+
+/**
+ * A `gallery` field — a scalar-string list of image URLs — gets the thumbnail
+ * grid + media-library editor instead of the plain text-input list.
+ */
+const isGalleryField = (field: FieldWithReadonlyMeta): boolean =>
+  field.list === true &&
+  field.type === "string" &&
+  field.name?.toLowerCase() === "gallery";
 
 /**
  * Form layout. "stacked" (default) = label-above, used by the CMS entry drawer
@@ -1391,6 +1401,15 @@ const EntryForm = ({
           (typeof effectiveField.list === "object" &&
             effectiveField.list !== null)
         ) {
+          if (isGalleryField(effectiveField)) {
+            return (
+              <GalleryField
+                key={currentFieldKey}
+                field={effectiveField}
+                fieldName={currentFieldName}
+              />
+            );
+          }
           return (
             <ListField
               key={currentFieldKey}

@@ -30,6 +30,11 @@ import { toast } from "sonner";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@workspace/ui/components/resizable";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -132,6 +137,11 @@ export function ArrayCollection({
   const itemFields = useMemo<Field[]>(() => {
     if (items.length === 0) return schema.fields as Field[];
     const inferred = entryFieldsFromValue(mergeItems(items), collection.fields);
+    // Only a collection that DECLARES fields gets its unfilled ones appended.
+    // Discovered collections carry no real declaration — `schema.fields` is the
+    // synthetic DEFAULT_FIELDS fallback (a required `title`), which must not
+    // leak into a non-empty collection whose shape is fully inferred from data.
+    if (!collection.fields.length) return inferred;
     const names = new Set(inferred.map((field) => field.name));
     const declaredMissing = (schema.fields as Field[]).filter(
       (field) => !names.has(field.name)
@@ -212,6 +222,90 @@ export function ArrayCollection({
   const editingItem =
     editing !== null && editing < items.length ? items[editing] : null;
 
+  const itemsList = (
+    <div className="scrollbar h-full w-full min-w-0 overflow-y-auto pb-10">
+      {fileQuery.isLoading ? (
+        <p className="text-muted-foreground py-12 text-center text-sm">
+          Loading items…
+        </p>
+      ) : items.length === 0 ? (
+        <p className="text-muted-foreground py-12 text-center text-sm">
+          No items yet — add the first one.
+        </p>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={items.map((_, i) => String(i))}
+            strategy={verticalListSortingStrategy}
+          >
+            <div>
+              <CollectionTableHeader columns={columns} template={template} />
+              {items.map((item, index) => (
+                <SortableRow
+                  key={index}
+                  id={String(index)}
+                  item={item}
+                  columns={columns}
+                  template={template}
+                  fallbackLabel={rowLabel(item, index)}
+                  active={editing === index}
+                  onOpen={() => setEditing(index)}
+                  onDelete={() => handleDelete(index)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
+    </div>
+  );
+
+  const editorPanel = editing !== null && editingItem && (
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 items-start gap-3 border-b px-4 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">
+            {rowLabel(editingItem, editing)}
+          </p>
+          <p className="text-muted-foreground truncate text-xs">
+            Saved on this device until you publish.
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-mr-1.5 size-7 shrink-0"
+          onClick={() => setEditing(null)}
+          aria-label="Close editor"
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
+      <div className="scrollbar flex-1 overflow-y-auto">
+        <EntryForm
+          key={editing}
+          formId="array-item-form"
+          fields={itemFields}
+          contentObject={editingItem}
+          onSubmit={(values) => handleSubmitItem(editing, values)}
+        />
+      </div>
+      <div className="bg-background flex shrink-0 gap-2 border-t p-4">
+        <Button variant="outline" onClick={() => setEditing(null)}>
+          Cancel
+        </Button>
+        <Button type="submit" form="array-item-form" className="flex-1">
+          Save item
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
@@ -226,92 +320,23 @@ export function ArrayCollection({
         </Button>
       </div>
 
-      <div className="flex min-h-0 flex-1">
-        <div className="scrollbar min-w-0 flex-1 overflow-y-auto px-5 pb-10">
-          {fileQuery.isLoading ? (
-            <p className="text-muted-foreground py-12 text-center text-sm">
-              Loading items…
-            </p>
-          ) : items.length === 0 ? (
-            <p className="text-muted-foreground py-12 text-center text-sm">
-              No items yet — add the first one.
-            </p>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={items.map((_, i) => String(i))}
-                strategy={verticalListSortingStrategy}
-              >
-                <div>
-                  <CollectionTableHeader
-                    columns={columns}
-                    template={template}
-                  />
-                  {items.map((item, index) => (
-                    <SortableRow
-                      key={index}
-                      id={String(index)}
-                      item={item}
-                      columns={columns}
-                      template={template}
-                      fallbackLabel={rowLabel(item, index)}
-                      active={editing === index}
-                      onOpen={() => setEditing(index)}
-                      onDelete={() => handleDelete(index)}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
-
-        {editing !== null && editingItem && (
-          <div className="flex w-[430px] shrink-0 flex-col border-l">
-            <div className="flex shrink-0 items-start gap-3 border-b px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">
-                  {rowLabel(editingItem, editing)}
-                </p>
-                <p className="text-muted-foreground truncate text-xs">
-                  Saved on this device until you publish.
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="-mr-1.5 size-7 shrink-0"
-                onClick={() => setEditing(null)}
-                aria-label="Close editor"
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-            <div className="scrollbar flex-1 overflow-y-auto">
-              <EntryForm
-                key={editing}
-                formId="array-item-form"
-                fields={itemFields}
-                contentObject={editingItem}
-                onSubmit={(values) => handleSubmitItem(editing, values)}
-              />
-            </div>
-            <div className="bg-background flex shrink-0 gap-2 border-t p-4">
-              <Button variant="outline" onClick={() => setEditing(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" form="array-item-form" className="flex-1">
-                Save item
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      {editing !== null && editingItem ? (
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId="cms-array-editor"
+          className="min-h-0 flex-1"
+        >
+          <ResizablePanel defaultSize={65} minSize={35} className="min-w-0">
+            {itemsList}
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={35} minSize={22} maxSize={55}>
+            {editorPanel}
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+        <div className="flex min-h-0 flex-1">{itemsList}</div>
+      )}
     </div>
   );
 }
