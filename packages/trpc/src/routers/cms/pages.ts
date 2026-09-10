@@ -6,7 +6,7 @@ import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
 import { resolveRepoId } from "../../lib/cms/repo-id";
-import { getWebsiteUrlsByRepoId } from "../../lib/vercel/domains";
+import { getWebsiteUrlsByRepoId } from "../../lib/domain";
 
 /**
  * Page discovery for the canvas view. The single source of truth is

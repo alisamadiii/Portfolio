@@ -15,7 +15,7 @@ import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { syncOrgRepos } from "@workspace/trpc/lib/cms/org-repos";
 import { getToken } from "@workspace/trpc/lib/cms/token";
-import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/vercel/domains";
+import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/domain";
 
 // Org repo listing shared by `listRepos` (admin picker) and the admin path of
 // `listMine`. Seeds the table on first read after deploy so it's never empty.

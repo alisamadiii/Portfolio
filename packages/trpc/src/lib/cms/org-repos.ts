@@ -80,9 +80,9 @@ const fetchOrgRepos = async (): Promise<OrgRepo[]> => {
 };
 
 // Full reconcile: upsert every org repo by GitHub id, drop rows no longer in
-// the org. Per-repo settings (basePath, mediaProvider, freeLife,
-// vercelProjectId) are intentionally absent from the conflict set() below so
-// they survive every re-sync.
+// the org. Per-repo settings (basePath, mediaProvider, freeLife) are
+// intentionally absent from the conflict set() below so they survive every
+// re-sync.
 const syncOrgRepos = async () => {
   const repos = await fetchOrgRepos();
   const syncedAt = new Date();

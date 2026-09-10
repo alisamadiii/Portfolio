@@ -5,7 +5,7 @@ import { collaboratorProcedure, createTRPCRouter } from "../../init";
 
 import { db as cmsDb, orgRepoTable } from "@workspace/trpc/lib/cms/db";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/vercel/domains";
+import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/domain";
 
 // The live website URL is derived from the repo's Vercel domains (cms_domain,
 // kept in sync by the Vercel webhook). Status is derived by pinging it.

@@ -31,9 +31,9 @@ function readCache(owner?: string, repo?: string): Cached | null {
 
 function writeCache(owner: string, repo: string, url: string | null) {
   if (typeof window === "undefined") return;
-  // Only cache a resolved URL. Caching a `null` (domain not linked / not yet
-  // synced) would let a transient "missing" shadow a later real value for the
-  // whole TTL, so previews would stay broken until something else refetched.
+  // Only cache a resolved URL. Caching a `null` (no domain added yet) would let
+  // a transient "missing" shadow a later real value for the whole TTL, so
+  // previews would stay broken until something else refetched.
   if (!url) return;
   try {
     const value: Cached = { url, ts: Date.now() };
@@ -54,8 +54,8 @@ export type WebsiteUrlStatus = "loading" | "ready" | "missing";
  * URL (< 20 min old) seeds `initialData` so there's an instant value and no
  * spinner, and `staleTime` keeps the network query from actually running while
  * that seed is fresh. The query stays **enabled** regardless, so a cache miss
- * (or a project whose domain was linked/synced after the last visit) resolves
- * on its own — without needing the Domains panel to fetch first. React Query
+ * (or a project whose domain was added after the last visit) resolves on its
+ * own — without needing the Domains panel to fetch first. React Query
  * dedupes by key, so many callers on one screen share a single request.
  */
 export function useWebsiteUrl(): {
@@ -70,7 +70,7 @@ export function useWebsiteUrl(): {
   const cached = readCache(owner, repo);
 
   const { data, isSuccess, isError } = useQuery(
-    trpc.vercel.domains.list.queryOptions(
+    trpc.domain.list.queryOptions(
       { owner: owner ?? "", repo: repo ?? "" },
       {
         enabled: !!owner && !!repo,
@@ -79,7 +79,6 @@ export function useWebsiteUrl(): {
         ...(cached
           ? {
               initialData: {
-                linked: true as const,
                 domains: [],
                 websiteUrl: cached.url,
               },

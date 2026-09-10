@@ -98,7 +98,10 @@ const home = pages.home;
 // Per-reason-code fix recipes.
 // ---------------------------------------------------------------------------
 
-export const REASON_RECIPES: Record<ReasonCode, { title: string; recipe: string }> = {
+export const REASON_RECIPES: Record<
+  ReasonCode,
+  { title: string; recipe: string }
+> = {
   R0: {
     title: "File reverted — automated edit failed verification",
     recipe:
@@ -214,7 +217,20 @@ export default defineConfig({
 // Writer
 // ---------------------------------------------------------------------------
 
-const ORDER: ReasonCode[] = ["R0", "R12", "R3", "R8", "R5", "R2", "R1", "R4", "R9", "R7", "R10", "R6"];
+const ORDER: ReasonCode[] = [
+  "R0",
+  "R12",
+  "R3",
+  "R8",
+  "R5",
+  "R2",
+  "R1",
+  "R4",
+  "R9",
+  "R7",
+  "R10",
+  "R6",
+];
 
 export function buildReport(
   analyses: PageAnalysis[],
@@ -250,7 +266,9 @@ export function buildReport(
   lines.push("");
 
   if (items.length === 0) {
-    lines.push("Nothing to do — every scanned element is either CMS-wired or intentionally out of scope. ✅");
+    lines.push(
+      "Nothing to do — every scanned element is either CMS-wired or intentionally out of scope. ✅"
+    );
   }
 
   for (const code of ORDER) {
@@ -262,8 +280,12 @@ export function buildReport(
     lines.push(recipe.recipe);
     lines.push("");
     for (const item of list) {
-      const suggestion = item.suggestedKey ? ` → suggested key: \`${item.suggestedKey}\`` : "";
-      lines.push(`- \`${item.file}:${item.line}\` — \`${item.excerpt.replace(/`/g, "'")}\`${suggestion}${item.note ? ` — ${item.note}` : ""}`);
+      const suggestion = item.suggestedKey
+        ? ` → suggested key: \`${item.suggestedKey}\``
+        : "";
+      lines.push(
+        `- \`${item.file}:${item.line}\` — \`${item.excerpt.replace(/`/g, "'")}\`${suggestion}${item.note ? ` — ${item.note}` : ""}`
+      );
     }
     lines.push("");
   }

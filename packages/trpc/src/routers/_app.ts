@@ -5,6 +5,7 @@ import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
 import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
+import { domainRouter } from "./domain";
 import { emailsRouter } from "./emails";
 import { paymentsRouter } from "./payments";
 import { productsRouter } from "./products";
@@ -12,7 +13,6 @@ import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
 import { uploadsRouter } from "./uploads";
 import { usersRouter } from "./users";
-import { vercelRouter } from "./vercel/index";
 import { websitesRouter } from "./stripe/websites";
 
 export const appRouter = createTRPCRouter({
@@ -27,7 +27,7 @@ export const appRouter = createTRPCRouter({
   contact: contactRouter,
   emails: emailsRouter,
   cms: cmsRouter,
-  vercel: vercelRouter,
+  domain: domainRouter,
   websites: websitesRouter,
 });
 

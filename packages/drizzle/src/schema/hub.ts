@@ -135,21 +135,12 @@ export const hubProject = pgTable(
     // for logic, and drizzle-kit push mishandles adding an enum-typed column
     // to an existing table.
     mediaProvider: text("media_provider").notNull().default("imagekit"),
-    // DEPRECATED: replaced by the derived URL from hub_domain (Vercel-synced).
-    // No code reads this anymore — kept only to compare against the derived
-    // URLs after the first domain backfill (vercel.domains.syncAll). Drop the
-    // column + push once parity is confirmed.
-    websiteUrl: text("website_url"),
     // Agency-granted free-for-life access. When true, the hub gate is bypassed
     // for this project for every user (no subscription, no Stripe), and Billing
     // shows a gratitude panel. Set directly in the DB (no admin UI). Like the
     // other per-project settings, it is intentionally absent from syncOrgRepos'
     // onConflict set() so it survives every GitHub webhook re-sync.
     freeLife: boolean("free_life").notNull().default(false),
-    // Cached Vercel project id, auto-discovered by matching the project's
-    // GitHub link (GET /v9/projects → link.repoId === repoId). Also absent from
-    // syncOrgRepos' onConflict set() so it survives GitHub webhook re-syncs.
-    vercelProjectId: text("vercel_project_id"),
     // Blog sync state: the Blog tab shows an "unpublished changes" banner when
     // blogEditedAt > blogPublishedAt. Edited is stamped on every blog CRUD
     // mutation (including deletes, which max(updatedAt) could never detect);
@@ -173,35 +164,24 @@ export const hubProject = pgTable(
   })
 );
 
-// Vercel project domains, one row per (repo, domain) — including *.vercel.app.
-// Source of truth is the Vercel API; rows are replaced wholesale by
-// syncDomainsForRepo (state-sync, same pattern as the Stripe webhook). The
-// live site URL shown across the hub is derived from these rows.
+// Project domains, one row per (repo, domain). The hub DB is the source of
+// truth — domains are plain metadata the client points at their own host; there
+// is no provider integration, verification, or DNS-record generation. Exactly
+// one row per repo is flagged `isPrimary` (canonical/display); the live site URL
+// shown across the hub is derived from it.
 export const hubDomain = pgTable(
   "hub_domain",
   {
     id: serial("id").primaryKey(),
     // = hubProject.repoId (GitHub-stable)
     repoId: integer("repo_id").notNull(),
-    // Lowercased host, e.g. "acme.com" / "www.acme.com" / "acme.vercel.app"
+    // Lowercased host, e.g. "acme.com" / "www.acme.com"
     domain: text("domain").notNull(),
-    apexName: text("apex_name").notNull(),
-    verified: boolean("verified").notNull().default(false),
-    // From GET /v6/domains/{domain}/config — null until first config check.
-    misconfigured: boolean("misconfigured"),
-    redirect: text("redirect"),
-    redirectStatusCode: integer("redirect_status_code"),
-    // Null = production domain
-    gitBranch: text("git_branch"),
-    // Vercel `verification` array (TXT challenges) for the DNS instructions UI.
-    verification: jsonb("verification").$type<
-      { type: string; domain: string; value: string; reason: string }[]
-    >(),
-    // Raw /config response (recommendedCNAME/recommendedIPv4/…) — powers the
-    // A/CNAME instruction block without schema churn.
-    dnsConfig: jsonb("dns_config").$type<Record<string, unknown>>(),
-    vercelCreatedAt: timestamp("vercel_created_at"),
-    syncedAt: timestamp("synced_at").notNull().defaultNow(),
+    // The canonical domain for the project (used for the derived site URL). The
+    // first domain added to a repo becomes primary; setPrimary moves the flag.
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => ({
     uqHubDomainRepoDomainCi: uniqueIndex("uq_hub_domain_repo_domain_ci").on(
