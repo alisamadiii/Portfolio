@@ -13,6 +13,7 @@ export interface PlaceResult {
   types?: string[];
   primaryTypeDisplayName?: { text?: string };
   businessStatus?: string;
+  location?: { latitude?: number; longitude?: number };
 }
 
 const FIELD_MASK = [
@@ -27,6 +28,7 @@ const FIELD_MASK = [
   "places.types",
   "places.primaryTypeDisplayName",
   "places.businessStatus",
+  "places.location",
   "nextPageToken",
 ].join(",");
 
@@ -35,7 +37,8 @@ const MAX_PAGES = 3; // 3 × 20 = 60 results, the API's hard cap per query
 // Never throws after the first request fires — `apiCalls` must reach the
 // caller even on failure so every billed call is counted against the cap.
 export async function searchPlaces(
-  textQuery: string
+  textQuery: string,
+  near?: { lat: number; lng: number; radiusMeters: number }
 ): Promise<{ places: PlaceResult[]; apiCalls: number; error?: string }> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
@@ -59,6 +62,17 @@ export async function searchPlaces(
         body: JSON.stringify({
           textQuery,
           pageSize: 20,
+          ...(near
+            ? {
+                rankPreference: "DISTANCE",
+                locationBias: {
+                  circle: {
+                    center: { latitude: near.lat, longitude: near.lng },
+                    radius: near.radiusMeters,
+                  },
+                },
+              }
+            : {}),
           ...(pageToken ? { pageToken } : {}),
         }),
       });
@@ -115,6 +129,21 @@ export function isSocialOnly(website: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Great-circle distance in miles.
+export function distanceMiles(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number }
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const R = 3958.8; // earth radius, miles
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 // HEAD (fallback GET) with timeout; true = site unreachable/dead.

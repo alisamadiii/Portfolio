@@ -23,7 +23,9 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@workspace/ui/components/combobox";
+import { Label } from "@workspace/ui/components/label";
 import { Progress } from "@workspace/ui/components/progress";
+import { Switch } from "@workspace/ui/components/switch";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 
@@ -169,6 +171,7 @@ export const ScanDashboard = () => {
   const [niche, setNiche] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("FL");
+  const [nearMe, setNearMe] = useState(false);
 
   const scans = useQuery(trpc.leads.scan.list.queryOptions());
   const runScan = useMutation(trpc.leads.scan.run.mutationOptions());
@@ -176,7 +179,7 @@ export const ScanDashboard = () => {
   const handleScan = (e: React.FormEvent) => {
     e.preventDefault();
     runScan.mutate(
-      { niche, city, state },
+      nearMe ? { niche, nearMe } : { niche, city, state },
       {
         onSuccess: (result) => {
           queryClient.invalidateQueries({
@@ -212,20 +215,24 @@ export const ScanDashboard = () => {
               placeholder="Niche (e.g. plumbers)"
               className="flex-1"
             />
-            <SuggestInput
-              value={city}
-              onChange={setCity}
-              items={CITIES[state.trim().toUpperCase()] ?? []}
-              placeholder="City (e.g. Cape Coral)"
-              className="flex-1"
-            />
-            <SuggestInput
-              value={state}
-              onChange={setState}
-              items={STATES}
-              placeholder="State"
-              className="sm:max-w-28"
-            />
+            {!nearMe && (
+              <>
+                <SuggestInput
+                  value={city}
+                  onChange={setCity}
+                  items={CITIES[state.trim().toUpperCase()] ?? []}
+                  placeholder="City (e.g. Cape Coral)"
+                  className="flex-1"
+                />
+                <SuggestInput
+                  value={state}
+                  onChange={setState}
+                  items={STATES}
+                  placeholder="State"
+                  className="sm:max-w-28"
+                />
+              </>
+            )}
             <Button
               type="submit"
               disabled={runScan.isPending || usage?.scansLeft === 0}
@@ -238,6 +245,13 @@ export const ScanDashboard = () => {
               Scan
             </Button>
           </form>
+          <div className="mt-3 flex items-center gap-2">
+            <Switch id="near-me" checked={nearMe} onCheckedChange={setNearMe} />
+            <Label htmlFor="near-me" className="text-sm">
+              Near me — businesses within ~12 miles of home, closest first, for
+              in-person visits
+            </Label>
+          </div>
           {usage && (
             <div className="mt-4 space-y-1.5">
               <Progress

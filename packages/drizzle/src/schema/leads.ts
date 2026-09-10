@@ -20,6 +20,9 @@ export const leadScan = pgTable("lead_scan", {
   city: text("city").notNull(),
   state: text("state").notNull(),
 
+  // Scan searched around home base instead of a picked city.
+  nearMe: boolean("near_me").notNull().default(false),
+
   status: text("status").$type<LeadScanStatus>().notNull().default("pending"),
   totalFound: integer("total_found").notNull().default(0),
   noWebsiteCount: integer("no_website_count").notNull().default(0),
@@ -47,6 +50,9 @@ export const lead = pgTable(
     website: text("website"),
     socialOnly: boolean("social_only").notNull().default(false),
     websiteDead: boolean("website_dead").notNull().default(false),
+
+    // Miles from home base; only set on near-me scans.
+    distanceMiles: real("distance_miles"),
 
     rating: real("rating"),
     reviewCount: integer("review_count").notNull().default(0),

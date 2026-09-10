@@ -7,7 +7,22 @@ import { lead, leadScan } from "@workspace/drizzle/schema";
 import type { LeadStatus } from "@workspace/drizzle/schema";
 
 import { adminProcedure, createTRPCRouter } from "../init";
-import { isSocialOnly, isWebsiteDead, searchPlaces } from "../lib/places";
+import {
+  distanceMiles,
+  isSocialOnly,
+  isWebsiteDead,
+  searchPlaces,
+} from "../lib/places";
+
+// Home base for near-me scans (566 Kit St, Jacksonville FL 32216).
+const HOME = {
+  lat: 30.3048973,
+  lng: -81.5660117,
+  city: "Jacksonville",
+  state: "FL",
+  radiusMeters: 15_000, // bias circle ~9 mi
+  maxMiles: 12, // hard cutoff — close enough to drive to
+};
 
 // Google Places Enterprise SKU free tier. Scans are blocked before the
 // month's counted calls could cross this — nothing ever gets billed.
@@ -59,11 +74,16 @@ export const leadsRouter = createTRPCRouter({
   scan: createTRPCRouter({
     run: adminProcedure
       .input(
-        z.object({
-          niche: z.string().min(2).max(80),
-          city: z.string().min(2).max(80),
-          state: z.string().min(2).max(40),
-        })
+        z
+          .object({
+            niche: z.string().min(2).max(80),
+            city: z.string().max(80).optional(),
+            state: z.string().max(40).optional(),
+            nearMe: z.boolean().default(false),
+          })
+          .refine((data) => data.nearMe || (data.city && data.state), {
+            message: "City and state are required unless scanning near me",
+          })
       )
       .mutation(async ({ input }) => {
         // Hard stop before the free tier can be crossed — a scan may use up
@@ -76,16 +96,25 @@ export const leadsRouter = createTRPCRouter({
           });
         }
 
-        const query = `${input.niche} in ${input.city}, ${input.state}`;
+        const city = input.nearMe ? HOME.city : input.city!;
+        const state = input.nearMe ? HOME.state : input.state!;
+        const query = input.nearMe
+          ? input.niche
+          : `${input.niche} in ${city}, ${state}`;
 
         const [scan] = await db
           .insert(leadScan)
-          .values({ query: input.niche, city: input.city, state: input.state })
+          .values({ query: input.niche, city, state, nearMe: input.nearMe })
           .returning();
         if (!scan) throw new Error("Failed to create scan");
 
         try {
-          const { places, apiCalls, error } = await searchPlaces(query);
+          const { places, apiCalls, error } = await searchPlaces(
+            query,
+            input.nearMe
+              ? { lat: HOME.lat, lng: HOME.lng, radiusMeters: HOME.radiusMeters }
+              : undefined
+          );
 
           // Failed calls are still billed calls — persist the count, then bail.
           if (error) {
@@ -99,10 +128,23 @@ export const leadsRouter = createTRPCRouter({
             });
           }
 
-          const operational = places.filter(
-            (p) =>
-              !p.businessStatus || p.businessStatus === "OPERATIONAL"
+          let operational = places.filter(
+            (p) => !p.businessStatus || p.businessStatus === "OPERATIONAL"
           );
+
+          // Near-me: locationBias is a bias, not a filter — enforce the
+          // drive-to radius ourselves.
+          if (input.nearMe) {
+            operational = operational.filter((p) => {
+              const { latitude, longitude } = p.location ?? {};
+              if (latitude === undefined || longitude === undefined)
+                return false;
+              return (
+                distanceMiles(HOME, { lat: latitude, lng: longitude }) <=
+                HOME.maxMiles
+              );
+            });
+          }
 
           // Liveness-check real websites in parallel.
           const classified = await Promise.all(
@@ -129,6 +171,15 @@ export const leadsRouter = createTRPCRouter({
               website: c.website,
               socialOnly: c.socialOnly,
               websiteDead: c.websiteDead,
+              distanceMiles:
+                input.nearMe && c.place.location?.latitude !== undefined
+                  ? Math.round(
+                      distanceMiles(HOME, {
+                        lat: c.place.location.latitude!,
+                        lng: c.place.location.longitude!,
+                      }) * 10
+                    ) / 10
+                  : null,
               rating: c.place.rating ?? null,
               reviewCount: c.place.userRatingCount ?? 0,
               mapsUrl: c.place.googleMapsUri ?? null,
@@ -235,11 +286,22 @@ export const leadsRouter = createTRPCRouter({
       if (input.minRating !== undefined)
         filters.push(gte(lead.rating, input.minRating));
 
+      const [scan] = await db
+        .select({ nearMe: leadScan.nearMe })
+        .from(leadScan)
+        .where(eq(leadScan.id, input.scanId))
+        .limit(1);
+
       return db
         .select()
         .from(lead)
         .where(and(...filters))
-        .orderBy(desc(lead.score), desc(lead.reviewCount));
+        .orderBy(
+          // Near-me scans: closest first — the whole point is driving over.
+          ...(scan?.nearMe
+            ? [sql`${lead.distanceMiles} asc nulls last`, desc(lead.score)]
+            : [desc(lead.score), desc(lead.reviewCount)])
+        );
     }),
 
   updateStatus: adminProcedure

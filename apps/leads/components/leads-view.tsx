@@ -237,6 +237,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Score</TableHead>
+              {scan.data?.nearMe && <TableHead>Distance</TableHead>}
               <TableHead>Business</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Rating</TableHead>
@@ -248,7 +249,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
             {leads.isLoading ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={scan.data?.nearMe ? 7 : 6}
                   className="text-muted-foreground py-8 text-center"
                 >
                   Loading…
@@ -257,7 +258,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
             ) : !rows.length ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={scan.data?.nearMe ? 7 : 6}
                   className="text-muted-foreground py-8 text-center"
                 >
                   No leads match the filters.
@@ -271,6 +272,13 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                   onClick={() => setOpenLeadId(lead.id)}
                 >
                   <TableCell className="font-semibold">{lead.score}</TableCell>
+                  {scan.data?.nearMe && (
+                    <TableCell>
+                      {lead.distanceMiles !== null
+                        ? `${lead.distanceMiles} mi`
+                        : "—"}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <div className="font-medium">{lead.name}</div>
                     <div className="text-muted-foreground text-xs">
@@ -374,6 +382,9 @@ const LeadSheet = ({
           {lead.category && <span>{lead.category}</span>}
           {websiteBadge(lead)}
           <Badge variant="outline">Score {lead.score}</Badge>
+          {lead.distanceMiles !== null && (
+            <Badge variant="outline">{lead.distanceMiles} mi away</Badge>
+          )}
           {lead.rating ? (
             <span className="flex items-center gap-1">
               <Star className="size-3.5 fill-current text-amber-500" />
