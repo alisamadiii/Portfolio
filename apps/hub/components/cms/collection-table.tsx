@@ -11,16 +11,60 @@ import { labelize } from "@/lib/engine/infer";
 
 export type ColumnDef = { key: string; label: string; type: string };
 
-/** First 3 declared fields (the synthetic `body` never earns a column). */
-export function buildColumns(collection: ManifestCollection): ColumnDef[] {
-  return collection.fields
-    .filter((field) => field.name !== "body")
-    .slice(0, 3)
-    .map((field) => ({
-      key: field.name,
-      label: field.label ?? labelize(field.name),
-      type: field.type,
-    }));
+const COLUMN_SKIP = new Set(["body", "seo"]);
+// Keys that make the best first (primary) column, in preference order.
+const PRIMARY_KEYS = ["title", "name", "label", "slug"];
+
+const scalarType = (value: unknown): string => {
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "number") return "number";
+  return "string";
+};
+
+/**
+ * Columns for a discovered collection (no declared fields): the first few
+ * SCALAR top-level keys of a representative entry, a title/name-ish key first.
+ * Arrays/objects never earn a column.
+ */
+function deriveColumns(sample: Record<string, unknown>): ColumnDef[] {
+  const scalarKeys = Object.keys(sample).filter(
+    (key) =>
+      !COLUMN_SKIP.has(key) &&
+      sample[key] !== null &&
+      typeof sample[key] !== "object"
+  );
+  scalarKeys.sort((a, b) => {
+    const ai = PRIMARY_KEYS.indexOf(a);
+    const bi = PRIMARY_KEYS.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+  return scalarKeys.slice(0, 3).map((key) => ({
+    key,
+    label: labelize(key),
+    type: scalarType(sample[key]),
+  }));
+}
+
+/**
+ * First 3 declared fields (the synthetic `body` never earns a column). When the
+ * collection has no declared fields (discovered), derive columns from a sample
+ * entry instead.
+ */
+export function buildColumns(
+  collection: ManifestCollection,
+  sample?: Record<string, unknown> | null
+): ColumnDef[] {
+  if (collection.fields.length > 0) {
+    return collection.fields
+      .filter((field) => field.name !== "body")
+      .slice(0, 3)
+      .map((field) => ({
+        key: field.name,
+        label: field.label ?? labelize(field.name),
+        type: field.type,
+      }));
+  }
+  return sample ? deriveColumns(sample) : [];
 }
 
 /** First column flexes, the rest are fixed; `trailing` is the Status/actions slot. */

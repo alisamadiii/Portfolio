@@ -52,6 +52,10 @@ const registerField = (fieldName: string, fieldModule: FieldModule) => {
 registerField("boolean", booleanField);
 registerField("code", codeField);
 registerField("date", dateField);
+// datetime = a `YYYY-MM-DDTHH:MM` wall-time string (Calendar + time picker in
+// the hub). Validated as a plain string so the date module's strict yyyy-MM-dd
+// schema never rejects the time portion; the widget owns the format.
+registerField("datetime", stringField);
 registerField("file", fileField);
 registerField("image", imageField);
 registerField("number", numberField);

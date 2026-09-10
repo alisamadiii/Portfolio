@@ -25,6 +25,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useQuery } from "@tanstack/react-query";
 import { initializeState } from "@workspace/cms-core/schema";
+import type { Field } from "@workspace/cms-core/types/field";
 import { toast } from "sonner";
 
 import { Badge } from "@workspace/ui/components/badge";
@@ -37,6 +38,8 @@ import {
   arrayItemSchema,
   type ManifestCollection,
 } from "@/lib/engine/collections";
+import { entryFieldsFromValue } from "@/lib/engine/entry-schema";
+import { mergeItems } from "@/lib/engine/infer";
 import {
   draftKey,
   getDraft,
@@ -122,6 +125,20 @@ export function ArrayCollection({
     return remoteItems;
   }, [draft, remoteItems]);
 
+  // Infer the per-item fields from the actual items (so arrays/objects/datetime
+  // inside an item are editable), overlaying manifest labels/widgets and keeping
+  // any declared field the data doesn't have yet. Empty collection → the flat
+  // manifest schema (nothing to infer from).
+  const itemFields = useMemo<Field[]>(() => {
+    if (items.length === 0) return schema.fields as Field[];
+    const inferred = entryFieldsFromValue(mergeItems(items), collection.fields);
+    const names = new Set(inferred.map((field) => field.name));
+    const declaredMissing = (schema.fields as Field[]).filter(
+      (field) => !names.has(field.name)
+    );
+    return [...inferred, ...declaredMissing];
+  }, [items, collection, schema]);
+
   const commitItems = (next: Item[]) => {
     if (!config) return;
     const key = draftKey(owner, repo, branch, collection.path);
@@ -148,7 +165,7 @@ export function ArrayCollection({
   };
 
   const handleAdd = () => {
-    const blank = initializeState(schema.fields, {}) as Item;
+    const blank = initializeState(itemFields, {}) as Item;
     // New items go to the top (index 0), not the bottom — order is array
     // position, so the newest entry shows first.
     const next = [blank, ...items];
@@ -185,7 +202,12 @@ export function ArrayCollection({
   };
 
   const label = collection.label ?? collection.name;
-  const columns = useMemo(() => buildColumns(collection), [collection]);
+  // Discovered collections have no declared fields — derive columns from the
+  // first item.
+  const columns = useMemo(
+    () => buildColumns(collection, (items[0] as Record<string, unknown>) ?? null),
+    [collection, items]
+  );
   const template = gridTemplate(columns, "40px");
   const editingItem =
     editing !== null && editing < items.length ? items[editing] : null;
@@ -274,7 +296,7 @@ export function ArrayCollection({
               <EntryForm
                 key={editing}
                 formId="array-item-form"
-                fields={schema.fields}
+                fields={itemFields}
                 contentObject={editingItem}
                 onSubmit={(values) => handleSubmitItem(editing, values)}
               />

@@ -523,7 +523,10 @@ const ListField = ({
       render={() => (
         <FormItem
           data-field-path={fieldName}
-          className={cn(showListChangedFrame && changedFieldFrameClass)}
+          className={cn(
+            "border-border/70 bg-muted/30 rounded-xl border p-4",
+            showListChangedFrame && changedFieldFrameClass
+          )}
         >
           {shouldShowListHeader && (
             <div className="flex h-5 items-center gap-x-2">
@@ -531,6 +534,11 @@ const ListField = ({
                 <FormLabel className="text-sm font-semibold">
                   {field.label || field.name}
                 </FormLabel>
+              )}
+              {arrayFields.length > 0 && (
+                <span className="text-muted-foreground text-xs font-medium">
+                  {arrayFields.length}
+                </span>
               )}
               {field.required && (
                 <Badge variant="secondary" className="text-muted-foreground">
@@ -888,9 +896,13 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
       `Item ${index !== undefined ? `#${index + 1}` : ""}`
     );
 
+    // A standalone nested object (not a list item) gets a plain titled header so
+    // sections like `partners` / `rsvp` read as their own labelled block.
+    const showStandaloneHeader = !isCollapsible && field.label !== false;
+
     return (
       <div className="bg-background overflow-hidden rounded-lg border shadow-xs">
-        {isCollapsible && (
+        {isCollapsible ? (
           <header
             className="bg-muted/50 hover:bg-muted flex h-10 cursor-pointer items-center gap-x-2 pr-1 pl-4 text-sm font-medium transition-colors"
             onClick={onToggleOpen}
@@ -905,11 +917,17 @@ const ObjectField = forwardRef<HTMLDivElement, NestedFieldProps>(
               {itemLabel}
             </span>
           </header>
-        )}
+        ) : showStandaloneHeader ? (
+          <header className="bg-muted/50 flex h-10 items-center px-4 text-sm font-semibold">
+            <span className={hasErrors() ? "text-destructive" : ""}>
+              {field.label || field.name}
+            </span>
+          </header>
+        ) : null}
         <div
           className={cn(
             "grid gap-5 p-4 md:p-5",
-            isCollapsible && "border-t",
+            (isCollapsible || showStandaloneHeader) && "border-t",
             isOpen ? "" : "hidden"
           )}
         >

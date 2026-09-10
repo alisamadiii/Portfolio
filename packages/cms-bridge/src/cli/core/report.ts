@@ -43,9 +43,11 @@ export function loadConventionsContract(): string {
 const FALLBACK_CONTRACT = `## The CMS conventions contract (v2)
 
 Content lives in **two JSON files at the repo root**: \`_site.json\` — one config
-file with keys \`cms\` (manifest: version, baseUrl, media, page→route map,
-collections), \`seo\` (site + per-page SEO), and \`variables\` (global values reused
-on every page) — plus \`_pages.json\` (all page content, keyed by page name). Markup
+file with keys \`cms\` (manifest: version, baseUrl, media, page→route map), \`seo\`
+(site + per-page SEO), and \`variables\` (global values reused on every page) — plus
+\`_pages.json\` (all page content, keyed by page name). Collections are **not**
+declared here: they are auto-discovered by listing the repo-root \`_collections/\`
+folder (see \`collections.md\`). Markup
 is made editable with the bridge components, or a \`data-cms-field\` attribute.
 (Legacy repos used four files under \`src/data/\`; the hosted CMS now REQUIRES the
 root \`_site.json\` + \`_pages.json\` — migrate them. \`cms-bridge check\` still

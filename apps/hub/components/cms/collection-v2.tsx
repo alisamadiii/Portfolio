@@ -55,7 +55,42 @@ export function CollectionV2({
   );
 
   const drafts = useDrafts(owner, repo, branch);
-  const schema = useMemo(() => collectionSchema(collection), [collection]);
+  // Discovered collections carry no `format` — derive it from the entries' file
+  // extensions so new entries get the right extension (.json vs .md).
+  const entryFormat: "md" | "json" = listQuery.data?.entries?.[0]?.name.endsWith(
+    ".json"
+  )
+    ? "json"
+    : "md";
+  const schema = useMemo(
+    () => collectionSchema(collection, { format: entryFormat }),
+    [collection, entryFormat]
+  );
+
+  // New entries mirror Edit: infer the field structure (arrays/nested objects)
+  // from a real sibling entry, or — when the collection is empty — from an
+  // optional `.template.json` in the folder (a dotfile: invisible to the site
+  // and the entry list, it only defines the New-entry inputs). Only fetched
+  // while creating, and only the structure is used — the entry starts blank.
+  const firstEntryPath = listQuery.data?.entries?.[0]?.path;
+  const isCreating = editing?.kind === "new";
+  const templateSourcePath =
+    firstEntryPath ?? `${collection.path}/.template.json`;
+  const templateQuery = useQuery(
+    trpc.cms.entries.getContent.queryOptions(
+      { owner, repo, branch, path: templateSourcePath },
+      {
+        enabled: Boolean(owner && repo && branch && isCreating),
+        staleTime: 60_000,
+        retry: false, // a missing .template.json 404s — don't hammer it
+      }
+    )
+  );
+  const newTemplate =
+    templateQuery.data && "contentObject" in templateQuery.data
+      ? (templateQuery.data.contentObject as Record<string, unknown>)
+      : null;
+  const templateLoading = isCreating && templateQuery.isLoading;
 
   const rows = useMemo(() => {
     const prefix = `${collection.path}/`;
@@ -119,7 +154,16 @@ export function CollectionV2({
   }, [listQuery.data, drafts]);
 
   const label = collection.label ?? collection.name;
-  const columns = useMemo(() => buildColumns(collection), [collection]);
+  // Discovered collections have no declared fields — derive columns from the
+  // first entry that carries some values.
+  const columnSample = useMemo(
+    () => rows.find((row) => Object.keys(row.fields).length > 0)?.fields ?? null,
+    [rows]
+  );
+  const columns = useMemo(
+    () => buildColumns(collection, columnSample),
+    [collection, columnSample]
+  );
   const template = gridTemplate(columns, "110px");
 
   return (
@@ -224,6 +268,8 @@ export function CollectionV2({
               schemaName={collection.name}
               mode={editing}
               schemaOverride={schema}
+              newTemplate={newTemplate}
+              templateLoading={templateLoading}
               onClose={() => setEditing(null)}
             />
           </div>

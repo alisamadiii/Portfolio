@@ -13,6 +13,7 @@ import { ViewComponent as BooleanView } from "./core/boolean/view-component";
 import { EditComponent as CodeEdit } from "./core/code/lazy-edit-component";
 import { EditComponent as DateEdit } from "./core/date/edit-component";
 import { ViewComponent as DateView } from "./core/date/view-component";
+import { EditComponent as DatetimeEdit } from "./core/datetime/edit-component";
 import { EditComponent as FileEdit } from "./core/file/edit-component";
 import { ViewComponent as FileView } from "./core/file/view-component";
 import { EditComponent as ImageEdit } from "./core/image/edit-component";
@@ -31,6 +32,7 @@ const editComponents: Record<string, React.ComponentType<any>> = {
   boolean: BooleanEdit,
   code: CodeEdit,
   date: DateEdit,
+  datetime: DatetimeEdit,
   file: FileEdit,
   image: ImageEdit,
   number: NumberEdit,

@@ -4,7 +4,7 @@ This project is wired to a git-based CMS. Content lives in **two JSON files at t
 repo root**:
 
 - **`_site.json`** — one config file with three keys: `cms` (the manifest:
-  `version`, `baseUrl`, `media`, the page→route map, `collections`), `seo` (site +
+  `version`, `baseUrl`, `media`, the page→route map), `seo` (site +
   per-page SEO), and `variables` (global values reused on every page).
 - **`_pages.json`** — all page content, keyed by page name.
 
@@ -79,10 +79,11 @@ const home = pages.home;
   **Slot-style**: it renders its single root child and merges a `data-cms-*` marker
   onto that child's opening tag — no wrapper element. Requires one root child.
   - `<Region type="collection" name="…">` — a region rendered from a collection
-    declared in `_site.json` → `cms.collections`. Purple outline + a "✎ Edit
+    auto-discovered under `_collections/`. Purple outline + a "✎ Edit
     collection" button that opens the
     collection's editor; entries are edited on the collection page, not inline
-    (unlike `<Group>`). `name` required.
+    (unlike `<Group>`). `name` required — it matches the collection's
+    `_collections/` folder or `.json` file name.
   - `<Region type="variant" variantName="…">` — green outline. Clicking it opens
     Settings › Variables and flashes the variable whose path equals `variantName`.
   - `<Region type="blog">` — yellow outline. Clicking it opens the Blog settings

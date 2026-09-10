@@ -2,11 +2,11 @@
  * CMS v2 manifest store.
  *
  * A v2 repo ships exactly one root `_site.json` (keys `cms` = the manifest:
- * baseUrl, media, page→route map, collections; plus schema-less `seo` and
- * `variables` bags) and a root `_pages.json` for page content. Collections live
- * under a root `_collections/` folder. There is NO fallback: a repo without a
- * root `_site.json` is simply not a v2 repo, and the hub surfaces that to the
- * user rather than reading anything under `src/data`.
+ * baseUrl, media, page→route map; plus schema-less `seo` and `variables` bags)
+ * and a root `_pages.json` for page content. Collections are NOT declared in the
+ * file — they are discovered by listing the root `_collections/` folder. There is
+ * NO fallback: a repo without a root `_site.json` is simply not a v2 repo, and the
+ * hub surfaces that to the user rather than reading anything under `src/data`.
  *
  * The cache reuses the legacy `hubConfig` table: a repo is either legacy or
  * v2, so the (owner, repo, branch) row is never contested. Rows are
@@ -34,6 +34,11 @@ const manifestVersion = "cms-v2.1";
  */
 const SITE_FILE = "_site.json";
 const PAGES_FILE = "_pages.json";
+// Collections are AUTO-DISCOVERED from this folder — they are NOT declared in
+// _site.json. Each subfolder is a directory collection (md/json entries); each
+// top-level `.json` file is an array collection; a folder named `blog` is the
+// blog (see isBlogCollection). Adding a folder here makes it appear in the CMS.
+const COLLECTIONS_DIR = "_collections";
 
 const CollectionFieldSchema = z.object({
   name: z.string().min(1),
@@ -69,6 +74,8 @@ const ManifestObjectSchema = z.object({
     z.string().min(1),
     z.object({ route: z.string().min(1), title: z.string().optional() })
   ),
+  // Collections are discovered from _collections/, not read from the file. Any
+  // `collections` key in _site.json is ignored (kept lenient for back-compat).
   collections: z.array(CollectionSchema).default([]),
 });
 
@@ -123,6 +130,60 @@ const labelize = (key: string): string => {
 const rebase = (basePath: string, path: string): string =>
   normalizePath(basePath ? joinPathSegments([basePath, path]) : path);
 
+type DiscoveredCollection = z.infer<typeof CollectionSchema>;
+
+/**
+ * Discover collections by listing the repo's `_collections/` folder — the CMS's
+ * source of truth, replacing any `collections` declared in _site.json. A subdir
+ * is a directory collection; a top-level `.json` file is an array collection.
+ * Paths are pre-basePath (`_collections/<name>`); rebaseCms prepends basePath.
+ * A missing `_collections/` folder → no collections.
+ */
+const discoverCollections = async (
+  octokit: ReturnType<typeof createOctokitInstance>,
+  owner: string,
+  repo: string,
+  branch: string,
+  basePath: string
+): Promise<DiscoveredCollection[]> => {
+  let children: Array<{ name: string; type: string }>;
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: rebase(basePath, COLLECTIONS_DIR),
+      ref: branch,
+    });
+    if (!Array.isArray(response.data)) return [];
+    children = response.data;
+  } catch (error: any) {
+    if (error?.status === 404) return [];
+    throw error;
+  }
+
+  const collections: DiscoveredCollection[] = [];
+  for (const child of children) {
+    if (child.type === "dir") {
+      collections.push({
+        name: child.name,
+        label: labelize(child.name),
+        path: `${COLLECTIONS_DIR}/${child.name}`,
+        fields: [],
+      });
+    } else if (child.type === "file" && child.name.endsWith(".json")) {
+      const name = child.name.replace(/\.json$/, "");
+      collections.push({
+        name,
+        label: labelize(name),
+        path: `${COLLECTIONS_DIR}/${child.name}`,
+        fields: [],
+      });
+    }
+  }
+  // Stable, alphabetical rail order (no authored order without a manifest).
+  return collections.sort((a, b) => a.name.localeCompare(b.name));
+};
+
 /** Rebase a validated manifest's collection + media paths in place. */
 const rebaseCms = (
   cms: z.infer<typeof ManifestObjectSchema>,
@@ -140,13 +201,18 @@ const rebaseCms = (
 
 /**
  * Validate the fetched `_site.json` (`cms`/`seo`/`variables`) and attach physical
- * paths. seo + variables ride inline; every config path resolves to the one
- * root _site.json, page content to the root _pages.json.
+ * paths. `collections` come from folder discovery, not the file. seo + variables
+ * ride inline; every config path resolves to the one root _site.json, page
+ * content to the root _pages.json.
  */
-const normalizeManifest = (raw: unknown, basePath: string): ManifestObject => {
+const normalizeManifest = (
+  raw: unknown,
+  basePath: string,
+  discovered: DiscoveredCollection[]
+): ManifestObject => {
   const site = SiteFileSchema.parse(raw);
   return {
-    ...rebaseCms(site.cms, basePath),
+    ...rebaseCms({ ...site.cms, collections: discovered }, basePath),
     seo: site.seo ?? { site: {}, pages: {} },
     variables: site.variables ?? {},
     paths: {
@@ -265,9 +331,17 @@ const fetchManifestFromGithub = async (
   );
   if (!site) return null;
 
+  const collections = await discoverCollections(
+    octokit,
+    owner,
+    repo,
+    branch,
+    basePath
+  );
+
   return {
     sha: site.sha,
-    object: normalizeManifest(JSON.parse(site.raw), basePath),
+    object: normalizeManifest(JSON.parse(site.raw), basePath, collections),
   };
 };
 

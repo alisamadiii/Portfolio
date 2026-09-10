@@ -7,10 +7,10 @@
  * + root `_pages.json`, collections under `_collections/`) or the legacy
  * `src/data/*.json` files as a fallback:
  *
- *  - cms (_site.json) shape (version, baseUrl, pages, collections)
+ *  - cms (_site.json) shape (version, baseUrl, pages)
  *  - every manifest page has a _pages.json object (and vice versa)
  *  - page top-level keys don't collide with variables keys
- *  - array collections hold an array with their required fields
+ *  - array collections (a top-level `_collections/*.json`) hold an array of objects
  *  - every static field path (data-cms-field / component `field` prop) resolves
  *    into _pages.json or the variables bag
  */
@@ -168,50 +168,30 @@ export function checkContract(root: string): {
     }
   }
 
-  for (const collection of Array.isArray(manifest.collections)
-    ? manifest.collections
-    : []) {
-    if (typeof collection?.name !== "string" || typeof collection?.path !== "string") {
-      errors.push(`${cmsLabel}: every collection needs "name" and "path".`);
-      continue;
-    }
-    const abs = path.join(root, collection.path);
-    if (collection.path.endsWith(".json")) {
-      if (!fs.existsSync(abs)) {
-        warnings.push(
-          `Collection file "${collection.path}" doesn't exist yet (created on first entry).`
-        );
-        continue;
-      }
+  // Collections are AUTO-DISCOVERED from _collections/ (not declared in
+  // _site.json): each subfolder is a directory collection whose entry fields are
+  // inferred from the JSON (nothing to validate here); each top-level `.json`
+  // file is an array collection and must hold a JSON array of objects.
+  const collectionsDir = path.join(root, "_collections");
+  if (fs.existsSync(collectionsDir)) {
+    for (const child of fs.readdirSync(collectionsDir, { withFileTypes: true })) {
+      if (!child.isFile() || !child.name.endsWith(".json")) continue;
+      const rel = `_collections/${child.name}`;
       let data: unknown;
       try {
-        data = readJson(abs);
+        data = readJson(path.join(collectionsDir, child.name));
       } catch {
-        errors.push(`Collection file "${collection.path}" is not valid JSON.`);
+        errors.push(`Collection file "${rel}" is not valid JSON.`);
         continue;
       }
       if (!Array.isArray(data)) {
-        errors.push(`Collection file "${collection.path}" must hold a JSON array.`);
+        errors.push(`Collection file "${rel}" must hold a JSON array.`);
         continue;
       }
-      const required = (Array.isArray(collection.fields) ? collection.fields : [])
-        .filter((field: any) => field?.required)
-        .map((field: any) => field.name);
       data.forEach((item: any, index: number) => {
-        if (!item || typeof item !== "object" || Array.isArray(item)) {
-          warnings.push(`${collection.path}[${index}] is not an object.`);
-          return;
-        }
-        for (const req of required)
-          if (item[req] === undefined || item[req] === "")
-            warnings.push(
-              `${collection.path}[${index}] is missing required field "${req}".`
-            );
+        if (!item || typeof item !== "object" || Array.isArray(item))
+          warnings.push(`${rel}[${index}] is not an object.`);
       });
-    } else if (!fs.existsSync(abs)) {
-      warnings.push(
-        `Collection folder "${collection.path}" doesn't exist yet (created on first entry).`
-      );
     }
   }
 

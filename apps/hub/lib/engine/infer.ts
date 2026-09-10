@@ -9,7 +9,15 @@
 export type InferredField = {
   name: string;
   label: string;
-  type: "string" | "text" | "number" | "boolean" | "image" | "object";
+  type:
+    | "string"
+    | "text"
+    | "number"
+    | "boolean"
+    | "image"
+    | "date"
+    | "datetime"
+    | "object";
   list?: boolean;
   fields?: InferredField[];
   options?: { type?: string };
@@ -27,6 +35,9 @@ export const labelize = (key: string): string => {
 const IMAGE_VALUE = /\.(png|jpe?g|webp|avif|gif|svg|ico)(\?.*)?$/i;
 const IMAGE_KEY = /(image|img|src|icon|logo|avatar|banner|photo|thumbnail)$/i;
 const URL_KEY = /(link|url|href)$/i;
+// A datetime is a date + time (calendar + time picker); a date is date-only.
+const DATETIME_VALUE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+const DATE_VALUE = /^\d{4}-\d{2}-\d{2}$/;
 /** Long-ish prose edits better as multiline text than a single-line string. */
 const TEXT_LENGTH = 120;
 
@@ -34,6 +45,8 @@ const inferScalar = (key: string, value: string): InferredField => {
   const base = { name: key, label: labelize(key) };
   if (IMAGE_VALUE.test(value) || (IMAGE_KEY.test(key) && value.startsWith("/")))
     return { ...base, type: "image" };
+  if (DATETIME_VALUE.test(value)) return { ...base, type: "datetime" };
+  if (DATE_VALUE.test(value)) return { ...base, type: "date" };
   if (URL_KEY.test(key) || /^https?:\/\//.test(value))
     return { ...base, type: "string", options: { type: "url" } };
   if (value.length > TEXT_LENGTH || value.includes("\n"))
@@ -42,7 +55,7 @@ const inferScalar = (key: string, value: string): InferredField => {
 };
 
 /** Merge the shapes of every array item so sparse items still infer fully. */
-const mergeItems = (items: unknown[]): Record<string, unknown> => {
+export const mergeItems = (items: unknown[]): Record<string, unknown> => {
   const merged: Record<string, unknown> = {};
   for (const item of items) {
     if (!item || typeof item !== "object" || Array.isArray(item)) continue;

@@ -17,15 +17,20 @@
       "input": "public/media",
       "output": "/media"
     },
-    "pages": {},
-    "collections": []
+    "pages": {}
   },
   "variables": {
     "name": "",
     "logo": "",
     "phone": "",
     "email": "",
-    "address": { "street": "", "city": "", "region": "", "zip": "", "mapsUrl": "" },
+    "address": {
+      "street": "",
+      "city": "",
+      "region": "",
+      "zip": "",
+      "mapsUrl": ""
+    },
     "socials": []
   }
 }

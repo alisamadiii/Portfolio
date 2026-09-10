@@ -34,6 +34,8 @@ import {
 } from "@workspace/cms-core/schema";
 import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file";
 
+import { entryFieldsFromValue } from "@/lib/engine/entry-schema";
+
 import { EntryForm } from "@/components/entry/entry-form";
 
 /**
@@ -107,23 +109,6 @@ export function EntrySheet({
     [schemaOverride, config, schemaName]
   );
 
-  const entryFields = useMemo(() => {
-    if (!schema?.fields || schema.fields.length === 0) return [];
-    const fields = hideSeoFields(schema, schema.fields);
-    if (schema.list === true) {
-      return [
-        {
-          name: "listWrapper",
-          label: false as const,
-          type: "object",
-          list: true,
-          fields,
-        },
-      ];
-    }
-    return fields;
-  }, [schema]);
-
   const legacyEntryQuery = useQuery(
     trpc.cms.entries.get.queryOptions(
       {
@@ -166,6 +151,42 @@ export function EntrySheet({
       ? getDraft(config.owner, config.repo, config.branch, editPath)
       : null;
 
+  // v2 collection entries: infer field structure (arrays, nested objects) from
+  // the entry's own JSON, overlaying manifest labels/widgets. Legacy repos and
+  // brand-new entries keep the manifest schema.
+  const inferSource = useMemo<Record<string, unknown> | null>(() => {
+    if (!schemaOverride || !isEdit) return null;
+    return (
+      (editDraft?.values as Record<string, unknown> | undefined) ??
+      (fetched?.contentObject as Record<string, unknown> | undefined) ??
+      null
+    );
+  }, [schemaOverride, isEdit, editDraft, fetched]);
+
+  const entryFields = useMemo(() => {
+    if (!schema?.fields || schema.fields.length === 0) return [];
+    const base =
+      schemaOverride && isEdit
+        ? inferSource
+          ? entryFieldsFromValue(inferSource, schema.fields)
+          : null
+        : schema.fields;
+    if (!base) return [];
+    const fields = hideSeoFields(schema, base);
+    if (schema.list === true) {
+      return [
+        {
+          name: "listWrapper",
+          label: false as const,
+          type: "object",
+          list: true,
+          fields,
+        },
+      ];
+    }
+    return fields;
+  }, [schema, schemaOverride, isEdit, inferSource]);
+
   const contentObject = useMemo(() => {
     if (isEdit) {
       const values =
@@ -184,7 +205,7 @@ export function EntrySheet({
     return (mode.kind === "new" ? mode.initialValues : undefined) ?? {};
   }, [isEdit, editDraft, fetched, newDraft, mode, schema]);
 
-  if (!config || !schema || entryFields.length === 0) return null;
+  if (!config || !schema) return null;
 
   const handleSubmit = (values: Record<string, unknown>) => {
     setSaving(true);
@@ -282,7 +303,8 @@ export function EntrySheet({
     }
   };
 
-  const loading = isEdit && entryQuery.isLoading && !contentObject;
+  const loading =
+    isEdit && (entryQuery.isLoading || entryFields.length === 0) && !contentObject;
 
   return (
     <Sheet
@@ -311,7 +333,7 @@ export function EntrySheet({
             <Loader2 className="size-4 animate-spin" />
             Loading entry…
           </div>
-        ) : contentObject ? (
+        ) : contentObject && entryFields.length > 0 ? (
           <>
             <div className="px-4 pb-24">
               <EntryForm

@@ -134,35 +134,55 @@ describe("check", () => {
     expect(errors).toEqual([]);
   });
 
-  it("validates the combined root layout (site.json + pages.json)", () => {
+  it("validates the combined root layout (_site.json + _pages.json)", () => {
     fs.writeFileSync(
-      path.join(root, "site.json"),
+      path.join(root, "_site.json"),
       JSON.stringify({
         seo: { site: {}, pages: {} },
         cms: {
           version: 1,
           baseUrl: "https://example.com",
           pages: { home: { route: "/" } },
-          collections: [],
         },
         variables: { name: "Acme" },
       })
     );
     fs.writeFileSync(
-      path.join(root, "pages.json"),
+      path.join(root, "_pages.json"),
       JSON.stringify({ home: { hero: { heading: "Hi" } } })
     );
     const { errors } = checkContract(root);
     expect(errors).toEqual([]);
   });
 
-  it("errors when site.json is missing its cms key", () => {
+  it("errors when _site.json is missing its cms key", () => {
     fs.writeFileSync(
-      path.join(root, "site.json"),
+      path.join(root, "_site.json"),
       JSON.stringify({ seo: {}, variables: {} })
     );
-    fs.writeFileSync(path.join(root, "pages.json"), JSON.stringify({}));
+    fs.writeFileSync(path.join(root, "_pages.json"), JSON.stringify({}));
     const { errors } = checkContract(root);
     expect(errors.some((e) => e.includes('"cms"'))).toBe(true);
+  });
+
+  it("discovers + validates array collections under _collections/", () => {
+    fs.writeFileSync(
+      path.join(root, "_site.json"),
+      JSON.stringify({
+        cms: {
+          version: 1,
+          baseUrl: "https://example.com",
+          pages: { home: { route: "/" } },
+        },
+      })
+    );
+    fs.writeFileSync(path.join(root, "_pages.json"), JSON.stringify({ home: {} }));
+    fs.mkdirSync(path.join(root, "_collections"), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, "_collections/team.json"),
+      JSON.stringify("not an array")
+    );
+    const { errors } = checkContract(root);
+    expect(errors.some((e) => e.includes("must hold a JSON array"))).toBe(true);
   });
 });

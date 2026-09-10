@@ -29,6 +29,8 @@ import {
   useDraftsStore,
 } from "@/lib/store/drafts";
 
+import { entryFieldsFromValue } from "@/lib/engine/entry-schema";
+
 import type { EntrySheetMode } from "@/components/cms/entry-sheet";
 import { EntryForm } from "@/components/entry/entry-form";
 import { Loader2, X } from "@/components/icon";
@@ -43,12 +45,22 @@ export function EntryEditor({
   schemaName,
   mode,
   schemaOverride,
+  newTemplate,
+  templateLoading,
   onClose,
 }: {
   schemaName: string;
   mode: EntrySheetMode;
   /** CMS v2: synthetic schema from the cms.json collection declaration. */
   schemaOverride?: Record<string, any> | null;
+  /**
+   * CMS v2 new entries: a sibling entry's value, used to infer the field
+   * structure (arrays/nested objects) so New matches Edit. Structure only —
+   * the new entry still starts blank.
+   */
+  newTemplate?: Record<string, unknown> | null;
+  /** New entries: the sibling template is still being fetched — show a loader. */
+  templateLoading?: boolean;
   /** Back / after a new entry is saved. */
   onClose: () => void;
 }) {
@@ -71,23 +83,6 @@ export function EntryEditor({
       (config ? getSchemaByName(config.object, schemaName) : null),
     [schemaOverride, config, schemaName]
   );
-
-  const entryFields = useMemo(() => {
-    if (!schema?.fields || schema.fields.length === 0) return [];
-    const fields = hideSeoFields(schema, schema.fields);
-    if (schema.list === true) {
-      return [
-        {
-          name: "listWrapper",
-          label: false as const,
-          type: "object",
-          list: true,
-          fields,
-        },
-      ];
-    }
-    return fields;
-  }, [schema]);
 
   const legacyEntryQuery = useQuery(
     trpc.cms.entries.get.queryOptions(
@@ -124,6 +119,52 @@ export function EntryEditor({
       ? getDraft(config.owner, config.repo, config.branch, editPath)
       : null;
 
+  // v2 collection entries: infer the field structure from the entry's own JSON
+  // (arrays, nested objects) instead of the flat manifest, overlaying manifest
+  // labels/widgets. Falls back to the manifest schema for legacy repos and for
+  // brand-new entries (no value to infer from yet).
+  const inferSource = useMemo<Record<string, unknown> | null>(() => {
+    if (!schemaOverride) return null;
+    if (isEdit)
+      return (
+        (editDraft?.values as Record<string, unknown> | undefined) ??
+        (fetched?.contentObject as Record<string, unknown> | undefined) ??
+        null
+      );
+    // New entry: an in-progress new-draft uses its own values; a fresh one
+    // borrows structure (not content) from a sibling entry template.
+    return (
+      (newDraft?.draft.values as Record<string, unknown> | undefined) ??
+      newTemplate ??
+      null
+    );
+  }, [schemaOverride, isEdit, editDraft, fetched, newDraft, newTemplate]);
+
+  const entryFields = useMemo(() => {
+    if (!schema?.fields || schema.fields.length === 0) return [];
+    const base = schemaOverride
+      ? inferSource
+        ? entryFieldsFromValue(inferSource, schema.fields)
+        : isEdit
+          ? null // v2 entry value still loading — loader shows below
+          : schema.fields // new entry, no sibling to infer from → manifest schema
+      : schema.fields;
+    if (!base) return [];
+    const fields = hideSeoFields(schema, base);
+    if (schema.list === true) {
+      return [
+        {
+          name: "listWrapper",
+          label: false as const,
+          type: "object",
+          list: true,
+          fields,
+        },
+      ];
+    }
+    return fields;
+  }, [schema, schemaOverride, isEdit, inferSource]);
+
   const contentObject = useMemo(() => {
     if (isEdit) {
       const values =
@@ -140,7 +181,7 @@ export function EntryEditor({
     return (mode.kind === "new" ? mode.initialValues : undefined) ?? {};
   }, [isEdit, editDraft, fetched, newDraft, mode, schema]);
 
-  if (!config || !schema || entryFields.length === 0) return null;
+  if (!config || !schema) return null;
 
   const heading = isEdit
     ? schema.label || schema.name
@@ -240,7 +281,9 @@ export function EntryEditor({
     }
   };
 
-  const loading = isEdit && entryQuery.isLoading && !contentObject;
+  const loading =
+    (isEdit && (entryQuery.isLoading || entryFields.length === 0) && !contentObject) ||
+    (!isEdit && Boolean(templateLoading));
 
   return (
     <div className="flex h-full flex-col">
@@ -270,7 +313,7 @@ export function EntryEditor({
             <Loader2 className="size-4 animate-spin" />
             Loading entry…
           </div>
-        ) : contentObject ? (
+        ) : contentObject && entryFields.length > 0 ? (
           <div className="">
             <EntryForm
               key={isEdit ? editPath : (newDraft?.key ?? "new")}

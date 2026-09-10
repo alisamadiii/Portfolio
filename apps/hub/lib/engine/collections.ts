@@ -32,33 +32,49 @@ const FIELD_TYPES = new Set([
   "select",
 ]);
 
+// Discovered collections carry no declared fields (structure is inferred from
+// the entry JSON). This minimal default keeps a brand-new / empty collection
+// usable: it gives a `title` primary for the filename and a non-empty new-entry
+// form when there's no sibling entry to infer from.
+const DEFAULT_FIELDS = [
+  { name: "title", label: "Title", type: "string", required: true },
+];
+
+const declareFields = (collection: ManifestCollection) =>
+  ((collection.fields.length ? collection.fields : DEFAULT_FIELDS) as any[]).map(
+    (field) => ({
+      name: field.name,
+      label: field.label ?? labelize(field.name),
+      type: FIELD_TYPES.has(field.type) ? field.type : "string",
+      required: field.required,
+      ...(field.type === "select" && field.options
+        ? { options: { values: field.options } }
+        : {}),
+      ...(field.type === "image" && field.multiple
+        ? { options: { multiple: field.multiple } }
+        : {}),
+    })
+  );
+
 export function collectionSchema(
-  collection: ManifestCollection
+  collection: ManifestCollection,
+  opts?: { format?: "md" | "json" }
 ): Record<string, any> {
   // Blog is special: every client shares one fixed, future-proofed schema
   // (always Markdown), regardless of what its cms.json blog fields declare.
   if (isBlogCollection(collection)) return buildBlogSchema(collection);
 
-  const declared = collection.fields.map((field) => ({
-    name: field.name,
-    label: field.label ?? labelize(field.name),
-    type: FIELD_TYPES.has(field.type) ? field.type : "string",
-    required: field.required,
-    ...(field.type === "select" && field.options
-      ? { options: { values: field.options } }
-      : {}),
-    ...(field.type === "image" && field.multiple
-      ? { options: { multiple: field.multiple } }
-      : {}),
-  }));
+  const declared = declareFields(collection);
   const primary =
     declared.find((field) => field.type === "string")?.name ??
     declared[0]?.name ??
     "title";
   // JSON collections store body as a plain field; Markdown collections put it
   // below the frontmatter. Either way it's edited as multiline text and
-  // publishV2 serializes by file extension.
-  const isJson = collection.format === "json";
+  // publishV2 serializes by file extension. Discovered collections carry no
+  // `format`, so it's derived from the entries' extensions (opts.format),
+  // defaulting to Markdown.
+  const isJson = (opts?.format ?? collection.format ?? "md") === "json";
   const extension = isJson ? "json" : "md";
   return {
     name: collection.name,
@@ -83,18 +99,7 @@ export function collectionSchema(
 export function arrayItemSchema(
   collection: ManifestCollection
 ): Record<string, any> {
-  const declared = collection.fields.map((field) => ({
-    name: field.name,
-    label: field.label ?? labelize(field.name),
-    type: FIELD_TYPES.has(field.type) ? field.type : "string",
-    required: field.required,
-    ...(field.type === "select" && field.options
-      ? { options: { values: field.options } }
-      : {}),
-    ...(field.type === "image" && field.multiple
-      ? { options: { multiple: field.multiple } }
-      : {}),
-  }));
+  const declared = declareFields(collection);
   const primary =
     declared.find((field) => field.type === "string")?.name ??
     declared[0]?.name ??

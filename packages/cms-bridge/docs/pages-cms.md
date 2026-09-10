@@ -41,20 +41,7 @@ Everything lives in **two files at the repo root**:
     "home": { "route": "/" },
     "menu": { "route": "/menu" },
     "story": { "route": "/our-story", "title": "Our Story" }
-  },
-  "collections": [
-    {
-      "name": "blog",
-      "path": "_collections/blog",
-      "route": "/blog/{slug}",
-      "format": "md",
-      "fields": [
-        { "name": "title", "type": "string", "required": true },
-        { "name": "date", "type": "date", "required": true },
-        { "name": "banner", "type": "image" }
-      ]
-    }
-  ]
+  }
 }
 ```
 
@@ -63,8 +50,9 @@ Everything lives in **two files at the repo root**:
 - `pages` keys ARE the top-level keys in `_pages.json`. Each entry becomes a
   canvas tile; its `route` maps a frame back to its page. `title` is optional
   (defaults to the key in Title Case).
-- `collections` (optional) — see [Collections](#collections). This tiny field
-  list is the ONLY schema left anywhere.
+- There is **no `collections` key** — collections are auto-discovered from the
+  repo-root `_collections/` folder, see [Collections](#collections). The manifest
+  carries no schema at all.
 
 ### 2. `_pages.json` — all page content, keyed by page name (its own root file)
 
@@ -245,17 +233,18 @@ reads them, e.g. `<Layout title={seo.pages.home.title ?? seo.site.title}>`.
 
 ## Collections
 
-Structured, repeating content. Two kinds, chosen by `path` (full details in
-`docs/collections.md`):
+Structured, repeating content. **Auto-discovered** from the repo-root
+`_collections/` folder — nothing is declared in `_site.json`. Two kinds, decided
+by what you drop in `_collections/` (full details in `docs/collections.md`):
 
-**Array collection** — `path` is a `.json` FILE. The whole collection is one
-JSON array, edited/published as a single file like `_pages.json`. **Order is
-array position** (no `sort_order`). No `route`, no `body`. Default for data
-lists (team, partners, workshops, …).
+**Array collection** — a `.json` FILE in `_collections/`. The whole collection is
+one JSON array, edited/published as a single file like `_pages.json`. **Order is
+array position** (no `sort_order`). No route, no `body`. Default for data lists
+(team, partners, workshops, …). Add one by creating the file:
 
 ```json
-{ "name": "team", "path": "_collections/team.json",
-  "fields": [ { "name": "name", "type": "string", "required": true } ] }
+// _collections/team.json
+[ { "name": "…", "role": "…", "image": "/media/a.jpg" } ]
 ```
 
 The site imports the file directly, rendered in order:
@@ -264,21 +253,17 @@ The site imports the file directly, rendered in order:
 import team from "../../_collections/team.json";   // already ordered — no sort
 ```
 
-**Directory collection** — `path` is a FOLDER, one file per entry. Needed for
-`{slug}` routes and Markdown bodies (blog, stories).
+**Directory collection** — a SUBFOLDER in `_collections/`, one file per entry.
+Needed for `{slug}` routes and Markdown bodies (blog, stories). Add one by
+creating the folder `_collections/blog/` and adding entry files; a subfolder
+named `blog` is treated as the blog, routed at `/blog/{slug}`.
 
-```json
-{ "name": "blog", "path": "_collections/blog", "route": "/blog/{slug}",
-  "format": "md",
-  "fields": [ { "name": "title", "type": "string", "required": true } ] }
-```
-
-- `format` (directory only): `"md"` (frontmatter + body, default) or `"json"`.
-- `route` (directory only) with `{slug}` gives each entry a canvas tile.
-- `fields` drives the create dialog and table columns. Directory collections
-  also get a `body` field; array collections don't.
-- The site reads the file/folder however it likes; the CMS only needs `path` +
-  `fields`. Convert a directory JSON collection with
+- Entries are Markdown (frontmatter + `body`) or JSON, one per file.
+- **Fields are inferred from each entry's JSON** — arrays become repeatable item
+  lists, nested objects become nested groups, `YYYY-MM-DDTHH:MM` strings become
+  datetime pickers. There is no `fields` declaration.
+- The site reads the file/folder however it likes; the CMS only needs the
+  `_collections/` entry. Convert a directory JSON collection to an array with
   `npx cms-bridge collections-to-array`.
 
 ---

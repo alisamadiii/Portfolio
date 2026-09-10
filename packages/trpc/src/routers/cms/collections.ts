@@ -247,11 +247,15 @@ export const collectionsRouter = createTRPCRouter({
           if (Array.isArray(response.data)) {
             const files = response.data.filter(
               (item) =>
-                item.type === "file" && /\.(md|mdx|json)$/.test(item.name)
+                item.type === "file" &&
+                // Dotfiles (e.g. `.template.json`, `.gitkeep`) are not entries.
+                !item.name.startsWith(".") &&
+                /\.(md|mdx|json)$/.test(item.name)
             );
-            // The collection table shows the first few declared fields as
-            // columns, so each entry's frontmatter is fetched and reduced to
-            // just those keys. A file that fails to fetch or parse still
+            // The collection table shows a few columns, so each entry is fetched
+            // and reduced. Declared collections use their first fields; discovered
+            // collections (no declared fields) keep every scalar top-level key
+            // (the client picks the columns). A file that fails to parse still
             // lists — its cells just render empty.
             const columnKeys = collection.fields
               .filter((field) => field.name !== "body")
@@ -274,9 +278,19 @@ export const collectionsRouter = createTRPCRouter({
                     ? JSON.parse(content)
                     : parse(content, { format: "yaml-frontmatter" });
                   if (parsed && typeof parsed === "object") {
-                    for (const key of columnKeys) {
-                      if (key in parsed)
-                        fields[key] = (parsed as Record<string, unknown>)[key];
+                    if (columnKeys.length > 0) {
+                      for (const key of columnKeys) {
+                        if (key in parsed)
+                          fields[key] = (parsed as Record<string, unknown>)[key];
+                      }
+                    } else {
+                      for (const [key, value] of Object.entries(
+                        parsed as Record<string, unknown>
+                      )) {
+                        if (key === "body" || key === "seo") continue;
+                        if (value !== null && typeof value === "object") continue;
+                        fields[key] = value;
+                      }
                     }
                   }
                 } catch {

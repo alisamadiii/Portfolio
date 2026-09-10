@@ -10,7 +10,8 @@ Read `pages-cms.md` for the full guide and `conventions.md` for the contract.
 Content is **two JSON files at the repo root**:
 
 - `_site.json` — one config file with three keys:
-  - `cms` — manifest: `baseUrl`, `pages` (name → route), optional `collections`.
+  - `cms` — manifest: `baseUrl`, `pages` (name → route). No `collections` key —
+    collections are auto-discovered from `_collections/`.
   - `seo` — site + per-page SEO (`site` and `pages.<key>` slices).
   - `variables` — global values reused on every page (name/logo/contact/socials).
 - `_pages.json` — all page content, keyed by page name.
@@ -37,8 +38,9 @@ editable on the canvas. Prefer components for anything new; a plain
 - **`npx cms-bridge check`** — validates the v2 contract (manifest shape,
   page/site key collisions, every `field`/`data-cms-field` resolves to a value)
   and lists any markup still needing wiring. Run it until clean.
-- **`npx cms-bridge collection`** — interactively adds an array collection to
-  the manifest (`_site.json` → `cms.collections`) and creates its placeholder file.
+- **`npx cms-bridge collection`** — interactively adds an array collection by
+  creating its `.json` file under `_collections/`; discovery picks it up (nothing
+  is written to the manifest).
 
 ## `pages-cms.md` is package-managed
 
@@ -58,7 +60,8 @@ run, so never hand-edit it. To change the canonical text, edit
 
 ## Collections
 
-New structured content types (blog, newsletters, jobs…) are declared in the
-manifest (`_site.json` → `cms.collections`) — see `collections.md`. Fields there drive the
-CMS table and create dialog; entries are Markdown (or JSON) files in the
-collection's `path`.
+New structured content types (blog, newsletters, jobs…) are **auto-discovered**
+from the repo-root `_collections/` folder — nothing is declared in `_site.json`
+— see `collections.md`. Drop a `.json` file (array collection) or a subfolder
+(directory collection, one Markdown/JSON entry per file) into `_collections/` and
+it appears in the CMS. Fields are inferred from each entry's JSON, not declared.

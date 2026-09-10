@@ -254,9 +254,9 @@ export function CmsOverlay({
             <EmptyHeader>
               <EmptyTitle>No collections yet</EmptyTitle>
               <EmptyDescription>
-                Add a collection to your _site.json manifest
-                (&quot;cms.collections&quot;), or run &quot;npx cms-bridge
-                collection&quot; to scaffold one.
+                Add a folder under <code>_collections/</code> — each folder is a
+                collection, and a top-level <code>.json</code> file is an array
+                collection. They show up here automatically.
               </EmptyDescription>
             </EmptyHeader>
             {canConfigure && (
