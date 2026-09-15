@@ -20,7 +20,12 @@ import path from "node:path";
 import pc from "picocolors";
 
 import { analyzeProject } from "../core/analyze.js";
+import { parseAstro } from "../core/astro-doc.js";
+import { classifyPage } from "../core/classify.js";
 import { countReportItems } from "../core/report.js";
+import { bindCandidatePaths } from "../../auto/bind.js";
+import { loadClaims } from "../../auto/claims.js";
+import { discoverContract } from "../../auto/contract.js";
 
 const COMPONENTS_MODULE = "@alisamadiillc/cms-bridge/components";
 
@@ -137,7 +142,11 @@ export function checkContract(root: string): {
   const cmsLabel = combined ? "_site.json (cms)" : "cms.json";
   const pagesLabel = combined ? "_pages.json" : "pages.json";
   const varsLabel = combined ? "_site.json (variables)" : "variables.json";
-  if (manifest.version !== 1) errors.push(`${cmsLabel}: "version" must be 1.`);
+  // version 2 = FLAT contract: _pages.json is one flat global map, no
+  // per-page objects to validate.
+  const flat = combined && manifest.version === 2;
+  if (manifest.version !== 1 && !flat)
+    errors.push(`${cmsLabel}: "version" must be 1 or 2.`);
   if (typeof manifest.baseUrl !== "string" || !manifest.baseUrl)
     errors.push(`${cmsLabel}: "baseUrl" is required.`);
   const manifestPages: Record<string, any> =
@@ -147,24 +156,35 @@ export function checkContract(root: string): {
       errors.push(`${cmsLabel}: pages.${name} is missing "route".`);
   }
 
-  for (const name of Object.keys(manifestPages))
-    if (!(name in pages))
-      errors.push(`${pagesLabel}: no "${name}" object (declared in ${cmsLabel}).`);
-  for (const name of Object.keys(pages))
-    if (!(name in manifestPages))
-      warnings.push(
-        `${pagesLabel}: "${name}" has no ${cmsLabel} route — it won't appear on the canvas.`
-      );
+  if (!flat) {
+    for (const name of Object.keys(manifestPages))
+      if (!(name in pages))
+        errors.push(`${pagesLabel}: no "${name}" object (declared in ${cmsLabel}).`);
+    for (const name of Object.keys(pages))
+      if (!(name in manifestPages))
+        warnings.push(
+          `${pagesLabel}: "${name}" has no ${cmsLabel} route — it won't appear on the canvas.`
+        );
+  }
 
   const variablesKeys = new Set(Object.keys(variables));
-  for (const [name, values] of Object.entries(pages)) {
-    if (!values || typeof values !== "object") continue;
-    for (const key of Object.keys(values)) {
-      if (key === "seo") continue;
+  if (flat) {
+    for (const key of Object.keys(pages)) {
       if (variablesKeys.has(key))
         warnings.push(
-          `Key collision: "${name}.${key}" shadows ${varsLabel} "${key}" on that page.`
+          `Key collision: "${key}" shadows ${varsLabel} "${key}".`
         );
+    }
+  } else {
+    for (const [name, values] of Object.entries(pages)) {
+      if (!values || typeof values !== "object") continue;
+      for (const key of Object.keys(values)) {
+        if (key === "seo") continue;
+        if (variablesKeys.has(key))
+          warnings.push(
+            `Key collision: "${name}.${key}" shadows ${varsLabel} "${key}" on that page.`
+          );
+      }
     }
   }
 
@@ -210,18 +230,142 @@ export function checkContract(root: string): {
   return { errors, warnings };
 }
 
-export async function checkCommand(root: string): Promise<number> {
+/** Auto mode enabled in the astro config? (`cmsBridge({ auto: true })`). */
+function detectAutoMode(root: string): boolean {
+  for (const name of ["astro.config.mjs", "astro.config.ts", "astro.config.js"]) {
+    const file = path.join(root, name);
+    if (!fs.existsSync(file)) continue;
+    const source = fs.readFileSync(file, "utf8");
+    return /cmsBridge\s*\(\s*\{[^)]*\bauto\s*:\s*true/.test(source);
+  }
+  return false;
+}
+
+export async function checkCommand(
+  root: string,
+  options: { auto?: boolean } = {}
+): Promise<number> {
   const { errors, warnings } = checkContract(root);
+  const autoMode = options.auto || detectAutoMode(root);
+  const projectContract = discoverContract(root);
 
   // Un-wired markup still needing review (expression-driven text, loops, etc.).
-  const { analyses } = await analyzeProject(root);
+  const { scan, analyses } = await analyzeProject(root, {
+    wireChrome: autoMode && projectContract.flat,
+  });
   const adoptedCount = analyses.reduce((sum, a) => sum + a.adoptedPaths.length, 0);
   const itemCount = countReportItems(analyses);
+
+  // Auto mode: the build transform wires plain-HTML candidates itself. Run the
+  // same key assignment (adopted-only taken set — key-stability invariant) and
+  // surface generated keys that aren't seeded in the pages JSON yet.
+  let autoCount = 0;
+  const autoWarnings: string[] = [];
+  if (autoMode) {
+    const contract = projectContract;
+    // Contract-aware pages read (scan.pagesJson is legacy-only).
+    const combinedPagesFile = path.join(root, "_pages.json");
+    const pagesJson: Record<string, unknown> =
+      fs.existsSync(path.join(root, "_site.json")) &&
+      fs.existsSync(combinedPagesFile)
+        ? (() => {
+            try {
+              return readJson(combinedPagesFile);
+            } catch {
+              return {};
+            }
+          })()
+        : scan.pagesJson;
+
+    // Flat contract: components/layouts are in scope too — classify every
+    // non-page src .astro file and append it to the analyses list.
+    if (contract.flat) {
+      const srcDir = path.join(root, "src");
+      const pagesPrefix = path.join(srcDir, "pages") + path.sep;
+      const extras = fs.existsSync(srcDir)
+        ? fs
+            .readdirSync(srcDir, { recursive: true, encoding: "utf8" })
+            .map((name) => path.join(srcDir, name))
+            .filter(
+              (file) =>
+                file.endsWith(".astro") &&
+                !file.startsWith(pagesPrefix) &&
+                !file.includes("[")
+            )
+        : [];
+      for (const file of extras) {
+        const source = fs.readFileSync(file, "utf8");
+        try {
+          const parsed = await parseAstro(source);
+          if (parsed.diagnosticCount > 0) continue;
+          const relPath = path.relative(root, file);
+          analyses.push(
+            classifyPage(
+              { filePath: file, relPath, route: "/", pageKey: "", contentIdent: "content", hasPagesBinding: false, source },
+              parsed,
+              source,
+              { wireChrome: true }
+            )
+          );
+        } catch {
+          // unparseable component — ignore, the build will warn
+        }
+      }
+    }
+
+    // Same binding as the build: persisted ownership from _fields.json
+    // scopes the ordinal fallback per file, exactly like the transform.
+    const persisted = contract.flat ? loadClaims(root) : new Map();
+    const sessionClaims = new Set<string>();
+    for (const analysis of analyses) {
+      const pageValues = contract.flat
+        ? pagesJson
+        : ((pagesJson[analysis.page.pageKey] ?? {}) as Record<string, unknown>);
+      bindCandidatePaths(analysis, pageValues, {
+        legacy: !contract.flat,
+        externalClaims: contract.flat ? sessionClaims : undefined,
+        ownClaims: contract.flat
+          ? (persisted.get(analysis.page.relPath) ?? new Set())
+          : undefined,
+      });
+      if (contract.flat) {
+        for (const candidate of analysis.candidates) {
+          if (candidate.path) sessionClaims.add(candidate.path);
+        }
+      }
+      let unseeded = 0;
+      for (const candidate of analysis.candidates) {
+        if (!candidate.path) {
+          unseeded++;
+          continue;
+        }
+        autoCount++;
+        const seeded =
+          resolvePath(pageValues, candidate.path) ||
+          (candidate.role === "image" &&
+            resolvePath(pageValues, `${candidate.path}Alt`));
+        if (!seeded) {
+          autoWarnings.push(
+            `${analysis.page.relPath}: key "${candidate.path}" not seeded — run dev/build locally and commit the pages JSON.`
+          );
+        }
+      }
+      if (unseeded > 0) {
+        autoWarnings.push(
+          `${analysis.page.relPath}: ${unseeded} element(s) not seeded yet — run dev/build locally and commit the pages JSON.`
+        );
+      }
+    }
+  }
 
   console.log(`${pc.bold("cms-bridge check")} — ${analyses.length} page(s)`);
   for (const error of errors) console.log(`  ${pc.red("✗")} ${error}`);
   for (const warning of warnings) console.log(`  ${pc.yellow("⚠")} ${warning}`);
   console.log(`  ${pc.green("✓")} ${adoptedCount} field(s) CMS-wired`);
+  if (autoMode) {
+    console.log(`  ${pc.green("✓")} ${autoCount} field(s) auto-wired`);
+    for (const warning of autoWarnings) console.log(`  ${pc.yellow("⚠")} ${warning}`);
+  }
   if (itemCount > 0)
     console.log(
       `  ${pc.yellow("⚠")} ${itemCount} item(s) need manual review`

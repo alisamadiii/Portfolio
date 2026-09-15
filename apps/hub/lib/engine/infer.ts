@@ -23,8 +23,28 @@ export type InferredField = {
   options?: { type?: string };
 };
 
+/**
+ * cms-bridge auto-mode field ID: `<role>_<4 base36>`, plus the image alt
+ * sibling `<id>Alt`. Mirror of AUTO_ID_RE in cms-bridge `src/auto/ids.ts` —
+ * the hub doesn't depend on that package, keep the two in sync by hand.
+ */
+const AUTO_ID =
+  /^(heading|title|subtitle|text|eyebrow|cta|image)_[a-z0-9]{4}(Alt)?$/;
+const AUTO_LABEL: Record<string, string> = {
+  heading: "Heading",
+  title: "Title",
+  subtitle: "Subtitle",
+  text: "Text",
+  eyebrow: "Eyebrow",
+  cta: "Link",
+  image: "Image",
+};
+
 /** camelCase / kebab-case key → "Title Case" label. */
 export const labelize = (key: string): string => {
+  // Random auto IDs are meaningless to humans — label by their role prefix.
+  const auto = AUTO_ID.exec(key);
+  if (auto) return auto[2] ? `${AUTO_LABEL[auto[1]]} Alt Text` : AUTO_LABEL[auto[1]];
   const words = key
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/[-_]+/g, " ")
@@ -43,7 +63,13 @@ const TEXT_LENGTH = 120;
 
 const inferScalar = (key: string, value: string): InferredField => {
   const base = { name: key, label: labelize(key) };
-  if (IMAGE_VALUE.test(value) || (IMAGE_KEY.test(key) && value.startsWith("/")))
+  if (
+    IMAGE_VALUE.test(value) ||
+    (IMAGE_KEY.test(key) && value.startsWith("/")) ||
+    // auto-ID image fields: the role prefix is the type signal (covers
+    // extensionless / root-relative paths that IMAGE_VALUE misses).
+    /^image_[a-z0-9]{4}$/.test(key)
+  )
     return { ...base, type: "image" };
   if (DATETIME_VALUE.test(value)) return { ...base, type: "datetime" };
   if (DATE_VALUE.test(value)) return { ...base, type: "date" };

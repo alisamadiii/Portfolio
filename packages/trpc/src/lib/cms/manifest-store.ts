@@ -65,7 +65,8 @@ const CollectionSchema = z.object({
 });
 
 const ManifestObjectSchema = z.object({
-  version: z.literal(1),
+  // 1 = nested per-page _pages.json; 2 = flat global map (auto mode v3).
+  version: z.union([z.literal(1), z.literal(2)]),
   baseUrl: z.string().url(),
   media: z
     .object({ input: z.string().min(1), output: z.string().min(1) })

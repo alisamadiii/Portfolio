@@ -144,3 +144,16 @@ const home = pages.home;
   CMS and saved drafts reference them.
 - Only ADD. Existing values in the JSON always win over generated defaults.
 - After every batch of changes, run `npx cms-bridge check` until clean.
+
+### Auto mode
+
+`cmsBridge({ auto: true })` wires plain HTML entirely at build time — the
+SOURCE carries no `data-cms-*` attributes at all; they exist only in the
+built/served output. Field IDs (`<role>_<rand>`, e.g. `text_x8n1`) live in
+the pages JSON as a flat per-page map, and elements re-bind to them every
+build by value (literal == JSON value, reorder-safe) with an ordinal
+fallback for in-place edits. The idempotency rules above apply identically.
+Manual dot-path `data-cms-field` attrs stay first-class: never renamed,
+substitution/sync included. Existing readable keys in the JSON are reused
+(legacy adoption), never renamed. Plain `.map()` loops over page-JSON arrays
+are wired to the Group/Item contract automatically. See `docs/auto.md`.

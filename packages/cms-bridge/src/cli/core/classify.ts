@@ -22,6 +22,7 @@ import {
   walk,
 } from "./astro-doc.js";
 import { roleForTag, sectionName } from "./naming.js";
+import { pathFromFieldAttr } from "../../auto/ids.js";
 import type {
   CandidateField,
   PageAnalysis,
@@ -112,11 +113,22 @@ function frontmatterReports(
   return reports;
 }
 
+export type ClassifyOptions = {
+  /**
+   * Flat contract: chrome (buttons, labels, nav/header/footer text) becomes
+   * normal editable candidates instead of R6 reports. Placeholders stay
+   * report-only. Off for legacy repos (zero behavior change).
+   */
+  wireChrome?: boolean;
+};
+
 export function classifyPage(
   page: PageFile,
   parsed: ParsedAstro,
-  source: string
+  source: string,
+  options: ClassifyOptions = {}
 ): PageAnalysis {
+  const wireChrome = options.wireChrome ?? false;
   const candidates: CandidateField[] = [];
   const reports: ReportItem[] = frontmatterReports(parsed.frontmatter, page);
   const adoptedPaths: string[] = [];
@@ -204,33 +216,34 @@ export function classifyPage(
     if (node.type !== "element") return;
     const tag = node.name ?? "";
 
-    // Already tagged → adopted, leave alone.
+    // Already tagged → self-pinned: the path is frozen (never renumbered) and
+    // the element is still a candidate so substitution/sync/seeding apply.
+    // A stamp is deliberate, so no reports are emitted for it.
     const adopted = staticAttr(node, "data-cms-field");
-    if (adopted) {
-      adoptedPaths.push(adopted);
-      return;
-    }
+    if (adopted) adoptedPaths.push(adopted);
 
     if (getAttr(node, "set:html") || getAttr(node, "set:text")) return false;
 
-    // aria-label / title attr chrome strings — informational.
-    for (const attrName of ["aria-label"] as const) {
-      const value = staticAttr(node, attrName);
-      if (value && value.length > 2) {
-        reports.push({
-          code: "R6",
-          file: page.relPath,
-          line: line(node),
-          excerpt: `${attrName}="${value}"`,
-          note: "Accessibility string — usually fine to leave hardcoded.",
-        });
+    if (!adopted) {
+      // aria-label / title attr chrome strings — informational.
+      for (const attrName of ["aria-label"] as const) {
+        const value = staticAttr(node, attrName);
+        if (value && value.length > 2) {
+          reports.push({
+            code: "R6",
+            file: page.relPath,
+            line: line(node),
+            excerpt: `${attrName}="${value}"`,
+            note: "Accessibility string — usually fine to leave hardcoded.",
+          });
+        }
       }
     }
 
     // Form/nav chrome: placeholders + labels/buttons.
     const chrome = isChrome(node, ancestors);
     const placeholder = staticAttr(node, "placeholder");
-    if (placeholder) {
+    if (placeholder && !adopted) {
       reports.push({
         code: "R6",
         file: page.relPath,
@@ -240,12 +253,18 @@ export function classifyPage(
       });
     }
 
-    const role = roleForTag(tag);
+    // Chrome tags (button/label/…) have no intrinsic role; when chrome is
+    // wired (flat contract) they become plain text candidates.
+    const role =
+      roleForTag(tag) ?? (wireChrome && CHROME_TAGS.has(tag) ? "text" : null);
     if (!role && !CHROME_TAGS.has(tag)) return;
+    // Stamped element whose tag has no role: adopted-only, nothing to extract.
+    if (adopted && !role) return;
 
     const chain = sectionChainFor(ancestors);
+    const selfPath = adopted && role ? pathFromFieldAttr(adopted, role) : undefined;
 
-    if (chrome) {
+    if (chrome && !adopted && !wireChrome) {
       const text = soleStaticText(node);
       if (text && text.value.trim().length > 1) {
         reports.push({
@@ -266,7 +285,7 @@ export function classifyPage(
       const src = staticAttr(node, "src");
       const alt = staticAttr(node, "alt");
       if (!src) {
-        if (alt) {
+        if (alt && !adopted) {
           reports.push({
             code: "R7",
             file: page.relPath,
@@ -285,6 +304,7 @@ export function classifyPage(
         role,
         tag,
         sectionChain: chain,
+        path: selfPath,
         src,
         alt,
         line: line(node),
@@ -313,7 +333,7 @@ export function classifyPage(
       const spanText = span ? soleStaticText(span) : undefined;
       const label = direct ?? spanText;
       if (!href || !label || !label.value.trim()) {
-        if (label && label.value.trim().length > 1) {
+        if (label && label.value.trim().length > 1 && !adopted) {
           reports.push({
             code: "R1",
             file: page.relPath,
@@ -331,6 +351,7 @@ export function classifyPage(
         role,
         tag,
         sectionChain: chain,
+        path: selfPath,
         text: label.value.trim(),
         href,
         line: line(node),
@@ -357,7 +378,7 @@ export function classifyPage(
       const hasElements = (node.children ?? []).some(
         (child) => child.type === "element" || child.type === "component"
       );
-      if (hasStaticText && hasElements) {
+      if (hasStaticText && hasElements && !adopted) {
         reports.push({
           code: "R2",
           file: page.relPath,
@@ -376,6 +397,7 @@ export function classifyPage(
       role,
       tag,
       sectionChain: chain,
+      path: selfPath,
       text: value,
       line: line(node),
       el: {
@@ -402,6 +424,8 @@ export function classifyPage(
     if (headingIndex <= 0) continue;
     for (let i = 0; i < headingIndex; i++) {
       const candidate = list[i];
+      // Stamped candidates keep their minted role — never re-roled.
+      if (candidate.path) continue;
       if (candidate.role === "text" && (candidate.text ?? "").length < 40) {
         candidate.role = "eyebrow";
       }

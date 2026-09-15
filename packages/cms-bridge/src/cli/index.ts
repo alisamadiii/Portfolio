@@ -31,7 +31,7 @@ Flags:
 
 async function main(): Promise<number> {
   const argv = mri(process.argv.slice(2), {
-    boolean: ["dry-run", "verbose", "help", "force"],
+    boolean: ["dry-run", "verbose", "help", "force", "auto"],
     string: ["repo-id"],
   });
   const command = argv._[0];
@@ -50,7 +50,7 @@ async function main(): Promise<number> {
     }
     case "check": {
       const { checkCommand } = await import("./commands/check.js");
-      return checkCommand(root);
+      return checkCommand(root, { auto: argv.auto });
     }
     case "collection": {
       const { collectionCommand } = await import("./commands/collection.js");

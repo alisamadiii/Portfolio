@@ -1,13 +1,17 @@
 /**
- * Section prefix + field key derivation. Deterministic, adopt-first: names are
- * only computed for NEW fields; anything already in JSON or already tagged is
- * never renamed or renumbered.
+ * Section prefix + readable field key derivation (the pre-ID scheme).
+ *
+ * Auto mode now stamps permanent random IDs (src/auto/ids.ts); this module
+ * is kept for LEGACY ADOPTION — the first stamped run computes the key an
+ * element would have derived and, if it resolves in the page JSON, freezes
+ * that readable key instead of minting. Also feeds report suggestedKeys.
+ * `roleForTag` remains load-bearing everywhere (kinds + value shapes).
  */
 
 import type { AstroNode } from "./astro-doc.js";
 import { staticAttr, walk } from "./astro-doc.js";
 import { camelCase } from "./routes.js";
-import type { FieldRole } from "../types.js";
+import type { CandidateField, FieldRole } from "../types.js";
 
 // Tailwind-ish utility class tokens are never section names.
 const UTILITY_CLASS =
@@ -114,6 +118,16 @@ export function sectionName(section: AstroNode, used: Set<string>): string {
   return name;
 }
 
+const ROLE_KEY: Record<FieldRole, string> = {
+  heading: "heading",
+  title: "title",
+  subtitle: "subtitle",
+  text: "text",
+  eyebrow: "eyebrow",
+  cta: "cta",
+  image: "image",
+};
+
 export function roleForTag(tag: string): FieldRole | null {
   if (tag === "h1") return "heading";
   if (tag === "h2" || tag === "h3") return "title";
@@ -122,4 +136,39 @@ export function roleForTag(tag: string): FieldRole | null {
   if (tag === "a") return "cta";
   if (tag === "img") return "image";
   return null;
+}
+
+/**
+ * Assign readable dot paths to a page's candidates. `taken` seeds collision
+ * numbering with everything that must never be reused. NOTE (auto mode):
+ * only used for the one-time legacy-adoption check — seed `taken` with
+ * source-adopted paths so the computed keys reproduce the pre-ID scheme
+ * byte-identically; keys that don't resolve in the JSON are discarded and
+ * replaced by minted IDs (src/auto/ids.ts).
+ */
+export function assignPaths(
+  candidates: CandidateField[],
+  taken: Set<string>
+): void {
+  for (const candidate of candidates) {
+    const prefix = candidate.sectionChain.join(".");
+    const baseKey = ROLE_KEY[candidate.role];
+    let key = baseKey;
+    let counter = 2;
+    const pathFor = (k: string) => (prefix ? `${prefix}.${k}` : k);
+    while (
+      taken.has(pathFor(key)) ||
+      // image reserves its sibling alt key too
+      (candidate.role === "image" && taken.has(pathFor(`${key}Alt`)))
+    ) {
+      key = `${baseKey}${counter++}`;
+    }
+    candidate.path = pathFor(key);
+    taken.add(candidate.path);
+    if (candidate.role === "image") taken.add(pathFor(`${key}Alt`));
+    if (candidate.role === "cta") {
+      taken.add(`${candidate.path}.label`);
+      taken.add(`${candidate.path}.link`);
+    }
+  }
 }

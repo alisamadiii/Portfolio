@@ -139,6 +139,22 @@ page under Page Settings). The hub writes it **additively** — it never prunes.
 
 ---
 
+## Authoring: auto mode (plain HTML — the default for new work)
+
+With `cmsBridge({ auto: true })` in `astro.config.mjs`, skip the components
+entirely: write plain HTML in `src/pages/*.astro` — sources carry NO
+`data-cms-*` attributes; all wiring is injected into the built output only.
+Random field IDs (`text_x8n1`) live in the pages JSON (flat per-page map);
+elements re-bind to them every build by value, so reordering never shifts
+keys. The bridge substitutes JSON values (JSON wins once a key exists) and
+seeds missing keys from markup literals. Plain `.map()` loops over page-JSON
+arrays are wired to the group contract automatically (add/remove/reorder in
+the canvas), and a map over a missing array seeds one placeholder item. Run
+dev/build locally and commit the pages JSON; hub edits work as usual.
+Conditionals, mixed markup, and shared components still need manual wiring.
+Full guide: `docs/auto.md` in the package. The bridge components below remain
+supported for legacy repos and edge cases.
+
 ## Authoring: bridge components
 
 The reliable way to make markup editable. Import from

@@ -526,7 +526,11 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         const pagesPath = manifest.object.paths.pages;
         const key = draftKey(owner, repo, branch, pagesPath);
         const base = pagesBaseRef.current ?? {};
-        const assembled = assemblePagesDraft(pagesBaseRef.current, pageValues);
+        const assembled = assemblePagesDraft(
+          pagesBaseRef.current,
+          pageValues,
+          manifest.object.version === 2
+        );
         // No net difference from published → drop the draft entirely so the
         // Publish badge, dialog and page dots don't show a phantom change.
         if (!contentDiffers(base, assembled)) {

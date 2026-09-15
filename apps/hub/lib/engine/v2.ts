@@ -15,7 +15,8 @@ import { inferFields, labelize } from "./infer";
 export type ManifestData = {
   sha: string;
   object: {
-    version: 1;
+    /** 1 = nested per-page _pages.json; 2 = FLAT global map (auto mode v3). */
+    version: number;
     baseUrl: string;
     media?: { input: string; output: string };
     pages: Record<string, { route: string; title?: string }>;
@@ -69,9 +70,15 @@ export function buildV2EntryMap(
   if (!manifest) return { routes, globals: [], byName };
 
   const { pages, paths } = manifest.object;
+  // Flat contract (version 2): _pages.json is ONE flat map shared by every
+  // page — keys are globally unique, so each page entry sees the whole
+  // object and resolution just works.
+  const flat = manifest.object.version === 2;
 
   for (const [name, page] of Object.entries(pages)) {
-    const values = (pagesContent?.[name] ?? {}) as Record<string, unknown>;
+    const values = (
+      flat ? (pagesContent ?? {}) : (pagesContent?.[name] ?? {})
+    ) as Record<string, unknown>;
     const entry: EntryRoute = {
       name,
       filePath: paths.pages,
@@ -115,9 +122,15 @@ export function buildV2EntryMap(
  */
 export function assemblePagesDraft(
   base: Record<string, unknown> | null,
-  pageValues: Map<string, Record<string, unknown>>
+  pageValues: Map<string, Record<string, unknown>>,
+  flat = false
 ): Record<string, unknown> {
   const out: Record<string, unknown> = { ...(base ?? {}) };
+  // Flat contract: every entry holds the whole flat object — merge at root.
+  if (flat) {
+    for (const [, values] of pageValues) Object.assign(out, values);
+    return out;
+  }
   for (const [name, values] of pageValues) out[name] = values;
   return out;
 }

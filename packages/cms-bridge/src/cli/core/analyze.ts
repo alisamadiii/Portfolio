@@ -4,11 +4,14 @@
  */
 
 import { parseAstro } from "./astro-doc.js";
-import { classifyPage } from "./classify.js";
+import { classifyPage, type ClassifyOptions } from "./classify.js";
 import { scanProject } from "./scan.js";
 import type { PageAnalysis } from "../types.js";
 
-export async function analyzeProject(root: string): Promise<{
+export async function analyzeProject(
+  root: string,
+  options: ClassifyOptions = {}
+): Promise<{
   scan: ReturnType<typeof scanProject>;
   analyses: PageAnalysis[];
 }> {
@@ -16,7 +19,7 @@ export async function analyzeProject(root: string): Promise<{
   const analyses: PageAnalysis[] = [];
   for (const page of scan.pages) {
     const parsed = await parseAstro(page.source);
-    analyses.push(classifyPage(page, parsed, page.source));
+    analyses.push(classifyPage(page, parsed, page.source, options));
   }
   return { scan, analyses };
 }
