@@ -14,8 +14,6 @@ import {
 import { toast } from "sonner";
 
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
 import { Label } from "@workspace/ui/components/label";
 import {
   Select,
@@ -49,10 +47,36 @@ type Lead = RouterOutputs["leads"]["list"][number];
 const STATUSES = ["new", "contacted", "interested", "won", "lost"] as const;
 
 function websiteBadge(lead: Lead) {
-  if (!lead.website) return <Badge variant="destructive">No website</Badge>;
-  if (lead.socialOnly) return <Badge variant="secondary">Social only</Badge>;
-  if (lead.websiteDead) return <Badge variant="secondary">Site down</Badge>;
-  return <Badge variant="outline">Has site</Badge>;
+  const pill = "rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap";
+  if (!lead.website)
+    return <span className={`${pill} bg-rose-100 text-rose-600`}>No website</span>;
+  if (lead.socialOnly)
+    return (
+      <span className={`${pill} bg-amber-100 text-amber-700`}>Social only</span>
+    );
+  if (lead.websiteDead)
+    return (
+      <span className={`${pill} bg-orange-100 text-orange-600`}>Site down</span>
+    );
+  return (
+    <span className={`${pill} bg-emerald-100 text-emerald-700`}>Has site</span>
+  );
+}
+
+function scoreChip(score: number) {
+  const tone =
+    score >= 70
+      ? "bg-primary/10 text-primary"
+      : score >= 50
+        ? "bg-amber-100 text-amber-700"
+        : "bg-muted text-muted-foreground";
+  return (
+    <span
+      className={`flex size-9 items-center justify-center rounded-xl text-sm font-semibold ${tone}`}
+    >
+      {score}
+    </span>
+  );
 }
 
 // Own outreach script — filled from lead data.
@@ -178,14 +202,16 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/">
-              <ArrowLeft /> Scans
-            </Link>
-          </Button>
+          <Link
+            href="/"
+            className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+          >
+            <ArrowLeft /> Scans
+          </Link>
           {scan.data && (
-            <h1 className="text-lg font-semibold capitalize">
-              {scan.data.query} — {scan.data.city}, {scan.data.state}
+            <h1 className="text-lg font-semibold tracking-tight capitalize">
+              {scan.data.query} —{" "}
+              {scan.data.nearMe ? "near me" : `${scan.data.city}, ${scan.data.state}`}
             </h1>
           )}
         </div>
@@ -216,9 +242,8 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
               ))}
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
             disabled={!rows.length}
             onClick={() =>
               exportCsv(
@@ -228,11 +253,11 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
             }
           >
             <Download /> CSV
-          </Button>
+          </button>
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="bg-card rounded-3xl p-2 shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -271,7 +296,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                   className="cursor-pointer"
                   onClick={() => setOpenLeadId(lead.id)}
                 >
-                  <TableCell className="font-semibold">{lead.score}</TableCell>
+                  <TableCell>{scoreChip(lead.score)}</TableCell>
                   {scan.data?.nearMe && (
                     <TableCell>
                       {lead.distanceMiles !== null
@@ -279,8 +304,8 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                         : "—"}
                     </TableCell>
                   )}
-                  <TableCell>
-                    <div className="font-medium">{lead.name}</div>
+                  <TableCell className="max-w-80 whitespace-normal">
+                    <div className="font-medium break-words">{lead.name}</div>
                     <div className="text-muted-foreground text-xs">
                       {lead.category ?? ""}
                       {lead.mapsUrl && (
@@ -381,9 +406,13 @@ const LeadSheet = ({
         <SheetDescription className="flex flex-wrap items-center gap-2">
           {lead.category && <span>{lead.category}</span>}
           {websiteBadge(lead)}
-          <Badge variant="outline">Score {lead.score}</Badge>
+          <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-medium">
+            Score {lead.score}
+          </span>
           {lead.distanceMiles !== null && (
-            <Badge variant="outline">{lead.distanceMiles} mi away</Badge>
+            <span className="bg-emerald-100 text-emerald-700 rounded-full px-2.5 py-1 text-xs font-medium">
+              {lead.distanceMiles} mi away
+            </span>
           )}
           {lead.rating ? (
             <span className="flex items-center gap-1">
@@ -396,11 +425,12 @@ const LeadSheet = ({
 
       <div className="space-y-5 px-4 pb-6">
         {lead.phone && (
-          <Button asChild size="lg" className="w-full text-base">
-            <a href={`tel:${lead.phone}`}>
-              <Phone /> Call {lead.phone}
-            </a>
-          </Button>
+          <a
+            href={`tel:${lead.phone}`}
+            className="btn-pill btn-violet h-13 w-full text-base font-semibold [&_svg]:size-5"
+          >
+            <Phone /> Call {lead.phone}
+          </a>
         )}
 
         <div className="space-y-2">
@@ -416,18 +446,24 @@ const LeadSheet = ({
           />
           <div className="flex gap-2">
             {lead.mapsUrl && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={lead.mapsUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink /> Open in Google Maps
-                </a>
-              </Button>
+              <a
+                href={lead.mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+              >
+                <ExternalLink /> Open in Google Maps
+              </a>
             )}
             {lead.website && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={lead.website} target="_blank" rel="noreferrer">
-                  <ExternalLink /> Website
-                </a>
-              </Button>
+              <a
+                href={lead.website}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+              >
+                <ExternalLink /> Website
+              </a>
             )}
           </div>
         </div>
@@ -440,18 +476,17 @@ const LeadSheet = ({
         <div>
           <div className="mb-1 flex items-center justify-between">
             <Label>Call script</Label>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              className="btn-pill btn-light h-8 px-3 text-xs [&_svg]:size-3.5"
               onClick={() => {
                 navigator.clipboard.writeText(script);
                 toast.success("Script copied");
               }}
             >
               <Copy /> Copy
-            </Button>
+            </button>
           </div>
-          <p className="bg-muted rounded-md p-3 text-sm whitespace-pre-wrap">
+          <p className="bg-muted rounded-2xl p-4 text-sm whitespace-pre-wrap">
             {script}
           </p>
         </div>
@@ -465,9 +500,12 @@ const LeadSheet = ({
             rows={3}
             className="mt-1"
           />
-          <Button size="sm" className="mt-2" onClick={() => onSaveNotes(notes)}>
+          <button
+            className="btn-pill btn-dark mt-2 h-9 px-4 text-sm"
+            onClick={() => onSaveNotes(notes)}
+          >
             Save notes
-          </Button>
+          </button>
         </div>
       </div>
     </>

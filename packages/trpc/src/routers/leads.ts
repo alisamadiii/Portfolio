@@ -7,6 +7,7 @@ import { lead, leadScan } from "@workspace/drizzle/schema";
 import type { LeadStatus } from "@workspace/drizzle/schema";
 
 import { adminProcedure, createTRPCRouter } from "../init";
+import { inspectSite } from "../lib/inspect";
 import {
   distanceMiles,
   isSocialOnly,
@@ -312,6 +313,23 @@ export const leadsRouter = createTRPCRouter({
         .set({ status: input.status as LeadStatus, updatedAt: new Date() })
         .where(eq(lead.id, input.id));
       return { success: true };
+    }),
+
+  // Fetches a client site's HTML and reports vendors/scripts to port over.
+  // No Google API involved — plain HTTP, no quota impact.
+  inspect: adminProcedure
+    .input(z.object({ domain: z.string().min(3).max(255) }))
+    .mutation(async ({ input }) => {
+      try {
+        return await inspectSite(input.domain);
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Could not fetch ${input.domain}: ${
+            error instanceof Error ? error.message : "unknown error"
+          }`,
+        });
+      }
     }),
 
   updateNotes: adminProcedure

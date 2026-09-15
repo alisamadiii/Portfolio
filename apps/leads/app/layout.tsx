@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Crosshair } from "lucide-react";
 
 import { hubLoginUrl, urls } from "@workspace/ui/lib/company";
 
@@ -14,6 +15,7 @@ import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
 import { LeadsProviders } from "@/components/providers";
+import { NavPills } from "@/components/nav-pills";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -73,15 +75,23 @@ async function LeadsLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4">
-      <header className="flex items-center justify-between border-b py-4">
-        <Link href="/" className="text-lg font-semibold">
-          Lead Finder
-        </Link>
-        <span className="text-muted-foreground text-sm">
+      <header className="bg-card mt-4 flex items-center justify-between rounded-full px-3 py-2.5 shadow-sm sm:px-5">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-full">
+              <Crosshair className="size-4.5" />
+            </span>
+            <span className="text-lg font-semibold tracking-tight max-sm:hidden">
+              Lead Finder
+            </span>
+          </Link>
+          <NavPills />
+        </div>
+        <span className="text-muted-foreground text-sm max-md:hidden">
           Local businesses without websites
         </span>
       </header>
-      <main className="flex-1 py-6">{children}</main>
+      <main className="flex-1 py-8">{children}</main>
     </div>
   );
 }

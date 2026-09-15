@@ -1,1 +1,134 @@
 @import "@workspace/ui/globals.css";
+
+/*
+ * Leads theme — soft-gray canvas, white cards, violet accent, pill shapes.
+ * Overrides the shared token layer only; shadcn components pick these up.
+ */
+:root,
+.light {
+  --background: oklch(0.945 0.004 260);
+  --foreground: oklch(0.21 0.01 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.01 260);
+  --primary: oklch(0.585 0.222 287);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.955 0.003 260);
+  --secondary-foreground: oklch(0.3 0.01 260);
+  --muted: oklch(0.955 0.003 260);
+  --muted-foreground: oklch(0.5 0.012 260);
+  --accent: oklch(0.955 0.003 260);
+  --accent-foreground: oklch(0.21 0.01 260);
+  --destructive: oklch(0.6 0.24 27);
+  --border: oklch(0.925 0.004 260);
+  --input: oklch(0.9 0.004 260);
+  --ring: oklch(0.585 0.222 287 / 35%);
+  --radius: 1rem;
+}
+
+/* Pill primitives — custom controls per design direction */
+.btn-pill {
+  @apply inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-6 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0;
+}
+
+.btn-dark {
+  @apply bg-foreground text-background hover:opacity-85 active:scale-[0.98];
+}
+
+.btn-light {
+  @apply bg-card text-foreground border border-border shadow-xs hover:bg-muted;
+}
+
+.btn-violet {
+  @apply bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98];
+}
+
+.input-pill {
+  @apply h-11 w-full rounded-full border border-border bg-card px-4 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-primary/40 focus-visible:ring-[3px] focus-visible:ring-ring;
+}
+
+.icon-chip {
+  @apply flex size-9 shrink-0 items-center justify-center rounded-xl [&_svg]:size-4.5;
+}
+
+/*
+ * Shared-component retheme. The workspace Table paints header bg-muted and
+ * body bg-background — gray-on-gray on this canvas. Flatten to transparent
+ * rows with hairline dividers; whiten sheets, selects, and text controls.
+ * Unlayered rules here intentionally out-cascade Tailwind's layered utilities.
+ */
+[data-slot="table-header"] {
+  background: transparent;
+}
+[data-slot="table-header"] [data-slot="table-row"] {
+  border-bottom-width: 1px;
+}
+[data-slot="table-body"] {
+  background: transparent;
+}
+[data-slot="table-head"] {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  height: 2.75rem;
+  padding-inline: 0.75rem;
+}
+[data-slot="table-cell"] {
+  padding: 0.75rem;
+}
+[data-slot="table-row"] {
+  border-color: var(--border);
+}
+
+[data-slot="sheet-content"] {
+  background: var(--card);
+}
+
+[data-slot="textarea"],
+[data-slot="input"] {
+  background: var(--card);
+  border-radius: 1rem;
+}
+
+[data-slot="select-trigger"] {
+  background: var(--card);
+  border-radius: 9999px;
+}
+
+/* Combobox chevron addon: no gray block or divider inside pill inputs. */
+[data-slot="input-group-addon"] {
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+}
+
+/* Code/evidence blocks sit on white cards — keep them a soft gray inset. */
+pre {
+  background: var(--muted);
+}
+
+/* Slim rounded scrollbars everywhere in this app. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.78 0.01 260) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.78 0.01 260);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.68 0.012 260);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

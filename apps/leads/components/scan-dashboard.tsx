@@ -4,17 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Search } from "lucide-react";
+import {
+  History,
+  Loader2,
+  MapPin,
+  Navigation,
+  Radar,
+  Search,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card";
 import {
   Combobox,
   ComboboxContent,
@@ -24,7 +23,6 @@ import {
   ComboboxList,
 } from "@workspace/ui/components/combobox";
 import { Label } from "@workspace/ui/components/label";
-import { Progress } from "@workspace/ui/components/progress";
 import { Switch } from "@workspace/ui/components/switch";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
@@ -148,7 +146,7 @@ const SuggestInput = ({
         placeholder={placeholder}
         required
         minLength={2}
-        className={className}
+        className={`bg-card h-11 rounded-full border-border px-2 shadow-xs ${className ?? ""}`}
       />
       <ComboboxContent>
         <ComboboxEmpty>No matches — free text works too</ComboboxEmpty>
@@ -196,14 +194,23 @@ export const ScanDashboard = () => {
   };
 
   const usage = scans.data;
+  const usedRatio = usage ? usage.monthApiCalls / usage.freeTier : 0;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>New scan</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-card rounded-3xl p-6 shadow-sm sm:p-7">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="icon-chip bg-primary/10 text-primary">
+            <Radar />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">New scan</h2>
+            <p className="text-muted-foreground text-sm">
+              Find businesses without a real website
+            </p>
+          </div>
+        </div>
+        <div>
           <form
             onSubmit={handleScan}
             className="flex flex-col gap-3 sm:flex-row"
@@ -233,8 +240,9 @@ export const ScanDashboard = () => {
                 />
               </>
             )}
-            <Button
+            <button
               type="submit"
+              className="btn-pill btn-dark"
               disabled={runScan.isPending || usage?.scansLeft === 0}
             >
               {runScan.isPending ? (
@@ -243,7 +251,7 @@ export const ScanDashboard = () => {
                 <Search />
               )}
               Scan
-            </Button>
+            </button>
           </form>
           <div className="mt-3 flex items-center gap-2">
             <Switch id="near-me" checked={nearMe} onCheckedChange={setNearMe} />
@@ -253,19 +261,25 @@ export const ScanDashboard = () => {
             </Label>
           </div>
           {usage && (
-            <div className="mt-4 space-y-1.5">
-              <Progress
-                value={(usage.monthApiCalls / usage.freeTier) * 100}
-                className={
-                  usage.monthApiCalls / usage.freeTier >= 0.8
-                    ? "[&>[data-slot=progress-indicator]]:bg-destructive"
-                    : undefined
-                }
-              />
+            <div className="mt-5 space-y-2">
+              <div className="bg-muted h-2 overflow-hidden rounded-full">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    usedRatio >= 0.8 ? "bg-destructive" : "bg-primary"
+                  }`}
+                  style={{ width: `${Math.min(100, usedRatio * 100)}%` }}
+                />
+              </div>
               <p className="text-muted-foreground text-sm">
-                {usage.monthApiCalls} / {usage.freeTier} free Google API calls
-                used this month — about {usage.scansLeft} scans left. Scans are
-                blocked at the limit so nothing gets billed; resets on the 1st.
+                <span className="text-foreground font-medium">
+                  {usage.monthApiCalls} / {usage.freeTier}
+                </span>{" "}
+                free Google API calls used this month — about{" "}
+                <span className="text-foreground font-medium">
+                  {usage.scansLeft} scans left
+                </span>
+                . Scans are blocked at the limit so nothing gets billed; resets
+                on the 1st.
               </p>
               {usage.scansLeft === 0 && (
                 <p className="text-destructive text-sm font-medium">
@@ -274,34 +288,48 @@ export const ScanDashboard = () => {
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Scan history</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {scans.isLoading ? (
-            <p className="text-muted-foreground text-sm">Loading…</p>
-          ) : !usage?.scans.length ? (
-            <p className="text-muted-foreground text-sm">
-              No scans yet. Pick a niche and city above.
-            </p>
-          ) : (
-            <ul className="divide-y">
-              {usage.scans.map((scan) => (
-                <li key={scan.id}>
-                  <Link
-                    href={`/scans/${scan.id}`}
-                    className="hover:bg-muted/50 flex items-center justify-between gap-3 rounded-md px-2 py-3"
-                  >
+      <div className="bg-card rounded-3xl p-6 shadow-sm sm:p-7">
+        <div className="mb-4 flex items-center gap-3">
+          <span className="icon-chip bg-amber-100 text-amber-600">
+            <History />
+          </span>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Scan history
+          </h2>
+        </div>
+        {scans.isLoading ? (
+          <p className="text-muted-foreground text-sm">Loading…</p>
+        ) : !usage?.scans.length ? (
+          <p className="text-muted-foreground text-sm">
+            No scans yet. Pick a niche and city above.
+          </p>
+        ) : (
+          <ul className="space-y-1">
+            {usage.scans.map((scan) => (
+              <li key={scan.id}>
+                <Link
+                  href={`/scans/${scan.id}`}
+                  className="hover:bg-muted/70 flex items-center justify-between gap-3 rounded-2xl px-3 py-3 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`icon-chip ${
+                        scan.nearMe
+                          ? "bg-emerald-100 text-emerald-600"
+                          : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      {scan.nearMe ? <Navigation /> : <MapPin />}
+                    </span>
                     <div>
                       <span className="font-medium capitalize">
                         {scan.query}
                       </span>{" "}
                       <span className="text-muted-foreground">
-                        — {scan.city}, {scan.state}
+                        — {scan.nearMe ? "near me" : `${scan.city}, ${scan.state}`}
                       </span>
                       <p className="text-muted-foreground text-xs">
                         {scan.createdAt
@@ -309,25 +337,29 @@ export const ScanDashboard = () => {
                           : ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {scan.status === "error" ? (
-                        <Badge variant="destructive">error</Badge>
-                      ) : (
-                        <>
-                          <Badge variant="secondary">
-                            {scan.totalFound} found
-                          </Badge>
-                          <Badge>{scan.noWebsiteCount} leads</Badge>
-                        </>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2 text-xs font-medium">
+                    {scan.status === "error" ? (
+                      <span className="bg-destructive/10 text-destructive rounded-full px-3 py-1">
+                        error
+                      </span>
+                    ) : (
+                      <>
+                        <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 max-sm:hidden">
+                          {scan.totalFound} found
+                        </span>
+                        <span className="bg-primary/10 text-primary rounded-full px-3 py-1">
+                          {scan.noWebsiteCount} leads
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
