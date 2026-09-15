@@ -244,9 +244,10 @@ export async function syncSourceToJson(
     const value = getAtPath(pageJson, path);
     const current = collapse(candidate.text ?? "");
     if (value !== undefined && String(value) !== current) {
-      // Rich-marker JSON values render via substitution; the literal is a
-      // plain seed and shouldn't clobber the richer value.
-      if (typeof value === "string" && hasRichMarkers(value)) continue;
+      // Rich-marker JSON values render via substitution; a PLAIN literal
+      // shouldn't clobber them. Inline-captured elements are exempt — their
+      // extracted text IS marker-formatted, so source edits must win.
+      if (!candidate.mixed && typeof value === "string" && hasRichMarkers(value)) continue;
       overwrites.push({ path, value: current });
     }
   }

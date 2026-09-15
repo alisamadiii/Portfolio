@@ -16,6 +16,7 @@ import {
   getAttr,
   isComponent,
   isExpression,
+  openTagEnd,
   quotedAttrSpan,
   soleStaticText,
   staticAttr,
@@ -83,10 +84,182 @@ function expressionHasStaticContent(expr: AstroNode): boolean {
   return found;
 }
 
+/** Inline formatting tags capturable inside a text element. */
+const INLINE_TAGS = new Set(["span", "strong", "b", "em", "i"]);
+
+/**
+ * Is a div/span acting as a TEXT LEAF — every meaningful child is text, a
+ * string-literal expression, or flattenable inline markup, with real text
+ * somewhere? Layout wrappers (block children) never qualify.
+ */
+function isTextLeaf(node: AstroNode): boolean {
+  let hasText = false;
+  for (const child of node.children ?? []) {
+    if (child.type === "text") {
+      if ((child.value ?? "").trim().length > 1) hasText = true;
+      continue;
+    }
+    if (isExpression(child)) {
+      const code = (child.children ?? [])
+        .filter((c) => c.type === "text")
+        .map((c) => c.value ?? "")
+        .join("");
+      if (!/^\s*(["'])([^"'\\]*)\1\s*$/.test(code)) return false;
+      continue;
+    }
+    if (child.type === "element" && INLINE_TAGS.has(child.name ?? "")) {
+      if (inlineFlatText(child) === null) return false;
+      hasText = true;
+      continue;
+    }
+    return false;
+  }
+  return hasText;
+}
+
+/**
+ * Flatten an inline element's subtree to plain text — nested inline elements
+ * (span in span in span) contribute their text; anything else fails.
+ */
+function inlineFlatText(node: AstroNode): string | null {
+  let out = "";
+  for (const child of node.children ?? []) {
+    if (child.type === "text") {
+      out += child.value ?? "";
+      continue;
+    }
+    if (child.type === "element" && INLINE_TAGS.has(child.name ?? "")) {
+      const inner = inlineFlatText(child);
+      if (inner === null) return null;
+      out += inner;
+      continue;
+    }
+    return null;
+  }
+  return out;
+}
+/**
+ * Offset of the MATCHING `</tag` for the element whose content starts at
+ * `from` — depth-aware, so same-tag nesting (span in span) resolves to the
+ * OUTER close, where a plain indexOf would grab the inner one.
+ */
+function matchingClose(source: string, from: number, tag: string): number {
+  let depth = 0;
+  let i = from;
+  const open = `<${tag}`;
+  const close = `</${tag}`;
+  while (i < source.length) {
+    const nextOpen = source.indexOf(open, i);
+    const nextClose = source.indexOf(close, i);
+    if (nextClose < 0) return -1;
+    // an opening must be a real tag start (next char terminates the name)
+    const isOpen =
+      nextOpen >= 0 &&
+      nextOpen < nextClose &&
+      /[\s/>]/.test(source[nextOpen + open.length] ?? "");
+    if (isOpen) {
+      depth++;
+      i = nextOpen + open.length;
+      continue;
+    }
+    if (depth === 0) return nextClose;
+    depth--;
+    i = nextClose + close.length;
+  }
+  return -1;
+}
+
+/** Expression whose code is a single plain string literal ({" "} spacers). */
+const STRING_LITERAL_EXPR = /^\s*(["'])([^"'\\]*)\1\s*$/;
+
+/**
+ * Capture a text element that mixes raw text with inline spans/strong as ONE
+ * rich field: `span` → `accent`, strong/b → **mark**, per-occurrence source
+ * classes preserved. Returns null when any child is something else (real
+ * expressions, nested blocks, dynamic classes) — those stay reports.
+ */
+function captureInline(
+  node: AstroNode,
+  source: string
+): NonNullable<CandidateField["mixed"]> | null {
+  const tag = node.name ?? "";
+  let richText = "";
+  const hlClasses: string[] = [];
+  const markClasses: string[] = [];
+  let inlineCount = 0;
+  for (const child of node.children ?? []) {
+    if (child.type === "text") {
+      richText += child.value ?? "";
+      continue;
+    }
+    if (isExpression(child)) {
+      const code = (child.children ?? [])
+        .filter((c) => c.type === "text")
+        .map((c) => c.value ?? "")
+        .join("");
+      const literal = STRING_LITERAL_EXPR.exec(code);
+      if (!literal) return null;
+      richText += literal[2];
+      continue;
+    }
+    if (child.type === "element" && INLINE_TAGS.has(child.name ?? "")) {
+      const classAttr = getAttr(child, "class");
+      if (classAttr && classAttr.kind !== "quoted") return null; // dynamic class
+      // Nested inline markup (span in span) flattens to its combined text —
+      // the OUTER element's class carries the styling.
+      const flat = inlineFlatText(child);
+      if (flat === null) return null;
+      const text = flat.replace(/\s+/g, " ").trim();
+      if (!text) return null;
+      if (child.name === "strong" || child.name === "b") {
+        if (text.includes("*")) return null;
+        richText += `**${text}**`;
+        markClasses.push(classAttr?.value ?? "");
+      } else {
+        if (text.includes("`")) return null;
+        richText += `\`${text}\``;
+        hlClasses.push(classAttr?.value ?? "");
+      }
+      inlineCount++;
+      continue;
+    }
+    return null;
+  }
+  if (inlineCount === 0) return null;
+  const collapsed = richText.replace(/\s+/g, " ").trim();
+  if (collapsed.length < 2) return null;
+  if (node.position?.start?.offset === undefined) return null;
+  const { end: innerStart } = openTagEnd(source, node.position.start.offset, tag);
+  const innerEnd = matchingClose(source, innerStart, tag);
+  if (innerEnd < innerStart) return null;
+  return { richText: collapsed, hlClasses, markClasses, innerStart, innerEnd };
+}
+
+/**
+ * Wrap-eligible bare text runs among an element's direct children — used when
+ * the element itself can't be one field (text interleaved with links/blocks).
+ * Each run becomes an injected <span data-cms-field> in the OUTPUT.
+ */
+function textRunsOf(
+  node: AstroNode
+): Array<{ start: number; raw: string; value: string; line: number }> {
+  const runs: Array<{ start: number; raw: string; value: string; line: number }> = [];
+  for (const child of node.children ?? []) {
+    if (child.type !== "text") continue;
+    const raw = child.value ?? "";
+    const value = raw.replace(/\s+/g, " ").trim();
+    const start = child.position?.start?.offset;
+    if (start === undefined || value.length < 2 || /^[\W_]+$/.test(value)) continue;
+    runs.push({ start, raw, value, line: child.position?.start?.line ?? 0 });
+  }
+  return runs;
+}
+
 /** Frontmatter consts holding content-shaped arrays (nav-style) → R8. */
 function frontmatterReports(
   frontmatter: AstroNode | null,
-  page: PageFile
+  page: PageFile,
+  wireChrome: boolean
 ): ReportItem[] {
   const code = frontmatter?.value ?? "";
   if (!code) return [];
@@ -95,6 +268,16 @@ function frontmatterReports(
   let match: RegExpExecArray | null;
   while ((match = constArray.exec(code)) !== null) {
     const [, name, body] = match;
+    // Flat contract: a PURE-LITERAL array is auto-lifted into the pages JSON
+    // by the build (frontmatter-arrays.ts) — no report needed.
+    if (wireChrome) {
+      try {
+        const value = new Function(`"use strict"; return ([${body}]);`)();
+        if (Array.isArray(value)) continue;
+      } catch {
+        // references code — still a report
+      }
+    }
     const stringCount = (body.match(/["'`][^"'`]{3,}["'`]/g) ?? []).length;
     if (stringCount >= 2) {
       const lineNumber =
@@ -130,7 +313,11 @@ export function classifyPage(
 ): PageAnalysis {
   const wireChrome = options.wireChrome ?? false;
   const candidates: CandidateField[] = [];
-  const reports: ReportItem[] = frontmatterReports(parsed.frontmatter, page);
+  const reports: ReportItem[] = frontmatterReports(
+    parsed.frontmatter,
+    page,
+    wireChrome
+  );
   const adoptedPaths: string[] = [];
   const sectionNames = new Map<AstroNode, string>();
   const usedSections = new Set<string>();
@@ -210,6 +397,29 @@ export function classifyPage(
         adoptedPaths.push(field.value);
         return false;
       }
+      // Slot text (flat contract): bare text passed as a component's child —
+      // <Eyebrow>A field guide</Eyebrow>. The component's internals can't be
+      // reached from here, so the OUTPUT wraps the text in an injected
+      // <span data-cms-field>. Element children keep being scanned normally.
+      if (wireChrome) {
+        for (const child of node.children ?? []) {
+          if (child.type !== "text") continue;
+          const raw = child.value ?? "";
+          const value = raw.replace(/\s+/g, " ").trim();
+          if (value.length < 2 || /^[\W_]+$/.test(value)) continue;
+          const start = child.position?.start?.offset;
+          if (start === undefined) continue;
+          candidates.push({
+            role: "text",
+            tag: node.name ?? "component",
+            sectionChain: sectionChainFor(ancestors),
+            slotWrap: true,
+            text: value,
+            line: line(child),
+            el: { start, name: node.name ?? "component", textStart: start, textValue: raw },
+          });
+        }
+      }
       return;
     }
 
@@ -255,9 +465,36 @@ export function classifyPage(
 
     // Chrome tags (button/label/…) have no intrinsic role; when chrome is
     // wired (flat contract) they become plain text candidates.
+    const LIST_TAGS = ["li", "dt", "dd"];
+    // div/span with ONLY text/inline children are text leaves — the common
+    // AI-markup pattern of copy living in wrappers. Layout wrappers (any
+    // block child) never qualify and stay transparent.
+    const leafWrapper =
+      wireChrome && (tag === "div" || tag === "span") && isTextLeaf(node);
     const role =
-      roleForTag(tag) ?? (wireChrome && CHROME_TAGS.has(tag) ? "text" : null);
-    if (!role && !CHROME_TAGS.has(tag)) return;
+      roleForTag(tag) ??
+      (wireChrome && (CHROME_TAGS.has(tag) || LIST_TAGS.includes(tag) || leafWrapper)
+        ? "text"
+        : null);
+    if (!role && !CHROME_TAGS.has(tag)) {
+      // Non-role wrapper carrying stray bare text next to block children —
+      // wrap each text run in an injected editable span. Children keep
+      // being walked normally.
+      if (wireChrome && !adopted) {
+        for (const run of textRunsOf(node)) {
+          candidates.push({
+            role: "text",
+            tag,
+            sectionChain: sectionChainFor(ancestors),
+            slotWrap: true,
+            text: run.value,
+            line: run.line,
+            el: { start: run.start, name: tag, textStart: run.start, textValue: run.raw },
+          });
+        }
+      }
+      return;
+    }
     // Stamped element whose tag has no role: adopted-only, nothing to extract.
     if (adopted && !role) return;
 
@@ -331,7 +568,39 @@ export function classifyPage(
           ? nonWs[0]
           : undefined;
       const spanText = span ? soleStaticText(span) : undefined;
+      // Nested inline label (<a><span>x <span>y</span></span></a>): flatten
+      // to plain text; substitution replaces the anchor's inner content.
+      let flatLabel: string | undefined;
+      if (wireChrome && !direct && !spanText && href) {
+        const flat = inlineFlatText(node);
+        const value = flat?.replace(/\s+/g, " ").trim();
+        if (value && value.length >= 2) flatLabel = value;
+      }
       const label = direct ?? spanText;
+      if (flatLabel !== undefined && node.position?.start?.offset !== undefined) {
+        const { end: innerStart } = openTagEnd(source, node.position.start.offset, tag);
+        const innerEnd = matchingClose(source, innerStart, tag);
+        const hrefSpanF = hrefAttr ? quotedAttrSpan(source, hrefAttr) : undefined;
+        if (innerEnd >= innerStart && hrefSpanF) {
+          candidates.push({
+            role,
+            tag,
+            sectionChain: chain,
+            path: selfPath,
+            text: flatLabel,
+            href,
+            line: line(node),
+            el: {
+              start: node.position.start.offset,
+              name: tag,
+              innerStart,
+              innerEnd,
+              hrefAttr: hrefSpanF,
+            },
+          });
+          return false;
+        }
+      }
       if (!href || !label || !label.value.trim()) {
         if (label && label.value.trim().length > 1 && !adopted) {
           reports.push({
@@ -372,6 +641,80 @@ export function classifyPage(
     // Text roles.
     const text = soleStaticText(node);
     if (!text) {
+      // Sole inline child with no surrounding text (<button><span>Label</span>)
+      // — the span is structural, not an accent: wire the SPAN as a plain
+      // text field so no marker noise leaks into the value.
+      if (wireChrome) {
+        const meaningful = (node.children ?? []).filter(
+          (child) => !(child.type === "text" && (child.value ?? "").trim() === "")
+        );
+        const only = meaningful.length === 1 ? meaningful[0] : undefined;
+        if (
+          only &&
+          only.type === "element" &&
+          INLINE_TAGS.has(only.name ?? "") &&
+          only.position?.start?.offset !== undefined
+        ) {
+          const innerText = soleStaticText(only);
+          const innerValue = innerText?.value.replace(/\s+/g, " ").trim() ?? "";
+          if (innerText && innerValue.length >= 2 && !/^[\W_]+$/.test(innerValue)) {
+            candidates.push({
+              role,
+              tag: only.name ?? "span",
+              sectionChain: chain,
+              path: selfPath,
+              text: innerValue,
+              line: line(only),
+              el: {
+                start: only.position.start.offset,
+                name: only.name ?? "span",
+                textStart: innerText.start,
+                textValue: innerText.value,
+              },
+            });
+            return false;
+          }
+        }
+      }
+
+      // Inline-capture: text mixed with inline spans/strong → ONE rich field
+      // (flat contract only). Falls through to the R2 report when uncapturable.
+      if (wireChrome && node.position?.start?.offset !== undefined) {
+        const mixed = captureInline(node, source);
+        if (mixed) {
+          candidates.push({
+            role,
+            tag,
+            sectionChain: chain,
+            path: selfPath,
+            mixed,
+            text: mixed.richText,
+            line: line(node),
+            el: { start: node.position.start.offset, name: tag },
+          });
+          return false; // children are captured — never descend
+        }
+      }
+      // Text interleaved with non-inline children (links, nested blocks):
+      // wrap each bare run as its own field; interior elements are walked
+      // and wired on their own. Replaces the old R2 dead-end.
+      if (wireChrome && !adopted) {
+        const runs = textRunsOf(node);
+        if (runs.length > 0) {
+          for (const run of runs) {
+            candidates.push({
+              role: "text",
+              tag,
+              sectionChain: chain,
+              slotWrap: true,
+              text: run.value,
+              line: run.line,
+              el: { start: run.start, name: tag, textStart: run.start, textValue: run.raw },
+            });
+          }
+          return; // children still walked
+        }
+      }
       const hasStaticText = (node.children ?? []).some(
         (child) => child.type === "text" && (child.value ?? "").trim().length > 1
       );

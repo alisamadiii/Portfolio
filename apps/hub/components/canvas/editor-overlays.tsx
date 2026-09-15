@@ -27,6 +27,7 @@ export function EditorOverlays() {
     copiesRef,
     groupEditor,
     setGroupEditor,
+    applyGroupStructuralOp,
     linkEditor,
     setLinkEditor,
     commitNonText,
@@ -91,14 +92,18 @@ export function EditorOverlays() {
           ).sort((a, b) => a - b);
 
           const sections: GroupEditorSection[] = [];
-          const pushRows = (rows: GroupEditorFieldRow[], title?: string) => {
+          const pushRows = (
+            rows: GroupEditorFieldRow[],
+            title?: string,
+            itemIndex?: number
+          ) => {
             const seen = new Set<string>();
             const deduped = rows.filter((r) => {
               if (seen.has(r.path)) return false;
               seen.add(r.path);
               return true;
             });
-            if (deduped.length) sections.push({ title, rows: deduped });
+            if (deduped.length) sections.push({ title, rows: deduped, itemIndex });
           };
           const rowsFor = (indexed: number | null) => {
             const rows: GroupEditorFieldRow[] = [];
@@ -125,7 +130,8 @@ export function EditorOverlays() {
             for (const i of indices)
               pushRows(
                 rowsFor(i),
-                indices.length > 1 ? `Item ${i + 1}` : undefined
+                indices.length > 1 ? `Item ${i + 1}` : undefined,
+                i
               );
           else pushRows(rowsFor(null));
 
@@ -138,6 +144,17 @@ export function EditorOverlays() {
                 commitNonText(groupEditor.framePath, path, value)
               }
               onClose={() => setGroupEditor(null)}
+              onStructuralOp={(op, index, toIndex) => {
+                applyGroupStructuralOp(
+                  groupEditor.framePath,
+                  groupEditor.path,
+                  op,
+                  index,
+                  toIndex
+                );
+                // section snapshot is stale after a structural change
+                setGroupEditor(null);
+              }}
             />
           );
         })()}

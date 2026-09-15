@@ -615,3 +615,387 @@ import siteData from "_site.json";
     expect(result!.code).toContain('<p data-cms-variant="name">');
   });
 });
+
+// ---------------------------------------------------------------------------
+// v3 smarter wiring: inline-capture, slot text, frontmatter array lift
+// ---------------------------------------------------------------------------
+
+describe("flat contract — inline capture (mixed elements)", () => {
+  it("captures text + spans as ONE rich field with per-occurrence classes", async () => {
+    const source = `<section>
+  <h1>Every forest is a galaxy,{" "}
+    <span class="font-display text-fern italic">every star a seed.</span>{" "}
+    and the <span class="text-nebula">ancient light</span> above.</h1>
+</section>
+`;
+    const result = await runFlat(source);
+    expect(result).not.toBeNull();
+    const { code, additions } = result!;
+    const seed = additions.find((a) => a.path.startsWith("heading_"));
+    expect(seed!.value).toBe(
+      "Every forest is a galaxy, `every star a seed.` and the `ancient light` above."
+    );
+    expect(code).toContain(
+      'data-cms-hl-class="font-display text-fern italic||text-nebula"'
+    );
+    // always substituted through renderRich so the canvas can round-trip
+    expect(code).toContain("<Fragment set:html={renderRich(");
+    expect(code).toContain('"hlClass":["font-display text-fern italic","text-nebula"]');
+  });
+
+  it("strong maps to ** with its class; uncapturable stays a report", async () => {
+    const good = await runFlat(`<section><p>Save <strong class="x">50%</strong> now</p></section>\n`);
+    const seed = good!.additions.find((a) => a.path.startsWith("text_"));
+    expect(seed!.value).toBe("Save **50%** now");
+    // real expression inside → not capturable whole, but the static runs
+    // around it wrap as their own fields
+    const bad = await runFlat(`<section><p>Hello {user.name} friend</p></section>\n`);
+    const values = (bad?.additions ?? []).map((a) => a.value);
+    expect(values).toContain("Hello");
+    expect(values).toContain("friend");
+  });
+
+  it("hub edit renders through renderRich with preserved classes", async () => {
+    const source = `<section><h2>One story in <span class="text-fern">leaves</span></h2></section>\n`;
+    const first = await runFlat(source);
+    const key = first!.additions[0].path;
+    const result = await autoTransformPage(source, {
+      relPath: "src/components/x.astro", pageKey: "", warn: silent, rng: seqRng(), flat: true,
+      pageJson: { [key]: "Rewritten in `light` by the hub" },
+      ownClaims: new Set(first!.autoPaths),
+    });
+    expect(result!.code).toContain('renderRich("Rewritten in `light` by the hub"');
+    expect(result!.additions).toEqual([]);
+  });
+});
+
+describe("flat contract — component slot text", () => {
+  it("wraps bare slot text in an injected editable span", async () => {
+    const source = `---
+import Eyebrow from "../components/site/eyebrow.astro";
+---
+
+<section>
+  <Eyebrow>A field guide to everything</Eyebrow>
+</section>
+`;
+    const result = await runFlat(source);
+    expect(result).not.toBeNull();
+    const seed = result!.additions.find((a) => a.value === "A field guide to everything");
+    expect(seed).toBeDefined();
+    expect(result!.code).toContain(
+      `<Eyebrow><span data-cms-field="${seed!.path}" data-cms-kind="text">{"A field guide to everything"}</span></Eyebrow>`
+    );
+  });
+
+  it("hub edit of slot text substitutes into the wrap", async () => {
+    const source = `<div><Cta>Journey outward</Cta></div>\n`;
+    const first = await runFlat(source);
+    const key = first!.additions[0].path;
+    const second = await autoTransformPage(source, {
+      relPath: "src/components/x.astro", pageKey: "", warn: silent, rng: seqRng(), flat: true,
+      pageJson: { [key]: "Take the trip" },
+      ownClaims: new Set(first!.autoPaths),
+    });
+    expect(second!.code).toContain(`>{"Take the trip"}</span>`);
+    expect(second!.additions).toEqual([]);
+  });
+});
+
+describe("flat contract — frontmatter array lift", () => {
+  const PAGE = `---
+const stats = [
+  { value: "13.8B", label: "years since the universe began" },
+  { value: "3T", label: "trees breathing on Earth right now" },
+  { value: "2T", label: "galaxies in the observable universe" },
+];
+---
+
+<section>
+  <div class="grid">
+    {stats.slice(0, 2).map((s, i) => (
+      <div><p>{s.value}</p><p>{s.label}</p></div>
+    ))}
+  </div>
+  <div class="grid2">
+    {stats.slice(2).map((s, i) => (
+      <div><p>{s.value}</p><p>{s.label}</p></div>
+    ))}
+  </div>
+</section>
+`;
+
+  it("lifts a pure-literal const array with REAL items and wires sliced maps with absolute indices", async () => {
+    const result = await runFlat(PAGE);
+    expect(result).not.toBeNull();
+    const seed = result!.additions.find((a) => /^stats_[a-z0-9]{4}$/.test(a.path));
+    expect(seed).toBeDefined();
+    expect((seed!.value as unknown[]).length).toBe(3);
+    expect((seed!.value as any)[0].value).toBe("13.8B");
+    const key = seed!.path;
+    // RHS rewritten with array-checked fallback + pages import injected
+    expect(result!.code).toContain(`import __cmsPages from "_pages.json";`);
+    expect(result!.code).toContain(`(Array.isArray(__cmsPages["${key}"]) ? __cmsPages["${key}"] : [`);
+    // sliced windows: absolute indices, no group host, no data-cms-item
+    expect(result!.code).toContain("data-cms-field={`" + key + ".${i}.value`}");
+    expect(result!.code).toContain("data-cms-field={`" + key + ".${i + 2}.value`}");
+    expect(result!.code).not.toContain('data-cms-kind="group"');
+    expect(result!.code).not.toContain("data-cms-item");
+  });
+
+  it("is idempotent: seeded array reuses its key, no re-seed", async () => {
+    const first = await runFlat(PAGE);
+    const seed = first!.additions.find((a) => /^stats_/.test(a.path))!;
+    const second = await runFlat(PAGE, { [seed.path]: seed.value });
+    expect(second!.additions).toEqual([]);
+    expect(second!.code).toContain(`__cmsPages["${seed.path}"]`);
+  });
+
+  it("skips arrays referencing code (free identifiers)", async () => {
+    const source = `---
+const items = raw.filter((x) => x.ok);
+const good = ["alpha text", "beta text"];
+---
+
+<div><p>Static line here</p></div>
+`;
+    const result = await runFlat(source);
+    const lifted = result!.additions.filter((a) => a.path.includes("_") && Array.isArray(a.value));
+    expect(lifted.length).toBe(1);
+    expect(lifted[0].path).toMatch(/^good_/);
+  });
+
+  it("unsliced map over a lifted array still gets the full group contract", async () => {
+    const source = `---
+const links = [
+  { href: "/nature", label: "Nature" },
+  { href: "/cosmos", label: "Cosmos" },
+];
+---
+
+<nav>
+  <ul>
+    {links.map((l, i) => (
+      <li><a href={l.href}>{l.label}</a></li>
+    ))}
+  </ul>
+</nav>
+`;
+    const result = await runFlat(source);
+    const key = result!.additions.find((a) => /^links_/.test(a.path))!.path;
+    expect(result!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(result!.code).toContain("data-cms-item={i}");
+    expect(result!.code).toContain("data-cms-field={`" + key + ".${i}.href`}");
+  });
+});
+
+describe("flat contract — lifted array literal sync", () => {
+  const SRC = `---
+const stats = [
+  { value: "13.8B", label: "years since the universe began" },
+  { value: "3T", label: "trees breathing on Earth" },
+];
+---
+
+<div class="grid">{stats.map((s, i) => (<div><p>{s.value}</p></div>))}</div>
+`;
+
+  it("JSON edit rewrites the source const literal", async () => {
+    const { syncArraysJsonToSource } = await import("../src/auto/frontmatter-arrays.js");
+    const json = {
+      stats_ab12: [
+        { value: "99X", label: "edited in the hub" },
+        { value: "3T", label: "trees breathing on Earth" },
+        { value: "NEW", label: "added item" },
+      ],
+    };
+    const out = syncArraysJsonToSource(SRC, json);
+    expect(out).not.toBeNull();
+    expect(out).toContain('value: "99X", label: "edited in the hub"');
+    expect(out).toContain('value: "NEW", label: "added item"');
+    // converges: second pass is a no-op
+    expect(syncArraysJsonToSource(out!, json)).toBeNull();
+    // still valid enough to lift again (evaluates)
+    const evald = new Function('"use strict"; return (' + /=\s*(\[[\s\S]*?\n\])/.exec(out!)![1] + ")")();
+    expect(evald.length).toBe(3);
+  });
+
+  it("source edit overwrites the JSON array (dev wins)", async () => {
+    const { syncArraysSourceToJson } = await import("../src/auto/frontmatter-arrays.js");
+    const json = { stats_ab12: [{ value: "OLD", label: "stale" }] };
+    const overwrites = syncArraysSourceToJson(SRC, json);
+    expect(overwrites.length).toBe(1);
+    expect(overwrites[0].path).toBe("stats_ab12");
+    expect((overwrites[0].value as any)[0].value).toBe("13.8B");
+    // in sync → no overwrites
+    const synced = { stats_ab12: (overwrites[0].value as unknown[]) };
+    expect(syncArraysSourceToJson(SRC, synced)).toEqual([]);
+  });
+});
+
+describe("flat contract — deep-nesting torture (round 2)", () => {
+  it("span-in-span flattens into one accent with the outer class", async () => {
+    const r = await runFlat(`<section><h1>Outer <span class="a">one <span class="b">two</span></span> tail</h1></section>\n`);
+    const seed = r!.additions.find((a) => a.path.startsWith("heading_"));
+    expect(seed!.value).toBe("Outer `one two` tail");
+    expect(r!.code).toContain('data-cms-hl-class="a"');
+  });
+
+  it("li / dt / dd become editable text fields", async () => {
+    const r = await runFlat(`<section><ul><li>Alpha item</li><li>Beta <span class="x">accent</span></li></ul><dl><dt>Term</dt><dd>Definition text</dd></dl></section>\n`);
+    const values = r!.additions.map((a) => a.value);
+    expect(values).toContain("Alpha item");
+    expect(values).toContain("Beta `accent`");
+    expect(values).toContain("Term");
+    expect(values).toContain("Definition text");
+  });
+
+  it("anchor with nested-span label flattens; substitution replaces inner", async () => {
+    const src = `<section><a href="/go"><span>Outer <span class="i">inner</span></span></a></section>\n`;
+    const first = await runFlat(src);
+    const seed = first!.additions.find((a) => a.path.startsWith("cta_"));
+    expect(seed!.value).toEqual({ label: "Outer inner", link: "/go" });
+    const second = await autoTransformPage(src, {
+      relPath: "p", pageKey: "", warn: silent, rng: seqRng(), flat: true,
+      pageJson: { [seed!.path]: { label: "Edited label", link: "/new" } },
+      ownClaims: new Set(first!.autoPaths),
+    });
+    expect(second!.code).toContain('href={"/new"}');
+    expect(second!.code).toContain('{"Edited label"}');
+  });
+
+  it("a-inside-a: outer skipped, inner wired; bare div text is a leaf field", async () => {
+    const r = await runFlat(`<section><div>Bare div text here</div><a href="/o">Outer <a href="/i">inner</a></a></section>\n`);
+    const seeds = r?.additions ?? [];
+    expect(seeds.find((a) => a.value === "Bare div text here")).toBeDefined();
+    const cta = seeds.find((a) => a.path.startsWith("cta_"));
+    expect((cta?.value as any)?.link).toBe("/i");
+  });
+
+  it("same const name in two files gets ISOLATED keys (foreign scope)", async () => {
+    const SRC = `---
+const cards = [{ title: "Mine", text: "Body" }];
+---
+
+<div class="g">{cards.map((c) => (<div><h4>{c.title}</h4></div>))}</div>
+`;
+    const a = await runFlat(SRC);
+    const keyA = a!.additions.find((x) => /^cards_/.test(x.path))!.path;
+    // second file: same name, other file's key is FOREIGN
+    const b = await autoTransformPage(SRC.replace("Mine", "Other file"), {
+      relPath: "src/components/other.astro", pageKey: "", warn: silent,
+      rng: seqRng(), flat: true,
+      pageJson: { [keyA]: [{ title: "Mine", text: "Body" }] },
+      externalClaims: new Set([keyA]), ownClaims: new Set(),
+    });
+    const keyB = b!.additions.find((x) => /^cards_/.test(x.path))!.path;
+    expect(keyB).not.toBe(keyA);
+  });
+});
+
+describe("claims merge-on-save", () => {
+  it("an instance never clobbers other files' persisted entries", async () => {
+    const fsm = await import("node:fs");
+    const os = await import("node:os");
+    const pathm = await import("node:path");
+    const { loadClaims, saveClaims } = await import("../src/auto/claims.js");
+    const dir = fsm.mkdtempSync(pathm.join(os.tmpdir(), "claims-"));
+    fsm.writeFileSync(pathm.join(dir, "a.astro"), "x");
+    fsm.writeFileSync(pathm.join(dir, "b.astro"), "x");
+    fsm.writeFileSync(pathm.join(dir, "_fields.json"), JSON.stringify({ "a.astro": ["text_aaaa"] }));
+    // stale instance knows only b — must NOT drop a's entry
+    const stale = new Map([["b.astro", new Set(["text_bbbb"])]]);
+    saveClaims(dir, stale, () => {});
+    const merged = loadClaims(dir);
+    expect([...(merged.get("a.astro") ?? [])]).toEqual(["text_aaaa"]);
+    expect([...(merged.get("b.astro") ?? [])]).toEqual(["text_bbbb"]);
+    fsm.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe("flat contract — leaf div/span wiring", () => {
+  it("wires lone spans, bare-text divs, and mixed-inline divs", async () => {
+    const r = await runFlat(`<section>
+  <span>lone span at section level</span>
+  <div>Bare text directly in a div</div>
+  <div>Mixed div text <span class="q">span bit</span> more div text</div>
+</section>
+`);
+    const values = r!.additions.map((a) => a.value);
+    expect(values).toContain("lone span at section level");
+    expect(values).toContain("Bare text directly in a div");
+    expect(values).toContain("Mixed div text `span bit` more div text");
+  });
+
+  it("layout wrappers: block children wire AND stray text runs wrap as fields", async () => {
+    const r = await runFlat(`<section>
+  <div class="wrap">Wrapper stray text
+    <p>Real paragraph child</p>
+  </div>
+</section>
+`);
+    const values = r!.additions.map((a) => a.value);
+    expect(values).toContain("Real paragraph child");
+    expect(values).toContain("Wrapper stray text");
+  });
+
+  it("div inside a span: inner leaf div wires, outer span skips", async () => {
+    const r = await runFlat(`<section><span class="holder">Span text <div>Div inside a span</div></span></section>\n`);
+    const values = r!.additions.map((a) => a.value);
+    expect(values).toContain("Div inside a span");
+  });
+});
+
+describe("flat contract — interleaved text runs (p with link inside)", () => {
+  it("wraps text runs around an inner link; link wires separately", async () => {
+    const src = `<section><p>Para with <a href="/x">link inside</a> and trailing text</p></section>\n`;
+    const r = await runFlat(src);
+    const values = r!.additions.map((a) => a.value);
+    expect(values).toContain("Para with");
+    expect(values).toContain("and trailing text");
+    const cta = r!.additions.find((a) => a.path.startsWith("cta_"));
+    expect((cta!.value as any).label).toBe("link inside");
+    // output wraps both runs in editable spans
+    expect((r!.code.match(/<span data-cms-field="text_[a-z0-9]{4}" data-cms-kind="text">/g) ?? []).length).toBe(2);
+  });
+
+  it("hub edit of a wrapped run substitutes in place", async () => {
+    const src = `<section><p>Before <a href="/x">go</a> after words</p></section>\n`;
+    const first = await runFlat(src);
+    const key = first!.additions.find((a) => a.value === "after words")!.path;
+    const second = await autoTransformPage(src, {
+      relPath: "p", pageKey: "", warn: silent, rng: seqRng(), flat: true,
+      pageJson: Object.fromEntries(first!.additions.map((a) => [a.path, a.value])),
+      ownClaims: new Set(first!.autoPaths),
+    });
+    expect(second!.additions).toEqual([]);
+    const edited = await autoTransformPage(src, {
+      relPath: "p", pageKey: "", warn: silent, rng: seqRng(), flat: true,
+      pageJson: { ...Object.fromEntries(first!.additions.map((a) => [a.path, a.value])), [key]: "changed tail" },
+      ownClaims: new Set(first!.autoPaths),
+    });
+    expect(edited!.code).toContain('>{"changed tail"}</span>');
+  });
+});
+
+describe("flat contract — same-tag nesting close (HerVoice bug)", () => {
+  it("span-wrapping-span captures with the OUTER closing tag intact", async () => {
+    const source = `<section>
+  <h2 class="big">
+    <span>HerVoice <span class="cms-hl">2026</span></span>
+    <br />
+    <span>Writing Contest</span>
+  </h2>
+</section>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    // no orphan closing tag: equal open/close span counts in output
+    const opens = (r!.code.match(/<span/g) ?? []).length;
+    const closes = (r!.code.match(/<\/span>/g) ?? []).length;
+    expect(opens).toBe(closes);
+    const values = r!.additions.map((a) => a.value);
+    expect(values).toContain("HerVoice `2026`");
+    expect(values).toContain("Writing Contest");
+  });
+});

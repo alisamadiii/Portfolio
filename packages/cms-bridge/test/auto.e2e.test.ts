@@ -271,3 +271,27 @@ describe("flat contract — self-heal + orphan prune (heavy-test finds)", () => 
     expect(Object.keys(p).some((k) => k.startsWith("heading_"))).toBe(true);
   });
 });
+
+describe("query sub-request guard (Hero corruption bug)", () => {
+  it("never transforms ?astro sub-requests — script fragments must not sync back", async () => {
+    const root = mkProject("combined");
+    fs.writeFileSync(
+      path.join(root, "_site.json"),
+      JSON.stringify({ cms: { version: 2, baseUrl: "https://x.com", pages: { home: { route: "/" } } }, seo: {}, variables: {} })
+    );
+    fs.writeFileSync(path.join(root, "_pages.json"), JSON.stringify({ text_ox0j: "Empowering Dreams" }));
+    const file = path.join(root, "src/pages/index.astro");
+    fs.writeFileSync(file, "<section><p>Hello there</p></section>\n<script>\nlet t: ReturnType<typeof setInterval> | undefined;\n</script>\n");
+    const before = fs.readFileSync(file, "utf8");
+    const plugin = autoCmsVitePlugin({ root, warn: silent });
+    const scriptBody = "let t: ReturnType<typeof setInterval> | undefined;";
+    const res = await plugin.transform.handler.call(
+      undefined,
+      scriptBody,
+      file + "?astro&type=script&index=0&lang.ts"
+    );
+    expect(res).toBeNull();
+    plugin.closeBundle?.();
+    expect(fs.readFileSync(file, "utf8")).toBe(before); // file untouched
+  });
+});

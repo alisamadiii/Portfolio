@@ -149,6 +149,14 @@ type CanvasEditorValue = {
   groupEditor: GroupEditorState;
   setGroupEditor: (state: GroupEditorState) => void;
   commitNonText: (framePath: string, fieldPath: string, value: string) => void;
+  /** Structural array op (add/remove/move) — used by the group dialog. */
+  applyGroupStructuralOp: (
+    framePath: string,
+    path: string,
+    op: "add" | "remove" | "move",
+    index: number,
+    toIndex?: number
+  ) => void;
 
   // CMS overlay (opened from the header + page-tree collection rows).
   cmsOverlay: CmsOverlayState;
@@ -1014,6 +1022,27 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages, entryMap, copiesVersion]);
 
+  const applyGroupStructuralOp = useCallback(
+    (
+      framePath: string,
+      path: string,
+      op: "add" | "remove" | "move",
+      index: number,
+      toIndex?: number
+    ) => {
+      handleGroupOp(framePath, {
+        cms: 1,
+        v: 1,
+        type: "group-op",
+        path,
+        op,
+        index,
+        toIndex,
+      } as GroupOpMessage);
+    },
+    [handleGroupOp]
+  );
+
   const value = useMemo<CanvasEditorValue>(
     () => ({
       owner,
@@ -1042,6 +1071,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       groupEditor,
       setGroupEditor,
       commitNonText,
+      applyGroupStructuralOp,
       cmsOverlay,
       setCmsOverlay,
       settingsRequest,
@@ -1073,6 +1103,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       linkEditor,
       groupEditor,
       commitNonText,
+      applyGroupStructuralOp,
       cmsOverlay,
       settingsRequest,
       globalEntry,

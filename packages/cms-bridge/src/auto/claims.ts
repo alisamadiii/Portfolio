@@ -37,16 +37,23 @@ export function loadClaims(root: string): ClaimsMap {
   return claims;
 }
 
-/** Serialize + write (sorted for stable diffs). Prunes files that no longer exist. */
+/**
+ * MERGE + write (sorted for stable diffs). An instance only has authority
+ * over files IT transformed — entries for other files are kept from disk, so
+ * a long-running dev server can never clobber what a parallel build (or a
+ * later instance) recorded. Files that no longer exist are pruned.
+ */
 export function saveClaims(
   root: string,
   claims: ClaimsMap,
   warn: (message: string) => void
 ): void {
+  const merged: ClaimsMap = loadClaims(root);
+  for (const [file, keys] of claims) merged.set(file, keys);
   const out: Record<string, string[]> = {};
-  for (const file of [...claims.keys()].sort()) {
+  for (const file of [...merged.keys()].sort()) {
     if (!fs.existsSync(path.join(root, file))) continue; // deleted file
-    const keys = [...(claims.get(file) ?? [])];
+    const keys = [...(merged.get(file) ?? [])];
     if (keys.length > 0) out[file] = keys;
   }
   const serialized = `${JSON.stringify(out, null, 2)}\n`;

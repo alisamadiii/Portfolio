@@ -60,6 +60,25 @@ export type CandidateField = {
   sectionChain: string[];
   /** Assigned by naming pass — full dot path relative to the entry. */
   path?: string;
+  /**
+   * Inline-capture: the element mixes text with inline spans/strong — wired
+   * as ONE rich field. `richText` is the marker source (` and **), classes
+   * arrays preserve each source span's own styling per occurrence, and
+   * [innerStart, innerEnd) spans the element's inner content for wholesale
+   * substitution.
+   */
+  mixed?: {
+    richText: string;
+    hlClasses: string[];
+    markClasses: string[];
+    innerStart: number;
+    innerEnd: number;
+  };
+  /**
+   * Bare text passed as a component's slot child — the output wraps it in an
+   * injected <span data-cms-field> (components can't be edited from here).
+   */
+  slotWrap?: boolean;
   /** Static text content (text roles + cta label). */
   text?: string;
   /** cta: static href value. image: static src value. */
@@ -80,6 +99,10 @@ export type CandidateField = {
     /** span element offsets when present. */
     spanStart?: number;
     spanName?: string;
+    /** cta with flattened nested-inline label: inner content span for
+     *  wholesale substitution (no single text node exists). */
+    innerStart?: number;
+    innerEnd?: number;
     /** Attr spans for value rewrites: [startOffset, rawLength] over `name="value"`. */
     hrefAttr?: { start: number; raw: string };
     srcAttr?: { start: number; raw: string };

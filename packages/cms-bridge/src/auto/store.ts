@@ -43,6 +43,30 @@ export class SeedStore {
     for (const addition of additions) this.queue.push({ pageKey, addition });
   }
 
+  /**
+   * Read-your-writes: overlay queued-but-unflushed additions onto a fresh
+   * read of the pages JSON. A file transformed twice in one build (client +
+   * server pass) must see its own first-pass seeds, or it re-mints new keys
+   * every pass. Mutates and returns `pagesJson`.
+   */
+  overlayPending(
+    pagesJson: Record<string, unknown>,
+    pageKey: string
+  ): Record<string, unknown> {
+    for (const pending of this.queue) {
+      if (pending.pageKey !== pageKey) continue;
+      const target =
+        pageKey === ""
+          ? pagesJson
+          : ((pagesJson[pageKey] as Record<string, unknown> | undefined) ?? {});
+      if (pageKey !== "" && pagesJson[pageKey] === undefined) {
+        pagesJson[pageKey] = target;
+      }
+      addAtPath(target, pending.addition.path, pending.addition.value);
+    }
+    return pagesJson;
+  }
+
   scheduleFlush(delayMs = 150): void {
     if (this.queue.length === 0) return;
     if (this.timer) clearTimeout(this.timer);

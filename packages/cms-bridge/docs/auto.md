@@ -11,6 +11,27 @@ time the bridge:
    key and injects `data-cms-field` / `data-cms-kind` into the transformed
    output, the exact contract the bridge components emit, so the CMS canvas
    arms them unchanged. Input placeholders stay developer-owned.
+   - **Mixed inline markup** (`<h1>Every forest <span class="text-fern">is a
+     galaxy</span></h1>`) becomes ONE rich field: spans → `` `accent` ``,
+     strong → `**mark**`; each source span's own classes are preserved per
+     occurrence (`data-cms-hl-class`), so clients can move/edit accents and
+     the design survives. A sole `<span>` label with no surrounding text
+     (`<button><span>Send</span></button>`) is wired as a plain field.
+   - **Component slot text** (`<Eyebrow>A field guide</Eyebrow>`) is wrapped
+     in an injected `<span data-cms-field>` in the output — component labels
+     are editable without touching the component.
+   - **Frontmatter const arrays** that are pure literals (`const stats =
+     [{value, label}, …]`) are LIFTED: real items seeded into the pages JSON
+     under `<name>_<rand>`, the const rewritten in the output with an
+     array-checked fallback, and their `.map()`s wired. `.slice(a).map()`
+     windows get member fields with absolute indices (group add/remove is
+     disabled for sliced maps). Arrays referencing code are left alone.
+     Lifted array literals are TWO-WAY SYNCED like scalars: a hub edit
+     rewrites the source const on the next build/dev pass, a dev edit of the
+     literal overwrites the JSON — source and JSON never disagree.
+     After a build that rewrote sources, the PROJECT's prettier runs on
+     just those files automatically — synced literals always match repo
+     style. (No prettier installed → skipped.)
 2. **Substitutes** values from the pages JSON when the key exists — **JSON
    always wins** once a key is seeded.
 3. **Seeds** missing keys into the pages JSON from the markup literals

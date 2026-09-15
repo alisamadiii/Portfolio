@@ -371,12 +371,18 @@ function scheduleInput(el: HTMLElement, path: string): void {
  * plain-string value — the styling survives every edit and `set`.
  */
 function markOpts(el: HTMLElement): {
-  markClass?: string;
+  markClass?: string | string[];
   markStyle?: string;
+  hlClass?: string | string[];
 } {
+  // "||" joins per-occurrence class lists (auto mode preserves each source
+  // span's own styling); a plain value applies to every occurrence.
+  const split = (v: string | null): string | string[] | undefined =>
+    v == null ? undefined : v.includes("||") ? v.split("||") : v;
   return {
-    markClass: el.getAttribute("data-cms-mark-class") ?? undefined,
+    markClass: split(el.getAttribute("data-cms-mark-class")),
     markStyle: el.getAttribute("data-cms-mark-style") ?? undefined,
+    hlClass: split(el.getAttribute("data-cms-hl-class")),
   };
 }
 
@@ -577,8 +583,9 @@ function addGroupTools(
 
 /**
  * Inject group-editing UI:
- *  - Declared array groups (`data-cms-kind="group"`): an "✎ Edit content" +
- *    "+ Add" toolbar plus a move/remove pill per item.
+ *  - Declared array groups (`data-cms-kind="group"`): a single "✎ Edit
+ *    content" button — add/remove/reorder live in the CMS group dialog, so
+ *    no floating pills ever overlap the content.
  *  - Implicit group hosts (a tagged non-leaf wrapper armed with `data-cms-group`
  *    but not a declared array group — e.g. a partners logo grid): an
  *    "✎ Edit content" badge only, so the client can open the CMS dialog.
@@ -589,30 +596,7 @@ function attachGroupControls(): void {
     document.querySelectorAll(`[${KIND_ATTR}="group"]`)
   )) {
     if (!(host instanceof HTMLElement)) continue;
-    addGroupTools(host, [
-      ["✎ Edit content", "edit"],
-      ["+ Add", "add"],
-    ]);
-    for (const item of groupItems(host)) {
-      if (getComputedStyle(item).position === "static")
-        item.style.position = "relative";
-      if (item.querySelector(`:scope > [${UI_ATTR}="item-controls"]`)) continue;
-      const pill = document.createElement("div");
-      pill.setAttribute(UI_ATTR, "item-controls");
-      for (const [label, action, title] of [
-        ["↑", "move-up", "Move up"],
-        ["↓", "move-down", "Move down"],
-        ["✕", "remove", "Remove"],
-      ] as const) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.setAttribute(UI_ACTION_ATTR, action);
-        button.textContent = label;
-        button.title = title;
-        pill.appendChild(button);
-      }
-      item.appendChild(pill);
-    }
+    addGroupTools(host, [["✎ Edit content", "edit"]]);
   }
   // Implicit group hosts: an Edit-content badge only (no structural add/remove).
   for (const host of Array.from(

@@ -27,6 +27,8 @@ export type GroupEditorFieldRow = {
 export type GroupEditorSection = {
   title?: string;
   rows: GroupEditorFieldRow[];
+  /** Array index this section represents — enables move/remove controls. */
+  itemIndex?: number;
 };
 
 /**
@@ -40,11 +42,14 @@ export function GroupEditorDialog({
   sections,
   onCommit,
   onClose,
+  onStructuralOp,
 }: {
   open: boolean;
   sections: GroupEditorSection[];
   onCommit: (path: string, value: string) => void;
   onClose: () => void;
+  /** Add/remove/move an array item — applies immediately and closes. */
+  onStructuralOp?: (op: "add" | "remove" | "move", index: number, toIndex?: number) => void;
 }) {
   const { open: openMediaLibrary } = useMediaLibrary();
   const hasRows = sections.some((section) => section.rows.length > 0);
@@ -88,8 +93,57 @@ export function GroupEditorDialog({
                 key={section.title ?? index}
                 className="bg-muted/50 flex flex-col gap-3 rounded-lg border p-4"
               >
-                {section.title && (
-                  <span className="text-base font-medium">{section.title}</span>
+                {(section.title || section.itemIndex !== undefined) && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-medium">
+                      {section.title ?? `Item ${(section.itemIndex ?? 0) + 1}`}
+                    </span>
+                    {onStructuralOp && section.itemIndex !== undefined && (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Move up"
+                          disabled={section.itemIndex === 0}
+                          onClick={() =>
+                            onStructuralOp("move", section.itemIndex!, section.itemIndex! - 1)
+                          }
+                        >
+                          ↑
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Move down"
+                          disabled={
+                            section.itemIndex ===
+                            Math.max(
+                              ...sections
+                                .map((s) => s.itemIndex)
+                                .filter((i): i is number => i !== undefined)
+                            )
+                          }
+                          onClick={() =>
+                            onStructuralOp("move", section.itemIndex!, section.itemIndex! + 1)
+                          }
+                        >
+                          ↓
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Remove item"
+                          className="text-destructive"
+                          onClick={() => onStructuralOp("remove", section.itemIndex!)}
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {section.rows.map((row) =>
                   row.kind === "media" ? (
@@ -139,6 +193,24 @@ export function GroupEditorDialog({
           </p>
         )}
         <DialogFooter className="bg-card sticky bottom-0 mx-0">
+          {onStructuralOp &&
+            sections.some((section) => section.itemIndex !== undefined) && (
+              <Button
+                type="button"
+                variant="outline"
+                className="mr-auto"
+                onClick={() => {
+                  const last = Math.max(
+                    ...sections
+                      .map((s) => s.itemIndex)
+                      .filter((i): i is number => i !== undefined)
+                  );
+                  onStructuralOp("add", last);
+                }}
+              >
+                + Add item
+              </Button>
+            )}
           <DialogClose render={<Button variant="secondary">Cancel</Button>} />
           <Button type="button" disabled={!dirty} onClick={save}>
             Save

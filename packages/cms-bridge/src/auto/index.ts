@@ -15,6 +15,10 @@ import path from "node:path";
 
 import { readJsonAt } from "../cli/core/json-store.js";
 import { loadClaims, saveClaims, type ClaimsMap } from "./claims.js";
+import {
+  syncArraysJsonToSource,
+  syncArraysSourceToJson,
+} from "./frontmatter-arrays.js";
 import { discoverContract, pageKeyForFile } from "./contract.js";
 import { SeedStore } from "./store.js";
 import { syncJsonToSource, syncSourceToJson } from "./sync.js";
@@ -58,6 +62,14 @@ type VitePluginLike = {
 };
 
 export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
+  const trace = process.env.CMS_BRIDGE_TRACE
+    ? (msg: string) => {
+        try {
+          fs.appendFileSync(process.env.CMS_BRIDGE_TRACE as string, `[pid ${process.pid}] ${msg}\n`);
+        } catch {}
+      }
+    : (_msg: string) => {};
+  trace(`factory root=${options.root}`);
   const warn = options.warn ?? ((message: string) => console.warn(message));
   const root = options.root;
   const pagesDir = path.join(root, "src", "pages") + path.sep;
@@ -117,6 +129,34 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
     saveClaims(root, claims, warn);
   };
   const transformedFiles = new Set<string>();
+  /** Source files this build rewrote (literal/array syncs) — formatted after. */
+  const sourceWrites = new Set<string>();
+
+  // After a build that rewrote sources, run the PROJECT's prettier (its own
+  // version, config, and plugins) on just those files so sync rewrites match
+  // the repo style. No prettier in the project → silently skipped.
+  const formatWrittenSources = async (): Promise<void> => {
+    if (sourceWrites.size === 0) return;
+    const files = [...sourceWrites];
+    sourceWrites.clear();
+    try {
+      const { createRequire } = await import("node:module");
+      const { spawnSync } = await import("node:child_process");
+      const projectRequire = createRequire(path.join(root, "package.json"));
+      // The project's own prettier CLI — same config/plugins as `pnpm format`.
+      const bin = projectRequire.resolve("prettier/bin/prettier.cjs");
+      const result = spawnSync(process.execPath, [bin, "--write", ...files], {
+        cwd: root,
+        stdio: "ignore",
+        timeout: 30_000,
+      });
+      if (result.status === 0) {
+        warn(`[cms-bridge auto] formatted ${files.length} synced source file(s)`);
+      }
+    } catch {
+      // project has no prettier — sync output stands as written
+    }
+  };
 
   // After a FULL build (every in-scope file transformed this session), any
   // auto-ID SCALAR key bound by no file is an orphan — typically a duplicate
@@ -179,7 +219,11 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
     transform: {
       order: "pre",
       async handler(code: string, id: string) {
-        const [file] = id.split("?");
+        // Sub-requests (?astro&type=script/style) carry a FRAGMENT of the
+        // file as `code` — transforming (or syncing!) against it would write
+        // that fragment back over the real source. Primary module only.
+        if (id.includes("?")) return null;
+        const file = id;
         if (!inScope(file)) return null;
         // Ordering regression guard: compiled output, not raw source.
         if (code.includes("astro/compiler-runtime")) {
@@ -202,7 +246,13 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
         this?.addWatchFile?.(contract.pagesFile);
 
         // Re-read per transform: cheap, and picks up hub/git edits in dev.
-        const pagesJson = readJsonAt(contract.pagesFile) ?? {};
+        // Queued-but-unflushed seeds are overlaid (read-your-writes) so a
+        // second transform of the same file in one build binds the keys the
+        // first pass minted instead of minting again.
+        const pagesJson = store.overlayPending(
+          readJsonAt(contract.pagesFile) ?? {},
+          pageKey
+        );
         const pageJson = contract.flat
           ? pagesJson
           : ((pagesJson[pageKey] as Record<string, unknown> | undefined) ?? {});
@@ -218,6 +268,7 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
           ownClaims: contract.flat ? claims.get(relPath) : undefined,
         });
         if (contract.flat) transformedFiles.add(relPath);
+        trace(`transform ${relPath} → ${result ? `${result.additions.length} additions, ${result.autoPaths.length} paths` : "null"}`);
         if (!result) return null;
 
         if (contract.flat) {
@@ -240,8 +291,17 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
                 ownClaims: claims.get(relPath),
               }
             );
-            if (newSource !== null && newSource !== code) {
-              fs.writeFileSync(file, newSource);
+            // Lifted const arrays sync too — the source literal and the JSON
+            // array never disagree, exactly like scalar fields.
+            const base = newSource ?? code;
+            const arraySynced = syncArraysJsonToSource(base, pageJson, {
+              own: claims.get(relPath),
+              foreign: claimsExcluding(relPath),
+            });
+            const final = arraySynced ?? (newSource !== null ? newSource : null);
+            if (final !== null && final !== code) {
+              fs.writeFileSync(file, final);
+              sourceWrites.add(file);
             }
           } catch {
             // never fail the build over a literal sync
@@ -259,8 +319,11 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
       store.flushSync();
     },
     closeBundle() {
+      trace(`closeBundle transformed=${transformedFiles.size}`);
       store.flushSync();
       pruneOrphans();
+      // fire-and-forget: formatting must never fail or block the build
+      void formatWrittenSources();
     },
     // Two-way dev sync — the source literal and the JSON value stay identical:
     //  - pages JSON changed (hub / hand edit) → rewrite page literals to match.
@@ -326,8 +389,16 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
                   }
                 : undefined
             );
-            if (newSource !== null && newSource !== source) {
-              fsMod.writeFileSync(file, newSource);
+            const base = newSource ?? source;
+            const arraySynced = contract.flat
+              ? syncArraysJsonToSource(base, pageJsonFor(pagesJson, pageKey), {
+                  own: claims.get(path.relative(root, file)),
+                  foreign: claimsExcluding(path.relative(root, file)),
+                })
+              : null;
+            const final = arraySynced ?? newSource;
+            if (final !== null && final !== source) {
+              fsMod.writeFileSync(file, final);
             }
           }
           return;
@@ -352,7 +423,13 @@ export function autoCmsVitePlugin(options: AutoPluginOptions): VitePluginLike {
                 }
               : undefined
           );
-          store.applyOverwrites(pageKey, overwrites);
+          const arrayOverwrites = contract.flat
+            ? syncArraysSourceToJson(source, pageJsonFor(pagesJson, pageKey), {
+                own: claims.get(path.relative(root, resolved)),
+                foreign: claimsExcluding(path.relative(root, resolved)),
+              })
+            : [];
+          store.applyOverwrites(pageKey, [...overwrites, ...arrayOverwrites]);
         }
       });
     },

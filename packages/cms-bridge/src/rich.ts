@@ -20,29 +20,48 @@ export const HL_CLASS = "cms-hl";
 export const MARK_CLASS = "cms-mark";
 
 type RichOptions = {
-  /** Extra class(es) appended to the mark span (e.g. Tailwind utilities). */
-  markClass?: string;
+  /**
+   * Extra class(es) appended to the mark span (e.g. Tailwind utilities).
+   * An array applies per **occurrence** in order (last entry repeats) — used
+   * by auto mode to preserve each source span's own styling.
+   */
+  markClass?: string | string[];
   /** Inline style string applied to the mark span. */
   markStyle?: string;
+  /** Extra class(es) appended to highlight spans; array = per occurrence. */
+  hlClass?: string | string[];
+};
+
+const nth = (
+  classes: string | string[] | undefined,
+  index: number
+): string | undefined => {
+  if (classes === undefined) return undefined;
+  if (typeof classes === "string") return classes;
+  if (classes.length === 0) return undefined;
+  return classes[Math.min(index, classes.length - 1)];
 };
 
 /** Source string (with ` and **) → safe HTML with highlight/mark markup. */
 export function renderRich(source: string, opts: RichOptions = {}): string {
-  const cls = opts.markClass ? `${MARK_CLASS} ${opts.markClass}` : MARK_CLASS;
   const styleAttr = opts.markStyle ? ` style="${opts.markStyle}"` : "";
   const escaped = source
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+  let markIndex = 0;
+  let hlIndex = 0;
   return escaped
-    .replace(
-      /\*\*([^*]+)\*\*/g,
-      (_match, inner) => `<span class="${cls}"${styleAttr}>${inner}</span>`
-    )
-    .replace(
-      /`([^`]+)`/g,
-      (_match, inner) => `<span class="${HL_CLASS}">${inner}</span>`
-    );
+    .replace(/\*\*([^*]+)\*\*/g, (_match, inner) => {
+      const extra = nth(opts.markClass, markIndex++);
+      const cls = extra ? `${MARK_CLASS} ${extra}` : MARK_CLASS;
+      return `<span class="${cls}"${styleAttr}>${inner}</span>`;
+    })
+    .replace(/`([^`]+)`/g, (_match, inner) => {
+      const extra = nth(opts.hlClass, hlIndex++);
+      const cls = extra ? `${HL_CLASS} ${extra}` : HL_CLASS;
+      return `<span class="${cls}">${inner}</span>`;
+    });
 }
 
 /** Rendered element (highlight / mark spans) → source string with ` and **. */

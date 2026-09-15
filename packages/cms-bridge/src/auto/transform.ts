@@ -29,6 +29,7 @@ import { getAtPath } from "../cli/core/json-store.js";
 import type { CandidateField, PageFile } from "../cli/types.js";
 import { bindCandidatePaths } from "./bind.js";
 import type { IdRng } from "./ids.js";
+import { liftFrontmatterArrays } from "./frontmatter-arrays.js";
 import { loopWiring } from "./loops.js";
 import { variableMarkSplices } from "./variables.js";
 import {
@@ -158,6 +159,61 @@ export async function autoTransformPage(
         candidate.role === "cta" ? `${path}.link` : path
       );
 
+      // Inline-capture: ONE rich field for text mixed with inline spans.
+      // ALWAYS substituted via renderRich (even when equal) so the rendered
+      // spans carry cms-hl/cms-mark and canvas edits round-trip; each source
+      // span's own classes ride along per occurrence.
+      if (candidate.mixed) {
+        const m = candidate.mixed;
+        if (!hasSourceAttr) {
+          let attrs = ` data-cms-field="${path}" data-cms-kind="text"`;
+          if (m.hlClasses.some(Boolean))
+            attrs += ` data-cms-hl-class="${m.hlClasses.join("||")}"`;
+          if (m.markClasses.some(Boolean))
+            attrs += ` data-cms-mark-class="${m.markClasses.join("||")}"`;
+          splices.push(attrInjectSplice(source, el.start, el.name, attrs));
+        }
+        const value = getAtPath(context.pageJson, path);
+        if (value === undefined) additions.push({ path, value: m.richText });
+        const v = value !== undefined ? String(value) : m.richText;
+        const opts: Record<string, unknown> = {};
+        if (m.hlClasses.some(Boolean)) opts.hlClass = m.hlClasses;
+        if (m.markClasses.some(Boolean)) opts.markClass = m.markClasses;
+        splices.push({
+          start: m.innerStart,
+          end: m.innerEnd,
+          replacement: `<Fragment set:html={renderRich(${JSON.stringify(v)}, ${JSON.stringify(opts)})} />`,
+        });
+        needRich.flag = true;
+        continue;
+      }
+
+      // Slot text: wrap the component's bare text child in an injected span
+      // so it becomes a normal editable field in the rendered output.
+      if (candidate.slotWrap && el.textStart !== undefined && el.textValue !== undefined) {
+        const value = getAtPath(context.pageJson, path);
+        if (value === undefined) {
+          additions.push({ path, value: collapse(candidate.text ?? "") });
+        }
+        const v = value !== undefined ? String(value) : collapse(candidate.text ?? "");
+        let inner: string;
+        if (hasRichMarkers(v)) {
+          needRich.flag = true;
+          inner = `<Fragment set:html={renderRich(${JSON.stringify(v)})} />`;
+        } else {
+          inner = `{${JSON.stringify(v)}}`;
+        }
+        splices.push(
+          textReplaceSplice(
+            source,
+            el.textStart,
+            el.textValue,
+            `<span data-cms-field="${path}" data-cms-kind="text">${inner}</span>`
+          )
+        );
+        continue;
+      }
+
       if (candidate.role === "image") {
         if (!hasSourceAttr) {
           splices.push(
@@ -211,6 +267,21 @@ export async function autoTransformPage(
           if (label !== undefined) {
             const sub = textSubstitution(candidate, source, label, needRich);
             if (sub) splices.push(sub);
+            // Flattened nested-inline label: no single text node — replace
+            // the anchor's whole inner content when the value diverges.
+            if (
+              !sub &&
+              el.textStart === undefined &&
+              el.innerStart !== undefined &&
+              el.innerEnd !== undefined &&
+              String(label) !== collapse(candidate.text ?? "")
+            ) {
+              splices.push({
+                start: el.innerStart,
+                end: el.innerEnd,
+                replacement: expr(label),
+              });
+            }
           }
         }
         continue;
@@ -236,6 +307,31 @@ export async function autoTransformPage(
       }
     }
 
+    // Frontmatter array lift: pure-literal const arrays become hub-editable
+    // JSON arrays — REAL items seeded, RHS rewritten in the OUTPUT.
+    let localArrays: Map<string, string> | undefined;
+    if (context.flat && parsed.frontmatter?.value) {
+      const frontmatterStart = source.indexOf("---") + 3;
+      const pagesIdent =
+        parsed.frontmatter.value.match(
+          /import\s+(\w+)\s+from\s+["'][^"']*_?pages\.json["']/
+        )?.[1] ?? null;
+      const lift = liftFrontmatterArrays(
+        parsed.frontmatter.value,
+        frontmatterStart,
+        context.pageJson,
+        pagesIdent,
+        context.rng,
+        { own: context.ownClaims, foreign: context.externalClaims }
+      );
+      for (const arr of lift.lifted) {
+        if (arr.fresh) additions.push({ path: arr.key, value: arr.items });
+        autoPaths.push(arr.key);
+      }
+      splices.push(...lift.splices);
+      localArrays = lift.localArrays;
+    }
+
     // Plain `.map()` loops over page-JSON arrays → Group/Item DOM contract,
     // wired into the OUTPUT only (index param injected in-memory too).
     const loops = loopWiring(parsed.ast, parsed.frontmatter?.value ?? "", source, {
@@ -244,6 +340,7 @@ export async function autoTransformPage(
       warn,
       flat: context.flat,
       rng: context.rng,
+      localArrays,
     });
     splices.push(...loops.splices);
     additions.push(...loops.additions);

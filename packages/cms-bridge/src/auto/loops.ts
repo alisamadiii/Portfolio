@@ -37,9 +37,14 @@ export type LoopWiringResult = {
   arrayKeys: string[];
 };
 
-/** `<head>.map((item[, i]) => (` — captured from the map header text node. */
+/**
+ * `<head>[.slice(a[, b])].map((item[, i]) => (` — captured from the map
+ * header text node. A `.slice` window still gets member wiring with ABSOLUTE
+ * indices (i + a); group add/remove is disabled for sliced maps (reindexing
+ * across split groups would corrupt the array).
+ */
 const MAP_HEADER_RE =
-  /^\s*([\w$][\w$.]*)\.map\s*\(\s*(\(?)\s*([\w$]+)\s*(?:,\s*([\w$]+))?\s*(\)?)\s*=>\s*\(?\s*$/;
+  /^\s*([\w$][\w$.]*?)(?:\.slice\(\s*(\d+)\s*(?:,\s*\d+\s*)?\))?\.map\s*\(\s*(\(?)\s*([\w$]+)\s*(?:,\s*([\w$]+))?\s*(\)?)\s*=>\s*\(?\s*$/;
 
 const expressionCode = (expr: AstroNode): string =>
   (expr.children ?? [])
@@ -126,6 +131,12 @@ export type LoopWiringContext = {
    */
   flat?: boolean;
   rng?: IdRng;
+  /**
+   * Frontmatter-lifted const arrays: local name → pages-JSON key. Their RHS
+   * is already rewritten by the lift, so maps over them wire the group
+   * contract directly with no accessor rewrite and no bootstrap.
+   */
+  localArrays?: Map<string, string>;
 };
 
 /**
@@ -201,7 +212,8 @@ export function loopWiring(
     if (header?.type !== "text" || header.value === undefined) return null;
     const match = MAP_HEADER_RE.exec(header.value);
     if (!match) return null;
-    const [, head, openParen, itemVar, indexVar, closeParen] = match;
+    const [, head, sliceStart, openParen, itemVar, indexVar, closeParen] = match;
+    const sliceOffset = sliceStart !== undefined ? Number(sliceStart) : null;
 
     // Single-root arrow body only.
     const roots = children.filter((child) => child.type === "element");
@@ -213,7 +225,11 @@ export function loopWiring(
 
     let arrayKey: string | null = null;
     let flatRewrite: { name: string; viaBinding: boolean } | null = null;
-    if (context.flat) {
+    let viaLift = false;
+    if (context.flat && context.localArrays?.has(head)) {
+      arrayKey = context.localArrays.get(head)!;
+      viaLift = true; // RHS already rewritten + items seeded by the lift
+    } else if (context.flat) {
       flatRewrite = flatArrayName(head, frontmatterCode);
       if (!flatRewrite) return null;
       const name = flatRewrite.name;
@@ -312,23 +328,31 @@ export function loopWiring(
       }
     }
 
-    // Host + item-root stamps.
-    out.push(
-      attrInjectSplice(
-        source,
-        host.position.start.offset,
-        host.name,
-        ` data-cms-field="${arrayKey}" data-cms-kind="group"`
-      )
-    );
-    out.push(
-      attrInjectSplice(
-        source,
-        itemRoot.position.start.offset,
-        itemRoot.name,
-        ` data-cms-item={${index}}`
-      )
-    );
+    // Members address the array by ABSOLUTE index (slice windows offset it).
+    const idxExpr =
+      sliceOffset !== null && sliceOffset > 0 ? `${index} + ${sliceOffset}` : index;
+
+    // Host + item-root stamps — skipped for sliced maps: two hosts over
+    // windows of one array would let reindexGroup renumber from 0 per host
+    // and corrupt it. Members stay inline-editable; count changes are dev's.
+    if (sliceOffset === null) {
+      out.push(
+        attrInjectSplice(
+          source,
+          host.position.start.offset,
+          host.name,
+          ` data-cms-field="${arrayKey}" data-cms-kind="group"`
+        )
+      );
+      out.push(
+        attrInjectSplice(
+          source,
+          itemRoot.position.start.offset,
+          itemRoot.name,
+          ` data-cms-item={${index}}`
+        )
+      );
+    }
 
     // Members inside the item root.
     const memberRoles = new Map<string, "text" | "media" | "link">();
@@ -351,7 +375,7 @@ export function loopWiring(
               source,
               member.position.start.offset,
               member.name,
-              ` data-cms-field={\`${arrayKey}.\${${index}}.${srcKey}\`} data-cms-kind="media"`
+              ` data-cms-field={\`${arrayKey}.\${${idxExpr}}.${srcKey}\`} data-cms-kind="media"`
             )
           );
           memberRoles.set(srcKey, "media");
@@ -372,7 +396,7 @@ export function loopWiring(
               source,
               member.position.start.offset,
               member.name,
-              ` data-cms-field={\`${arrayKey}.\${${index}}.${hrefKey}\`} data-cms-kind="link"`
+              ` data-cms-field={\`${arrayKey}.\${${idxExpr}}.${hrefKey}\`} data-cms-kind="link"`
             )
           );
           memberRoles.set(hrefKey, "link");
@@ -392,7 +416,7 @@ export function loopWiring(
               source,
               member.position.start.offset,
               member.name,
-              ` data-cms-field={\`${arrayKey}.\${${index}}.${key}\`} data-cms-kind="text"`
+              ` data-cms-field={\`${arrayKey}.\${${idxExpr}}.${key}\`} data-cms-kind="text"`
             )
           );
           memberRoles.set(key, "text");
@@ -406,7 +430,7 @@ export function loopWiring(
     // every `<itemVar>.<key>` accessor in the arrow body (add-only; an
     // existing array is never touched).
     const bootstrap: AutoAddition[] = [];
-    if (existing === undefined) {
+    if (existing === undefined && !viaLift) {
       const item: Record<string, unknown> = {};
       const allAccessors = new RegExp(`\\b${itemVar}\\.([\\w$]+)`, "g");
       const code = collectSubtreeCode(expr);
