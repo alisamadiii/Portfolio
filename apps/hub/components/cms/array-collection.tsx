@@ -142,24 +142,72 @@ export function ArrayCollection({
     return remoteItems;
   }, [draft, remoteItems]);
 
+  // An empty array collection has nothing to infer its shape from. Mirror the
+  // folder CMS's `.template.json`: an optional sibling dotfile next to the
+  // collection file — `_collections/foo.json` → `_collections/.foo.template.json`
+  // — holding a sample item (a `{…}` object, or `[{…}]`). It's a dotfile:
+  // invisible to the site build, it only defines the New-item inputs when the
+  // collection is empty. Declared `cms.json` fields still win over it.
+  const templatePath = useMemo(() => {
+    const path = collection.path;
+    const slash = path.lastIndexOf("/");
+    const dir = slash >= 0 ? path.slice(0, slash + 1) : "";
+    const base = slash >= 0 ? path.slice(slash + 1) : path;
+    const stem = base.replace(/\.json$/i, "");
+    return `${dir}.${stem}.template.json`;
+  }, [collection.path]);
+
+  const templateQuery = useQuery(
+    trpc.cms.entries.getContent.queryOptions(
+      { owner, repo, branch, path: templatePath },
+      {
+        // Only when the collection is empty; a missing template 404s — retry:false.
+        enabled:
+          Boolean(owner && repo && branch) &&
+          !fileQuery.isLoading &&
+          items.length === 0,
+        staleTime: 60_000,
+        retry: false,
+      }
+    )
+  );
+  const templateItem = useMemo<Item | null>(() => {
+    const content = templateQuery.data?.contentObject;
+    const item = Array.isArray(content) ? content[0] : content;
+    return item && typeof item === "object" ? (item as Item) : null;
+  }, [templateQuery.data]);
+
   // Infer the per-item fields from the actual items (so arrays/objects/datetime
   // inside an item are editable), overlaying manifest labels/widgets and keeping
-  // any declared field the data doesn't have yet. Empty collection → the flat
-  // manifest schema (nothing to infer from).
+  // any declared field the data doesn't have yet. Empty collection → the
+  // `.template.json` shape if present, else the flat manifest schema.
   const itemFields = useMemo<Field[]>(() => {
-    if (items.length === 0) return schema.fields as Field[];
+    const templateFields = templateItem
+      ? (entryFieldsFromValue(templateItem, collection.fields) as Field[])
+      : null;
+    if (items.length === 0) {
+      // Nothing to infer from: prefer the template's shape, else the declared/
+      // DEFAULT_FIELDS schema.
+      return templateFields ?? (schema.fields as Field[]);
+    }
     const inferred = entryFieldsFromValue(mergeItems(items), collection.fields);
     // Only a collection that DECLARES fields gets its unfilled ones appended.
     // Discovered collections carry no real declaration — `schema.fields` is the
     // synthetic DEFAULT_FIELDS fallback (a required `title`), which must not
     // leak into a non-empty collection whose shape is fully inferred from data.
-    if (!collection.fields.length) return inferred;
+    if (!collection.fields.length && !templateFields) return inferred;
     const names = new Set(inferred.map((field) => field.name));
-    const declaredMissing = (schema.fields as Field[]).filter(
-      (field) => !names.has(field.name)
+    const seen = new Set<string>();
+    const missing = [
+      ...(collection.fields.length ? (schema.fields as Field[]) : []),
+      ...(templateFields ?? []),
+    ].filter((field) =>
+      names.has(field.name) || seen.has(field.name)
+        ? false
+        : (seen.add(field.name), true)
     );
-    return [...inferred, ...declaredMissing];
-  }, [items, collection, schema]);
+    return [...inferred, ...missing];
+  }, [items, collection, schema, templateItem]);
 
   // Self-heal a pre-existing no-op draft: once the published file loads, if the
   // stored draft is identical to it, discard the draft so the "Draft" badge and
