@@ -15,8 +15,9 @@ import {
 import type { GroupMember } from "@/lib/bridge-messages";
 
 import { TextField } from "@/components/ui/form-fields";
-import { Image as ImageIcon } from "@/components/icon";
+import { Image as ImageIcon, Trash2 } from "@/components/icon";
 import { useMediaLibrary } from "@/components/media/media-library-context";
+import { Thumbnail } from "@/components/thumbnail";
 
 export type GroupEditorFieldRow = {
   path: string;
@@ -145,31 +146,55 @@ export function GroupEditorDialog({
                     )}
                   </div>
                 )}
-                {section.rows.map((row) =>
-                  row.kind === "media" ? (
+                {section.rows.map((row) => {
+                  const current = drafts[row.path] ?? "";
+                  return row.kind === "media" ? (
                     <div key={row.path} className="flex flex-col gap-1.5">
                       <span className="text-muted-foreground text-xs">
                         {row.label}
                       </span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          openMediaLibrary({
-                            title: "Replace image",
-                            onInsert: (urls) => {
-                              const url = urls[0];
-                              if (url) setField(row.path, url);
-                            },
-                          })
-                        }
-                      >
-                        <ImageIcon className="size-4" />
-                        {(drafts[row.path] ?? "") !== row.value
-                          ? "Image selected — Save to apply"
-                          : "Replace image"}
-                      </Button>
+                      {current && (
+                        <Thumbnail
+                          path={current}
+                          className="aspect-video w-full max-w-[220px] rounded-md border"
+                          imgClassName="object-contain"
+                        />
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            openMediaLibrary({
+                              title: current ? "Replace image" : "Add image",
+                              onInsert: (urls) => {
+                                const url = urls[0];
+                                if (url) setField(row.path, url);
+                              },
+                            })
+                          }
+                        >
+                          <ImageIcon className="size-4" />
+                          {current !== row.value
+                            ? "Image selected — Save to apply"
+                            : current
+                              ? "Replace image"
+                              : "Add image"}
+                        </Button>
+                        {current && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={() => setField(row.path, "")}
+                          >
+                            <Trash2 className="size-4" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <TextField
@@ -182,8 +207,8 @@ export function GroupEditorDialog({
                         setField(row.path, event.target.value)
                       }
                     />
-                  )
-                )}
+                  );
+                })}
               </div>
             ))}
           </div>

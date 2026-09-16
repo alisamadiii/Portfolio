@@ -65,7 +65,11 @@ const inferScalar = (key: string, value: string): InferredField => {
   const base = { name: key, label: labelize(key) };
   if (
     IMAGE_VALUE.test(value) ||
-    (IMAGE_KEY.test(key) && value.startsWith("/")) ||
+    // Key-name signal: a populated value must look like a path (avoids tagging
+    // arbitrary prose whose key ends in an image word); an empty value carries
+    // no counter-signal, so trust the key — new/blank entries get an image
+    // picker instead of a text box.
+    (IMAGE_KEY.test(key) && (value === "" || value.startsWith("/"))) ||
     // auto-ID image fields: the role prefix is the type signal (covers
     // extensionless / root-relative paths that IMAGE_VALUE misses).
     /^image_[a-z0-9]{4}$/.test(key)
