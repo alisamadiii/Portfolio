@@ -999,3 +999,447 @@ describe("flat contract — same-tag nesting close (HerVoice bug)", () => {
     expect(values).toContain("Writing Contest");
   });
 });
+
+describe("flat contract — && guard transparency (Partners bug)", () => {
+  it("wires content inside {cond && ( ... )} guards", async () => {
+    const source = `---
+const partners = [{ name: "X" }];
+---
+
+{
+  partners.length > 0 && (
+    <section class="py-28">
+      <p class="text-xs uppercase">Trusted Partners & Supporters</p>
+      <div class="grid">
+        {partners.map((p) => (
+          <a href="/x">{p.name}</a>
+        ))}
+      </div>
+    </section>
+  )
+}
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const seed = r!.additions.find((a) => a.value === "Trusted Partners & Supporters");
+    expect(seed).toBeDefined();
+    expect(r!.code).toContain(`data-cms-field="${seed!.path}"`);
+  });
+
+  it("ternaries and maps stay hard boundaries", async () => {
+    const source = `<section>{ok ? (<p>Yes branch text</p>) : (<p>No branch text</p>)}</section>\n`;
+    const r = await runFlat(source);
+    expect((r?.additions ?? []).length).toBe(0);
+  });
+});
+
+describe("flat contract — component-wrapped map items (Reveal pattern)", () => {
+  it("descends through a component root to the element item root", async () => {
+    const source = `---
+const pillars = [
+  { index: "01", title: "Advocacy", description: "Long body text here." },
+  { index: "02", title: "Education", description: "Second body text." },
+];
+---
+
+<div class="divide-y">
+  {pillars.map((item, i) => (
+    <Reveal delay={i * 80}>
+      <div class="row">
+        <span>{item.index}</span>
+        <h3>{item.title}</h3>
+        <p>{item.description}</p>
+      </div>
+    </Reveal>
+  ))}
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^pillars_/.test(a.path))!.path;
+    expect(r!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(r!.code).toContain('<div class="row" data-cms-item={i}>');
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.title`}");
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.description`}");
+  });
+});
+
+describe("flat contract — block-body map with icon zip (SPR Benefits bug)", () => {
+  it("wires maps whose arrow body is { const …; return ( <root/> ) }", async () => {
+    const source = `---
+const items = [
+  { title: "Hands-On Leadership", description: "Gain practical skills leading classes." },
+  { title: "Professional Development", description: "Learn how a nonprofit operates." },
+];
+const icons = ["a", "b"];
+---
+
+<div class="grid">
+  {
+    items.map((benefit, i) => {
+      const icon = icons[i % icons.length];
+      return (
+        <div class="card">
+          <h3>{benefit.title}</h3>
+          <p>{benefit.description}</p>
+        </div>
+      );
+    })
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^items_/.test(a.path))!.path;
+    expect(r!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(r!.code).toContain('<div class="card" data-cms-item={i}>');
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.title`}");
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.description`}");
+  });
+});
+
+describe("flat contract — destructured map params (HerVoice guidelines bug)", () => {
+  it("wires maps with ({ label, text }) destructured params", async () => {
+    const source = `---
+const guidelines = [
+  { label: "Content Quality", text: "Write from the heart with honest reflection." },
+  { label: "Image Required", text: "Include a relevant image for your story." },
+];
+---
+
+<div class="space-y-5">
+  {
+    guidelines.map(({ label, text }) => (
+      <div class="row">
+        <p class="font-semibold">{label}</p>
+        <p class="mt-1">{text}</p>
+      </div>
+    ))
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^guidelines_/.test(a.path))!.path;
+    expect(r!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(r!.code).toContain("guidelines.map(({ label, text }, i) => (");
+    expect(r!.code).toContain('<div class="row" data-cms-item={i}>');
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.label`}");
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.text`}");
+  });
+
+  it("skips destructures with renames or defaults (ambiguous keys)", async () => {
+    const source = `---
+const rows = [{ a: "First value here", b: "Second value here" }];
+---
+
+<div>{rows.map(({ a: renamed, b }) => (<p>{renamed}</p>))}</div>
+`;
+    const r = await runFlat(source);
+    expect(r?.code ?? "").not.toContain('data-cms-kind="group"');
+  });
+});
+
+describe("flat contract — dynamic-tag map item roots (hazara bento-grid bug)", () => {
+  it("wires maps whose item root is a dynamic tag binding", async () => {
+    const source = `---
+const services = [
+  { title: "Job Training & Placement", description: "Helping community members build skills.", href: "/services/job-training" },
+  { title: "Financial Literacy", description: "Workshops on budgeting and banking.", href: "#" },
+];
+---
+
+<div class="grid">
+  {
+    services.map((service, i) => {
+      const isExternal = service.href.startsWith("#");
+      const Tag = isExternal ? "div" : "a";
+      return (
+        <Tag href={isExternal ? undefined : service.href} class="card">
+          <h3 class="text-lg">{service.title}</h3>
+          <p class="mt-3">{service.description}</p>
+        </Tag>
+      );
+    })
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^services_/.test(a.path))!.path;
+    expect(r!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(r!.code).toContain("<Tag");
+    expect(r!.code).toContain("data-cms-item={i}");
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.title`}");
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.description`}");
+  });
+
+  it("still descends real component wrappers (no dynamic-tag binding)", async () => {
+    const source = `---
+const cards = [{ title: "First card title", text: "First card body text." }];
+---
+
+<div class="grid">
+  {
+    cards.map((card) => (
+      <Reveal>
+        <div class="card">
+          <h3>{card.title}</h3>
+          <p>{card.text}</p>
+        </div>
+      </Reveal>
+    ))
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    expect(r!.code).toContain('<div class="card" data-cms-item={i}>');
+  });
+});
+
+describe("flat contract — string-array loops (fla2z trust-badges bug)", () => {
+  it("wires bare {item} members with the index-only path", async () => {
+    const source = `---
+const trustBadges = ["Licensed & insured GC", "15 years building in Florida"];
+---
+
+<div class="mt-14 flex">
+  {
+    trustBadges.map((label) => (
+      <div class="flex items-baseline">
+        <span class="h-2.5 w-2.5" />
+        <span class="text-[13px] uppercase">{label}</span>
+      </div>
+    ))
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^trustBadges_/.test(a.path))!.path;
+    expect(r!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(r!.code).toContain('<div class="flex items-baseline" data-cms-item={i}>');
+    expect(r!.code).toContain(
+      "data-cms-field={`" + key + ".${i}`} data-cms-kind=\"text\""
+    );
+  });
+
+  it("bootstraps a missing string array from a bare accessor", async () => {
+    const source = `---
+import pages from "_pages.json";
+---
+
+<ul>
+  {pages.tags.map((tag) => (
+    <li class="tag">{tag}</li>
+  ))}
+</ul>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const seeded = r!.additions.find((a) => /^tags_/.test(a.path));
+    expect(seeded).toBeDefined();
+    expect(seeded!.value).toEqual(["Item"]);
+  });
+});
+
+describe("flat contract — nested member-array maps (fla2z services bullets bug)", () => {
+  it("wires {item.sub.map(…)} as a sub-group with its own item stamps", async () => {
+    const source = `---
+const serviceItems = [
+  {
+    name: "New construction",
+    copy: "Ground-up residential builds run on a written scope.",
+    bullets: ["Site prep & foundation", "Framing & roofing", "Final inspections"],
+  },
+];
+---
+
+<div>
+  {
+    serviceItems.map((svc) => (
+      <section class="py-16">
+        <h2>{svc.name}</h2>
+        <p>{svc.copy}</p>
+        <div class="mt-7 grid">
+          {svc.bullets.map((b) => (
+            <div class="flex items-baseline">
+              <span class="h-2 w-2" />
+              <span class="text-[15px]">{b}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^serviceItems_/.test(a.path))!.path;
+    expect(r!.code).toContain(`data-cms-field="${key}" data-cms-kind="group"`);
+    expect(r!.code).toContain('<section class="py-16" data-cms-item={i}>');
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.name`}");
+    // Sub-group host + spliced inner index + index-only inner member paths.
+    expect(r!.code).toContain(
+      "data-cms-field={`" + key + ".${i}.bullets`} data-cms-kind=\"group\""
+    );
+    expect(r!.code).toContain("svc.bullets.map((b, j) => (");
+    expect(r!.code).toContain('<div class="flex items-baseline" data-cms-item={j}>');
+    expect(r!.code).toContain(
+      "data-cms-field={`" + key + ".${i}.bullets.${j}`} data-cms-kind=\"text\""
+    );
+  });
+
+  it("wires dotted accessors inside nested maps and reuses an existing inner index", async () => {
+    const source = `---
+const faqs = [
+  {
+    topic: "Permits",
+    entries: [{ q: "Do you pull permits?", a: "Yes, on every job." }],
+  },
+];
+---
+
+<div>
+  {
+    faqs.map((faq) => (
+      <section class="faq">
+        <h2>{faq.topic}</h2>
+        <div class="entries">
+          {faq.entries.map((entry, n) => (
+            <div class="entry">
+              <h3>{entry.q}</h3>
+              <p>{entry.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</div>
+`;
+    const r = await runFlat(source);
+    expect(r).not.toBeNull();
+    const key = r!.additions.find((a) => /^faqs_/.test(a.path))!.path;
+    expect(r!.code).toContain(
+      "data-cms-field={`" + key + ".${i}.entries`} data-cms-kind=\"group\""
+    );
+    expect(r!.code).toContain("faq.entries.map((entry, n) => (");
+    expect(r!.code).toContain('<div class="entry" data-cms-item={n}>');
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.entries.${n}.q`}");
+    expect(r!.code).toContain("data-cms-field={`" + key + ".${i}.entries.${n}.a`}");
+  });
+});
+
+describe("flat contract — variable guards never mark ancestors (fla2z green-section bug)", () => {
+  it("fragment-bodied guard: container stays unmarked, inner display still marks", async () => {
+    const source = `---
+import siteData from "_site.json";
+
+const site = siteData.variables;
+---
+
+<div class="mx-auto max-w-[1200px]">
+  <section id="services">
+    <h2>Residential work, permit to punch list.</h2>
+  </section>
+  {site.reviewCount > 0 && (
+    <>
+      <hr class="divider" />
+      <section id="reviews">
+        <p class="rating">{site.rating}</p>
+      </section>
+    </>
+  )}
+</div>
+`;
+    const result = await runFlat(source);
+    expect(result).not.toBeNull();
+    const { code } = result!;
+    expect(code).not.toContain('<div class="mx-auto max-w-[1200px]" data-cms-variant');
+    expect(code).not.toContain('data-cms-variant="reviewCount"');
+    expect(code).toContain('<p class="rating" data-cms-variant="rating">');
+  });
+
+  it("multi-root guard body is transparent too", async () => {
+    const source = `---
+import siteData from "_site.json";
+
+const site = siteData.variables;
+---
+
+<div class="page">
+  {site.reviewCount > 0 && (
+    <hr class="divider" />
+    <section id="reviews">
+      <p class="rating">{site.rating}</p>
+    </section>
+  )}
+</div>
+`;
+    const result = await runFlat(source);
+    expect(result).not.toBeNull();
+    const { code } = result!;
+    expect(code).not.toContain('<div class="page" data-cms-variant');
+    expect(code).toContain('<p class="rating" data-cms-variant="rating">');
+  });
+});
+
+describe("flat contract — Region subtrees are never auto-wired (fla2z junk-seeds bug)", () => {
+  it("static text runs inside <Region> variants stay unwired and unseeded", async () => {
+    const source = `---
+import siteData from "_site.json";
+
+const site = siteData.variables;
+---
+
+<footer>
+  <Region type="variant" variantName="serviceArea">
+    <p class="m-0 text-sm">Serving {site.serviceArea}</p>
+  </Region>
+  <Region type="variant" variantName="name">
+    <span class="text-[13px]">&copy; 2026 {site.name}. All rights reserved.</span>
+  </Region>
+  <p class="keep">Family-run since 2011.</p>
+</footer>
+`;
+    const result = await runFlat(source);
+    expect(result).not.toBeNull();
+    const { code, additions } = result!;
+    const values = additions.map((a) => a.value);
+    expect(values).not.toContain("Serving");
+    expect(values.some((v) => typeof v === "string" && v.includes("rights reserved"))).toBe(false);
+    expect(values).toContain("Family-run since 2011.");
+    expect(code).not.toMatch(/<p class="m-0 text-sm" data-cms-field/);
+    expect(code).not.toMatch(/<span class="text-\[13px\]" data-cms-field/);
+  });
+
+  it("collection Region content is untouched too", async () => {
+    const source = `---
+import reviewItems from "_collections/reviews.json";
+---
+
+<section>
+  <Region type="collection" name="reviews">
+    <div class="grid">
+      {reviewItems.map((rev) => (
+        <div class="card">
+          <p>Verified customer</p>
+          <p>{rev.quote}</p>
+        </div>
+      ))}
+    </div>
+  </Region>
+</section>
+`;
+    // Nothing to wire at all → transform reports no changes (null) or, at
+    // most, changes that never touch the Region's content.
+    const result = await runFlat(source);
+    expect(
+      (result?.additions ?? []).map((a) => a.value)
+    ).not.toContain("Verified customer");
+    expect(result?.code ?? "").not.toContain('data-cms-field');
+  });
+});

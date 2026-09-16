@@ -324,13 +324,21 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         useDraftsStore.getState().deleteDraft(draftKey(owner, repo, branch, pagesPath));
       }
       const livePagesDraft = getDraft(owner, repo, branch, pagesPath);
+      // Flat contract (version 2): no per-page nesting — every page's working
+      // copy IS the whole flat object.
+      const flat = manifest.object.version === 2;
       for (const entry of entryMap.routes) {
         if (entry.name === SITE_ENTRY || copiesRef.current.has(entry.name))
           continue;
-        const draftSlice = (
-          livePagesDraft?.values as Record<string, unknown> | undefined
-        )?.[entry.name] as Record<string, unknown> | undefined;
-        const baseSlice = (base[entry.name] ?? {}) as Record<string, unknown>;
+        const draftValues = livePagesDraft?.values as
+          | Record<string, unknown>
+          | undefined;
+        const draftSlice = flat
+          ? draftValues
+          : (draftValues?.[entry.name] as Record<string, unknown> | undefined);
+        const baseSlice = (
+          flat ? base : (base[entry.name] ?? {})
+        ) as Record<string, unknown>;
         copiesRef.current.set(entry.name, {
           entry,
           sha: livePagesDraft?.sha ?? pagesData.sha ?? null,
@@ -421,13 +429,16 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       if (!base) return;
       const draft = getDraft(owner, repo, branch, manifest.object.paths.pages);
       const draftValues = draft?.values as Record<string, unknown> | undefined;
+      const flat = manifest.object.version === 2;
       let changed = false;
       for (const entry of candidatesFor(entryMap, framePath)) {
         if (entry.name === SITE_ENTRY) continue;
-        const draftSlice = draftValues?.[entry.name] as
-          | Record<string, unknown>
-          | undefined;
-        const baseSlice = (base[entry.name] ?? {}) as Record<string, unknown>;
+        const draftSlice = flat
+          ? draftValues
+          : (draftValues?.[entry.name] as Record<string, unknown> | undefined);
+        const baseSlice = (
+          flat ? base : (base[entry.name] ?? {})
+        ) as Record<string, unknown>;
         const prev = copiesRef.current.get(entry.name);
         copiesRef.current.set(entry.name, {
           entry,
@@ -531,14 +542,31 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           )
             pageValues.set(route.name, pageCopy.values);
         }
+        const flat = manifest.object.version === 2;
+        // Flat contract: every page copy is the WHOLE flat object, so a stale
+        // copy merged after the edited entry would clobber the fresh edit —
+        // re-insert the edited entry so it merges last.
+        if (flat) {
+          pageValues.delete(entry.name);
+          pageValues.set(entry.name, copy.values);
+        }
         const pagesPath = manifest.object.paths.pages;
         const key = draftKey(owner, repo, branch, pagesPath);
         const base = pagesBaseRef.current ?? {};
         const assembled = assemblePagesDraft(
           pagesBaseRef.current,
           pageValues,
-          manifest.object.version === 2
+          flat
         );
+        // Keep every flat page copy in sync with the merged result so no copy
+        // goes stale between edits on different pages.
+        if (flat) {
+          for (const route of entryMap.routes) {
+            if (route.name === SITE_ENTRY) continue;
+            const pageCopy = copiesRef.current.get(route.name);
+            if (pageCopy) pageCopy.values = assembled;
+          }
+        }
         // No net difference from published → drop the draft entirely so the
         // Publish badge, dialog and page dots don't show a phantom change.
         if (!contentDiffers(base, assembled)) {

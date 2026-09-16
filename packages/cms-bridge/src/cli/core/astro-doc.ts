@@ -254,6 +254,26 @@ export function scanPastGt(source: string, from: number): number {
   throw new SpliceError(`offset ${from}: expected a closing '>'`);
 }
 
+/**
+ * A `{cond && ( <single-root/> )}` guard expression — static markup behind a
+ * boolean flag. Returns the root element so callers can treat its subtree as
+ * normal content. Maps and ternaries don't qualify.
+ */
+export function guardedSingleRoot(expr: AstroNode): AstroNode | null {
+  const children = expr.children ?? [];
+  const header = children[0];
+  if (header?.type !== "text" || header.value === undefined) return null;
+  if (!/&&\s*\(\s*$/.test(header.value)) return null;
+  if (/\.map\s*\(|\?/.test(header.value)) return null;
+  // Guard bodies may be one element, a fragment (`<>…</>`), or several
+  // sibling roots — all are static markup behind a flag, all transparent.
+  const roots = children.filter(
+    (child) => child.type === "element" || child.type === "fragment"
+  );
+  if (roots.length === 0) return null;
+  return roots[0];
+}
+
 /** Sole non-whitespace child text node of an element, if that's all there is. */
 export function soleStaticText(
   node: AstroNode

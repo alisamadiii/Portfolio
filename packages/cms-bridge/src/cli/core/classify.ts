@@ -14,6 +14,7 @@ import type {
 } from "./astro-doc.js";
 import {
   getAttr,
+  guardedSingleRoot,
   isComponent,
   isExpression,
   openTagEnd,
@@ -353,8 +354,12 @@ export function classifyPage(
     if (node.type === "element" && SKIP_TAGS.has(node.name ?? "")) return false;
 
     // Expression boundary: record adopted paths inside, report static content,
-    // never descend for candidates.
+    // never descend for candidates. EXCEPTION (flat contract): a
+    // `{cond && ( <root/> )}` guard is static markup behind a flag — its
+    // subtree classifies normally.
     if (isExpression(node)) {
+      if (wireChrome && guardedSingleRoot(node)) return; // descend
+
       walk(node, (inner) => {
         const adopted = adoptedFieldOf(inner);
         if (adopted) adoptedPaths.push(adopted);
@@ -392,6 +397,9 @@ export function classifyPage(
     // their own concern). Plain wrapper components (Layout, section wrappers
     // with no `field`) stay transparent so page markup inside is still scanned.
     if (isComponent(node)) {
+      // <Region> subtrees are managed elsewhere (variant → Variables page,
+      // collection → collection editor) — never wire static text inside.
+      if (node.name === "Region") return false;
       const field = getAttr(node, "field");
       if (field) {
         adoptedPaths.push(field.value);

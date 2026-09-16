@@ -19,10 +19,18 @@
  */
 
 import type { AstroNode, Splice } from "../cli/core/astro-doc.js";
-import { getAttr, isExpression, walk } from "../cli/core/astro-doc.js";
+import {
+  getAttr,
+  guardedSingleRoot,
+  isExpression,
+  walk,
+} from "../cli/core/astro-doc.js";
 import { attrInjectSplice } from "./splice.js";
 
 /** Accessor regexes for the current page, or null when it can't use variables. */
+/** Bare destructured idents map to their own name as the variables path. */
+const MATCHER_PATHS = new WeakMap<RegExp, string>();
+
 export function variablesMatchers(
   frontmatterCode: string
 ): RegExp[] | null {
@@ -43,8 +51,27 @@ export function variablesMatchers(
   ).test(frontmatterCode)
     ? "variables"
     : undefined;
-  for (const name of [bound, destructured]) {
-    if (name) matchers.push(new RegExp(`\\b${name}\\.([\\w$][\\w$.]*)`));
+  const bindings = [bound, destructured].filter(Boolean) as string[];
+  for (const name of bindings) {
+    matchers.push(new RegExp(`\\b${name}\\.([\\w$][\\w$.]*)`));
+  }
+  // Scalars destructured OUT of the variables binding:
+  //   const { name, email } = variables;  →  bare `email` IS variables.email.
+  // Guarded against member accesses (`item.name`) via the lookbehind.
+  for (const name of bindings) {
+    const picked = frontmatterCode.match(
+      new RegExp(`const\\s*\\{([^}]*)\\}\\s*=\\s*${name}\\b`)
+    )?.[1];
+    if (!picked) continue;
+    for (const raw of picked.split(",")) {
+      const ident = raw.split(":")[0].trim();
+      if (!/^[A-Za-z_$][\w$]*$/.test(ident)) continue;
+      matchers.push(
+        new RegExp(`(?<![.\\w$])${ident}\\b((?:\\.[\\w$]+)*)`, "")
+      );
+      // map bare ident → its own name as the variables path
+      MATCHER_PATHS.set(matchers[matchers.length - 1], ident);
+    }
   }
   return matchers;
 }
@@ -76,9 +103,23 @@ export function variableMarkSplices(
 
   const pathIn = (code: string): string | undefined => {
     for (const matcher of matchers) {
-      const found = matcher.exec(code)?.[1];
-      // Trim a trailing dot left by greedy matches like `variables.email.`
-      if (found) return found.replace(/\.+$/, "");
+      const m = matcher.exec(code);
+      if (!m) continue;
+      const base = MATCHER_PATHS.get(matcher);
+      // bare destructured ident: path = ident (+ any tail accessors)
+      let found = base !== undefined ? `${base}${m[1] ?? ""}` : m[1];
+      if (!found) continue;
+      found = found.replace(/^\./, "").replace(/\.+$/, "");
+      // accessor tails are not variable paths: `socials.map(…)` → `socials`
+      let prev = "";
+      while (prev !== found) {
+        prev = found;
+        found = found.replace(
+          /\.(map|filter|slice|forEach|reduce|join|length|some|every|find|includes|indexOf)$/,
+          ""
+        );
+      }
+      if (found) return found;
     }
     return undefined;
   };
@@ -104,6 +145,8 @@ export function variableMarkSplices(
 
     // Text-position expressions: mark the nearest element ancestor.
     if (isExpression(node)) {
+      if (guardedSingleRoot(node)) return; // guard — descend into its subtree
+
       const path = pathIn(expressionCode(node));
       if (path) {
         const host = [...ancestors]

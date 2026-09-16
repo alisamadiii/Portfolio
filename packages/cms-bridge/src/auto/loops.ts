@@ -21,6 +21,7 @@
 import type { AstroNode, Splice } from "../cli/core/astro-doc.js";
 import {
   getAttr,
+  guardedSingleRoot,
   isExpression,
   verifySlice,
   walk,
@@ -44,7 +45,7 @@ export type LoopWiringResult = {
  * across split groups would corrupt the array).
  */
 const MAP_HEADER_RE =
-  /^\s*([\w$][\w$.]*?)(?:\.slice\(\s*(\d+)\s*(?:,\s*\d+\s*)?\))?\.map\s*\(\s*(\(?)\s*([\w$]+)\s*(?:,\s*([\w$]+))?\s*(\)?)\s*=>\s*\(?\s*$/;
+  /^\s*([\w$][\w$.]*?)(?:\.slice\(\s*(\d+)\s*(?:,\s*\d+\s*)?\))?\.map\s*\(\s*(\(?)\s*(\{[^}]*\}|[\w$]+)\s*(?:,\s*([\w$]+))?\s*(\)?)\s*=>\s*(?:\(|\{[\s\S]*?\breturn\s*\()?\s*$/;
 
 const expressionCode = (expr: AstroNode): string =>
   (expr.children ?? [])
@@ -188,6 +189,9 @@ export function loopWiring(
     if (node.type === "frontmatter") return false;
     if (!isExpression(node)) return;
 
+    // `{cond && (…)}` guards are transparent — maps inside them are still
+    // page-level, not item-scoped.
+    if (context.flat && guardedSingleRoot(node)) return; // descend
     // Expression subtrees are handled here in full; never descend (nested
     // maps inside are item-scoped, not page arrays).
     const handled = wireOne(node, ancestors);
@@ -214,11 +218,46 @@ export function loopWiring(
     if (!match) return null;
     const [, head, sliceStart, openParen, itemVar, indexVar, closeParen] = match;
     const sliceOffset = sliceStart !== undefined ? Number(sliceStart) : null;
+    // Destructured item param: `({ label, text })` — members are BARE idents.
+    const destructured = itemVar.startsWith("{");
+    if (destructured && (itemVar.includes(":") || itemVar.includes("=") || !openParen)) {
+      return null; // renames/defaults are ambiguous key mappings — skip
+    }
+    const destructuredNames = destructured
+      ? itemVar
+          .slice(1, -1)
+          .split(",")
+          .map((n) => n.trim())
+          .filter((n) => /^[\w$]+$/.test(n))
+      : [];
+    if (destructured && destructuredNames.length === 0) return null;
 
-    // Single-root arrow body only.
-    const roots = children.filter((child) => child.type === "element");
+    // Single-root arrow body only. A COMPONENT root (the common
+    // animation-wrapper pattern: `<Reveal><div>…</div></Reveal>`) is
+    // descended through to its single element child — data-cms-item must
+    // land on a real DOM element.
+    const roots = children.filter(
+      (child) => child.type === "element" || child.type === "component"
+    );
     if (roots.length !== 1) return null;
-    const itemRoot = roots[0];
+    let itemRoot = roots[0];
+    // Dynamic-tag roots (`const Tag = cond ? "div" : "a"; … <Tag class=…>`)
+    // parse as components but render literal elements with attrs forwarded —
+    // treat them as element hosts. Detected by a string-literal tag binding in
+    // the frontmatter or the map's block body (the header text node).
+    const dynamicTag = (name: string | undefined): boolean =>
+      !!name &&
+      new RegExp(
+        `const\\s+${name}\\s*=\\s*(?:[^;\\n]*?\\?\\s*)?["'][a-z][\\w-]*["']` +
+          `(?:\\s*:\\s*["'][a-z][\\w-]*["'])?`
+      ).test(`${frontmatterCode}\n${header.value ?? ""}`);
+    while (itemRoot.type === "component" && !dynamicTag(itemRoot.name)) {
+      const inner = (itemRoot.children ?? []).filter(
+        (child) => child.type === "element" || child.type === "component"
+      );
+      if (inner.length !== 1) return null;
+      itemRoot = inner[0];
+    }
     if (itemRoot.position?.start?.offset === undefined || !itemRoot.name) {
       return null;
     }
@@ -275,15 +314,13 @@ export function loopWiring(
     // Index param: reuse the arrow's, or splice one in.
     let index = indexVar;
     if (!index) {
-      index = itemVar === "i" ? "idx" : "i";
+      index = !destructured && itemVar === "i" ? "idx" : "i";
       const headerStart = header.position?.start?.offset;
       if (headerStart === undefined) return null;
       const paramText = `${openParen}${itemVar}${closeParen}`;
       const relAt = header.value.lastIndexOf(paramText);
       if (relAt < 0) return null;
-      const replacement = openParen
-        ? `(${itemVar}, ${index})`
-        : `(${itemVar}, ${index})`;
+      const replacement = `(${itemVar}, ${index})`;
       out.push({
         start: headerStart + relAt,
         end: headerStart + relAt + paramText.length,
@@ -354,9 +391,127 @@ export function loopWiring(
       );
     }
 
-    // Members inside the item root.
+    // Members inside the item root. A bare `{item}` accessor (string arrays)
+    // resolves to the EMPTY key — the member IS the item, path `<key>.<i>`.
     const memberRoles = new Map<string, "text" | "media" | "link">();
-    const accessorRe = new RegExp(`^\\s*${itemVar}\\.([\\w$][\\w$.]*)\\s*$`);
+    const accessorRe = destructured
+      ? new RegExp(
+          `^\\s*(${destructuredNames.join("|")})((?:\\.[\\w$]+)*)\\s*$`
+        )
+      : new RegExp(`^\\s*${itemVar}((?:\\.[\\w$]+)*)\\s*$`);
+    const accessorKey = (code: string | undefined): string | undefined => {
+      const m = accessorRe.exec(code ?? "");
+      if (!m) return undefined;
+      return destructured
+        ? `${m[1]}${m[2] ?? ""}`
+        : (m[1] ?? "").replace(/^\./, "");
+    };
+    const memberField = (key: string): string =>
+      `${arrayKey}.\${${idxExpr}}${key ? `.${key}` : ""}`;
+
+    // One-level nested map over a member array: the hosting element becomes a
+    // sub-group (`<key>.<i>.<subKey>`), its item roots get their own index
+    // stamps, and inner accessors (bare or dotted) become text members.
+    const wireNestedMemberLoop = (
+      hostEl: AstroNode,
+      nestedExpr: AstroNode
+    ): Splice[] | null => {
+      const kids = nestedExpr.children ?? [];
+      const head = kids[0];
+      if (head?.type !== "text" || head.value === undefined) return null;
+      const headerStart = head.position?.start?.offset;
+      if (headerStart === undefined) return null;
+      const m =
+        /^\s*([\w$][\w$.]*)\.map\(\s*(?:\(\s*([\w$]+)\s*(?:,\s*([\w$]+)\s*)?\)|([\w$]+))\s*=>/.exec(
+          head.value
+        );
+      if (!m) return null;
+      const [, headCode, parenVar, nestedIndexVar, bareVar] = m;
+      const innerVar = parenVar ?? bareVar;
+      const subKey = accessorKey(headCode);
+      if (!subKey) return null; // must be an <item>.<key> member array
+      if (
+        hostEl.position?.start?.offset === undefined ||
+        !hostEl.name ||
+        getAttr(hostEl, "data-cms-field")
+      ) {
+        return null;
+      }
+      const roots = kids.filter((child) => child.type === "element");
+      if (roots.length !== 1) return null;
+      const innerRoot = roots[0];
+      if (innerRoot.position?.start?.offset === undefined || !innerRoot.name) {
+        return null;
+      }
+
+      const nested: Splice[] = [];
+      let innerIndex = nestedIndexVar;
+      if (!innerIndex) {
+        // Splicing an index needs the parenthesised form for a safe anchor.
+        if (!parenVar) return null;
+        innerIndex = ["j", "k", "n"].find(
+          (candidate) =>
+            candidate !== itemVar &&
+            candidate !== index &&
+            candidate !== innerVar
+        )!;
+        const paramText = `(${parenVar})`;
+        const relAt = head.value.lastIndexOf(paramText);
+        if (relAt < 0) return null;
+        nested.push({
+          start: headerStart + relAt,
+          end: headerStart + relAt + paramText.length,
+          replacement: `(${innerVar}, ${innerIndex})`,
+        });
+      }
+
+      const prefix = `${arrayKey}.\${${idxExpr}}.${subKey}`;
+      nested.push(
+        attrInjectSplice(
+          source,
+          hostEl.position.start.offset,
+          hostEl.name,
+          ` data-cms-field={\`${prefix}\`} data-cms-kind="group"`
+        ),
+        attrInjectSplice(
+          source,
+          innerRoot.position.start.offset,
+          innerRoot.name,
+          ` data-cms-item={${innerIndex}}`
+        )
+      );
+
+      const innerRe = new RegExp(`^\\s*${innerVar}((?:\\.[\\w$]+)*)\\s*$`);
+      const innerKey = (code: string | undefined): string | undefined => {
+        const mm = innerRe.exec(code ?? "");
+        return mm ? (mm[1] ?? "").replace(/^\./, "") : undefined;
+      };
+      walk(innerRoot, (el) => {
+        if (el.type !== "element" || !el.name) return;
+        if (el.position?.start?.offset === undefined) return;
+        if (getAttr(el, "data-cms-field")) return false;
+        const inner = (el.children ?? []).filter(
+          (child) => !(child.type === "text" && (child.value ?? "").trim() === "")
+        );
+        if (inner.length === 1 && isExpression(inner[0])) {
+          const key = innerKey(expressionCode(inner[0]));
+          if (key !== undefined) {
+            nested.push(
+              attrInjectSplice(
+                source,
+                el.position.start.offset,
+                el.name,
+                ` data-cms-field={\`${prefix}.\${${innerIndex}}${
+                  key ? `.${key}` : ""
+                }\`} data-cms-kind="text"`
+              )
+            );
+            return false;
+          }
+        }
+      });
+      return nested;
+    };
     walk(itemRoot, (member) => {
       if (member.type !== "element" || !member.name) return;
       if (member.position?.start?.offset === undefined) return;
@@ -367,15 +522,15 @@ export function loopWiring(
         const src = getAttr(member, "src");
         const srcKey =
           src && src.kind !== "quoted"
-            ? accessorRe.exec(src.value ?? "")?.[1]
+            ? accessorKey(src.value)
             : undefined;
-        if (srcKey) {
+        if (srcKey !== undefined) {
           out.push(
             attrInjectSplice(
               source,
               member.position.start.offset,
               member.name,
-              ` data-cms-field={\`${arrayKey}.\${${idxExpr}}.${srcKey}\`} data-cms-kind="media"`
+              ` data-cms-field={\`${memberField(srcKey)}\`} data-cms-kind="media"`
             )
           );
           memberRoles.set(srcKey, "media");
@@ -388,15 +543,15 @@ export function loopWiring(
         const href = getAttr(member, "href");
         const hrefKey =
           href && href.kind !== "quoted"
-            ? accessorRe.exec(href.value ?? "")?.[1]
+            ? accessorKey(href.value)
             : undefined;
-        if (hrefKey) {
+        if (hrefKey !== undefined) {
           out.push(
             attrInjectSplice(
               source,
               member.position.start.offset,
               member.name,
-              ` data-cms-field={\`${arrayKey}.\${${idxExpr}}.${hrefKey}\`} data-cms-kind="link"`
+              ` data-cms-field={\`${memberField(hrefKey)}\`} data-cms-kind="link"`
             )
           );
           memberRoles.set(hrefKey, "link");
@@ -409,17 +564,24 @@ export function loopWiring(
         (child) => !(child.type === "text" && (child.value ?? "").trim() === "")
       );
       if (meaningful.length === 1 && isExpression(meaningful[0])) {
-        const key = accessorRe.exec(expressionCode(meaningful[0]))?.[1];
-        if (key) {
+        const key = accessorKey(expressionCode(meaningful[0]));
+        if (key !== undefined) {
           out.push(
             attrInjectSplice(
               source,
               member.position.start.offset,
               member.name,
-              ` data-cms-field={\`${arrayKey}.\${${idxExpr}}.${key}\`} data-cms-kind="text"`
+              ` data-cms-field={\`${memberField(key)}\`} data-cms-kind="text"`
             )
           );
           memberRoles.set(key, "text");
+          return false;
+        }
+        // Nested member-array map (`{svc.bullets.map((b) => …)}`) — the
+        // member hosts a sub-group over `<key>.<i>.<subKey>`, one level deep.
+        const nested = wireNestedMemberLoop(member, meaningful[0]);
+        if (nested) {
+          out.push(...nested);
           return false;
         }
       }
@@ -432,7 +594,9 @@ export function loopWiring(
     const bootstrap: AutoAddition[] = [];
     if (existing === undefined && !viaLift) {
       const item: Record<string, unknown> = {};
-      const allAccessors = new RegExp(`\\b${itemVar}\\.([\\w$]+)`, "g");
+      const allAccessors = destructured
+        ? new RegExp(`(?<![.\\w$])(${destructuredNames.join("|")})\\b`, "g")
+        : new RegExp(`\\b${itemVar}\\.([\\w$]+)`, "g");
       const code = collectSubtreeCode(expr);
       let accessor: RegExpExecArray | null;
       while ((accessor = allAccessors.exec(code)) !== null) {
@@ -444,6 +608,9 @@ export function loopWiring(
       }
       if (Object.keys(item).length > 0) {
         bootstrap.push({ path: arrayKey, value: [item] });
+      } else if (memberRoles.has("")) {
+        // Bare `{item}` members — a plain string array.
+        bootstrap.push({ path: arrayKey, value: ["Item"] });
       }
     }
 
