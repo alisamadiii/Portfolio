@@ -120,7 +120,10 @@ const ImportWizard = ({ onClose }: { onClose: () => void }) => {
     );
   }
 
-  if (!conn.github || !conn.cloudflareReady) {
+  // Only block when NEITHER provider is connected. Otherwise proceed with the
+  // one that's connected (GitHub-only import skips the optional Cloudflare DNS
+  // step; Cloudflare-only import pulls the repo from the CF project).
+  if (!conn.github && !conn.cloudflareReady) {
     return (
       <ConnectGate
         github={conn.github}
@@ -148,41 +151,93 @@ const ImportWizard = ({ onClose }: { onClose: () => void }) => {
       />
     );
   }
-  return <SourceStep onPick={setStep} />;
+  return (
+    <SourceStep
+      onPick={setStep}
+      github={conn.github}
+      cloudflareReady={conn.cloudflareReady}
+    />
+  );
 };
 
-const SourceStep = ({ onPick }: { onPick: (s: Step) => void }) => (
+const SourceStep = ({
+  onPick,
+  github,
+  cloudflareReady,
+}: {
+  onPick: (s: Step) => void;
+  github: boolean;
+  cloudflareReady: boolean;
+}) => (
   <div>
     <DialogHeader>
       <DialogTitle>Import a project</DialogTitle>
       <DialogDescription>Where is your project?</DialogDescription>
     </DialogHeader>
     <div className="mt-4 grid grid-cols-2 gap-3">
-      <button
-        type="button"
+      <SourceCard
+        icon={<Github className="size-6" />}
+        title="From GitHub"
+        description="Pick a repo and set its domain."
+        connected={github}
+        provider="GitHub"
         onClick={() => onPick("github")}
-        className="hover:border-foreground/30 flex flex-col items-start gap-2 rounded-lg border p-4 text-left"
-      >
-        <Github className="size-6" />
-        <span className="text-[14.5px] font-bold">From GitHub</span>
-        <span className="text-muted-foreground text-[12.5px]">
-          Pick a repo and set its domain.
-        </span>
-      </button>
-      <button
-        type="button"
+      />
+      <SourceCard
+        icon={<CloudflareMark className="size-6 text-[#F38020]" />}
+        title="From Cloudflare"
+        description="Import an existing Workers or Pages project."
+        connected={cloudflareReady}
+        provider="Cloudflare"
         onClick={() => onPick("cloudflare")}
-        className="hover:border-foreground/30 flex flex-col items-start gap-2 rounded-lg border p-4 text-left"
-      >
-        <CloudflareMark className="size-6 text-[#F38020]" />
-        <span className="text-[14.5px] font-bold">From Cloudflare</span>
-        <span className="text-muted-foreground text-[12.5px]">
-          Import an existing Workers or Pages project.
-        </span>
-      </button>
+      />
     </div>
   </div>
 );
+
+const SourceCard = ({
+  icon,
+  title,
+  description,
+  connected,
+  provider,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  connected: boolean;
+  provider: string;
+  onClick: () => void;
+}) => {
+  // A source is only usable when its provider is connected; otherwise the card
+  // is disabled and points at the Integrations tab.
+  if (!connected) {
+    return (
+      <a
+        href="/integrations"
+        className="border-dashed hover:border-foreground/30 flex flex-col items-start gap-2 rounded-lg border p-4 text-left opacity-70"
+      >
+        {icon}
+        <span className="text-[14.5px] font-bold">{title}</span>
+        <span className="text-muted-foreground text-[12.5px]">
+          Connect {provider} to use this source.
+        </span>
+      </a>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="hover:border-foreground/30 flex flex-col items-start gap-2 rounded-lg border p-4 text-left"
+    >
+      {icon}
+      <span className="text-[14.5px] font-bold">{title}</span>
+      <span className="text-muted-foreground text-[12.5px]">{description}</span>
+    </button>
+  );
+};
 
 const ConnectGate = ({
   github,
