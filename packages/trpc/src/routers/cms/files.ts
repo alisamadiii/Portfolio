@@ -489,9 +489,9 @@ export const filesRouter = createTRPCRouter({
           configObject: config?.object,
           identityOverride: schemaCommitIdentity,
         });
-        // Commits are always authored by the org PAT owner; when the config asks
-        // for user identity, the editor's name goes into the commit message instead
-        // (stamping user emails as author can block Vercel deploys).
+        // Commits are authored by the editing user's GitHub token; when the
+        // config asks for user identity, the editor's name is also appended to
+        // the commit message.
         const editorName =
           commitIdentity === "user"
             ? ctx.user.name?.trim() || ctx.user.email

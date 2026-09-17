@@ -1,12 +1,10 @@
 /**
  * Token helper functions.
  *
- * Org repos use a single org PAT owned by the portfolio app, read straight from
- * the environment. Self-deployed repos (a user's own imported repo, outside
- * GITHUB_ORG) use the project owner's connected GitHub token instead — the org
- * PAT can't reach them. Authorization stays local: admins access every repo,
- * the self-deployed project owner gets full access to their own project, and
- * everyone else needs a collaborator row.
+ * Every repo is read/committed with the accessing user's own GitHub token
+ * (resolved per-repo by resolveRepoToken). Authorization stays local: admins
+ * access every repo, the self-deployed project owner gets full access to their
+ * own project, and everyone else needs a collaborator row.
  */
 
 import { cache } from "react";
@@ -19,18 +17,11 @@ import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForRepo } from "./collaborator-access";
 import { db } from "./db";
 import { createHttpError } from "./errors";
-import { getGithubEnv } from "./org-repos";
 import { resolveRepoToken } from "./repo-token";
-
-// Get the org PAT from the environment.
-const getPatToken = async () => {
-  const { token } = getGithubEnv();
-  return token;
-};
 
 // Get a token for a user: admins access any repo, the self-deployed project
 // owner accesses their own, others need a collaborator row. The token itself is
-// resolved per-repo (org PAT vs the project owner's GitHub token).
+// the accessing user's GitHub OAuth token, resolved per-repo.
 const getToken = cache(
   async (
     user: { id: string; email: string; role?: string | null },
@@ -39,10 +30,9 @@ const getToken = cache(
     _verifyGithubAccess: boolean = false
   ) => {
     const token = await resolveRepoToken(owner, repo, user.id);
-    const source = token === (await getPatToken()) ? "pat" : "user";
 
     if (isAdminUser(user)) {
-      return { token, source: source as "pat" | "user", role: "full-access" as const };
+      return { token, source: "user" as const, role: "full-access" as const };
     }
 
     // The connecting user has full access to their own self-deployed project.
@@ -61,14 +51,14 @@ const getToken = cache(
       )
       .limit(1);
     if (project?.selfDeployed && project.githubConnectedUserId === user.id) {
-      return { token, source: source as "pat" | "user", role: "full-access" as const };
+      return { token, source: "user" as const, role: "full-access" as const };
     }
 
     const permission = await db.query.hubCollaborator.findFirst({
       where: collaboratorMatchesUserForRepo(user, owner, repo),
     });
     if (permission) {
-      return { token, source: source as "pat" | "user", role: permission.role };
+      return { token, source: "user" as const, role: permission.role };
     }
 
     throw createHttpError(
@@ -78,4 +68,4 @@ const getToken = cache(
   }
 );
 
-export { getPatToken, getToken };
+export { getToken };

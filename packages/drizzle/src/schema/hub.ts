@@ -128,9 +128,7 @@ export const hubProject = pgTable(
     defaultBranch: text("default_branch").notNull(),
     githubUpdatedAt: timestamp("github_updated_at").notNull(),
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
-    // Per-project settings. syncOrgRepos' onConflictDoUpdate.set does NOT list
-    // these, so they survive every webhook re-sync; new projects fall back to
-    // these defaults.
+    // Per-project settings, with defaults for new projects.
     basePath: text("base_path").notNull().default(""),
     // Plain text (not a pgEnum): the value is always "imagekit" and never read
     // for logic, and drizzle-kit push mishandles adding an enum-typed column
@@ -138,22 +136,18 @@ export const hubProject = pgTable(
     mediaProvider: text("media_provider").notNull().default("imagekit"),
     // Agency-granted free-for-life access. When true, the hub gate is bypassed
     // for this project for every user (no subscription, no Stripe), and Billing
-    // shows a gratitude panel. Set directly in the DB (no admin UI). Like the
-    // other per-project settings, it is intentionally absent from syncOrgRepos'
-    // onConflict set() so it survives every GitHub webhook re-sync.
+    // shows a gratitude panel. Set directly in the DB (no admin UI).
     freeLife: boolean("free_life").notNull().default(false),
     // Blog sync state: the Blog tab shows an "unpublished changes" banner when
     // blogEditedAt > blogPublishedAt. Edited is stamped on every blog CRUD
     // mutation (including deletes, which max(updatedAt) could never detect);
     // published is stamped when the Publish button fires the blog-sync
-    // repository_dispatch. Also absent from syncOrgRepos' onConflict set().
+    // repository_dispatch.
     blogEditedAt: timestamp("blog_edited_at"),
     blogPublishedAt: timestamp("blog_published_at"),
     // useSend domainId of this project's sending domain — scopes the hub
     // Emails tab to that domain's sends. Null → tab is admin-only and shows
-    // every send on the instance. Set directly in the DB (no admin UI). Also
-    // absent from syncOrgRepos' onConflict set() so it survives GitHub
-    // webhook re-syncs.
+    // every send on the instance. Set directly in the DB (no admin UI).
     usesendDomainId: text("usesend_domain_id"),
     // Sending domain created in useSend but not yet DNS-verified — the Emails
     // tab's connect flow parks the id here so setup survives refreshes and slow
@@ -163,22 +157,19 @@ export const hubProject = pgTable(
     // (e.g. "123456789") the project's Analytics tab reports on; gaConnectedUserId
     // is the Better Auth user.id whose stored Google token (account table) we use
     // to call the GA4 Data API — project-level, so any viewer sees the data. Both
-    // set via the Analytics tab. Like the other per-project settings above, they
-    // are absent from syncOrgRepos' onConflict set() so they survive re-syncs.
+    // set via the Analytics tab.
     gaPropertyId: text("ga_property_id"),
     gaConnectedUserId: text("ga_connected_user_id"),
     // Per-client Cloudflare. The Better Auth user.id whose stored Cloudflare
     // OAuth token (account table) the Domain tab uses to list zones and manage
     // DNS — project-level, so any collaborator sees the same zones/records. Set
-    // when a CF zone is first bound to a domain. Like the settings above, absent
-    // from syncOrgRepos' onConflict set() so it survives re-syncs.
+    // when a CF zone is first bound to a domain.
     cfConnectedUserId: text("cf_connected_user_id"),
     // Per-client GitHub. The Better Auth user.id whose stored GitHub OAuth token
-    // (account table, "repo" scope) the CMS uses to read + commit + push this
-    // project — set at import for self-deployed repos, which live outside
-    // GITHUB_ORG so the org PAT can't reach them. Absent from syncOrgRepos'
-    // onConflict set() so it survives re-syncs. githubWebhookId is the push
-    // webhook we register on that repo (for teardown on delete).
+    // (account table, "repo" scope) backstops reads/commits for this project when
+    // there's no caller (the webhook path) — the editing user's own token is used
+    // interactively. Set at import. githubWebhookId is the push webhook we
+    // register on that repo (for teardown on delete).
     githubConnectedUserId: text("github_connected_user_id"),
     githubWebhookId: integer("github_webhook_id"),
     // The Cloudflare account the project's Worker lives on (set at import) —
@@ -187,12 +178,11 @@ export const hubProject = pgTable(
     // The Cloudflare zone whose DNS records this project manages in the DNS tab
     // (picked there or during import). Independent of hub_domain.cfZoneId.
     cfZoneId: text("cf_zone_id"),
-    // Deploy flow (Vercel-style). When a user deploys their OWN GitHub repo to
-    // Cloudflare Pages from the hub, the project row is created here with
-    // selfDeployed=true so syncOrgRepos' reconcile does NOT delete it (it only
-    // owns repos under GITHUB_ORG). cfPagesProject/Subdomain record the created
-    // Pages project; cfRootDir is the monorepo subfolder holding wrangler.json
-    // (blank = repo root).
+    // Deploy flow (Vercel-style). Set true when a user imports their OWN GitHub
+    // repo to Cloudflare from the hub, marking it as owned by the connecting user
+    // (grants them full access, distinct from admin/collaborator). cfPagesProject/
+    // Subdomain record the created project; cfRootDir is the monorepo subfolder
+    // holding wrangler.json (blank = repo root).
     selfDeployed: boolean("self_deployed").notNull().default(false),
     cfPagesProject: text("cf_pages_project"),
     // Production workers.dev URL (filled on confirm).
@@ -200,10 +190,9 @@ export const hubProject = pgTable(
     // Preview workers.dev URL pattern (*-<name>.<sub>.workers.dev).
     cfPreviewUrl: text("cf_preview_url"),
     cfRootDir: text("cf_root_dir"),
-    // Danger-tab tombstone. Set true when the project is deleted from the hub —
-    // the row stays so an org re-sync (syncOrgRepos re-upserts by repoId) can't
-    // resurrect it as active. Absent from that onConflict set(), so it sticks.
-    // Every project listing filters hidden=false.
+    // Danger-tab tombstone. Set true when the project is deleted from the hub;
+    // the row stays (keyed by repoId) so it isn't recreated. Every project
+    // listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),
   },
   (table) => ({

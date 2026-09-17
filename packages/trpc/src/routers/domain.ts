@@ -60,7 +60,7 @@ const sortForDisplay = <T extends { isPrimary: boolean; id: number }>(
 ) => [...rows].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.id - b.id);
 
 const ownerRepoWhere = (owner: string | undefined, repo: string) => {
-  const org = owner ?? process.env.GITHUB_ORG;
+  const org = owner;
   return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
 };
 

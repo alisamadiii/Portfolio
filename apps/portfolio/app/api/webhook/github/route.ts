@@ -1,30 +1,21 @@
 import crypto from "crypto";
 import { after } from "next/server";
 
-import { syncOrgRepos } from "@workspace/trpc/lib/cms/org-repos";
 import { handlePushWebhookEvent } from "@workspace/trpc/lib/cms/webhook-push";
 import { handleRepositoryWebhookEvent } from "@workspace/trpc/lib/cms/webhook-repository";
 
 export const maxDuration = 60;
 
 /**
- * Handles GitHub org webhooks:
+ * Handles GitHub repo webhooks (registered per repo at import):
  * - Maintains collaborator rows on repo rename/delete/transfer
- * - Maintains GitHub file cache on push and branch deletion
+ * - Maintains the CMS file cache on push and branch deletion
  *
  * POST /api/webhook/github
  *
- * Requires the org webhook secret and signature.
+ * Requires the webhook secret and signature.
  */
 const processWebhookEvent = async (event: string | null, data: any) => {
-  // Any repository change (created/deleted/renamed/transferred) re-syncs
-  // the org repo table (in-process now — no tRPC hop).
-  if (event === "repository") {
-    await syncOrgRepos().catch((error) => {
-      console.error("Failed to sync org repos", error);
-    });
-  }
-
   if (await handleRepositoryWebhookEvent(event, data)) return;
   if (await handlePushWebhookEvent(event, data)) return;
 };

@@ -14,14 +14,14 @@ import { createHttpError } from "./errors";
  * Whether a project (owner/repo) is flagged free-for-life on hubProject — an
  * agency-granted override that bypasses the feature gate for every user. Uses
  * the same case-insensitive owner/repo match as the unique index. Returns false
- * when the repo isn't found so callers fall through to the normal gate rather
- * than erroring. Owner defaults to GITHUB_ORG.
+ * when the repo isn't found (or no owner is given) so callers fall through to
+ * the normal gate rather than erroring.
  */
 const repoHasFreeLife = async (repo: {
   owner?: string;
   repo: string;
 }): Promise<boolean> => {
-  const org = repo.owner ?? process.env.GITHUB_ORG;
+  const org = repo.owner;
   if (!org) return false;
   const [row] = await db
     .select({ freeLife: hubProject.freeLife })

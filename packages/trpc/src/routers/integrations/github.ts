@@ -4,8 +4,8 @@ import { createOctokitInstance } from "../../lib/cms/octokit";
 
 // ─── GitHub repo webhooks ────────────────────────────────────────
 // Registered on a user's own imported (self-deployed) repo so external pushes
-// refresh the CMS cache, mirroring the single org webhook. Secured with the
-// same GITHUB_WEBHOOK_SECRET the /api/webhook/github route already verifies.
+// refresh the CMS cache. Secured with the GITHUB_WEBHOOK_SECRET the
+// /api/webhook/github route verifies.
 
 /** The public URL of our GitHub webhook endpoint, or null if not configured. */
 export const githubWebhookUrl = (): string | null => {

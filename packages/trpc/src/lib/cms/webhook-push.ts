@@ -178,8 +178,7 @@ const handlePushWebhookEvent = async (event: string | null, data: any) => {
     return true;
   }
 
-  // Self-deployed repos live outside the org — refetch with the project owner's
-  // token, not the org PAT (which can't read them).
+  // Refetch with the project owner's connected GitHub token (no caller here).
   const installationToken = await resolveRepoToken(pushOwner, pushRepo);
 
   await updateMultipleFilesCache(

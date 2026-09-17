@@ -33,8 +33,7 @@ import {
 //  • Cloudflare — pick an existing CF Worker/Pages project; we pull its domains,
 //    URLs and (Pages only) the connected repo.
 // Every project is repo-keyed (hub_project.repoId), so a GitHub repo is always
-// required. Imported projects are the user's own, so rows are selfDeployed to
-// survive syncOrgRepos' reconcile.
+// required. Imported projects are the user's own, so rows are selfDeployed.
 
 const githubToken = (userId: string) =>
   getIntegrationAccessToken(userId, "github", "GitHub");
@@ -165,9 +164,9 @@ async function upsertProject(
 
 /**
  * Register a push webhook on the user's repo (best-effort) so external pushes
- * refresh the CMS cache — mirrors the org webhook. Skips silently when the
- * endpoint/secret aren't configured, a hook already exists, or the user lacks
- * admin on the repo. Never blocks the import.
+ * refresh the CMS cache. Skips silently when the endpoint/secret aren't
+ * configured, a hook already exists, or the user lacks admin on the repo.
+ * Never blocks the import.
  */
 async function registerProjectWebhook(
   userId: string,

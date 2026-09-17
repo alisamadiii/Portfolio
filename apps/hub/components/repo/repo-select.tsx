@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { ChevronsUpDown, LockKeyhole, RefreshCw, Search } from "@/components/icon";
+import { ChevronsUpDown, LockKeyhole, Search } from "@/components/icon";
 import { useDebounce } from "use-debounce";
 
 import { Button } from "@workspace/ui/components/button";
@@ -29,7 +29,6 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { isAdminUser } from "@/lib/authz-shared";
 import { repoPath } from "@/lib/paths";
 
 export function RepoSelect({
@@ -51,7 +50,6 @@ export function RepoSelect({
     500
   );
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
 
   const reposQuery = useQuery(
     trpc.cms.repos.listMine.queryOptions(
@@ -73,17 +71,6 @@ export function RepoSelect({
     }
     return results;
   }, [results, keyword, selectedAccount]);
-
-  const syncMutation = useMutation(
-    trpc.cms.repos.syncRepos.mutationOptions({
-      onSuccess: () =>
-        queryClient.invalidateQueries({
-          queryKey: trpc.cms.repos.listMine.queryKey(),
-        }),
-      onError: (error) => console.error(error),
-    })
-  );
-  const isSyncing = syncMutation.isPending;
 
   const resultsLoadingSkeleton = useMemo(
     () => (
@@ -166,17 +153,6 @@ export function RepoSelect({
           />
           <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 opacity-50" />
         </div>
-        {isAdminUser(user) && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => syncMutation.mutate()}
-            disabled={isSyncing}
-            title="Refresh repositories from GitHub"
-          >
-            <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
-          </Button>
-        )}
       </div>
       {reposQuery.isFetching || results === null ? (
         resultsLoadingSkeleton

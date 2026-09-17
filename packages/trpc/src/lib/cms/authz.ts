@@ -6,26 +6,8 @@ import { createHttpError } from "./errors";
 import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForRepo } from "./collaborator-access";
 import { db, orgRepoTable } from "./db";
-import { getPatToken } from "./token";
-import { createOctokitInstance } from "./octokit";
 
-// Repo lookup with the org PAT (404s if the PAT can't see the repo).
-const getRepoAccess = async (owner: string, repo: string) => {
-  const token = await getPatToken();
-  const octokit = createOctokitInstance(token);
-  const response = await octokit.rest.repos.get({ owner, repo });
-
-  const repoAccess = {
-    repoId: response.data.id,
-    ownerLogin: response.data.owner.login,
-    repoName: response.data.name,
-    ownerType: response.data.owner.type === "User" ? "user" : "org",
-  };
-
-  return { token, repoAccess };
-};
-
-// Repo lookup from the synced org catalog — no GitHub, no PAT. Collaborator
+// Repo lookup from the project catalog — no GitHub, no PAT. Collaborator
 // invites are CMS-dashboard-only (nothing is sent to GitHub), and the hub app
 // that runs them has no GITHUB_* env, so this must stay DB-only.
 const getRepoAccessFromDb = async (owner: string, repo: string) => {
@@ -69,4 +51,4 @@ const requireCollaboratorManageAccess = async (
   return { repoAccess, isActorAdmin };
 };
 
-export { getRepoAccess, requireCollaboratorManageAccess };
+export { getRepoAccessFromDb, requireCollaboratorManageAccess };

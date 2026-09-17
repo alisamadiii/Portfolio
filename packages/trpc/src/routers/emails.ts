@@ -37,7 +37,7 @@ const NOT_FOUND = () =>
 const emailId = z.string().min(1).max(100);
 
 async function resolveProject(owner: string | undefined, repo: string) {
-  const org = owner ?? process.env.GITHUB_ORG;
+  const org = owner;
   if (!org) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
   }
@@ -61,7 +61,7 @@ async function resolveProject(owner: string | undefined, repo: string) {
 }
 
 const projectWhere = (owner: string | undefined, repo: string) => {
-  const org = owner ?? process.env.GITHUB_ORG;
+  const org = owner;
   return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
 };
 

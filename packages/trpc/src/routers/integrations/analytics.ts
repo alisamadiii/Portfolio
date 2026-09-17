@@ -273,7 +273,7 @@ async function runGa4Report(
 // Google account.
 
 async function resolveProject(owner: string | undefined, repo: string) {
-  const org = owner ?? process.env.GITHUB_ORG;
+  const org = owner;
   if (!org) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
   }
@@ -294,7 +294,7 @@ async function resolveProject(owner: string | undefined, repo: string) {
 }
 
 const ownerRepoWhere = (owner: string | undefined, repo: string) => {
-  const org = owner ?? process.env.GITHUB_ORG;
+  const org = owner;
   return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
 };
 

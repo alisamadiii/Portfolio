@@ -6,10 +6,14 @@ import z from "zod";
 import { auth } from "@workspace/auth/auth";
 
 import { isAdminUser, roleAtLeast } from "./lib/authz-shared";
-import { getRepoAccess, requireCollaboratorManageAccess } from "./lib/cms/authz";
+import {
+  getRepoAccessFromDb,
+  requireCollaboratorManageAccess,
+} from "./lib/cms/authz";
 import { collaboratorMatchesUser } from "./lib/cms/collaborator-access";
 import { db } from "./lib/cms/db";
 import { toTRPCError } from "./lib/cms/errors";
+import { resolveRepoToken } from "./lib/cms/repo-token";
 import { getToken } from "./lib/cms/token";
 
 export const createTRPCContext = cache(async () => {});
@@ -157,16 +161,17 @@ export const collaboratorManageProcedure = authenticatedProcedure
     return next({ ctx: { ...ctx, ...access } });
   });
 
-// Admin-only repo access with the org PAT. Injects `token` + `repoAccess`.
+// Admin-only repo access. Injects the admin's own GitHub token + DB repoAccess.
 export const adminRepoProcedure = adminProcedure
   .input(z.object({ owner: z.string(), repo: z.string() }))
   .use(async ({ next, ctx, input }) => {
-    let result;
     try {
-      result = await getRepoAccess(input.owner, input.repo);
+      const [token, repoAccess] = await Promise.all([
+        resolveRepoToken(input.owner, input.repo, ctx.session.user.id),
+        getRepoAccessFromDb(input.owner, input.repo),
+      ]);
+      return next({ ctx: { ...ctx, token, repoAccess } });
     } catch (error) {
       throw toTRPCError(error);
     }
-
-    return next({ ctx: { ...ctx, ...result } });
   });

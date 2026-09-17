@@ -26,10 +26,13 @@ import { RepoLayout } from "@/components/repo/repo-layout";
 function ErrorCard({
   title,
   description,
+  action,
 }: {
   title: string;
   description: string;
+  action?: { href: string; label: string };
 }) {
+  const { href, label } = action ?? { href: "/", label: "Choose another repository" };
   return (
     <Empty className="absolute inset-0 rounded-none border-0">
       <EmptyHeader>
@@ -37,10 +40,7 @@ function ErrorCard({
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button
-          variant="default"
-          render={<Link href="/">Choose another repository</Link>}
-        />
+        <Button variant="default" render={<Link href={href}>{label}</Link>} />
       </EmptyContent>
     </Empty>
   );
@@ -66,8 +66,8 @@ export default async function Layout({
 
   const caller = createHttpCaller(requestHeaders);
 
-  // Resolve the repo snapshot. `owner` is resolved server-side (GITHUB_ORG),
-  // `branch` defaults to the repo's default branch — neither is in the URL.
+  // Resolve the repo snapshot. `owner` is resolved server-side from the project
+  // catalog, `branch` defaults to the repo's default branch — neither is in the URL.
   let repoInfo;
   try {
     repoInfo = await caller.cms.repos.getSnapshot.query({ repo });
@@ -85,6 +85,16 @@ export default async function Layout({
           <ErrorCard
             title="Access denied"
             description="You do not have permission to access this repository."
+          />
+        );
+      case "PRECONDITION_FAILED":
+        // This project lives on a repo outside the agency org, so it commits
+        // with your OWN GitHub token — which isn't connected yet.
+        return (
+          <ErrorCard
+            title="Connect your GitHub"
+            description="This project is on a repository you were given access to. Connect your GitHub account (with repository access) to open, edit, and publish it."
+            action={{ href: "/integrations", label: "Connect GitHub" }}
           />
         );
       default:

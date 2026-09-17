@@ -52,7 +52,7 @@ const checkWebsiteStatus = async (domain: string) => {
 export const websitesRouter = createTRPCRouter({
   getMine: collaboratorProcedure.query(async ({ ctx }) => {
     try {
-      // Every org repo whose Vercel project has a derivable website URL.
+      // Every project whose site has a derivable website URL.
       // Admins see them all; collaborators are filtered down to the repos
       // they were invited to.
       const orgRows = await cmsDb.select().from(orgRepoTable);

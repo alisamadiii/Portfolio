@@ -63,7 +63,7 @@ export const subscriptionRouter = createTRPCRouter({
   getProject: authenticatedProcedure
     .input(z.object({ owner: z.string().optional(), repo: z.string() }))
     .query(async ({ input }) => {
-      const org = input.owner ?? process.env.GITHUB_ORG;
+      const org = input.owner;
       if (!org) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
       }

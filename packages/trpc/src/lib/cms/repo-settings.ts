@@ -10,9 +10,9 @@
  *   only provider today, so this is effectively fixed — kept as a column for
  *   future providers. No provider-specific config is stored.
  *
- * Rows are created solely by `syncOrgRepos`, so the setters are UPDATE-only —
- * a repo must be in the org catalog before its settings can be written (it
- * always is, since you can't open a repo's settings unless it's listed).
+ * Rows are created by the import flow, so the setters are UPDATE-only — a repo
+ * must already be a project before its settings can be written (it always is,
+ * since you can't open a repo's settings unless it's listed).
  */
 
 import { sql } from "drizzle-orm";

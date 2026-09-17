@@ -13,37 +13,28 @@ import { hubProject } from "@workspace/drizzle/schema";
 
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
-import { syncOrgRepos } from "@workspace/trpc/lib/cms/org-repos";
 import { getToken } from "@workspace/trpc/lib/cms/token";
 import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/domain";
 
-// Org repo listing shared by `listRepos` (admin picker) and the admin path of
-// `listMine`. Seeds the table on first read after deploy so it's never empty.
-const listOrgRepos = async (keyword?: string) => {
+// Every project is a hub_project row (created by the import flow). Pure DB
+// listing, optionally scoped to one owner + a repo-name keyword.
+const listProjectRows = async (owner?: string, keyword?: string) => {
   const trimmed = keyword?.trim();
 
-  const selectRepos = () =>
-    db
-      .select()
-      .from(hubProject)
-      // Exclude Danger-tab tombstones (hidden) from every listing.
-      .where(
-        and(
-          eq(hubProject.hidden, false),
-          trimmed ? ilike(hubProject.repo, `%${trimmed}%`) : undefined
-        )
+  const rows = await db
+    .select()
+    .from(hubProject)
+    // Exclude Danger-tab tombstones (hidden) from every listing.
+    .where(
+      and(
+        eq(hubProject.hidden, false),
+        owner ? sql`lower(${hubProject.owner}) = lower(${owner})` : undefined,
+        trimmed ? ilike(hubProject.repo, `%${trimmed}%`) : undefined
       )
-      .orderBy(desc(hubProject.githubUpdatedAt));
+    )
+    .orderBy(desc(hubProject.githubUpdatedAt));
 
-  let rows = await selectRepos();
-
-  // Seed on first read after deploy so the picker is never empty.
-  if (rows.length === 0 && !trimmed) {
-    await syncOrgRepos();
-    rows = await selectRepos();
-  }
-
-  // websiteUrl is derived from the repo's Vercel domains (hub_domain).
+  // websiteUrl is derived from the repo's domains (hub_domain).
   const urlByRepoId = await getWebsiteUrlsByRepoId(rows.map((r) => r.repoId));
 
   return rows.map((row) => ({
@@ -58,9 +49,8 @@ const listOrgRepos = async (keyword?: string) => {
 
 /**
  * The owner login for a repo when the URL carries only the repo name. Reads
- * hub_project (a repo can live under the org OR a client's account the user was
- * given access to). Prefers the caller's own self-deployed row, then any row;
- * falls back to GITHUB_ORG for back-compat when no row exists.
+ * hub_project. Prefers the caller's own self-deployed row, then any row;
+ * undefined when no project row exists (getSnapshot then 404s).
  */
 const resolveOwnerForRepo = async (
   userId: string,
@@ -76,7 +66,7 @@ const resolveOwnerForRepo = async (
     .where(
       and(eq(hubProject.hidden, false), sql`lower(${hubProject.repo}) = lower(${repo})`)
     );
-  if (rows.length === 0) return process.env.GITHUB_ORG;
+  if (rows.length === 0) return undefined;
   const mine = rows.find(
     (r) => r.selfDeployed && r.githubConnectedUserId === userId
   );
@@ -86,23 +76,25 @@ const resolveOwnerForRepo = async (
 export const reposRouter = createTRPCRouter({
   listRepos: adminProcedure
     .input(z.object({ keyword: z.string().optional() }).optional())
-    .query(async ({ input }) => listOrgRepos(input?.keyword)),
-
-  // Refresh button in the CMS repo picker.
-  syncRepos: adminProcedure.mutation(() => syncOrgRepos()),
+    .query(async ({ input }) => listProjectRows(undefined, input?.keyword)),
 
   /**
-   * GitHub accounts the current user can act as (port of hub's lib/accounts).
-   * Admins act as the org; collaborators get the distinct owners they were
-   * invited to. Keeps GITHUB_ORG out of the hub app entirely.
+   * GitHub accounts the current user can act as. Admins act as every owner that
+   * has a project; collaborators get the distinct owners they were invited to.
    */
   listAccounts: collaboratorProcedure.query(async ({ ctx }) => {
     try {
+      // Admins act as every owner that has a (non-hidden) project.
       if (!ctx.collaborations) {
-        const org = process.env.GITHUB_ORG;
-        if (!org) throw createHttpError("Missing GITHUB_ORG.", 500);
-
-        return [{ login: org, type: "org", repositorySelection: "all" }];
+        const owners = await db
+          .selectDistinct({ owner: hubProject.owner })
+          .from(hubProject)
+          .where(eq(hubProject.hidden, false));
+        return owners.map((o) => ({
+          login: o.owner,
+          type: "org",
+          repositorySelection: "all",
+        }));
       }
 
       const accountByOwner = new Map<
@@ -125,9 +117,9 @@ export const reposRouter = createTRPCRouter({
   }),
 
   /**
-   * Repositories visible to the current user (port of GET /api/repos/[owner]).
-   * Admins get the org repo list (when `owner` matches the org); everyone also
-   * sees repos they were invited to as collaborators, deduped by owner/repo.
+   * Projects visible to the current user. Admins see every project under the
+   * given owner; everyone also sees repos they were invited to as collaborators
+   * and their own imported (self-deployed) projects, deduped by owner/repo.
    */
   listMine: collaboratorProcedure
     .input(z.object({ owner: z.string(), keyword: z.string().optional() }))
@@ -135,14 +127,8 @@ export const reposRouter = createTRPCRouter({
       try {
         let githubRepos: any[] = [];
 
-        const org = process.env.GITHUB_ORG;
-
-        if (
-          ctx.isAdmin &&
-          org &&
-          input.owner.toLowerCase() === org.toLowerCase()
-        ) {
-          githubRepos = await listOrgRepos(input.keyword);
+        if (ctx.isAdmin) {
+          githubRepos = await listProjectRows(input.owner, input.keyword);
         }
 
         const collaboratorRepos = (ctx.collaborations ?? []).filter(
@@ -233,7 +219,7 @@ export const reposRouter = createTRPCRouter({
         const owner =
           input.owner ??
           (await resolveOwnerForRepo(ctx.session.user.id, input.repo));
-        if (!owner) throw createHttpError("Missing GITHUB_ORG.", 500);
+        if (!owner) throw createHttpError("Project not found", 404);
 
         const { token, role } = await getToken(
           ctx.session.user,
