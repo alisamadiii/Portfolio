@@ -56,6 +56,33 @@ const listOrgRepos = async (keyword?: string) => {
   }));
 };
 
+/**
+ * The owner login for a repo when the URL carries only the repo name. Reads
+ * hub_project (a repo can live under the org OR a client's account the user was
+ * given access to). Prefers the caller's own self-deployed row, then any row;
+ * falls back to GITHUB_ORG for back-compat when no row exists.
+ */
+const resolveOwnerForRepo = async (
+  userId: string,
+  repo: string
+): Promise<string | undefined> => {
+  const rows = await db
+    .select({
+      owner: hubProject.owner,
+      selfDeployed: hubProject.selfDeployed,
+      githubConnectedUserId: hubProject.githubConnectedUserId,
+    })
+    .from(hubProject)
+    .where(
+      and(eq(hubProject.hidden, false), sql`lower(${hubProject.repo}) = lower(${repo})`)
+    );
+  if (rows.length === 0) return process.env.GITHUB_ORG;
+  const mine = rows.find(
+    (r) => r.selfDeployed && r.githubConnectedUserId === userId
+  );
+  return (mine ?? rows[0]).owner;
+};
+
 export const reposRouter = createTRPCRouter({
   listRepos: adminProcedure
     .input(z.object({ keyword: z.string().optional() }).optional())
@@ -122,6 +149,31 @@ export const reposRouter = createTRPCRouter({
           (c) => c.owner.toLowerCase() === input.owner.toLowerCase()
         );
 
+        // Self-deployed projects the caller imported (their own connected repo) —
+        // full access without a collaborator invite.
+        const selfRows = await db
+          .select()
+          .from(hubProject)
+          .where(
+            and(
+              eq(hubProject.selfDeployed, true),
+              eq(hubProject.hidden, false),
+              eq(hubProject.githubConnectedUserId, ctx.session.user.id),
+              sql`lower(${hubProject.owner}) = lower(${input.owner})`
+            )
+          );
+        const selfUrlByRepoId = await getWebsiteUrlsByRepoId(
+          selfRows.map((r) => r.repoId)
+        );
+        const selfRepos = selfRows.map((row) => ({
+          owner: row.owner,
+          repo: row.repo,
+          private: row.private,
+          defaultBranch: row.defaultBranch,
+          updatedAt: row.githubUpdatedAt.toISOString(),
+          websiteUrl: selfUrlByRepoId.get(row.repoId) ?? null,
+        }));
+
         // websiteUrl is derived from hub_domain rows keyed by repoId;
         // collaborator rows don't carry it, so look it up for this owner and
         // attach it (used by the home page gallery).
@@ -158,6 +210,10 @@ export const reposRouter = createTRPCRouter({
             });
           }
         }
+        for (const repo of selfRepos) {
+          const key = `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`;
+          if (!reposByKey.has(key)) reposByKey.set(key, repo);
+        }
 
         return Array.from(reposByKey.values());
       } catch (error) {
@@ -174,7 +230,9 @@ export const reposRouter = createTRPCRouter({
     .input(z.object({ owner: z.string().optional(), repo: z.string() }))
     .query(async ({ input, ctx }) => {
       try {
-        const owner = input.owner ?? process.env.GITHUB_ORG;
+        const owner =
+          input.owner ??
+          (await resolveOwnerForRepo(ctx.session.user.id, input.repo));
         if (!owner) throw createHttpError("Missing GITHUB_ORG.", 500);
 
         const { token, role } = await getToken(

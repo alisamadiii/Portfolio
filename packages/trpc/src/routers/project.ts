@@ -10,10 +10,12 @@ import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { settleAndCancel } from "@workspace/trpc/lib/cms/settle-subscription";
+import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
 import {
   deleteWorkerScript,
   detachWorkerDomain,
 } from "@workspace/trpc/routers/integrations/cloudflare";
+import { deleteRepoWebhook } from "@workspace/trpc/routers/integrations/github";
 import { resolveProjectCf } from "@workspace/trpc/routers/domain";
 
 export const projectRouter = createTRPCRouter({
@@ -59,6 +61,28 @@ export const projectRouter = createTRPCRouter({
         }
       }
 
+      // 2b. Remove the repo webhook we registered (best-effort). Never the repo.
+      const [gh] = await db
+        .select({
+          githubConnectedUserId: hubProject.githubConnectedUserId,
+          githubWebhookId: hubProject.githubWebhookId,
+        })
+        .from(hubProject)
+        .where(eq(hubProject.repoId, repoId))
+        .limit(1);
+      if (gh?.githubWebhookId && gh.githubConnectedUserId) {
+        try {
+          const token = await getIntegrationAccessToken(
+            gh.githubConnectedUserId,
+            "github",
+            "GitHub"
+          );
+          await deleteRepoWebhook(token, input.owner, input.repo, gh.githubWebhookId);
+        } catch {
+          // Hook may already be gone / token revoked — not fatal.
+        }
+      }
+
       // 3. Wipe project-scoped rows (domains, deployments, blog, subscription,
       //    collaborators), then tombstone the project + clear its CF fields.
       await deleteProjectChildRows([repoId]);
@@ -73,6 +97,8 @@ export const projectRouter = createTRPCRouter({
           cfPagesSubdomain: null,
           cfPreviewUrl: null,
           cfRootDir: null,
+          githubConnectedUserId: null,
+          githubWebhookId: null,
         })
         .where(eq(hubProject.repoId, repoId));
 

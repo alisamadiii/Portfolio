@@ -173,6 +173,14 @@ export const hubProject = pgTable(
     // when a CF zone is first bound to a domain. Like the settings above, absent
     // from syncOrgRepos' onConflict set() so it survives re-syncs.
     cfConnectedUserId: text("cf_connected_user_id"),
+    // Per-client GitHub. The Better Auth user.id whose stored GitHub OAuth token
+    // (account table, "repo" scope) the CMS uses to read + commit + push this
+    // project — set at import for self-deployed repos, which live outside
+    // GITHUB_ORG so the org PAT can't reach them. Absent from syncOrgRepos'
+    // onConflict set() so it survives re-syncs. githubWebhookId is the push
+    // webhook we register on that repo (for teardown on delete).
+    githubConnectedUserId: text("github_connected_user_id"),
+    githubWebhookId: integer("github_webhook_id"),
     // The Cloudflare account the project's Worker lives on (set at import) —
     // needed to attach custom domains / read zones.
     cfAccountId: text("cf_account_id"),

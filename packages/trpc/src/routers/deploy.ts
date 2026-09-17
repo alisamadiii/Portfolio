@@ -21,6 +21,11 @@ import {
   listCfZones,
   listPagesProjects,
 } from "./integrations/cloudflare";
+import {
+  createRepoWebhook,
+  findRepoWebhook,
+  githubWebhookUrl,
+} from "./integrations/github";
 
 // ─── Deploy / import flow ────────────────────────────────────────
 // "Add project" with two sources (both require GitHub + Cloudflare connected):
@@ -124,6 +129,8 @@ async function upsertProject(
   }
   const cfFields = {
     cfConnectedUserId: userId,
+    // The importing user owns this repo — commits/reads/webhook use their token.
+    githubConnectedUserId: userId,
     ...(cf
       ? {
           cfAccountId: cf.accountId,
@@ -151,6 +158,36 @@ async function upsertProject(
       selfDeployed: true,
       ...cfFields,
     });
+  }
+
+  await registerProjectWebhook(userId, ghRepo);
+}
+
+/**
+ * Register a push webhook on the user's repo (best-effort) so external pushes
+ * refresh the CMS cache — mirrors the org webhook. Skips silently when the
+ * endpoint/secret aren't configured, a hook already exists, or the user lacks
+ * admin on the repo. Never blocks the import.
+ */
+async function registerProjectWebhook(
+  userId: string,
+  ghRepo: { id: number; owner: string; repo: string }
+) {
+  const url = githubWebhookUrl();
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+  if (!url || !secret) return;
+  try {
+    const token = await githubToken(userId);
+    const existingHook = await findRepoWebhook(token, ghRepo.owner, ghRepo.repo, url);
+    const hookId =
+      existingHook ??
+      (await createRepoWebhook(token, ghRepo.owner, ghRepo.repo, url, secret));
+    await db
+      .update(hubProject)
+      .set({ githubWebhookId: hookId })
+      .where(eq(hubProject.repoId, ghRepo.id));
+  } catch (error) {
+    console.error("Failed to register GitHub webhook", ghRepo.repo, error);
   }
 }
 
