@@ -166,6 +166,12 @@ export const hubProject = pgTable(
     // are absent from syncOrgRepos' onConflict set() so they survive re-syncs.
     gaPropertyId: text("ga_property_id"),
     gaConnectedUserId: text("ga_connected_user_id"),
+    // Per-client Cloudflare. The Better Auth user.id whose stored Cloudflare
+    // OAuth token (account table) the Domain tab uses to list zones and manage
+    // DNS — project-level, so any collaborator sees the same zones/records. Set
+    // when a CF zone is first bound to a domain. Like the settings above, absent
+    // from syncOrgRepos' onConflict set() so it survives re-syncs.
+    cfConnectedUserId: text("cf_connected_user_id"),
   },
   (table) => ({
     uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),
@@ -192,6 +198,10 @@ export const hubDomain = pgTable(
     // The canonical domain for the project (used for the derived site URL). The
     // first domain added to a repo becomes primary; setPrimary moves the flag.
     isPrimary: boolean("is_primary").notNull().default(false),
+    // Bound Cloudflare zone id when the domain was picked from the project's CF
+    // account — unlocks the DNS-records panel. Null for manual free-text domains
+    // (no DNS ability).
+    cfZoneId: text("cf_zone_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

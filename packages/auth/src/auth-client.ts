@@ -2,6 +2,7 @@ import { polarClient } from "@polar-sh/better-auth";
 import {
   adminClient,
   emailOTPClient,
+  genericOAuthClient,
   inferAdditionalFields,
   magicLinkClient,
 } from "better-auth/client/plugins";
@@ -17,6 +18,7 @@ export const authClient = createAuthClient({
     adminClient(),
     inferAdditionalFields<typeof auth>(),
     emailOTPClient(),
+    genericOAuthClient(),
     magicLinkClient(),
     polarClient(),
   ],

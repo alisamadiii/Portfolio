@@ -1,13 +1,14 @@
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import { createTRPCRouter } from "../init";
-import { analyticsRouter } from "./analytics";
+import { analyticsRouter } from "./integrations/analytics";
 import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
 import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { domainRouter } from "./domain";
 import { emailsRouter } from "./emails";
+import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
 import { paymentsRouter } from "./payments";
 import { productsRouter } from "./products";
@@ -29,6 +30,7 @@ export const appRouter = createTRPCRouter({
   contact: contactRouter,
   emails: emailsRouter,
   analytics: analyticsRouter,
+  integrations: integrationsRouter,
   cms: cmsRouter,
   domain: domainRouter,
   websites: websitesRouter,

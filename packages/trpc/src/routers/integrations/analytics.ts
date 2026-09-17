@@ -1,61 +1,42 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import z from "zod";
 
-import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
-import { account } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
-// Per-client Google Analytics reading. Unlike @workspace/google-analytics
+import {
+  cmsFullAccessProcedure,
+  cmsProcedure,
+  createTRPCRouter,
+} from "../../init";
+import {
+  getIntegrationAccessToken,
+  reconnectError,
+} from "../../lib/integrations";
+
+// ─── Google Analytics integration ────────────────────────────────
+// Per-client GA4 reading + tRPC procedures. Unlike @workspace/google-analytics
 // (send-only Measurement Protocol), this reads a client's GA4 property via the
 // Data API using the OAuth token Better Auth stored when the connecting user
-// granted the analytics.readonly scope. No SDK — raw fetch, matching the
-// usesend.ts / places.ts clients.
+// granted the analytics.readonly scope. No SDK — raw fetch.
 
 const ADMIN_BASE = "https://analyticsadmin.googleapis.com/v1beta";
 const DATA_BASE = "https://analyticsdata.googleapis.com/v1beta";
 
-const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
-
 /** The connected Google token is missing/expired/unscoped — the UI must prompt a reconnect. */
-export const RECONNECT = () =>
-  new TRPCError({
-    code: "PRECONDITION_FAILED",
-    message: "Google Analytics needs to be reconnected.",
-  });
+export const RECONNECT = () => reconnectError("Google Analytics");
 
 /**
  * Fetch a usable Google access token for a specific user, refreshing it via the
  * stored refresh token when needed. Throws RECONNECT when the user has no linked
- * Google account or the token can't be refreshed (revoked / never offline).
- *
- * A user can hold multiple google rows (accountLinking allows linking a
- * different Google account than the sign-in one), and Better Auth's
- * getAccessToken without an accountId just takes the first — which may be the
- * unscoped sign-in account. Pick the row whose scope actually includes
- * analytics.readonly and pin it via accountId.
+ * Google account with the analytics scope or the token can't be refreshed
+ * (revoked / never offline).
  */
-export async function getGoogleAccessToken(userId: string): Promise<string> {
-  if (!userId) throw RECONNECT();
-  const rows = await db
-    .select({ accountId: account.accountId, scope: account.scope })
-    .from(account)
-    .where(and(eq(account.userId, userId), eq(account.providerId, "google")));
-  const scoped = rows.find((row) => row.scope?.includes(GA_SCOPE));
-  if (!scoped) throw RECONNECT();
-  try {
-    const res = await auth.api.getAccessToken({
-      body: { providerId: "google", userId, accountId: scoped.accountId },
-    });
-    const token = (res as { accessToken?: string } | null)?.accessToken;
-    if (!token) throw RECONNECT();
-    return token;
-  } catch (err) {
-    if (err instanceof TRPCError) throw err;
-    throw RECONNECT();
-  }
-}
+const getGoogleAccessToken = (userId: string) =>
+  getIntegrationAccessToken(userId, "google-analytics", "Google Analytics");
 
 async function ga<T>(url: string, accessToken: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -77,7 +58,7 @@ async function ga<T>(url: string, accessToken: string, init?: RequestInit): Prom
   return (await res.json()) as T;
 }
 
-export type Ga4Property = {
+type Ga4Property = {
   /** Numeric property id, e.g. "123456789". */
   propertyId: string;
   displayName: string;
@@ -88,7 +69,7 @@ export type Ga4Property = {
  * List every GA4 property the token's user can read, for the connect dropdown.
  * accountSummaries returns accounts each with their propertySummaries.
  */
-export async function listGa4Properties(accessToken: string): Promise<Ga4Property[]> {
+async function listGa4Properties(accessToken: string): Promise<Ga4Property[]> {
   type Resp = {
     accountSummaries?: {
       displayName?: string;
@@ -115,7 +96,7 @@ export async function listGa4Properties(accessToken: string): Promise<Ga4Propert
   return out;
 }
 
-export type Ga4Report = {
+type Ga4Report = {
   kpis: {
     activeUsers: number;
     sessions: number;
@@ -153,7 +134,7 @@ type RunReportResp = {
  * Run every report the dashboard needs and return a narrowed public shape.
  * batchRunReports takes up to 5 requests per call — 8 reports → 2 calls.
  */
-export async function runGa4Report(
+async function runGa4Report(
   accessToken: string,
   propertyId: string,
   range: { startDate: string; endDate: string }
@@ -284,3 +265,98 @@ export async function runGa4Report(
       .filter((row) => row.type === "new" || row.type === "returning"),
   };
 }
+
+// ─── Router ──────────────────────────────────────────────────────
+// Project-level connection: whoever connects stores their user id + the chosen
+// GA4 property on hub_project, and every report call uses THAT user's stored
+// Google token — so any viewer of the tab sees data without linking their own
+// Google account.
+
+async function resolveProject(owner: string | undefined, repo: string) {
+  const org = owner ?? process.env.GITHUB_ORG;
+  if (!org) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
+  }
+  const [row] = await db
+    .select({
+      gaPropertyId: hubProject.gaPropertyId,
+      gaConnectedUserId: hubProject.gaConnectedUserId,
+    })
+    .from(hubProject)
+    .where(
+      sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`
+    )
+    .limit(1);
+  if (!row) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
+  }
+  return row;
+}
+
+const ownerRepoWhere = (owner: string | undefined, repo: string) => {
+  const org = owner ?? process.env.GITHUB_ORG;
+  return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
+};
+
+const RANGES = { "7d": 7, "28d": 28, "90d": 90 } as const;
+
+export const analyticsRouter = createTRPCRouter({
+  // Cheap gate for the Analytics tab — connected → dashboard, else setup card.
+  status: cmsProcedure.query(async ({ input }) => {
+    const project = await resolveProject(input.owner, input.repo);
+    return {
+      connected: !!(project.gaPropertyId && project.gaConnectedUserId),
+      propertyId: project.gaPropertyId,
+    };
+  }),
+
+  // GA4 properties the CALLER's freshly-linked Google account can read —
+  // powers the property dropdown right after the consent flow.
+  properties: cmsFullAccessProcedure.query(async ({ ctx }) => {
+    const token = await getGoogleAccessToken(ctx.user.id);
+    return listGa4Properties(token);
+  }),
+
+  // Bind a property to the project. The caller becomes the connected user
+  // whose token future reports run under.
+  connect: cmsFullAccessProcedure
+    .input(z.object({ propertyId: z.string().regex(/^\d+$/) }))
+    .mutation(async ({ ctx, input }) => {
+      // Verify the caller's token can actually see this property before saving.
+      const token = await getGoogleAccessToken(ctx.user.id);
+      const properties = await listGa4Properties(token);
+      if (!properties.some((p) => p.propertyId === input.propertyId)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Your Google account has no access to that property.",
+        });
+      }
+      await db
+        .update(hubProject)
+        .set({ gaPropertyId: input.propertyId, gaConnectedUserId: ctx.user.id })
+        .where(ownerRepoWhere(input.owner, input.repo));
+      return { ok: true };
+    }),
+
+  disconnect: cmsFullAccessProcedure.mutation(async ({ input }) => {
+    await db
+      .update(hubProject)
+      .set({ gaPropertyId: null, gaConnectedUserId: null })
+      .where(ownerRepoWhere(input.owner, input.repo));
+    return { ok: true };
+  }),
+
+  report: cmsProcedure
+    .input(z.object({ range: z.enum(["7d", "28d", "90d"]).default("28d") }))
+    .query(async ({ input }) => {
+      const project = await resolveProject(input.owner, input.repo);
+      if (!project.gaPropertyId || !project.gaConnectedUserId) {
+        throw RECONNECT();
+      }
+      const token = await getGoogleAccessToken(project.gaConnectedUserId);
+      return runGa4Report(token, project.gaPropertyId, {
+        startDate: `${RANGES[input.range]}daysAgo`,
+        endDate: "today",
+      });
+    }),
+});

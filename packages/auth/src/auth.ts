@@ -4,7 +4,7 @@ import { Polar } from "@polar-sh/sdk";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, emailOTP, magicLink } from "better-auth/plugins";
+import { admin, emailOTP, genericOAuth, magicLink } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
@@ -32,6 +32,16 @@ import {
   updateProduct,
   updateSubscription,
 } from "./auth-action";
+
+// Cloudflare OAuth scopes for the hub Integrations tab: Workers read/write for
+// deploys plus zone/DNS write so client domains can be managed programmatically.
+// Slugs must match the scopes selected on the OAuth client in the CF dashboard
+// (Manage account → OAuth clients).
+export const CLOUDFLARE_SCOPES = [
+  "workers-scripts.write",
+  "zone.read",
+  "dns.write",
+];
 
 export const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -66,7 +76,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "github"],
+      trustedProviders: ["google", "github", "cloudflare"],
       allowDifferentEmails: true,
       updateUserInfoOnLink: true,
     },
@@ -127,6 +137,70 @@ export const auth = betterAuth({
   plugins: [
     expo(),
     admin(),
+    // Custom OAuth providers for the Integrations tab. Cloudflare clients can't
+    // request OIDC scopes (openid/profile/email → invalid_scope), so identity
+    // comes from the REST API via getUserInfo: /user when the client has the
+    // User Details Read scope, else the first /accounts entry. Refresh tokens
+    // come from the client's Refresh Token grant, not an offline_access scope.
+    genericOAuth({
+      config: [
+        {
+          providerId: "cloudflare",
+          clientId: process.env.CLOUDFLARE_OAUTH_CLIENT_ID as string,
+          clientSecret: process.env.CLOUDFLARE_OAUTH_CLIENT_SECRET as string,
+          authorizationUrl: "https://dash.cloudflare.com/oauth2/auth",
+          tokenUrl: "https://dash.cloudflare.com/oauth2/token",
+          scopes: CLOUDFLARE_SCOPES,
+          pkce: true,
+          getUserInfo: async (tokens) => {
+            const cfGet = async (path: string) => {
+              const res = await fetch(
+                `https://api.cloudflare.com/client/v4${path}`,
+                { headers: { Authorization: `Bearer ${tokens.accessToken}` } }
+              );
+              if (!res.ok) return null;
+              const data = (await res.json()) as {
+                success?: boolean;
+                result?: unknown;
+              };
+              return data.success ? data.result : null;
+            };
+            const user = (await cfGet("/user")) as {
+              id?: string;
+              email?: string;
+              first_name?: string | null;
+              last_name?: string | null;
+            } | null;
+            if (user?.id) {
+              return {
+                id: user.id,
+                // Better Auth's callback hard-requires an email even for link
+                // flows — synthesize a non-routable one when CF withholds it.
+                email: user.email ?? `${user.id}@cloudflare.invalid`,
+                name:
+                  [user.first_name, user.last_name]
+                    .filter(Boolean)
+                    .join(" ") || (user.email ?? "Cloudflare user"),
+                emailVerified: true,
+              };
+            }
+            // No User Details scope — fall back to the granted account, which
+            // is stable for the single-account clients this integration serves.
+            const accounts = (await cfGet("/accounts?per_page=1")) as
+              | { id?: string; name?: string }[]
+              | null;
+            const account = accounts?.[0];
+            if (!account?.id) return null;
+            return {
+              id: account.id,
+              email: `${account.id}@cloudflare.invalid`,
+              name: account.name ?? "Cloudflare account",
+              emailVerified: true,
+            };
+          },
+        },
+      ],
+    }),
     magicLink({
       sendMagicLink: async ({ email, url }) => {
         const { error: sendError } = await emailService.send({
