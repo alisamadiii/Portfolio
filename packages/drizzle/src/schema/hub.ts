@@ -192,6 +192,11 @@ export const hubProject = pgTable(
     // Preview workers.dev URL pattern (*-<name>.<sub>.workers.dev).
     cfPreviewUrl: text("cf_preview_url"),
     cfRootDir: text("cf_root_dir"),
+    // Danger-tab tombstone. Set true when the project is deleted from the hub —
+    // the row stays so an org re-sync (syncOrgRepos re-upserts by repoId) can't
+    // resurrect it as active. Absent from that onConflict set(), so it sticks.
+    // Every project listing filters hidden=false.
+    hidden: boolean("hidden").notNull().default(false),
   },
   (table) => ({
     uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),

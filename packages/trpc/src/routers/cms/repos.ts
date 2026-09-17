@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { desc, ilike, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -26,7 +26,13 @@ const listOrgRepos = async (keyword?: string) => {
     db
       .select()
       .from(hubProject)
-      .where(trimmed ? ilike(hubProject.repo, `%${trimmed}%`) : undefined)
+      // Exclude Danger-tab tombstones (hidden) from every listing.
+      .where(
+        and(
+          eq(hubProject.hidden, false),
+          trimmed ? ilike(hubProject.repo, `%${trimmed}%`) : undefined
+        )
+      )
       .orderBy(desc(hubProject.githubUpdatedAt));
 
   let rows = await selectRepos();

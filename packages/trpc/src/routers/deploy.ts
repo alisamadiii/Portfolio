@@ -70,11 +70,14 @@ async function addDomains(repoId: number, domains: string[]) {
   const hadRows = existing.length > 0;
   const toInsert = norm.filter((d) => !have.has(d));
   if (toInsert.length === 0) return;
+  // These come straight from CF (workers.dev route + existing custom domains) —
+  // already serving, so they land active, not pending.
   await db.insert(hubDomain).values(
     toInsert.map((domain, i) => ({
       repoId,
       domain,
       isPrimary: !hadRows && i === 0,
+      status: "active",
     }))
   );
 }

@@ -85,12 +85,16 @@ export const DeployButton = () => {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button size="sm" className="rounded-full px-4" onClick={() => setOpen(true)}>
-        <Plus className="size-4" />
+      <Button
+        size="lg"
+        className="from-primary to-primary/80 shadow-primary/30 hover:shadow-primary/40 gap-2 rounded-full bg-gradient-to-b px-7 text-[15px] font-semibold shadow-lg transition-shadow"
+        onClick={() => setOpen(true)}
+      >
+        <Plus className="size-5" />
         Import
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="bg-background max-w-xl">
           <ImportWizard onClose={() => setOpen(false)} />
         </DialogContent>
       </Dialog>

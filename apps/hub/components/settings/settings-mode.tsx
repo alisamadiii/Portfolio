@@ -10,6 +10,7 @@ import {
   Network,
   Newspaper,
   SlidersHorizontal,
+  TriangleAlert,
 } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
@@ -17,6 +18,7 @@ import { REGION_COLORS } from "@alisamadiillc/cms-bridge";
 
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { AnalyticsPanel } from "@/components/settings/analytics-panel";
+import { DangerPanel } from "@/components/settings/danger-panel";
 import { ChartMark } from "@/components/analytics/chart-mark";
 import { SpeedMark } from "@/components/analytics/speed-mark";
 import { SpeedPanel } from "@/components/settings/speed-panel";
@@ -42,6 +44,7 @@ const BLOG = "$blog";
 const EMAILS = "$emails";
 const ANALYTICS = "$analytics";
 const SPEED = "$speed";
+const DANGER = "$danger";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
@@ -91,7 +94,8 @@ export function SettingsMode() {
     selected === BLOG ||
     selected === EMAILS ||
     selected === ANALYTICS ||
-    selected === SPEED
+    selected === SPEED ||
+    selected === DANGER
       ? null
       : (pageRows.find((page) => page.path === selected) ?? null);
 
@@ -166,6 +170,12 @@ export function SettingsMode() {
           active={selected === SPEED}
           onClick={() => setSelected(SPEED)}
         />
+        <NavRow
+          icon={<TriangleAlert className="text-destructive size-4" />}
+          label="Danger"
+          active={selected === DANGER}
+          onClick={() => setSelected(DANGER)}
+        />
 
         <p className="text-muted-foreground mt-3 px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
           Page Settings
@@ -203,6 +213,8 @@ export function SettingsMode() {
           <AnalyticsPanel />
         ) : selected === SPEED ? (
           <SpeedPanel />
+        ) : selected === DANGER ? (
+          <DangerPanel />
         ) : noSite ? (
           <div className="mx-auto max-w-2xl p-6">
             <PanelError

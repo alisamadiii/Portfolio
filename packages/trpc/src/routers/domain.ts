@@ -64,7 +64,7 @@ const ownerRepoWhere = (owner: string | undefined, repo: string) => {
   return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
 };
 
-type ProjectCf = {
+export type ProjectCf = {
   token: string;
   connectedUserId: string;
   accountId: string;
@@ -77,7 +77,7 @@ type ProjectCf = {
  * user, or the caller as bootstrap), the account the Worker is on, its name,
  * and the project's chosen DNS zone. Returns null when no CF is linked.
  */
-async function resolveProjectCf(
+export async function resolveProjectCf(
   owner: string | undefined,
   repo: string,
   callerId: string
@@ -191,13 +191,16 @@ export const domainRouter = createTRPCRouter({
           .update(hubProject)
           .set({ cfConnectedUserId: cf.connectedUserId, cfAccountId: cf.accountId })
           .where(ownerRepoWhere(input.owner, input.repo));
+        // Workers Custom Domains on a zone already on the account serve
+        // immediately (the zone's edge cert covers it) — a successful attach is
+        // active. The CF domain object carries no cert-status field to poll.
         await db.insert(hubDomain).values({
           repoId,
           domain: input.domain,
           isPrimary: existing.length === 0,
           cfZoneId: zone.id,
           cfDomainId: attached.id,
-          status: attached.status ?? "pending",
+          status: "active",
         });
         revalidateWebsiteStatus();
         return { domains: sortForDisplay(await listByRepo(repoId)) };
@@ -218,16 +221,21 @@ export const domainRouter = createTRPCRouter({
           .from(hubDomain)
           .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, input.domain)))
           .limit(1);
-        if (!row?.cfDomainId) {
+        if (!row) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Domain not found." });
         }
-        const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
-        if (!cf) throw reconnect();
-        const domain = await getWorkerDomain(cf.token, cf.accountId, row.cfDomainId);
-        const status = domain.status ?? "pending";
+        // No cfDomainId → the built-in *.workers.dev route: always live.
+        // Otherwise confirm the Workers Custom Domain still exists on CF; a
+        // successful fetch means it's attached and serving (no cert-status
+        // field is returned to poll).
+        if (row.cfDomainId) {
+          const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+          if (!cf) throw reconnect();
+          await getWorkerDomain(cf.token, cf.accountId, row.cfDomainId);
+        }
         await db
           .update(hubDomain)
-          .set({ status, updatedAt: new Date() })
+          .set({ status: "active", updatedAt: new Date() })
           .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, input.domain)));
         return { domains: sortForDisplay(await listByRepo(repoId)) };
       } catch (error) {

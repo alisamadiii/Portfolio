@@ -13,6 +13,7 @@ import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
 import { paymentsRouter } from "./payments";
 import { productsRouter } from "./products";
+import { projectRouter } from "./project";
 import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
 import { uploadsRouter } from "./uploads";
@@ -35,6 +36,7 @@ export const appRouter = createTRPCRouter({
   deploy: deployRouter,
   cms: cmsRouter,
   domain: domainRouter,
+  project: projectRouter,
   websites: websitesRouter,
   leads: leadsRouter,
 });

@@ -147,6 +147,18 @@ export const detachWorkerDomain = (
     method: "DELETE",
   });
 
+/** Delete a Worker script (the project's own Worker) — takes it offline. */
+export const deleteWorkerScript = (
+  accessToken: string,
+  accountId: string,
+  name: string
+) =>
+  cf<unknown>(
+    `/accounts/${accountId}/workers/scripts/${encodeURIComponent(name)}`,
+    accessToken,
+    { method: "DELETE" }
+  );
+
 /** Find the account zone a hostname belongs to (longest matching suffix). */
 export async function resolveZoneForHost(
   accessToken: string,
