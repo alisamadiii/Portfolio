@@ -7,6 +7,7 @@ import {
   FileText,
   Globe,
   House,
+  Network,
   Newspaper,
   SlidersHorizontal,
 } from "@/components/icon";
@@ -23,6 +24,7 @@ import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
 import { BlogPanel } from "@/components/settings/blog-panel";
 import { DomainsPanel } from "@/components/settings/domains-panel";
+import { DnsPanel } from "@/components/settings/dns-panel";
 import { EmailsPanel } from "@/components/settings/emails-panel";
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
@@ -35,6 +37,7 @@ const GENERAL = "$general";
 const VARIABLES = "$variables";
 const BILLING = "$billing";
 const DOMAIN = "$domain";
+const DNS = "$dns";
 const BLOG = "$blog";
 const EMAILS = "$emails";
 const ANALYTICS = "$analytics";
@@ -84,6 +87,7 @@ export function SettingsMode() {
     selected === VARIABLES ||
     selected === BILLING ||
     selected === DOMAIN ||
+    selected === DNS ||
     selected === BLOG ||
     selected === EMAILS ||
     selected === ANALYTICS ||
@@ -126,6 +130,12 @@ export function SettingsMode() {
           label="Domain"
           active={selected === DOMAIN}
           onClick={() => setSelected(DOMAIN)}
+        />
+        <NavRow
+          icon={<Network className="size-4" />}
+          label="DNS"
+          active={selected === DNS}
+          onClick={() => setSelected(DNS)}
         />
         <NavRow
           icon={
@@ -183,6 +193,8 @@ export function SettingsMode() {
           <ProjectBillingPanel />
         ) : selected === DOMAIN ? (
           <DomainsPanel />
+        ) : selected === DNS ? (
+          <DnsPanel />
         ) : selected === BLOG ? (
           <BlogPanel />
         ) : selected === EMAILS ? (

@@ -453,6 +453,10 @@ export function Link2(props: LucideProps) {
   return <Lucide.Link2 {...props} />;
 }
 
+export function Network(props: LucideProps) {
+  return <Lucide.Network {...props} />;
+}
+
 export function List(props: LucideProps) {
   return <Lucide.List {...props} />;
 }

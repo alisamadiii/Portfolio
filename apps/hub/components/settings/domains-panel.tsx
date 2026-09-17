@@ -41,31 +41,16 @@ import {
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { Switch } from "@workspace/ui/components/switch";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import {
-  ExternalLink,
-  Globe,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-} from "@/components/icon";
+import { ExternalLink, Globe, MoreHorizontal } from "@/components/icon";
 import { PanelError } from "@/components/settings/panel-error";
 
 type DomainList = RouterOutputs["domain"]["list"];
 type DomainRow = DomainList["domains"][number];
-type DnsRecord = RouterOutputs["domain"]["dnsRecords"]["records"][number];
 
 // The primary domain (or the first one) drives the derived site URL — mirrors
 // the server's pickPrimaryDomain so cache writes stay in sync without a refetch.
@@ -150,60 +135,8 @@ export const DomainsPanel = () => {
               ))
             )}
           </div>
-
-          <DnsRecordsSection owner={owner} repo={repo} domains={data.domains} />
         </div>
       )}
-    </div>
-  );
-};
-
-// ─── DNS records section (one panel per bound Cloudflare zone) ────
-// DNS is zone-level: the apex and its www share one zone and the same records,
-// so records live here once per zone rather than duplicated on each domain row.
-
-const DnsRecordsSection = ({
-  owner,
-  repo,
-  domains,
-}: {
-  owner: string;
-  repo: string;
-  domains: DomainRow[];
-}) => {
-  // Group bound domains by zone; label each with its apex (shortest host).
-  const zones = new Map<string, string>();
-  for (const d of domains) {
-    if (!d.cfZoneId) continue;
-    const current = zones.get(d.cfZoneId);
-    if (!current || d.domain.length < current.length) {
-      zones.set(d.cfZoneId, d.domain);
-    }
-  }
-  if (zones.size === 0) return null;
-
-  return (
-    <div className="space-y-3">
-      <div>
-        <h3 className="text-[17px] font-extrabold tracking-tight">
-          DNS records
-        </h3>
-        <p className="text-muted-foreground mt-0.5 text-[13.5px]">
-          Records for your Cloudflare {zones.size > 1 ? "zones" : "zone"}.
-        </p>
-      </div>
-      {[...zones.entries()].map(([zoneId, apex]) => (
-        <div key={zoneId} className="bg-card overflow-hidden rounded-lg border">
-          <div className="flex items-center gap-2 px-5 py-3">
-            <span className="text-[14.5px] font-bold">{apex}</span>
-            <Badge variant="outline" className="gap-1">
-              <span className="size-1.5 rounded-full bg-[#F38020]" />
-              Cloudflare
-            </Badge>
-          </div>
-          <DnsSection owner={owner} repo={repo} domain={apex} />
-        </div>
-      ))}
     </div>
   );
 };
@@ -524,214 +457,5 @@ const EditDomainDialog = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
-
-// ─── DNS records (Cloudflare-bound domains) ──────────────────────
-
-const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX"] as const;
-// Only these get the orange-cloud proxy toggle; others are DNS-only.
-const PROXYABLE = new Set(["A", "AAAA", "CNAME"]);
-
-const DnsSection = ({
-  owner,
-  repo,
-  domain,
-}: {
-  owner: string;
-  repo: string;
-  domain: string;
-}) => {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  const recordsOptions = trpc.domain.dnsRecords.queryOptions(
-    { owner, repo, domain },
-    { retry: false }
-  );
-  const { data, isLoading, error, refetch, isRefetching } =
-    useQuery(recordsOptions);
-
-  const setRecords = (records: DnsRecord[]) =>
-    queryClient.setQueryData(recordsOptions.queryKey, { records });
-
-  const addMutation = useMutation(
-    trpc.domain.addDnsRecord.mutationOptions({
-      onSuccess: ({ records }) => {
-        setRecords(records);
-        toast.success("DNS record added.");
-      },
-      onError: (err) => toast.error(err.message),
-    })
-  );
-  const deleteMutation = useMutation(
-    trpc.domain.deleteDnsRecord.mutationOptions({
-      onSuccess: ({ records }) => {
-        setRecords(records);
-        toast.success("DNS record removed.");
-      },
-      onError: (err) => toast.error(err.message),
-    })
-  );
-
-  return (
-    <div className="bg-muted/30 border-t px-5 py-4">
-      {error ? (
-        <PanelError
-          title="Failed to load DNS records"
-          message={error.message}
-          onRetry={() => void refetch()}
-          retrying={isRefetching}
-        />
-      ) : isLoading || !data ? (
-        <div className="flex justify-center py-6">
-          <Spinner className="text-muted-foreground size-5" />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {data.records.length === 0 ? (
-            <p className="text-muted-foreground text-[13px]">
-              No DNS records yet.
-            </p>
-          ) : (
-            <div className="divide-y overflow-hidden rounded-md border">
-              {data.records.map((record) => (
-                <div
-                  key={record.id}
-                  className="bg-card flex items-center gap-3 px-3 py-2 text-[13px]"
-                >
-                  <span className="w-14 shrink-0 font-mono font-semibold">
-                    {record.type}
-                  </span>
-                  <span className="w-40 shrink-0 truncate font-medium">
-                    {record.name}
-                  </span>
-                  <span className="text-muted-foreground min-w-0 flex-1 truncate font-mono">
-                    {record.content}
-                  </span>
-                  {record.proxied && (
-                    <span className="shrink-0 text-[#F38020]">Proxied</span>
-                  )}
-                  <span className="text-muted-foreground shrink-0">
-                    {record.ttl === 1 ? "Auto" : record.ttl}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="shrink-0"
-                    disabled={deleteMutation.isPending}
-                    onClick={() =>
-                      deleteMutation.mutate({
-                        owner,
-                        repo,
-                        domain,
-                        recordId: record.id,
-                      })
-                    }
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <AddDnsRecordForm
-            pending={addMutation.isPending}
-            onAdd={(record) =>
-              addMutation.mutate({ owner, repo, domain, record })
-            }
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AddDnsRecordForm = ({
-  pending,
-  onAdd,
-}: {
-  pending: boolean;
-  onAdd: (record: {
-    type: (typeof RECORD_TYPES)[number];
-    name: string;
-    content: string;
-    proxied?: boolean;
-    ttl?: number;
-  }) => void;
-}) => {
-  const [type, setType] = useState<(typeof RECORD_TYPES)[number]>("A");
-  const [name, setName] = useState("");
-  const [content, setContent] = useState("");
-  const [proxied, setProxied] = useState(false);
-
-  const canAdd = !pending && name.trim() && content.trim();
-
-  return (
-    <form
-      className="flex flex-wrap items-center gap-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!canAdd) return;
-        onAdd({
-          type,
-          name: name.trim(),
-          content: content.trim(),
-          proxied: PROXYABLE.has(type) ? proxied : undefined,
-        });
-        setName("");
-        setContent("");
-        setProxied(false);
-      }}
-    >
-      <Select
-        value={type}
-        onValueChange={(v) =>
-          setType((v as (typeof RECORD_TYPES)[number]) ?? "A")
-        }
-      >
-        <SelectTrigger className="h-8 w-24">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {RECORD_TYPES.map((t) => (
-            <SelectItem key={t} value={t}>
-              {t}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Input
-        value={name}
-        placeholder="Name (@ for root)"
-        className="w-40"
-        onChange={(event) => setName(event.target.value)}
-        disabled={pending}
-      />
-      <Input
-        value={content}
-        placeholder="Content"
-        className="min-w-40 flex-1"
-        onChange={(event) => setContent(event.target.value)}
-        disabled={pending}
-      />
-      {PROXYABLE.has(type) && (
-        <label className="text-muted-foreground flex items-center gap-1.5 text-[13px]">
-          <Switch checked={proxied} onCheckedChange={setProxied} />
-          Proxy
-        </label>
-      )}
-      <Button
-        type="submit"
-        size="sm"
-        variant="outline"
-        disabled={!canAdd}
-        isLoading={pending}
-      >
-        <Plus className="size-3.5" />
-        Add
-      </Button>
-    </form>
   );
 };
