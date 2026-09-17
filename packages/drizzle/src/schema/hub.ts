@@ -154,6 +154,18 @@ export const hubProject = pgTable(
     // absent from syncOrgRepos' onConflict set() so it survives GitHub
     // webhook re-syncs.
     usesendDomainId: text("usesend_domain_id"),
+    // Sending domain created in useSend but not yet DNS-verified — the Emails
+    // tab's connect flow parks the id here so setup survives refreshes and slow
+    // DNS propagation, then moves it into usesendDomainId once verified.
+    usesendPendingDomainId: text("usesend_pending_domain_id"),
+    // Per-client Google Analytics. gaPropertyId is the numeric GA4 property id
+    // (e.g. "123456789") the project's Analytics tab reports on; gaConnectedUserId
+    // is the Better Auth user.id whose stored Google token (account table) we use
+    // to call the GA4 Data API — project-level, so any viewer sees the data. Both
+    // set via the Analytics tab. Like the other per-project settings above, they
+    // are absent from syncOrgRepos' onConflict set() so they survive re-syncs.
+    gaPropertyId: text("ga_property_id"),
+    gaConnectedUserId: text("ga_connected_user_id"),
   },
   (table) => ({
     uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),

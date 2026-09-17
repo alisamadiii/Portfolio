@@ -15,6 +15,10 @@ import { cn } from "@workspace/ui/lib/utils";
 import { REGION_COLORS } from "@alisamadiillc/cms-bridge";
 
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
+import { AnalyticsPanel } from "@/components/settings/analytics-panel";
+import { ChartMark } from "@/components/analytics/chart-mark";
+import { SpeedMark } from "@/components/analytics/speed-mark";
+import { SpeedPanel } from "@/components/settings/speed-panel";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
 import { BlogPanel } from "@/components/settings/blog-panel";
@@ -33,6 +37,8 @@ const BILLING = "$billing";
 const DOMAIN = "$domain";
 const BLOG = "$blog";
 const EMAILS = "$emails";
+const ANALYTICS = "$analytics";
+const SPEED = "$speed";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
@@ -79,7 +85,9 @@ export function SettingsMode() {
     selected === BILLING ||
     selected === DOMAIN ||
     selected === BLOG ||
-    selected === EMAILS
+    selected === EMAILS ||
+    selected === ANALYTICS ||
+    selected === SPEED
       ? null
       : (pageRows.find((page) => page.path === selected) ?? null);
 
@@ -136,6 +144,18 @@ export function SettingsMode() {
           active={selected === EMAILS}
           onClick={() => setSelected(EMAILS)}
         />
+        <NavRow
+          icon={<ChartMark className="size-4" />}
+          label="Analytics"
+          active={selected === ANALYTICS}
+          onClick={() => setSelected(ANALYTICS)}
+        />
+        <NavRow
+          icon={<SpeedMark className="size-4" />}
+          label="Speed"
+          active={selected === SPEED}
+          onClick={() => setSelected(SPEED)}
+        />
 
         <p className="text-muted-foreground mt-3 px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
           Page Settings
@@ -167,6 +187,10 @@ export function SettingsMode() {
           <BlogPanel />
         ) : selected === EMAILS ? (
           <EmailsPanel />
+        ) : selected === ANALYTICS ? (
+          <AnalyticsPanel />
+        ) : selected === SPEED ? (
+          <SpeedPanel />
         ) : noSite ? (
           <div className="mx-auto max-w-2xl p-6">
             <PanelError

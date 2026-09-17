@@ -99,6 +99,12 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      // Offline access so Google issues a refresh token — required to read a
+      // client's GA4 data server-side long after the consent flow. The
+      // analytics.readonly scope is NOT requested here (that would force it on
+      // every login); it's asked for only at connect time via linkSocial.
+      accessType: "offline",
+      prompt: "consent",
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID as string,

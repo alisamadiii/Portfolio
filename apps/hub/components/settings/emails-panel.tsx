@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useConfig } from "@/contexts/config-context";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   eachDayOfInterval,
   endOfDay,
@@ -24,6 +29,17 @@ import {
   type ChartConfig,
 } from "@workspace/ui/components/chart";
 import { Input } from "@workspace/ui/components/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { DataTable } from "@workspace/ui/custom/data-table";
 import type { DateRange } from "@workspace/ui/custom/date-range-picker";
@@ -34,6 +50,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
+import { useWebsiteUrl } from "@/hooks/use-website-url";
 import { ExportEmailsPdfButton } from "@/components/emails/export-pdf-button";
 import { eventPillFor, eventTileFor } from "@/components/emails/status-colors";
 import {
@@ -174,25 +191,7 @@ export function EmailsPanel() {
     return (
       <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
         <PanelHeading />
-        <div className="rounded-lg border border-dashed px-6 py-16 text-center">
-          <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
-            <EnvelopeMark className="size-6" />
-          </div>
-          <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
-            Emails aren&apos;t set up yet
-          </h3>
-          <p className="text-muted-foreground mx-auto mt-2 max-w-[400px] text-[14px]">
-            This project doesn&apos;t have a sending domain connected. Once
-            it&apos;s connected, every email sent from your website will show
-            up here — with delivery, open, and click tracking.
-          </p>
-          <p className="text-muted-foreground mx-auto mt-4 max-w-[400px] text-[13px]">
-            Think something&apos;s off? Some clients get a custom email setup
-            hosted just for them, with its own dashboard at a different URL.
-            If you don&apos;t have that URL — or you&apos;re not sure — contact
-            us and we&apos;ll help you out.
-          </p>
-        </div>
+        <DomainConnectFlow owner={owner} repo={repo} />
       </div>
     );
   }
@@ -747,6 +746,251 @@ function EmailDetail({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Sending-domain connect flow ─────────────────────────────────────────────
+
+const CopyChip = ({ value }: { value: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      aria-label="Copy"
+      className="text-muted-foreground hover:text-foreground shrink-0 rounded p-1 transition-colors"
+      onClick={() => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+    >
+      {copied ? (
+        <Check className="text-status-success size-3.5" />
+      ) : (
+        <Copy className="size-3.5" />
+      )}
+    </button>
+  );
+};
+
+const recordBadge = (status?: string | null) =>
+  status === "SUCCESS" ? (
+    <Badge className="bg-status-success/15 text-status-success rounded-full px-2 py-0.5 text-[11px] font-semibold">
+      Verified
+    </Badge>
+  ) : status === "FAILED" || status === "TEMPORARY_FAILURE" ? (
+    <Badge className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-[11px] font-semibold">
+      Failed
+    </Badge>
+  ) : (
+    <Badge className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-semibold">
+      Pending
+    </Badge>
+  );
+
+/**
+ * Resend-style self-service domain setup. Full-access users create the domain
+ * in useSend, add the returned DNS records at their provider, then verify —
+ * which is when (and only when) usesend_domain_id gets written and the Emails
+ * dashboard takes over. Viewers get an informational card instead.
+ */
+function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { websiteUrl } = useWebsiteUrl();
+  const [domain, setDomain] = useState("");
+
+  const setup = useQuery(
+    trpc.emails.domainSetup.queryOptions(
+      { owner, repo },
+      { retry: false, refetchInterval: (query) => (query.state.data?.pending ? 30_000 : false) }
+    )
+  );
+
+  const invalidateSetup = () =>
+    queryClient.invalidateQueries({
+      queryKey: trpc.emails.domainSetup.queryOptions({ owner, repo }).queryKey,
+    });
+
+  const create = useMutation(
+    trpc.emails.createDomain.mutationOptions({
+      onSuccess: () => invalidateSetup(),
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
+  const verify = useMutation(
+    trpc.emails.verifyDomain.mutationOptions({
+      onSuccess: (result) => {
+        if (result.verified) {
+          toast.success("Domain verified — emails are live");
+          queryClient.invalidateQueries({
+            queryKey: trpc.emails.enabled.queryOptions({ owner, repo }).queryKey,
+          });
+        } else {
+          toast.info("Records not verified yet — DNS changes can take up to an hour");
+          invalidateSetup();
+        }
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
+  const cancel = useMutation(
+    trpc.emails.cancelDomainSetup.mutationOptions({
+      onSuccess: () => invalidateSetup(),
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
+  // Non-full-access viewers can't run the flow — informational card.
+  if (setup.isError) {
+    return (
+      <div className="rounded-lg border border-dashed px-6 py-16 text-center">
+        <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
+          <EnvelopeMark className="size-6" />
+        </div>
+        <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
+          Emails aren&apos;t set up yet
+        </h3>
+        <p className="text-muted-foreground mx-auto mt-2 max-w-[400px] text-[14px]">
+          This project doesn&apos;t have a sending domain connected. Once
+          it&apos;s connected, every email sent from your website will show up
+          here — with delivery, open, and click tracking.
+        </p>
+        <p className="text-muted-foreground mx-auto mt-4 max-w-[400px] text-[13px]">
+          Ask someone with full access to this project to connect the domain.
+        </p>
+      </div>
+    );
+  }
+
+  if (setup.isLoading) {
+    return <Skeleton className="h-[260px] w-full rounded-lg" />;
+  }
+
+  const pending = setup.data?.pending;
+
+  if (!pending) {
+    const suggested = websiteUrl?.replace(/^https?:\/\//, "").replace(/^www\./, "") ?? "";
+    return (
+      <div className="rounded-lg border border-dashed px-6 py-16 text-center">
+        <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
+          <EnvelopeMark className="size-6" />
+        </div>
+        <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
+          Connect your sending domain
+        </h3>
+        <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14px]">
+          Emails will be sent from your own domain. We&apos;ll give you a few
+          DNS records to add — once they&apos;re verified, every email sent
+          from your website shows up here.
+        </p>
+        <form
+          className="mx-auto mt-6 flex max-w-[420px] items-center gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const value = (domain || suggested).trim();
+            if (value) create.mutate({ owner, repo, domain: value });
+          }}
+        >
+          <Input
+            value={domain || suggested}
+            onChange={(event) => setDomain(event.target.value)}
+            placeholder="yourdomain.com"
+            className="bg-card"
+          />
+          <Button type="submit" disabled={create.isPending}>
+            {create.isPending ? "Connecting…" : "Connect domain"}
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card rounded-lg border">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+        <div>
+          <h3 className="text-[16px] font-extrabold tracking-tight">
+            Add these DNS records for {pending.name}
+          </h3>
+          <p className="text-muted-foreground mt-1 text-[13px]">
+            Add them at your DNS provider (Cloudflare, GoDaddy, …). &quot;Auto&quot;
+            TTL means your provider&apos;s default. Verification usually takes a
+            few minutes after the records are in.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button type="button" variant="ghost" size="sm" className="text-destructive">
+                  Cancel setup
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel domain setup?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {pending.name} will be removed from the email service. DNS
+                  records you already added at your provider can stay — they do
+                  nothing on their own.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep setup</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => cancel.mutate({ owner, repo })}
+                >
+                  Cancel setup
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <Button
+            type="button"
+            size="sm"
+            disabled={verify.isPending}
+            onClick={() => verify.mutate({ owner, repo })}
+          >
+            {verify.isPending ? "Verifying…" : "Verify records"}
+          </Button>
+        </div>
+      </div>
+      <ul>
+        {pending.dnsRecords.map((record, index) => (
+          <li
+            key={`${record.type}-${record.name}`}
+            className={cn(
+              "flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3",
+              index > 0 && "border-t"
+            )}
+          >
+            <span className="w-16 shrink-0">{recordBadge(record.status)}</span>
+            <span className="w-10 shrink-0 text-[13px] font-semibold">
+              {record.type}
+            </span>
+            <span className="flex w-44 shrink-0 items-center gap-1 text-[13px]">
+              <span className="truncate font-mono">{record.name}</span>
+              <CopyChip value={record.name} />
+            </span>
+            <span className="flex min-w-0 flex-1 items-center gap-1">
+              <span className="min-w-0 break-all font-mono text-[12px]">
+                {record.value}
+              </span>
+              <CopyChip value={record.value} />
+            </span>
+            {record.priority && (
+              <span className="text-muted-foreground shrink-0 text-[12px]">
+                Priority {record.priority}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -7,12 +7,20 @@ import { hubProject } from "@workspace/drizzle/schema";
 
 import {
   authenticatedProcedure,
+  cmsFullAccessProcedure,
   cmsProcedure,
   createTRPCRouter,
 } from "../init";
 import {
+  createUsesendDomain,
+  deleteUsesendDomain,
   getEmailById,
   getEmailsSnapshot,
+  getUsesendDomain,
+  isDomainVerified,
+  listUsesendDomains,
+  verifyUsesendDomain,
+  type UseSendDomain,
   type UseSendEmailRow,
 } from "../lib/usesend";
 import { getToken } from "../lib/cms/token";
@@ -34,7 +42,10 @@ async function resolveProject(owner: string | undefined, repo: string) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
   }
   const [row] = await db
-    .select({ usesendDomainId: hubProject.usesendDomainId })
+    .select({
+      usesendDomainId: hubProject.usesendDomainId,
+      usesendPendingDomainId: hubProject.usesendPendingDomainId,
+    })
     .from(hubProject)
     .where(
       sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`
@@ -43,8 +54,25 @@ async function resolveProject(owner: string | undefined, repo: string) {
   if (!row) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
   }
-  return { usesendDomainId: row.usesendDomainId };
+  return {
+    usesendDomainId: row.usesendDomainId,
+    usesendPendingDomainId: row.usesendPendingDomainId,
+  };
 }
+
+const projectWhere = (owner: string | undefined, repo: string) => {
+  const org = owner ?? process.env.GITHUB_ORG;
+  return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
+};
+
+// The connect flow's public view of a pending domain.
+const toPendingDomain = (domain: UseSendDomain) => ({
+  id: domain.id,
+  name: domain.name,
+  verified: isDomainVerified(domain),
+  isVerifying: domain.isVerifying,
+  dnsRecords: domain.dnsRecords,
+});
 
 // Other domains' emails never leave the server — every response is narrowed
 // to this shape.
@@ -115,6 +143,104 @@ export const emailsRouter = createTRPCRouter({
   enabled: cmsProcedure.query(async ({ input }) => {
     const project = await resolveProject(input.owner, input.repo);
     return { enabled: !!project.usesendDomainId };
+  }),
+
+  // ─── Sending-domain connect flow (full-access only) ────────────────────
+
+  // Current setup state: the pending domain with fresh per-record DNS
+  // statuses, or null when nothing is in flight.
+  domainSetup: cmsFullAccessProcedure.query(async ({ input }) => {
+    const project = await resolveProject(input.owner, input.repo);
+    if (!project.usesendPendingDomainId) return { pending: null };
+    const domain = await getUsesendDomain(
+      Number(project.usesendPendingDomainId)
+    );
+    if (!domain) {
+      // Deleted on the useSend side — clear the stale pointer.
+      await db
+        .update(hubProject)
+        .set({ usesendPendingDomainId: null })
+        .where(projectWhere(input.owner, input.repo));
+      return { pending: null };
+    }
+    return { pending: toPendingDomain(domain) };
+  }),
+
+  createDomain: cmsFullAccessProcedure
+    .input(
+      z.object({
+        domain: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .transform((value) => value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, ""))
+          .pipe(z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "Enter a valid domain")),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const project = await resolveProject(input.owner, input.repo);
+      if (project.usesendDomainId || project.usesendPendingDomainId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "A sending domain is already set up for this project.",
+        });
+      }
+      // Adopt an existing useSend domain with the same name instead of
+      // creating a duplicate (e.g. a retried setup).
+      const existing = (await listUsesendDomains()).find(
+        (domain) => domain.name === input.domain
+      );
+      const domain = existing ?? (await createUsesendDomain(input.domain));
+      await db
+        .update(hubProject)
+        .set({ usesendPendingDomainId: String(domain.id) })
+        .where(projectWhere(input.owner, input.repo));
+      return { pending: toPendingDomain(domain) };
+    }),
+
+  verifyDomain: cmsFullAccessProcedure.mutation(async ({ input }) => {
+    const project = await resolveProject(input.owner, input.repo);
+    if (!project.usesendPendingDomainId) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "No domain setup in progress.",
+      });
+    }
+    const id = Number(project.usesendPendingDomainId);
+    await verifyUsesendDomain(id);
+    const domain = await getUsesendDomain(id);
+    if (!domain) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Domain no longer exists in useSend.",
+      });
+    }
+    if (isDomainVerified(domain)) {
+      // The only write path for usesendDomainId — always behind a
+      // confirmed-verified GET.
+      await db
+        .update(hubProject)
+        .set({
+          usesendDomainId: String(domain.id),
+          usesendPendingDomainId: null,
+        })
+        .where(projectWhere(input.owner, input.repo));
+      return { verified: true as const };
+    }
+    return { verified: false as const, pending: toPendingDomain(domain) };
+  }),
+
+  cancelDomainSetup: cmsFullAccessProcedure.mutation(async ({ input }) => {
+    const project = await resolveProject(input.owner, input.repo);
+    // Never touches usesendDomainId — a connected domain can't be deleted here.
+    if (project.usesendPendingDomainId) {
+      await deleteUsesendDomain(Number(project.usesendPendingDomainId));
+      await db
+        .update(hubProject)
+        .set({ usesendPendingDomainId: null })
+        .where(projectWhere(input.owner, input.repo));
+    }
+    return { ok: true };
   }),
 
   list: cmsProcedure

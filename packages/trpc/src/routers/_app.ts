@@ -1,6 +1,7 @@
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import { createTRPCRouter } from "../init";
+import { analyticsRouter } from "./analytics";
 import { authRouter } from "./auth";
 import { clickupRouter } from "./clickup";
 import { cmsRouter } from "./cms/index";
@@ -27,6 +28,7 @@ export const appRouter = createTRPCRouter({
   uploads: uploadsRouter,
   contact: contactRouter,
   emails: emailsRouter,
+  analytics: analyticsRouter,
   cms: cmsRouter,
   domain: domainRouter,
   websites: websitesRouter,
