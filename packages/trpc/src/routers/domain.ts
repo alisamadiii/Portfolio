@@ -19,19 +19,21 @@ import {
   getIntegrationAccessToken,
 } from "@workspace/trpc/lib/integrations";
 import {
+  attachWorkerDomain,
   createCfDnsRecord,
   deleteCfDnsRecord,
+  detachWorkerDomain,
+  getWorkerDomain,
+  listCfAccounts,
   listCfDnsRecords,
   listCfZones,
+  resolveZoneForHost,
 } from "@workspace/trpc/routers/integrations/cloudflare";
 
-// Domain management is open to every collaborator of the repo (cmsProcedure, no
-// admin assert) — clients manage their own domains. The hub DB is the source of
-// truth: domains are plain metadata the client points at their own host. No
-// provider, no verification, no DNS-record generation.
+// Domain management. Domains live on the user's Cloudflare; adding one attaches
+// it to the project's Worker (Workers Custom Domains) — CF creates the DNS
+// record + cert. The DNS tab manages a separately-chosen project zone.
 
-// The home page website-status card caches per-URL ping results under this tag;
-// bust it whenever the domain set (and thus the derived URL) changes.
 const revalidateWebsiteStatus = () =>
   revalidateTag("website-status", { expire: 0 });
 
@@ -62,19 +64,31 @@ const ownerRepoWhere = (owner: string | undefined, repo: string) => {
   return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
 };
 
+type ProjectCf = {
+  token: string;
+  connectedUserId: string;
+  accountId: string;
+  workerName: string | null;
+  cfZoneId: string | null;
+};
+
 /**
- * Cloudflare access for a project. Uses the project's stored connected user's
- * token when set (so any collaborator sees the same zones/DNS), else the
- * caller's own — which lets the first CF-connected user bootstrap the binding.
- * Returns null when neither has Cloudflare linked.
+ * Cloudflare context for a project: the token (from the project's connected CF
+ * user, or the caller as bootstrap), the account the Worker is on, its name,
+ * and the project's chosen DNS zone. Returns null when no CF is linked.
  */
-async function resolveProjectCfToken(
+async function resolveProjectCf(
   owner: string | undefined,
   repo: string,
   callerId: string
-): Promise<{ token: string; connectedUserId: string } | null> {
+): Promise<ProjectCf | null> {
   const [project] = await db
-    .select({ cfConnectedUserId: hubProject.cfConnectedUserId })
+    .select({
+      cfConnectedUserId: hubProject.cfConnectedUserId,
+      cfAccountId: hubProject.cfAccountId,
+      cfPagesProject: hubProject.cfPagesProject,
+      cfZoneId: hubProject.cfZoneId,
+    })
     .from(hubProject)
     .where(ownerRepoWhere(owner, repo))
     .limit(1);
@@ -82,24 +96,36 @@ async function resolveProjectCfToken(
   const account = await getConnectedAccount(userId, "cloudflare");
   if (!account) return null;
   const token = await getIntegrationAccessToken(userId, "cloudflare", "Cloudflare");
-  return { token, connectedUserId: userId };
+  // Fall back to the sole CF account when the project has no stored one.
+  let accountId = project?.cfAccountId ?? "";
+  if (!accountId) {
+    const accounts = await listCfAccounts(token);
+    accountId = accounts[0]?.id ?? "";
+  }
+  return {
+    token,
+    connectedUserId: userId,
+    accountId,
+    workerName: project?.cfPagesProject ?? null,
+    cfZoneId: project?.cfZoneId ?? null,
+  };
 }
 
-/** The bound CF zone id for a domain, or throw if the domain is manual/unbound. */
-async function requireBoundZone(repoId: number, domain: string): Promise<string> {
-  const [row] = await db
-    .select({ cfZoneId: hubDomain.cfZoneId })
-    .from(hubDomain)
-    .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, domain)))
-    .limit(1);
-  if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Domain not found." });
-  if (!row.cfZoneId) {
+const reconnect = () =>
+  new TRPCError({
+    code: "PRECONDITION_FAILED",
+    message: "Cloudflare needs to be reconnected.",
+  });
+
+/** The project's chosen DNS zone, or throw when unset. */
+async function requireProjectZone(cf: ProjectCf): Promise<string> {
+  if (!cf.cfZoneId) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "This domain isn't linked to a Cloudflare zone.",
+      message: "Pick a DNS zone for this project first.",
     });
   }
-  return row.cfZoneId;
+  return cf.cfZoneId;
 }
 
 const dnsRecordInput = z.object({
@@ -124,65 +150,55 @@ export const domainRouter = createTRPCRouter({
   }),
 
   /**
-   * Add a domain. The first domain added to a repo becomes primary. When a
-   * Cloudflare zoneId is supplied (domain picked from the CF dropdown), it's
-   * validated against the caller's zones, bound to the row, and the project's
-   * CF connected-user is stamped so DNS reads work for every collaborator.
+   * Add a domain: attach it to the project's Worker via Workers Custom Domains
+   * (the domain's zone must be on the user's Cloudflare). CF creates the DNS
+   * record + issues the cert; we store the custom-domain id + status.
    */
-  add: cmsProcedure
-    .input(z.object({ domain: hostname, zoneId: z.string().optional() }))
+  add: cmsFullAccessProcedure
+    .input(z.object({ domain: hostname }))
     .mutation(async ({ ctx, input }) => {
       try {
         const repoId = await resolveRepoId(input.owner, input.repo);
         const existing = await listByRepo(repoId);
-
-        // A CF zone is the apex — add both the apex and its www subdomain (both
-        // bound to the zone). Free-text custom adds the single typed domain.
-        const wanted = input.zoneId
-          ? [input.domain, `www.${input.domain}`]
-          : [input.domain];
-        const toInsert = wanted.filter(
-          (d) => !existing.some((e) => e.domain === d)
-        );
-        if (toInsert.length === 0) {
+        if (existing.some((d) => d.domain === input.domain)) {
           throw new TRPCError({
             code: "CONFLICT",
             message: "That domain is already on this project.",
           });
         }
-
-        if (input.zoneId) {
-          const cf = await resolveProjectCfToken(input.owner, input.repo, ctx.user.id);
-          if (!cf) {
-            throw new TRPCError({
-              code: "PRECONDITION_FAILED",
-              message: "Connect Cloudflare before picking a zone.",
-            });
-          }
-          const zones = await listCfZones(cf.token);
-          if (!zones.some((z) => z.id === input.zoneId)) {
-            throw new TRPCError({
-              code: "FORBIDDEN",
-              message: "Your Cloudflare account has no access to that zone.",
-            });
-          }
-          // Stamp the project's CF user on first binding (mirrors GA connect).
-          await db
-            .update(hubProject)
-            .set({ cfConnectedUserId: cf.connectedUserId })
-            .where(and(ownerRepoWhere(input.owner, input.repo), sql`${hubProject.cfConnectedUserId} is null`));
+        const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+        if (!cf) throw reconnect();
+        if (!cf.workerName) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Import or deploy this project to Cloudflare before adding a domain.",
+          });
         }
-
-        await db.insert(hubDomain).values(
-          toInsert.map((domain, index) => ({
-            repoId,
-            domain,
-            // First domain on an empty repo becomes primary (apex wins the pair).
-            isPrimary: existing.length === 0 && index === 0,
-            cfZoneId: input.zoneId ?? null,
-          }))
-        );
-
+        const zone = await resolveZoneForHost(cf.token, cf.accountId, input.domain);
+        if (!zone) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Add this domain to your Cloudflare account first, then try again.",
+          });
+        }
+        const attached = await attachWorkerDomain(cf.token, cf.accountId, {
+          hostname: input.domain,
+          service: cf.workerName,
+          zoneId: zone.id,
+        });
+        // Stamp the project's CF user + account on first bind.
+        await db
+          .update(hubProject)
+          .set({ cfConnectedUserId: cf.connectedUserId, cfAccountId: cf.accountId })
+          .where(ownerRepoWhere(input.owner, input.repo));
+        await db.insert(hubDomain).values({
+          repoId,
+          domain: input.domain,
+          isPrimary: existing.length === 0,
+          cfZoneId: zone.id,
+          cfDomainId: attached.id,
+          status: attached.status ?? "pending",
+        });
         revalidateWebsiteStatus();
         return { domains: sortForDisplay(await listByRepo(repoId)) };
       } catch (error) {
@@ -191,86 +207,29 @@ export const domainRouter = createTRPCRouter({
       }
     }),
 
-  /**
-   * Cloudflare zones the project can pick from. Uses the project's connected CF
-   * user (or the caller as bootstrap). `connected: false` → the panel shows the
-   * plain free-text input only.
-   */
-  cfZones: cmsProcedure.query(async ({ ctx, input }) => {
-    try {
-      const cf = await resolveProjectCfToken(input.owner, input.repo, ctx.user.id);
-      if (!cf) return { connected: false, zones: [] as { id: string; name: string }[] };
-      const zones = await listCfZones(cf.token);
-      return {
-        connected: true,
-        zones: zones.map((z) => ({ id: z.id, name: z.name })),
-      };
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  }),
-
-  /** DNS records for a domain's bound Cloudflare zone. */
-  dnsRecords: cmsProcedure
+  /** Re-check a domain's Workers Custom Domain status. */
+  verify: cmsProcedure
     .input(z.object({ domain: hostname }))
-    .query(async ({ ctx, input }) => {
-      try {
-        const repoId = await resolveRepoId(input.owner, input.repo);
-        const zoneId = await requireBoundZone(repoId, input.domain);
-        const cf = await resolveProjectCfToken(input.owner, input.repo, ctx.user.id);
-        if (!cf) {
-          throw new TRPCError({
-            code: "PRECONDITION_FAILED",
-            message: "Cloudflare needs to be reconnected.",
-          });
-        }
-        const records = await listCfDnsRecords(cf.token, zoneId);
-        return { records };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw toTRPCError(error);
-      }
-    }),
-
-  /** Add a DNS record to a domain's bound zone. */
-  addDnsRecord: cmsFullAccessProcedure
-    .input(z.object({ domain: hostname, record: dnsRecordInput }))
     .mutation(async ({ ctx, input }) => {
       try {
         const repoId = await resolveRepoId(input.owner, input.repo);
-        const zoneId = await requireBoundZone(repoId, input.domain);
-        const cf = await resolveProjectCfToken(input.owner, input.repo, ctx.user.id);
-        if (!cf) {
-          throw new TRPCError({
-            code: "PRECONDITION_FAILED",
-            message: "Cloudflare needs to be reconnected.",
-          });
+        const [row] = await db
+          .select({ cfDomainId: hubDomain.cfDomainId })
+          .from(hubDomain)
+          .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, input.domain)))
+          .limit(1);
+        if (!row?.cfDomainId) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Domain not found." });
         }
-        await createCfDnsRecord(cf.token, zoneId, input.record);
-        return { records: await listCfDnsRecords(cf.token, zoneId) };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw toTRPCError(error);
-      }
-    }),
-
-  /** Delete a DNS record from a domain's bound zone. */
-  deleteDnsRecord: cmsFullAccessProcedure
-    .input(z.object({ domain: hostname, recordId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const repoId = await resolveRepoId(input.owner, input.repo);
-        const zoneId = await requireBoundZone(repoId, input.domain);
-        const cf = await resolveProjectCfToken(input.owner, input.repo, ctx.user.id);
-        if (!cf) {
-          throw new TRPCError({
-            code: "PRECONDITION_FAILED",
-            message: "Cloudflare needs to be reconnected.",
-          });
-        }
-        await deleteCfDnsRecord(cf.token, zoneId, input.recordId);
-        return { records: await listCfDnsRecords(cf.token, zoneId) };
+        const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+        if (!cf) throw reconnect();
+        const domain = await getWorkerDomain(cf.token, cf.accountId, row.cfDomainId);
+        const status = domain.status ?? "pending";
+        await db
+          .update(hubDomain)
+          .set({ status, updatedAt: new Date() })
+          .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, input.domain)));
+        return { domains: sortForDisplay(await listByRepo(repoId)) };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);
@@ -292,7 +251,6 @@ export const domainRouter = createTRPCRouter({
             });
           }
         }
-
         const updated = await db
           .update(hubDomain)
           .set({ domain: input.newDomain, updatedAt: new Date() })
@@ -301,7 +259,6 @@ export const domainRouter = createTRPCRouter({
         if (updated.length === 0) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Domain not found." });
         }
-
         revalidateWebsiteStatus();
         return { domains: sortForDisplay(await listByRepo(repoId)) };
       } catch (error) {
@@ -316,8 +273,6 @@ export const domainRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const repoId = await resolveRepoId(input.owner, input.repo);
-        // neon-http has no interactive transactions; sequential writes are fine
-        // here — one primary flag flips per repo, no concurrent contention.
         const rows = await db
           .select({ id: hubDomain.id })
           .from(hubDomain)
@@ -333,7 +288,6 @@ export const domainRouter = createTRPCRouter({
           .update(hubDomain)
           .set({ isPrimary: true, updatedAt: new Date() })
           .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, input.domain)));
-
         revalidateWebsiteStatus();
         return { domains: sortForDisplay(await listByRepo(repoId)) };
       } catch (error) {
@@ -342,18 +296,24 @@ export const domainRouter = createTRPCRouter({
       }
     }),
 
-  /** Remove a domain. If it was primary, the earliest remaining one is promoted. */
+  /** Remove a domain: detach from the Worker (best-effort), promote next primary. */
   remove: cmsProcedure
     .input(z.object({ domain: hostname }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const repoId = await resolveRepoId(input.owner, input.repo);
-        // neon-http has no interactive transactions; delete then promote the
-        // next domain sequentially (single-user domain management, no contention).
         const [removed] = await db
           .delete(hubDomain)
           .where(and(eq(hubDomain.repoId, repoId), eq(hubDomain.domain, input.domain)))
-          .returning({ isPrimary: hubDomain.isPrimary });
+          .returning({ isPrimary: hubDomain.isPrimary, cfDomainId: hubDomain.cfDomainId });
+        if (removed?.cfDomainId) {
+          try {
+            const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+            if (cf) await detachWorkerDomain(cf.token, cf.accountId, removed.cfDomainId);
+          } catch {
+            // Row is gone; leave the CF custom domain if detach fails.
+          }
+        }
         if (removed?.isPrimary) {
           const [next] = await db
             .select({ id: hubDomain.id })
@@ -368,9 +328,115 @@ export const domainRouter = createTRPCRouter({
               .where(eq(hubDomain.id, next.id));
           }
         }
-
         revalidateWebsiteStatus();
         return { domains: sortForDisplay(await listByRepo(repoId)) };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  // ─── DNS (project zone) ────────────────────────────────────────
+
+  /** The project's chosen DNS zone (null when unset). */
+  dnsZone: cmsProcedure.query(async ({ ctx, input }) => {
+    try {
+      const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+      if (!cf) return { connected: false, zone: null };
+      if (!cf.cfZoneId) return { connected: true, zone: null };
+      const zones = await listCfZones(cf.token, cf.accountId);
+      const zone = zones.find((z) => z.id === cf.cfZoneId);
+      return {
+        connected: true,
+        zone: { id: cf.cfZoneId, name: zone?.name ?? cf.cfZoneId },
+      };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  }),
+
+  /** All CF zones the project's account can use — for the DNS-zone dropdown. */
+  dnsZones: cmsProcedure.query(async ({ ctx, input }) => {
+    try {
+      const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+      if (!cf) return { connected: false, zones: [] as { id: string; name: string }[] };
+      const zones = await listCfZones(cf.token, cf.accountId);
+      return { connected: true, zones: zones.map((z) => ({ id: z.id, name: z.name })) };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  }),
+
+  /** Set the project's DNS zone. */
+  setDnsZone: cmsFullAccessProcedure
+    .input(z.object({ zoneId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+        if (!cf) throw reconnect();
+        const zones = await listCfZones(cf.token, cf.accountId);
+        if (!zones.some((z) => z.id === input.zoneId)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Your Cloudflare account has no access to that zone.",
+          });
+        }
+        await db
+          .update(hubProject)
+          .set({
+            cfZoneId: input.zoneId,
+            cfConnectedUserId: cf.connectedUserId,
+            cfAccountId: cf.accountId,
+          })
+          .where(ownerRepoWhere(input.owner, input.repo));
+        return { ok: true };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  /** DNS records for the project's zone. */
+  dnsRecords: cmsProcedure.query(async ({ ctx, input }) => {
+    try {
+      const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+      if (!cf) throw reconnect();
+      const zoneId = await requireProjectZone(cf);
+      return { records: await listCfDnsRecords(cf.token, zoneId) };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw toTRPCError(error);
+    }
+  }),
+
+  /** Add a DNS record to the project's zone. */
+  addDnsRecord: cmsFullAccessProcedure
+    .input(z.object({ record: dnsRecordInput }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+        if (!cf) throw reconnect();
+        const zoneId = await requireProjectZone(cf);
+        await createCfDnsRecord(cf.token, zoneId, input.record);
+        return { records: await listCfDnsRecords(cf.token, zoneId) };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  /** Delete a DNS record from the project's zone. */
+  deleteDnsRecord: cmsFullAccessProcedure
+    .input(z.object({ recordId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const cf = await resolveProjectCf(input.owner, input.repo, ctx.user.id);
+        if (!cf) throw reconnect();
+        const zoneId = await requireProjectZone(cf);
+        await deleteCfDnsRecord(cf.token, zoneId, input.recordId);
+        return { records: await listCfDnsRecords(cf.token, zoneId) };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

@@ -5,10 +5,17 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { notInArray, sql } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
+import {
+  hubBlogPost,
+  hubCollaborator,
+  hubDeployment,
+  hubDomain,
+  hubProject,
+  hubSubscription,
+} from "@workspace/drizzle/schema";
 
 type OrgRepo = {
   repoId: number;
@@ -117,12 +124,41 @@ const syncOrgRepos = async () => {
       });
   }
 
+  // Reconcile org repos only — never drop user-deployed projects (their repos
+  // live outside GITHUB_ORG and would otherwise be deleted here).
   const repoIds = repos.map((repo) => repo.repoId);
-  await db
-    .delete(hubProject)
-    .where(repoIds.length ? notInArray(hubProject.repoId, repoIds) : sql`true`);
+  const stale = await db
+    .select({ repoId: hubProject.repoId })
+    .from(hubProject)
+    .where(
+      and(
+        eq(hubProject.selfDeployed, false),
+        repoIds.length ? notInArray(hubProject.repoId, repoIds) : sql`true`
+      )
+    );
+  const staleIds = stale.map((r) => r.repoId);
+  if (staleIds.length) {
+    // App-level cascade: drop all project-scoped rows for the removed repos
+    // before the project rows (no DB FKs — see schema).
+    await deleteProjectsCascade(staleIds);
+  }
 
   return { synced: repos.length };
 };
 
-export { fetchOrgRepos, getGithubEnv, syncOrgRepos };
+/**
+ * Delete a project and ALL its project-scoped rows (domains, deployments, blog
+ * posts, subscription, collaborators). App-level cascade — the hub DB has no FK
+ * cascade because hub_project.repo_id is a unique index, not a constraint.
+ */
+const deleteProjectsCascade = async (repoIds: number[]) => {
+  if (!repoIds.length) return;
+  await db.delete(hubDomain).where(inArray(hubDomain.repoId, repoIds));
+  await db.delete(hubDeployment).where(inArray(hubDeployment.repoId, repoIds));
+  await db.delete(hubBlogPost).where(inArray(hubBlogPost.repoId, repoIds));
+  await db.delete(hubSubscription).where(inArray(hubSubscription.repoId, repoIds));
+  await db.delete(hubCollaborator).where(inArray(hubCollaborator.repoId, repoIds));
+  await db.delete(hubProject).where(inArray(hubProject.repoId, repoIds));
+};
+
+export { deleteProjectsCascade, fetchOrgRepos, getGithubEnv, syncOrgRepos };

@@ -24,7 +24,12 @@ import { authClient } from "@workspace/auth/auth-client";
 
 import type { IntegrationApp } from "@/lib/integrations";
 
-type Status = { connected: boolean; providerId: string; accountId: string | null };
+type Status = {
+  connected: boolean;
+  needsReconnect: boolean;
+  providerId: string;
+  accountId: string | null;
+};
 
 export const IntegrationCard = ({
   app,
@@ -73,12 +78,18 @@ export const IntegrationCard = ({
           <div className="bg-muted/60 border-border flex size-11 items-center justify-center rounded-[12px] border">
             {app.logo}
           </div>
-          {status?.connected && (
-            <Badge className="bg-status-success-bg text-status-success gap-1.5 rounded-full border-transparent px-3 py-1 text-[12.5px] font-semibold">
-              <span className="bg-status-success size-1.5 rounded-full" />
-              Connected
-            </Badge>
-          )}
+          {status?.connected &&
+            (status.needsReconnect ? (
+              <Badge className="gap-1.5 rounded-full border-transparent bg-amber-100 px-3 py-1 text-[12.5px] font-semibold text-amber-700">
+                <span className="size-1.5 rounded-full bg-amber-500" />
+                Reconnect needed
+              </Badge>
+            ) : (
+              <Badge className="bg-status-success-bg text-status-success gap-1.5 rounded-full border-transparent px-3 py-1 text-[12.5px] font-semibold">
+                <span className="bg-status-success size-1.5 rounded-full" />
+                Connected
+              </Badge>
+            ))}
         </div>
         <div className="flex-1 space-y-1">
           <h4 className="text-[15.5px] font-bold">{app.name}</h4>
@@ -86,7 +97,21 @@ export const IntegrationCard = ({
             {app.description}
           </p>
         </div>
-        {status?.connected ? (
+        {status?.connected && status.needsReconnect ? (
+          <div className="flex gap-2">
+            <Button size="sm" onClick={connect} disabled={busy}>
+              {busy ? "Reconnecting…" : "Reconnect"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={disconnect}
+              disabled={busy}
+            >
+              Disconnect
+            </Button>
+          </div>
+        ) : status?.connected ? (
           <AlertDialog>
             <AlertDialogTrigger
               render={

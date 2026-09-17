@@ -33,6 +33,7 @@ export const hubCollaborator = pgTable(
     // LEGACY: GitHub owner id from the old GitHub-backed invite flow. No code
     // reads or writes it anymore — collaborators are scoped by repoId.
     ownerId: integer("owner_id"),
+    // = hubProject.repoId. Cascade handled in application code (deleteProject).
     repoId: integer("repo_id"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
@@ -172,6 +173,25 @@ export const hubProject = pgTable(
     // when a CF zone is first bound to a domain. Like the settings above, absent
     // from syncOrgRepos' onConflict set() so it survives re-syncs.
     cfConnectedUserId: text("cf_connected_user_id"),
+    // The Cloudflare account the project's Worker lives on (set at import) —
+    // needed to attach custom domains / read zones.
+    cfAccountId: text("cf_account_id"),
+    // The Cloudflare zone whose DNS records this project manages in the DNS tab
+    // (picked there or during import). Independent of hub_domain.cfZoneId.
+    cfZoneId: text("cf_zone_id"),
+    // Deploy flow (Vercel-style). When a user deploys their OWN GitHub repo to
+    // Cloudflare Pages from the hub, the project row is created here with
+    // selfDeployed=true so syncOrgRepos' reconcile does NOT delete it (it only
+    // owns repos under GITHUB_ORG). cfPagesProject/Subdomain record the created
+    // Pages project; cfRootDir is the monorepo subfolder holding wrangler.json
+    // (blank = repo root).
+    selfDeployed: boolean("self_deployed").notNull().default(false),
+    cfPagesProject: text("cf_pages_project"),
+    // Production workers.dev URL (filled on confirm).
+    cfPagesSubdomain: text("cf_pages_subdomain"),
+    // Preview workers.dev URL pattern (*-<name>.<sub>.workers.dev).
+    cfPreviewUrl: text("cf_preview_url"),
+    cfRootDir: text("cf_root_dir"),
   },
   (table) => ({
     uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),
@@ -191,17 +211,19 @@ export const hubDomain = pgTable(
   "hub_domain",
   {
     id: serial("id").primaryKey(),
-    // = hubProject.repoId (GitHub-stable)
+    // = hubProject.repoId (GitHub-stable).
     repoId: integer("repo_id").notNull(),
     // Lowercased host, e.g. "acme.com" / "www.acme.com"
     domain: text("domain").notNull(),
     // The canonical domain for the project (used for the derived site URL). The
     // first domain added to a repo becomes primary; setPrimary moves the flag.
     isPrimary: boolean("is_primary").notNull().default(false),
-    // Bound Cloudflare zone id when the domain was picked from the project's CF
-    // account — unlocks the DNS-records panel. Null for manual free-text domains
-    // (no DNS ability).
+    // The domain's own Cloudflare zone (needed to attach it to the Worker).
     cfZoneId: text("cf_zone_id"),
+    // Workers Custom Domain id (for status polling + detach) and its status
+    // ("pending" while the cert issues, "active" once serving).
+    cfDomainId: text("cf_domain_id"),
+    status: text("status"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -211,6 +233,30 @@ export const hubDomain = pgTable(
       sql`lower(${table.domain})`
     ),
     idxHubDomainRepoId: index("idx_hub_domain_repo_id").on(table.repoId),
+  })
+);
+
+// One row per Cloudflare Pages deployment kicked off from the hub's Deploy
+// flow. Records the CF deployment id + status so the publishing progress UI can
+// poll it and the project page can show the latest deploy. The hub DB is a
+// mirror of CF's deployment state, not the source of truth.
+export const hubDeployment = pgTable(
+  "hub_deployment",
+  {
+    id: serial("id").primaryKey(),
+    // = hubProject.repoId.
+    repoId: integer("repo_id").notNull(),
+    cfPagesProject: text("cf_pages_project").notNull(),
+    cfDeploymentId: text("cf_deployment_id"),
+    // Normalized: queued | building | deploying | success | failure | canceled
+    status: text("status").notNull().default("queued"),
+    error: text("error"),
+    createdByUserId: text("created_by_user_id"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    idxHubDeploymentRepoId: index("idx_hub_deployment_repo_id").on(table.repoId),
   })
 );
 
@@ -226,7 +272,7 @@ export const hubBlogPost = pgTable(
   "hub_blog_post",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    // = hubProject.repoId (GitHub-stable)
+    // = hubProject.repoId (GitHub-stable).
     repoId: integer("repo_id").notNull(),
     slug: text("slug").notNull(),
     title: text("title").notNull(),

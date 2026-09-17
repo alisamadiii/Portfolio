@@ -18,14 +18,6 @@ import {
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@workspace/ui/components/combobox";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -155,12 +147,6 @@ const AddDomainForm = ({
   const trpc = useTRPC();
   const [value, setValue] = useState("");
 
-  // Cloudflare zones the project can pick from — suggestions in the combobox;
-  // free text still works (custom domain, no DNS ability).
-  const { data: cf } = useQuery(
-    trpc.domain.cfZones.queryOptions({ owner, repo }, { retry: false })
-  );
-
   const addMutation = useMutation(
     trpc.domain.add.mutationOptions({
       onSuccess: ({ domains }) => {
@@ -172,82 +158,33 @@ const AddDomainForm = ({
     })
   );
 
-  const zoneNames = cf?.connected ? cf.zones.map((z) => z.name) : [];
   const domain = value.trim().toLowerCase();
-  // Typed/picked value matching a zone → bind it; otherwise plain free text.
-  const zone = cf?.connected
-    ? cf.zones.find((z) => z.name === domain)
-    : undefined;
-  const canAdd = addMutation.isPending
-    ? false
-    : zone
-      ? true
-      : domain.includes(".");
-
-  const submit = () => {
-    if (!canAdd) return;
-    if (zone) {
-      addMutation.mutate({ owner, repo, domain: zone.name, zoneId: zone.id });
-    } else {
-      addMutation.mutate({ owner, repo, domain });
-    }
-  };
+  const canAdd = domain.includes(".") && !addMutation.isPending;
 
   return (
-    <div className="space-y-2">
-      <form
-        className="flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
+    <form
+      className="flex gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (canAdd) addMutation.mutate({ owner, repo, domain });
+      }}
+    >
+      <Input
+        value={value}
+        placeholder="acme.com"
+        className="flex-1"
+        onChange={(event) => setValue(event.target.value)}
+        disabled={addMutation.isPending}
+      />
+      <Button
+        type="submit"
+        className="rounded-full px-5"
+        disabled={!canAdd}
+        isLoading={addMutation.isPending}
       >
-        <Combobox
-          items={zoneNames}
-          inputValue={value}
-          onInputValueChange={(next) => setValue(next ?? "")}
-          value={zoneNames.includes(value) ? value : null}
-          onValueChange={(next) => {
-            if (typeof next === "string") setValue(next);
-          }}
-        >
-          <ComboboxInput
-            placeholder={
-              cf?.connected
-                ? "Pick a Cloudflare domain or type one…"
-                : "acme.com"
-            }
-            className="h-9 flex-1"
-          />
-          <ComboboxContent>
-            <ComboboxEmpty>No matches — free text works too</ComboboxEmpty>
-            <ComboboxList>
-              {(item: string) => (
-                <ComboboxItem key={item} value={item}>
-                  {item}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-        <Button
-          type="submit"
-          className="rounded-full px-5"
-          disabled={!canAdd}
-          isLoading={addMutation.isPending}
-        >
-          Add
-        </Button>
-      </form>
-      {!cf?.connected && (
-        <p className="text-muted-foreground text-[13px]">
-          <a href="/integrations" className="font-medium underline">
-            Connect Cloudflare
-          </a>{" "}
-          to pick a domain and manage its DNS here.
-        </p>
-      )}
-    </div>
+        Add
+      </Button>
+    </form>
   );
 };
 
@@ -267,6 +204,13 @@ const DomainItem = ({
   const trpc = useTRPC();
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+
+  const verifyMutation = useMutation(
+    trpc.domain.verify.mutationOptions({
+      onSuccess: ({ domains }) => onChanged(domains),
+      onError: (error) => toast.error(error.message),
+    })
+  );
 
   const setPrimaryMutation = useMutation(
     trpc.domain.setPrimary.mutationOptions({
@@ -308,14 +252,33 @@ const DomainItem = ({
                 Primary
               </Badge>
             )}
-            {row.cfZoneId && (
-              <Badge variant="outline" className="shrink-0 gap-1">
-                <span className="size-1.5 rounded-full bg-[#F38020]" />
-                Cloudflare
+            {row.status === "active" ? (
+              <Badge className="bg-status-success-bg text-status-success shrink-0 gap-1.5 border-transparent">
+                <span className="bg-status-success size-1.5 rounded-full" />
+                Active
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="shrink-0 gap-1.5 text-amber-600">
+                <span className="size-1.5 rounded-full bg-amber-500" />
+                Pending
               </Badge>
             )}
           </div>
         </div>
+
+        {row.status !== "active" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            disabled={verifyMutation.isPending}
+            onClick={() =>
+              verifyMutation.mutate({ owner, repo, domain: row.domain })
+            }
+          >
+            Verify
+          </Button>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger

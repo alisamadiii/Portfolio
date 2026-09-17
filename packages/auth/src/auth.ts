@@ -38,9 +38,18 @@ import {
 // Slugs must match the scopes selected on the OAuth client in the CF dashboard
 // (Manage account → OAuth clients).
 export const CLOUDFLARE_SCOPES = [
+  // Read is needed to LIST workers/pages for the import flow; write to manage.
+  "workers-scripts.read",
   "workers-scripts.write",
+  // Deploy flow: create/manage Cloudflare Pages projects + deployments.
+  // CF's slug is singular "page.write"/"page.read" (not "pages.*").
+  "page.read",
+  "page.write",
   "zone.read",
   "dns.write",
+  // Yields a refresh token so the access token renews past ~1h (the client must
+  // also have the Refresh Token grant enabled).
+  "offline_access",
 ];
 
 export const polarClient = new Polar({

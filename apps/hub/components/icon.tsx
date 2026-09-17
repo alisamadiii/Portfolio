@@ -461,6 +461,10 @@ export function List(props: LucideProps) {
   return <Lucide.List {...props} />;
 }
 
+export function Rocket(props: LucideProps) {
+  return <Lucide.Rocket {...props} />;
+}
+
 export function ListOrdered(props: LucideProps) {
   return <Lucide.ListOrdered {...props} />;
 }

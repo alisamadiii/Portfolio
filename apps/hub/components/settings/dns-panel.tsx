@@ -20,49 +20,37 @@ import { Switch } from "@workspace/ui/components/switch";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { ChevronDown, ChevronRight, Globe, Plus, Trash2 } from "@/components/icon";
+import { Globe, Plus, Trash2 } from "@/components/icon";
 import { useConfig } from "@/contexts/config-context";
 import { PanelError } from "@/components/settings/panel-error";
 
-type DomainRow = RouterOutputs["domain"]["list"]["domains"][number];
 type DnsRecord = RouterOutputs["domain"]["dnsRecords"]["records"][number];
 
 // ─── Panel (Site Settings › DNS) ─────────────────────────────────
-// DNS is zone-level: a project's Cloudflare-bound domains group by zone (apex
-// and its www share one zone), and each zone gets one records panel. Domains
-// are added/managed in the Domain tab; this tab manages their DNS.
+// Each project picks a Cloudflare zone; we read/show its DNS records here so the
+// user can view, add and remove them. We never change their Cloudflare setup
+// beyond the records they edit here.
 
 export const DnsPanel = () => {
   const trpc = useTRPC();
   const { config } = useConfig();
-
   const owner = config?.owner;
   const repo = config?.repo;
+  const scope = { owner: owner ?? "", repo: repo ?? "" };
+  const [changing, setChanging] = useState(false);
 
-  const { data, isLoading, error, refetch, isRefetching } = useQuery(
-    trpc.domain.list.queryOptions(
-      { owner: owner ?? "", repo: repo ?? "" },
-      { enabled: !!owner && !!repo }
-    )
-  );
-  // Only used to tailor the empty state's call to action.
-  const { data: cf } = useQuery(
-    trpc.domain.cfZones.queryOptions(
-      { owner: owner ?? "", repo: repo ?? "" },
-      { enabled: !!owner && !!repo, retry: false }
-    )
+  const { data: zone, isLoading, error, refetch, isRefetching } = useQuery(
+    trpc.domain.dnsZone.queryOptions(scope, { enabled: !!owner && !!repo })
   );
 
   if (!owner || !repo) return null;
-
-  const bound = data?.domains.some((d) => d.cfZoneId) ?? false;
 
   return (
     <div className="mx-auto w-full max-w-screen-md p-6">
       <div className="mb-6">
         <h2 className="text-[22px] font-extrabold tracking-tight">DNS</h2>
         <p className="text-muted-foreground mt-1 text-[14px]">
-          Manage DNS records for your Cloudflare domains.
+          View and manage DNS records for your Cloudflare zone.
         </p>
       </div>
 
@@ -73,121 +61,145 @@ export const DnsPanel = () => {
           onRetry={() => void refetch()}
           retrying={isRefetching}
         />
-      ) : isLoading || !data ? (
+      ) : isLoading || !zone ? (
         <div className="flex justify-center py-24">
           <Spinner className="text-muted-foreground size-6" />
         </div>
-      ) : !bound ? (
-        <div className="bg-card rounded-lg border px-6 py-12 text-center">
-          <div className="bg-accent text-accent-foreground mx-auto grid size-12 place-items-center rounded-full">
-            <Globe className="size-6" />
-          </div>
-          <p className="text-muted-foreground mx-auto mt-4 max-w-[400px] text-[14.5px]">
-            {cf?.connected ? (
-              <>
-                No Cloudflare domains yet. Add one from the{" "}
-                <span className="font-medium">Domain</span> tab to manage its DNS
-                here.
-              </>
-            ) : (
-              <>
-                <a href="/integrations" className="font-medium underline">
-                  Connect Cloudflare
-                </a>{" "}
-                and add a domain to manage its DNS here.
-              </>
-            )}
-          </p>
-        </div>
+      ) : !zone.connected ? (
+        <EmptyCard>
+          <a href="/integrations" className="font-medium underline">
+            Connect Cloudflare
+          </a>{" "}
+          to manage this project&apos;s DNS.
+        </EmptyCard>
+      ) : !zone.zone || changing ? (
+        <ZonePicker
+          owner={owner}
+          repo={repo}
+          current={zone.zone?.id}
+          onSaved={() => setChanging(false)}
+          onCancel={zone.zone ? () => setChanging(false) : undefined}
+        />
       ) : (
-        <DnsRecordsSection owner={owner} repo={repo} domains={data.domains} />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[14.5px] font-bold">{zone.zone.name}</span>
+              <Badge variant="outline" className="gap-1">
+                <span className="size-1.5 rounded-full bg-[#F38020]" />
+                Cloudflare
+              </Badge>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setChanging(true)}>
+              Change zone
+            </Button>
+          </div>
+          <div className="bg-card overflow-hidden rounded-lg border">
+            <DnsSection owner={owner} repo={repo} />
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
-// ─── Records grouped by zone ─────────────────────────────────────
-
-const DnsRecordsSection = ({
-  owner,
-  repo,
-  domains,
-}: {
-  owner: string;
-  repo: string;
-  domains: DomainRow[];
-}) => {
-  // Group bound domains by zone; label each with its apex (shortest host).
-  const zones = new Map<string, string>();
-  for (const d of domains) {
-    if (!d.cfZoneId) continue;
-    const current = zones.get(d.cfZoneId);
-    if (!current || d.domain.length < current.length) {
-      zones.set(d.cfZoneId, d.domain);
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      {[...zones.entries()].map(([zoneId, apex]) => (
-        <ZoneCard key={zoneId} owner={owner} repo={repo} apex={apex} />
-      ))}
+const EmptyCard = ({ children }: { children: React.ReactNode }) => (
+  <div className="bg-card rounded-lg border px-6 py-12 text-center">
+    <div className="bg-accent text-accent-foreground mx-auto grid size-12 place-items-center rounded-full">
+      <Globe className="size-6" />
     </div>
-  );
-};
+    <p className="text-muted-foreground mx-auto mt-4 max-w-[400px] text-[14.5px]">
+      {children}
+    </p>
+  </div>
+);
 
-const ZoneCard = ({
+const ZonePicker = ({
   owner,
   repo,
-  apex,
+  current,
+  onSaved,
+  onCancel,
 }: {
   owner: string;
   repo: string;
-  apex: string;
+  current?: string;
+  onSaved: () => void;
+  onCancel?: () => void;
 }) => {
-  const [open, setOpen] = useState(true);
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [zoneId, setZoneId] = useState(current ?? "");
+
+  const { data, isLoading } = useQuery(
+    trpc.domain.dnsZones.queryOptions({ owner, repo }, { retry: false })
+  );
+
+  const save = useMutation(
+    trpc.domain.setDnsZone.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: trpc.domain.dnsZone.queryOptions({ owner, repo }).queryKey,
+        });
+        await queryClient.invalidateQueries({
+          queryKey: trpc.domain.dnsRecords.queryOptions({ owner, repo }).queryKey,
+        });
+        toast.success("DNS zone set.");
+        onSaved();
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
 
   return (
-    <div className="bg-card overflow-hidden rounded-lg border">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center gap-2 px-5 py-3 text-left"
-      >
-        {open ? (
-          <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-        ) : (
-          <ChevronRight className="text-muted-foreground size-4 shrink-0" />
-        )}
-        <span className="text-[14.5px] font-bold">{apex}</span>
-        <Badge variant="outline" className="gap-1">
-          <span className="size-1.5 rounded-full bg-[#F38020]" />
-          Cloudflare
-        </Badge>
-      </button>
-      {open && <DnsSection owner={owner} repo={repo} domain={apex} />}
+    <div className="bg-card space-y-4 rounded-lg border p-6">
+      <p className="text-muted-foreground text-[13.5px]">
+        Pick the Cloudflare zone whose DNS you want to manage. We only read and
+        show your DNS — we don&apos;t change your Cloudflare setup.
+      </p>
+      {isLoading ? (
+        <Spinner className="text-muted-foreground size-5" />
+      ) : (
+        <div className="flex gap-2">
+          <Select value={zoneId} onValueChange={(v) => setZoneId(v ?? "")}>
+            <SelectTrigger className="h-8 flex-1">
+              <SelectValue placeholder="Choose a domain…" />
+            </SelectTrigger>
+            <SelectContent>
+              {(data?.zones ?? []).map((z) => (
+                <SelectItem key={z.id} value={z.id}>
+                  {z.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            disabled={!zoneId || save.isPending}
+            isLoading={save.isPending}
+            onClick={() => save.mutate({ owner, repo, zoneId })}
+          >
+            Save
+          </Button>
+          {onCancel && (
+            <Button variant="ghost" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX"] as const;
-// Only these get the orange-cloud proxy toggle; others are DNS-only.
 const PROXYABLE = new Set(["A", "AAAA", "CNAME"]);
 
-const DnsSection = ({
-  owner,
-  repo,
-  domain,
-}: {
-  owner: string;
-  repo: string;
-  domain: string;
-}) => {
+const DnsSection = ({ owner, repo }: { owner: string; repo: string }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const recordsOptions = trpc.domain.dnsRecords.queryOptions(
-    { owner, repo, domain },
+    { owner, repo },
     { retry: false }
   );
   const { data, isLoading, error, refetch, isRefetching } =
@@ -216,7 +228,7 @@ const DnsSection = ({
   );
 
   return (
-    <div className="bg-muted/30 border-t px-5 py-4">
+    <div className="bg-muted/30 px-5 py-4">
       {error ? (
         <PanelError
           title="Failed to load DNS records"
@@ -231,9 +243,7 @@ const DnsSection = ({
       ) : (
         <div className="space-y-3">
           {data.records.length === 0 ? (
-            <p className="text-muted-foreground text-[13px]">
-              No DNS records yet.
-            </p>
+            <p className="text-muted-foreground text-[13px]">No DNS records yet.</p>
           ) : (
             <div className="divide-y overflow-hidden rounded-md border">
               {data.records.map((record) => (
@@ -262,12 +272,7 @@ const DnsSection = ({
                     className="shrink-0"
                     disabled={deleteMutation.isPending}
                     onClick={() =>
-                      deleteMutation.mutate({
-                        owner,
-                        repo,
-                        domain,
-                        recordId: record.id,
-                      })
+                      deleteMutation.mutate({ owner, repo, recordId: record.id })
                     }
                   >
                     <Trash2 className="size-3.5" />
@@ -279,9 +284,7 @@ const DnsSection = ({
 
           <AddDnsRecordForm
             pending={addMutation.isPending}
-            onAdd={(record) =>
-              addMutation.mutate({ owner, repo, domain, record })
-            }
+            onAdd={(record) => addMutation.mutate({ owner, repo, record })}
           />
         </div>
       )}
@@ -299,7 +302,6 @@ const AddDnsRecordForm = ({
     name: string;
     content: string;
     proxied?: boolean;
-    ttl?: number;
   }) => void;
 }) => {
   const [type, setType] = useState<(typeof RECORD_TYPES)[number]>("A");
@@ -363,13 +365,7 @@ const AddDnsRecordForm = ({
           Proxy
         </label>
       )}
-      <Button
-        type="submit"
-        size="sm"
-        variant="outline"
-        disabled={!canAdd}
-        isLoading={pending}
-      >
+      <Button type="submit" size="sm" variant="outline" disabled={!canAdd} isLoading={pending}>
         <Plus className="size-3.5" />
         Add
       </Button>

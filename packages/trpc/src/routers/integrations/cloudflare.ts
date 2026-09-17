@@ -2,14 +2,11 @@ import "server-only";
 
 import { TRPCError } from "@trpc/server";
 
-import { authenticatedProcedure, createTRPCRouter } from "../../init";
-import { getIntegrationAccessToken, reconnectError } from "../../lib/integrations";
+import { reconnectError } from "../../lib/integrations";
 
-// ─── Cloudflare integration ──────────────────────────────────────
-// REST client + tRPC procedures for the connected user's Cloudflare account,
-// running on the OAuth token Better Auth stored at connect time. Raw fetch,
-// matching the analytics client. Connect-only for now — the helpers back
-// future zone/DNS/Workers features and admin-side DNS management.
+// ─── Cloudflare REST client ──────────────────────────────────────
+// Raw-fetch helpers over the connected user's Cloudflare OAuth token, consumed
+// by the domain (zones/DNS) and deploy (workers/pages import) routers.
 
 const CF_BASE = "https://api.cloudflare.com/client/v4";
 
@@ -93,17 +90,6 @@ export const createCfDnsRecord = (
     body: JSON.stringify(record),
   });
 
-export const updateCfDnsRecord = (
-  accessToken: string,
-  zoneId: string,
-  recordId: string,
-  record: CfDnsRecordInput
-) =>
-  cf<CfDnsRecord>(`/zones/${zoneId}/dns_records/${recordId}`, accessToken, {
-    method: "PUT",
-    body: JSON.stringify(record),
-  });
-
 export const deleteCfDnsRecord = (
   accessToken: string,
   zoneId: string,
@@ -118,18 +104,131 @@ export type CfWorker = { id: string; created_on?: string; modified_on?: string }
 export const listCfWorkers = (accessToken: string, accountId: string) =>
   cf<CfWorker[]>(`/accounts/${accountId}/workers/scripts`, accessToken);
 
-// ─── Router ──────────────────────────────────────────────────────
-// Connect-only phase: accounts serves as the post-connect sanity check ("what
-// did the user grant?"). Zone/DNS/Workers procedures land here as features
-// ship, on the same token helper + client above.
+// ─── Workers Custom Domains (attach a hostname to a Worker) ───────
 
-export const cloudflareRouter = createTRPCRouter({
-  accounts: authenticatedProcedure.query(async ({ ctx }) => {
-    const token = await getIntegrationAccessToken(
-      ctx.session.user.id,
-      "cloudflare",
-      "Cloudflare"
-    );
-    return listCfAccounts(token);
-  }),
-});
+export type CfWorkerDomain = {
+  id: string;
+  hostname: string;
+  service: string;
+  zone_id: string;
+  // "active" once the cert is issued and serving; else pending/initializing.
+  status?: string;
+};
+
+/** Attach a hostname (in a zone on the account) to a Worker. CF creates the DNS record. */
+export const attachWorkerDomain = (
+  accessToken: string,
+  accountId: string,
+  input: { hostname: string; service: string; zoneId: string }
+) =>
+  cf<CfWorkerDomain>(`/accounts/${accountId}/workers/domains`, accessToken, {
+    method: "PUT",
+    body: JSON.stringify({
+      hostname: input.hostname,
+      service: input.service,
+      zone_id: input.zoneId,
+      environment: "production",
+    }),
+  });
+
+export const getWorkerDomain = (
+  accessToken: string,
+  accountId: string,
+  id: string
+) =>
+  cf<CfWorkerDomain>(`/accounts/${accountId}/workers/domains/${id}`, accessToken);
+
+export const detachWorkerDomain = (
+  accessToken: string,
+  accountId: string,
+  id: string
+) =>
+  cf<unknown>(`/accounts/${accountId}/workers/domains/${id}`, accessToken, {
+    method: "DELETE",
+  });
+
+/** Find the account zone a hostname belongs to (longest matching suffix). */
+export async function resolveZoneForHost(
+  accessToken: string,
+  accountId: string,
+  hostname: string
+): Promise<CfZone | null> {
+  const zones = await listCfZones(accessToken, accountId);
+  const matches = zones.filter(
+    (z) => hostname === z.name || hostname.endsWith(`.${z.name}`)
+  );
+  matches.sort((a, b) => b.name.length - a.name.length);
+  return matches[0] ?? null;
+}
+
+/** The account's *.workers.dev subdomain, e.g. "a-141" → <worker>.a-141.workers.dev. */
+export const getWorkersDevSubdomain = (accessToken: string, accountId: string) =>
+  cf<{ subdomain: string }>(
+    `/accounts/${accountId}/workers/subdomain`,
+    accessToken
+  ).then((r) => r.subdomain);
+
+/** Custom domains attached to a Worker (excludes the workers.dev route). */
+export const getWorkerDomains = (
+  accessToken: string,
+  accountId: string,
+  name: string
+) =>
+  cf<{ hostname: string }[]>(
+    `/accounts/${accountId}/workers/domains?service=${encodeURIComponent(name)}`,
+    accessToken
+  ).then((rows) => rows.map((r) => r.hostname));
+
+type CfPagesListItem = {
+  name: string;
+  subdomain?: string;
+  source?: { config?: { owner?: string; repo_name?: string } };
+};
+
+export type CfPagesSummary = {
+  name: string;
+  subdomain: string | null;
+  repo: { owner: string; repo: string } | null;
+};
+
+/** All Pages projects on the account, with their git source + pages.dev host. */
+export const listPagesProjects = (accessToken: string, accountId: string) =>
+  cf<CfPagesListItem[]>(
+    `/accounts/${accountId}/pages/projects?per_page=100`,
+    accessToken
+  ).then((rows) =>
+    rows.map<CfPagesSummary>((p) => ({
+      name: p.name,
+      subdomain: p.subdomain ?? null,
+      repo:
+        p.source?.config?.owner && p.source?.config?.repo_name
+          ? { owner: p.source.config.owner, repo: p.source.config.repo_name }
+          : null,
+    }))
+  );
+
+/** Custom domains on a Pages project (excludes the pages.dev host). */
+export const getPagesProjectDomains = (
+  accessToken: string,
+  accountId: string,
+  name: string
+) =>
+  cf<{ name: string }[]>(
+    `/accounts/${accountId}/pages/projects/${encodeURIComponent(name)}/domains`,
+    accessToken
+  ).then((rows) => rows.map((r) => r.name));
+
+/** Production + preview workers.dev URLs for a Worker on this account. */
+export async function getWorkerUrls(
+  accessToken: string,
+  accountId: string,
+  name: string
+): Promise<{ production: string; preview: string }> {
+  const sub = await getWorkersDevSubdomain(accessToken, accountId);
+  return {
+    production: `https://${name}.${sub}.workers.dev`,
+    // CF exposes previews as the wildcard <alias>-<name>.<sub>.workers.dev.
+    preview: `https://*-${name}.${sub}.workers.dev`,
+  };
+}
+
