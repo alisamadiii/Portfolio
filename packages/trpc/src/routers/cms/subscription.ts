@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import Stripe from "stripe";
 import z from "zod";
 
@@ -12,6 +12,10 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import { hubProject, hubSubscription } from "@workspace/drizzle/schema";
 
+import {
+  assertProjectAccess,
+  assertRepoAccessByRepoId,
+} from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { refreshFeatureAccess } from "@workspace/trpc/lib/cms/feature-access";
 import { featureKeys } from "@workspace/trpc/lib/features";
@@ -62,13 +66,19 @@ export const subscriptionRouter = createTRPCRouter({
   // products-vs-manage-vs-free-life branch.
   getProject: authenticatedProcedure
     .input(z.object({ owner: z.string().optional(), repo: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const org = input.owner;
       if (!org) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
       }
       const [project] = await db
-        .select({ repoId: hubProject.repoId, freeLife: hubProject.freeLife })
+        .select({
+          repoId: hubProject.repoId,
+          freeLife: hubProject.freeLife,
+          owner: hubProject.owner,
+          repo: hubProject.repo,
+          githubConnectedUserId: hubProject.githubConnectedUserId,
+        })
         .from(hubProject)
         .where(
           and(
@@ -80,6 +90,7 @@ export const subscriptionRouter = createTRPCRouter({
       if (!project) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
       }
+      await assertProjectAccess(ctx.session.user, project);
       const [row] = await db
         .select()
         .from(hubSubscription)
@@ -92,22 +103,11 @@ export const subscriptionRouter = createTRPCRouter({
       };
     }),
 
-  // Batch fetch for the home gallery plan badges — one query, not N.
-  listForRepos: authenticatedProcedure
-    .input(z.object({ repoIds: z.array(z.number().int().positive()).max(200) }))
-    .query(async ({ input }) => {
-      if (input.repoIds.length === 0)
-        return [] as (typeof hubSubscription.$inferSelect)[];
-      return db
-        .select()
-        .from(hubSubscription)
-        .where(inArray(hubSubscription.repoId, input.repoIds));
-    }),
-
   // Invoices for a project, scoped to that project's Stripe customer.
   getInvoices: authenticatedProcedure
     .input(z.object({ repoId: z.number().int().positive() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
       const [row] = await db
         .select({ stripeCustomerId: hubSubscription.stripeCustomerId })
         .from(hubSubscription)
@@ -129,7 +129,8 @@ export const subscriptionRouter = createTRPCRouter({
         returnUrl: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
       const [row] = await db
         .select({ stripeCustomerId: hubSubscription.stripeCustomerId })
         .from(hubSubscription)

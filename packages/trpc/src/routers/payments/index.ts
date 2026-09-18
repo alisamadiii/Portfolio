@@ -12,12 +12,12 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { polarClient } from "@workspace/auth/auth";
+import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
   previousCustomers,
   products,
-  ProjectType,
   subscriptions,
 } from "@workspace/drizzle/schema";
 
@@ -184,13 +184,24 @@ export const paymentsRouter = createTRPCRouter({
           .default("prorate"),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const { subscriptionId, toProductId, prorationBehavior } = input;
 
         const sub = await polarClient.subscriptions.get({
           id: subscriptionId,
         });
+
+        // Only the subscription's own customer (or an admin) may change it.
+        if (
+          !isAdminUser(ctx.session.user) &&
+          sub.customer.externalId !== ctx.session.user.id
+        ) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Subscription not found",
+          });
+        }
 
         if (sub.status === "trialing") {
           throw new TRPCError({
@@ -220,51 +231,19 @@ export const paymentsRouter = createTRPCRouter({
       }
     }),
 
-  getOrders: authenticatedProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        email: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const { userId, email } = input;
-        const ordersList = await db
-          .select()
-          .from(orders)
-          .where(or(eq(orders.userId, userId), eq(orders.email, email)))
-          .orderBy(desc(orders.createdAt));
-
-        return ordersList.map((order) => {
-          const metadata = order.metadata as
-            | { project?: ProjectType }
-            | undefined;
-          const project = metadata?.project;
-          return {
-            ...order,
-            project,
-          };
-        });
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error ? error.message : "Failed to fetch orders",
-          cause: error,
-        });
-      }
-    }),
-
   getSubscriptions: authenticatedProcedure
     .input(
       z.object({
         userId: z.string(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
-        const { userId } = input;
+        // Non-admins may only read their own subscriptions; admins (user pages)
+        // may pass any userId.
+        const userId = isAdminUser(ctx.session.user)
+          ? input.userId
+          : ctx.session.user.id;
 
         const rows = await db
           .select({
@@ -303,7 +282,11 @@ export const paymentsRouter = createTRPCRouter({
 
   listOrders: authenticatedProcedure
     .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Non-admins may only read their own orders; admins may pass any userId.
+      const userId = isAdminUser(ctx.session.user)
+        ? input.userId
+        : ctx.session.user.id;
       const ordersList = await db
         .select({
           order: orders,
@@ -311,7 +294,7 @@ export const paymentsRouter = createTRPCRouter({
         })
         .from(orders)
         .leftJoin(products, eq(products.id, orders.productId))
-        .where(eq(orders.userId, input.userId))
+        .where(eq(orders.userId, userId))
         .orderBy(desc(orders.createdAt));
 
       return ordersList.map((r) => ({
@@ -322,10 +305,35 @@ export const paymentsRouter = createTRPCRouter({
 
   verifyCheckout: authenticatedProcedure
     .input(z.object({ sessionId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
-        return await polarClient.checkouts.get({ id: input.sessionId });
-      } catch {
+        const checkout = await polarClient.checkouts.get({
+          id: input.sessionId,
+        });
+        // Only the customer who owns the checkout (or an admin) may read it.
+        // The Polar customer is created with the user's email, so the checkout
+        // email identifies the owner.
+        const owns =
+          !!checkout.customerEmail &&
+          checkout.customerEmail.toLowerCase() ===
+            ctx.session.user.email.toLowerCase();
+        if (!isAdminUser(ctx.session.user) && !owns) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Checkout session not found",
+          });
+        }
+        // Return only what the success page needs — no billing address, tax id,
+        // or IP.
+        return {
+          status: checkout.status,
+          product: checkout.product ? { name: checkout.product.name } : null,
+          totalAmount: checkout.totalAmount,
+          currency: checkout.currency,
+          customerEmail: checkout.customerEmail,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Checkout session not found",

@@ -52,9 +52,9 @@ const checkWebsiteStatus = async (domain: string) => {
 export const websitesRouter = createTRPCRouter({
   getMine: collaboratorProcedure.query(async ({ ctx }) => {
     try {
-      // Every project whose site has a derivable website URL.
-      // Admins see them all; collaborators are filtered down to the repos
-      // they were invited to.
+      // Every project whose site has a derivable website URL. Admins see them
+      // all; everyone else is filtered to the repos they collaborate on plus
+      // their own imported projects (the user who connected GitHub for them).
       const orgRows = await cmsDb.select().from(orgRepoTable);
       const urlByRepoId = await getWebsiteUrlsByRepoId(
         orgRows.map((r) => r.repoId)
@@ -67,8 +67,11 @@ export const websitesRouter = createTRPCRouter({
             (c) => `${c.owner.toLowerCase()}/${c.repo.toLowerCase()}`
           )
         );
-        repos = repos.filter((r) =>
-          allowed.has(`${r.owner.toLowerCase()}/${r.repo.toLowerCase()}`)
+        const userId = ctx.session.user.id;
+        repos = repos.filter(
+          (r) =>
+            allowed.has(`${r.owner.toLowerCase()}/${r.repo.toLowerCase()}`) ||
+            r.githubConnectedUserId === userId
         );
       }
 

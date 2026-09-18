@@ -211,7 +211,7 @@ export const domainRouter = createTRPCRouter({
     }),
 
   /** Re-check a domain's Workers Custom Domain status. */
-  verify: cmsProcedure
+  verify: cmsFullAccessProcedure
     .input(z.object({ domain: hostname }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -245,7 +245,7 @@ export const domainRouter = createTRPCRouter({
     }),
 
   /** Rename a domain in place. */
-  update: cmsProcedure
+  update: cmsFullAccessProcedure
     .input(z.object({ domain: hostname, newDomain: hostname }))
     .mutation(async ({ input }) => {
       try {
@@ -276,7 +276,7 @@ export const domainRouter = createTRPCRouter({
     }),
 
   /** Make a domain the primary (canonical) one for the repo. */
-  setPrimary: cmsProcedure
+  setPrimary: cmsFullAccessProcedure
     .input(z.object({ domain: hostname }))
     .mutation(async ({ input }) => {
       try {
@@ -305,7 +305,7 @@ export const domainRouter = createTRPCRouter({
     }),
 
   /** Remove a domain: detach from the Worker (best-effort), promote next primary. */
-  remove: cmsProcedure
+  remove: cmsFullAccessProcedure
     .input(z.object({ domain: hostname }))
     .mutation(async ({ ctx, input }) => {
       try {

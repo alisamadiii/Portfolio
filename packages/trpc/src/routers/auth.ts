@@ -1,24 +1,28 @@
 import { headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import z from "zod";
 
 import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/index";
 import { session } from "@workspace/drizzle/schema";
 
-import {
-  authenticatedProcedure,
-  baseProcedure,
-  createTRPCRouter,
-} from "../init";
+import { authenticatedProcedure, createTRPCRouter } from "../init";
+import { isAdminUser } from "../lib/authz-shared";
 
 export const authRouter = createTRPCRouter({
-  getSessions: baseProcedure.input(z.string()).query(async ({ input }) => {
-    try {
-      const userId = input;
+  getSessions: authenticatedProcedure
+    .input(z.string().optional())
+    .query(async ({ input, ctx }) => {
+      try {
+        // Non-admins can only list their own sessions; admins (user pages) may
+        // pass a target userId.
+        const userId =
+          isAdminUser(ctx.session.user) && input
+            ? input
+            : ctx.session.user.id;
 
-      const sessions = await auth.api
+        const sessions = await auth.api
         .listUserSessions({
           body: {
             userId,
@@ -44,10 +48,21 @@ export const authRouter = createTRPCRouter({
 
   revokeSession: authenticatedProcedure
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const sessionId = input;
-        await db.delete(session).where(eq(session.id, sessionId));
+        // Non-admins may only revoke their own sessions; admins (user devices
+        // page) may revoke any session by id.
+        await db
+          .delete(session)
+          .where(
+            isAdminUser(ctx.session.user)
+              ? eq(session.id, sessionId)
+              : and(
+                  eq(session.id, sessionId),
+                  eq(session.userId, ctx.session.user.id)
+                )
+          );
         return true;
       } catch (error) {
         throw new TRPCError({

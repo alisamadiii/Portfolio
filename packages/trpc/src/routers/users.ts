@@ -12,6 +12,7 @@ import {
   authenticatedProcedure,
   createTRPCRouter,
 } from "../init";
+import { isAdminUser } from "../lib/authz-shared";
 
 export const usersRouter = createTRPCRouter({
   // ─── Authenticated ─────────────────────────────────────────────
@@ -86,10 +87,15 @@ export const usersRouter = createTRPCRouter({
     .input(z.string().optional())
     .query(async ({ input, ctx }) => {
       try {
-        const userId = input;
+        // Non-admins may only read their own linked accounts; admins (user
+        // pages) may pass a target userId.
+        const userId =
+          isAdminUser(ctx.session.user) && input
+            ? input
+            : ctx.session.user.id;
         const accounts = await (
           await auth.$context
-        ).internalAdapter.findAccounts(userId ?? ctx.session.user.id);
+        ).internalAdapter.findAccounts(userId);
         return accounts;
       } catch (error) {
         throw new TRPCError({

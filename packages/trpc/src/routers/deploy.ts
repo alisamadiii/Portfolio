@@ -117,10 +117,21 @@ async function upsertProject(
       owner: hubProject.owner,
       repo: hubProject.repo,
       cfPagesSubdomain: hubProject.cfPagesSubdomain,
+      githubConnectedUserId: hubProject.githubConnectedUserId,
     })
     .from(hubProject)
     .where(eq(hubProject.repoId, ghRepo.id))
     .limit(1);
+  // Never let a re-import reassign a project that another user already owns.
+  if (
+    existing?.githubConnectedUserId &&
+    existing.githubConnectedUserId !== userId
+  ) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `${existing.owner}/${existing.repo} is already owned by another user.`,
+    });
+  }
   if (existing?.cfPagesSubdomain) {
     throw new TRPCError({
       code: "CONFLICT",
@@ -195,6 +206,15 @@ async function resolveRepo(userId: string, repoFullName: string) {
   const { owner, repo } = splitRepo(repoFullName);
   const octokit = createOctokitInstance(await githubToken(userId));
   const { data } = await octokit.rest.repos.get({ owner, repo });
+  // Read access (public repos, or any repo you can pull) is not enough to
+  // claim a project — require admin/push so a stranger can't import someone
+  // else's public repo and take ownership of the hub project.
+  if (!(data.permissions?.admin || data.permissions?.push)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You need write access to this repository to import it.",
+    });
+  }
   return {
     id: data.id,
     owner: data.owner.login,

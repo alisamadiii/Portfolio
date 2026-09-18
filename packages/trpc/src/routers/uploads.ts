@@ -60,6 +60,18 @@ export const uploadsRouter = createTRPCRouter({
         }
 
         assertPathAllowed(input.path, ctx.session.user.id);
+
+        // The `users/` prefix is shared, and the key is the filename — so a
+        // caller-supplied filename could overwrite another user's object. Pin
+        // it to the caller's own id so they can only write their own avatar.
+        const normalized = (input.path ?? "").replace(/^\/+|\/+$/g, "");
+        if (normalized === "users") {
+          return presignUpload({
+            ...input,
+            filename: ctx.session.user.id,
+            naming: "filename",
+          });
+        }
       }
 
       return presignUpload(input);
