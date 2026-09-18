@@ -137,35 +137,53 @@ export async function commitFilesAtomic({
   // One tree, one commit for all files (inline content — no createBlob). A
   // deleted entry is written as a tree node with `sha: null`, which removes the
   // path from the base tree.
-  const newTreeResponse = await octokit.rest.git.createTree({
-    owner,
-    repo,
-    base_tree: baseTreeSha,
-    tree: filesToCommit.map((entry) =>
-      entry.deleted
-        ? {
-            path: entry.path,
-            mode: "100644" as const,
-            type: "blob" as const,
-            sha: null,
-          }
-        : {
-            path: entry.path,
-            mode: "100644" as const,
-            type: "blob" as const,
-            content: entry.stringified,
-          }
-    ),
-  });
+  //
+  // The reads above succeed even on a public repo the caller can't push to, so
+  // the first write (createTree) is where "no write access" surfaces — GitHub
+  // returns 403/404. Translate that into a clear, actionable message instead of
+  // leaking the raw octokit "Not Found" error to the editor.
+  let newCommitSha: string;
+  let newCommitTreeSha: string;
+  try {
+    const newTreeResponse = await octokit.rest.git.createTree({
+      owner,
+      repo,
+      base_tree: baseTreeSha,
+      tree: filesToCommit.map((entry) =>
+        entry.deleted
+          ? {
+              path: entry.path,
+              mode: "100644" as const,
+              type: "blob" as const,
+              sha: null,
+            }
+          : {
+              path: entry.path,
+              mode: "100644" as const,
+              type: "blob" as const,
+              content: entry.stringified,
+            }
+      ),
+    });
 
-  const newCommitResponse = await octokit.rest.git.createCommit({
-    owner,
-    repo,
-    message,
-    tree: newTreeResponse.data.sha,
-    parents: [headSha],
-  });
-  const newCommitSha = newCommitResponse.data.sha;
+    const newCommitResponse = await octokit.rest.git.createCommit({
+      owner,
+      repo,
+      message,
+      tree: newTreeResponse.data.sha,
+      parents: [headSha],
+    });
+    newCommitSha = newCommitResponse.data.sha;
+    newCommitTreeSha = newCommitResponse.data.tree.sha;
+  } catch (error: any) {
+    if (error?.status === 403 || error?.status === 404) {
+      throw createHttpError(
+        `You don't have permission to publish to ${owner}/${repo} on GitHub. Ask the repository owner to give your GitHub account write (push) access to the repo, then try publishing again.`,
+        403
+      );
+    }
+    throw error;
+  }
 
   try {
     await octokit.rest.git.updateRef({
@@ -190,7 +208,7 @@ export async function commitFilesAtomic({
   const publishedTreeResponse = await octokit.rest.git.getTree({
     owner,
     repo,
-    tree_sha: newCommitResponse.data.tree.sha,
+    tree_sha: newCommitTreeSha,
     recursive: "1",
   });
   const publishedShaByPath = new Map<string, { sha: string; size?: number }>();

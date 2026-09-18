@@ -74,27 +74,43 @@ export default async function Layout({
   } catch (error: any) {
     switch (error?.data?.code) {
       case "NOT_FOUND":
+        // No hub_project row for this repo — the project itself is gone.
         return (
           <ErrorCard
-            title="Repository not found"
-            description="It may have been removed, renamed, or the URL may be incorrect."
+            title="Project not found"
+            description="This project no longer exists in Client Hub — it may have been removed or renamed."
           />
         );
       case "FORBIDDEN":
+        // The caller has no Hub access to this project (not a collaborator).
         return (
           <ErrorCard
-            title="Access denied"
-            description="You do not have permission to access this repository."
+            title="You don't have access"
+            description="You're not a collaborator on this project. Ask the project owner to invite your email, then open it from the invitation link."
           />
         );
       case "PRECONDITION_FAILED":
-        // This project lives on a repo outside the agency org, so it commits
-        // with your OWN GitHub token — which isn't connected yet.
+        // GitHub isn't connected at all — Client Hub opens every project with
+        // the signed-in user's own GitHub token (whether they own it or were
+        // invited as a collaborator).
         return (
           <ErrorCard
             title="Connect your GitHub"
-            description="This project is on a repository you were given access to. Connect your GitHub account (with repository access) to open, edit, and publish it."
+            description="Connect your GitHub account — one that has access to this repository — to open, edit, and publish this project."
             action={{ href: "/integrations", label: "Connect GitHub" }}
+          />
+        );
+      case "UNPROCESSABLE_CONTENT":
+        // Connected to GitHub, but that account can't reach this repo. The
+        // server message names the repo and the exact remedy.
+        return (
+          <ErrorCard
+            title="GitHub access required"
+            description={
+              error?.message ??
+              "Your connected GitHub account can't access this repository. Ask the repository owner to add you as a collaborator on GitHub, then reconnect your GitHub."
+            }
+            action={{ href: "/integrations", label: "Reconnect GitHub" }}
           />
         );
       default:

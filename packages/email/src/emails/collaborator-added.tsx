@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   Body,
   Button,
@@ -6,116 +5,85 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Section,
-  Tailwind,
   Text,
 } from "@react-email/components";
 
-// Email-safe equivalents of the hub's light theme tokens. Email clients can't
-// rely on CSS variables or OKLCH, so these are resolved to hex here.
-const emailTheme = {
-  background: "#ffffff",
-  foreground: "#0a0a0a",
-  mutedForeground: "#737373",
-  link: "#0a0a0a",
-  mutedLink: "#737373",
-  buttonBackground: "#009869",
-  buttonForeground: "#edfdf5",
-  buttonBorder: "#009869",
-} as const;
+import {
+  button,
+  buttonSection,
+  container,
+  EmailFooter,
+  EmailHeader,
+  heading,
+  main,
+  mutedText,
+  paragraph,
+  strong,
+  subheading,
+  textLink,
+} from "./components/shared";
 
-export const CollaboratorAddedEmail = ({
+interface CollaboratorAddedProps {
+  email?: string;
+  repoName?: string;
+  repoUrl?: string;
+  invitedByName?: string;
+  invitedByUrl?: string;
+}
+
+export default function CollaboratorAddedEmail({
   email,
   repoName,
   repoUrl,
   invitedByName,
   invitedByUrl,
-  baseUrl,
-}: {
-  email: string;
-  repoName: string;
-  repoUrl: string;
-  invitedByName: string;
-  invitedByUrl: string;
-  baseUrl: string;
-}) => {
+}: CollaboratorAddedProps) {
   return (
     <Html>
       <Head />
-      <Preview>You were added to &quot;{repoName}&quot; on Client Hub</Preview>
-      <Tailwind>
-        <Body
-          className="mx-auto my-auto px-2 font-sans antialiased"
-          style={{
-            backgroundColor: emailTheme.background,
-            color: emailTheme.foreground,
-          }}
-        >
-          <Container className="mx-auto my-[40px] max-w-[465px] p-[20px]">
-            <Section className="mt-[24px]">
-              <Img
-                src={`${baseUrl}/images/email-logo.png`}
-                width="42"
-                height="42"
-                alt="Client Hub"
-                className="mx-auto my-0"
-              />
-            </Section>
-            <Heading
-              className="mx-0 my-[30px] p-0 text-center text-[24px] font-semibold tracking-tight"
-              style={{ color: emailTheme.foreground }}
-            >
-              You were added to &quot;{repoName}&quot;
-            </Heading>
-            <Text
-              className="text-[16px] leading-[24px]"
-              style={{ color: emailTheme.foreground }}
-            >
-              <Link
-                href={invitedByUrl}
-                className="rounded-md underline"
-                style={{ color: emailTheme.link }}
-              >
-                {invitedByName}
-              </Link>{" "}
-              added you to the &quot;{repoName}&quot; project on Client Hub. You
-              already have access, so there is nothing to accept.
-            </Text>
-            <Section className="mt-[24px] mb-[24px] text-center">
-              <Button
-                className="rounded-lg px-5 py-3 text-center text-[14px] font-medium no-underline"
-                href={repoUrl}
-                style={{
-                  backgroundColor: emailTheme.buttonBackground,
-                  border: `1px solid ${emailTheme.buttonBorder}`,
-                  color: emailTheme.buttonForeground,
-                }}
-              >
-                Open &quot;{repoName}&quot;
-              </Button>
-            </Section>
-            <Text
-              className="mt-[36px] text-[14px] leading-[24px]"
-              style={{ color: emailTheme.mutedForeground }}
-            >
-              This email was intended for{" "}
-              <Link
-                href={`mailto:${email}`}
-                className="underline"
-                style={{ color: emailTheme.mutedLink }}
-              >
-                {email}
-              </Link>
-              .
-            </Text>
-          </Container>
-        </Body>
-      </Tailwind>
+      <Preview>{`You were added to "${repoName}" on Client Hub`}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <EmailHeader />
+
+          <Heading style={heading}>
+            You were added to &quot;{repoName}&quot;
+          </Heading>
+          <Text style={subheading}>You already have access</Text>
+
+          <Text style={paragraph}>
+            <Link href={invitedByUrl} style={textLink}>
+              {invitedByName}
+            </Link>{" "}
+            added you to the <span style={strong}>&quot;{repoName}&quot;</span>{" "}
+            project on Client Hub. You already have access — there&apos;s
+            nothing to accept.
+          </Text>
+
+          <Section style={buttonSection}>
+            <Button href={repoUrl} style={button}>
+              Open project
+            </Button>
+          </Section>
+
+          <Text style={{ ...mutedText, margin: "24px 0 0" }}>
+            This email was intended for {email}.
+          </Text>
+
+          <EmailFooter />
+        </Container>
+      </Body>
     </Html>
   );
-};
+}
 
-export default CollaboratorAddedEmail;
+CollaboratorAddedEmail.PreviewProps = {
+  email: "jane@example.com",
+  repoName: "acme/website",
+  repoUrl: "https://hub.alisamadii.com/website",
+  invitedByName: "Ali Samadii",
+  invitedByUrl: "https://hub.alisamadii.com",
+} satisfies CollaboratorAddedProps;

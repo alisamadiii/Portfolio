@@ -304,7 +304,6 @@ export const collaboratorsRouter = createTRPCRouter({
                 email,
                 invitedByName: user.name || user.email,
                 invitedByUrl: baseUrl,
-                baseUrl,
               }),
             });
             if (error) {
@@ -322,7 +321,6 @@ export const collaboratorsRouter = createTRPCRouter({
                 repoUrl,
                 invitedByName: user.name || user.email,
                 invitedByUrl: baseUrl,
-                baseUrl,
               }),
             });
             if (error) {
@@ -484,7 +482,6 @@ export const collaboratorsRouter = createTRPCRouter({
             email: collaborator.email,
             invitedByName: user.name || user.email,
             invitedByUrl: baseUrl,
-            baseUrl,
           }),
         });
         if (error) {

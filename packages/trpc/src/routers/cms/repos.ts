@@ -262,7 +262,26 @@ export const reposRouter = createTRPCRouter({
 
         // Spread copy: the snapshot is module-cached per repo and shared
         // across users — the caller's role must never be written into it.
-        const snapshot = await getRepoSnapshot(owner, input.repo, token);
+        let snapshot;
+        try {
+          snapshot = await getRepoSnapshot(owner, input.repo, token);
+        } catch (snapshotError) {
+          // We already confirmed the project exists (owner resolved) and the
+          // caller has Hub access (getToken). So a GitHub 404/403 here means
+          // the caller's own GitHub account can't reach the repo — a distinct,
+          // actionable case, NOT "repository removed".
+          const status =
+            (snapshotError as { status?: number; statusCode?: number })
+              ?.status ??
+            (snapshotError as { statusCode?: number })?.statusCode;
+          if (status === 404 || status === 403) {
+            throw new TRPCError({
+              code: "UNPROCESSABLE_CONTENT",
+              message: `Your connected GitHub account can't access "${owner}/${input.repo}". You have access to this project in Client Hub, but not to its GitHub repository — ask the repository owner to add you as a collaborator on GitHub (with repository access), then reconnect your GitHub here.`,
+            });
+          }
+          throw snapshotError;
+        }
         return { ...snapshot, myRole: role };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
