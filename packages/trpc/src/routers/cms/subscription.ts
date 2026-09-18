@@ -104,55 +104,6 @@ export const subscriptionRouter = createTRPCRouter({
         .where(inArray(hubSubscription.repoId, input.repoIds));
     }),
 
-  // Batch plan lookup for the home gallery, keyed by (owner, repo) so the caller
-  // doesn't need repoId. Joins hubProject -> hubSubscription; projects without a
-  // row are simply absent (the gallery treats those as "No plan").
-  listForProjects: authenticatedProcedure
-    .input(
-      z.object({
-        projects: z
-          .array(z.object({ owner: z.string(), repo: z.string() }))
-          .max(200),
-      })
-    )
-    .query(async ({ input }) => {
-      if (input.projects.length === 0)
-        return [] as {
-          owner: string;
-          repo: string;
-          plan: string | null;
-          status: string | null;
-          freeLife: boolean;
-        }[];
-
-      const owners = [
-        ...new Set(input.projects.map((p) => p.owner.toLowerCase())),
-      ];
-      const wanted = new Set(
-        input.projects.map(
-          (p) => `${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`
-        )
-      );
-
-      // Base on hubProject (leftJoin the subscription) so free-for-life projects
-      // without a subscription row still surface for the gallery badge.
-      const rows = await db
-        .select({
-          owner: hubProject.owner,
-          repo: hubProject.repo,
-          plan: hubSubscription.plan,
-          status: hubSubscription.status,
-          freeLife: hubProject.freeLife,
-        })
-        .from(hubProject)
-        .leftJoin(hubSubscription, eq(hubSubscription.repoId, hubProject.repoId))
-        .where(inArray(sql`lower(${hubProject.owner})`, owners));
-
-      return rows.filter((r) =>
-        wanted.has(`${r.owner.toLowerCase()}/${r.repo.toLowerCase()}`)
-      );
-    }),
-
   // Invoices for a project, scoped to that project's Stripe customer.
   getInvoices: authenticatedProcedure
     .input(z.object({ repoId: z.number().int().positive() }))

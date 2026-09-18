@@ -6,7 +6,6 @@ import { useUser } from "@/contexts/user-context";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronsUpDown, LockKeyhole, Search } from "@/components/icon";
-import { useDebounce } from "use-debounce";
 
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
@@ -45,31 +44,25 @@ export function RepoSelect({
 
   const [selectedAccount, setSelectedAccount] = useState(accounts[0]);
   const [keyword, setKeyword] = useState("");
-  const [debouncedKeyword] = useDebounce(
-    selectedAccount?.repositorySelection === "all" ? keyword : "",
-    500
-  );
   const trpc = useTRPC();
 
+  // Session-derived: every project the caller can access. The account switcher
+  // and search box filter it client-side (the set is small).
   const reposQuery = useQuery(
-    trpc.cms.repos.listMine.queryOptions(
-      {
-        owner: selectedAccount?.login ?? "",
-        keyword: debouncedKeyword,
-      },
-      { enabled: !!selectedAccount }
-    )
+    trpc.cms.repos.listMine.queryOptions(undefined, { enabled: !!user })
   );
   const results = reposQuery.isError ? [] : (reposQuery.data ?? null);
 
   const searchResults = useMemo(() => {
     if (!results) return [];
-    if (selectedAccount?.repositorySelection !== "all") {
-      return results.filter((result: any) =>
-        result.repo.toLowerCase().includes(keyword.toLowerCase())
-      );
-    }
-    return results;
+    const kw = keyword.trim().toLowerCase();
+    return results.filter(
+      (result: any) =>
+        (!selectedAccount ||
+          result.owner.toLowerCase() ===
+            selectedAccount.login.toLowerCase()) &&
+        (!kw || result.repo.toLowerCase().includes(kw))
+    );
   }, [results, keyword, selectedAccount]);
 
   const resultsLoadingSkeleton = useMemo(

@@ -1,5 +1,15 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, ilike, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -8,13 +18,16 @@ import {
   collaboratorProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
-import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
-
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
 import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/domain";
+import { db } from "@workspace/drizzle/index";
+import {
+  hubDomain,
+  hubProject,
+  hubSubscription,
+} from "@workspace/drizzle/schema";
 
 // Every project is a hub_project row (created by the import flow). Pure DB
 // listing, optionally scoped to one owner + a repo-name keyword.
@@ -49,7 +62,7 @@ const listProjectRows = async (owner?: string, keyword?: string) => {
 
 /**
  * The owner login for a repo when the URL carries only the repo name. Reads
- * hub_project. Prefers the caller's own self-deployed row, then any row;
+ * hub_project. Prefers the row the caller connected GitHub for, then any row;
  * undefined when no project row exists (getSnapshot then 404s).
  */
 const resolveOwnerForRepo = async (
@@ -59,17 +72,17 @@ const resolveOwnerForRepo = async (
   const rows = await db
     .select({
       owner: hubProject.owner,
-      selfDeployed: hubProject.selfDeployed,
       githubConnectedUserId: hubProject.githubConnectedUserId,
     })
     .from(hubProject)
     .where(
-      and(eq(hubProject.hidden, false), sql`lower(${hubProject.repo}) = lower(${repo})`)
+      and(
+        eq(hubProject.hidden, false),
+        sql`lower(${hubProject.repo}) = lower(${repo})`
+      )
     );
   if (rows.length === 0) return undefined;
-  const mine = rows.find(
-    (r) => r.selfDeployed && r.githubConnectedUserId === userId
-  );
+  const mine = rows.find((r) => r.githubConnectedUserId === userId);
   return (mine ?? rows[0]).owner;
 };
 
@@ -109,6 +122,28 @@ export const reposRouter = createTRPCRouter({
         });
       }
 
+      // Also include owners of the caller's own imported projects — the user
+      // who connected GitHub gets access without a collaborator invite, so the
+      // owner must surface here for the project to appear in the gallery.
+      const selfOwners = await db
+        .selectDistinct({ owner: hubProject.owner })
+        .from(hubProject)
+        .where(
+          and(
+            eq(hubProject.hidden, false),
+            eq(hubProject.githubConnectedUserId, ctx.session.user.id)
+          )
+        );
+      for (const { owner } of selfOwners) {
+        if (!accountByOwner.has(owner.toLowerCase())) {
+          accountByOwner.set(owner.toLowerCase(), {
+            login: owner,
+            type: "org",
+            repositorySelection: "selected",
+          });
+        }
+      }
+
       return Array.from(accountByOwner.values());
     } catch (error) {
       if (error instanceof TRPCError) throw error;
@@ -116,92 +151,89 @@ export const reposRouter = createTRPCRouter({
     }
   }),
 
-  /**
-   * Projects visible to the current user. Admins see every project under the
-   * given owner; everyone also sees repos they were invited to as collaborators
-   * and their own imported (self-deployed) projects, deduped by owner/repo.
-   */
-  listMine: collaboratorProcedure
-    .input(z.object({ owner: z.string(), keyword: z.string().optional() }))
-    .query(async ({ input, ctx }) => {
-      try {
-        let githubRepos: any[] = [];
+  // Every project the caller can access — derived entirely from the session.
+  // No owner/keyword input: the set is small (one hub_project row per project),
+  // so the account switcher and search filter it client-side.
+  listMine: collaboratorProcedure.query(async ({ ctx }) => {
+    try {
+      const conds: (SQL | undefined)[] = [eq(hubProject.hidden, false)];
 
-        if (ctx.isAdmin) {
-          githubRepos = await listProjectRows(input.owner, input.keyword);
-        }
-
-        const collaboratorRepos = (ctx.collaborations ?? []).filter(
-          (c) => c.owner.toLowerCase() === input.owner.toLowerCase()
+      // Admins see every project. Everyone else sees repos they collaborate on,
+      // plus their own imported repos — the user who connected GitHub gets
+      // access without a collaborator invite.
+      if (!ctx.isAdmin) {
+        const collabConds = (ctx.collaborations ?? []).map((c) =>
+          and(
+            sql`lower(${hubProject.owner}) = lower(${c.owner})`,
+            sql`lower(${hubProject.repo}) = lower(${c.repo})`
+          )
         );
+        const ownConnected = eq(
+          hubProject.githubConnectedUserId,
+          ctx.session.user.id
+        );
+        conds.push(or(ownConnected, ...collabConds));
+      }
 
-        // Self-deployed projects the caller imported (their own connected repo) —
-        // full access without a collaborator invite.
-        const selfRows = await db
-          .select()
+      // One query: project rows + their plan (left join, so free-for-life
+      // projects with no subscription still surface). websiteUrl is derived
+      // from the primary hub_domain in a single batched lookup below.
+        const rows = await db
+          .select({
+            owner: hubProject.owner,
+            repo: hubProject.repo,
+            repoId: hubProject.repoId,
+            private: hubProject.private,
+            defaultBranch: hubProject.defaultBranch,
+            updatedAt: hubProject.githubUpdatedAt,
+            freeLife: hubProject.freeLife,
+            plan: hubSubscription.plan,
+            status: hubSubscription.status,
+            // Cloudflare chip: connected account or a created Pages/Worker.
+            cfConnectedUserId: hubProject.cfConnectedUserId,
+            cfPagesSubdomain: hubProject.cfPagesSubdomain,
+          })
           .from(hubProject)
-          .where(
-            and(
-              eq(hubProject.selfDeployed, true),
-              eq(hubProject.hidden, false),
-              eq(hubProject.githubConnectedUserId, ctx.session.user.id),
-              sql`lower(${hubProject.owner}) = lower(${input.owner})`
-            )
-          );
-        const selfUrlByRepoId = await getWebsiteUrlsByRepoId(
-          selfRows.map((r) => r.repoId)
+          .leftJoin(
+            hubSubscription,
+            eq(hubSubscription.repoId, hubProject.repoId)
+          )
+          .where(and(...conds))
+          .orderBy(desc(hubProject.githubUpdatedAt));
+
+        const repoIds = rows.map((r) => r.repoId);
+        const urlByRepoId = await getWebsiteUrlsByRepoId(repoIds);
+
+        // DNS chip: repos with at least one managed (cfZoneId) domain row.
+        const dnsRepoIds = new Set(
+          repoIds.length
+            ? (
+                await db
+                  .select({ repoId: hubDomain.repoId })
+                  .from(hubDomain)
+                  .where(
+                    and(
+                      inArray(hubDomain.repoId, repoIds),
+                      isNotNull(hubDomain.cfZoneId)
+                    )
+                  )
+              ).map((r) => r.repoId)
+            : []
         );
-        const selfRepos = selfRows.map((row) => ({
+
+        return rows.map((row) => ({
           owner: row.owner,
           repo: row.repo,
           private: row.private,
           defaultBranch: row.defaultBranch,
-          updatedAt: row.githubUpdatedAt.toISOString(),
-          websiteUrl: selfUrlByRepoId.get(row.repoId) ?? null,
+          updatedAt: row.updatedAt.toISOString(),
+          websiteUrl: urlByRepoId.get(row.repoId) ?? null,
+          plan: row.plan ?? null,
+          status: row.status ?? null,
+          freeLife: row.freeLife,
+          cloudflare: !!(row.cfConnectedUserId || row.cfPagesSubdomain),
+          dns: dnsRepoIds.has(row.repoId),
         }));
-
-        // websiteUrl is derived from hub_domain rows keyed by repoId;
-        // collaborator rows don't carry it, so look it up for this owner and
-        // attach it (used by the home page gallery).
-        let urlByRepo = new Map<string, string | null>();
-        if (collaboratorRepos.length) {
-          const orgRows = await db
-            .select({ repo: hubProject.repo, repoId: hubProject.repoId })
-            .from(hubProject)
-            .where(sql`lower(${hubProject.owner}) = lower(${input.owner})`);
-          const urlByRepoId = await getWebsiteUrlsByRepoId(
-            orgRows.map((r) => r.repoId)
-          );
-          urlByRepo = new Map(
-            orgRows.map((r) => [
-              r.repo.toLowerCase(),
-              urlByRepoId.get(r.repoId) ?? null,
-            ])
-          );
-        }
-
-        const reposByKey = new Map<string, any>();
-        for (const repo of githubRepos) {
-          reposByKey.set(
-            `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`,
-            repo
-          );
-        }
-        for (const repo of collaboratorRepos) {
-          const key = `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`;
-          if (!reposByKey.has(key)) {
-            reposByKey.set(key, {
-              ...repo,
-              websiteUrl: urlByRepo.get(repo.repo.toLowerCase()) ?? null,
-            });
-          }
-        }
-        for (const repo of selfRepos) {
-          const key = `${repo.owner.toLowerCase()}::${repo.repo.toLowerCase()}`;
-          if (!reposByKey.has(key)) reposByKey.set(key, repo);
-        }
-
-        return Array.from(reposByKey.values());
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

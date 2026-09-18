@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  useActionState,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookText, EllipsisVertical, Loader } from "@/components/icon";
 import { toast } from "sonner";
 
@@ -70,12 +64,6 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { useUser } from "@/contexts/user-context";
 import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
-import {
-  handleAddCollaborator,
-  handleChangeCollaboratorRole,
-  handleRemoveCollaborator,
-  handleResendCollaboratorInvite,
-} from "@/lib/actions/collaborator";
 
 import { useRepoHeader } from "@/components/repo/repo-header-context";
 import { SubmitButton } from "@/components/submit-button";
@@ -92,18 +80,9 @@ type Collaborator = {
   role: CollaboratorRole;
 };
 
-type AddCollaboratorState = {
-  message?: string;
-  error?: string;
-  errors?: string[];
-  data?: Collaborator[];
-};
-
 export function InviteCollaboratorsDialog({
-  owner,
-  repo,
-  state,
-  action,
+  onSubmit,
+  pending,
   open,
   onOpenChange,
   value,
@@ -114,10 +93,8 @@ export function InviteCollaboratorsDialog({
   triggerVariant = "outline",
   triggerSize = "default",
 }: {
-  owner: string;
-  repo: string;
-  state: AddCollaboratorState;
-  action: (payload: FormData) => void;
+  onSubmit: (emails: string[], role: CollaboratorRole) => void;
+  pending: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   value: string;
@@ -161,10 +138,14 @@ export function InviteCollaboratorsDialog({
             lines.
           </DialogDescription>
         </DialogHeader>
-        <form action={action} className="space-y-4">
-          <input type="hidden" name="owner" value={owner} />
-          <input type="hidden" name="repo" value={repo} />
-          <input type="hidden" name="role" value={role} />
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (parsedInviteEmails.length === 0) return;
+            onSubmit(parsedInviteEmails, role);
+          }}
+          className="space-y-4"
+        >
           <TextArea
             name="emails"
             label="Email addresses"
@@ -197,15 +178,10 @@ export function InviteCollaboratorsDialog({
               </SelectItem>
             </SelectContent>
           </Select>
-          {state?.error ? (
-            <p className="text-destructive text-sm font-medium">
-              {state.error}
-            </p>
-          ) : null}
           <DialogFooter>
             <SubmitButton
               type="submit"
-              disabled={parsedInviteEmails.length === 0}
+              disabled={pending || parsedInviteEmails.length === 0}
             >
               Send invite{parsedInviteEmails.length > 1 ? "s" : ""}
             </SubmitButton>
@@ -246,10 +222,17 @@ export function Collaborators({
     [queryClient, trpc, owner, repo]
   );
 
-  const [addCollaboratorState, addCollaboratorAction] = useActionState<
-    AddCollaboratorState,
-    FormData
-  >(handleAddCollaborator, {});
+  const addMutation = useMutation(trpc.cms.collaborators.add.mutationOptions());
+  const removeMutation = useMutation(
+    trpc.cms.collaborators.remove.mutationOptions()
+  );
+  const resendMutation = useMutation(
+    trpc.cms.collaborators.resend.mutationOptions()
+  );
+  const changeRoleMutation = useMutation(
+    trpc.cms.collaborators.changeRole.mutationOptions()
+  );
+
   const [emails, setEmails] = useState("");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [removing, setRemoving] = useState<number[]>([]);
@@ -272,47 +255,44 @@ export function Collaborators({
     [setCollaborators]
   );
 
-  useEffect(() => {
-    if (addCollaboratorState?.message) {
-      if (
-        Array.isArray(addCollaboratorState.data) &&
-        addCollaboratorState.data.length > 0
-      ) {
-        addNewCollaborator(addCollaboratorState.data);
+  const handleAddSubmit = async (
+    parsedEmails: string[],
+    role: CollaboratorRole
+  ) => {
+    try {
+      const result = await addMutation.mutateAsync({
+        owner,
+        repo,
+        emails: parsedEmails,
+        role,
+      });
+      if (Array.isArray(result.data) && result.data.length > 0) {
+        addNewCollaborator(result.data as Collaborator[]);
       }
-
-      toast.success(addCollaboratorState.message, { duration: 10000 });
-      if (
-        Array.isArray(addCollaboratorState.errors) &&
-        addCollaboratorState.errors.length > 0
-      ) {
-        toast.error(addCollaboratorState.errors.join("\n"), {
-          duration: 10000,
-        });
+      toast.success(result.message, { duration: 10000 });
+      if (Array.isArray(result.errors) && result.errors.length > 0) {
+        toast.error(result.errors.join("\n"), { duration: 10000 });
       }
       setEmails("");
       setInviteDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.message, { duration: 10000 });
     }
-  }, [addCollaboratorState, addNewCollaborator]);
+  };
 
   const handleConfirmRemove = async (collaboratorId: number) => {
     setRemoving((prev) => [...prev, collaboratorId]);
 
     try {
-      const removed = await handleRemoveCollaborator(
-        collaboratorId,
+      const removed = await removeMutation.mutateAsync({
         owner,
-        repo
+        repo,
+        collaboratorId,
+      });
+      setCollaborators((prev) =>
+        prev.filter((collaborator) => collaborator.id !== collaboratorId)
       );
-
-      if (removed.error) {
-        toast.error(removed.error);
-      } else {
-        setCollaborators((prev) =>
-          prev.filter((collaborator) => collaborator.id !== collaboratorId)
-        );
-        toast.success(removed.message);
-      }
+      toast.success(removed.message);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -328,24 +308,20 @@ export function Collaborators({
     setChangingRole((prev) => [...prev, collaboratorId]);
 
     try {
-      const changed = await handleChangeCollaboratorRole(
-        collaboratorId,
+      const changed = await changeRoleMutation.mutateAsync({
         owner,
         repo,
-        role
+        collaboratorId,
+        role,
+      });
+      setCollaborators((prev) =>
+        prev.map((collaborator) =>
+          collaborator.id === collaboratorId
+            ? { ...collaborator, role }
+            : collaborator
+        )
       );
-      if (changed.error) {
-        toast.error(changed.error);
-      } else {
-        setCollaborators((prev) =>
-          prev.map((collaborator) =>
-            collaborator.id === collaboratorId
-              ? { ...collaborator, role }
-              : collaborator
-          )
-        );
-        toast.success(changed.message);
-      }
+      toast.success(changed.message);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -357,16 +333,12 @@ export function Collaborators({
     setResending((prev) => [...prev, collaboratorId]);
 
     try {
-      const resent = await handleResendCollaboratorInvite(
-        collaboratorId,
+      const resent = await resendMutation.mutateAsync({
         owner,
-        repo
-      );
-      if (resent.error) {
-        toast.error(resent.error);
-      } else {
-        toast.success(resent.message);
-      }
+        repo,
+        collaboratorId,
+      });
+      toast.success(resent.message);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -406,10 +378,8 @@ export function Collaborators({
         </div>
         {showInviteAction ? (
           <InviteCollaboratorsDialog
-            owner={owner}
-            repo={repo}
-            state={addCollaboratorState}
-            action={addCollaboratorAction}
+            onSubmit={handleAddSubmit}
+            pending={addMutation.isPending}
             open={inviteDialogOpen}
             onOpenChange={setInviteDialogOpen}
             value={emails}
@@ -423,15 +393,14 @@ export function Collaborators({
       </div>
     );
   }, [
-    addCollaboratorAction,
-    addCollaboratorState,
+    handleAddSubmit,
+    addMutation.isPending,
     collaborators.length,
     emails,
     error,
     inviteDialogOpen,
+    isAdmin,
     isLoading,
-    owner,
-    repo,
   ]);
 
   useRepoHeader({ header: headerNode });
@@ -622,10 +591,8 @@ export function Collaborators({
             </EmptyHeader>
             <EmptyContent>
               <InviteCollaboratorsDialog
-                owner={owner}
-                repo={repo}
-                state={addCollaboratorState}
-                action={addCollaboratorAction}
+                onSubmit={handleAddSubmit}
+                pending={addMutation.isPending}
                 open={inviteDialogOpen}
                 onOpenChange={setInviteDialogOpen}
                 value={emails}

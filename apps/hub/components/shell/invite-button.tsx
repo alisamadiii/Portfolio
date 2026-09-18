@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import { ArrowUp, Loader2, X } from "@/components/icon";
 import { toast } from "sonner";
@@ -30,21 +30,10 @@ import {
 import { useRepo } from "@/contexts/repo-context";
 import { useUser } from "@/contexts/user-context";
 import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
-import {
-  handleAddCollaborator,
-  handleRemoveCollaborator,
-} from "@/lib/actions/collaborator";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 import { ROLE_LABELS } from "@/components/collaborators";
 
 type Collaborator = { id: number; email: string; role: CollaboratorRole };
-
-type AddState = {
-  message?: string;
-  error?: string;
-  errors?: string[];
-  data?: Collaborator[];
-};
 
 /**
  * Header Invite — full-access only. Framer-style popover: email field + role
@@ -61,10 +50,12 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
   const canManage = myRole === "full-access";
   const isAdmin = isAdminUser(user);
 
-  const [state, action, pending] = useActionState<AddState, FormData>(
-    handleAddCollaborator,
-    {}
+  const addMutation = useMutation(trpc.cms.collaborators.add.mutationOptions());
+  const removeMutation = useMutation(
+    trpc.cms.collaborators.remove.mutationOptions()
   );
+  const pending = addMutation.isPending;
+
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<CollaboratorRole>("content-editor");
   const [removing, setRemoving] = useState<number[]>([]);
@@ -83,35 +74,42 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
       (prev) => updater(prev ?? [])
     );
 
-  useEffect(() => {
-    if (!state?.message) return;
-    toast.success(state.message, { duration: 8000 });
-    if (Array.isArray(state.errors) && state.errors.length > 0)
-      toast.error(state.errors.join("\n"), { duration: 8000 });
-    if (Array.isArray(state.data) && state.data.length > 0) {
-      const fresh = state.data;
-      setCollaborators((prev) => {
-        const seen = new Set(prev.map((c) => c.id));
-        return [...prev, ...fresh.filter((c) => !seen.has(c.id))];
+  const submit = async () => {
+    const value = email.trim();
+    if (!value) return;
+    try {
+      const res = await addMutation.mutateAsync({
+        owner,
+        repo,
+        emails: [value],
+        role,
       });
+      toast.success(res.message, { duration: 8000 });
+      if (Array.isArray(res.errors) && res.errors.length > 0)
+        toast.error(res.errors.join("\n"), { duration: 8000 });
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        const fresh = res.data as Collaborator[];
+        setCollaborators((prev) => {
+          const seen = new Set(prev.map((c) => c.id));
+          return [...prev, ...fresh.filter((c) => !seen.has(c.id))];
+        });
+      }
+      setEmail("");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to invite.", { duration: 8000 });
     }
-    setEmail("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
-
-  useEffect(() => {
-    if (state?.error) toast.error(state.error, { duration: 8000 });
-  }, [state?.error]);
+  };
 
   const remove = async (id: number) => {
     setRemoving((prev) => [...prev, id]);
     try {
-      const res = await handleRemoveCollaborator(id, owner, repo);
-      if (res.error) toast.error(res.error);
-      else {
-        setCollaborators((prev) => prev.filter((c) => c.id !== id));
-        if (res.message) toast.success(res.message);
-      }
+      const res = await removeMutation.mutateAsync({
+        owner,
+        repo,
+        collaboratorId: id,
+      });
+      setCollaborators((prev) => prev.filter((c) => c.id !== id));
+      if (res.message) toast.success(res.message);
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to remove.");
     } finally {
@@ -133,10 +131,13 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
       <PopoverContent align="end" className="w-80 gap-3">
         <PopoverTitle>Invite</PopoverTitle>
 
-        <form action={action} className="flex flex-col gap-1.5">
-          <input type="hidden" name="owner" value={owner} />
-          <input type="hidden" name="repo" value={repo} />
-          <input type="hidden" name="role" value={role} />
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+          className="flex flex-col gap-1.5"
+        >
           <div className="flex items-center gap-1.5">
             <Input
               name="email"

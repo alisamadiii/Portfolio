@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { Loader } from "@/components/icon";
 
 import { Button } from "@workspace/ui/components/button";
@@ -29,34 +30,48 @@ type InviteState =
 
 export function InviteSignIn({ token }: { token: string }) {
   const [pending, setPending] = useState(false);
+  const trpc = useTRPC();
 
   // One-shot load — a focus refetch could flip state after acceptance,
-  // so refetching is disabled. Endpoint returns the state union as JSON
-  // regardless of HTTP status (current behavior preserved).
-  const inviteQuery = useQuery({
-    queryKey: [`/api/collaborator-invites/${encodeURIComponent(token)}`],
-    queryFn: async ({ signal }) => {
-      const response = await fetch(
-        `/api/collaborator-invites/${encodeURIComponent(token)}`,
-        { signal }
-      );
-      return (await response.json()) as InviteState;
-    },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  });
+  // so refetching is disabled. The query is read-only; acceptance happens
+  // via the `claim` mutation once the invite resolves to "ready".
+  const inviteQuery = useQuery(
+    trpc.cms.collaborators.getInvite.queryOptions(
+      { token },
+      { staleTime: Infinity, refetchOnWindowFocus: false, retry: false }
+    )
+  );
+  const claim = useMutation(trpc.cms.collaborators.claim.mutationOptions());
 
-  const state: InviteState = inviteQuery.isPending
+  const resolved: InviteState = inviteQuery.isPending
     ? { status: "loading" }
     : inviteQuery.isError
       ? { status: "unavailable" }
       : inviteQuery.data;
 
+  // While claiming (or once claimed "ready") keep showing the loader; a
+  // non-ready claim result (wrong account / gone) takes over the display.
+  const state: InviteState =
+    claim.data && claim.data.status !== "ready"
+      ? claim.data
+      : claim.isError
+        ? { status: "unavailable" }
+        : resolved;
+
   useEffect(() => {
-    if (state.status === "ready") {
-      window.location.assign(state.destinationPath);
+    if (resolved.status === "ready" && claim.isIdle) {
+      claim.mutate(
+        { token },
+        {
+          onSuccess: (res) => {
+            if (res.status === "ready") {
+              window.location.assign(res.destinationPath);
+            }
+          },
+        }
+      );
     }
-  }, [state]);
+  }, [resolved, claim, token]);
 
   const shellClassName = "absolute inset-0 border-0 rounded-none";
   // Auth now lives in this app — bounce through /sign-in and back here

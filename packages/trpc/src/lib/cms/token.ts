@@ -3,8 +3,8 @@
  *
  * Every repo is read/committed with the accessing user's own GitHub token
  * (resolved per-repo by resolveRepoToken). Authorization stays local: admins
- * access every repo, the self-deployed project owner gets full access to their
- * own project, and everyone else needs a collaborator row.
+ * access every repo, the user who connected GitHub for a project gets full
+ * access to it, and everyone else needs a collaborator row.
  */
 
 import { cache } from "react";
@@ -19,8 +19,8 @@ import { db } from "./db";
 import { createHttpError } from "./errors";
 import { resolveRepoToken } from "./repo-token";
 
-// Get a token for a user: admins access any repo, the self-deployed project
-// owner accesses their own, others need a collaborator row. The token itself is
+// Get a token for a user: admins access any repo, the user who connected GitHub
+// for a project accesses it, others need a collaborator row. The token itself is
 // the accessing user's GitHub OAuth token, resolved per-repo.
 const getToken = cache(
   async (
@@ -35,10 +35,9 @@ const getToken = cache(
       return { token, source: "user" as const, role: "full-access" as const };
     }
 
-    // The connecting user has full access to their own self-deployed project.
+    // The user who connected GitHub for this project has full access to it.
     const [project] = await db
       .select({
-        selfDeployed: hubProject.selfDeployed,
         githubConnectedUserId: hubProject.githubConnectedUserId,
       })
       .from(hubProject)
@@ -50,7 +49,7 @@ const getToken = cache(
         )
       )
       .limit(1);
-    if (project?.selfDeployed && project.githubConnectedUserId === user.id) {
+    if (project?.githubConnectedUserId === user.id) {
       return { token, source: "user" as const, role: "full-access" as const };
     }
 

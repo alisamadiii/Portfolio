@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq, isNotNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
@@ -33,7 +33,8 @@ import {
 //  • Cloudflare — pick an existing CF Worker/Pages project; we pull its domains,
 //    URLs and (Pages only) the connected repo.
 // Every project is repo-keyed (hub_project.repoId), so a GitHub repo is always
-// required. Imported projects are the user's own, so rows are selfDeployed.
+// required. The importing user's id is stored as githubConnectedUserId — that
+// user owns the project (commits/reads/webhook use their token).
 
 const githubToken = (userId: string) =>
   getIntegrationAccessToken(userId, "github", "GitHub");
@@ -154,7 +155,6 @@ async function upsertProject(
       defaultBranch: ghRepo.defaultBranch,
       githubUpdatedAt: new Date(ghRepo.updatedAt ?? Date.now()),
       syncedAt: new Date(),
-      selfDeployed: true,
       ...cfFields,
     });
   }
@@ -368,46 +368,5 @@ export const deployRouter = createTRPCRouter({
         input.domains.length > 0 ? input.domains : [hostOf(input.url)];
       await addDomains(ghRepo.id, domains);
       return { repo: ghRepo.repo };
-    }),
-
-  // Per-project config flags for the projects grid chips. Takes the owner/repo
-  // pairs the caller already lists and returns only those, so nothing leaks.
-  projectFlags: authenticatedProcedure
-    .input(
-      z.object({
-        repos: z.array(z.object({ owner: z.string(), repo: z.string() })),
-      })
-    )
-    .query(async ({ input }) => {
-      const out: Record<string, { cloudflare: boolean; dns: boolean }> = {};
-      if (input.repos.length === 0) return out;
-      const wanted = new Set(
-        input.repos.map((r) => `${r.owner.toLowerCase()}/${r.repo.toLowerCase()}`)
-      );
-      const [projects, dnsRows] = await Promise.all([
-        db
-          .select({
-            repoId: hubProject.repoId,
-            owner: hubProject.owner,
-            repo: hubProject.repo,
-            cfConnectedUserId: hubProject.cfConnectedUserId,
-            cfPagesSubdomain: hubProject.cfPagesSubdomain,
-          })
-          .from(hubProject),
-        db
-          .select({ repoId: hubDomain.repoId })
-          .from(hubDomain)
-          .where(isNotNull(hubDomain.cfZoneId)),
-      ]);
-      const dnsRepoIds = new Set(dnsRows.map((r) => r.repoId));
-      for (const p of projects) {
-        const key = `${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`;
-        if (!wanted.has(key)) continue;
-        out[key] = {
-          cloudflare: !!(p.cfConnectedUserId || p.cfPagesSubdomain),
-          dns: dnsRepoIds.has(p.repoId),
-        };
-      }
-      return out;
     }),
 });

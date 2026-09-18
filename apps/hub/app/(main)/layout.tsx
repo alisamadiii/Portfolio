@@ -7,7 +7,6 @@ import { SubscriptionGateProvider } from "@/components/subscription/subscription
 import { UserProvider } from "@/contexts/user-context";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
-import { bindCollaboratorInvitesToUser } from "@workspace/trpc/lib/cms/collaborator-access";
 import { isAdminUser } from "@/lib/authz-shared";
 import { getServerSession } from "@/lib/session-server";
 
@@ -25,13 +24,14 @@ export default async function Layout({
       : "/sign-in";
   if (!session?.user) return redirect(signInUrl);
 
+  const caller = createHttpCaller(requestHeaders);
+
   // Auth lives in the shared portal package, so the invite binding that used
   // to run in Better Auth's session-create hook happens here on CMS entry.
-  await bindCollaboratorInvitesToUser(session.user).catch(() => {});
+  // DB access lives in the portfolio backend, so this goes over tRPC.
+  await caller.cms.collaborators.bindInvites.mutate().catch(() => {});
 
-  const accounts = await createHttpCaller(
-    requestHeaders
-  ).cms.repos.listAccounts.query();
+  const accounts = await caller.cms.repos.listAccounts.query();
 
   const userWithAccounts = {
     ...session.user,

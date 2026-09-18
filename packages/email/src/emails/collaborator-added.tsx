@@ -14,24 +14,34 @@ import {
   Text,
 } from "@react-email/components";
 
-import { emailTheme } from "@/components/email/theme";
-import { getBaseUrl } from "@/lib/base-url";
+// Email-safe equivalents of the hub's light theme tokens. Email clients can't
+// rely on CSS variables or OKLCH, so these are resolved to hex here.
+const emailTheme = {
+  background: "#ffffff",
+  foreground: "#0a0a0a",
+  mutedForeground: "#737373",
+  link: "#0a0a0a",
+  mutedLink: "#737373",
+  buttonBackground: "#009869",
+  buttonForeground: "#edfdf5",
+  buttonBorder: "#009869",
+} as const;
 
-export const CollaboratorAddedEmailTemplate = ({
+export const CollaboratorAddedEmail = ({
   email,
   repoName,
   repoUrl,
   invitedByName,
   invitedByUrl,
+  baseUrl,
 }: {
   email: string;
   repoName: string;
   repoUrl: string;
   invitedByName: string;
   invitedByUrl: string;
+  baseUrl: string;
 }) => {
-  const baseUrl = getBaseUrl();
-
   return (
     <Html>
       <Head />
@@ -107,3 +117,5 @@ export const CollaboratorAddedEmailTemplate = ({
     </Html>
   );
 };
+
+export default CollaboratorAddedEmail;

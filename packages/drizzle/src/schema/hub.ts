@@ -178,12 +178,10 @@ export const hubProject = pgTable(
     // The Cloudflare zone whose DNS records this project manages in the DNS tab
     // (picked there or during import). Independent of hub_domain.cfZoneId.
     cfZoneId: text("cf_zone_id"),
-    // Deploy flow (Vercel-style). Set true when a user imports their OWN GitHub
-    // repo to Cloudflare from the hub, marking it as owned by the connecting user
-    // (grants them full access, distinct from admin/collaborator). cfPagesProject/
-    // Subdomain record the created project; cfRootDir is the monorepo subfolder
-    // holding wrangler.json (blank = repo root).
-    selfDeployed: boolean("self_deployed").notNull().default(false),
+    // Deploy flow (Vercel-style): cfPagesProject/Subdomain record the created
+    // Cloudflare project; cfRootDir is the monorepo subfolder holding
+    // wrangler.json (blank = repo root). Ownership is tracked by
+    // githubConnectedUserId (the importing user), who gets full access.
     cfPagesProject: text("cf_pages_project"),
     // Production workers.dev URL (filled on confirm).
     cfPagesSubdomain: text("cf_pages_subdomain"),

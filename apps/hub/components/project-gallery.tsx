@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/contexts/user-context";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { Globe, LockKeyhole } from "@/components/icon";
+import { useQuery } from "@tanstack/react-query";
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Github } from "@workspace/ui/icons/social";
@@ -14,7 +13,9 @@ import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { repoPath } from "@/lib/paths";
+
 import { DeployButton } from "@/components/deploy/deploy-dialog";
+import { Globe, LockKeyhole } from "@/components/icon";
 
 // Logical size the live site renders at inside the preview iframe before it's
 // scaled down to the card width. A desktop-ish viewport so previews look like
@@ -28,6 +29,10 @@ type Project = {
   private?: boolean;
   updatedAt?: string | null;
   websiteUrl?: string | null;
+  plan?: string | null;
+  freeLife?: boolean;
+  cloudflare?: boolean;
+  dns?: boolean;
 };
 
 type Site = {
@@ -154,8 +159,14 @@ const ConfigChips = ({ flags }: { flags?: ProjectFlags }) => (
       <Github className="size-3.5" />
     </span>
     <span
-      title={flags?.cloudflare ? "Cloudflare configured" : "Cloudflare not configured"}
-      className={flags?.cloudflare ? "text-[#F38020]" : "text-muted-foreground/35"}
+      title={
+        flags?.cloudflare
+          ? "Cloudflare configured"
+          : "Cloudflare not configured"
+      }
+      className={
+        flags?.cloudflare ? "text-[#F38020]" : "text-muted-foreground/35"
+      }
     >
       <CloudflareMark className="size-3.5" />
     </span>
@@ -225,87 +236,35 @@ export function ProjectGallery() {
   const trpc = useTRPC();
   const { data: currentUser } = useCurrentUser();
 
-  const accounts = useMemo(() => user?.accounts ?? [], [user]);
-
-  // One listMine query per account (most clients have a single account), then
-  // flatten + dedupe by owner/repo. This mirrors the picker's project list, so
-  // every card is guaranteed a valid repoPath target.
-  const repoQueries = useQueries({
-    queries: accounts.map((account: any) =>
-      trpc.cms.repos.listMine.queryOptions(
-        { owner: account.login, keyword: "" },
-        { enabled: !!account.login, staleTime: 5 * 60 * 1000 }
-      )
-    ),
-  });
+  // Every project the caller can access, derived from the session — one call,
+  // no per-account fan-out.
+  const projectsQuery = useQuery(
+    trpc.cms.repos.listMine.queryOptions(undefined, {
+      enabled: !!user,
+      staleTime: 5 * 60 * 1000,
+    })
+  );
+  const projects = (projectsQuery.data as Project[] | undefined) ?? [];
 
   const { data: sites } = useQuery(
     trpc.websites.getMine.queryOptions(undefined, { enabled: !!currentUser })
   );
 
-  const isPending = accounts.length > 0 && repoQueries.some((q) => q.isPending);
+  const isPending = !!user && projectsQuery.isPending;
 
-  const projects = useMemo(() => {
-    const seen = new Set<string>();
-    const out: Project[] = [];
-    for (const q of repoQueries) {
-      for (const p of (q.data as Project[] | undefined) ?? []) {
-        const key = `${p.owner}/${p.repo}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(p);
-      }
-    }
-    return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [repoQueries.map((q) => q.dataUpdatedAt).join(",")]);
-
-  // One batched plan lookup for every visible project (keyed by owner/repo).
-  const { data: plans } = useQuery(
-    trpc.cms.subscription.listForProjects.queryOptions(
-      { projects: projects.map((p) => ({ owner: p.owner, repo: p.repo })) },
-      { enabled: projects.length > 0 }
-    )
-  );
-
-  const planByKey = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const row of plans ?? []) {
-      if (row.plan)
-        map.set(`${row.owner.toLowerCase()}/${row.repo.toLowerCase()}`, row.plan);
-    }
-    return map;
-  }, [plans]);
-
-  const freeLifeByKey = useMemo(() => {
-    const set = new Set<string>();
-    for (const row of plans ?? []) {
-      if (row.freeLife)
-        set.add(`${row.owner.toLowerCase()}/${row.repo.toLowerCase()}`);
-    }
-    return set;
-  }, [plans]);
-
-  // Per-project Cloudflare/DNS config flags for the card chips.
-  const { data: flags } = useQuery(
-    trpc.deploy.projectFlags.queryOptions(
-      { repos: projects.map((p) => ({ owner: p.owner, repo: p.repo })) },
-      { enabled: projects.length > 0 }
-    )
-  );
-
-  const flagsFor = (p: Project): ProjectFlags | undefined =>
-    flags?.[`${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`];
+  // Cloudflare/DNS config chips now ride along in the listMine payload.
+  const flagsFor = (p: Project): ProjectFlags => ({
+    cloudflare: !!p.cloudflare,
+    dns: !!p.dns,
+  });
 
   // Match a project to its pinged live-status row by owner/repo id.
   const siteFor = (p: Project): Site | undefined =>
     (sites as Site[] | undefined)?.find((s) => s.id === `${p.owner}/${p.repo}`);
 
-  const planFor = (p: Project): string | undefined =>
-    planByKey.get(`${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`);
+  const planFor = (p: Project): string | undefined => p.plan ?? undefined;
 
-  const freeLifeFor = (p: Project): boolean =>
-    freeLifeByKey.has(`${p.owner.toLowerCase()}/${p.repo.toLowerCase()}`);
+  const freeLifeFor = (p: Project): boolean => !!p.freeLife;
 
   return (
     <section className="space-y-4">

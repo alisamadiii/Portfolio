@@ -76,7 +76,6 @@ export function CmsProjectsDialog({
     loading: boolean;
   }) => React.ReactElement;
 }) {
-  const { user } = useUser();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -93,20 +92,12 @@ export function CmsProjectsDialog({
   };
 
   const handleClick = async () => {
-    const accounts = user?.accounts ?? [];
-    // Only a single-account user can auto-resolve to one project; anything else
-    // (multiple accounts, or none) falls through to the picker dialog.
-    if (accounts.length !== 1) {
-      setOpen(true);
-      return;
-    }
+    const opts = trpc.cms.repos.listMine.queryOptions(undefined, {
+      staleTime: 5 * 60 * 1000,
+    });
 
-    const opts = trpc.cms.repos.listMine.queryOptions(
-      { owner: accounts[0].login, keyword: "" },
-      { staleTime: 5 * 60 * 1000 }
-    );
-
-    // Cache hit → decide synchronously, no spinner, no network.
+    // Cache hit → decide synchronously, no spinner, no network. A single
+    // project auto-opens; anything else (0 or many) falls through to the picker.
     const cached = queryClient.getQueryData(opts.queryKey);
     if (cached) {
       decide(cached);
