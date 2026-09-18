@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 
-import { readRich, renderRich } from "../src/rich";
+import { hasHtmlEntities, readRich, renderRich } from "../src/rich";
 
 const roundTrip = (source: string): string => {
   const host = document.createElement("p");
@@ -44,6 +44,42 @@ describe("renderRich", () => {
     expect(renderRich("a < b & **c**")).toBe(
       'a &lt; b &amp; <span class="cms-mark">c</span>'
     );
+  });
+
+  it("preserves authored HTML entities (named / decimal / hex)", () => {
+    expect(renderRich("&copy; 2026")).toBe("&copy; 2026");
+    expect(renderRich("caf&eacute; &mdash; open")).toBe(
+      "caf&eacute; &mdash; open"
+    );
+    expect(renderRich("&#169; &#xA9; &#XA9;")).toBe("&#169; &#xA9; &#XA9;");
+    expect(renderRich("a &nbsp; b")).toBe("a &nbsp; b");
+  });
+
+  it("still escapes bare ampersands next to entity-looking text", () => {
+    // Bare `&` (space/EOL/non-entity after) → &amp;; real entities untouched.
+    expect(renderRich("AT&T & Q&A")).toBe("AT&amp;T &amp; Q&amp;A");
+    expect(renderRich("Tom & &copy;")).toBe("Tom &amp; &copy;");
+    expect(renderRich("trailing &")).toBe("trailing &amp;");
+    // No semicolon → not a valid reference → escaped.
+    expect(renderRich("&copy no semi")).toBe("&amp;copy no semi");
+  });
+
+  it("keeps entities intact through mark/accent markup", () => {
+    expect(renderRich("**caf&eacute;** `&copy;`")).toBe(
+      '<span class="cms-mark">caf&eacute;</span> <span class="cms-hl">&copy;</span>'
+    );
+  });
+});
+
+describe("hasHtmlEntities", () => {
+  it("detects named, decimal, and hex entities", () => {
+    for (const s of ["&copy;", "x &mdash; y", "&#169;", "&#xA9;", "&#XA9;"])
+      expect(hasHtmlEntities(s)).toBe(true);
+  });
+
+  it("ignores bare ampersands and non-entities", () => {
+    for (const s of ["AT&T", "Q&A", "plain text", "trailing &", "&copy no semi"])
+      expect(hasHtmlEntities(s)).toBe(false);
   });
 });
 

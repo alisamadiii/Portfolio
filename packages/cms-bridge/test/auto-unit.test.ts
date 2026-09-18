@@ -700,6 +700,27 @@ import Eyebrow from "../components/site/eyebrow.astro";
     expect(second!.code).toContain(`>{"Take the trip"}</span>`);
     expect(second!.additions).toEqual([]);
   });
+
+  it("preserves an HTML entity and its trailing space in wrapped slot text", async () => {
+    // Footer pattern: a bare `&copy;` run beside an expression. The entity must
+    // survive (render © not "&copy;") and the space before {year} must remain.
+    const source = `---
+const year = 2026;
+---
+
+<footer>
+  <p>&copy; {year} <span>EmpowerHer</span></p>
+</footer>
+`;
+    const result = await runFlat(source);
+    expect(result).not.toBeNull();
+    const code = result!.code;
+    // Entity single-escaped (browser renders ©), rendered via set:html…
+    expect(code).toContain("renderRich(\"&copy;\")");
+    expect(code).not.toContain("&amp;copy;");
+    // …and the separating space before {year} is kept outside the span.
+    expect(code).toMatch(/<\/span> \{year\}/);
+  });
 });
 
 describe("flat contract — frontmatter array lift", () => {

@@ -42,13 +42,49 @@ const nth = (
   return classes[Math.min(index, classes.length - 1)];
 };
 
+/**
+ * A `&` that does NOT begin a valid HTML character reference. The lookahead
+ * allows the three standards forms (each needing the trailing `;`):
+ *   - named:   `&copy;` `&amp;` `&nbsp;` `&mdash;` …  (letter, then alphanumerics)
+ *   - decimal: `&#169;`
+ *   - hex:     `&#xA9;` / `&#XA9;`
+ * Anything else — "AT&T", "Q&A", a trailing "&" — matches and gets escaped.
+ */
+const BARE_AMPERSAND = /&(?![a-zA-Z][a-zA-Z0-9]*;|#\d+;|#[xX][0-9a-fA-F]+;)/g;
+
+/** A valid HTML character reference anywhere in a string (named/decimal/hex). */
+const HTML_ENTITY = /&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#[xX][0-9a-fA-F]+);/;
+
+/**
+ * True when the string carries an author-typed HTML entity (`&copy;`, `&#169;`,
+ * `&#xA9;`, …). Auto mode uses this to route such text through `renderRich` +
+ * `set:html` instead of a plain `{expr}` (which Astro would HTML-escape, making
+ * the entity render as literal text).
+ */
+export const hasHtmlEntities = (value: string): boolean =>
+  HTML_ENTITY.test(value);
+
+/**
+ * Make an authored plain-text run safe to inject as HTML, WITHOUT mangling the
+ * entities an author typed on purpose:
+ *   - `<` and `>` are always escaped (they alone can open/close tags);
+ *   - a `&` is escaped to `&amp;` ONLY when it is a bare ampersand; a `&` that
+ *     starts a real entity is left intact so `&copy;` renders as © rather than
+ *     the literal text "&copy;".
+ * An entity can only expand to a single character, never a tag, so preserving
+ * it is safe. Shared by server render + browser bridge so output is identical.
+ */
+export function escapeText(source: string): string {
+  return source
+    .replace(BARE_AMPERSAND, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 /** Source string (with ` and **) → safe HTML with highlight/mark markup. */
 export function renderRich(source: string, opts: RichOptions = {}): string {
   const styleAttr = opts.markStyle ? ` style="${opts.markStyle}"` : "";
-  const escaped = source
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const escaped = escapeText(source);
   let markIndex = 0;
   let hlIndex = 0;
   return escaped

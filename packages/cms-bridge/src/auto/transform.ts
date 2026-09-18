@@ -40,6 +40,7 @@ import {
   richImportSplices,
   textReplaceSplice,
 } from "./splice.js";
+import { hasHtmlEntities } from "../rich.js";
 
 export type AutoAddition = { path: string; value: unknown };
 
@@ -84,7 +85,11 @@ function textSubstitution(
   const current = collapse(el.textValue);
   const next = String(value);
   if (next === current) return null;
-  if (hasRichMarkers(next)) {
+  // Rich markers (` / **) OR author-typed HTML entities (&copy;, &#169;, …)
+  // must go through renderRich + set:html: a plain `{expr}` is HTML-escaped by
+  // Astro, which would render `&copy;` as the literal text "&copy;". renderRich
+  // preserves valid entities and matches what the browser bridge renders.
+  if (hasRichMarkers(next) || hasHtmlEntities(next)) {
     needRich.flag = true;
     return textReplaceSplice(
       source,
@@ -197,18 +202,25 @@ export async function autoTransformPage(
         }
         const v = value !== undefined ? String(value) : collapse(candidate.text ?? "");
         let inner: string;
-        if (hasRichMarkers(v)) {
+        if (hasRichMarkers(v) || hasHtmlEntities(v)) {
           needRich.flag = true;
           inner = `<Fragment set:html={renderRich(${JSON.stringify(v)})} />`;
         } else {
           inner = `{${JSON.stringify(v)}}`;
         }
+        // Keep the text node's own leading/trailing whitespace OUTSIDE the
+        // injected span. Without this, wrapping a bare run that sits beside a
+        // sibling (`&copy; {year}`, `<span>{name}</span>`) swallows the space
+        // that separated them, rendering "©2026" instead of "© 2026".
+        const raw = el.textValue;
+        const lead = raw.match(/^\s*/)?.[0] ?? "";
+        const trail = raw.match(/\s*$/)?.[0] ?? "";
         splices.push(
           textReplaceSplice(
             source,
             el.textStart,
             el.textValue,
-            `<span data-cms-field="${path}" data-cms-kind="text">${inner}</span>`
+            `${lead}<span data-cms-field="${path}" data-cms-kind="text">${inner}</span>${trail}`
           )
         );
         continue;
@@ -276,10 +288,18 @@ export async function autoTransformPage(
               el.innerEnd !== undefined &&
               String(label) !== collapse(candidate.text ?? "")
             ) {
+              const labelStr = String(label);
+              const replacement =
+                hasRichMarkers(labelStr) || hasHtmlEntities(labelStr)
+                  ? (() => {
+                      needRich.flag = true;
+                      return `<Fragment set:html={renderRich(${JSON.stringify(labelStr)})} />`;
+                    })()
+                  : expr(label);
               splices.push({
                 start: el.innerStart,
                 end: el.innerEnd,
-                replacement: expr(label),
+                replacement,
               });
             }
           }
