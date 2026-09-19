@@ -4,6 +4,7 @@ import HomeNav from "../components/HomeNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
 import PricingCards from "../components/PricingCards.astro";
 import QuoteForm from "../components/QuoteForm.astro";
+import ProcessMotion from "../components/ProcessMotion.astro";
 import Testimonial from "../components/Testimonial.astro";
 import ClientResults from "../components/ClientResults.astro";
 import AudienceSegments from "../components/AudienceSegments.astro";
@@ -17,7 +18,7 @@ const SITE = "https://agency.alisamadii.com";
 const faqs = [
   {
     q: "How much does a website cost?",
-    a: `Choose the all-inclusive plan at ${fmtPrice(PRICING.setup)} setup + ${fmtPrice(PRICING.monthly)}/month — where most projects land — covering design, development, hosting, and ongoing updates. Or go with a one-time build you own outright, priced per project after we scope it together.`,
+    a: `Choose the all-inclusive plan for local and small businesses at ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/month — where most projects land — covering design, development, hosting, email, CMS, SEO, and ongoing updates. Or reach out for a fully custom project scoped together.`,
   },
   {
     q: "How long does it take to launch?",
@@ -33,7 +34,7 @@ const faqs = [
   },
   {
     q: "What's included in the monthly plan?",
-    a: `For ${fmtPrice(PRICING.setup)} setup + ${fmtPrice(PRICING.monthly)}/month you get design, development, hosting, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs. Pricing varies with scope, but for most projects this is the price.`,
+    a: `For ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/month you get design, development, hosting, email, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs. This plan is for local and small businesses; pricing varies with scope, but for most projects this is the price.`,
   },
 ];
 
@@ -93,9 +94,8 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
               class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
               >Jacksonville web design &amp; development</span
             >
-            We build digital
-            <span class="text-accent" id="scrambleTarget">experiences</span
-            ><span class="scramble-cursor"></span>
+            We build websites that
+            <span class="text-accent">make an impact</span>
           </h1>
           <p
             class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
@@ -128,6 +128,9 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
         </div>
       </div>
     </section>
+
+    <!-- ==================== HOW WE WORK (motion) ==================== -->
+    <ProcessMotion />
 
     <!-- ==================== STATS ==================== -->
     <section class="mx-auto max-w-[1200px] px-6 py-14 md:px-10">
@@ -169,7 +172,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       <div
         class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
       >
-        <span class="h-px w-[26px] bg-accent"></span>02 &mdash; About Us
+        <span class="h-px w-[26px] bg-accent"></span>03 &mdash; About Us
       </div>
       <div
         class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.2fr_1fr] md:gap-14"
@@ -206,7 +209,7 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
     <!-- Audience self-identification: problem → solution → CTA per segment.
        Full orange band, dark cards; component + copy live in
        AudienceSegments.astro, photos via scripts/fetch-audience-images.mjs. -->
-    <AudienceSegments eyebrow="03 &mdash; Who We Build For" />
+    <AudienceSegments eyebrow="03 — Who We Build For" />
 
     <!-- ==================== SERVICES ==================== -->
     <section
@@ -728,8 +731,8 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
           Simple, transparent pricing
         </h2>
         <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
-          One all-inclusive monthly plan, a one-time build you own outright, or
-          a fully custom project — no hidden fees, cancel anytime.
+          One all-inclusive monthly plan or a fully custom project — no hidden
+          fees, cancel anytime.
         </p>
       </div>
 
@@ -1016,53 +1019,6 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
         });
       });
 
-      // Text scramble effect
-      const scrambleEl = document.getElementById("scrambleTarget");
-      const words = [
-        "experiences",
-        "brands",
-        "products",
-        "platforms",
-        "identities",
-      ];
-      const chars = "abcdefghijklmnopqrstuvwxyz";
-      let wordIndex = 0;
-
-      function scrambleTo(newWord) {
-        const oldWord = scrambleEl.textContent;
-        const length = Math.max(oldWord.length, newWord.length);
-        let frame = 0;
-        const totalFrames = 12;
-
-        function update() {
-          let output = "";
-          for (let i = 0; i < length; i++) {
-            if (i < newWord.length) {
-              if (frame >= totalFrames * (i / length)) {
-                output += newWord[i];
-              } else {
-                output += chars[Math.floor(Math.random() * chars.length)];
-              }
-            }
-          }
-          scrambleEl.textContent = output;
-          frame++;
-          if (frame <= totalFrames) {
-            requestAnimationFrame(update);
-          } else {
-            scrambleEl.textContent = newWord;
-          }
-        }
-        update();
-      }
-
-      // Clear the previous visit's timer — it holds a detached element.
-      if (window.__scrambleTimer) clearInterval(window.__scrambleTimer);
-      window.__scrambleTimer = setInterval(() => {
-        wordIndex = (wordIndex + 1) % words.length;
-        scrambleTo(words[wordIndex]);
-      }, 5000);
-
       // Mobile menu
       const menuToggle = document.getElementById("menuToggle");
       const menuOverlay = document.getElementById("menuOverlay");
@@ -1212,26 +1168,6 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
       box-shadow 0.45s,
       border-color 0.45s;
-  }
-
-  /* Text scramble cursor blink */
-  @keyframes blink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
-  }
-  .scramble-cursor {
-    display: inline-block;
-    width: 3px;
-    height: 0.75em;
-    background: #fc8464;
-    margin-left: 6px;
-    vertical-align: baseline;
-    animation: blink 0.8s step-end infinite;
   }
 
   /* Floating welcome video */

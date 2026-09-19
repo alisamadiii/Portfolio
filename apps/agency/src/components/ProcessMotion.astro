@@ -1,0 +1,621 @@
+---
+// Animated "How We Work" band — a video-style canvas animation.
+// Left: typographic frames (DOM, crisp + indexable). Right: <canvas>
+// where the platform nodes (GitHub, Cloudflare, Proton Pass, Client Hub)
+// orbit and morph between scene layouts using real brand marks.
+// One timeline drives both. Vanilla only — no dependencies.
+// On lg+ the canvas bleeds past the 1200px container to the viewport edge;
+// the text column stays aligned with the site container.
+---
+
+<section id="process" class="relative overflow-hidden bg-charcoal text-cream" aria-label="How we work">
+  <div
+    class="mx-auto max-w-[1200px] px-6 py-24 md:px-10 md:py-28 lg:max-w-none lg:pr-0 lg:pl-[max(2.5rem,calc((100vw-1200px)/2+2.5rem))]"
+  >
+    <div
+      class="mb-12 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-cream/50 uppercase"
+    >
+      <span class="h-px w-[26px] bg-accent"></span>02 &mdash; How We Work
+    </div>
+
+    <div
+      class="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12"
+    >
+      <!-- Text frames -->
+      <div class="order-2 lg:order-1">
+        <div class="pm-stage relative min-h-[240px] sm:min-h-[220px] lg:min-h-[280px]">
+          <div class="pm-frame" data-frame="0">
+            <h2
+              class="max-w-[16ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+            >
+              You own <span class="text-accent">everything.</span>
+            </h2>
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+              Before we build anything &mdash; here&rsquo;s how the whole thing works.
+            </p>
+          </div>
+
+          <div class="pm-frame" data-frame="1">
+            <h2
+              class="max-w-[18ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+            >
+              Set up together, <span class="text-accent">shared from day one.</span>
+            </h2>
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+              We start from one shared email &mdash; yours, or a business address like
+              you&#64;alihq.org. I use it to create your GitHub, Cloudflare, and Proton Pass, so
+              both of us have access to everything.
+            </p>
+          </div>
+
+          <div class="pm-frame" data-frame="2">
+            <h2
+              class="max-w-[18ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+            >
+              Your code lives in <span class="text-accent">your GitHub.</span>
+            </h2>
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+              Everything we build is saved to a repository you own &mdash; every page, every change.
+            </p>
+          </div>
+
+          <div class="pm-frame" data-frame="3">
+            <h2
+              class="max-w-[18ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+            >
+              Cloudflare runs <span class="text-accent">the engine.</span>
+            </h2>
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+              Your domain, DNS, hosting, and assets &mdash; fast, secure, and free for most local
+              businesses.
+            </p>
+          </div>
+
+          <div class="pm-frame" data-frame="4">
+            <h2
+              class="max-w-[18ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+            >
+              Your Client Hub <span class="text-accent">does the rest.</span>
+            </h2>
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+              Edit your site without touching code. Watch your Google Analytics traffic, see every
+              email we send, run a speed test &mdash; one dashboard.
+            </p>
+          </div>
+
+          <div class="pm-frame" data-frame="5">
+            <h2
+              class="max-w-[16ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
+            >
+              You stay in <span class="text-accent">control.</span>
+            </h2>
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+              Never locked out of your own business.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-8 flex items-center gap-2" aria-hidden="true">
+          <span class="pm-dot" data-dot="0"></span>
+          <span class="pm-dot" data-dot="1"></span>
+          <span class="pm-dot" data-dot="2"></span>
+          <span class="pm-dot" data-dot="3"></span>
+          <span class="pm-dot" data-dot="4"></span>
+          <span class="pm-dot" data-dot="5"></span>
+        </div>
+      </div>
+
+      <!-- Canvas stage (first on mobile — the "video") -->
+      <div class="order-1 lg:absolute lg:inset-y-0 lg:right-0 lg:order-2 lg:w-[58%]">
+        <canvas class="pm-canvas block h-[320px] w-full sm:h-[400px] lg:h-full" aria-hidden="true"
+        ></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .pm-frame {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(8px);
+    transition: all 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    pointer-events: none;
+    will-change: opacity, transform, filter;
+  }
+  .pm-frame.active {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+  .pm-sub {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s;
+  }
+  .pm-frame.active .pm-sub {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .pm-dot {
+    height: 5px;
+    width: 5px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-cream) 25%, transparent);
+    transition: all 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .pm-dot.active {
+    width: 18px;
+    background: var(--color-accent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pm-frame,
+    .pm-sub,
+    .pm-dot {
+      transition: none;
+    }
+    .pm-frame {
+      transform: none;
+      filter: none;
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  (function () {
+    // Clear the previous visit's loop — it holds detached elements.
+    if (window.__pmTimer) clearTimeout(window.__pmTimer);
+    if (window.__pmRaf) cancelAnimationFrame(window.__pmRaf);
+    if (window.__pmObserver) window.__pmObserver.disconnect();
+    window.__pmPausedAt = 0;
+
+    const section = document.getElementById("process");
+    if (!section) return;
+    const canvas = section.querySelector(".pm-canvas");
+    const ctx = canvas.getContext("2d");
+    const frames = section.querySelectorAll(".pm-frame");
+    const dots = section.querySelectorAll(".pm-dot");
+
+    const EASE = 0.075; // node position chase factor
+    const CREAM = [246, 245, 243];
+    const ACCENT = [252, 132, 100];
+    const CREAM_STR = "rgb(246,245,243)";
+    const CF_ORANGE = "#F38020";
+    const GA_YELLOW = "#F9AB00";
+
+    // Official brand paths (simple-icons, 24-unit viewBox)
+    const GH_PATH = new Path2D(
+      "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
+    );
+    const CF_PATH = new Path2D(
+      "M16.5088 16.8447c.1475-.5068.0908-.9707-.1553-1.3154-.2246-.3164-.6045-.499-1.0615-.5205l-8.6592-.1123a.1559.1559 0 0 1-.1333-.0713c-.0283-.042-.0351-.0986-.021-.1553.0278-.084.1123-.1484.2036-.1562l8.7359-.1123c1.0351-.0489 2.1601-.8868 2.5537-1.9136l.499-1.3013c.0215-.0561.0293-.1128.0147-.168-.5625-2.5463-2.835-4.4453-5.5499-4.4453-2.5039 0-4.6284 1.6177-5.3876 3.8614-.4927-.3658-1.1187-.5625-1.794-.499-1.2026.119-2.1665 1.083-2.2861 2.2856-.0283.31-.0069.6128.0635.894C1.5683 13.171 0 14.7754 0 16.752c0 .1748.0142.3515.0352.5273.0141.083.0844.1475.1689.1475h15.9814c.0909 0 .1758-.0645.2032-.1553l.12-.4268zm2.7568-5.5634c-.0771 0-.1611 0-.2383.0112-.0566 0-.1054.0415-.127.0976l-.3378 1.1744c-.1475.5068-.0918.9707.1543 1.3164.2256.3164.6055.498 1.0625.5195l1.8437.1133c.0557 0 .1055.0263.1329.0703.0283.043.0351.1074.0214.1562-.0283.084-.1132.1485-.204.1553l-1.921.1123c-1.041.0488-2.1582.8867-2.5527 1.914l-.1406.3585c-.0283.0713.0215.1416.0986.1416h6.5977c.0771 0 .1474-.0489.169-.126.1122-.4082.1757-.837.1757-1.2803 0-2.6025-2.125-4.727-4.7344-4.727",
+    );
+    const GA_PATH = new Path2D(
+      "M22.84 2.9982v17.9987c.0086 1.6473-1.3197 2.9897-2.967 2.9984a2.9808 2.9808 0 01-.3677-.0208c-1.528-.226-2.6477-1.5558-2.6105-3.1V3.1204c-.0369-1.5458 1.0856-2.8762 2.6157-3.1 1.6361-.1915 3.1178.9796 3.3093 2.6158.014.1201.0208.241.0202.3619zM4.1326 18.0548c-1.6417 0-2.9726 1.331-2.9726 2.9726C1.16 22.6691 2.4909 24 4.1326 24s2.9726-1.3309 2.9726-2.9726-1.331-2.9726-2.9726-2.9726zm7.8728-9.0098c-.0171 0-.0342 0-.0513.0003-1.6495.0904-2.9293 1.474-2.891 3.1256v7.9846c0 2.167.9535 3.4825 2.3505 3.763 1.6118.3266 3.1832-.7152 3.5098-2.327.04-.1974.06-.3983.0593-.5998v-8.9585c.003-1.6474-1.33-2.9852-2.9773-2.9882z",
+    );
+
+    // Official Proton Pass gradient logomark (wordmark stripped)
+    const PROTON_IMG = new Image();
+    PROTON_IMG.src =
+      "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="2 2 32 32"><path d="M12.4198 7.53718C14.3731 5.58394 15.3497 4.60731 16.4758 4.2414C17.4665 3.91953 18.5335 3.91953 19.5241 4.2414C20.6503 4.60731 21.6269 5.58394 23.5802 7.53718L28.4628 12.4198C30.4161 14.3731 31.3927 15.3497 31.7586 16.4759C32.0805 17.4665 32.0805 18.5335 31.7586 19.5241C31.3927 20.6503 30.4161 21.6269 28.4628 23.5802L23.5802 28.4628C21.6269 30.4161 20.6503 31.3927 19.5241 31.7586C18.5335 32.0805 17.4665 32.0805 16.4758 31.7586C15.3497 31.3927 14.3731 30.4161 12.4198 28.4628L11.5018 27.4337C10.9463 26.8109 10.6686 26.4995 10.4705 26.1453C10.2949 25.8312 10.166 25.4931 10.088 25.1418C10 24.7457 10 24.3284 10 23.4939L10 12.5061C10 11.6716 10 11.2543 10.088 10.8582C10.166 10.5069 10.2949 10.1688 10.4705 9.85469C10.6685 9.50052 10.9463 9.18913 11.5018 8.56634L12.4198 7.53718Z" fill="url(#pmg0)"/><path d="M12.4198 7.53718C14.3731 5.58394 15.3497 4.60731 16.4758 4.2414C17.4665 3.91953 18.5335 3.91953 19.5241 4.2414C20.6503 4.60731 21.6269 5.58394 23.5802 7.53718L28.4628 12.4198C30.4161 14.3731 31.3927 15.3497 31.7586 16.4759C32.0805 17.4665 32.0805 18.5335 31.7586 19.5241C31.3927 20.6503 30.4161 21.6269 28.4628 23.5802L23.5802 28.4628C21.6269 30.4161 20.6503 31.3927 19.5241 31.7586C18.5335 32.0805 17.4665 32.0805 16.4758 31.7586C15.3497 31.3927 14.3731 30.4161 12.4198 28.4628L11.5018 27.4337C10.9463 26.8109 10.6686 26.4995 10.4705 26.1453C10.2949 25.8312 10.166 25.4931 10.088 25.1418C10 24.7457 10 24.3284 10 23.4939L10 12.5061C10 11.6716 10 11.2543 10.088 10.8582C10.166 10.5069 10.2949 10.1688 10.4705 9.85469C10.6685 9.50052 10.9463 9.18913 11.5018 8.56634L12.4198 7.53718Z" fill="url(#pmg1)"/><path d="M12.0711 7.88565C13.0477 6.90903 13.536 6.42072 14.0991 6.23777C14.5944 6.07683 15.1279 6.07683 15.6232 6.23777C16.1863 6.42072 16.6746 6.90903 17.6512 7.88565L24.9752 15.2096C25.9518 16.1863 26.4401 16.6746 26.6231 17.2376C26.784 17.7329 26.784 18.2665 26.6231 18.7618C26.4401 19.3249 25.9518 19.8132 24.9752 20.7898L17.6512 28.1138C16.6746 29.0904 16.1863 29.5787 15.6232 29.7617C15.1279 29.9226 14.5944 29.9226 14.0991 29.7617C13.536 29.5787 13.0477 29.0904 12.0711 28.1138L7.53718 23.5799C5.58394 21.6266 4.60731 20.65 4.2414 19.5239C3.91953 18.5332 3.91953 17.4662 4.2414 16.4756C4.60731 15.3494 5.58394 14.3728 7.53718 12.4195L12.0711 7.88565Z" fill="url(#pmg2)"/><defs><radialGradient id="pmg0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12.4504 32.5457) rotate(-58.142) scale(23.3731 36.5508)"><stop stop-color="#FFD580"/><stop offset="0.09375" stop-color="#F6C592"/><stop offset="0.205" stop-color="#EBB6A2"/><stop offset="0.324466" stop-color="#DFA5AF"/><stop offset="0.42875" stop-color="#D397BE"/><stop offset="0.53375" stop-color="#C486CB"/><stop offset="0.64875" stop-color="#B578D9"/><stop offset="0.77125" stop-color="#A166E5"/><stop offset="0.89125" stop-color="#8B57F2"/><stop offset="1" stop-color="#704CFF"/></radialGradient><linearGradient id="pmg1" x1="11.486" y1="-1.5597" x2="16.9312" y2="31.6785" gradientUnits="userSpaceOnUse"><stop stop-color="#6D4AFF"/><stop offset="0.392009" stop-color="#B39FFB" stop-opacity="0.978022"/><stop offset="1" stop-color="#FFE8DB" stop-opacity="0.8"/></linearGradient><radialGradient id="pmg2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(10.3973 29.6995) rotate(-58.142) scale(18.8001 29.3996)"><stop stop-color="#FFD580"/><stop offset="0.09375" stop-color="#F6C592"/><stop offset="0.205" stop-color="#EBB6A2"/><stop offset="0.324466" stop-color="#DFA5AF"/><stop offset="0.42875" stop-color="#D397BE"/><stop offset="0.53375" stop-color="#C486CB"/><stop offset="0.64875" stop-color="#B578D9"/><stop offset="0.77125" stop-color="#A166E5"/><stop offset="0.89125" stop-color="#8B57F2"/><stop offset="1" stop-color="#704CFF"/></radialGradient></defs></svg>',
+      );
+
+    // Agency "A" mark — same asset as the navbar, so it's already cached.
+    const HUB_IMG = new Image();
+    HUB_IMG.src = "https://cdn.alisamadii.com/company/business-logo-soft-rounded.png";
+
+    // ---- nodes: 4 platforms + 4 hub-feature satellites
+    const nodes = [
+      { id: "github", label: "GITHUB" },
+      { id: "cloudflare", label: "CLOUDFLARE" },
+      { id: "proton", label: "PROTON PASS" },
+      { id: "hub", label: "CLIENT HUB" },
+      { id: "m-edit", label: "EDIT", mini: true },
+      { id: "m-ga", label: "ANALYTICS", mini: true },
+      { id: "m-mail", label: "EMAILS", mini: true },
+      { id: "m-speed", label: "SPEED", mini: true },
+    ].map((n) => ({ ...n, x: 0.5, y: 0.5, s: 0.4, a: 0, h: 0 }));
+
+    const HIDDEN = { x: 0.5, y: 0.5, s: 0.3, a: 0, h: 0 };
+    const orbit = (cx, cy, r, ang, s, a, h) => ({
+      x: cx + Math.cos(ang) * r,
+      y: cy + Math.sin(ang) * r,
+      s: s,
+      a: a,
+      h: h ? 1 : 0,
+    });
+    const fixed = (x, y, s, a, h) => ({ x, y, s, a, h: h ? 1 : 0 });
+    const MAIN = { github: 0, cloudflare: 1, proton: 2, hub: 3 };
+    const MINI = { "m-edit": 0, "m-ga": 1, "m-mail": 2, "m-speed": 3 };
+
+    // ---- scenes: each returns a target layout per node id; lines fade in per scene
+    const SCENES = [
+      {
+        // 0 — intro: calm ring, everything orbits
+        hold: 4200,
+        lines: [],
+        layout(id, t) {
+          if (id in MAIN)
+            return orbit(0.5, 0.5, 0.32, t * 0.00028 + (MAIN[id] * Math.PI) / 2, 1, 1, false);
+          return HIDDEN;
+        },
+      },
+      {
+        // 1 — shared setup: vault centers, others orbit it
+        hold: 5600,
+        lines: [
+          ["github", "proton"],
+          ["cloudflare", "proton"],
+          ["hub", "proton"],
+        ],
+        layout(id, t) {
+          if (id === "proton") return fixed(0.5, 0.48, 1.3, 1, true);
+          const ring = { github: 0, cloudflare: 1, hub: 2 };
+          if (id in ring)
+            return orbit(0.5, 0.48, 0.34, t * 0.00022 + (ring[id] * Math.PI * 2) / 3, 0.85, 1, false);
+          return HIDDEN;
+        },
+      },
+      {
+        // 2 — GitHub: repo front and center
+        hold: 4600,
+        lines: [],
+        layout(id) {
+          if (id === "github") return fixed(0.5, 0.42, 1.45, 1, true);
+          if (id === "cloudflare") return fixed(0.2, 0.82, 0.65, 0.35, false);
+          if (id === "proton") return fixed(0.5, 0.86, 0.65, 0.35, false);
+          if (id === "hub") return fixed(0.8, 0.82, 0.65, 0.35, false);
+          return HIDDEN;
+        },
+      },
+      {
+        // 3 — pipeline: repo feeds Cloudflare
+        hold: 5200,
+        lines: [["github", "cloudflare"]],
+        layout(id) {
+          if (id === "github") return fixed(0.22, 0.46, 1, 1, false);
+          if (id === "cloudflare") return fixed(0.68, 0.46, 1.35, 1, true);
+          if (id === "proton") return fixed(0.24, 0.86, 0.6, 0.3, false);
+          if (id === "hub") return fixed(0.72, 0.86, 0.6, 0.3, false);
+          return HIDDEN;
+        },
+      },
+      {
+        // 4 — Client Hub: features orbit the dashboard
+        hold: 5600,
+        lines: [],
+        layout(id, t) {
+          if (id === "hub") return fixed(0.5, 0.46, 1.5, 1, true);
+          if (id in MINI)
+            return orbit(0.5, 0.46, 0.235, t * 0.00024 + (MINI[id] * Math.PI) / 2, 1.35, 1, false);
+          if (id === "github") return fixed(0.2, 0.87, 0.55, 0.25, false);
+          if (id === "cloudflare") return fixed(0.5, 0.9, 0.55, 0.25, false);
+          if (id === "proton") return fixed(0.8, 0.87, 0.55, 0.25, false);
+          return HIDDEN;
+        },
+      },
+      {
+        // 5 — closing: back to the calm ring
+        hold: 4600,
+        lines: [],
+        layout(id, t) {
+          if (id in MAIN)
+            return orbit(0.5, 0.5, 0.3, t * 0.0002 + (MAIN[id] * Math.PI) / 2, 1, 1, id === "hub");
+          return HIDDEN;
+        },
+      },
+    ];
+
+    let sceneIdx = 0;
+    let sceneStart = 0;
+    let running = false;
+    let cssW = 0;
+    let cssH = 0;
+    let SZ = 1; // node size factor — shrinks everything on small canvases
+
+    const mix = (c1, c2, k) =>
+      `rgb(${Math.round(c1[0] + (c2[0] - c1[0]) * k)},${Math.round(c1[1] + (c2[1] - c1[1]) * k)},${Math.round(c1[2] + (c2[2] - c1[2]) * k)})`;
+
+    function resize() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w === cssW && h === cssH) return;
+      cssW = w;
+      cssH = h;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      SZ = Math.max(0.62, Math.min(1, Math.min(w, h) / 560));
+    }
+
+    // unit square → px, centered, uniform scale so orbits stay circular.
+    // On the tall desktop canvas the content runs 20% bigger and sits 48px up.
+    function px(n) {
+      const big = cssH >= 500;
+      // Cap the layout base so a tall full-section canvas doesn't spread the
+      // nodes apart — content stays a compact cluster, 20% up-scaled on desktop.
+      const m = Math.min(cssW, cssH, 470) * (big ? 1.2 : 1);
+      return [cssW / 2 + (n.x - 0.5) * m, cssH / 2 + (n.y - 0.5) * m + (big ? -24 : 0), m];
+    }
+
+    function fillPath(path, size, color) {
+      ctx.save();
+      ctx.translate(-size / 2, -size / 2);
+      ctx.scale(size / 24, size / 24);
+      ctx.fillStyle = color;
+      ctx.fill(path);
+      ctx.restore();
+    }
+
+    // Brand glyphs keep their real colors — highlight never tints them.
+    function drawGlyph(id, r) {
+      if (id === "github") {
+        fillPath(GH_PATH, r * 1.05, CREAM_STR);
+      } else if (id === "cloudflare") {
+        fillPath(CF_PATH, r * 1.35, CF_ORANGE);
+      } else if (id === "proton") {
+        if (PROTON_IMG.complete && PROTON_IMG.naturalWidth) {
+          const d = r * 1.6;
+          ctx.drawImage(PROTON_IMG, -d / 2, -d / 2, d, d);
+        }
+      } else if (id === "hub") {
+        if (HUB_IMG.complete && HUB_IMG.naturalWidth) {
+          const d = r * 1.25;
+          ctx.drawImage(HUB_IMG, -d / 2, -d / 2, d, d);
+        }
+      }
+    }
+
+    // Small stroked icons for the hub-feature satellites.
+    function drawMiniIcon(id, s) {
+      ctx.strokeStyle = CREAM_STR;
+      ctx.fillStyle = CREAM_STR;
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (id === "m-ga") {
+        fillPath(GA_PATH, 13 * s, GA_YELLOW);
+      } else if (id === "m-mail") {
+        const w = 14 * s;
+        const h = 10 * s;
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+        ctx.beginPath();
+        ctx.moveTo(-w / 2, -h / 2 + 1);
+        ctx.lineTo(0, h * 0.12);
+        ctx.lineTo(w / 2, -h / 2 + 1);
+        ctx.stroke();
+      } else if (id === "m-edit") {
+        ctx.save();
+        ctx.rotate(-Math.PI / 4);
+        ctx.strokeRect(-1.8 * s, -6.5 * s, 3.6 * s, 9 * s);
+        ctx.beginPath();
+        ctx.moveTo(-1.8 * s, 2.5 * s);
+        ctx.lineTo(0, 6.2 * s);
+        ctx.lineTo(1.8 * s, 2.5 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else if (id === "m-speed") {
+        const g = 6.5 * s;
+        ctx.beginPath();
+        ctx.arc(0, 1.5 * s, g, Math.PI * 0.82, Math.PI * 2.18);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, 1.5 * s);
+        ctx.lineTo(g * 0.62, 1.5 * s - g * 0.62);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 1.5 * s, 1.4 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawNode(n) {
+      if (n.a < 0.02) return;
+      const [x, y] = px(n);
+      ctx.save();
+      ctx.globalAlpha = n.a;
+      ctx.translate(x, y);
+      if (n.mini) {
+        const R = 15 * SZ * n.s;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, R, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(246,245,243,0.05)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(246,245,243,0.28)";
+        ctx.stroke();
+        drawMiniIcon(n.id, SZ * n.s);
+        ctx.globalAlpha = n.a * 0.55;
+        ctx.fillStyle = CREAM_STR;
+        ctx.font = `500 ${SZ < 0.85 ? 8.5 : 9.5}px "Geist Mono Variable", "Geist Mono", ui-monospace, monospace`;
+        ctx.textAlign = "center";
+        ctx.fillText(n.label, 0, R + 16 * SZ + 2);
+      } else {
+        const R = 34 * SZ * n.s;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = mix(CREAM, ACCENT, n.h);
+        ctx.globalAlpha = n.a * (0.28 + n.h * 0.5);
+        ctx.beginPath();
+        ctx.arc(0, 0, R + 13 * SZ * n.s, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = n.a;
+        drawGlyph(n.id, R);
+        ctx.globalAlpha = n.a * (0.5 + n.h * 0.4);
+        ctx.fillStyle = mix(CREAM, ACCENT, n.h * 0.8);
+        ctx.font = `500 ${SZ < 0.85 ? 9 : 10.5}px "Geist Mono Variable", "Geist Mono", ui-monospace, monospace`;
+        ctx.textAlign = "center";
+        ctx.letterSpacing = "1px";
+        ctx.fillText(n.label, 0, R + 36 * SZ * Math.min(n.s, 1));
+      }
+      ctx.restore();
+    }
+
+    // Ambient dot grid in the bottom-right corner — its color follows the
+    // platform each scene is talking about.
+    const DOT_COLORS = [
+      [246, 245, 243], // 0 intro — dim cream
+      [128, 96, 255], // 1 Proton — purple
+      [255, 255, 255], // 2 GitHub — white
+      [243, 128, 32], // 3 Cloudflare — orange
+      [252, 132, 100], // 4 Client Hub — accent
+      [246, 245, 243], // 5 closing — dim cream
+    ];
+    // Color changes ripple out from the corner: each dot scales down in the
+    // old color, then pops back up in the new one, staggered by distance.
+    const DOT_GAP = 15;
+    const DOT_R = 1.1;
+    const DOT_WAVE = 500; // stagger spread (ms)
+    const DOT_DUR = 480; // per-dot down+up time (ms)
+    const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+    let dotFrom = DOT_COLORS[0];
+    let dotTo = DOT_COLORS[0];
+    let dotChangeAt = -1e9;
+
+    function drawDots(now) {
+      // Small canvas → keep the field a corner accent, not a backdrop.
+      const reach = Math.min(cssW, cssH) * (cssH >= 500 ? 0.85 : 0.5);
+      const tt = now - dotChangeAt;
+      const animating = tt < DOT_WAVE + DOT_DUR;
+      const colFrom = rgb(dotFrom);
+      const colTo = rgb(dotTo);
+      for (let x = cssW - DOT_GAP / 2; x > cssW - reach; x -= DOT_GAP) {
+        for (let y = cssH - DOT_GAP / 2; y > cssH - reach; y -= DOT_GAP) {
+          const dist = Math.hypot(cssW - x, cssH - y);
+          const a = Math.max(0, 1 - dist / reach) * 0.38;
+          if (a < 0.03) continue;
+          let scale = 1;
+          let col = colTo;
+          if (animating) {
+            const p = Math.min(1, Math.max(0, (tt - (dist / reach) * DOT_WAVE) / DOT_DUR));
+            if (p < 0.5) {
+              scale = 1 - p * 2;
+              col = colFrom;
+            } else {
+              scale = p * 2 - 1;
+            }
+            if (scale < 0.05) continue;
+          }
+          ctx.globalAlpha = a;
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(x, y, DOT_R * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function tick(now) {
+      if (!running) return;
+      resize();
+      ctx.clearRect(0, 0, cssW, cssH);
+      // Scene advancement rides the rAF clock (setTimeout throttles in
+      // occluded windows) — pauses off-screen, resumes where it left off.
+      if (now - sceneStart >= SCENES[sceneIdx].hold) {
+        const next = (sceneIdx + 1) % SCENES.length;
+        if (DOT_COLORS[next].join() !== DOT_COLORS[sceneIdx].join()) {
+          dotFrom = DOT_COLORS[sceneIdx];
+          dotTo = DOT_COLORS[next];
+          dotChangeAt = now;
+        }
+        sceneIdx = next;
+        sceneStart = now;
+        show(sceneIdx);
+      }
+      const scene = SCENES[sceneIdx];
+      drawDots(now);
+
+      for (const n of nodes) {
+        const t = scene.layout(n.id, now) || HIDDEN;
+        n.x += (t.x - n.x) * EASE;
+        n.y += (t.y - n.y) * EASE;
+        n.s += (t.s - n.s) * EASE;
+        n.a += (t.a - n.a) * EASE;
+        n.h += (t.h - n.h) * EASE;
+      }
+
+      // connection hairlines, fading in after the morph settles
+      const lineAlpha = Math.max(0, Math.min(1, (now - sceneStart - 900) / 700)) * 0.3;
+      if (lineAlpha > 0.01 && scene.lines.length) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(246,245,243,${lineAlpha})`;
+        ctx.lineWidth = 1;
+        for (const [aId, bId] of scene.lines) {
+          const a = nodes.find((n) => n.id === aId);
+          const b = nodes.find((n) => n.id === bId);
+          const [ax, ay] = px(a);
+          const [bx, by] = px(b);
+          const dx = bx - ax;
+          const dy = by - ay;
+          const d = Math.hypot(dx, dy) || 1;
+          const aR = (34 * a.s + 18) * SZ;
+          const bR = (34 * b.s + 18) * SZ;
+          ctx.beginPath();
+          ctx.moveTo(ax + (dx / d) * aR, ay + (dy / d) * aR);
+          ctx.lineTo(bx - (dx / d) * bR, by - (dy / d) * bR);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      for (const n of nodes) drawNode(n);
+      window.__pmRaf = requestAnimationFrame(tick);
+    }
+
+    function show(i) {
+      frames.forEach((f, n) => f.classList.toggle("active", n === i));
+      dots.forEach((d, n) => d.classList.toggle("active", n === i));
+    }
+
+    function drawStatic() {
+      resize();
+      for (const n of nodes) {
+        const t = SCENES[0].layout(n.id, 0) || HIDDEN;
+        Object.assign(n, { x: t.x, y: t.y, s: t.s, a: t.a, h: t.h });
+      }
+      ctx.clearRect(0, 0, cssW, cssH);
+      drawDots(0);
+      for (const n of nodes) drawNode(n);
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // Static: ownership frame + a still ring, no loops.
+      show(1);
+      drawStatic();
+      // Redraw once the images finish decoding so the marks appear.
+      PROTON_IMG.addEventListener("load", drawStatic, { once: true });
+      HUB_IMG.addEventListener("load", drawStatic, { once: true });
+      return;
+    }
+
+    // Run only while the band is on screen; opening scene plays live.
+    let started = false;
+    window.__pmObserver = new IntersectionObserver(
+      (entries) => {
+        const vis = entries[0].isIntersecting;
+        if (vis && !started) {
+          started = true;
+          sceneStart = performance.now();
+          show(0);
+        }
+        if (vis && !running) {
+          running = true;
+          sceneStart += performance.now() - (window.__pmPausedAt || performance.now());
+          window.__pmRaf = requestAnimationFrame(tick);
+        } else if (!vis && running) {
+          running = false;
+          window.__pmPausedAt = performance.now();
+          cancelAnimationFrame(window.__pmRaf);
+        }
+      },
+      { threshold: 0.2 },
+    );
+    window.__pmObserver.observe(section);
+  })();
+</script>
