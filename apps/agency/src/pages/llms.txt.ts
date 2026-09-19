@@ -51,8 +51,7 @@ export const GET: APIRoute = async () => {
 
 ## Pricing
 
-- Website-as-a-Service (all-inclusive): ${fmtPrice(PRICING.setup)} setup + ${fmtPrice(PRICING.monthly)}/mo — design, development, CMS, SEO, and managed hosting. Typical price for most projects; varies by scope.
-- One-time build (own it): priced per project — includes 5 months of hosting and contact email, you own the site outright. Contact for a quote.
+- Website-as-a-Service (all-inclusive): ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/mo — design, development, CMS, email, SEO, and managed hosting. For local and small businesses; typical price for most projects, varies by scope.
 - Custom: fully scoped projects (admin panels, auth, databases) — contact for a quote.
 
 Terms and privacy pages are always included free.

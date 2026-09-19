@@ -7,14 +7,14 @@
 //
 // The agency site no longer runs self-serve checkout — every plan routes to
 // the "Get a Quote" form. The subscription anchor below is published as
-// "$500 setup + $284/mo"; the one-time build is quote-only and has NO figure
-// here on purpose, so a stale number can never leak into the page.
+// "$1,299 + $100/mo" (one-time setup fee + monthly), for local and small
+// businesses. The one-time "own it" build plan was retired.
 
 export const PRICING = {
   // All-inclusive Website-as-a-Service plan — published anchor:
   // one-time setup + monthly.
-  setup: 500,
-  monthly: 284,
+  setup: 1299,
+  monthly: 100,
 
   // E-commerce Storefront plan — one-time setup + monthly monitoring &
   // maintenance. Published as "$1,500 setup + $120/mo". Stripe products not

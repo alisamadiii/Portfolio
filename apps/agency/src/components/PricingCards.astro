@@ -1,6 +1,6 @@
 ---
-// The four plan cards (Website-as-a-Service / Own-it build / E-commerce
-// Storefront / Custom) — single source of truth, rendered on /pricing and the
+// The three plan cards (Website-as-a-Service / E-commerce Storefront /
+// Custom) — single source of truth, rendered on /pricing and the
 // homepage #pricing section. Price anchors come from src/data/pricing.ts at
 // build time. Every card CTA routes to the "Get a Quote" form — no self-serve
 // checkout (the e-commerce Stripe subscription is pending; keep its CTA on
@@ -31,19 +31,19 @@ import ShopifyLogo from "./ShopifyLogo.astro";
           <span class="text-3xl font-bold tracking-tight"
             >{fmtPrice(PRICING.setup)}</span
           >
-          <span class="text-base font-normal text-warmgray">setup +</span>
+          <span class="text-base font-normal text-warmgray">+</span>
           <span class="price-monthly text-3xl font-bold tracking-tight"
             >{fmtPrice(PRICING.monthly)}</span
           >
           <span class="text-base font-normal text-warmgray">/mo</span>
         </div>
         <p class="mt-1 text-xs text-warmgray">
-          Pricing varies with scope, but for most projects this is where we
-          land.
+          For local &amp; small businesses. Pricing varies with scope, but for
+          most projects this is where we land.
         </p>
         <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
-          Everything included, one flat price — design, development, CMS, SEO,
-          and hosting. Fully managed for you.
+          Everything included, one flat price — design, development, CMS, email,
+          SEO, and hosting. Fully managed for you.
         </p>
         <ul class="mt-6 space-y-3 text-sm text-warmgray">
           <li class="flex items-start gap-3">
@@ -74,7 +74,27 @@ import ShopifyLogo from "./ShopifyLogo.astro";
                 stroke-linejoin="round"
                 d="M5 13l4 4L19 7"></path>
             </svg>
-            Full CMS access — edit anything
+            CMS client hub — edit anything
+          </li>
+          <li class="flex items-start gap-3">
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span
+              >Emails included
+              <span class="block text-xs text-muted"
+                >Send from your own domain</span
+              ></span
+            >
           </li>
           <li class="flex items-start gap-3">
             <svg
@@ -132,131 +152,6 @@ import ShopifyLogo from "./ShopifyLogo.astro";
           <a
             href="/quote?plan=waas"
             class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent"
-          >
-            Get a Quote
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-            </svg>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Own-it Build Card -->
-  <div class="reveal">
-    <div
-      class="package-card flex h-full flex-col rounded-[18px] bg-charcoal/[0.03] p-1.5 ring-1 ring-charcoal/[0.04]"
-    >
-      <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
-        <div class="mb-6 flex items-center gap-3">
-          <span
-            class="inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
-            >One-time</span
-          >
-        </div>
-        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Own-it Build</h3>
-        <div class="mt-3">
-          <span class="text-3xl font-bold tracking-tight"
-            >Priced per project</span
-          >
-        </div>
-        <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
-          A one-time build you own outright — includes 5 months of hosting and
-          contact email, then optional renewal. Scoped and priced around your
-          project.
-        </p>
-        <ul class="mt-6 space-y-3 text-sm text-warmgray">
-          <li class="flex items-start gap-3">
-            <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5 13l4 4L19 7"></path>
-            </svg>
-            Custom design &amp; development
-          </li>
-          <li class="flex items-start gap-3">
-            <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span
-              >You own the site — code, content, everything
-              <span class="block text-xs text-muted"
-                >Clean handover, no lock-in</span
-              ></span
-            >
-          </li>
-          <li class="flex items-start gap-3">
-            <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span
-              >Essential SEO included
-              <span class="block text-xs text-muted"
-                >Titles, meta descriptions, AI-ready schema markup &amp; keyword
-                checks</span
-              ></span
-            >
-          </li>
-          <li class="flex items-start gap-3">
-            <svg
-              class="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span
-              >5 months of managed hosting &amp; contact email included
-              <span class="block text-xs text-muted"
-                >Optional renewal after that</span
-              ></span
-            >
-          </li>
-        </ul>
-        <div class="mt-auto pt-8">
-          <a
-            href="/quote?plan=onetime"
-            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
           >
             Get a Quote
             <svg
@@ -421,30 +316,27 @@ import ShopifyLogo from "./ShopifyLogo.astro";
     </div>
   </div>
 
-  <!-- Custom Card (full-width row) -->
-  <div class="reveal lg:col-span-2 xl:col-span-3">
+  <!-- Custom Card -->
+  <div class="reveal">
     <div
       class="package-card flex h-full flex-col rounded-[18px] bg-charcoal/[0.03] p-1.5 ring-1 ring-charcoal/[0.04]"
     >
-      <div
-        class="flex flex-1 flex-wrap items-center justify-between gap-x-12 gap-y-8 rounded-[14px] bg-white p-8"
-      >
-        <div class="max-w-[46ch]">
+      <div class="flex flex-1 flex-col rounded-[14px] bg-white p-8">
+        <div class="mb-6 flex items-center gap-3">
           <span
             class="inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
             >Tailored</span
           >
-          <h3 class="mt-5 text-2xl font-semibold tracking-[-0.02em]">
-            Custom &mdash; <span class="font-bold">Let's talk</span>
-          </h3>
-          <p class="mt-3 text-sm leading-relaxed text-warmgray">
-            Bigger scope? Admin panels, user accounts, databases, or something
-            unique — we scope it together and quote it fairly.
-          </p>
         </div>
-        <ul
-          class="grid grid-cols-1 gap-x-10 gap-y-3 text-sm text-warmgray sm:grid-cols-2"
-        >
+        <h3 class="text-2xl font-semibold tracking-[-0.02em]">Custom</h3>
+        <div class="mt-3">
+          <span class="text-3xl font-bold tracking-tight">Let's talk</span>
+        </div>
+        <p class="mt-3 max-w-[40ch] text-sm leading-relaxed text-warmgray">
+          Bigger scope? Admin panels, user accounts, databases, or something
+          unique — we scope it together and quote it fairly.
+        </p>
+        <ul class="mt-6 space-y-3 text-sm text-warmgray">
           <li class="flex items-start gap-3">
             <svg
               class="mt-0.5 h-4 w-4 shrink-0 text-accent"
@@ -488,7 +380,7 @@ import ShopifyLogo from "./ShopifyLogo.astro";
                 stroke-linejoin="round"
                 d="M5 13l4 4L19 7"></path>
             </svg>
-            One-time and recurring options
+            Web apps, dashboards &amp; integrations
           </li>
           <li class="flex items-start gap-3">
             <svg
@@ -506,24 +398,26 @@ import ShopifyLogo from "./ShopifyLogo.astro";
             Personal quote, no surprises
           </li>
         </ul>
-        <a
-          href="/quote?plan=custom"
-          class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-6 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream lg:w-auto"
-        >
-          Get a Quote
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
+        <div class="mt-auto pt-8">
+          <a
+            href="/quote?plan=custom"
+            class="mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal/5 px-5 py-3 text-sm font-medium text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-cream"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-          </svg>
-        </a>
+            Get a Quote
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   </div>

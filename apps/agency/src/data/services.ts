@@ -185,7 +185,7 @@ export const services: Service[] = [
     ],
     seoTitle: "Astro Web Development Agency — Fast Local Business Sites",
     metaDescription:
-      "Web development agency building fast, static websites on Astro — instant page loads, SEO built in, and content you edit yourself. From $500.",
+      "Web development agency building fast, static websites on Astro — instant page loads, SEO built in, and content you edit yourself. From $100/mo.",
     h1: "A web development agency that builds fast Astro websites",
     heroSub:
       "Local-business websites built on Astro — pre-rendered static pages, instant navigation, and SEO baked in. Custom projects get Next.js, React, and Postgres.",
@@ -234,7 +234,7 @@ export const services: Service[] = [
     faqs: [
       {
         q: "How much does a website cost?",
-        a: "Our all-inclusive plan is $500 setup + $284/mo — where most projects land — covering design, development, hosting, CMS, and updates. Or choose a one-time build you own outright, priced per project after we scope it. See the pricing page for details.",
+        a: "Our all-inclusive plan for local and small businesses is $1,299 + $100/mo — where most projects land — covering design, development, hosting, CMS, email, SEO, and updates. Or reach out for a fully custom project scoped together. See the pricing page for details.",
       },
       {
         q: "Why Astro instead of WordPress or Wix?",
@@ -549,7 +549,7 @@ export const services: Service[] = [
       },
       {
         q: "What does website management cost?",
-        a: "Everything — hosting, CMS, updates, and support — is included in the all-inclusive plan at $500 setup + $284/mo. One-time builds include 5 months of managed hosting and contact email, with optional renewal after. Current numbers are on the pricing page.",
+        a: "Everything — hosting, CMS, email, SEO, updates, and support — is included in the all-inclusive plan for local and small businesses at $1,299 + $100/mo. Current numbers are on the pricing page.",
       },
       {
         q: "What if I break something?",

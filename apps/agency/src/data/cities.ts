@@ -402,7 +402,7 @@ export const cities: City[] = [
       },
       {
         q: "What does a website cost for a small Hialeah business?",
-        a: "Pricing is flat and public on our pricing page — a monthly all-inclusive plan or a one-time build starting with a single page. No quotes-by-salesperson, no surprise invoices.",
+        a: "Pricing is flat and public on our pricing page — a monthly all-inclusive plan built for local and small businesses. No quotes-by-salesperson, no surprise invoices.",
       },
     ],
     searchKeywords: [
@@ -619,7 +619,7 @@ export const cities: City[] = [
       },
       {
         q: "I run a small local business. Is professional web design in budget?",
-        a: "Our pricing is flat and public — a monthly all-inclusive plan or a one-time build. Small suburban businesses are our core clientele, and the pricing page shows exactly what you'd pay before you ever talk to us.",
+        a: "Our pricing is flat and public — a monthly all-inclusive plan. Small suburban businesses are our core clientele, and the pricing page shows exactly what you'd pay before you ever talk to us.",
       },
       {
         q: "Can you help us stand out from the franchises?",
