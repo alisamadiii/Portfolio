@@ -106,6 +106,22 @@ const schema = [
     </section>
   </main>
   <HomeFooter />
+
+  <!-- ==================== FLOATING WELCOME VIDEO ==================== -->
+  <div
+    id="welcomeVideo"
+    class="fixed right-4 bottom-4 z-40 w-[180px] translate-y-[130%] overflow-hidden rounded-[18px] border border-charcoal/[0.08] opacity-0 shadow-[0_20px_50px_rgba(27,26,23,0.18)] md:w-[240px]"
+  >
+    <!-- preload="none": nothing downloads until the reveal calls video.play()
+         at 800ms, keeping the ~9.6MB clip off the initial-load critical path.
+         TODO(Ali): re-encode welcome-video.mp4 on the CDN to <=1-2MB. -->
+    <video
+      src="https://cdn.alisamadii.com/media/welcome-video.mp4"
+      muted
+      playsinline
+      preload="none"
+      class="block h-full w-full object-cover"></video>
+  </div>
 </Layout>
 
 <style is:global>
@@ -117,6 +133,13 @@ const schema = [
   }
   .mag-btn:active {
     transform: scale(0.97);
+  }
+
+  /* Floating welcome video */
+  #welcomeVideo {
+    transition:
+      transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 </style>
 
@@ -134,5 +157,35 @@ const schema = [
       { threshold: 0.1, rootMargin: "-60px" }
     );
     document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+
+    // Floating welcome video — slides up on load, exits when finished
+    (function initWelcomeVideo() {
+      const wrap = document.getElementById("welcomeVideo");
+      if (!wrap) return;
+      const video = wrap.querySelector("video");
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (reduced) {
+        wrap.remove();
+        return;
+      }
+
+      function exit() {
+        wrap.classList.add("translate-y-[130%]", "opacity-0");
+        setTimeout(() => wrap.remove(), 700);
+      }
+
+      video.addEventListener("ended", exit);
+
+      setTimeout(() => {
+        wrap.classList.remove("translate-y-[130%]", "opacity-0");
+        const played = video.play();
+        if (played && typeof played.catch === "function") {
+          played.catch(() => wrap.remove());
+        }
+      }, 800);
+    })();
   })();
 </script>

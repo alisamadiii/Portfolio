@@ -3,7 +3,6 @@ import Layout from "../layouts/Layout.astro";
 import HomeNav from "../components/HomeNav.astro";
 import HomeFooter from "../components/HomeFooter.astro";
 import PricingCards from "../components/PricingCards.astro";
-import QuoteForm from "../components/QuoteForm.astro";
 import ProcessMotion from "../components/ProcessMotion.astro";
 import Testimonial from "../components/Testimonial.astro";
 import ClientResults from "../components/ClientResults.astro";
@@ -77,55 +76,79 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       id="hero"
       class="mx-auto max-w-[1200px] px-6 pt-[128px] pb-20 md:px-10"
     >
+      <div class="stagger flex flex-col items-center text-center">
+        <h1
+          class="max-w-[16ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
+        >
+          <span
+            class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
+            >Jacksonville web design &amp; development</span
+          >
+          We build websites that
+          <span class="text-accent">make an impact</span>
+        </h1>
+        <p
+          class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
+        >
+          A Jacksonville, FL web design and development agency creating brand
+          identities, custom websites, and web apps that drive real, measurable
+          results.
+        </p>
+        <div
+          class="reveal mt-10 flex flex-wrap items-center justify-center gap-3.5"
+        >
+          <a
+            href="https://cal.com/alisamadii"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-medium text-charcoal shadow-[0_8px_24px_rgba(252,132,100,0.32)] hover:bg-charcoal hover:text-cream"
+          >
+            Start a Project
+            <span>&#8599;</span>
+          </a>
+          <a
+            href="https://hub.alisamadii.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
+            >I am a customer</a
+          >
+        </div>
+      </div>
       <div
-        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.25fr_1fr] lg:gap-16"
+        id="heroVideo"
+        class="reveal group relative mt-16 aspect-video overflow-hidden rounded-[16px] border border-charcoal/[0.08] shadow-[0_24px_60px_rgba(27,26,23,0.12)]"
       >
-        <div class="stagger">
-          <div
-            class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+        <video
+          src="/hero-video.mp4"
+          poster="/hero-poster.webp"
+          playsinline
+          preload="none"
+          class="block h-full w-full object-cover"></video>
+        <!-- Poster stays blurred behind the play button until first click.
+             preload="none" means the mp4 itself downloads only on play(). -->
+        <button
+          type="button"
+          data-play
+          aria-label="Play video"
+          class="absolute inset-0 flex items-center justify-center transition-opacity duration-500"
+        >
+          <span
+            class="flex h-[76px] w-[76px] items-center justify-center rounded-full border border-cream/40 bg-cream/25 text-charcoal shadow-[0_10px_30px_rgba(27,26,23,0.25)] backdrop-blur-md transition-transform duration-300 group-hover:scale-110"
           >
-            <span class="h-px w-[26px] bg-accent"></span>01 &mdash; Web Design
-            Agency &middot; Jacksonville, FL
-          </div>
-          <h1
-            class="max-w-[14ch] text-[clamp(44px,7vw,92px)] leading-[0.98] font-semibold tracking-[-0.035em]"
-          >
-            <span
-              class="mb-4 block font-mono text-[13px] font-normal tracking-[0.12em] text-muted uppercase"
-              >Jacksonville web design &amp; development</span
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 18 18"
+              fill="currentColor"
+              aria-hidden="true"
             >
-            We build websites that
-            <span class="text-accent">make an impact</span>
-          </h1>
-          <p
-            class="reveal mt-[30px] max-w-[52ch] text-[17px] leading-[1.55] text-warmgray md:text-[19px]"
-          >
-            A Jacksonville, FL web design and development agency creating brand
-            identities, custom websites, and web apps that drive real,
-            measurable results.
-          </p>
-          <div class="reveal mt-10 flex flex-wrap items-center gap-3.5">
-            <a
-              href="https://cal.com/alisamadii"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-medium text-charcoal shadow-[0_8px_24px_rgba(252,132,100,0.32)] hover:bg-charcoal hover:text-cream"
-            >
-              Start a Project
-              <span>&#8599;</span>
-            </a>
-            <a
-              href="https://hub.alisamadii.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
-              >I am a customer</a
-            >
-          </div>
-        </div>
-        <div>
-          <QuoteForm compact />
-        </div>
+              <path
+                d="M15.1,7.478L5.608,2.222c-.553-.306-1.206-.297-1.749,.023-.538,.317-.859,.877-.859,1.499V14.256c0,.622,.321,1.182,.859,1.499,.279,.164,.586,.247,.895,.247,.293,0,.586-.075,.854-.223l9.491-5.256c.556-.307,.901-.891,.901-1.522s-.345-1.215-.9-1.522Z"
+              ></path>
+            </svg>
+          </span>
+        </button>
       </div>
     </section>
 
@@ -938,22 +961,6 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
   </main>
   <HomeFooter />
 
-  <!-- ==================== FLOATING WELCOME VIDEO ==================== -->
-  <div
-    id="welcomeVideo"
-    class="fixed right-4 bottom-4 z-40 w-[180px] translate-y-[130%] overflow-hidden rounded-[18px] border border-charcoal/[0.08] opacity-0 shadow-[0_20px_50px_rgba(27,26,23,0.18)] md:w-[240px]"
-  >
-    <!-- preload="none": nothing downloads until the reveal calls video.play()
-         at 800ms, keeping the ~9.6MB clip off the initial-load critical path.
-         TODO(Ali): re-encode welcome-video.mp4 on the CDN to <=1-2MB. -->
-    <video
-      src="https://cdn.alisamadii.com/media/welcome-video.mp4"
-      muted
-      playsinline
-      preload="none"
-      class="block h-full w-full object-cover"></video>
-  </div>
-
   <!-- ==================== SCRIPTS ==================== -->
   <!-- data-astro-rerun + IIFE: re-runs after every ClientRouter swap without
        leaking top-level consts into the persistent global scope. -->
@@ -1071,34 +1078,24 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
         });
       });
 
-      // Floating welcome video — slides up on load, exits when finished
-      (function initWelcomeVideo() {
-        const wrap = document.getElementById("welcomeVideo");
+      // Hero video — click-to-play with sound; mp4 downloads only on click
+      (function initHeroVideo() {
+        const wrap = document.getElementById("heroVideo");
         if (!wrap) return;
         const video = wrap.querySelector("video");
-        const reduced = window.matchMedia(
-          "(prefers-reduced-motion: reduce)"
-        ).matches;
-
-        if (reduced) {
-          wrap.remove();
-          return;
-        }
-
-        function exit() {
-          wrap.classList.add("translate-y-[130%]", "opacity-0");
-          setTimeout(() => wrap.remove(), 700);
-        }
-
-        video.addEventListener("ended", exit);
-
-        setTimeout(() => {
-          wrap.classList.remove("translate-y-[130%]", "opacity-0");
+        const btn = wrap.querySelector("[data-play]");
+        btn.addEventListener("click", () => {
+          video.preload = "auto";
+          video.controls = true;
+          video.muted = false;
+          btn.classList.add("pointer-events-none", "opacity-0");
           const played = video.play();
           if (played && typeof played.catch === "function") {
-            played.catch(() => wrap.remove());
+            played.catch(() => {
+              btn.classList.remove("pointer-events-none", "opacity-0");
+            });
           }
-        }, 800);
+        });
       })();
     })();
   </script>
@@ -1170,10 +1167,4 @@ const otherCities = cities.filter((c) => !c.isHeadquarters);
       border-color 0.45s;
   }
 
-  /* Floating welcome video */
-  #welcomeVideo {
-    transition:
-      transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
-      opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
 </style>
