@@ -14,11 +14,7 @@ const nextConfig = {
   // workspace deps land in the bundle.
   output: "standalone",
   outputFileTracingRoot: path.join(import.meta.dirname, "../../"),
-  transpilePackages: [
-    "@workspace/ui",
-    "@workspace/drizzle",
-    "@workspace/trpc",
-  ],
+  transpilePackages: ["@workspace/ui", "@workspace/trpc"],
   cacheComponents: true,
   compiler: {
     // Remove all console logs

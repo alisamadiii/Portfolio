@@ -17,6 +17,7 @@
     "format:check": "prettier --check \"src/**/*.{astro,ts,css,md}\" \"scripts/*.mjs\""
   },
   "dependencies": {
+    "@astrojs/node": "^9.4.4",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@workspace/google-analytics": "workspace:*",

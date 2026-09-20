@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-# Self-hosted (Coolify) build for the `agency` Astro static site. Build context = monorepo ROOT.
+# Self-hosted (Coolify) build for the `agency` Astro site. Build context = monorepo ROOT.
+# Marketing pages are prerendered to static files; the @astrojs/node standalone
+# server serves them plus the on-demand /[slug] shortener redirect.
 FROM node:22-slim AS base
 RUN corepack enable
 WORKDIR /app
@@ -18,8 +20,11 @@ COPY --from=pruner /app/out/full/ .
 RUN --mount=type=cache,id=turbo-agency,target=/app/.turbo \
     pnpm turbo build --filter=agency
 
-# 3. nginx serves the static dist
-FROM nginx:alpine AS runner
-COPY --from=builder /app/apps/agency/dist /usr/share/nginx/html
-COPY apps/agency/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+# 3. Node runtime — the standalone server needs the built output + node_modules
+FROM base AS runner
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3004
+WORKDIR /app
+COPY --from=builder /app ./
+WORKDIR /app/apps/agency
+EXPOSE 3004
+CMD ["node", "./dist/server/entry.mjs"]
