@@ -11,9 +11,10 @@ export default defineConfig({
   output: "static",
   adapter: node({ mode: "standalone" }),
   trailingSlash: "never",
-  // Flat dist/pricing.html etc. so Vercel clean URLs serve /pricing exactly
-  // like the old static-directory deploy did (no trailing-slash change).
-  build: { format: "file" },
+  // Directory format (about/index.html) — the @astrojs/node standalone server
+  // resolves prerendered routes this way. `format: "file"` (flat about.html)
+  // made the server miss them and fall through to the SSR [slug] catch-all,
+  // 404-ing nested pages and bouncing top-level ones to the homepage.
   // Next.js-Link-style speed: prefetch every internal link on hover.
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   integrations: [
