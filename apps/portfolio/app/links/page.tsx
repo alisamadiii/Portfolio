@@ -13,8 +13,11 @@ import { CheckIcon, CopyIcon, Trash2Icon } from "lucide-react";
 import { Button, buttonVariants } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 
-// Admin-only URL shortener manager. Data comes from /api/links (admin
-// session required) — non-admins just see the forbidden state.
+// Admin-only URL shortener manager. The CRUD lives on the api app
+// (/api/links, admin session required); this page calls it cross-origin with
+// the shared session cookie — non-admins just see the forbidden state.
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type ShortLink = {
   id: string;
@@ -24,8 +27,11 @@ type ShortLink = {
   createdAt: string | null;
 };
 
-async function api<T>(input: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, init);
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
+    ...init,
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Request failed (${res.status})`);

@@ -16,12 +16,8 @@ const nextConfig = {
   outputFileTracingRoot: path.join(import.meta.dirname, "../../"),
   transpilePackages: [
     "@workspace/ui",
-    "@workspace/auth",
-    "@workspace/cms-core",
     "@workspace/drizzle",
     "@workspace/trpc",
-    "@workspace/email",
-    "@workspace/storage",
   ],
   cacheComponents: true,
   compiler: {

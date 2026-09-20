@@ -4,10 +4,39 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { auth } from "@workspace/auth/auth";
+import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { db } from "@workspace/drizzle/index";
 import { shortLink } from "@workspace/drizzle/schema";
 
-// Admin-only CRUD for the URL shortener (www.alisamadii.com/<slug>).
+// Admin-only CRUD for the URL shortener (www.alisamadii.com/<slug>). Lives on
+// the api app; the /links admin page (on the portfolio app) calls it
+// cross-origin with the shared session cookie, so every response carries CORS
+// credentials headers scoped to an allowed origin.
+
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+  const allowed =
+    origin && ALLOWED_ORIGINS.includes(origin)
+      ? origin
+      : ALLOWED_ORIGINS[0]!;
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+function json(req: Request, body: unknown, init?: ResponseInit) {
+  return NextResponse.json(body, {
+    ...init,
+    headers: { ...corsHeaders(req), ...init?.headers },
+  });
+}
+
+export async function OPTIONS(req: Request) {
+  return new Response(null, { status: 204, headers: corsHeaders(req) });
+}
 
 // Lowercase only, no ambiguous chars (0/O, 1/l) — slugs get read aloud
 // and typed by hand.
@@ -17,23 +46,23 @@ function generateSlug(length = 5) {
   return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("");
 }
 
-async function requireAdmin() {
+async function requireAdmin(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (session?.user.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return json(req, { error: "Forbidden" }, { status: 403 });
   }
   return null;
 }
 
-export async function GET() {
-  const forbidden = await requireAdmin();
+export async function GET(req: Request) {
+  const forbidden = await requireAdmin(req);
   if (forbidden) return forbidden;
 
   const links = await db
     .select()
     .from(shortLink)
     .orderBy(desc(shortLink.createdAt));
-  return NextResponse.json(links);
+  return json(req, links);
 }
 
 const createSchema = z.object({
@@ -45,12 +74,12 @@ const createSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const forbidden = await requireAdmin();
+  const forbidden = await requireAdmin(req);
   if (forbidden) return forbidden;
 
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return json(req, { error: "Invalid input" }, { status: 400 });
   }
 
   const attempts = parsed.data.slug ? 1 : 3;
@@ -61,28 +90,29 @@ export async function POST(req: Request) {
         .insert(shortLink)
         .values({ slug, url: parsed.data.url })
         .returning();
-      return NextResponse.json(link, { status: 201 });
+      return json(req, link, { status: 201 });
     } catch (error) {
       const taken =
         error instanceof Error && error.message.includes("short_link_slug");
       if (!taken || i === attempts - 1) {
-        return NextResponse.json(
+        return json(
+          req,
           { error: taken ? "Slug already taken" : "Failed to create link" },
           { status: taken ? 409 : 500 }
         );
       }
     }
   }
-  return NextResponse.json({ error: "Failed to create link" }, { status: 500 });
+  return json(req, { error: "Failed to create link" }, { status: 500 });
 }
 
 export async function DELETE(req: Request) {
-  const forbidden = await requireAdmin();
+  const forbidden = await requireAdmin(req);
   if (forbidden) return forbidden;
 
   const id = new URL(req.url).searchParams.get("id");
   if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    return json(req, { error: "Missing id" }, { status: 400 });
   }
 
   const [deleted] = await db
@@ -90,7 +120,7 @@ export async function DELETE(req: Request) {
     .where(eq(shortLink.id, id))
     .returning();
   if (!deleted) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return json(req, { error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json(deleted);
+  return json(req, deleted);
 }
