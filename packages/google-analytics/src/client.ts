@@ -3,7 +3,13 @@
 // snippet is already in the page <head> (agency Layout.astro).
 export { GA_MEASUREMENT_ID } from "./config";
 
-export const PLANS = ["waas", "onetime", "ecommerce", "custom"] as const;
+export const PLANS = [
+  "waas",
+  "onetime",
+  "ecommerce",
+  "custom",
+  "newsletter",
+] as const;
 export type Plan = (typeof PLANS)[number];
 
 type AnalyticsEvents = {

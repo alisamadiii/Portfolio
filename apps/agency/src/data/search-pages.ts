@@ -114,6 +114,21 @@ export const SEARCH_PAGES: SearchPage[] = [
     ],
   },
   {
+    title: "Business Newsletter",
+    description:
+      "A managed email newsletter for your local business — your domain, your brand, set up and run for you.",
+    url: "/newsletter",
+    keywords: [
+      "newsletter",
+      "email",
+      "email marketing",
+      "mailchimp",
+      "campaigns",
+      "subscribers",
+      "local business",
+    ],
+  },
+  {
     title: "Locations",
     description:
       "Florida cities we serve — Jacksonville, Miami, Tampa, Orlando, and more.",

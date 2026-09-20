@@ -39,6 +39,7 @@ export const GET: APIRoute = async () => {
 - [Pricing](https://agency.alisamadii.com/pricing): plans and how pricing works.
 - [Contact](https://agency.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://agency.alisamadii.com/blog): articles on how websites get built.
+- [Business Newsletter](https://agency.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
 
 ## Services
 

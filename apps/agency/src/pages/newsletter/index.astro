@@ -1,0 +1,737 @@
+---
+// Offer page for the Managed Newsletter plan — a branded email newsletter
+// run on the client's own domain for local businesses. Quote-only (no public
+// price); every CTA routes to /quote?plan=newsletter. Screenshots live in
+// public/newsletter-app/. Distinct from the footer NewsletterBand, which is
+// the agency's own mailing list.
+import Layout from "../../layouts/Layout.astro";
+import BackNav from "../../components/BackNav.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
+
+const SITE = "https://agency.alisamadii.com";
+const pageUrl = `${SITE}/newsletter`;
+
+// Sticky walkthrough steps — order matters, index drives the image fade.
+const features = [
+  {
+    n: "01",
+    title: "See what's working",
+    body: "One dashboard shows every send at a glance — how many emails were delivered, opened, and clicked, with bounce and complaint rates flagged before they become a problem. No spreadsheets, no guessing whether anyone read it.",
+    img: "/newsletter-app/01-analytics.webp",
+    alt: "Newsletter analytics dashboard showing delivery, open, and click rates for a local business",
+  },
+  {
+    n: "02",
+    title: "Write like a doc",
+    body: "The editor works like a plain document. Type your update, hit / to drop in a heading, image, or button, and use placeholders like the customer's first name so every email feels personal. If you can write a text message, you can write your newsletter.",
+    img: "/newsletter-app/05-template-slash.webp",
+    alt: "Simple newsletter email editor that works like a document, with a slash menu for headings, images, and buttons",
+  },
+  {
+    n: "03",
+    title: "Send in minutes",
+    body: "Pick your contact list, pick the email, send. Each campaign keeps its own record — how many delivered, who unsubscribed — so next month you can see what landed and do more of it.",
+    img: "/newsletter-app/08-campaigns.webp",
+    alt: "Newsletter campaign list showing sent campaigns with delivery progress for each",
+  },
+  {
+    n: "04",
+    title: "Your customers, organized",
+    body: "Subscribers live in simple contact books — your regulars, your event list, whatever fits your business. Sign-ups, unsubscribes, and double opt-in confirmations are handled automatically, so the list stays clean without you touching it.",
+    img: "/newsletter-app/06-contacts.webp",
+    alt: "Contact books organizing newsletter subscribers for a small business",
+  },
+  {
+    n: "05",
+    title: "From your own domain",
+    body: "Emails come from you@yourbusiness.com — not a generic platform address. We set up and verify the technical records (SPF, DKIM, DMARC) that convince inboxes you're legitimate, which is most of the battle for landing outside the spam folder.",
+    img: "/newsletter-app/11-domain-detail.webp",
+    alt: "Verified sending domain with SPF, DKIM, and DMARC email deliverability records all passing",
+  },
+  {
+    n: "06",
+    title: "Every email, tracked",
+    body: "Click into any single email and see its full story — sent, delivered, opened, clicked, down to the device and browser. When a customer says they never got it, you'll know exactly what happened.",
+    img: "/newsletter-app/16-email-detail.webp",
+    alt: "Individual email event timeline showing sent, delivered, opened, and clicked states",
+  },
+];
+
+const faqs = [
+  {
+    q: "What does it cost?",
+    a: "A flat monthly amount quoted for your business — not a per-contact price that climbs every time someone subscribes. For a growing list it works out to a fraction of what Mailchimp or Klaviyo charge, and you get the number in writing before you commit to anything.",
+  },
+  {
+    q: "Do I have to write the newsletter myself?",
+    a: "Only if you want to. The editor is simple enough to send a monthly update in minutes — or you send us the news (a new offer, an event, a menu change) and we write, design, and send it for you.",
+  },
+  {
+    q: "Can I bring my existing contact list?",
+    a: "Yes. Send us the list you have — a spreadsheet, an export from another tool, even a stack of loyalty-card emails — and we import and clean it during setup.",
+  },
+  {
+    q: "Is this just Mailchimp under the hood?",
+    a: "No. It's a private email platform we run for you, branded with your business and sending from your own domain. There's no third-party logo in your emails and no shared platform address.",
+  },
+  {
+    q: "Who owns the subscriber list?",
+    a: "You do, always. Export it any time with one click — and it stays yours even if you cancel.",
+  },
+];
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Business Newsletter",
+        item: pageUrl,
+      },
+    ],
+  },
+  {
+    "@type": "Service",
+    "@id": `${pageUrl}#service`,
+    name: "Managed Email Newsletter",
+    serviceType: "Email newsletter management",
+    description:
+      "A branded email newsletter for local businesses, sent from the business's own domain — setup, deliverability, writing, and sending managed by the agency for a flat monthly amount.",
+    provider: { "@id": `${SITE}/#organization` },
+    areaServed: "US",
+    url: pageUrl,
+  },
+  {
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
+];
+---
+
+<Layout
+  title="Email Newsletter for Local Businesses — Managed for You"
+  description="A branded newsletter your customers actually read — sent from your own domain, tracked open by open. We set it up, keep it out of spam, and can even write it for you."
+  canonical={pageUrl}
+  og={{
+    title: "A Newsletter for Your Local Business — Ali Samadi Agency",
+    description:
+      "Your customers already gave you their emails. We turn that into repeat visits — a branded newsletter on your own domain, set up and managed for a flat monthly amount.",
+    url: pageUrl,
+    twitterDescription:
+      "A managed newsletter for your local business — your domain, your brand, flat monthly quote.",
+    image: "/og/newsletter.jpg",
+  }}
+  schema={schema}
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/" backLabel="Back to Home" fixed />
+
+  <main class="overflow-x-clip">
+    <!-- ==================== HERO ==================== -->
+    <section
+      class="mx-auto max-w-[1300px] px-6 pt-32 pb-[70px] md:px-10 md:pt-40"
+    >
+      <div
+        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-14"
+      >
+        <div class="stagger">
+          <div
+            class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            <span class="h-px w-[26px] bg-accent"></span>Business Newsletter
+          </div>
+          <h1
+            class="reveal max-w-[16ch] text-[clamp(38px,5.5vw,68px)] leading-[1.02] font-semibold tracking-[-0.035em]"
+          >
+            An email newsletter for your local business &mdash;
+            <span class="text-accent-ink">managed for you</span>
+          </h1>
+          <p
+            class="reveal mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+          >
+            Your customers already gave you their emails. We turn that into
+            repeat visits: a newsletter branded like your business, sent from
+            your own domain, simple enough to write in minutes &mdash; or we
+            write and send it for you.
+          </p>
+          <div class="reveal mt-9 flex flex-wrap items-center gap-3.5">
+            <a
+              href="/quote?plan=newsletter"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-charcoal px-6 py-3.5 text-[15.5px] font-medium text-cream hover:bg-accent"
+            >
+              Get a Quote
+              <span>&#8599;</span>
+            </a>
+            <a
+              href="#tour"
+              class="mag-btn px-2 py-3.5 text-[15px] text-warmgray hover:text-charcoal"
+              >See how it works &darr;</a
+            >
+          </div>
+          <p class="reveal mt-6 font-mono text-[12.5px] text-muted">
+            Your domain &middot; your brand &middot; flat monthly quote
+          </p>
+        </div>
+
+        <div
+          class="reveal lg:-mr-[max(2.5rem,calc((100vw-1300px)/2+2.5rem))]"
+        >
+          <div
+            class="overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white shadow-[0_24px_60px_rgba(27,26,23,0.12)] lg:rounded-r-none lg:border-r-0"
+          >
+            <div
+              class="flex items-center gap-1.5 border-b border-charcoal/[0.06] bg-charcoal/[0.02] px-4 py-2.5"
+            >
+              <span class="h-2.5 w-2.5 rounded-full bg-charcoal/[0.12]"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-charcoal/[0.12]"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-charcoal/[0.12]"></span>
+            </div>
+            <img
+              src="/newsletter-app/02-emails.webp"
+              alt="Newsletter dashboard listing sent emails with delivered, opened, and clicked statuses"
+              width="1950"
+              height="1205"
+              loading="eager"
+              fetchpriority="high"
+              class="h-auto w-full"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== HOW IT WORKS ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>How It Works
+      </div>
+      <div
+        class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Three steps, most of them ours
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          You run your business. The newsletter runs alongside it &mdash; we
+          handle the setup and the technical upkeep, you just decide what to
+          tell your customers.
+        </p>
+      </div>
+
+      <div class="stagger mt-11 grid grid-cols-1 gap-[22px] md:grid-cols-3">
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <span class="font-mono text-[32px] font-medium text-accent-ink"
+            >01</span
+          >
+          <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
+            We set it up on your domain
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Emails come from you@yourbusiness.com with your logo and colors. We
+            verify the records inboxes check for (SPF, DKIM, DMARC), import
+            your existing contacts, and build your branded templates.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <span class="font-mono text-[32px] font-medium text-accent-ink"
+            >02</span
+          >
+          <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
+            You write, or we do
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            The editor works like a plain document &mdash; a monthly update
+            takes minutes. Too busy? Send us your news and we write, design,
+            and send it for you.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
+        >
+          <span class="font-mono text-[32px] font-medium text-accent-ink"
+            >03</span
+          >
+          <h3 class="mt-5 text-[19px] font-semibold tracking-[-0.02em]">
+            Customers come back
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
+            Offers, events, and reminders land in inboxes you own &mdash; not
+            an algorithm's feed. You watch opens and clicks turn into repeat
+            visits.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STICKY WALKTHROUGH ==================== -->
+    <section
+      id="tour"
+      class="mx-auto max-w-[1440px] scroll-mt-24 border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>The Tour
+      </div>
+      <div
+        class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+        >
+          Simple enough to <span class="text-accent-ink">actually use</span>
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
+          This is the real product, not a mockup &mdash; the same screens you
+          (or we) will use every month. Scroll through what running your
+          newsletter looks like.
+        </p>
+      </div>
+
+      <!-- Desktop: scrolling text rail + sticky image frame -->
+      <div class="mt-6 hidden lg:grid lg:grid-cols-[0.8fr_1.45fr] lg:gap-14">
+        <div>
+          {
+            features.map((f, i) => (
+              <div
+                class="walk-step flex min-h-[78vh] flex-col justify-center"
+                data-step={i}
+              >
+                <span class="font-mono text-[15px] font-medium text-accent-ink">
+                  {f.n}
+                </span>
+                <h3 class="mt-4 text-[26px] leading-[1.15] font-semibold tracking-[-0.02em]">
+                  {f.title}
+                </h3>
+                <p class="mt-4 max-w-[44ch] text-[15.5px] leading-[1.65] text-warmgray">
+                  {f.body}
+                </p>
+              </div>
+            ))
+          }
+        </div>
+        <div class="lg:-mr-[max(2.5rem,calc((100vw-1440px)/2+2.5rem))]">
+          <div class="sticky top-0 flex h-screen items-center">
+            <div
+              class="walk-frame relative aspect-[1950/1205] w-full overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white shadow-[0_24px_60px_rgba(27,26,23,0.12)] [perspective:1200px] lg:rounded-r-none lg:border-r-0"
+            >
+              {
+                features.map((f, i) => (
+                  <img
+                    src={f.img}
+                    alt={f.alt}
+                    width="1950"
+                    height="1205"
+                    loading="lazy"
+                    class="walk-img absolute inset-0 h-full w-full object-cover"
+                    data-img={i}
+                  />
+                ))
+              }
+              <span
+                class="walk-count absolute right-4 bottom-3 z-10 rounded-full bg-charcoal/[0.65] px-2.5 py-1 font-mono text-[11.5px] tracking-[0.08em] text-cream backdrop-blur-sm"
+                >01 / 06</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile: plain stack, image above text -->
+      <div class="mt-10 space-y-14 lg:hidden">
+        {
+          features.map((f) => (
+            <div class="reveal">
+              <img
+                src={f.img}
+                alt={f.alt}
+                width="1950"
+                height="1205"
+                loading="lazy"
+                class="w-full rounded-[14px] border border-charcoal/[0.08] shadow-[0_14px_34px_rgba(27,26,23,0.10)]"
+              />
+              <span class="mt-6 block font-mono text-[14px] font-medium text-accent-ink">
+                {f.n}
+              </span>
+              <h3 class="mt-2 text-[22px] leading-[1.15] font-semibold tracking-[-0.02em]">
+                {f.title}
+              </h3>
+              <p class="mt-3 text-[15px] leading-[1.6] text-warmgray">
+                {f.body}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== WHY NOT MAILCHIMP ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>The Difference
+      </div>
+      <h2
+        class="reveal max-w-[26ch] text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        The cheapest way for a local business to
+        <span class="text-accent-ink">own its audience</span>
+      </h2>
+
+      <div class="stagger mt-11 grid grid-cols-1 gap-[18px] md:grid-cols-2">
+        <div
+          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-charcoal/[0.02] p-[30px]"
+        >
+          <div
+            class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+          >
+            DIY email platforms
+          </div>
+          <ul class="mt-6 space-y-4 text-[15px] leading-[1.55] text-warmgray">
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Pricing climbs with every contact you add
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              You design templates and fight the editor yourself
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Sent through a shared platform address with their logo in your
+              footer
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-[15px] text-warmgray/60"
+                >&times;</span
+              >
+              Deliverability, list cleanup &amp; setup are your problem
+            </li>
+          </ul>
+        </div>
+
+        <div
+          class="reveal rounded-[18px] border border-accent/60 bg-gradient-to-br from-[#fda98f] via-accent to-[#f26a45] p-[30px] text-charcoal"
+        >
+          <div
+            class="font-mono text-[12.5px] tracking-[0.12em] text-charcoal/70 uppercase"
+          >
+            Your managed newsletter
+          </div>
+          <ul class="mt-6 space-y-4 text-[15px] leading-[1.55] text-charcoal/85">
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Flat quote &mdash; a fraction of what Mailchimp or Klaviyo cost a
+              growing list
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Your own domain and branded templates, set up for you
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              We handle deliverability, suppressions &amp; the boring parts
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              Writing and sending done for you, if you want it
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="mt-0.5 h-4 w-4 shrink-0 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"></path>
+              </svg>
+              You own the list &mdash; export it any time
+            </li>
+          </ul>
+          <div class="mt-8">
+            <a
+              href="/quote?plan=newsletter"
+              class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream hover:bg-white hover:text-charcoal"
+            >
+              Get a Quote
+              <span>&#8599;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section
+      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>FAQ
+      </div>
+      <h2
+        class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
+      >
+        Common questions
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+        {
+          faqs.map((faq) => (
+            <div class="reveal">
+              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+                {faq.q}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
+                {faq.a}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="reveal mt-9 text-[15px] text-warmgray">
+        Want the website to go with it?
+        <a href="/pricing" class="text-accent-ink hover:underline"
+          >See our website plans &rarr;</a
+        >
+      </p>
+    </section>
+
+    <!-- ==================== CTA ==================== -->
+    <section
+      class="relative mx-3 mt-[70px] mb-6 overflow-hidden rounded-[26px] bg-gradient-to-br from-[#fda98f] via-accent to-[#f26a45] text-charcoal md:mx-6"
+    >
+      <div class="relative mx-auto max-w-[1160px] px-6 py-16 md:px-10 md:py-20">
+        <div class="stagger">
+          <div
+            class="reveal mb-7 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-charcoal/70 uppercase"
+          >
+            <span class="h-px w-[26px] bg-charcoal/50"></span>Get Started
+          </div>
+          <h2
+            class="reveal max-w-[18ch] text-[clamp(34px,4.5vw,60px)] leading-[1.04] font-semibold tracking-[-0.035em] text-white"
+          >
+            Your customers' inboxes are
+            <span class="text-charcoal">waiting</span>
+          </h2>
+          <p
+            class="reveal mt-6 max-w-[48ch] text-[17px] leading-[1.55] text-charcoal/80"
+          >
+            Tell us your business name and roughly how many customer emails you
+            have &mdash; we'll reply with a flat monthly price in writing and a
+            plan for your first send.
+          </p>
+          <div class="reveal mt-9">
+            <a
+              href="/quote?plan=newsletter"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-charcoal px-[26px] py-[15px] text-base font-medium text-cream shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:bg-white hover:text-charcoal"
+            >
+              Get a Quote
+              <span>&#8599;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <HomeFooter />
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-gutter: stable;
+  }
+  .mag-btn {
+    transition:
+      transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
+      background-color 0.3s,
+      border-color 0.3s,
+      color 0.3s;
+  }
+  .mag-btn:active {
+    transform: scale(0.97);
+  }
+  .stagger > .reveal:nth-child(1) {
+    transition-delay: 0ms;
+  }
+  .stagger > .reveal:nth-child(2) {
+    transition-delay: 80ms;
+  }
+  .stagger > .reveal:nth-child(3) {
+    transition-delay: 160ms;
+  }
+  .stagger > .reveal:nth-child(4) {
+    transition-delay: 240ms;
+  }
+  .stagger > .reveal:nth-child(5) {
+    transition-delay: 320ms;
+  }
+
+  /* Sticky walkthrough — image crossfade with a subtle 3D tilt.
+     A not-yet-shown image waits right/+5deg; a passed image parks left/−5deg,
+     so scrolling down slides shots in from the right and scrolling up brings
+     the previous one back from the left. */
+  .walk-img {
+    opacity: 0;
+    transform: translateX(18px) rotateY(5deg) scale(0.98);
+    transition:
+      opacity 0.45s ease,
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    backface-visibility: hidden;
+    will-change: opacity, transform;
+  }
+  .walk-img.is-prev {
+    transform: translateX(-18px) rotateY(-5deg) scale(0.98);
+  }
+  .walk-img.is-active {
+    opacity: 1;
+    transform: none;
+    z-index: 1;
+  }
+  .walk-step {
+    transition: opacity 0.4s ease;
+  }
+  .walk-step:not(.is-active) {
+    opacity: 0.35;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .walk-img {
+      transition: opacity 0.2s linear;
+      transform: none !important;
+    }
+    .walk-step {
+      transition: none;
+      opacity: 1 !important;
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-60px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  })();
+</script>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const steps = [...document.querySelectorAll(".walk-step")];
+    const imgs = [...document.querySelectorAll(".walk-img")];
+    const count = document.querySelector(".walk-count");
+    if (!steps.length || !imgs.length) return;
+
+    const setActive = (i) => {
+      imgs.forEach((img, j) => {
+        img.classList.toggle("is-active", j === i);
+        img.classList.toggle("is-prev", j < i);
+      });
+      steps.forEach((step, j) => step.classList.toggle("is-active", j === i));
+      if (count)
+        count.textContent = `${String(i + 1).padStart(2, "0")} / ${String(imgs.length).padStart(2, "0")}`;
+    };
+    setActive(0);
+
+    // A 10%-tall band at the viewport's vertical center: each step is far
+    // taller than the band, so exactly one intersects at a time and the same
+    // trigger fires symmetrically scrolling up or down. On fast scrolls a
+    // batch can contain several entries — the last intersecting one wins, and
+    // we never unset on leave, so state always lands on the current step.
+    const io = new IntersectionObserver(
+      (entries) => {
+        let next = -1;
+        for (const entry of entries) {
+          if (entry.isIntersecting) next = Number(entry.target.dataset.step);
+        }
+        if (next >= 0) setActive(next);
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
+    );
+    steps.forEach((step) => io.observe(step));
+  })();
+</script>
