@@ -13,15 +13,51 @@ export interface HttpTarget {
 // Public URLs pinged every run — real user-facing uptime, catches broken
 // proxy/SSL even when the container itself is "running". Edit freely.
 export const HTTP_TARGETS: HttpTarget[] = [
-  { name: "Portfolio", url: "https://www.alisamadii.com", coolify: { type: "applications", uuid: "g6e8t75qv59bjerrnltwv5dq" } },
-  { name: "Agency", url: "https://agency.alisamadii.com", coolify: { type: "applications", uuid: "ikgth6bdvnycrlqtgh1enyga" } },
-  { name: "Hub", url: "https://hub.alisamadii.com", coolify: { type: "applications", uuid: "i7xogvxrr78uwpsinysnmkag" } },
-  { name: "usesend", url: "https://mail.alisamadii.com", coolify: { type: "services", uuid: "19mzkqnmdibuozcfznsc9z66" } },
-  { name: "EmpowerHer", url: "https://www.empowerher-initiative.org", coolify: { type: "applications", uuid: "j45skvsiimhm0uym35jshwwr" } },
-  { name: "EmpowerHer admin", url: "https://admin.empowerher-initiative.org", coolify: { type: "applications", uuid: "opkslucsxlwgshb4p8rv6f32" } },
-  { name: "EmpowerHer usesend", url: "https://newsletter.empowerher-initiative.org", coolify: { type: "services", uuid: "drjr4oz2d6kb4kk9uqsvqetu" } },
-  { name: "Hazara Oregon", url: "https://www.hazaraoregon.org", coolify: { type: "applications", uuid: "vy4qftmhl4bchlqtrsii37xn" } },
-  { name: "Florida A2Z", url: "https://www.fla2zconstruction.com", coolify: { type: "applications", uuid: "ljwxkm2194xux2xxgmqopv6d" } },
+  {
+    name: "Portfolio",
+    url: "https://me.alisamadii.com",
+    coolify: { type: "applications", uuid: "g6e8t75qv59bjerrnltwv5dq" },
+  },
+  {
+    name: "Agency",
+    url: "https://www.alisamadii.com",
+    coolify: { type: "applications", uuid: "ikgth6bdvnycrlqtgh1enyga" },
+  },
+  {
+    name: "Hub",
+    url: "https://hub.alisamadii.com",
+    coolify: { type: "applications", uuid: "i7xogvxrr78uwpsinysnmkag" },
+  },
+  {
+    name: "usesend",
+    url: "https://mail.alisamadii.com",
+    coolify: { type: "services", uuid: "19mzkqnmdibuozcfznsc9z66" },
+  },
+  {
+    name: "EmpowerHer",
+    url: "https://www.empowerher-initiative.org",
+    coolify: { type: "applications", uuid: "j45skvsiimhm0uym35jshwwr" },
+  },
+  {
+    name: "EmpowerHer admin",
+    url: "https://admin.empowerher-initiative.org",
+    coolify: { type: "applications", uuid: "opkslucsxlwgshb4p8rv6f32" },
+  },
+  {
+    name: "EmpowerHer usesend",
+    url: "https://newsletter.empowerher-initiative.org",
+    coolify: { type: "services", uuid: "drjr4oz2d6kb4kk9uqsvqetu" },
+  },
+  {
+    name: "Hazara Oregon",
+    url: "https://www.hazaraoregon.org",
+    coolify: { type: "applications", uuid: "vy4qftmhl4bchlqtrsii37xn" },
+  },
+  {
+    name: "Florida A2Z",
+    url: "https://www.fla2zconstruction.com",
+    coolify: { type: "applications", uuid: "ljwxkm2194xux2xxgmqopv6d" },
+  },
 ];
 
 // At most one auto-restart per resource per this window — a crash-looping app
