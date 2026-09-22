@@ -16,7 +16,7 @@ const jsonLd = {
         width: 512,
         height: 512,
       },
-      jobTitle: "Full-Stack Developer",
+      jobTitle: "Software Developer",
       sameAs: SOCIAL_LINKS,
     },
     {

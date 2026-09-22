@@ -7,7 +7,6 @@ import { Metadata } from "next";
 import { DevTools } from "@alisamadiillc/devtools";
 
 import { BgPattern } from "@workspace/ui/components/bg-pattern";
-import { Footer } from "@workspace/ui/components/footer";
 import { Providers } from "@workspace/ui/providers";
 
 import { JsonLd } from "@/components/json-ld";
@@ -32,7 +31,7 @@ const fontMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Ali Samadi - Portfolio",
+    default: "Ali Samadi",
     template: "%s | Ali Samadi",
   },
   description: SITE_DESCRIPTION,
@@ -41,7 +40,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     siteName: SITE_NAME,
-    title: "Ali Samadi - Portfolio",
+    title: "Ali Samadi",
     description: SITE_DESCRIPTION,
     type: "website",
     images: [
@@ -55,13 +54,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ali Samadi - Portfolio",
+    title: "Ali Samadi",
     description: SITE_DESCRIPTION,
     images: ["/og-image.png"],
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
@@ -72,6 +71,18 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Gveret+Levin&display=swap"
+        />
+      </head>
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
@@ -80,7 +91,6 @@ export default async function RootLayout({
           <Suspense>
             {/* <BgPattern lessVisibleOn={["/client/", "/blog/how-i-build"]} /> */}
             {children}
-            <Footer />
             <DevTools />
           </Suspense>
         </Providers>
