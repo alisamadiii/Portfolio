@@ -26,8 +26,7 @@ export const apps: Tile[] = [
   { name: "Story", status: "building", img: "/apps/story.png" },
 ];
 
-// Companies I've built for. Logo SVGs live in components/icons/clients.tsx;
-// Area has no glyph, so it falls back to a monogram tile.
+// Companies I've built for. Logo SVGs live in components/icons/clients.tsx.
 // Nonprofit websites built through the agency.
 export const nonprofits: Tile[] = [
   {
@@ -50,5 +49,4 @@ export const clients: Tile[] = [
   { name: "Crosspost", href: "https://www.crosspost.app/", Icon: Crosspost },
   { name: "Bless", href: "https://bless.network/", Icon: Bless },
   { name: "B402", href: "https://www.b402.ai/", Icon: B402 },
-  { name: "Area", href: "https://www.area.club" },
 ];
