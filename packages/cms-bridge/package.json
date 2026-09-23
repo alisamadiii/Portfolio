@@ -1,72 +1,18 @@
 {
   "name": "@alisamadiillc/cms-bridge",
-  "version": "0.9.1",
-  "description": "CMS live-preview & in-page editing bridge for client sites — highlight fields from the CMS, edit text inline on the canvas",
+  "version": "1.0.1",
+  "description": "Build-time source annotator + click-to-request overlay: stamps every element with data-cms-src and posts plain-language change requests to content-pilot",
   "private": false,
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    },
-    "./client": {
-      "import": {
-        "types": "./dist/client.d.ts",
-        "default": "./dist/client.js"
-      },
-      "require": {
-        "types": "./dist/client.d.cts",
-        "default": "./dist/client.cjs"
-      }
-    },
     "./astro": {
-      "import": {
-        "types": "./dist/astro.d.ts",
-        "default": "./dist/astro.js"
-      },
-      "require": {
-        "types": "./dist/astro.d.cts",
-        "default": "./dist/astro.cjs"
-      }
+      "types": "./dist/astro.d.ts",
+      "default": "./dist/astro.js"
     },
-    "./auto": {
-      "import": {
-        "types": "./dist/auto.d.ts",
-        "default": "./dist/auto.js"
-      }
-    },
-    "./rich": {
-      "import": {
-        "types": "./dist/rich.d.ts",
-        "default": "./dist/rich.js"
-      },
-      "require": {
-        "types": "./dist/rich.d.cts",
-        "default": "./dist/rich.cjs"
-      }
-    },
-    "./components": {
-      "types": "./components/index.d.ts",
-      "default": "./components/index.ts"
-    }
-  },
-  "bin": {
-    "cms-bridge": "./dist/cli/index.js"
+    "./client": "./dist/client.global.js"
   },
   "files": [
-    "dist",
-    "docs",
-    "components",
-    "templates"
+    "dist"
   ],
   "peerDependencies": {
     "astro": ">=4.0.0"
@@ -84,28 +30,21 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run",
-    "prepublishOnly": "pnpm build"
+    "test": "vitest run"
   },
   "dependencies": {
-    "@astrojs/compiler": "^2.10.0",
-    "es-module-lexer": "^1.5.0",
-    "magicast": "^0.3.4",
-    "mri": "^1.2.0",
-    "picocolors": "^1.1.0"
+    "@astrojs/compiler": "^2.10.0"
   },
   "devDependencies": {
     "@workspace/typescript-config": "workspace:*",
-    "jsdom": "^30.0.1",
     "tsup": "^8.0.0",
-    "typescript": "^5.9.0",
-    "vitest": "^3.0.0"
+    "typescript": "^5.9.0"
   },
   "keywords": [
     "cms",
-    "live-preview",
-    "contenteditable",
-    "astro-integration"
+    "astro-integration",
+    "ai",
+    "content-editing"
   ],
   "license": "MIT"
 }

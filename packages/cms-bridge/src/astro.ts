@@ -1,65 +1,170 @@
+import { readFileSync } from "node:fs";
+import { parse } from "@astrojs/compiler";
+import type { AstroIntegration } from "astro";
+import {
+  findInsertOffset,
+  formatSrc,
+  SKIP_TAGS,
+  spliceInserts,
+  SRC_ATTR,
+} from "./core/annotate.js";
+import type { Insert } from "./core/annotate.js";
+import type { BridgeOptions, BridgeRuntimeConfig } from "./core/options.js";
+
+/** Recursively collect annotation inserts for every plain HTML element node. */
+function collectInserts(
+  node: any,
+  buf: Buffer,
+  project: string | undefined,
+  srcPath: string,
+  out: Insert[]
+): void {
+  if (
+    node.type === "element" &&
+    !SKIP_TAGS.has(node.name) &&
+    node.position?.start
+  ) {
+    const offset = findInsertOffset(buf, node.position.start.offset);
+    if (offset !== -1) {
+      out.push({
+        offset,
+        text: ` ${SRC_ATTR}="${formatSrc(project, srcPath, node.position.start.line)}"`,
+      });
+    }
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children)
+      collectInserts(child, buf, project, srcPath, out);
+  }
+}
+
 /**
- * Astro integration. Injects a ~200 B inline check on every page; the actual
- * bridge is a lazy Vite chunk fetched only when `?cms-preview=…` is present
- * (or a prior boot in this tab stored the mode in sessionStorage) — zero cost
- * for normal visitors.
- *
- * `auto: true` additionally registers a build-time Vite pre-transform that
- * wires plain HTML to the CMS automatically (see docs/auto.md). The transform
- * lives in the node-only `./auto` export and is imported lazily so this
- * module stays browser-bundle-safe.
+ * Annotate one .astro source string: stamp `data-cms-src="<project>:<srcPath>:<line>"`
+ * onto every plain HTML element. Returns the new source, or null when there is
+ * nothing to annotate. Pure and framework-context-free so it is unit-testable
+ * and reusable by other adapters. Throws only if the compiler parse fails —
+ * the Vite plugin below catches that and fails open.
  */
-
-// Minimal structural types so `astro` isn't a hard dependency.
-interface AstroIntegrationLike {
-  name: string;
-  hooks: {
-    "astro:config:setup"?: (options: {
-      injectScript: (stage: "page", content: string) => void;
-      updateConfig: (config: {
-        vite: { plugins: unknown[] };
-      }) => void;
-      config: { root: URL };
-    }) => void | Promise<void>;
-  };
+export async function annotateAstroSource(
+  source: string,
+  opts: { project?: string; srcPath: string }
+): Promise<string | null> {
+  const { ast } = await parse(source, { position: true });
+  const buf = Buffer.from(source);
+  const inserts: Insert[] = [];
+  collectInserts(ast, buf, opts.project, opts.srcPath, inserts);
+  return spliceInserts(buf, inserts);
 }
 
-export interface CmsBridgeOptions {
-  /**
-   * Build-time auto-wiring: annotate plain HTML with data-cms-* attrs,
-   * substitute values from the pages JSON (JSON wins), and seed missing keys
-   * from markup literals. Default false — zero behavior change.
-   */
-  auto?: boolean;
-}
-
-const LOADER = [
-  `(function(){`,
-  `var p=new URLSearchParams(location.search).has("cms-preview");`,
-  `var s=null;try{s=sessionStorage.getItem("cms-bridge-mode")}catch(e){}`,
-  `if(p||s){import("@alisamadiillc/cms-bridge/client").then(function(m){m.boot()})}`,
-  `})();`,
-].join("");
-
-export default function cmsBridge({ auto = false }: CmsBridgeOptions = {}): AstroIntegrationLike {
+/**
+ * cms-bridge — build-time source annotator + click-to-submit overlay for Astro.
+ *
+ * When enabled:
+ *  - Every rendered HTML element gets `data-cms-src="<project>:src/…/File.astro:LINE"`
+ *    (its owning source file + line), surviving production builds.
+ *  - Every page loads a tiny overlay script. It is inert until the page is
+ *    opened with the edit-mode URL param carrying an intake token (the hub
+ *    injects it into the iframe). Then hover shows a cursor box around editable
+ *    elements; clicking opens a popover where the client describes a change,
+ *    which is POSTed to the content-pilot intake endpoint to create an edit job.
+ *
+ * The intake token is never baked into the built site — it arrives at runtime
+ * via the URL param and is sent as an Authorization header.
+ *
+ * When disabled: nothing is injected at all.
+ */
+export default function cmsBridge({
+  enabled = false,
+  project,
+  endpoint,
+  repoId,
+  owner,
+  repo,
+  branch = "main",
+  pathPrefix = "",
+}: BridgeOptions): AstroIntegration {
   return {
-    name: "@alisamadiillc/cms-bridge",
+    name: "cms-bridge",
     hooks: {
-      async "astro:config:setup"({ injectScript, updateConfig, config }) {
-        injectScript("page", LOADER);
-        if (auto) {
-          // Variable specifier: opaque to esbuild + the dts resolver, so the
-          // node-only module never leaks into the browser bundle or types.
-          const specifier = "@alisamadiillc/cms-bridge/auto";
-          const { autoCmsVitePlugin } = await import(/* @vite-ignore */ specifier);
-          updateConfig({
-            vite: {
-              plugins: [
-                autoCmsVitePlugin({ root: config.root.pathname }),
-              ],
-            },
-          });
+      "astro:config:setup": ({ config, injectScript, updateConfig, logger }) => {
+        if (!enabled) return;
+        if (!endpoint || !repoId || !owner || !repo) {
+          logger.warn(
+            "cms-bridge: endpoint/repoId/owner/repo are required — edit submissions will fail."
+          );
         }
+
+        const rootDir = config.root;
+
+        updateConfig({
+          vite: {
+            plugins: [
+              {
+                name: "cms-src",
+                // Hook-level order:"pre" is required — Astro's own .astro
+                // transform has no order, so this is guaranteed to run first
+                // and receive raw .astro source (plugin position alone is not
+                // enough; Astro appends integration plugins after its own).
+                transform: {
+                  order: "pre",
+                  async handler(source: string, id: string) {
+                    if (!id.endsWith(".astro") || id.includes("node_modules"))
+                      return null;
+                    // Ordering regression guard: compiled output, not raw source.
+                    if (source.includes("astro/compiler-runtime")) {
+                      logger.warn(
+                        `cms-src received compiled output for ${id} — skipping (plugin ordering broke)`
+                      );
+                      return null;
+                    }
+                    try {
+                      const srcPath =
+                        pathPrefix +
+                        id
+                          .slice(rootDir.pathname.length)
+                          .replace(/^\/+/, "")
+                          .split("\\")
+                          .join("/");
+                      const code = await annotateAstroSource(source, {
+                        project,
+                        srcPath,
+                      });
+                      if (code == null) return null;
+                      return { code, map: null };
+                    } catch (err) {
+                      // Fail-open: an annotation failure must never break a build.
+                      logger.warn(
+                        `cms-src skipped ${id}: ${err instanceof Error ? err.message : err}`
+                      );
+                      return null;
+                    }
+                  },
+                },
+              },
+            ],
+          },
+        });
+
+        // Runtime config for the overlay — repo identity only, NO secret. The
+        // intake token arrives at runtime via the edit-mode URL param.
+        const runtime: BridgeRuntimeConfig = {
+          project,
+          endpoint,
+          repoId,
+          owner,
+          repo,
+          branch,
+        };
+        injectScript(
+          "page",
+          `window.__CMS_BRIDGE__=${JSON.stringify(runtime)};`
+        );
+
+        // The browser overlay (built IIFE), injected inline on every page.
+        injectScript(
+          "page",
+          readFileSync(new URL("./client.global.js", import.meta.url), "utf-8")
+        );
       },
     },
   };

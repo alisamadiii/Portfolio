@@ -1,1121 +1,723 @@
 /**
- * Browser bridge for client sites. Booted only when the page URL carries
- * `?cms-preview=…` (the CMS iframe adds it) or a previous boot in this tab
- * stored the mode in sessionStorage (Astro's ClientRouter drops the query
- * param on soft navigations).
+ * cms-bridge browser overlay. Injected inline on every page by the framework
+ * adapter. Inert until the page is opened with `?cms-edit` (or `?cms-edit=<token>`),
+ * which flags the session. Then: a cursor box morphs around editable elements;
+ * clicking one opens a popover where the client describes a change, which is
+ * POSTed to the content-pilot intake endpoint to create an edit job.
  *
- * Modes:
- *  - "highlight" (`?cms-preview=1`) — read-only; scroll+highlight the element
- *    whose `data-cms-field` matches the field focused in the CMS form.
- *  - "edit" (`?cms-preview=edit`) — canvas mode; leaf `data-cms-field` text
- *    elements become contenteditable and edits are posted to the parent.
- *
- * The field path, the JSON key path, and the `data-cms-field` value are the
+ * The real security boundary is the server-side origin whitelist on the intake
+ * endpoint — the `token` here is only UX gating for turning edit mode on.
  */
 
-import {
-  envelope,
-  isBridgeEnvelope,
-  type BridgeMode,
-  type CmsToBridgeMessage,
-  type FieldInfo,
-  type GroupInfo,
-  type GroupMember,
-  type LegacyFieldFocusMessage,
-} from "./protocol";
-import { HL_CLASS, readRich, renderRich } from "./rich";
-import { REGION_COLORS } from "./colors";
+interface CmsBridgeConfig {
+  project?: string;
+  endpoint?: string;
+  repoId?: number;
+  owner?: string;
+  repo?: string;
+  branch?: string;
+}
 
-const PARAM = "cms-preview";
-const MODE_KEY = "cms-bridge-mode";
-const HIGHLIGHT_CLASS = "cms-preview-highlight";
-const STYLE_ID = "cms-preview-style";
-const FIELD_ATTR = "data-cms-field";
-/**
- * Explicit editor kind, emitted by the bridge components (`<Heading1>`,
- * `<Image>`, `<Group>`, …). When present it is trusted outright — no leaf
- * heuristics, no CMS whitelist — which is what makes component-tagged
- * elements reliably editable. Values: "text" | "media" | "link" | "group".
- */
-const KIND_ATTR = "data-cms-kind";
-/** Index wrapper inside a `<Group>` (`<Item index={i}>`). */
-const ITEM_ATTR = "data-cms-item";
-const EDITABLE_ATTR = "data-cms-editable";
-const MEDIA_ATTR = "data-cms-media";
-const LINK_ATTR = "data-cms-link";
-const GROUP_ATTR = "data-cms-group";
-/** Authored: a page region driven by a CMS collection (`<Collection name>`). */
-const COLLECTION_ATTR = "data-cms-collection";
-/** Runtime marker set only in edit mode, so the outline never shows on live sites. */
-const COLLECTION_EDIT_ATTR = "data-cms-collection-edit";
-/** Authored: a variant region (any component's `variant` prop). Value = the name (or ""). */
-const VARIANT_ATTR = "data-cms-variant";
-/** Runtime marker (edit-mode only): a variant region — green outline, click opens it. */
-const VARIANT_EDIT_ATTR = "data-cms-variant-edit";
-/** Authored: a blog region (`<Region type="blog">`). */
-const BLOG_ATTR = "data-cms-blog";
-/** Runtime marker (edit-mode only): a blog region — yellow outline, click opens Blog settings. */
-const BLOG_EDIT_ATTR = "data-cms-blog-edit";
-/** Runtime marker (edit-mode only): a text leaf not wired to the CMS — shows a red outline. */
-const LOCKED_ATTR = "data-cms-locked";
-/** Bridge-injected UI (group add button, item move/remove pills) — never content. */
-const UI_ATTR = "data-cms-ui";
-const UI_ACTION_ATTR = "data-cms-ui-action";
-const INPUT_THROTTLE_MS = 150;
-
-/** Tags that never make sense as editable text hosts. */
-const NON_TEXT_TAGS = new Set([
-  "IMG",
-  "PICTURE",
-  "VIDEO",
-  "AUDIO",
-  "IFRAME",
-  "SVG",
-  "INPUT",
-  "TEXTAREA",
-  "SELECT",
-  "BUTTON",
-  "SOURCE",
-]);
-
-/**
- * The CMS's editable whitelist (from the `editable` message). `null` until it
- * arrives — until then every tagged leaf is armed (back-compat with CMS builds
- * that never send it). Once set, a path in none of the sets stays inert.
- */
-let editable: {
-  arm: Set<string>;
-  media: Set<string>;
-  link: Set<string>;
-} | null = null;
-
-let booted = false;
-let mode: BridgeMode = "highlight";
-let current: Element | null = null;
-let focusSnapshot: { el: HTMLElement; path: string; value: string } | null =
-  null;
-let inputTimer: ReturnType<typeof setTimeout> | null = null;
-
-function post(msg: { type: string } & Record<string, unknown>): void {
-  if (window.parent && window.parent !== window) {
-    window.parent.postMessage(envelope(msg), "*");
+declare global {
+  interface Window {
+    __CMS_BRIDGE__?: CmsBridgeConfig;
+    __cmsBridgeBound?: boolean;
   }
 }
 
-function esc(value: string): string {
-  return window.CSS && CSS.escape ? CSS.escape(value) : value;
-}
+(function () {
+  const CFG: CmsBridgeConfig = window.__CMS_BRIDGE__ || {};
+  // Obscure, non-obvious activation param — a random visitor won't stumble on
+  // it, and the value is the intake token (real auth is server-side).
+  const EDIT_PARAM = "e7k9x2fq";
+  // sessionStorage key holding the intake token for this edit session.
+  const TOKEN_KEY = "cms-bridge-token";
+  const EDITABLE =
+    "h1,h2,h3,h4,h5,h6,p,span,a,button,img,li,blockquote,figcaption," +
+    "label,input:not([type=hidden]):not([aria-hidden=true]),textarea";
+  // Accent is a fixed brand blue for the overlay — never read from the host
+  // site, so the ring/border/cursor look identical across every client.
+  const ACCENT = "#4f7fff";
+  const ringColor = () => `color-mix(in oklch, ${ACCENT} 45%, transparent)`;
 
-// ---------------------------------------------------------------------------
-// Highlight (ported from the original public/cms-preview.js)
-// ---------------------------------------------------------------------------
-
-function injectStyle(): void {
-  if (document.getElementById(STYLE_ID)) return;
-  const style = document.createElement("style");
-  style.id = STYLE_ID;
-  style.textContent =
-    // Accent = the hub dashboard's primary green (oklch). Held in a var so the
-    // whole overlay recolors from one place; alpha variants use oklch's `/ a`.
-    // Region-type colors come from the shared `REGION_COLORS` map so the iframe
-    // markers match the hub's icons exactly. --cms-accent stays the variant green
-    // (used by the hover/flash rules below).
-    `:root{--cms-accent:${REGION_COLORS.variant};--cms-variant:${REGION_COLORS.variant};` +
-    `--cms-collection:${REGION_COLORS.collection};--cms-blog:${REGION_COLORS.blog};` +
-    `--cms-locked:oklch(0.58 0.22 27);}` +
-    // Variant region (green): a component flagged with `variant`. Persistent in
-    // edit mode + clickable; marker stripped on disarm so live sites stay clean.
-    `[${VARIANT_EDIT_ATTR}]{outline:2px solid var(--cms-variant);outline-offset:2px;` +
-    `background:color-mix(in oklch,var(--cms-variant) 8%,transparent);border-radius:2px;cursor:pointer;}` +
-    // Blog region (yellow): `<Region type="blog">` — click opens Blog settings.
-    `[${BLOG_EDIT_ATTR}]{outline:2px solid var(--cms-blog);outline-offset:2px;` +
-    `background:color-mix(in oklch,var(--cms-blog) 12%,transparent);border-radius:2px;cursor:pointer;}` +
-    // Locked (red): text with no CMS wiring — persistent + low alpha so a page of
-    // static text isn't overwhelming. Edit-mode only (marker stripped on disarm).
-    `[${LOCKED_ATTR}]{outline:1px dashed oklch(0.58 0.22 27 / .35);outline-offset:2px;` +
-    `background:oklch(0.58 0.22 27 / .07);}` +
-    `.${HIGHLIGHT_CLASS}{outline:2px solid var(--cms-accent);outline-offset:3px;border-radius:2px;` +
-    `animation:cms-preview-pulse 1.2s ease-out;}` +
-    `@keyframes cms-preview-pulse{0%{box-shadow:0 0 0 0 oklch(0.60 0.13 163 / .5);}` +
-    `100%{box-shadow:0 0 0 14px oklch(0.60 0.13 163 / 0);}}` +
-    `[${EDITABLE_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .6);outline-offset:2px;cursor:text;}` +
-    `[${EDITABLE_ATTR}]:focus{outline:2px solid var(--cms-accent);outline-offset:2px;border-radius:2px;}` +
-    `[${MEDIA_ATTR}]:hover{outline:2px dashed oklch(0.60 0.13 163 / .7);outline-offset:2px;cursor:pointer;}` +
-    `[${LINK_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .5);outline-offset:3px;}` +
-    `[${GROUP_ATTR}]:hover{outline:1px dashed oklch(0.60 0.13 163 / .55);outline-offset:4px;cursor:pointer;}` +
-    // Collection region (purple). Marker is edit-mode-only so live sites stay clean.
-    `[${COLLECTION_EDIT_ATTR}]{outline:2px dashed var(--cms-collection);outline-offset:4px;cursor:pointer;}` +
-    `[${UI_ATTR}="collection-tools"]{position:absolute;top:8px;right:8px;z-index:2147483001;` +
-    `display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;}` +
-    `[${COLLECTION_EDIT_ATTR}]>[${UI_ATTR}="collection-tools"]{opacity:1;pointer-events:auto;}` +
-    `[${UI_ATTR}="collection-tools"] button{border:0;border-radius:9999px;background:var(--cms-collection);` +
-    `color:#fff;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);}` +
-    // Group structural-edit UI. Host tools (✎ Edit content + '+ Add') sit in one
-    // flex toolbar at the host's top-right so they never overlap each other; the
-    // per-item move/remove pill sits at the item's top-LEFT so it never overlaps
-    // the host toolbar. Host tools render above item controls if they meet.
-    `[${UI_ATTR}]{font:600 12px/1 system-ui,sans-serif;}` +
-    `[${UI_ATTR}="group-tools"]{position:absolute;top:8px;right:8px;z-index:2147483001;` +
-    `display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;}` +
-    `[${KIND_ATTR}="group"]:hover>[${UI_ATTR}="group-tools"]{opacity:1;pointer-events:auto;}` +
-    `[${UI_ATTR}="group-tools"] button{border:0;border-radius:9999px;background:var(--cms-accent);` +
-    `color:#fff;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);}` +
-    `[${UI_ATTR}="item-controls"]{position:absolute;top:8px;left:8px;z-index:2147483000;` +
-    `display:flex;gap:2px;border-radius:9999px;background:rgba(24,24,27,.85);padding:2px;` +
-    `opacity:0;transition:opacity .15s;}` +
-    `[${ITEM_ATTR}]:hover>[${UI_ATTR}="item-controls"]{opacity:1;}` +
-    `[${UI_ATTR}="item-controls"] button{border:0;border-radius:9999px;background:transparent;` +
-    `color:#fff;width:24px;height:24px;cursor:pointer;display:grid;place-items:center;}` +
-    `[${UI_ATTR}="item-controls"] button:hover{background:var(--cms-accent);}`;
-  document.head.appendChild(style);
-}
-
-function clearHighlight(): void {
-  if (current) {
-    current.classList.remove(HIGHLIGHT_CLASS);
-    current = null;
-  }
-}
-
-function resolve(field: string): Element | null {
-  if (!field) return null;
-  let el = document.querySelector(`[${FIELD_ATTR}="${esc(field)}"]`);
-  if (el) return el;
-  // Prefix fallback: focusing `hero.cta.link` highlights the `hero.cta` element.
-  const parts = field.split(".");
-  while (parts.length > 1) {
-    parts.pop();
-    el = document.querySelector(`[${FIELD_ATTR}="${esc(parts.join("."))}"]`);
-    if (el) return el;
-  }
-  // Child fallback: focusing an object highlights its first tagged descendant.
-  return document.querySelector(`[${FIELD_ATTR}^="${esc(field)}."]`);
-}
-
-function highlight(field: string): void {
-  const el = resolve(field);
-  clearHighlight();
-  if (!el) return;
-  injectStyle();
-  el.classList.remove(HIGHLIGHT_CLASS);
-  void (el as HTMLElement).offsetWidth; // reflow so the pulse restarts on re-focus
-  el.classList.add(HIGHLIGHT_CLASS);
-  current = el;
-  el.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-// ---------------------------------------------------------------------------
-// Edit mode
-// ---------------------------------------------------------------------------
-
-function supportsPlaintextOnly(): boolean {
-  const div = document.createElement("div");
+  // ---------- activation ----------
+  // The hub opens the iframe with `?<EDIT_PARAM>=<token>`. We stash the token in
+  // sessionStorage (survives in-site navigation, dies with the tab, never in the
+  // built bundle) and immediately strip it from the URL so it doesn't linger in
+  // history or referer.
   try {
-    div.contentEditable = "plaintext-only";
+    const params = new URLSearchParams(location.search);
+    if (params.has(EDIT_PARAM)) {
+      const token = params.get(EDIT_PARAM) || "";
+      if (token) sessionStorage.setItem(TOKEN_KEY, token);
+      params.delete(EDIT_PARAM);
+      const qs = params.toString();
+      history.replaceState(
+        null,
+        "",
+        location.pathname + (qs ? "?" + qs : "") + location.hash
+      );
+    }
   } catch {
-    return false;
+    /* sessionStorage/URL may be unavailable — stay inert */
   }
-  return div.contentEditable === "plaintext-only";
-}
 
-function isEditableCandidate(el: Element): boolean {
-  if (NON_TEXT_TAGS.has(el.tagName)) return false;
-  // Leaf only: no nested tagged fields, no media inside.
-  if (el.querySelector(`[${FIELD_ATTR}]`)) return false;
-  if (el.querySelector("img,picture,video,svg,iframe")) return false;
-  return true;
-}
-
-type FieldKind = "text" | "media" | "link" | "group" | "none";
-
-const EXPLICIT_KINDS = new Set(["text", "media", "link", "group"]);
-
-/** Explicit `data-cms-kind` from a bridge component, or null. */
-function declaredKind(el: Element): FieldKind | null {
-  const raw = el.getAttribute(KIND_ATTR);
-  return raw && EXPLICIT_KINDS.has(raw) ? (raw as FieldKind) : null;
-}
-
-/** What editor a tagged path gets. Without a whitelist, everything is text. */
-function kindForPath(path: string): FieldKind {
-  if (!editable) return "text";
-  if (editable.media.has(path)) return "media";
-  if (editable.link.has(path)) return "link";
-  if (editable.arm.has(path)) return "text";
-  return "none";
-}
-
-/**
- * The editor kind of an element. An explicit `data-cms-kind` (bridge
- * component) is trusted outright; otherwise fall back to the CMS whitelist
- * (legacy schema-driven sites) or, absent both, plain text.
- */
-function kindOf(el: Element, path: string): FieldKind {
-  return declaredKind(el) ?? kindForPath(path);
-}
-
-function armTextEditable(host: HTMLElement, plaintext: boolean): void {
-  if (host.hasAttribute(EDITABLE_ATTR)) return;
-  host.setAttribute(EDITABLE_ATTR, "");
-  host.setAttribute("contenteditable", plaintext ? "plaintext-only" : "true");
-  host.setAttribute("spellcheck", "false");
-}
-
-function armEditables(): void {
-  const plaintext = supportsPlaintextOnly();
-  const nodes = document.querySelectorAll(`[${FIELD_ATTR}]`);
-  for (const el of Array.from(nodes)) {
-    const host = el as HTMLElement;
-    const path = host.getAttribute(FIELD_ATTR);
-    if (!path) continue;
-    // A variant region is edited via its variant editor (a click opens it), so
-    // it never arms as inline text / media / link — variant wins over the field.
-    if (host.hasAttribute(VARIANT_ATTR) || host.hasAttribute(BLOG_ATTR))
-      continue;
-    // Anything inside a `<Group>` host is edited ONLY through that group's CMS
-    // dialog — never inline. So a descendant of a `[data-cms-kind="group"]`
-    // element never arms individually (no contenteditable / media / link
-    // marker). Starting from `parentElement` leaves the group host itself
-    // armable, so its click still opens the dialog.
-    if (host.parentElement?.closest(`[${KIND_ATTR}="group"]`)) {
-      continue;
+  const getToken = (): string => {
+    try {
+      return sessionStorage.getItem(TOKEN_KEY) || "";
+    } catch {
+      return "";
     }
-    // Outside groups: only the top-level tagged element of a cluster is
-    // interactive. A tagged descendant is edited via its ancestor's popover —
-    // EXCEPT component-declared elements (`data-cms-kind`), which always arm.
-    if (!declaredKind(host) && host.parentElement?.closest(`[${FIELD_ATTR}]`)) {
-      continue;
-    }
-    switch (kindOf(host, path)) {
-      case "none":
-        // Tagged in the markup but not a real CMS field — leave inert.
-        continue;
-      case "group":
-        // Explicit `<Group>` host: click opens the CMS group editor. Its item
-        // children arm individually on their own iterations.
-        host.setAttribute(GROUP_ATTR, "");
-        break;
-      case "media":
-        // Images open the media picker on click (never contenteditable).
-        host.setAttribute(MEDIA_ATTR, "");
-        break;
-      case "link":
-        if (host.tagName === "A") {
-          // The anchor opens a URL popover; its inner label span arms as text
-          // on its own iteration.
-          host.setAttribute(LINK_ATTR, "");
-        } else if (isEditableCandidate(host)) {
-          // A standalone URL string with no anchor — edit it as plain text.
-          armTextEditable(host, plaintext);
-        }
-        break;
-      case "text":
-        if (isEditableCandidate(host)) {
-          armTextEditable(host, plaintext);
-        } else if (!host.hasAttribute(GROUP_ATTR)) {
-          // Non-leaf text field — it wraps other tagged fields (or media), so it
-          // can't be contenteditable. Arm it as a group host: a click opens the
-          // CMS popover editing this field plus its tagged descendants. Those
-          // descendants still arm on their own loop iterations, so inline
-          // editing of the inner span keeps working.
-          host.setAttribute(GROUP_ATTR, "");
-        }
-        break;
-    }
-  }
-  injectStyle();
-}
-
-function disarmEditables(): void {
-  removeGroupControls();
-  for (const el of Array.from(
-    document.querySelectorAll(`[${EDITABLE_ATTR}]`)
-  )) {
-    el.removeAttribute("contenteditable");
-    el.removeAttribute(EDITABLE_ATTR);
-  }
-  for (const el of Array.from(document.querySelectorAll(`[${MEDIA_ATTR}]`)))
-    el.removeAttribute(MEDIA_ATTR);
-  for (const el of Array.from(document.querySelectorAll(`[${LINK_ATTR}]`)))
-    el.removeAttribute(LINK_ATTR);
-  for (const el of Array.from(document.querySelectorAll(`[${GROUP_ATTR}]`)))
-    el.removeAttribute(GROUP_ATTR);
-}
-
-function editableFrom(target: EventTarget | null): HTMLElement | null {
-  if (!(target instanceof Element)) return null;
-  const el = target.closest(`[${EDITABLE_ATTR}]`);
-  return el instanceof HTMLElement ? el : null;
-}
-
-function fieldPathOf(el: HTMLElement): string | null {
-  return el.getAttribute(FIELD_ATTR);
-}
-
-function valueOf(el: HTMLElement): string {
-  return (el.textContent ?? "").trim();
-}
-
-function scheduleInput(el: HTMLElement, path: string): void {
-  if (inputTimer) return;
-  inputTimer = setTimeout(() => {
-    inputTimer = null;
-    post({ type: "field-input", path, value: valueOf(el) });
-  }, INPUT_THROTTLE_MS);
-}
-
-/**
- * The mark span's styling (markClass/markStyle) is authored on the component
- * and carried on the host element's data-cms-mark-* attributes, so the bridge
- * can rebuild the exact `<span class="cms-mark …">` when it re-renders from the
- * plain-string value — the styling survives every edit and `set`.
- */
-function markOpts(el: HTMLElement): {
-  markClass?: string | string[];
-  markStyle?: string;
-  hlClass?: string | string[];
-} {
-  // "||" joins per-occurrence class lists (auto mode preserves each source
-  // span's own styling); a plain value applies to every occurrence.
-  const split = (v: string | null): string | string[] | undefined =>
-    v == null ? undefined : v.includes("||") ? v.split("||") : v;
-  return {
-    markClass: split(el.getAttribute("data-cms-mark-class")),
-    markStyle: el.getAttribute("data-cms-mark-style") ?? undefined,
-    hlClass: split(el.getAttribute("data-cms-hl-class")),
   };
-}
 
-function commit(el: HTMLElement, path: string, original: string): void {
-  if (inputTimer) {
-    clearTimeout(inputTimer);
-    inputTimer = null;
+  const active = () => getToken() !== "";
+
+  if (!active()) return;
+
+  // ---------- payload ----------
+
+  function sourceRefFor(el: Element): string {
+    const srcEl = el.closest("[data-cms-src]");
+    return srcEl ? srcEl.getAttribute("data-cms-src") || "" : "";
   }
-  const value = valueOf(el);
-  // Re-render inline markup in this frame (the element was flattened to plain
-  // source while editing). Always — even on an unchanged/Escape revert.
-  el.innerHTML = renderRich(value, markOpts(el));
-  if (value === original) return;
-  post({ type: "field-commit", path, value });
-}
 
-/**
- * The editable fields inside a group host: the host itself first, then every
- * tagged descendant that resolves to a real CMS field. Deduped by path so a
- * descendant that is itself a group host isn't listed twice.
- */
-function collectGroupMembers(host: HTMLElement): GroupMember[] {
-  const out: GroupMember[] = [];
-  const seen = new Set<string>();
-  const push = (el: Element): void => {
-    const path = el.getAttribute(FIELD_ATTR);
-    if (!path || seen.has(path)) return;
-    const kind = kindOf(el, path);
-    if (kind === "none" || kind === "group") return;
-    seen.add(path);
-    out.push({ path, kind });
-  };
-  push(host);
-  for (const el of Array.from(host.querySelectorAll(`[${FIELD_ATTR}]`)))
-    push(el);
-  return out;
-}
-
-/** Ask the CMS to open the group popover for a non-leaf tagged host. */
-function activateGroup(host: HTMLElement): void {
-  const path = host.getAttribute(FIELD_ATTR);
-  if (!path) return;
-  const rect = host.getBoundingClientRect();
-  post({
-    type: "field-activate",
-    path,
-    kind: "group",
-    members: collectGroupMembers(host),
-    rect: {
-      x: rect.left,
-      y: rect.top,
-      width: rect.width,
-      height: rect.height,
-    },
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Group structural editing (add / remove / reorder items).
-//
-// Hub-authoritative: the bridge only posts `group-op`; the CMS splices the
-// draft array and answers `group-apply`, which mutates the DOM (cloneNode for
-// add, remove, reinsert for move), reindexes every descendant field path
-// positionally from DOM order, then applies the flattened values.
-// ---------------------------------------------------------------------------
-
-/** The `<Item>` wrappers that belong directly to this group host (DOM order). */
-function groupItems(host: Element): HTMLElement[] {
-  return Array.from(host.querySelectorAll(`[${ITEM_ATTR}]`)).filter(
-    (item): item is HTMLElement =>
-      item instanceof HTMLElement &&
-      item.parentElement?.closest(`[${KIND_ATTR}="group"]`) === host
-  );
-}
-
-/** Flush any in-flight edit (blur commits; old-index paths must not fire late). */
-function flushPendingEdit(): void {
-  const active = document.activeElement;
-  if (active instanceof HTMLElement && active.hasAttribute(EDITABLE_ATTR)) {
-    active.blur(); // synchronously dispatches focusout → commit
-  }
-  if (inputTimer) {
-    clearTimeout(inputTimer);
-    inputTimer = null;
-  }
-}
-
-function requestGroupOp(
-  host: HTMLElement,
-  op: "add" | "remove" | "move",
-  index: number,
-  toIndex?: number
-): void {
-  const path = host.getAttribute(FIELD_ATTR);
-  if (!path) return;
-  flushPendingEdit();
-  post({ type: "group-op", path, op, index, toIndex });
-}
-
-/** Remove bridge-injected UI and runtime attrs from a cloned item subtree. */
-function sanitizeClone(clone: HTMLElement): void {
-  for (const ui of Array.from(clone.querySelectorAll(`[${UI_ATTR}]`)))
-    ui.remove();
-  const nodes = [clone, ...Array.from(clone.querySelectorAll("*"))];
-  for (const node of nodes) {
-    node.removeAttribute("contenteditable");
-    node.removeAttribute(EDITABLE_ATTR);
-    node.removeAttribute(MEDIA_ATTR);
-    node.removeAttribute(LINK_ATTR);
-    node.removeAttribute(GROUP_ATTR);
-    node.classList.remove(HIGHLIGHT_CLASS);
-  }
-}
-
-/**
- * Rewrite `data-cms-item` indices and the index segment of every descendant
- * `data-cms-field` from DOM order. Positional (never string-replace of the old
- * index), so it is idempotent and never double-shifts.
- */
-function reindexGroup(host: HTMLElement, path: string): void {
-  const prefix = `${path}.`;
-  groupItems(host).forEach((item, index) => {
-    item.setAttribute(ITEM_ATTR, String(index));
-    const tagged = [
-      item,
-      ...Array.from(item.querySelectorAll(`[${FIELD_ATTR}]`)),
-    ];
-    for (const el of tagged) {
-      const field = el.getAttribute(FIELD_ATTR);
-      if (!field || !field.startsWith(prefix)) continue;
-      const rest = field.slice(prefix.length);
-      const dot = rest.indexOf(".");
-      const tail = dot === -1 ? "" : rest.slice(dot);
-      el.setAttribute(FIELD_ATTR, `${prefix}${index}${tail}`);
+  function elementTextFor(el: Element): string {
+    const tag = el.tagName.toLowerCase();
+    if (tag === "img") {
+      const img = el as HTMLImageElement;
+      return `image src="${img.getAttribute("src") || ""}" alt="${img.getAttribute("alt") || ""}"`;
     }
-  });
-}
+    if (tag === "input" || tag === "textarea") {
+      const f = el as HTMLInputElement | HTMLTextAreaElement;
+      return (
+        f.value ||
+        f.getAttribute("placeholder") ||
+        ""
+      );
+    }
+    return (el.textContent || "").replace(/\s+/g, " ").trim();
+  }
 
-/** Apply a CMS-confirmed structural op to the DOM. No-op on `ok: false`. */
-function applyGroupOp(msg: {
-  ok: boolean;
-  path: string;
-  op: "add" | "remove" | "move";
-  index: number;
-  toIndex?: number;
-  values?: Array<{ path: string; value: string }>;
-}): void {
-  if (!msg.ok) return;
-  const host = document.querySelector(
-    `[${KIND_ATTR}="group"][${FIELD_ATTR}="${esc(msg.path)}"]`
-  );
-  if (!(host instanceof HTMLElement)) return;
-  const items = groupItems(host);
-  if (msg.op === "add") {
-    const source = items[msg.index] ?? items[items.length - 1];
-    if (!source) return; // empty group — no DOM template to clone
-    const clone = source.cloneNode(true) as HTMLElement;
-    sanitizeClone(clone);
-    source.after(clone);
-  } else if (msg.op === "remove") {
-    items[msg.index]?.remove();
-  } else if (msg.op === "move" && typeof msg.toIndex === "number") {
-    const item = items[msg.index];
-    const target = items[msg.toIndex];
-    if (!item || !target || item === target) return;
-    if (msg.toIndex > msg.index) target.after(item);
-    else target.before(item);
+  async function submitEdit(
+    el: Element,
+    prompt: string,
+    sourceRef: string,
+    branch: string
+  ): Promise<void> {
+    const endpoint = (CFG.endpoint || "").replace(/\/+$/, "");
+    if (!endpoint) {
+      throw new Error("No endpoint configured in the cms-bridge integration.");
+    }
+    const token = getToken();
+    if (!token) {
+      throw new Error("Edit session token missing — reopen from the editor.");
+    }
+    if (!CFG.repoId || !CFG.owner || !CFG.repo) {
+      throw new Error("Site is missing repoId/owner/repo in its cms-bridge config.");
+    }
+    let res: Response;
+    try {
+      res = await fetch(endpoint + "/api/v1/intake", {
+        method: "POST",
+        credentials: "omit",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          repoId: CFG.repoId,
+          owner: CFG.owner,
+          repo: CFG.repo,
+          branch: branch,
+          sourceRef: sourceRef,
+          elementText: elementTextFor(el),
+          pageUrl: location.href,
+          prompt: prompt,
+        }),
+      });
+    } catch (e) {
+      // Network / CORS failures never reach the response stage.
+      const msg = e instanceof Error ? e.message : "request failed";
+      throw new Error(
+        `Could not reach ${endpoint} (${msg}). Check the endpoint is up and reachable (CORS).`
+      );
+    }
+    if (!res.ok) {
+      let detail = "";
+      try {
+        const data = await res.clone().json();
+        detail = data?.error ? String(data.error) : JSON.stringify(data);
+      } catch {
+        try {
+          detail = (await res.text()).slice(0, 300);
+        } catch {
+          /* ignore */
+        }
+      }
+      throw new Error(`HTTP ${res.status}${detail ? `: ${detail}` : ""}`);
+    }
   }
-  reindexGroup(host, msg.path);
-  if (msg.values) applySet(msg.values);
-  if (mode === "edit") {
-    armEditables();
-    attachGroupControls();
-    markLocked();
-  }
-}
 
-/** Build the host's top-right toolbar with the given [label, action] buttons. */
-function addGroupTools(
-  host: HTMLElement,
-  actions: ReadonlyArray<readonly [string, string]>,
-  uiName = "group-tools"
-): void {
-  if (getComputedStyle(host).position === "static")
-    host.style.position = "relative";
-  if (host.querySelector(`:scope > [${UI_ATTR}="${uiName}"]`)) return;
-  const tools = document.createElement("div");
-  tools.setAttribute(UI_ATTR, uiName);
-  for (const [label, action] of actions) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.setAttribute(UI_ACTION_ATTR, action);
-    button.textContent = label;
-    tools.appendChild(button);
-  }
-  host.appendChild(tools);
-}
+  // ---------- overlay DOM ----------
 
-/**
- * Inject group-editing UI:
- *  - Declared array groups (`data-cms-kind="group"`): a single "✎ Edit
- *    content" button — add/remove/reorder live in the CMS group dialog, so
- *    no floating pills ever overlap the content.
- *  - Implicit group hosts (a tagged non-leaf wrapper armed with `data-cms-group`
- *    but not a declared array group — e.g. a partners logo grid): an
- *    "✎ Edit content" badge only, so the client can open the CMS dialog.
- */
-function attachGroupControls(): void {
-  if (mode !== "edit") return;
-  for (const host of Array.from(
-    document.querySelectorAll(`[${KIND_ATTR}="group"]`)
-  )) {
-    if (!(host instanceof HTMLElement)) continue;
-    addGroupTools(host, [["✎ Edit content", "edit"]]);
-  }
-  // Implicit group hosts: an Edit-content badge only (no structural add/remove).
-  for (const host of Array.from(
-    document.querySelectorAll(`[${GROUP_ATTR}]:not([${KIND_ATTR}="group"])`)
-  )) {
-    if (!(host instanceof HTMLElement)) continue;
-    addGroupTools(host, [["✎ Edit content", "edit"]]);
-  }
-  // Collection regions: purple outline + a button that opens the collection page.
-  for (const host of Array.from(
-    document.querySelectorAll(`[${COLLECTION_ATTR}]`)
-  )) {
-    if (!(host instanceof HTMLElement)) continue;
-    host.setAttribute(COLLECTION_EDIT_ATTR, "");
-    addGroupTools(
-      host,
-      [["✎ Edit collection", "open-collection"]],
-      "collection-tools"
+  let dot: HTMLDivElement,
+    chip: HTMLDivElement,
+    bar: HTMLDivElement,
+    popover: HTMLDivElement | null = null;
+  let chipTimer: ReturnType<typeof setTimeout>;
+
+  function showChip(ok: boolean, label?: string) {
+    chip.innerHTML = ok
+      ? chip.dataset.tick + "<span>" + (label || "Sent") + "</span>"
+      : "<span>" + (label || "Failed") + "</span>";
+    chip.style.left = mouse.x + 14 + "px";
+    chip.style.top = mouse.y + 14 + "px";
+    chip.classList.remove("in", "out");
+    void chip.offsetWidth; // restart animation
+    chip.classList.add("in");
+    clearTimeout(chipTimer);
+    chipTimer = setTimeout(
+      function () {
+        chip.classList.remove("in");
+        chip.classList.add("out");
+      },
+      ok ? 1400 : 1800
     );
   }
-  // Variant regions: green outline, clickable (handled in onClick — no button).
-  for (const host of Array.from(
-    document.querySelectorAll(`[${VARIANT_ATTR}]`)
-  )) {
-    if (!(host instanceof HTMLElement)) continue;
-    host.setAttribute(VARIANT_EDIT_ATTR, "");
-  }
-  // Blog regions: yellow outline, clickable (handled in onClick — no button).
-  for (const host of Array.from(document.querySelectorAll(`[${BLOG_ATTR}]`))) {
-    if (!(host instanceof HTMLElement)) continue;
-    host.setAttribute(BLOG_EDIT_ATTR, "");
-  }
-}
 
-function removeGroupControls(): void {
-  for (const el of Array.from(document.querySelectorAll(`[${UI_ATTR}]`)))
-    el.remove();
-  for (const el of Array.from(
-    document.querySelectorAll(`[${COLLECTION_EDIT_ATTR}]`)
-  ))
-    el.removeAttribute(COLLECTION_EDIT_ATTR);
-  for (const el of Array.from(
-    document.querySelectorAll(`[${VARIANT_EDIT_ATTR}]`)
-  ))
-    el.removeAttribute(VARIANT_EDIT_ATTR);
-  for (const el of Array.from(document.querySelectorAll(`[${BLOG_EDIT_ATTR}]`)))
-    el.removeAttribute(BLOG_EDIT_ATTR);
-}
+  function makeOverlay() {
+    if (document.getElementById("cms-bridge-dot")) return;
 
-/** True when the element has a direct, non-whitespace text node child. */
-function hasOwnText(el: Element): boolean {
-  for (const node of Array.from(el.childNodes))
-    if (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
-      return true;
-  return false;
-}
+    const base =
+      "position:fixed;top:0;left:0;pointer-events:none;z-index:2147483646;" +
+      "will-change:transform,width,height;";
 
-/**
- * Flag every text leaf that is NOT wired to the CMS with a red outline, so the
- * editor can see at a glance what can't be changed. Runs after armEditables()
- * so all CMS markers already exist. Skips anything tagged, bridge-injected, or
- * living inside a CMS-managed region (field/group/collection) — that content is
- * editable, just not here.
- */
-function markLocked(): void {
-  if (mode !== "edit") return;
-  if (!document.body) return;
-  for (const el of Array.from(document.body.querySelectorAll("*"))) {
-    if (!(el instanceof HTMLElement)) continue;
-    if (
-      el.hasAttribute(FIELD_ATTR) ||
-      el.hasAttribute(KIND_ATTR) ||
-      el.hasAttribute(EDITABLE_ATTR) ||
-      el.hasAttribute(MEDIA_ATTR) ||
-      el.hasAttribute(LINK_ATTR) ||
-      el.hasAttribute(GROUP_ATTR) ||
-      el.hasAttribute(COLLECTION_ATTR) ||
-      el.hasAttribute(ITEM_ATTR) ||
-      el.hasAttribute(VARIANT_ATTR) ||
-      el.hasAttribute(BLOG_ATTR) ||
-      el.hasAttribute(UI_ATTR)
-    )
-      continue;
-    if (
-      el.closest(
-        `[${FIELD_ATTR}],[${KIND_ATTR}="group"],[${COLLECTION_ATTR}],[${VARIANT_ATTR}],[${BLOG_ATTR}],[${UI_ATTR}]`
-      )
-    )
-      continue;
-    if (!isEditableCandidate(el)) continue;
-    if (!hasOwnText(el)) continue;
-    el.setAttribute(LOCKED_ATTR, "");
-  }
-}
+    dot = document.createElement("div");
+    dot.id = "cms-bridge-dot";
+    dot.style.cssText =
+      base +
+      "width:10px;height:10px;border-radius:50%;background:" +
+      ACCENT +
+      ";border:2px solid " +
+      ACCENT +
+      ";box-sizing:border-box;opacity:1;transition:background .18s ease,opacity .15s ease;";
 
-/** Route a click on injected group UI to the matching `group-op`. */
-function handleUiAction(el: HTMLElement): void {
-  const action = el.getAttribute(UI_ACTION_ATTR);
-  if (!action) return;
-  // Collection button: ask the hub to open that collection's editor.
-  if (action === "open-collection") {
-    const host = el.closest(`[${COLLECTION_ATTR}]`);
-    const name = host?.getAttribute(COLLECTION_ATTR);
-    if (name) post({ type: "collection-open", collection: name });
-    return;
-  }
-  // The edit badge just opens the CMS group dialog — no structural op. It lives
-  // on declared AND implicit group hosts, so resolve either.
-  if (action === "edit") {
-    const editHost = el.closest(`[${KIND_ATTR}="group"],[${GROUP_ATTR}]`);
-    if (editHost instanceof HTMLElement) activateGroup(editHost);
-    return;
-  }
-  // add / move / remove only exist on declared array groups.
-  const host = el.closest(`[${KIND_ATTR}="group"]`);
-  if (!(host instanceof HTMLElement)) return;
-  const items = groupItems(host);
-  if (action === "add") {
-    requestGroupOp(host, "add", Math.max(0, items.length - 1));
-    return;
-  }
-  const item = el.closest(`[${ITEM_ATTR}]`);
-  if (!(item instanceof HTMLElement)) return;
-  const index = items.indexOf(item);
-  if (index === -1) return;
-  if (action === "remove") requestGroupOp(host, "remove", index);
-  else if (action === "move-up" && index > 0)
-    requestGroupOp(host, "move", index, index - 1);
-  else if (action === "move-down" && index < items.length - 1)
-    requestGroupOp(host, "move", index, index + 1);
-}
+    const style = document.createElement("style");
+    style.id = "cms-bridge-style";
+    style.textContent =
+      "@keyframes cmsChipIn{0%{opacity:0;filter:blur(6px);scale:.6}" +
+      "60%{opacity:1;filter:blur(0);scale:1.08}100%{opacity:1;filter:blur(0);scale:1}}" +
+      "@keyframes cmsChipOut{to{opacity:0;filter:blur(4px);scale:.85}}" +
+      "@keyframes cmsTick{to{stroke-dashoffset:0}}" +
+      "@keyframes cmsPopIn{from{opacity:0;scale:.9}to{opacity:1;scale:1}}" +
+      // Edit mode: nothing on the page is text-selectable (so marquee-dragging
+      // never highlights text) — except inside our own popover.
+      "body{-webkit-user-select:none;user-select:none}" +
+      "#cms-bridge-popover,#cms-bridge-input,#cms-bridge-branch{-webkit-user-select:text;user-select:text}" +
+      "#cms-bridge-chip.in{animation:cmsChipIn .28s cubic-bezier(.34,1.56,.64,1) forwards}" +
+      "#cms-bridge-chip.in svg path{animation:cmsTick .25s ease-out .08s forwards}" +
+      "#cms-bridge-chip.out{animation:cmsChipOut .18s ease-in forwards}" +
+      // Focus ring + primary border on the textarea, matching the hub input.
+      "#cms-bridge-input,#cms-bridge-branch{transition:border-color .15s ease,box-shadow .15s ease}" +
+      // !important beats the inline border so the accent shows on focus.
+      "#cms-bridge-input:focus,#cms-bridge-branch:focus{border-color:" +
+      ACCENT +
+      " !important;box-shadow:0 0 0 3px " +
+      ringColor() +
+      " !important}";
+    document.head.appendChild(style);
 
-/** Ask the CMS to open a non-text editor (media picker / link popover). */
-function activate(el: HTMLElement, kind: "media" | "link"): void {
-  const path = el.getAttribute(FIELD_ATTR);
-  if (!path) return;
-  const value =
-    kind === "media"
-      ? ((el as HTMLImageElement).currentSrc ??
-        (el as HTMLImageElement).src ??
-        "")
-      : ((el as HTMLAnchorElement).getAttribute("href") ?? "");
-  post({ type: "field-activate", path, kind, value });
-}
+    chip = document.createElement("div");
+    chip.id = "cms-bridge-chip";
+    chip.style.cssText =
+      "position:fixed;top:0;left:0;pointer-events:none;z-index:2147483647;" +
+      "background:#111;color:#fff;font:12px/1 system-ui,sans-serif;" +
+      "padding:6px 10px;border-radius:999px;opacity:0;transform-origin:top left;" +
+      "display:flex;align-items:center;gap:6px;";
+    const TICK =
+      '<svg width="12" height="12" viewBox="0 0 12 12" fill="none">' +
+      '<path d="M2 6.5L4.8 9.3L10 3.5" stroke="#7CFFA0" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" ' +
+      'stroke-dasharray="12" stroke-dashoffset="12"/></svg>';
+    chip.dataset.tick = TICK;
+    chip.innerHTML = TICK + "<span>Sent</span>";
 
-function onFocusIn(event: FocusEvent): void {
-  const el = editableFrom(event.target);
-  if (!el) return;
-  const path = fieldPathOf(el);
-  if (!path) return;
-  // Editing a rich field: flatten its inline markup (cms-hl spans, <strong>)
-  // back to ` / ** source so the user edits plain text. Skipped when the field
-  // has no child markup, to keep the caret position on a plain edit.
-  if (el.children.length > 0) el.textContent = readRich(el);
-  focusSnapshot = { el, path, value: valueOf(el) };
-  post({ type: "field-focus", path });
-  // Editing a link's label also surfaces its URL editor in the CMS.
-  const anchor = el.closest(`[${LINK_ATTR}]`);
-  if (anchor instanceof HTMLElement) activate(anchor, "link");
-}
+    bar = document.createElement("div");
+    bar.id = "cms-bridge-bar";
+    bar.style.cssText =
+      "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);" +
+      "z-index:2147483647;background:#111;color:#fff;width:max-content;" +
+      "font:13px/1 system-ui,sans-serif;padding:10px 16px;" +
+      "border-radius:24px;box-shadow:0 4px 16px rgba(0,0,0,.25);" +
+      "display:flex;gap:12px;align-items:center;";
+    bar.innerHTML =
+      "<span>Edit mode — click any text or image to request a change · ⌘-click to follow links</span>" +
+      '<button id="cms-bridge-exit" style="background:#fff;border:1px solid #fff;' +
+      "color:#111;border-radius:999px;padding:4px 12px;" +
+      'font:12px/1 system-ui,sans-serif;cursor:pointer">Exit</button>';
 
-function onFocusOut(event: FocusEvent): void {
-  const el = editableFrom(event.target);
-  if (!el || !focusSnapshot || focusSnapshot.el !== el) return;
-  const snap = focusSnapshot;
-  focusSnapshot = null;
-  commit(el, snap.path, snap.value);
-}
+    document.body.appendChild(dot);
+    document.body.appendChild(chip);
+    document.body.appendChild(bar);
 
-function onInput(event: Event): void {
-  const el = editableFrom(event.target);
-  if (!el) return;
-  const path = fieldPathOf(el);
-  if (!path) return;
-  scheduleInput(el, path);
-}
-
-function onBeforeInput(event: InputEvent): void {
-  const el = editableFrom(event.target);
-  if (!el) return;
-  // Single-line plain text: Enter commits, no rich formatting ever.
-  if (
-    event.inputType === "insertParagraph" ||
-    event.inputType === "insertLineBreak" ||
-    event.inputType.startsWith("format")
-  ) {
-    event.preventDefault();
-    if (event.inputType === "insertParagraph") el.blur();
-  }
-}
-
-function onPaste(event: ClipboardEvent): void {
-  const el = editableFrom(event.target);
-  if (!el) return;
-  event.preventDefault();
-  const text = event.clipboardData?.getData("text/plain") ?? "";
-  document.execCommand("insertText", false, text.replace(/\s+/g, " "));
-}
-
-function onKeyDown(event: KeyboardEvent): void {
-  const el = editableFrom(event.target);
-  if (!el) return;
-  if (event.key === "Enter") {
-    event.preventDefault();
-    el.blur();
-  }
-  if (event.key === "Escape") {
-    if (focusSnapshot && focusSnapshot.el === el) {
-      el.textContent = focusSnapshot.value;
-      focusSnapshot = null;
-    }
-    el.blur();
-  }
-}
-
-function onClick(event: MouseEvent): void {
-  const target = event.target;
-  if (!(target instanceof Element)) return;
-  // Bridge-injected group UI (add / move / remove) wins over everything —
-  // it must never fall through to the group popover or link handling.
-  const uiAction = target.closest(`[${UI_ACTION_ATTR}]`);
-  if (uiAction instanceof HTMLElement) {
-    event.preventDefault();
-    event.stopPropagation();
-    handleUiAction(uiAction);
-    return;
-  }
-  // A blog region opens the Blog settings page. Precedes field/media/link.
-  const blog = target.closest(`[${BLOG_ATTR}]`);
-  if (blog instanceof HTMLElement) {
-    event.preventDefault();
-    event.stopPropagation();
-    post({ type: "blog-open" });
-    return;
-  }
-  // A variant region opens its variant editor — takes precedence over inline
-  // field editing, media/link/group. `<Text field=… variant=…>` opens the
-  // variant, not the caret. Value is the variant name ("" for a boolean flag).
-  const variant = target.closest(`[${VARIANT_ATTR}]`);
-  if (variant instanceof HTMLElement) {
-    event.preventDefault();
-    event.stopPropagation();
-    post({ type: "variant-open", variant: variant.getAttribute(VARIANT_ATTR) ?? "" });
-    return;
-  }
-  // Clicking an image opens the media picker.
-  const media = target.closest(`[${MEDIA_ATTR}]`);
-  if (media instanceof HTMLElement) {
-    event.preventDefault();
-    event.stopPropagation();
-    activate(media, "media");
-    return;
-  }
-  // Clicking a link never navigates in edit mode. If the click landed on the
-  // editable label, let the caret drop (its focus opens the URL editor);
-  // otherwise (icon/padding) open the URL editor directly.
-  const link = target.closest(`[${LINK_ATTR}]`);
-  if (link instanceof HTMLElement) {
-    event.preventDefault();
-    if (!editableFrom(target)) activate(link, "link");
-    return;
-  }
-  // A non-leaf group host opens the CMS popover — unless the click landed on an
-  // inner editable text child (media/link children were handled + returned
-  // above), in which case inline editing wins and the caret drops.
-  const group = target.closest(`[${GROUP_ATTR}]`);
-  if (group instanceof HTMLElement && !editableFrom(target)) {
-    event.preventDefault();
-    event.stopPropagation();
-    activateGroup(group);
-    return;
-  }
-  // Any remaining link (nav, footer, CTA — not a CMS field, not in a cluster):
-  // never navigate the iframe in edit mode. Show its destination in the CMS
-  // instead, unless the click landed on inline-editable text (caret drops).
-  const anchor = target.closest("a");
-  if (anchor instanceof HTMLElement) {
-    event.preventDefault();
-    event.stopPropagation(); // also stop Astro's client-router navigation
-    if (!editableFrom(target)) {
-      const r = anchor.getBoundingClientRect();
-      post({
-        type: "link-info",
-        href: anchor.getAttribute("href") ?? "",
-        rect: { x: r.left, y: r.top, width: r.width, height: r.height },
+    document
+      .getElementById("cms-bridge-exit")!
+      .addEventListener("click", function () {
+        try {
+          sessionStorage.removeItem(TOKEN_KEY);
+        } catch {
+          /* ignore */
+        }
+        location.reload();
       });
+  }
+
+  // ---------- popover ----------
+
+  let popoverCleanup: (() => void) | null = null;
+
+  // Selected element outlined while its popover is open.
+  let highlighted: HTMLElement | null = null;
+  let highlightPrev = "";
+  let highlightPrevOffset = "";
+  const setHighlight = (el: Element | null) => {
+    if (highlighted) {
+      highlighted.style.outline = highlightPrev;
+      highlighted.style.outlineOffset = highlightPrevOffset;
+      highlighted = null;
     }
+    if (el) {
+      highlighted = el as HTMLElement;
+      highlightPrev = highlighted.style.outline;
+      highlightPrevOffset = highlighted.style.outlineOffset;
+      highlighted.style.outline = `2px solid ${ACCENT}`;
+      highlighted.style.outlineOffset = "2px";
+    }
+  };
+
+  function closePopover() {
+    if (popoverCleanup) {
+      popoverCleanup();
+      popoverCleanup = null;
+    }
+    if (popover) {
+      popover.remove();
+      popover = null;
+    }
+    setHighlight(null);
   }
-}
 
-// ---------------------------------------------------------------------------
-// Messages from the CMS
-// ---------------------------------------------------------------------------
+  function openPopover(el: Element, groupRefs?: string[]) {
+    closePopover();
+    setHighlight(el);
+    // Where the code lives — the target's own source ref, plus each selected
+    // item's ref for a group so the AI knows exactly which lines to edit.
+    const ownRef = sourceRefFor(el);
+    const items = (groupRefs || []).filter(Boolean);
+    const sourceRef =
+      items.length > 1
+        ? `${ownRef} — items: ${items.join(", ")}`.slice(0, 500)
+        : ownRef;
+    const isGroup = items.length > 1;
+    const preview = isGroup
+      ? `${items.length} items selected`
+      : elementTextFor(el).slice(0, 80);
 
-/**
- * Write `value` as the element's own text WITHOUT touching nested tagged
- * children. Used for group hosts (e.g. a heading wrapping a highlight span):
- * `textContent = value` would delete the span. The host's own text is the
- * first text node; any later stray text nodes are cleared so the value isn't
- * duplicated. Known limitation: text authored after the children still lands
- * in the first text node — fine for the common "text + inline highlight" case.
- */
-// Backtick highlight helpers (renderRich/readRich) live in ./rich — shared
-// with the server-rendered bridge components so markup stays byte-identical.
+    popover = document.createElement("div");
+    popover.id = "cms-bridge-popover";
+    popover.style.cssText =
+      "position:fixed;z-index:2147483647;background:#fff;color:#111;" +
+      "width:300px;max-width:calc(100vw - 24px);border-radius:12px;" +
+      "box-shadow:0 0 0 1px rgba(255, 255, 255, 0.08) inset," +
+      "0 0 0 1px rgba(9, 9, 11, 0.07)," +
+      "0 0.7px 0.9px -1px rgba(9, 9, 11, 0.08)," +
+      "0 3px 4px -2px rgba(9, 9, 11, 0.14);padding:14px;" +
+      "font:13px/1.4 system-ui,sans-serif;transform-origin:top left;" +
+      "animation:cmsPopIn .12s ease-out;";
+    popover.innerHTML =
+      '<div style="font-weight:600;margin-bottom:2px">Request a change</div>' +
+      '<div style="color:#666;font-size:12px;margin-bottom:10px;overflow:hidden;' +
+      'text-overflow:ellipsis;white-space:nowrap">' +
+      (isGroup
+        ? escapeHtml(preview)
+        : preview
+          ? "“" + escapeHtml(preview) + "”"
+          : "this element") +
+      "</div>" +
+      '<textarea id="cms-bridge-input" rows="3" placeholder="Describe what to change…" ' +
+      'style="width:100%;box-sizing:border-box;resize:vertical;border:1px solid #ddd;' +
+      "border-radius:8px;padding:8px;font:13px/1.4 system-ui,sans-serif;" +
+      'outline:none"></textarea>' +
+      '<div id="cms-bridge-error" style="display:none;color:#e5484d;font-size:12px;' +
+      'margin-top:8px;word-break:break-word;white-space:pre-wrap"></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">' +
+      '<label for="cms-bridge-branch" style="color:#666;font-size:12px">Branch</label>' +
+      '<input id="cms-bridge-branch" type="text" value="' +
+      escapeHtml(CFG.branch || "main") +
+      '" spellcheck="false" ' +
+      'style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #ddd;' +
+      "border-radius:8px;padding:6px 8px;font:12px/1.2 system-ui,sans-serif;" +
+      'outline:none"></div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">' +
+      '<button id="cms-bridge-cancel" style="background:#f2f2f2;border:none;' +
+      "color:#333;border-radius:8px;padding:7px 12px;cursor:pointer;" +
+      'font:12px/1 system-ui,sans-serif">Cancel</button>' +
+      '<button id="cms-bridge-send" style="background:' +
+      ACCENT +
+      ";border:none;color:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;" +
+      'font:12px/1 system-ui,sans-serif">Send</button>' +
+      "</div>";
 
-function setOwnText(el: Element, value: string): void {
-  const textNodes = Array.from(el.childNodes).filter(
-    (node) => node.nodeType === Node.TEXT_NODE
-  );
-  if (textNodes.length === 0) {
-    el.insertBefore(document.createTextNode(value), el.firstChild);
-    return;
+    document.body.appendChild(popover);
+
+    // Keep the popover pinned to the element — recompute from its live rect on
+    // scroll/resize so it travels with the selected element.
+    const reposition = () => {
+      if (!popover) return;
+      const r = el.getBoundingClientRect();
+      const pw = popover.offsetWidth;
+      const ph = popover.offsetHeight;
+      const left = Math.max(12, Math.min(r.left, window.innerWidth - pw - 12));
+      let top = r.bottom + 8;
+      if (top + ph > window.innerHeight - 12) {
+        top = Math.max(12, r.top - ph - 8);
+      }
+      popover.style.left = left + "px";
+      popover.style.top = top + "px";
+    };
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    popoverCleanup = () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+
+    const input = document.getElementById(
+      "cms-bridge-input"
+    ) as HTMLTextAreaElement;
+    input.focus();
+
+    const send = document.getElementById("cms-bridge-send") as HTMLButtonElement;
+    const cancel = document.getElementById("cms-bridge-cancel")!;
+    const errorEl = document.getElementById("cms-bridge-error")!;
+    const branchInput = document.getElementById(
+      "cms-bridge-branch"
+    ) as HTMLInputElement;
+
+    cancel.addEventListener("click", closePopover);
+
+    const doSend = function () {
+      const prompt = input.value.trim();
+      if (prompt.length < 3) {
+        input.style.borderColor = "#e5484d";
+        input.focus();
+        return;
+      }
+      errorEl.style.display = "none";
+      errorEl.textContent = "";
+      const branch = branchInput.value.trim() || CFG.branch || "main";
+      send.disabled = true;
+      send.textContent = "Sending…";
+      submitEdit(el, prompt, sourceRef, branch).then(
+        function () {
+          closePopover();
+          showChip(true, "Change requested");
+        },
+        function (err) {
+          // Keep the popover open and show the real reason so it can be retried.
+          send.disabled = false;
+          send.textContent = "Send";
+          errorEl.textContent =
+            err instanceof Error ? err.message : "Could not send.";
+          errorEl.style.display = "block";
+        }
+      );
+    };
+
+    send.addEventListener("click", doSend);
+    input.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") doSend();
+      if (e.key === "Escape") closePopover();
+    });
   }
-  textNodes[0]!.textContent = value;
-  for (let i = 1; i < textNodes.length; i++) textNodes[i]!.textContent = "";
-}
 
-function applySet(values: Array<{ path: string; value: string }>): void {
-  for (const { path, value } of values) {
-    const nodes = document.querySelectorAll(`[${FIELD_ATTR}="${esc(path)}"]`);
-    for (const el of Array.from(nodes)) {
-      if (el === document.activeElement) continue; // never stomp the caret
-      // The kind of write is inferred from the element: images set src, anchors
-      // set href, everything else sets text.
-      if (el.tagName === "IMG") {
-        (el as HTMLImageElement).src = value;
-      } else if (el.tagName === "A") {
-        (el as HTMLAnchorElement).href = value;
-      } else if (el.querySelector(`[${FIELD_ATTR}]`)) {
-        // Group host: preserve nested tagged children, write only its own text.
-        setOwnText(el, value);
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // ---------- animation state ----------
+
+  const mouse = { x: -100, y: -100 };
+  const cur = { x: -100, y: -100, w: 10, h: 10, r: 5 };
+  let target: Element | null = null;
+
+  // Drag-select (marquee) state.
+  const DRAG_THRESHOLD = 6;
+  let dragStart: { x: number; y: number } | null = null;
+  let marquee: HTMLDivElement | null = null;
+  let dragging = false;
+  let justDragged = false;
+
+  function lerp(a: number, b: number, f: number) {
+    return a + (b - a) * f;
+  }
+
+  function frame() {
+    // While marquee-dragging, keep the dot a plain dot (don't morph over
+    // elements) and let it fade out via opacity below.
+    if (dragging) target = null;
+    let goal;
+    if (target && document.body.contains(target)) {
+      const rect = target.getBoundingClientRect();
+      goal = { x: rect.left, y: rect.top, w: rect.width, h: rect.height, r: 8 };
+    } else {
+      target = null;
+      goal = { x: mouse.x - 5, y: mouse.y - 5, w: 10, h: 10, r: 5 };
+    }
+    const f = 0.22;
+    cur.x = lerp(cur.x, goal.x, f);
+    cur.y = lerp(cur.y, goal.y, f);
+    cur.w = lerp(cur.w, goal.w, f);
+    cur.h = lerp(cur.h, goal.h, f);
+    cur.r = lerp(cur.r, goal.r, f);
+
+    if (dot && document.body.contains(dot)) {
+      dot.style.transform = "translate3d(" + cur.x + "px," + cur.y + "px,0)";
+      dot.style.width = cur.w + "px";
+      dot.style.height = cur.h + "px";
+      dot.style.borderRadius = target ? cur.r + "px" : "50%";
+      dot.style.background = target ? "transparent" : ACCENT;
+      // Fade out during a drag, fade back in when it ends.
+      dot.style.opacity = dragging ? "0" : "1";
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- events ----------
+
+  function editableFrom(node: EventTarget | null): Element | null {
+    if (!(node instanceof Element)) return null;
+    const el = node.closest(EDITABLE);
+    if (!el || !el.closest("[data-cms-src]")) return null;
+    if (
+      el.closest("#cms-bridge-dot") ||
+      (bar && bar.contains(el)) ||
+      (popover && popover.contains(el))
+    )
+      return null;
+    return el;
+  }
+
+  const inOwnUi = (el: Element) =>
+    !!(
+      el.closest("#cms-bridge-dot") ||
+      el.closest("#cms-bridge-bar") ||
+      el.closest("#cms-bridge-popover") ||
+      el.closest("#cms-bridge-marquee")
+    );
+
+  /** Annotated elements fully contained within the marquee rect. */
+  function elementsInRect(r: {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+  }): Element[] {
+    const out: Element[] = [];
+    document.querySelectorAll("[data-cms-src]").forEach((el) => {
+      if (inOwnUi(el)) return;
+      const b = el.getBoundingClientRect();
+      if (b.width === 0 || b.height === 0) return;
+      if (
+        b.left >= r.left &&
+        b.right <= r.right &&
+        b.top >= r.top &&
+        b.bottom <= r.bottom
+      ) {
+        out.push(el);
+      }
+    });
+    return out;
+  }
+
+  /** Lowest common ancestor of two nodes. */
+  function lca(a: Element, b: Element): Element {
+    const anc = new Set<Element>();
+    for (let n: Element | null = a; n; n = n.parentElement) anc.add(n);
+    for (let n: Element | null = b; n; n = n.parentElement)
+      if (anc.has(n)) return n;
+    return document.body;
+  }
+
+  /**
+   * The smart parent for a drag selection: the lowest common ancestor of the
+   * selected items, walked up to the nearest element that carries data-cms-src
+   * (every annotated element has one, so this resolves to the real wrapper).
+   */
+  function smartParent(els: Element[]): Element | null {
+    if (!els.length) return null;
+    let anc: Element = els[0];
+    for (let i = 1; i < els.length; i++) anc = lca(anc, els[i]);
+    let p: Element | null = anc;
+    while (p && !p.hasAttribute("data-cms-src")) p = p.parentElement;
+    return p;
+  }
+
+
+  function bindOnce() {
+    if (window.__cmsBridgeBound) return;
+    window.__cmsBridgeBound = true;
+
+    document.addEventListener(
+      "mousemove",
+      function (e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      },
+      { passive: true }
+    );
+
+    // ----- drag-select (marquee) -----
+    document.addEventListener("mousedown", function (e) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey) return;
+      if (e.target instanceof Element && inOwnUi(e.target)) return;
+      dragStart = { x: e.clientX, y: e.clientY };
+      dragging = false;
+    });
+
+    document.addEventListener("mousemove", function (e) {
+      if (!dragStart) return;
+      const dx = e.clientX - dragStart.x;
+      const dy = e.clientY - dragStart.y;
+      if (!dragging && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+      dragging = true;
+      e.preventDefault(); // suppress native text selection while marqueeing
+      if (!marquee) {
+        marquee = document.createElement("div");
+        marquee.id = "cms-bridge-marquee";
+        marquee.style.cssText =
+          "position:fixed;z-index:2147483646;pointer-events:none;" +
+          "border:1px solid " +
+          ACCENT +
+          ";background:color-mix(in oklch, " +
+          ACCENT +
+          " 12%, transparent);border-radius:4px;";
+        document.body.appendChild(marquee);
+      }
+      const left = Math.min(dragStart.x, e.clientX);
+      const top = Math.min(dragStart.y, e.clientY);
+      marquee.style.left = left + "px";
+      marquee.style.top = top + "px";
+      marquee.style.width = Math.abs(e.clientX - dragStart.x) + "px";
+      marquee.style.height = Math.abs(e.clientY - dragStart.y) + "px";
+    });
+
+    document.addEventListener("mouseup", function () {
+      if (!dragStart) return;
+      const wasDragging = dragging;
+      dragStart = null;
+      dragging = false;
+      if (!wasDragging || !marquee) {
+        if (marquee) {
+          marquee.remove();
+          marquee = null;
+        }
+        return;
+      }
+      const b = marquee.getBoundingClientRect();
+      const rect = { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+      marquee.remove();
+      marquee = null;
+      justDragged = true; // swallow the click that follows this mouseup
+      const selected = elementsInRect(rect);
+      const parent = smartParent(selected);
+      if (parent) {
+        const refs = selected
+          .map((el) => el.getAttribute("data-cms-src") || "")
+          .filter(Boolean);
+        openPopover(parent, refs);
       } else {
-        // Leaf text: render inline markup (accent + mark spans), plain otherwise.
-        el.innerHTML = renderRich(value, markOpts(el as HTMLElement));
+        closePopover();
       }
-    }
-  }
-}
+    });
 
-function setMode(next: BridgeMode): void {
-  if (next === mode) return;
-  mode = next;
-  try {
-    sessionStorage.setItem(MODE_KEY, mode);
-  } catch {
-    /* ignore */
+    document.addEventListener(
+      "mouseover",
+      function (e) {
+        const el = editableFrom(e.target);
+        if (el) target = el;
+      },
+      true
+    );
+
+    document.addEventListener(
+      "mouseout",
+      function (e) {
+        if (
+          target &&
+          e.target instanceof Element &&
+          e.target.closest(EDITABLE) === target
+        ) {
+          const to = e.relatedTarget;
+          if (!(to instanceof Element) || editableFrom(to) !== target)
+            target = null;
+        }
+      },
+      true
+    );
+
+    document.addEventListener(
+      "click",
+      function (e) {
+        // Swallow the click that fires right after a drag-select.
+        if (justDragged) {
+          justDragged = false;
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        // Cmd/Ctrl-click passes through — lets the client follow links.
+        if (e.metaKey || e.ctrlKey) return;
+        // Clicks inside our own UI pass through to their own handlers.
+        if (
+          e.target instanceof Element &&
+          ((popover && popover.contains(e.target)) ||
+            (bar && bar.contains(e.target)))
+        )
+          return;
+        const el = editableFrom(e.target);
+        if (!el) {
+          closePopover();
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        openPopover(el);
+      },
+      true
+    );
+
+    requestAnimationFrame(frame);
   }
-  if (mode === "edit") {
-    armEditables();
-    attachGroupControls();
-    markLocked();
+
+  function init() {
+    if (!active()) return;
+    makeOverlay();
+    bindOnce();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
   } else {
-    disarmEditables();
+    init();
   }
-}
+  // ClientRouter swaps <body> on view transitions — recreate overlay DOM.
+  document.addEventListener("astro:page-load", init);
+})();
 
-function onMessage(event: MessageEvent): void {
-  const data = event.data as unknown;
-  // Legacy focus from older CMS builds.
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    (data as LegacyFieldFocusMessage).type === "cms-field-focus"
-  ) {
-    highlight((data as LegacyFieldFocusMessage).field);
-    return;
-  }
-  if (!isBridgeEnvelope(data)) return;
-  const msg = data as CmsToBridgeMessage;
-  switch (msg.type) {
-    case "focus":
-      highlight(msg.path);
-      break;
-    case "set":
-      applySet(msg.values);
-      break;
-    case "mode":
-      setMode(msg.mode);
-      break;
-    case "editable": {
-      // An all-empty whitelist means "no schema info" (e.g. a CMS bug or a
-      // legacy handshake echo), never "nothing is editable" — a page with zero
-      // real fields wouldn't be armed for editing at all. Treat it as absent
-      // so a bad message can't brick the page.
-      if (!msg.arm.length && !msg.media.length && !msg.link.length) break;
-      editable = {
-        arm: new Set(msg.arm),
-        media: new Set(msg.media),
-        link: new Set(msg.link),
-      };
-      if (mode === "edit") {
-        disarmEditables();
-        armEditables();
-        attachGroupControls();
-        markLocked();
-      }
-      break;
-    }
-    case "group-apply":
-      applyGroupOp(msg);
-      break;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------------------
-
-function collectFields(): string[] {
-  const out = new Set<string>();
-  const nodes = document.querySelectorAll(`[${FIELD_ATTR}]`);
-  for (const el of Array.from(nodes)) {
-    const path = el.getAttribute(FIELD_ATTR);
-    if (path) out.add(path);
-  }
-  return Array.from(out);
-}
-
-/**
- * CMS v2 field inventory: every tagged field with its kind. Explicit
- * `data-cms-kind` (bridge components) is reported as declared; otherwise the
- * kind is inferred from the element so the hub needs no schema.
- */
-function collectFieldsV2(): FieldInfo[] {
-  const out: FieldInfo[] = [];
-  const seen = new Set<string>();
-  for (const el of Array.from(document.querySelectorAll(`[${FIELD_ATTR}]`))) {
-    const path = el.getAttribute(FIELD_ATTR);
-    if (!path || seen.has(path)) continue;
-    seen.add(path);
-    const declared = declaredKind(el);
-    const kind =
-      declared ??
-      (el.tagName === "IMG" ? "media" : el.tagName === "A" ? "link" : "text");
-    out.push({ path, kind: kind as FieldInfo["kind"], declared: !!declared });
-  }
-  return out;
-}
-
-/** Rendered `<Group>` hosts and how many direct `data-cms-item` children each holds. */
-function collectGroups(): GroupInfo[] {
-  const out: GroupInfo[] = [];
-  for (const el of Array.from(
-    document.querySelectorAll(`[${KIND_ATTR}="group"]`)
-  )) {
-    const path = el.getAttribute(FIELD_ATTR);
-    if (!path) continue;
-    const count = Array.from(el.querySelectorAll(`[${ITEM_ATTR}]`)).filter(
-      (item) => item.parentElement?.closest(`[${KIND_ATTR}="group"]`) === el
-    ).length;
-    out.push({ path, count });
-  }
-  return out;
-}
-
-function announce(): void {
-  post({
-    type: "ready",
-    url: location.href,
-    path: location.pathname,
-    mode,
-    fields: collectFields(),
-    caps: ["text", "media", "link", "group", "group-ops", "variant", "blog"],
-    fieldsV2: collectFieldsV2(),
-    groups: collectGroups(),
-  });
-  // Legacy handshake for older CMS builds.
-  if (window.parent && window.parent !== window) {
-    window.parent.postMessage({ type: "cms-preview-ready" }, "*");
-  }
-}
-
-function scan(): void {
-  if (mode === "edit") {
-    armEditables();
-    attachGroupControls();
-    markLocked();
-  }
-  announce();
-}
-
-function resolveMode(): BridgeMode | null {
-  const raw = new URLSearchParams(location.search).get(PARAM);
-  if (raw !== null) return raw === "edit" ? "edit" : "highlight";
-  try {
-    const stored = sessionStorage.getItem(MODE_KEY);
-    if (stored === "edit" || stored === "highlight") return stored;
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-// Exported for tests only — not part of the public bridge API.
-export { groupItems as _groupItems, reindexGroup as _reindexGroup };
-
-export function boot(): void {
-  if (booted) return;
-  const resolved = resolveMode();
-  if (!resolved) return;
-  booted = true;
-  mode = resolved;
-  try {
-    sessionStorage.setItem(MODE_KEY, mode);
-  } catch {
-    /* ignore */
-  }
-
-  window.addEventListener("message", onMessage);
-  document.addEventListener("focusin", onFocusIn);
-  document.addEventListener("focusout", onFocusOut);
-  document.addEventListener("input", onInput);
-  document.addEventListener("beforeinput", onBeforeInput as EventListener);
-  document.addEventListener("paste", onPaste);
-  document.addEventListener("keydown", onKeyDown);
-  document.addEventListener("click", onClick, true);
-  // Astro ClientRouter swaps the DOM on soft navigation — re-arm + re-announce.
-  document.addEventListener("astro:page-load", scan);
-
-  if (document.readyState !== "loading") scan();
-  else window.addEventListener("DOMContentLoaded", scan);
-}
+export {};
