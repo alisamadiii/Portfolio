@@ -16,7 +16,7 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
-import { REGION_COLORS } from "@alisamadiillc/cms-bridge";
+import { REGION_COLORS } from "@/lib/region-colors";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 

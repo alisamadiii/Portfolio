@@ -9,7 +9,7 @@ import {
   isBridgeEnvelope,
   type BridgeToCmsMessage,
   type ReadyMessage,
-} from "@alisamadiillc/cms-bridge";
+} from "./bridge-protocol";
 
 export type {
   BridgeToCmsMessage,
@@ -24,7 +24,7 @@ export type {
   LinkInfoMessage,
   VariantOpenMessage,
   BlogOpenMessage,
-} from "@alisamadiillc/cms-bridge";
+} from "./bridge-protocol";
 
 /**
  * Parse a `message` event coming from a bridge iframe. Returns `null` for

@@ -14,7 +14,7 @@ import {
 } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
-import { REGION_COLORS } from "@alisamadiillc/cms-bridge";
+import { REGION_COLORS } from "@/lib/region-colors";
 
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { AnalyticsPanel } from "@/components/settings/analytics-panel";
