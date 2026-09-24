@@ -31,9 +31,12 @@ import {
   Rocket,
   Settings2,
   Table2,
+  Upload,
   UploadCloud,
   type LucideProps,
 } from "@/components/icon";
+import { useMediaLibrary } from "@/components/media/media-library-context";
+import { toast } from "sonner";
 import { usePublish } from "@/components/publish/publish-context";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
@@ -63,6 +66,7 @@ export function ShellHeader({
   const { owner, repo, branch, cmsOverlay } = useCanvasEditor();
   const { draftCount, openPublishDialog } = usePublish();
   const { myRole } = useRepo();
+  const mediaLibrary = useMediaLibrary();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canManage = (myRole ?? "full-access") === "full-access";
 
@@ -150,7 +154,10 @@ export function ShellHeader({
             active={canvasActive}
             onClick={() => onModeChange("canvas")}
           />
-          {canEdit && (
+          {/* CMS tab hidden (not removed) — clients now request collection
+              changes through the AI overlay instead of editing entries here.
+              Flip back to `canEdit &&` to restore. */}
+          {false && (
             <SegButton
               icon={Table2}
               label="CMS"
@@ -190,6 +197,30 @@ export function ShellHeader({
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
         <AiIntroDialog />
+        {mediaLibrary.isAvailable && canEdit && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Upload media"
+            onClick={() =>
+              mediaLibrary.open({
+                title: "Upload media",
+                onInsert: (urls) => {
+                  // Uploading is the point; inserting just hands the URL back
+                  // for pasting into an AI request.
+                  if (!urls.length) return;
+                  navigator.clipboard
+                    ?.writeText(urls.join("\n"))
+                    .then(() => toast.success("Image URL copied"))
+                    .catch(() => {});
+                },
+              })
+            }
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Upload className="size-5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon-sm"
