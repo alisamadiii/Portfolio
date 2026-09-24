@@ -13,8 +13,6 @@ interface CmsBridgeConfig {
   project?: string;
   endpoint?: string;
   repoId?: number;
-  owner?: string;
-  repo?: string;
   branch?: string;
 }
 
@@ -38,11 +36,6 @@ declare global {
   // Accent is a fixed brand blue for the overlay — never read from the host
   // site, so the ring/border/cursor look identical across every client.
   const ACCENT = "#4f7fff";
-  // Elements tagged data-collection="<name>" are collection regions — they get a
-  // distinct purple highlight + a direct "Edit in CMS" pill instead of the
-  // click-to-request flow.
-  const COLLECTION_ACCENT = "#a855f7";
-  const ringColor = () => `color-mix(in oklch, ${ACCENT} 45%, transparent)`;
 
   // ---------- activation ----------
   // The hub opens the iframe with `?<EDIT_PARAM>=<token>`. We stash the token in
@@ -102,12 +95,11 @@ declare global {
     return (el.textContent || "").replace(/\s+/g, " ").trim();
   }
 
-  async function submitEdit(
-    el: Element,
-    prompt: string,
-    sourceRef: string,
-    branch: string
-  ): Promise<void> {
+  // Shared intake POST. Returns the created job (`{ id, status }`) so callers
+  // can notify the hub (edit-submitted postMessage) with the job id.
+  async function postIntake(
+    body: Record<string, unknown>
+  ): Promise<{ id?: number; status?: string }> {
     const endpoint = (CFG.endpoint || "").replace(/\/+$/, "");
     if (!endpoint) {
       throw new Error("No endpoint configured in the cms-bridge integration.");
@@ -116,8 +108,8 @@ declare global {
     if (!token) {
       throw new Error("Edit session token missing — reopen from the editor.");
     }
-    if (!CFG.repoId || !CFG.owner || !CFG.repo) {
-      throw new Error("Site is missing repoId/owner/repo in its cms-bridge config.");
+    if (!CFG.repoId) {
+      throw new Error("Site is missing repoId in its cms-bridge config.");
     }
     let res: Response;
     try {
@@ -128,16 +120,7 @@ declare global {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({
-          repoId: CFG.repoId,
-          owner: CFG.owner,
-          repo: CFG.repo,
-          branch: branch,
-          sourceRef: sourceRef,
-          elementText: elementTextFor(el),
-          pageUrl: location.href,
-          prompt: prompt,
-        }),
+        body: JSON.stringify({ repoId: CFG.repoId, ...body }),
       });
     } catch (e) {
       // Network / CORS failures never reach the response stage.
@@ -160,6 +143,25 @@ declare global {
       }
       throw new Error(`HTTP ${res.status}${detail ? `: ${detail}` : ""}`);
     }
+    try {
+      return await res.json();
+    } catch {
+      return {};
+    }
+  }
+
+  // Tell the hub (when framed) that a request was created so it can refresh
+  // its jobs list immediately instead of waiting for the next poll.
+  function notifySubmitted(jobId?: number): void {
+    if (window.parent === window) return;
+    try {
+      window.parent.postMessage(
+        { cms: 1, v: 2, type: "edit-submitted", jobId },
+        "*"
+      );
+    } catch {
+      /* ignore */
+    }
   }
 
   // ---------- overlay DOM ----------
@@ -167,8 +169,6 @@ declare global {
   let dot: HTMLDivElement,
     chip: HTMLDivElement,
     bar: HTMLDivElement,
-    collBtn: HTMLButtonElement,
-    collRing: HTMLDivElement,
     popover: HTMLDivElement | null = null;
   let chipTimer: ReturnType<typeof setTimeout>;
 
@@ -219,18 +219,25 @@ declare global {
       // Edit mode: nothing on the page is text-selectable (so marquee-dragging
       // never highlights text) — except inside our own popover.
       "body{-webkit-user-select:none;user-select:none}" +
-      "#cms-bridge-popover,#cms-bridge-input,#cms-bridge-branch{-webkit-user-select:text;user-select:text}" +
+      "#cms-bridge-popover,#cms-bridge-input,#cms-bridge-branch,#cms-bridge-page-image{-webkit-user-select:text;user-select:text}" +
       "#cms-bridge-chip.in{animation:cmsChipIn .28s cubic-bezier(.34,1.56,.64,1) forwards}" +
       "#cms-bridge-chip.in svg path{animation:cmsTick .25s ease-out .08s forwards}" +
       "#cms-bridge-chip.out{animation:cmsChipOut .18s ease-in forwards}" +
       // Focus ring + primary border on the textarea, matching the hub input.
-      "#cms-bridge-input,#cms-bridge-branch{transition:border-color .15s ease,box-shadow .15s ease}" +
-      // !important beats the inline border so the accent shows on focus.
-      "#cms-bridge-input:focus,#cms-bridge-branch:focus{border-color:" +
-      ACCENT +
-      " !important;box-shadow:0 0 0 3px " +
-      ringColor() +
-      " !important}";
+      "#cms-bridge-input,#cms-bridge-branch,#cms-bridge-page-image{transition:border-color .15s ease,box-shadow .15s ease}" +
+      // White focus ring — the popovers themselves are accent-blue, so the
+      // accent ring would vanish. !important beats the inline border.
+      "#cms-bridge-input:focus,#cms-bridge-branch:focus,#cms-bridge-page-image:focus{border-color:#fff" +
+      " !important;box-shadow:0 0 0 3px rgba(255,255,255,.35)" +
+      " !important}" +
+      // Dialog (expanded) mode: everything a notch bigger. !important beats the
+      // inline `font:` shorthands.
+      ".cms-expanded{font-size:15px !important}" +
+      ".cms-expanded .cmsb-title{font-size:16px !important}" +
+      ".cms-expanded .cmsb-muted{font-size:13px !important}" +
+      ".cms-expanded textarea,.cms-expanded input{font-size:15px !important;line-height:1.5 !important}" +
+      ".cms-expanded button{font-size:13px !important}" +
+      ".cms-expanded #cms-bridge-error{font-size:13px !important}";
     document.head.appendChild(style);
 
     chip = document.createElement("div");
@@ -262,47 +269,45 @@ declare global {
       "color:#111;border-radius:999px;padding:4px 12px;" +
       'font:12px/1 system-ui,sans-serif;cursor:pointer">Exit</button>';
 
-    // Dashed ring drawn around a hovered collection region. A separate overlay
-    // (never touches the client element's styles); frame() sizes it to the
-    // wrapper rect plus padding.
-    collRing = document.createElement("div");
-    collRing.id = "cms-bridge-collection-ring";
-    collRing.style.cssText =
-      "position:fixed;top:0;left:0;display:none;pointer-events:none;" +
-      "z-index:2147483646;box-sizing:border-box;border:3px dashed " +
-      COLLECTION_ACCENT +
-      ";border-radius:12px;";
-
-    // Floating pill for collection regions — opens that collection's editor in
-    // the parent hub. pointer-events:auto so it's clickable; frame() positions
-    // it over the hovered wrapper.
-    collBtn = document.createElement("button");
-    collBtn.id = "cms-bridge-collection-btn";
-    collBtn.style.cssText =
-      "position:fixed;top:0;left:0;display:none;pointer-events:auto;" +
-      "z-index:2147483647;background:" +
-      COLLECTION_ACCENT +
-      ";color:#fff;border:none;border-radius:999px;padding:12px 22px;" +
-      "font:600 16px/1 system-ui,sans-serif;cursor:pointer;" +
-      "box-shadow:0 4px 16px rgba(0,0,0,.3);white-space:nowrap;";
-    collBtn.textContent = "Edit in CMS ↗";
+    // Round chat launcher, bottom-right — page-level requests ("add an event",
+    // "write a blog post") for clients who don't think in click-an-element.
+    const launcher = document.createElement("button");
+    launcher.id = "cms-bridge-launcher";
+    launcher.setAttribute("aria-label", "Request a change to this page");
+    launcher.style.cssText =
+      "position:fixed;bottom:16px;right:16px;width:72px;height:72px;" +
+      "z-index:2147483647;pointer-events:auto;background:" +
+      ACCENT +
+      ";color:#fff;border:none;border-radius:50%;cursor:pointer;" +
+      "display:flex;align-items:center;justify-content:center;" +
+      "box-shadow:0 4px 16px rgba(0,0,0,.3);" +
+      "transition:transform .15s ease,box-shadow .15s ease;";
+    launcher.innerHTML =
+      '<svg width="33" height="33" viewBox="0 0 18 18" fill="#fff">' +
+      '<path d="m2.25,12c-.9976,0-1.75-1.0747-1.75-2.5s.7524-2.5,1.75-2.5c.4141,0,.75.3359.75.75,0,.3989.0308,3.0923.0308,3.5063s-.3667.7437-.7808.7437Z"></path>' +
+      '<path d="m15.75,12c-.4141,0-.75-.3359-.75-.75s-.0308-3.0923-.0308-3.5063.3667-.7437.7808-.7437c.9976,0,1.75,1.0747,1.75,2.5s-.7524,2.5-1.75,2.5Z"></path>' +
+      '<path d="m9,4.5c-.4141,0-.75-.3359-.75-.75V1.5c0-.4141.3359-.75.75-.75s.75.3359.75.75v2.25c0,.4141-.3359.75-.75.75Z"></path>' +
+      '<path d="m13.25,3H4.75c-1.5166,0-2.75,1.2334-2.75,2.75v7.5c0,1.5166,1.2334,2.75,2.75,2.75h8.5c1.5166,0,2.75-1.2334,2.75-2.75v-7.5c0-1.5166-1.2334-2.75-2.75-2.75Zm-6.75,8c-.5523,0-1-.6716-1-1.5s.4477-1.5,1-1.5,1,.6716,1,1.5-.4477,1.5-1,1.5Zm5,0c-.5523,0-1-.6716-1-1.5s.4477-1.5,1-1.5,1,.6716,1,1.5-.4477,1.5-1,1.5Z"></path></svg>';
+    launcher.addEventListener("mouseenter", function () {
+      launcher.style.transform = "scale(1.08)";
+    });
+    launcher.addEventListener("mouseleave", function () {
+      launcher.style.transform = "scale(1)";
+    });
+    launcher.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePagePopover();
+    });
 
     document.body.appendChild(dot);
     document.body.appendChild(chip);
     document.body.appendChild(bar);
-    document.body.appendChild(collRing);
-    document.body.appendChild(collBtn);
-
-    collBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openCollection(collectionTarget);
-    });
+    document.body.appendChild(launcher);
 
     document
       .getElementById("cms-bridge-exit")!
       .addEventListener("click", function () {
-        setCollectionHover(null);
         try {
           sessionStorage.removeItem(TOKEN_KEY);
         } catch {
@@ -315,31 +320,6 @@ declare global {
   // ---------- popover ----------
 
   let popoverCleanup: (() => void) | null = null;
-
-  // Currently-hovered collection wrapper (data-collection) — purple-outlined,
-  // with the "Edit in CMS" pill tracking it.
-  let collectionTarget: Element | null = null;
-  const setCollectionHover = (col: Element | null) => {
-    if (collectionTarget === col) return;
-    collectionTarget = col;
-    const show = col ? "block" : "none";
-    if (collRing) collRing.style.display = show;
-    if (collBtn) collBtn.style.display = show;
-  };
-
-  // Tell the parent hub to open this collection's editor (context state, no
-  // route). No-op when not framed by the hub.
-  function openCollection(col: Element | null) {
-    if (!col) return;
-    const name = col.getAttribute("data-collection") || "";
-    if (!name) return;
-    if (window.parent !== window) {
-      window.parent.postMessage(
-        { cms: 1, v: 2, type: "collection-open", collection: name },
-        "*"
-      );
-    }
-  }
 
   // Selected element outlined while its popover is open.
   let highlighted: HTMLElement | null = null;
@@ -360,6 +340,59 @@ declare global {
     }
   };
 
+  // ---------- request popover (one component, element + page modes) ----------
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // Dimmed page cover shown while the popover is expanded into a dialog.
+  // Clicking it collapses back to the anchored popover (never closes — the
+  // client's typed text must survive).
+  let backdrop: HTMLDivElement | null = null;
+  // Body scroll state restored when the dialog closes (Radix-style lock).
+  let prevHtmlOverflow = "";
+  let prevBodyOverflow = "";
+
+  function showBackdrop(onCollapse: () => void) {
+    if (backdrop) backdrop.remove();
+    backdrop = document.createElement("div");
+    backdrop.id = "cms-bridge-backdrop";
+    // The backdrop is the scroll container: the dialog is appended INTO it and
+    // grows with its content; when taller than the viewport the OVERLAY
+    // scrolls, not the dialog (flex + margin:auto keeps it centered while
+    // scrollable). The page behind is scroll-locked meanwhile.
+    backdrop.style.cssText =
+      "position:fixed;inset:0;z-index:2147483647;pointer-events:auto;" +
+      "background:rgba(9,9,11,.45);overflow:auto;display:flex;" +
+      "padding:32px 16px;box-sizing:border-box;";
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) onCollapse();
+    });
+    document.body.appendChild(backdrop);
+    prevHtmlOverflow = document.documentElement.style.overflow;
+    prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+  }
+
+  function hideBackdrop() {
+    if (!backdrop) return;
+    backdrop.remove();
+    backdrop = null;
+    document.documentElement.style.overflow = prevHtmlOverflow;
+    document.body.style.overflow = prevBodyOverflow;
+  }
+
+  type RequestMode = "element" | "page";
+  let popoverMode: RequestMode | null = null;
+  // Image CDN links attached to the pending request (chat-attachment chips).
+  let popoverImageUrls: string[] = [];
+
   function closePopover() {
     if (popoverCleanup) {
       popoverCleanup();
@@ -368,77 +401,161 @@ declare global {
     if (popover) {
       popover.remove();
       popover = null;
+      hideBackdrop();
     }
+    popoverMode = null;
+    popoverImageUrls = [];
     setHighlight(null);
   }
 
-  function openPopover(el: Element, groupRefs?: string[]) {
+  // Alias kept for call sites — element and page popovers are one component.
+  function closePagePopover() {
     closePopover();
-    setHighlight(el);
-    // Where the code lives — the target's own source ref, plus each selected
-    // item's ref for a group so the AI knows exactly which lines to edit.
-    const ownRef = sourceRefFor(el);
+  }
+
+  function openPopover(el: Element, groupRefs?: string[]) {
+    openRequestPopover("element", el, groupRefs);
+  }
+
+  function togglePagePopover() {
+    if (popover && popoverMode === "page") {
+      closePopover();
+      return;
+    }
+    openRequestPopover("page");
+  }
+
+  function openRequestPopover(
+    mode: RequestMode,
+    el?: Element,
+    groupRefs?: string[]
+  ) {
+    closePopover();
+    popoverMode = mode;
+    if (mode === "element" && el) setHighlight(el);
+
+    // Where the code lives — the target's own source ref (plus each selected
+    // item's ref for a group), or a page marker for launcher requests.
+    const ownRef = mode === "element" && el ? sourceRefFor(el) : "";
     const items = (groupRefs || []).filter(Boolean);
     const sourceRef =
-      items.length > 1
-        ? `${ownRef} — items: ${items.join(", ")}`.slice(0, 500)
-        : ownRef;
+      mode === "element"
+        ? items.length > 1
+          ? `${ownRef} — items: ${items.join(", ")}`.slice(0, 500)
+          : ownRef
+        : "page:" + location.pathname;
     const isGroup = items.length > 1;
-    const preview = isGroup
-      ? `${items.length} items selected`
-      : elementTextFor(el).slice(0, 80);
+    const preview =
+      mode === "element" && el
+        ? isGroup
+          ? `${items.length} items selected`
+          : elementTextFor(el).slice(0, 80)
+        : "";
+    const contextHtml =
+      mode === "element"
+        ? isGroup
+          ? escapeHtml(preview)
+          : preview
+            ? "“" + escapeHtml(preview) + "”"
+            : "this element"
+        : escapeHtml(document.title || "Untitled") +
+          ' · <span style="font-family:ui-monospace,monospace">' +
+          escapeHtml(location.pathname) +
+          "</span>";
+    const title =
+      mode === "element" ? "Request a change" : "Request a change to this page";
+    const placeholder =
+      mode === "element"
+        ? "Describe what to change…"
+        : "Describe what to add or change — paste event or blog details here…";
 
+    // Blue card on purpose — client sites are mostly white, so a white popover
+    // disappears into the page. Inputs stay white; primary action inverts to
+    // white-on-blue.
     popover = document.createElement("div");
     popover.id = "cms-bridge-popover";
     popover.style.cssText =
-      "position:fixed;z-index:2147483647;background:#fff;color:#111;" +
-      "width:300px;max-width:calc(100vw - 24px);border-radius:12px;" +
+      "position:fixed;z-index:2147483647;background:" +
+      ACCENT +
+      ";color:#fff;" +
+      (mode === "page" ? "bottom:100px;right:16px;" : "") +
+      "width:500px;max-width:calc(100vw - 24px);border-radius:12px;" +
       "box-shadow:0 0 0 1px rgba(255, 255, 255, 0.08) inset," +
       "0 0 0 1px rgba(9, 9, 11, 0.07)," +
       "0 0.7px 0.9px -1px rgba(9, 9, 11, 0.08)," +
       "0 3px 4px -2px rgba(9, 9, 11, 0.14);padding:14px;" +
-      "font:13px/1.4 system-ui,sans-serif;transform-origin:top left;" +
-      "animation:cmsPopIn .12s ease-out;";
+      "font:13px/1.4 system-ui,sans-serif;transform-origin:" +
+      (mode === "page" ? "bottom right" : "top left") +
+      ";animation:cmsPopIn .12s ease-out;";
     popover.innerHTML =
-      '<div style="font-weight:600;margin-bottom:2px">Request a change</div>' +
-      '<div style="color:#666;font-size:12px;margin-bottom:10px;overflow:hidden;' +
-      'text-overflow:ellipsis;white-space:nowrap">' +
-      (isGroup
-        ? escapeHtml(preview)
-        : preview
-          ? "“" + escapeHtml(preview) + "”"
-          : "this element") +
+      '<div style="display:flex;align-items:center;justify-content:space-between;' +
+      'gap:8px;margin-bottom:2px">' +
+      '<span class="cmsb-title" style="font-weight:600">' +
+      title +
+      "</span>" +
+      '<button id="cms-bridge-expand" style="background:rgba(255,255,255,.2);border:none;' +
+      "color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;" +
+      'font:11px/1 system-ui,sans-serif">Expand</button></div>' +
+      '<div class="cmsb-muted" style="color:rgba(255,255,255,.75);font-size:12px;margin-bottom:10px;' +
+      'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+      contextHtml +
       "</div>" +
-      '<textarea id="cms-bridge-input" rows="3" placeholder="Describe what to change…" ' +
-      'style="width:100%;box-sizing:border-box;resize:vertical;border:1px solid #ddd;' +
+      '<textarea id="cms-bridge-input" rows="5" placeholder="' +
+      placeholder +
+      '" style="width:100%;box-sizing:border-box;resize:vertical;background:#fff;color:#111;' +
+      "border:1px solid transparent;" +
       "border-radius:8px;padding:8px;font:13px/1.4 system-ui,sans-serif;" +
       'outline:none"></textarea>' +
-      '<div id="cms-bridge-error" style="display:none;color:#e5484d;font-size:12px;' +
+      '<div id="cms-bridge-chips" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px"></div>' +
+      '<div id="cms-bridge-image-row" style="display:none;gap:8px;margin-top:8px">' +
+      '<input id="cms-bridge-page-image" type="text" spellcheck="false" ' +
+      'placeholder="Paste an image URL (CDN link)…" ' +
+      'style="flex:1;min-width:0;box-sizing:border-box;background:#fff;color:#111;' +
+      "border:1px solid transparent;" +
+      "border-radius:8px;padding:6px 8px;font:12px/1.2 system-ui,sans-serif;" +
+      'outline:none">' +
+      '<button id="cms-bridge-image-add" style="background:rgba(255,255,255,.2);border:none;' +
+      "color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;" +
+      'font:12px/1 system-ui,sans-serif">Add</button></div>' +
+      '<div id="cms-bridge-error" style="display:none;color:#ffdcdc;font-size:12px;' +
       'margin-top:8px;word-break:break-word;white-space:pre-wrap"></div>' +
       '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">' +
-      '<label for="cms-bridge-branch" style="color:#666;font-size:12px">Branch</label>' +
+      '<label for="cms-bridge-branch" style="color:rgba(255,255,255,.75);font-size:12px">Branch</label>' +
       '<input id="cms-bridge-branch" type="text" value="' +
       escapeHtml(CFG.branch || "main") +
       '" spellcheck="false" ' +
-      'style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #ddd;' +
+      'style="flex:1;min-width:0;box-sizing:border-box;background:#fff;color:#111;' +
+      "border:1px solid transparent;" +
       "border-radius:8px;padding:6px 8px;font:12px/1.2 system-ui,sans-serif;" +
       'outline:none"></div>' +
-      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">' +
-      '<button id="cms-bridge-cancel" style="background:#f2f2f2;border:none;' +
-      "color:#333;border-radius:8px;padding:7px 12px;cursor:pointer;" +
+      '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">' +
+      '<button id="cms-bridge-image-toggle" aria-label="Attach an image URL" ' +
+      'style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;' +
+      'padding:7px 10px;cursor:pointer;font:12px/1 system-ui,sans-serif;' +
+      'display:flex;align-items:center;gap:5px">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none">' +
+      '<rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2"/>' +
+      '<circle cx="8.5" cy="8.5" r="1.5" fill="#fff"/>' +
+      '<path d="M21 15l-5-5L5 21" stroke="#fff" stroke-width="2"/></svg>' +
+      "Image</button>" +
+      '<span style="flex:1"></span>' +
+      '<button id="cms-bridge-cancel" style="background:rgba(255,255,255,.2);border:none;' +
+      "color:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;" +
       'font:12px/1 system-ui,sans-serif">Cancel</button>' +
-      '<button id="cms-bridge-send" style="background:' +
-      ACCENT +
-      ";border:none;color:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;" +
+      '<button id="cms-bridge-send" style="background:#fff;border:none;color:#111;' +
+      "border-radius:8px;padding:7px 14px;cursor:pointer;" +
       'font:12px/1 system-ui,sans-serif">Send</button>' +
       "</div>";
 
     document.body.appendChild(popover);
 
-    // Keep the popover pinned to the element — recompute from its live rect on
-    // scroll/resize so it travels with the selected element.
+    let expanded = false;
+
+    // Element mode: keep the popover pinned to the element — recompute from
+    // its live rect on scroll/resize so it travels with the selection. Page
+    // mode is a fixed bottom-right anchor and needs none of this.
     const reposition = () => {
-      if (!popover) return;
+      if (!popover || expanded || mode !== "element" || !el) return;
       const r = el.getBoundingClientRect();
       const pw = popover.offsetWidth;
       const ph = popover.offsetHeight;
@@ -450,52 +567,202 @@ declare global {
       popover.style.left = left + "px";
       popover.style.top = top + "px";
     };
-    reposition();
-    window.addEventListener("scroll", reposition, true);
-    window.addEventListener("resize", reposition);
-    popoverCleanup = () => {
-      window.removeEventListener("scroll", reposition, true);
-      window.removeEventListener("resize", reposition);
-    };
+    if (mode === "element") {
+      reposition();
+      window.addEventListener("scroll", reposition, true);
+      window.addEventListener("resize", reposition);
+      popoverCleanup = () => {
+        window.removeEventListener("scroll", reposition, true);
+        window.removeEventListener("resize", reposition);
+      };
+    }
 
     const input = document.getElementById(
       "cms-bridge-input"
     ) as HTMLTextAreaElement;
-    input.focus();
-
-    const send = document.getElementById("cms-bridge-send") as HTMLButtonElement;
-    const cancel = document.getElementById("cms-bridge-cancel")!;
+    const chips = document.getElementById("cms-bridge-chips")!;
+    const imageRow = document.getElementById("cms-bridge-image-row")!;
+    const imageInput = document.getElementById(
+      "cms-bridge-page-image"
+    ) as HTMLInputElement;
+    const imageAdd = document.getElementById("cms-bridge-image-add")!;
+    const imageToggle = document.getElementById("cms-bridge-image-toggle")!;
     const errorEl = document.getElementById("cms-bridge-error")!;
     const branchInput = document.getElementById(
       "cms-bridge-branch"
     ) as HTMLInputElement;
+    const send = document.getElementById("cms-bridge-send") as HTMLButtonElement;
+    const cancel = document.getElementById("cms-bridge-cancel")!;
+    const expandBtn = document.getElementById("cms-bridge-expand")!;
+
+    input.focus();
+
+    const showError = (message: string) => {
+      errorEl.textContent = message;
+      errorEl.style.display = "block";
+    };
+    const clearError = () => {
+      errorEl.style.display = "none";
+      errorEl.textContent = "";
+    };
+
+    const renderChips = () => {
+      chips.style.display = popoverImageUrls.length ? "flex" : "none";
+      chips.innerHTML = popoverImageUrls
+        .map(function (url, i) {
+          const short =
+            url.length > 42 ? url.slice(0, 24) + "…" + url.slice(-14) : url;
+          return (
+            '<span style="display:inline-flex;align-items:center;gap:5px;' +
+            "background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:4px 8px;" +
+            'font:11px/1.2 system-ui,sans-serif;max-width:100%">' +
+            escapeHtml(short) +
+            '<button data-chip="' +
+            i +
+            '" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;' +
+            'padding:0;font:12px/1 system-ui,sans-serif">×</button></span>'
+          );
+        })
+        .join("");
+      chips.querySelectorAll("[data-chip]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          popoverImageUrls.splice(Number(btn.getAttribute("data-chip")), 1);
+          renderChips();
+        });
+      });
+    };
+
+    const addImage = () => {
+      const url = imageInput.value.trim();
+      if (!url) return;
+      if (!/^https?:\/\//i.test(url)) {
+        showError("Image links must start with http:// or https://.");
+        return;
+      }
+      if (popoverImageUrls.length >= 10) {
+        showError("Up to 10 image links per request.");
+        return;
+      }
+      clearError();
+      popoverImageUrls.push(url);
+      imageInput.value = "";
+      renderChips();
+      imageInput.focus();
+    };
+
+    imageToggle.addEventListener("click", function () {
+      const open = imageRow.style.display !== "flex";
+      imageRow.style.display = open ? "flex" : "none";
+      if (open) imageInput.focus();
+    });
+    imageAdd.addEventListener("click", addImage);
+    imageInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addImage();
+      }
+      if (e.key === "Escape") closePopover();
+    });
+
+    // Dialog mode: the textarea hugs its content and grows line-by-line.
+    const autoGrow = () => {
+      if (!expanded) return;
+      input.style.height = "auto";
+      input.style.height = input.scrollHeight + 2 + "px";
+    };
+    input.addEventListener("input", autoGrow);
+
+    // Expand ↔ collapse: the same node moves between its anchor and a centered
+    // dialog inside the scrollable backdrop, so text, error state, and image
+    // chips survive the toggle.
+    const setExpanded = (next: boolean) => {
+      if (!popover) return;
+      expanded = next;
+      expandBtn.textContent = next ? "Collapse" : "Expand";
+      if (next) {
+        showBackdrop(function () {
+          setExpanded(false);
+        });
+        backdrop!.appendChild(popover);
+        popover.classList.add("cms-expanded");
+        popover.style.position = "static";
+        popover.style.left = "";
+        popover.style.top = "";
+        popover.style.right = "";
+        popover.style.bottom = "";
+        popover.style.transform = "";
+        popover.style.margin = "auto";
+        popover.style.width = "680px";
+        popover.style.maxWidth = "100%";
+        input.style.resize = "none";
+        input.style.overflow = "hidden";
+        input.style.minHeight = "9em";
+        autoGrow();
+      } else {
+        popover.classList.remove("cms-expanded");
+        document.body.appendChild(popover);
+        hideBackdrop();
+        popover.style.position = "fixed";
+        popover.style.margin = "";
+        popover.style.width = "500px";
+        popover.style.maxWidth = "calc(100vw - 24px)";
+        input.style.resize = "vertical";
+        input.style.overflow = "";
+        input.style.minHeight = "";
+        input.style.height = "";
+        if (mode === "page") {
+          popover.style.bottom = "100px";
+          popover.style.right = "16px";
+          popover.style.left = "";
+          popover.style.top = "";
+        } else {
+          reposition();
+        }
+      }
+      input.focus();
+    };
+    expandBtn.addEventListener("click", function () {
+      setExpanded(!expanded);
+    });
 
     cancel.addEventListener("click", closePopover);
 
     const doSend = function () {
       const prompt = input.value.trim();
-      if (prompt.length < 3) {
+      // Matches the intake's server-side minimum — validate here so the client
+      // never sees a raw HTTP 400 for a too-short prompt.
+      if (prompt.length < 4) {
         input.style.borderColor = "#e5484d";
         input.focus();
+        showError("Please describe the change — at least 4 characters.");
         return;
       }
-      errorEl.style.display = "none";
-      errorEl.textContent = "";
+      input.style.borderColor = "transparent";
+      clearError();
       const branch = branchInput.value.trim() || CFG.branch || "main";
       send.disabled = true;
       send.textContent = "Sending…";
-      submitEdit(el, prompt, sourceRef, branch).then(
-        function () {
+      postIntake({
+        branch: branch,
+        sourceRef: sourceRef,
+        elementText:
+          mode === "element" && el
+            ? elementTextFor(el)
+            : (document.title || "").slice(0, 2000),
+        pageUrl: location.href,
+        prompt: prompt,
+        ...(popoverImageUrls.length ? { imageUrls: popoverImageUrls } : {}),
+      }).then(
+        function (created) {
+          notifySubmitted(created.id);
           closePopover();
-          showChip(true, "Change requested");
+          showChip(true, mode === "element" ? "Change requested" : "Request sent");
         },
         function (err) {
           // Keep the popover open and show the real reason so it can be retried.
           send.disabled = false;
           send.textContent = "Send";
-          errorEl.textContent =
-            err instanceof Error ? err.message : "Could not send.";
-          errorEl.style.display = "block";
+          showError(err instanceof Error ? err.message : "Could not send.");
         }
       );
     };
@@ -505,14 +772,6 @@ declare global {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") doSend();
       if (e.key === "Escape") closePopover();
     });
-  }
-
-  function escapeHtml(s: string): string {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
   }
 
   // ---------- animation state ----------
@@ -533,9 +792,9 @@ declare global {
   }
 
   function frame() {
-    // While marquee-dragging OR hovering a collection region, keep the dot a
-    // plain dot (don't morph over elements) and fade it out via opacity below.
-    if (dragging || collectionTarget) target = null;
+    // While marquee-dragging, keep the dot a plain dot (don't morph over
+    // elements) and fade it out via opacity below.
+    if (dragging) target = null;
     let goal;
     if (target && document.body.contains(target)) {
       const rect = target.getBoundingClientRect();
@@ -557,25 +816,8 @@ declare global {
       dot.style.height = cur.h + "px";
       dot.style.borderRadius = target ? cur.r + "px" : "50%";
       dot.style.background = target ? "transparent" : ACCENT;
-      // Fade out during a drag or over a collection region; fade back after.
-      dot.style.opacity = dragging || collectionTarget ? "0" : "1";
-    }
-
-    // Draw the dashed ring around the hovered wrapper (rect + padding) and pin
-    // the pill to its top-right, clamped on-screen.
-    if (collectionTarget && document.body.contains(collectionTarget)) {
-      const r = collectionTarget.getBoundingClientRect();
-      const pad = 6;
-      if (collRing) {
-        collRing.style.left = r.left - pad + "px";
-        collRing.style.top = r.top - pad + "px";
-        collRing.style.width = r.width + pad * 2 + "px";
-        collRing.style.height = r.height + pad * 2 + "px";
-      }
-      const bw = collBtn.offsetWidth;
-      collBtn.style.left =
-        Math.max(8, Math.min(r.right - bw, window.innerWidth - bw - 8)) + "px";
-      collBtn.style.top = Math.max(8, r.top + 8) + "px";
+      // Fade out during a drag; fade back after.
+      dot.style.opacity = dragging ? "0" : "1";
     }
     requestAnimationFrame(frame);
   }
@@ -588,7 +830,7 @@ declare global {
     if (!el || !el.closest("[data-cms-src]")) return null;
     if (
       el.closest("#cms-bridge-dot") ||
-      el.closest("#cms-bridge-collection-btn") ||
+      el.closest("#cms-bridge-launcher") ||
       (bar && bar.contains(el)) ||
       (popover && popover.contains(el))
     )
@@ -602,7 +844,8 @@ declare global {
       el.closest("#cms-bridge-bar") ||
       el.closest("#cms-bridge-popover") ||
       el.closest("#cms-bridge-marquee") ||
-      el.closest("#cms-bridge-collection-btn")
+      el.closest("#cms-bridge-launcher") ||
+      el.closest("#cms-bridge-backdrop")
     );
 
   /** Annotated elements fully contained within the marquee rect. */
@@ -735,12 +978,6 @@ declare global {
       function (e) {
         const el = editableFrom(e.target);
         if (el) target = el;
-        // Collection wrappers are plain divs (not in EDITABLE), so resolve from
-        // the raw target. Over our own pill, keep the current hover so the pill
-        // stays reachable.
-        const raw = e.target instanceof Element ? e.target : null;
-        if (raw && inOwnUi(raw)) return;
-        setCollectionHover(raw ? raw.closest("[data-collection]") : null);
       },
       true
     );
@@ -777,12 +1014,15 @@ declare global {
         if (
           e.target instanceof Element &&
           ((popover && popover.contains(e.target)) ||
-            (bar && bar.contains(e.target)))
+            (bar && bar.contains(e.target)) ||
+            e.target.closest("#cms-bridge-launcher") ||
+            e.target.closest("#cms-bridge-backdrop"))
         )
           return;
         const el = editableFrom(e.target);
         if (!el) {
           closePopover();
+          closePagePopover();
           return;
         }
         e.preventDefault();
@@ -797,8 +1037,6 @@ declare global {
 
   function init() {
     if (!active()) return;
-    // View transitions swap <body>; drop any stale collection highlight/pill.
-    setCollectionHover(null);
     makeOverlay();
     bindOnce();
   }

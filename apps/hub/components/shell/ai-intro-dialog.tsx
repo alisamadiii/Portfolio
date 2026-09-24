@@ -15,7 +15,7 @@ import {
 import { HelpCircle, Sparkles } from "@/components/icon";
 
 // Bump this suffix if the intro changes enough that everyone should see it again.
-const SEEN_KEY = "cms-ai-intro-seen-v1";
+const SEEN_KEY = "cms-ai-intro-seen-v2";
 
 // Walkthrough video (direct MP4). Leave empty to show the "coming soon" box.
 const VIDEO_URL = "https://cdn.alisamadii.com/ai.mp4";
@@ -108,15 +108,19 @@ export function AiIntroDialog() {
             <Step n={2} title="Describe the change in plain words">
               Type what you&apos;d like, like texting a designer — for example
               &ldquo;shorten this paragraph&rdquo; or &ldquo;change this photo to
-              our new team picture.&rdquo;
+              our new team picture.&rdquo; What you clicked is just a starting
+              point — you can describe changes to other parts of the page in the
+              same message and they&apos;ll happen too.
             </Step>
             <Step n={3} title="Hit Send — that&apos;s it">
               Our AI makes the edit for you and publishes it. You&apos;ll see it
               live on your site shortly after.
             </Step>
-            <Step n={4} title="Bigger changes? Ask your developer">
-              New sections, new pages, or redesigns are still handled by your
-              developer — reach out and they&apos;ll take care of it.
+            <Step n={4} title="Adding something new? Use the chat button">
+              An event, a blog post, a whole section — click the round chat
+              button in the bottom-right corner and describe it. You can paste
+              image links right in. Full redesigns are still your
+              developer&apos;s job.
             </Step>
           </ol>
 

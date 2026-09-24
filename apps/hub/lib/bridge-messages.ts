@@ -24,6 +24,7 @@ export type {
   LinkInfoMessage,
   VariantOpenMessage,
   BlogOpenMessage,
+  EditSubmittedMessage,
 } from "./bridge-protocol";
 
 /**

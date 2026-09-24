@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import { roleAtLeast } from "@/lib/authz-shared";
 import { toast } from "sonner";
@@ -198,6 +198,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // request-a-change overlay), no armed inline editing.
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { open: openMediaLibrary } = useMediaLibrary();
 
   const owner = config?.owner ?? "";
@@ -899,8 +900,16 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
       if (!framePath) return;
       // view-only: ignore every editing action from the frame. `ready` (arms
-      // nothing, see pushEditableToFrame) and `link-info` stay allowed.
-      if (!canEdit && msg.type !== "ready" && msg.type !== "link-info") return;
+      // nothing, see pushEditableToFrame), `link-info` and `edit-submitted` (a
+      // refetch signal — the overlay already proved token possession) stay
+      // allowed.
+      if (
+        !canEdit &&
+        msg.type !== "ready" &&
+        msg.type !== "link-info" &&
+        msg.type !== "edit-submitted"
+      )
+        return;
       switch (msg.type) {
         case "ready": {
           if (msg.v >= 2 && msg.groups?.length) {
@@ -949,6 +958,15 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           // A blog region → open the Blog settings page.
           setSettingsRequest({ section: "blog" });
           break;
+        case "edit-submitted":
+          // The overlay created an AI-edit job — refresh the Deployments list
+          // (and the header's pending dot) right away instead of waiting for
+          // the 30s poll.
+          queryClient.invalidateQueries({
+            queryKey: trpc.cms.aiEdits.listJobs.queryOptions({ owner, repo })
+              .queryKey,
+          });
+          break;
         case "link-info": {
           const href = msg.href;
           toast(`Links to ${href || "(no href)"}`, {
@@ -981,6 +999,10 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     pushEditableToFrame,
     handleGroupOp,
     reconcileFrameGroups,
+    queryClient,
+    trpc,
+    owner,
+    repo,
   ]);
 
   // Copies can finish seeding AFTER a frame announced `ready` — re-run the

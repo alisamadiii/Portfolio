@@ -197,6 +197,19 @@ export interface BlogOpenMessage {
   type: "blog-open";
 }
 
+/**
+ * The overlay successfully created an AI-edit request (element popover or the
+ * page-level chat). The hub refreshes its jobs list immediately instead of
+ * waiting for the next poll.
+ */
+export interface EditSubmittedMessage {
+  cms: 1;
+  v: number;
+  type: "edit-submitted";
+  /** content-pilot job id, when the intake returned one. */
+  jobId?: number;
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
@@ -207,7 +220,8 @@ export type BridgeToCmsMessage =
   | GroupOpMessage
   | CollectionOpenMessage
   | VariantOpenMessage
-  | BlogOpenMessage;
+  | BlogOpenMessage
+  | EditSubmittedMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge

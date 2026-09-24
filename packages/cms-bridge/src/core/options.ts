@@ -5,7 +5,10 @@
  */
 
 export interface BridgeOptions {
-  /** Master switch — when false the integration is a complete no-op. */
+  /** GitHub numeric repo id — the content-pilot join key (not secret). The
+   * only required option; the server resolves owner/repo from it. */
+  repoId: number;
+  /** Master switch — when false the integration is a complete no-op. Default true. */
   enabled?: boolean;
   /**
    * Prefix token baked as the first segment of every `data-cms-src` value
@@ -14,15 +17,9 @@ export interface BridgeOptions {
    * repos (the attribute then carries just `<file>:<line>`).
    */
   project?: string;
-  /** content-pilot base URL, e.g. "https://pilot.alisamadii.com". */
-  endpoint: string;
-  /** GitHub numeric repo id — the content-pilot join key (not secret). */
-  repoId: number;
-  /** Repo owner, e.g. "acme-inc" (not secret). */
-  owner: string;
-  /** Repo name, e.g. "website" (not secret). */
-  repo: string;
-  /** Default target branch for edits; the popover can override it. */
+  /** content-pilot base URL. Default "https://pilot.alisamadii.com". */
+  endpoint?: string;
+  /** Default target branch for edits; the popover can override it. Default "main". */
   branch?: string;
   /**
    * Prepended to the file path portion for monorepo subfolders, e.g.
@@ -41,7 +38,5 @@ export interface BridgeRuntimeConfig {
   project?: string;
   endpoint: string;
   repoId: number;
-  owner: string;
-  repo: string;
   branch: string;
 }

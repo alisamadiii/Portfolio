@@ -18,9 +18,9 @@ import { createHmac } from "crypto";
 const DEFAULT_TTL_SECONDS = 30 * 60;
 
 export interface EditTokenPayload {
+  // GitHub repository id — the only identity claim; content-pilot resolves the
+  // owner/repo slug from it server-side, so a rename never invalidates tokens.
   repoId: number;
-  owner: string;
-  repo: string;
   /** Expiry, unix seconds. */
   exp: number;
 }

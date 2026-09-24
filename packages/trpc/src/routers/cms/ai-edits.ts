@@ -30,11 +30,7 @@ export const aiEditsRouter = createTRPCRouter({
     }
 
     const [project] = await db
-      .select({
-        repoId: hubProject.repoId,
-        owner: hubProject.owner,
-        repo: hubProject.repo,
-      })
+      .select({ repoId: hubProject.repoId })
       .from(hubProject)
       .where(
         and(
@@ -47,10 +43,7 @@ export const aiEditsRouter = createTRPCRouter({
       throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
     }
 
-    const token = signEditToken(
-      { repoId: project.repoId, owner: project.owner, repo: project.repo },
-      secret
-    );
+    const token = signEditToken({ repoId: project.repoId }, secret);
     return { token };
   }),
 
