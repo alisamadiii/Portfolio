@@ -95,12 +95,10 @@ async function getCustomDomainBaseUrl(
       .from(hubProject)
       .where(eq(hubProject.repoId, repoId))
       .limit(1);
-    const url = row?.websiteUrl ?? null;
-    if (url && !new URL(url).hostname.endsWith(".vercel.app")) return url;
+    return row?.websiteUrl ?? null;
   } catch {
-    // Fall through to the committed baseUrl.
+    return null;
   }
-  return null;
 }
 
 export const pagesRouter = createTRPCRouter({
@@ -118,18 +116,25 @@ export const pagesRouter = createTRPCRouter({
           input.branch,
           { getToken: async () => token }
         );
-        // Dev override: point every canvas iframe at a local server for
-        // testing (e.g. CMS_PREVIEW_BASE_URL=http://localhost:4321), without
-        // touching the client's committed cms.json baseUrl.
-        const devBaseUrl = process.env.CMS_PREVIEW_BASE_URL;
-        const domainBaseUrl = devBaseUrl
-          ? null
-          : await getCustomDomainBaseUrl(input.owner, input.repo);
+        // The canvas base URL is the project's own website URL only — no dev
+        // override, no manifest/settings fallback. Without one, tell the client
+        // to add a domain in Settings › Domain.
+        const domainBaseUrl = await getCustomDomainBaseUrl(
+          input.owner,
+          input.repo
+        );
+        if (!domainBaseUrl) {
+          return {
+            baseUrl: "",
+            origin: "",
+            pages: [] as CanvasPage[],
+            needsDomain: true as const,
+          };
+        }
+        const baseUrl = domainBaseUrl;
+        const origin = new URL(baseUrl).origin;
 
         if (manifest) {
-          const baseUrl =
-            devBaseUrl || domainBaseUrl || manifest.object.baseUrl;
-          const origin = new URL(baseUrl).origin;
           const byPath = new Map<string, CanvasPage>();
 
           for (const [name, page] of Object.entries(manifest.object.pages)) {
@@ -170,7 +175,12 @@ export const pagesRouter = createTRPCRouter({
             }
           }
 
-          return { baseUrl, origin, pages: Array.from(byPath.values()) };
+          return {
+            baseUrl,
+            origin,
+            pages: Array.from(byPath.values()),
+            needsDomain: false as const,
+          };
         }
 
         const config = await getConfig(input.owner, input.repo, input.branch, {
@@ -183,19 +193,6 @@ export const pagesRouter = createTRPCRouter({
           );
 
         const settings = config.object?.settings;
-        const baseUrl: unknown =
-          devBaseUrl ||
-          domainBaseUrl ||
-          (settings && typeof settings === "object"
-            ? settings.baseUrl
-            : undefined);
-        if (!baseUrl || typeof baseUrl !== "string") {
-          throw createHttpError(
-            "No `settings.baseUrl` configured — the canvas needs the site's live URL.",
-            400
-          );
-        }
-        const origin = new URL(baseUrl).origin;
 
         const byPath = new Map<string, CanvasPage>();
         const entriesByName = flattenEntries(config.object?.content);
@@ -259,7 +256,7 @@ export const pagesRouter = createTRPCRouter({
         // alphabetical sort.
         const pages = Array.from(byPath.values());
 
-        return { baseUrl, origin, pages };
+        return { baseUrl, origin, pages, needsDomain: false as const };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

@@ -131,6 +131,8 @@ type CanvasEditorValue = {
   siteOrigin: string | null;
   pagesLoading: boolean;
   pagesError: Error | null;
+  /** No website URL set for the project — the canvas prompts to add a domain. */
+  needsDomain: boolean;
   isV2: boolean;
   /** v2 repo whose root _pages.json is missing/unreadable — edits blocked. */
   pagesMissing: boolean;
@@ -229,7 +231,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     () => pagesQuery.data?.pages ?? [],
     [pagesQuery.data]
   );
-  const siteOrigin = pagesQuery.data?.origin ?? null;
+  const siteOrigin = pagesQuery.data?.origin || null;
+  const needsDomain = pagesQuery.data?.needsDomain ?? false;
 
   // Which page's iframe is currently shown. Defaults to the first page.
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -1123,6 +1126,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       pagesLoading: pagesQuery.isLoading,
       pagesError:
         pagesQuery.error instanceof Error ? pagesQuery.error : null,
+      needsDomain,
       isV2,
       pagesMissing,
       manifest,
@@ -1159,6 +1163,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       siteOrigin,
       pagesQuery.isLoading,
       pagesQuery.error,
+      needsDomain,
       isV2,
       pagesMissing,
       manifest,

@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
+import z from "zod";
 
 import { cmsFullAccessProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
@@ -44,4 +45,38 @@ export const projectRouter = createTRPCRouter({
       throw toTRPCError(error);
     }
   }),
+
+  /**
+   * Set (or clear) the project's live website URL — the domain shown across the
+   * hub and used as the canvas/SEO base URL. Accepts a bare host or a full URL;
+   * stores the normalized origin (https://). Empty clears it.
+   */
+  setWebsiteUrl: cmsFullAccessProcedure
+    .input(z.object({ websiteUrl: z.string().trim().max(255) }))
+    .mutation(async ({ input }) => {
+      try {
+        const repoId = await resolveRepoId(input.owner, input.repo);
+        const raw = input.websiteUrl.trim();
+        let url: string | null = null;
+        if (raw) {
+          const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+          try {
+            url = new URL(withProto).origin;
+          } catch {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Enter a valid domain, e.g. example.com",
+            });
+          }
+        }
+        await db
+          .update(hubProject)
+          .set({ websiteUrl: url })
+          .where(eq(hubProject.repoId, repoId));
+        return { websiteUrl: url };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

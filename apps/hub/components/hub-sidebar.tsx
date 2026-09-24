@@ -29,7 +29,7 @@ import {
   SidebarRail,
 } from "@workspace/ui/components/sidebar";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
-import { logos, urls } from "@workspace/ui/lib/company";
+import { urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -147,9 +147,9 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="px-5 pt-6 pb-5">
         <div className="flex items-center gap-3.5">
           <img
-            src={logos.green}
+            src="/agency-icon.png"
             alt="Ali Samadi"
-            className="size-11.5 shrink-0 rounded-full object-cover"
+            className="size-11.5 shrink-0 object-cover"
           />
           <div>
             <p className="text-sidebar-accent-foreground text-xl leading-none font-extrabold tracking-tight">

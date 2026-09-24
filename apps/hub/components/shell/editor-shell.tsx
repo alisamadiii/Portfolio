@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Frame } from "@/components/icon";
+import { AlertTriangle, Frame, Globe } from "@/components/icon";
+import { Button } from "@workspace/ui/components/button";
 
 import { CmsOverlay } from "@/components/cms/cms-overlay";
 import {
@@ -41,10 +42,12 @@ function ShellBody() {
     pages,
     selectedPath,
     pagesError,
+    needsDomain,
     isV2,
     cmsOverlay,
     setCmsOverlay,
     settingsRequest,
+    setSettingsRequest,
   } = useCanvasEditor();
   const { myRole } = useRepo();
   // view-only collaborators never see the CMS overlay or Deployments view.
@@ -90,6 +93,27 @@ function ShellBody() {
         <SettingsMode />
       ) : mode === "deployments" && canEdit ? (
         <DeploymentsMode />
+      ) : needsDomain ? (
+        <div className="bg-shell flex min-h-0 flex-1 items-center justify-center p-6">
+          <div className="bg-background w-full max-w-md rounded-2xl border p-7 text-center shadow-sm">
+            <div className="bg-primary/10 text-primary mx-auto flex size-11 items-center justify-center rounded-xl">
+              <Globe className="size-5" />
+            </div>
+            <h2 className="mt-4 text-[19px] font-semibold tracking-tight">
+              Add your website URL
+            </h2>
+            <p className="text-muted-foreground mx-auto mt-1.5 max-w-sm text-[14px] leading-relaxed">
+              The canvas previews your live site. Add the project's domain so we
+              know where it lives.
+            </p>
+            <Button
+              className="mt-5"
+              onClick={() => setSettingsRequest({ section: "domain" })}
+            >
+              Add domain
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="flex min-h-0 flex-1">
           {/* Left: page tree */}
