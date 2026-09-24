@@ -21,6 +21,7 @@ import { getServerSession } from "@/lib/session-server";
 
 import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 import { RepoLayout } from "@/components/repo/repo-layout";
+import { GitHubAccessOverlay } from "@/components/repo/github-access-overlay";
 
 /** Standalone error card (no repo/config providers available yet). */
 function ErrorCard({
@@ -131,6 +132,20 @@ export default async function Layout({
   const owner = repoInfo.owner;
   const branch = repoInfo.defaultBranch as string;
 
+  // Agency-access gate: the agency GitHub account must be a collaborator on the
+  // repo (content-pilot commits with it). If it's missing, the repo owner/admin
+  // gets a blocking (but translucent) overlay over the canvas to add it. Only
+  // admins ever see `missing`.
+  const agency = await caller.cms.repos.agencyAccess.query({ repo });
+  const agencyGate =
+    agency.status === "missing" || agency.status === "invited"
+      ? {
+          owner: agency.owner,
+          login: agency.login,
+          invited: agency.status === "invited",
+        }
+      : null;
+
   // The v2 canvas reads everything from the root _site.json manifest; the
   // ConfigProvider only carries the repo coordinates and default media settings.
   // (ImageKit is the sole media provider and needs no per-repo config.)
@@ -149,6 +164,14 @@ export default async function Layout({
       <ConfigProvider value={config}>
         <MediaLibraryProvider>
           <RepoLayout>{children}</RepoLayout>
+          {agencyGate && (
+            <GitHubAccessOverlay
+              owner={agencyGate.owner}
+              login={agencyGate.login}
+              repo={repo}
+              invited={agencyGate.invited}
+            />
+          )}
         </MediaLibraryProvider>
       </ConfigProvider>
     </RepoProvider>

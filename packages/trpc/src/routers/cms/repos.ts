@@ -11,8 +11,86 @@ import {
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
+import { revalidateRepoCache } from "@workspace/trpc/lib/cms/revalidate";
+import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
 import { db } from "@workspace/drizzle/index";
 import { hubProject, hubSubscription } from "@workspace/drizzle/schema";
+
+// ─── Agency-access gate ──────────────────────────────────────────
+// A specific GitHub account (AGENCY_GITHUB_LOGIN) — the one whose PAT
+// content-pilot commits with — must be a collaborator on every client repo, or
+// the agency can't publish. The repo owner is prompted to add it.
+const ghHeaders = (token: string) => ({
+  Authorization: `Bearer ${token}`,
+  Accept: "application/vnd.github+json",
+  "X-GitHub-Api-Version": "2022-11-28",
+});
+
+/** Whether the repo has a pending invitation for the agency account (the state
+ * right after `grantAgencyAccess` until the agency accepts). Needs admin on the
+ * caller's token; best-effort → false on any error. */
+async function hasPendingAgencyInvite(
+  owner: string,
+  repo: string,
+  login: string,
+  token: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/invitations`,
+      { headers: ghHeaders(token) }
+    );
+    if (!res.ok) return false;
+    const invites = (await res.json()) as Array<{
+      invitee?: { login?: string };
+    }>;
+    return invites.some(
+      (i) => i.invitee?.login?.toLowerCase() === login.toLowerCase()
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Best-effort accept of a pending repo invitation from the agency account's
+ * own stored token (only works when the importing user IS the agency account —
+ * the invite only appears in that account's list). Never throws. */
+async function acceptAgencyInvite(owner: string, repo: string) {
+  try {
+    const [row] = await db
+      .select({ uid: hubProject.githubConnectedUserId })
+      .from(hubProject)
+      .where(
+        and(
+          eq(hubProject.hidden, false),
+          sql`lower(${hubProject.repo}) = lower(${repo})`
+        )
+      )
+      .limit(1);
+    if (!row?.uid) return;
+    const token = await getIntegrationAccessToken(row.uid, "github", "GitHub");
+    const res = await fetch(
+      "https://api.github.com/user/repository_invitations",
+      { headers: ghHeaders(token) }
+    );
+    if (!res.ok) return;
+    const invites = (await res.json()) as Array<{
+      id: number;
+      repository?: { full_name?: string };
+    }>;
+    const full = `${owner}/${repo}`.toLowerCase();
+    const match = invites.find(
+      (i) => i.repository?.full_name?.toLowerCase() === full
+    );
+    if (!match) return;
+    await fetch(
+      `https://api.github.com/user/repository_invitations/${match.id}`,
+      { method: "PATCH", headers: ghHeaders(token) }
+    );
+  } catch {
+    // Invite stays pending; the agency accepts it manually.
+  }
+}
 
 // Every project is a hub_project row (created by the import flow). Pure DB
 // listing, optionally scoped to one owner + a repo-name keyword.
@@ -241,6 +319,17 @@ export const reposRouter = createTRPCRouter({
           throw snapshotError;
         }
 
+        // Opening a project reconciles its cache with the live branch HEAD
+        // (replaces the old push webhook). Best-effort — never blocks the open.
+        if (snapshot.defaultBranch) {
+          await revalidateRepoCache(
+            owner,
+            input.repo,
+            snapshot.defaultBranch,
+            token
+          );
+        }
+
         // The project's stored live URL (used by the thumbnail/preview + hooks).
         const [project] = await db
           .select({ websiteUrl: hubProject.websiteUrl })
@@ -258,5 +347,104 @@ export const reposRouter = createTRPCRouter({
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);
       }
+    }),
+
+  /**
+   * Is the agency GitHub account a collaborator on this repo? Uses the caller's
+   * token — GitHub's collaborator-check needs push access, so a `missing`
+   * result only reaches an admin (exactly who can fix it). Fails open: never
+   * blocks a project on a transient error or an unset AGENCY_GITHUB_LOGIN.
+   */
+  agencyAccess: authenticatedProcedure
+    .input(z.object({ repo: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const login = process.env.AGENCY_GITHUB_LOGIN;
+      if (!login) return { status: "ok" as const };
+      try {
+        const owner = await resolveOwnerForRepo(ctx.session.user.id, input.repo);
+        if (!owner) return { status: "ok" as const };
+        const { token } = await getToken(ctx.session.user, owner, input.repo);
+        if (!token) return { status: "ok" as const };
+        const res = await fetch(
+          `https://api.github.com/repos/${owner}/${input.repo}/collaborators/${login}`,
+          { headers: ghHeaders(token) }
+        );
+        if (res.status === 204) return { status: "ok" as const };
+        if (res.status === 404) {
+          // Not a collaborator — but an invite may already be pending.
+          const invited = await hasPendingAgencyInvite(
+            owner,
+            input.repo,
+            login,
+            token
+          );
+          return {
+            status: invited ? ("invited" as const) : ("missing" as const),
+            owner,
+            login,
+          };
+        }
+        if (res.status === 403) return { status: "not-admin" as const };
+        return { status: "unknown" as const };
+      } catch {
+        return { status: "unknown" as const };
+      }
+    }),
+
+  /**
+   * Add the agency GitHub account as a collaborator (permission: push) using the
+   * caller's token, then best-effort auto-accept the invitation. Requires the
+   * caller to have admin on the repo; otherwise FORBIDDEN so the UI shows the
+   * manual GitHub link.
+   */
+  grantAgencyAccess: authenticatedProcedure
+    .input(z.object({ repo: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const login = process.env.AGENCY_GITHUB_LOGIN;
+      if (!login) return { status: "active" as const };
+      const owner = await resolveOwnerForRepo(ctx.session.user.id, input.repo);
+      if (!owner) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
+      }
+      const { token } = await getToken(ctx.session.user, owner, input.repo);
+      if (!token) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "GitHub is not connected.",
+        });
+      }
+      const res = await fetch(
+        `https://api.github.com/repos/${owner}/${input.repo}/collaborators/${login}`,
+        {
+          method: "PUT",
+          headers: ghHeaders(token),
+          body: JSON.stringify({ permission: "push" }),
+        }
+      );
+      if (res.status === 403) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "You need admin access on this repository to add a collaborator.",
+        });
+      }
+      if (!res.ok && res.status !== 204) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `GitHub returned ${res.status} while adding the collaborator.`,
+        });
+      }
+      // 204 = already a collaborator (or added directly for an org member).
+      // 201 = a pending invitation was created — try to auto-accept it, then
+      // report whether the agency account ended up active or still invited.
+      if (res.status === 204) return { status: "active" as const };
+      await acceptAgencyInvite(owner, input.repo);
+      const check = await fetch(
+        `https://api.github.com/repos/${owner}/${input.repo}/collaborators/${login}`,
+        { headers: ghHeaders(token) }
+      );
+      return {
+        status: check.status === 204 ? ("active" as const) : ("invited" as const),
+      };
     }),
 });

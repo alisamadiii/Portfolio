@@ -165,13 +165,11 @@ export const hubProject = pgTable(
     // the canvas/SEO base URL. Set at import (add-project form) or directly in
     // the DB.
     websiteUrl: text("website_url"),
-    // Per-client GitHub. The Better Auth user.id whose stored GitHub OAuth token
-    // (account table, "repo" scope) backstops reads/commits for this project when
-    // there's no caller (the webhook path) — the editing user's own token is used
-    // interactively. Set at import. githubWebhookId is the push webhook we
-    // register on that repo (for teardown on delete).
+    // Per-client GitHub. The Better Auth user.id who imported the project — owns
+    // it (access filtering + full-access role) and whose stored GitHub OAuth
+    // token backstops reads/commits when there's no interactive caller. Set at
+    // import.
     githubConnectedUserId: text("github_connected_user_id"),
-    githubWebhookId: integer("github_webhook_id"),
     // Danger-tab tombstone. Set true when the project is deleted from the hub;
     // the row stays (keyed by repoId) so it isn't recreated. Every project
     // listing filters hidden=false.

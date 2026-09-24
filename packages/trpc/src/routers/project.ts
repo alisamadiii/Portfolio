@@ -9,8 +9,6 @@ import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { settleAndCancel } from "@workspace/trpc/lib/cms/settle-subscription";
-import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
-import { deleteRepoWebhook } from "@workspace/trpc/routers/integrations/github";
 
 export const projectRouter = createTRPCRouter({
   /**
@@ -28,29 +26,7 @@ export const projectRouter = createTRPCRouter({
       // 1. Billing first — hard gate. A failed cancel/refund aborts the delete.
       await settleAndCancel(repoId);
 
-      // 2. Remove the repo webhook we registered (best-effort). Never the repo.
-      const [gh] = await db
-        .select({
-          githubConnectedUserId: hubProject.githubConnectedUserId,
-          githubWebhookId: hubProject.githubWebhookId,
-        })
-        .from(hubProject)
-        .where(eq(hubProject.repoId, repoId))
-        .limit(1);
-      if (gh?.githubWebhookId && gh.githubConnectedUserId) {
-        try {
-          const token = await getIntegrationAccessToken(
-            gh.githubConnectedUserId,
-            "github",
-            "GitHub"
-          );
-          await deleteRepoWebhook(token, input.owner, input.repo, gh.githubWebhookId);
-        } catch {
-          // Hook may already be gone / token revoked — not fatal.
-        }
-      }
-
-      // 3. Wipe project-scoped rows (blog, subscription, collaborators), then
+      // 2. Wipe project-scoped rows (blog, subscription, collaborators), then
       //    tombstone the project + clear its GitHub fields.
       await deleteProjectChildRows([repoId]);
       await db
@@ -59,7 +35,6 @@ export const projectRouter = createTRPCRouter({
           hidden: true,
           websiteUrl: null,
           githubConnectedUserId: null,
-          githubWebhookId: null,
         })
         .where(eq(hubProject.repoId, repoId));
 

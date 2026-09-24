@@ -11,18 +11,13 @@ import {
   getConnectedAccount,
   getIntegrationAccessToken,
 } from "../lib/integrations";
-import {
-  createRepoWebhook,
-  findRepoWebhook,
-  githubWebhookUrl,
-} from "./integrations/github";
 
 // ─── Deploy / import flow ────────────────────────────────────────
 // "Add project": pick a GitHub repo + enter its live website URL (used for the
 // iframe preview + as the project's website_url). Every project is repo-keyed
 // (hub_project.repoId). The importing user's id is stored as
-// githubConnectedUserId — that user owns the project (commits/reads/webhook use
-// their token).
+// githubConnectedUserId — that user owns the project (commits/reads use their
+// token).
 
 const githubToken = (userId: string) =>
   getIntegrationAccessToken(userId, "github", "GitHub");
@@ -91,36 +86,6 @@ async function upsertProject(
       syncedAt: new Date(),
       ...fields,
     });
-  }
-
-  await registerProjectWebhook(userId, ghRepo);
-}
-
-/**
- * Register a push webhook on the user's repo (best-effort) so external pushes
- * refresh the CMS cache. Skips silently when the endpoint/secret aren't
- * configured, a hook already exists, or the user lacks admin on the repo.
- * Never blocks the import.
- */
-async function registerProjectWebhook(
-  userId: string,
-  ghRepo: { id: number; owner: string; repo: string }
-) {
-  const url = githubWebhookUrl();
-  const secret = process.env.GITHUB_WEBHOOK_SECRET;
-  if (!url || !secret) return;
-  try {
-    const token = await githubToken(userId);
-    const existingHook = await findRepoWebhook(token, ghRepo.owner, ghRepo.repo, url);
-    const hookId =
-      existingHook ??
-      (await createRepoWebhook(token, ghRepo.owner, ghRepo.repo, url, secret));
-    await db
-      .update(hubProject)
-      .set({ githubWebhookId: hookId })
-      .where(eq(hubProject.repoId, ghRepo.id));
-  } catch (error) {
-    console.error("Failed to register GitHub webhook", ghRepo.repo, error);
   }
 }
 
