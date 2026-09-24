@@ -31,8 +31,6 @@ type Project = {
   websiteUrl?: string | null;
   plan?: string | null;
   freeLife?: boolean;
-  cloudflare?: boolean;
-  dns?: boolean;
 };
 
 type Site = {
@@ -143,38 +141,11 @@ const hostOf = (url: string) =>
     .replace(/^https?:\/\//, "")
     .replace(/\/.*$/, "");
 
-type ProjectFlags = { cloudflare: boolean; dns: boolean };
-
-// Small orange-cloud mark for the Cloudflare chip.
-const CloudflareMark = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-    <path d="M16.5 16.8c.14-.5.09-.96-.16-1.3-.22-.31-.6-.5-1.05-.52l-8.6-.11a.17.17 0 0 1-.14-.07.18.18 0 0 1-.02-.15.23.23 0 0 1 .2-.16l8.69-.11c1.03-.05 2.14-.88 2.53-1.9l.5-1.3a.31.31 0 0 0 .01-.17A5.67 5.67 0 0 0 7.57 9.8a2.55 2.55 0 0 0-3.98 2.67A3.63 3.63 0 0 0 .05 16.1c0 .18.01.36.04.54a.17.17 0 0 0 .17.15h15.87a.22.22 0 0 0 .21-.16z" />
-  </svg>
-);
-
-// GitHub / Cloudflare / DNS config indicators (non-clickable — the card is a link).
-const ConfigChips = ({ flags }: { flags?: ProjectFlags }) => (
+// GitHub config indicator (non-clickable — the card is a link).
+const ConfigChips = () => (
   <div className="flex items-center gap-1.5 pt-1.5">
     <span title="GitHub repository" className="text-foreground">
       <Github className="size-3.5" />
-    </span>
-    <span
-      title={
-        flags?.cloudflare
-          ? "Cloudflare configured"
-          : "Cloudflare not configured"
-      }
-      className={
-        flags?.cloudflare ? "text-[#F38020]" : "text-muted-foreground/35"
-      }
-    >
-      <CloudflareMark className="size-3.5" />
-    </span>
-    <span
-      title={flags?.dns ? "DNS configured" : "DNS not configured"}
-      className={flags?.dns ? "text-foreground" : "text-muted-foreground/35"}
-    >
-      <Globe className="size-3.5" />
     </span>
   </div>
 );
@@ -184,13 +155,11 @@ const ProjectCard = ({
   site,
   plan,
   freeLife,
-  flags,
 }: {
   project: Project;
   site?: Site;
   plan?: string;
   freeLife?: boolean;
-  flags?: ProjectFlags;
 }) => {
   const url = project.websiteUrl ?? null;
   return (
@@ -210,7 +179,7 @@ const ProjectCard = ({
           <p className="text-muted-foreground truncate text-xs">
             {url ? hostOf(url) : project.repo}
           </p>
-          <ConfigChips flags={flags} />
+          <ConfigChips />
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <PlanBadge plan={plan} freeLife={freeLife} />
@@ -251,12 +220,6 @@ export function ProjectGallery() {
   );
 
   const isPending = !!user && projectsQuery.isPending;
-
-  // Cloudflare/DNS config chips now ride along in the listMine payload.
-  const flagsFor = (p: Project): ProjectFlags => ({
-    cloudflare: !!p.cloudflare,
-    dns: !!p.dns,
-  });
 
   // Match a project to its pinged live-status row by owner/repo id.
   const siteFor = (p: Project): Site | undefined =>
@@ -300,7 +263,6 @@ export function ProjectGallery() {
               site={siteFor(p)}
               plan={planFor(p)}
               freeLife={freeLifeFor(p)}
-              flags={flagsFor(p)}
             />
           ))}
         </div>

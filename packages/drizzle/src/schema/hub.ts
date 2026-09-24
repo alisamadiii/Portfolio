@@ -160,11 +160,11 @@ export const hubProject = pgTable(
     // set via the Analytics tab.
     gaPropertyId: text("ga_property_id"),
     gaConnectedUserId: text("ga_connected_user_id"),
-    // Per-client Cloudflare. The Better Auth user.id whose stored Cloudflare
-    // OAuth token (account table) the Domain tab uses to list zones and manage
-    // DNS — project-level, so any collaborator sees the same zones/records. Set
-    // when a CF zone is first bound to a domain.
-    cfConnectedUserId: text("cf_connected_user_id"),
+    // The project's live website URL, e.g. "https://acme.com". Shown across the
+    // hub (thumbnail preview, PageSpeed, suggested sending domain) and used as
+    // the canvas/SEO base URL. Set at import (add-project form) or directly in
+    // the DB.
+    websiteUrl: text("website_url"),
     // Per-client GitHub. The Better Auth user.id whose stored GitHub OAuth token
     // (account table, "repo" scope) backstops reads/commits for this project when
     // there's no caller (the webhook path) — the editing user's own token is used
@@ -172,22 +172,6 @@ export const hubProject = pgTable(
     // register on that repo (for teardown on delete).
     githubConnectedUserId: text("github_connected_user_id"),
     githubWebhookId: integer("github_webhook_id"),
-    // The Cloudflare account the project's Worker lives on (set at import) —
-    // needed to attach custom domains / read zones.
-    cfAccountId: text("cf_account_id"),
-    // The Cloudflare zone whose DNS records this project manages in the DNS tab
-    // (picked there or during import). Independent of hub_domain.cfZoneId.
-    cfZoneId: text("cf_zone_id"),
-    // Deploy flow (Vercel-style): cfPagesProject/Subdomain record the created
-    // Cloudflare project; cfRootDir is the monorepo subfolder holding
-    // wrangler.json (blank = repo root). Ownership is tracked by
-    // githubConnectedUserId (the importing user), who gets full access.
-    cfPagesProject: text("cf_pages_project"),
-    // Production workers.dev URL (filled on confirm).
-    cfPagesSubdomain: text("cf_pages_subdomain"),
-    // Preview workers.dev URL pattern (*-<name>.<sub>.workers.dev).
-    cfPreviewUrl: text("cf_preview_url"),
-    cfRootDir: text("cf_root_dir"),
     // Danger-tab tombstone. Set true when the project is deleted from the hub;
     // the row stays (keyed by repoId) so it isn't recreated. Every project
     // listing filters hidden=false.
@@ -199,64 +183,6 @@ export const hubProject = pgTable(
       sql`lower(${table.owner})`,
       sql`lower(${table.repo})`
     ),
-  })
-);
-
-// Project domains, one row per (repo, domain). The hub DB is the source of
-// truth — domains are plain metadata the client points at their own host; there
-// is no provider integration, verification, or DNS-record generation. Exactly
-// one row per repo is flagged `isPrimary` (canonical/display); the live site URL
-// shown across the hub is derived from it.
-export const hubDomain = pgTable(
-  "hub_domain",
-  {
-    id: serial("id").primaryKey(),
-    // = hubProject.repoId (GitHub-stable).
-    repoId: integer("repo_id").notNull(),
-    // Lowercased host, e.g. "acme.com" / "www.acme.com"
-    domain: text("domain").notNull(),
-    // The canonical domain for the project (used for the derived site URL). The
-    // first domain added to a repo becomes primary; setPrimary moves the flag.
-    isPrimary: boolean("is_primary").notNull().default(false),
-    // The domain's own Cloudflare zone (needed to attach it to the Worker).
-    cfZoneId: text("cf_zone_id"),
-    // Workers Custom Domain id (for status polling + detach) and its status
-    // ("pending" while the cert issues, "active" once serving).
-    cfDomainId: text("cf_domain_id"),
-    status: text("status"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => ({
-    uqHubDomainRepoDomainCi: uniqueIndex("uq_hub_domain_repo_domain_ci").on(
-      table.repoId,
-      sql`lower(${table.domain})`
-    ),
-    idxHubDomainRepoId: index("idx_hub_domain_repo_id").on(table.repoId),
-  })
-);
-
-// One row per Cloudflare Pages deployment kicked off from the hub's Deploy
-// flow. Records the CF deployment id + status so the publishing progress UI can
-// poll it and the project page can show the latest deploy. The hub DB is a
-// mirror of CF's deployment state, not the source of truth.
-export const hubDeployment = pgTable(
-  "hub_deployment",
-  {
-    id: serial("id").primaryKey(),
-    // = hubProject.repoId.
-    repoId: integer("repo_id").notNull(),
-    cfPagesProject: text("cf_pages_project").notNull(),
-    cfDeploymentId: text("cf_deployment_id"),
-    // Normalized: queued | building | deploying | success | failure | canceled
-    status: text("status").notNull().default("queued"),
-    error: text("error"),
-    createdByUserId: text("created_by_user_id"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => ({
-    idxHubDeploymentRepoId: index("idx_hub_deployment_repo_id").on(table.repoId),
   })
 );
 

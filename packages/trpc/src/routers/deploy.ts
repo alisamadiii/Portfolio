@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
-import { hubDomain, hubProject } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 import { authenticatedProcedure, createTRPCRouter } from "../init";
 import { createOctokitInstance } from "../lib/cms/octokit";
@@ -12,34 +12,20 @@ import {
   getIntegrationAccessToken,
 } from "../lib/integrations";
 import {
-  getPagesProjectDomains,
-  getWorkerDomains,
-  getWorkerUrls,
-  getWorkersDevSubdomain,
-  listCfAccounts,
-  listCfWorkers,
-  listCfZones,
-  listPagesProjects,
-} from "./integrations/cloudflare";
-import {
   createRepoWebhook,
   findRepoWebhook,
   githubWebhookUrl,
 } from "./integrations/github";
 
 // ─── Deploy / import flow ────────────────────────────────────────
-// "Add project" with two sources (both require GitHub + Cloudflare connected):
-//  • GitHub — pick a repo + enter its live domain (used for the iframe preview).
-//  • Cloudflare — pick an existing CF Worker/Pages project; we pull its domains,
-//    URLs and (Pages only) the connected repo.
-// Every project is repo-keyed (hub_project.repoId), so a GitHub repo is always
-// required. The importing user's id is stored as githubConnectedUserId — that
-// user owns the project (commits/reads/webhook use their token).
+// "Add project": pick a GitHub repo + enter its live website URL (used for the
+// iframe preview + as the project's website_url). Every project is repo-keyed
+// (hub_project.repoId). The importing user's id is stored as
+// githubConnectedUserId — that user owns the project (commits/reads/webhook use
+// their token).
 
 const githubToken = (userId: string) =>
   getIntegrationAccessToken(userId, "github", "GitHub");
-const cloudflareToken = (userId: string) =>
-  getIntegrationAccessToken(userId, "cloudflare", "Cloudflare");
 
 const splitRepo = (fullName: string) => {
   const [owner, repo] = fullName.split("/");
@@ -49,55 +35,9 @@ const splitRepo = (fullName: string) => {
   return { owner, repo };
 };
 
-const hostOf = (url: string) => {
-  try {
-    return new URL(url).host;
-  } catch {
-    return url.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-  }
-};
-
-/** Insert domain rows for a project, first one primary when none exist yet. */
-async function addDomains(repoId: number, domains: string[]) {
-  const norm = [
-    ...new Set(
-      domains
-        .map((d) => d.trim().toLowerCase())
-        .filter((d) => /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d))
-    ),
-  ];
-  if (norm.length === 0) return;
-  const existing = await db
-    .select({ domain: hubDomain.domain })
-    .from(hubDomain)
-    .where(eq(hubDomain.repoId, repoId));
-  const have = new Set(existing.map((e) => e.domain));
-  const hadRows = existing.length > 0;
-  const toInsert = norm.filter((d) => !have.has(d));
-  if (toInsert.length === 0) return;
-  // These come straight from CF (workers.dev route + existing custom domains) —
-  // already serving, so they land active, not pending.
-  await db.insert(hubDomain).values(
-    toInsert.map((domain, i) => ({
-      repoId,
-      domain,
-      isPrimary: !hadRows && i === 0,
-      status: "active",
-    }))
-  );
-}
-
-type CfImport = {
-  accountId: string;
-  name: string;
-  productionUrl: string;
-  previewUrl?: string | null;
-};
-
 /**
- * Create or attach the hub_project for an imported repo. Blocks only when the
- * project already carries a live CF URL (already imported); otherwise upserts
- * by repoId so org-synced/existing rows are reused.
+ * Create or attach the hub_project for an imported repo. Upserts by repoId so
+ * existing rows are reused; sets the project's website_url when provided.
  */
 async function upsertProject(
   userId: string,
@@ -109,14 +49,12 @@ async function upsertProject(
     defaultBranch: string;
     updatedAt: string | null;
   },
-  cf?: CfImport,
-  dnsZoneId?: string | null
+  websiteUrl?: string | null
 ) {
   const [existing] = await db
     .select({
       owner: hubProject.owner,
       repo: hubProject.repo,
-      cfPagesSubdomain: hubProject.cfPagesSubdomain,
       githubConnectedUserId: hubProject.githubConnectedUserId,
     })
     .from(hubProject)
@@ -132,30 +70,15 @@ async function upsertProject(
       message: `${existing.owner}/${existing.repo} is already owned by another user.`,
     });
   }
-  if (existing?.cfPagesSubdomain) {
-    throw new TRPCError({
-      code: "CONFLICT",
-      message: `${existing.owner}/${existing.repo} is already connected. Open it from your projects.`,
-    });
-  }
-  const cfFields = {
-    cfConnectedUserId: userId,
+  const fields = {
     // The importing user owns this repo — commits/reads/webhook use their token.
     githubConnectedUserId: userId,
-    ...(cf
-      ? {
-          cfAccountId: cf.accountId,
-          cfPagesProject: cf.name,
-          cfPagesSubdomain: cf.productionUrl,
-          cfPreviewUrl: cf.previewUrl ?? null,
-        }
-      : {}),
-    ...(dnsZoneId ? { cfZoneId: dnsZoneId } : {}),
+    ...(websiteUrl ? { websiteUrl } : {}),
   };
   if (existing) {
     await db
       .update(hubProject)
-      .set(cfFields)
+      .set(fields)
       .where(eq(hubProject.repoId, ghRepo.id));
   } else {
     await db.insert(hubProject).values({
@@ -166,7 +89,7 @@ async function upsertProject(
       defaultBranch: ghRepo.defaultBranch,
       githubUpdatedAt: new Date(ghRepo.updatedAt ?? Date.now()),
       syncedAt: new Date(),
-      ...cfFields,
+      ...fields,
     });
   }
 
@@ -226,29 +149,10 @@ async function resolveRepo(userId: string, repoFullName: string) {
 }
 
 export const deployRouter = createTRPCRouter({
-  // Gate + account picker: which integrations are connected + usable CF accounts.
+  // Gate: whether the caller's GitHub account is connected (import source).
   connections: authenticatedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-    const [github, cloudflare] = await Promise.all([
-      getConnectedAccount(userId, "github", "repo"),
-      getConnectedAccount(userId, "cloudflare"),
-    ]);
-    let cfAccounts: { id: string; name: string }[] = [];
-    let cloudflareReady = false;
-    if (cloudflare) {
-      try {
-        cfAccounts = await listCfAccounts(await cloudflareToken(userId));
-        cloudflareReady = true;
-      } catch {
-        cloudflareReady = false;
-      }
-    }
-    return {
-      github: !!github,
-      cloudflare: !!cloudflare,
-      cloudflareReady,
-      cfAccounts,
-    };
+    const github = await getConnectedAccount(ctx.session.user.id, "github", "repo");
+    return { github: !!github };
   }),
 
   // The caller's own GitHub repos, newest push first.
@@ -270,71 +174,7 @@ export const deployRouter = createTRPCRouter({
     }));
   }),
 
-  // The caller's Cloudflare Workers + Pages projects (for the CF import list).
-  cloudflareProjects: authenticatedProcedure
-    .input(z.object({ accountId: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      const token = await cloudflareToken(ctx.session.user.id);
-      // Workers are the primary target — let their errors surface (e.g. a
-      // missing read scope). Pages are optional; tolerate their failure.
-      const [workers, sub] = await Promise.all([
-        listCfWorkers(token, input.accountId),
-        getWorkersDevSubdomain(token, input.accountId).catch(() => ""),
-      ]);
-      const pages = await listPagesProjects(token, input.accountId).catch(
-        () => [] as Awaited<ReturnType<typeof listPagesProjects>>
-      );
-      const pageItems = pages.map((p) => ({
-        type: "pages" as const,
-        name: p.name,
-        url: p.subdomain ? `https://${p.subdomain}` : "",
-        repo: p.repo,
-      }));
-      const workerItems = workers.map((w) => ({
-        type: "worker" as const,
-        name: w.id,
-        url: sub ? `https://${w.id}.${sub}.workers.dev` : "",
-        repo: null as { owner: string; repo: string } | null,
-      }));
-      return [...pageItems, ...workerItems];
-    }),
-
-  // Domains + URLs for a chosen CF project (fetched on select, not in the list).
-  cloudflareProjectDetail: authenticatedProcedure
-    .input(
-      z.object({
-        accountId: z.string().min(1),
-        type: z.enum(["worker", "pages"]),
-        name: z.string().min(1),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const token = await cloudflareToken(ctx.session.user.id);
-      if (input.type === "pages") {
-        const domains = await getPagesProjectDomains(
-          token,
-          input.accountId,
-          input.name
-        );
-        return { domains, previewUrl: null as string | null };
-      }
-      const [domains, urls] = await Promise.all([
-        getWorkerDomains(token, input.accountId, input.name),
-        getWorkerUrls(token, input.accountId, input.name),
-      ]);
-      return { domains, previewUrl: urls.preview };
-    }),
-
-  // CF zones on an account — for the optional DNS-zone picker during import.
-  cfZones: authenticatedProcedure
-    .input(z.object({ accountId: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      const token = await cloudflareToken(ctx.session.user.id);
-      const zones = await listCfZones(token, input.accountId);
-      return zones.map((z) => ({ id: z.id, name: z.name }));
-    }),
-
-  // GitHub source: link a repo + its live domain (used for the iframe preview).
+  // GitHub source: link a repo + its live website URL (iframe preview + website_url).
   importGithub: authenticatedProcedure
     .input(
       z.object({
@@ -344,49 +184,12 @@ export const deployRouter = createTRPCRouter({
           .trim()
           .toLowerCase()
           .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "Enter a valid domain."),
-        dnsZoneId: z.string().nullish(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const ghRepo = await resolveRepo(userId, input.repoFullName);
-      await upsertProject(userId, ghRepo, undefined, input.dnsZoneId);
-      await addDomains(ghRepo.id, [input.domain]);
-      return { repo: ghRepo.repo };
-    }),
-
-  // Cloudflare source: import an existing Worker/Pages project wholesale.
-  importCloudflare: authenticatedProcedure
-    .input(
-      z.object({
-        accountId: z.string().min(1),
-        type: z.enum(["worker", "pages"]),
-        name: z.string().min(1),
-        repoFullName: z.string().min(1),
-        url: z.string().min(1),
-        previewUrl: z.string().nullish(),
-        domains: z.array(z.string()).default([]),
-        dnsZoneId: z.string().nullish(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-      const ghRepo = await resolveRepo(userId, input.repoFullName);
-      await upsertProject(
-        userId,
-        ghRepo,
-        {
-          accountId: input.accountId,
-          name: input.name,
-          productionUrl: input.url,
-          previewUrl: input.previewUrl ?? null,
-        },
-        input.dnsZoneId
-      );
-      // Custom domains, else the CF host so the preview still renders.
-      const domains =
-        input.domains.length > 0 ? input.domains : [hostOf(input.url)];
-      await addDomains(ghRepo.id, domains);
+      await upsertProject(userId, ghRepo, `https://${input.domain}`);
       return { repo: ghRepo.repo };
     }),
 });

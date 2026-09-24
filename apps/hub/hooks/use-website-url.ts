@@ -51,12 +51,9 @@ export type WebsiteUrlStatus = "loading" | "ready" | "missing";
  * site.
  *
  * localStorage-first for speed, but never localStorage-*only*: a fresh cached
- * URL (< 20 min old) seeds `initialData` so there's an instant value and no
- * spinner, and `staleTime` keeps the network query from actually running while
- * that seed is fresh. The query stays **enabled** regardless, so a cache miss
- * (or a project whose domain was added after the last visit) resolves on its
- * own — without needing the Domains panel to fetch first. React Query
- * dedupes by key, so many callers on one screen share a single request.
+ * URL (< 20 min old) is returned instantly while the query resolves. The URL
+ * rides on the per-repo `cms.repos.getSnapshot` result (the same call the
+ * project screen already makes), so React Query dedupes it — no extra request.
  */
 export function useWebsiteUrl(): {
   websiteUrl: string | null;
@@ -70,32 +67,19 @@ export function useWebsiteUrl(): {
   const cached = readCache(owner, repo);
 
   const { data, isSuccess, isError } = useQuery(
-    trpc.domain.list.queryOptions(
-      { owner: owner ?? "", repo: repo ?? "" },
-      {
-        enabled: !!owner && !!repo,
-        staleTime: TTL_MS,
-        retry: false,
-        ...(cached
-          ? {
-              initialData: {
-                domains: [],
-                websiteUrl: cached.url,
-              },
-              initialDataUpdatedAt: cached.ts,
-            }
-          : {}),
-      }
+    trpc.cms.repos.getSnapshot.queryOptions(
+      { repo: repo ?? "" },
+      { enabled: !!repo, staleTime: TTL_MS, retry: false }
     )
   );
 
-  const websiteUrl = data?.websiteUrl ?? null;
+  const websiteUrl = data?.websiteUrl ?? cached?.url ?? null;
 
   // Persist resolved URLs (writeCache ignores null) so the next visit is instant.
   useEffect(() => {
     if (!owner || !repo || !isSuccess) return;
-    writeCache(owner, repo, websiteUrl);
-  }, [owner, repo, isSuccess, websiteUrl]);
+    writeCache(owner, repo, data?.websiteUrl ?? null);
+  }, [owner, repo, isSuccess, data?.websiteUrl]);
 
   const status: WebsiteUrlStatus = !owner || !repo
     ? "loading"
@@ -103,9 +87,11 @@ export function useWebsiteUrl(): {
       ? websiteUrl
         ? "ready"
         : "missing"
-      : isError
-        ? "missing"
-        : "loading";
+      : cached
+        ? "ready"
+        : isError
+          ? "missing"
+          : "loading";
 
   return { websiteUrl, status };
 }

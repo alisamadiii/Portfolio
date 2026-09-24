@@ -1,15 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import {
-  and,
-  desc,
-  eq,
-  ilike,
-  inArray,
-  isNotNull,
-  or,
-  sql,
-  type SQL,
-} from "drizzle-orm";
+import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -21,13 +11,8 @@ import {
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
-import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/domain";
 import { db } from "@workspace/drizzle/index";
-import {
-  hubDomain,
-  hubProject,
-  hubSubscription,
-} from "@workspace/drizzle/schema";
+import { hubProject, hubSubscription } from "@workspace/drizzle/schema";
 
 // Every project is a hub_project row (created by the import flow). Pure DB
 // listing, optionally scoped to one owner + a repo-name keyword.
@@ -47,16 +32,13 @@ const listProjectRows = async (owner?: string, keyword?: string) => {
     )
     .orderBy(desc(hubProject.githubUpdatedAt));
 
-  // websiteUrl is derived from the repo's domains (hub_domain).
-  const urlByRepoId = await getWebsiteUrlsByRepoId(rows.map((r) => r.repoId));
-
   return rows.map((row) => ({
     owner: row.owner,
     repo: row.repo,
     private: row.private,
     defaultBranch: row.defaultBranch,
     updatedAt: row.githubUpdatedAt.toISOString(),
-    websiteUrl: urlByRepoId.get(row.repoId) ?? null,
+    websiteUrl: row.websiteUrl ?? null,
   }));
 };
 
@@ -176,8 +158,8 @@ export const reposRouter = createTRPCRouter({
       }
 
       // One query: project rows + their plan (left join, so free-for-life
-      // projects with no subscription still surface). websiteUrl is derived
-      // from the primary hub_domain in a single batched lookup below.
+      // projects with no subscription still surface). websiteUrl is the
+      // project's own stored URL.
         const rows = await db
           .select({
             owner: hubProject.owner,
@@ -187,11 +169,9 @@ export const reposRouter = createTRPCRouter({
             defaultBranch: hubProject.defaultBranch,
             updatedAt: hubProject.githubUpdatedAt,
             freeLife: hubProject.freeLife,
+            websiteUrl: hubProject.websiteUrl,
             plan: hubSubscription.plan,
             status: hubSubscription.status,
-            // Cloudflare chip: connected account or a created Pages/Worker.
-            cfConnectedUserId: hubProject.cfConnectedUserId,
-            cfPagesSubdomain: hubProject.cfPagesSubdomain,
           })
           .from(hubProject)
           .leftJoin(
@@ -201,38 +181,16 @@ export const reposRouter = createTRPCRouter({
           .where(and(...conds))
           .orderBy(desc(hubProject.githubUpdatedAt));
 
-        const repoIds = rows.map((r) => r.repoId);
-        const urlByRepoId = await getWebsiteUrlsByRepoId(repoIds);
-
-        // DNS chip: repos with at least one managed (cfZoneId) domain row.
-        const dnsRepoIds = new Set(
-          repoIds.length
-            ? (
-                await db
-                  .select({ repoId: hubDomain.repoId })
-                  .from(hubDomain)
-                  .where(
-                    and(
-                      inArray(hubDomain.repoId, repoIds),
-                      isNotNull(hubDomain.cfZoneId)
-                    )
-                  )
-              ).map((r) => r.repoId)
-            : []
-        );
-
         return rows.map((row) => ({
           owner: row.owner,
           repo: row.repo,
           private: row.private,
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
-          websiteUrl: urlByRepoId.get(row.repoId) ?? null,
+          websiteUrl: row.websiteUrl ?? null,
           plan: row.plan ?? null,
           status: row.status ?? null,
           freeLife: row.freeLife,
-          cloudflare: !!(row.cfConnectedUserId || row.cfPagesSubdomain),
-          dns: dnsRepoIds.has(row.repoId),
         }));
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -282,7 +240,20 @@ export const reposRouter = createTRPCRouter({
           }
           throw snapshotError;
         }
-        return { ...snapshot, myRole: role };
+
+        // The project's stored live URL (used by the thumbnail/preview + hooks).
+        const [project] = await db
+          .select({ websiteUrl: hubProject.websiteUrl })
+          .from(hubProject)
+          .where(
+            and(
+              sql`lower(${hubProject.owner}) = lower(${owner})`,
+              sql`lower(${hubProject.repo}) = lower(${input.repo})`
+            )
+          )
+          .limit(1);
+
+        return { ...snapshot, myRole: role, websiteUrl: project?.websiteUrl ?? null };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

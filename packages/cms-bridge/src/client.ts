@@ -38,6 +38,10 @@ declare global {
   // Accent is a fixed brand blue for the overlay — never read from the host
   // site, so the ring/border/cursor look identical across every client.
   const ACCENT = "#4f7fff";
+  // Elements tagged data-collection="<name>" are collection regions — they get a
+  // distinct purple highlight + a direct "Edit in CMS" pill instead of the
+  // click-to-request flow.
+  const COLLECTION_ACCENT = "#a855f7";
   const ringColor = () => `color-mix(in oklch, ${ACCENT} 45%, transparent)`;
 
   // ---------- activation ----------
@@ -163,6 +167,8 @@ declare global {
   let dot: HTMLDivElement,
     chip: HTMLDivElement,
     bar: HTMLDivElement,
+    collBtn: HTMLButtonElement,
+    collRing: HTMLDivElement,
     popover: HTMLDivElement | null = null;
   let chipTimer: ReturnType<typeof setTimeout>;
 
@@ -256,13 +262,47 @@ declare global {
       "color:#111;border-radius:999px;padding:4px 12px;" +
       'font:12px/1 system-ui,sans-serif;cursor:pointer">Exit</button>';
 
+    // Dashed ring drawn around a hovered collection region. A separate overlay
+    // (never touches the client element's styles); frame() sizes it to the
+    // wrapper rect plus padding.
+    collRing = document.createElement("div");
+    collRing.id = "cms-bridge-collection-ring";
+    collRing.style.cssText =
+      "position:fixed;top:0;left:0;display:none;pointer-events:none;" +
+      "z-index:2147483646;box-sizing:border-box;border:3px dashed " +
+      COLLECTION_ACCENT +
+      ";border-radius:12px;";
+
+    // Floating pill for collection regions — opens that collection's editor in
+    // the parent hub. pointer-events:auto so it's clickable; frame() positions
+    // it over the hovered wrapper.
+    collBtn = document.createElement("button");
+    collBtn.id = "cms-bridge-collection-btn";
+    collBtn.style.cssText =
+      "position:fixed;top:0;left:0;display:none;pointer-events:auto;" +
+      "z-index:2147483647;background:" +
+      COLLECTION_ACCENT +
+      ";color:#fff;border:none;border-radius:999px;padding:12px 22px;" +
+      "font:600 16px/1 system-ui,sans-serif;cursor:pointer;" +
+      "box-shadow:0 4px 16px rgba(0,0,0,.3);white-space:nowrap;";
+    collBtn.textContent = "Edit in CMS ↗";
+
     document.body.appendChild(dot);
     document.body.appendChild(chip);
     document.body.appendChild(bar);
+    document.body.appendChild(collRing);
+    document.body.appendChild(collBtn);
+
+    collBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openCollection(collectionTarget);
+    });
 
     document
       .getElementById("cms-bridge-exit")!
       .addEventListener("click", function () {
+        setCollectionHover(null);
         try {
           sessionStorage.removeItem(TOKEN_KEY);
         } catch {
@@ -275,6 +315,31 @@ declare global {
   // ---------- popover ----------
 
   let popoverCleanup: (() => void) | null = null;
+
+  // Currently-hovered collection wrapper (data-collection) — purple-outlined,
+  // with the "Edit in CMS" pill tracking it.
+  let collectionTarget: Element | null = null;
+  const setCollectionHover = (col: Element | null) => {
+    if (collectionTarget === col) return;
+    collectionTarget = col;
+    const show = col ? "block" : "none";
+    if (collRing) collRing.style.display = show;
+    if (collBtn) collBtn.style.display = show;
+  };
+
+  // Tell the parent hub to open this collection's editor (context state, no
+  // route). No-op when not framed by the hub.
+  function openCollection(col: Element | null) {
+    if (!col) return;
+    const name = col.getAttribute("data-collection") || "";
+    if (!name) return;
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        { cms: 1, v: 2, type: "collection-open", collection: name },
+        "*"
+      );
+    }
+  }
 
   // Selected element outlined while its popover is open.
   let highlighted: HTMLElement | null = null;
@@ -468,9 +533,9 @@ declare global {
   }
 
   function frame() {
-    // While marquee-dragging, keep the dot a plain dot (don't morph over
-    // elements) and let it fade out via opacity below.
-    if (dragging) target = null;
+    // While marquee-dragging OR hovering a collection region, keep the dot a
+    // plain dot (don't morph over elements) and fade it out via opacity below.
+    if (dragging || collectionTarget) target = null;
     let goal;
     if (target && document.body.contains(target)) {
       const rect = target.getBoundingClientRect();
@@ -492,8 +557,25 @@ declare global {
       dot.style.height = cur.h + "px";
       dot.style.borderRadius = target ? cur.r + "px" : "50%";
       dot.style.background = target ? "transparent" : ACCENT;
-      // Fade out during a drag, fade back in when it ends.
-      dot.style.opacity = dragging ? "0" : "1";
+      // Fade out during a drag or over a collection region; fade back after.
+      dot.style.opacity = dragging || collectionTarget ? "0" : "1";
+    }
+
+    // Draw the dashed ring around the hovered wrapper (rect + padding) and pin
+    // the pill to its top-right, clamped on-screen.
+    if (collectionTarget && document.body.contains(collectionTarget)) {
+      const r = collectionTarget.getBoundingClientRect();
+      const pad = 6;
+      if (collRing) {
+        collRing.style.left = r.left - pad + "px";
+        collRing.style.top = r.top - pad + "px";
+        collRing.style.width = r.width + pad * 2 + "px";
+        collRing.style.height = r.height + pad * 2 + "px";
+      }
+      const bw = collBtn.offsetWidth;
+      collBtn.style.left =
+        Math.max(8, Math.min(r.right - bw, window.innerWidth - bw - 8)) + "px";
+      collBtn.style.top = Math.max(8, r.top + 8) + "px";
     }
     requestAnimationFrame(frame);
   }
@@ -506,6 +588,7 @@ declare global {
     if (!el || !el.closest("[data-cms-src]")) return null;
     if (
       el.closest("#cms-bridge-dot") ||
+      el.closest("#cms-bridge-collection-btn") ||
       (bar && bar.contains(el)) ||
       (popover && popover.contains(el))
     )
@@ -518,7 +601,8 @@ declare global {
       el.closest("#cms-bridge-dot") ||
       el.closest("#cms-bridge-bar") ||
       el.closest("#cms-bridge-popover") ||
-      el.closest("#cms-bridge-marquee")
+      el.closest("#cms-bridge-marquee") ||
+      el.closest("#cms-bridge-collection-btn")
     );
 
   /** Annotated elements fully contained within the marquee rect. */
@@ -651,6 +735,12 @@ declare global {
       function (e) {
         const el = editableFrom(e.target);
         if (el) target = el;
+        // Collection wrappers are plain divs (not in EDITABLE), so resolve from
+        // the raw target. Over our own pill, keep the current hover so the pill
+        // stays reachable.
+        const raw = e.target instanceof Element ? e.target : null;
+        if (raw && inOwnUi(raw)) return;
+        setCollectionHover(raw ? raw.closest("[data-collection]") : null);
       },
       true
     );
@@ -707,6 +797,8 @@ declare global {
 
   function init() {
     if (!active()) return;
+    // View transitions swap <body>; drop any stale collection highlight/pill.
+    setCollectionHover(null);
     makeOverlay();
     bindOnce();
   }

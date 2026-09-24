@@ -7,7 +7,6 @@ import { clickupRouter } from "./clickup";
 import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
-import { domainRouter } from "./domain";
 import { emailsRouter } from "./emails";
 import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
@@ -35,7 +34,6 @@ export const appRouter = createTRPCRouter({
   integrations: integrationsRouter,
   deploy: deployRouter,
   cms: cmsRouter,
-  domain: domainRouter,
   project: projectRouter,
   websites: websitesRouter,
   leads: leadsRouter,

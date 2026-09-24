@@ -5,10 +5,9 @@ import { collaboratorProcedure, createTRPCRouter } from "../../init";
 
 import { db as cmsDb, orgRepoTable } from "@workspace/trpc/lib/cms/db";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { getWebsiteUrlsByRepoId } from "@workspace/trpc/lib/domain";
 
-// The live website URL is derived from the repo's Vercel domains (cms_domain,
-// kept in sync by the Vercel webhook). Status is derived by pinging it.
+// The live website URL is the project's stored hub_project.website_url. Status
+// is derived by pinging it.
 
 // Bare host only ("acme.com") — tolerate "https://acme.com/" etc. Keeps the
 // probe URL and cache tag stable.
@@ -52,15 +51,12 @@ const checkWebsiteStatus = async (domain: string) => {
 export const websitesRouter = createTRPCRouter({
   getMine: collaboratorProcedure.query(async ({ ctx }) => {
     try {
-      // Every project whose site has a derivable website URL. Admins see them
+      // Every project whose site has a stored website URL. Admins see them
       // all; everyone else is filtered to the repos they collaborate on plus
       // their own imported projects (the user who connected GitHub for them).
       const orgRows = await cmsDb.select().from(orgRepoTable);
-      const urlByRepoId = await getWebsiteUrlsByRepoId(
-        orgRows.map((r) => r.repoId)
-      );
 
-      let repos = orgRows.filter((r) => urlByRepoId.get(r.repoId));
+      let repos = orgRows.filter((r) => r.websiteUrl);
       if (ctx.collaborations) {
         const allowed = new Set(
           ctx.collaborations.map(
@@ -77,7 +73,7 @@ export const websitesRouter = createTRPCRouter({
 
       return Promise.all(
         repos.map(async (r) => {
-          const websiteUrl = urlByRepoId.get(r.repoId) as string;
+          const websiteUrl = r.websiteUrl as string;
           const domain = normalizeDomain(websiteUrl);
           return {
             id: `${r.owner}/${r.repo}`,

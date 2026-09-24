@@ -24,20 +24,18 @@ import { useTRPC } from "@workspace/trpc/client";
 import { TriangleAlert } from "@/components/icon";
 
 // ─── Danger panel (Site Settings › Danger) ──────────────────────
-// Permanently deletes everything about the project — Cloudflare (its custom
-// domains + Worker), all hub data, and cancels + refunds the paid subscription.
-// Never touches the GitHub repo, the user's integration tokens, or emails.
+// Permanently deletes everything about the project — all hub data — and
+// cancels + refunds the paid subscription. Never touches the GitHub repo, the
+// user's integration tokens, or emails.
 
 const DELETED = [
-  "All domains on this project, and the Cloudflare DNS records we created for them",
-  "The project's Cloudflare Worker and its .workers.dev route (the site goes offline)",
-  "The DNS-zone link, blog posts, and any collaborators",
+  "The project's website URL, blog posts, and any collaborators",
   "The project itself — it disappears from your hub",
 ];
 
 const PRESERVED = [
   "Your GitHub repository (code is never touched)",
-  "Your Cloudflare and GitHub connections (tokens stay linked)",
+  "Your GitHub connection (tokens stay linked)",
   "Your emails and sending setup",
 ];
 
@@ -147,10 +145,9 @@ export const DangerPanel = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete {repo}?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This cancels and refunds any paid subscription, removes the
-                  project's Cloudflare Worker and domains, and wipes all its hub
-                  data. Your GitHub repo and connections stay. This cannot be
-                  undone.
+                  This cancels and refunds any paid subscription and wipes all
+                  its hub data. Your GitHub repo and connection stay. This
+                  cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-2">

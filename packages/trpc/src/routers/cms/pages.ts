@@ -6,7 +6,9 @@ import { getConfig } from "../../lib/cms/config-store";
 import { createHttpError, toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
 import { resolveRepoId } from "../../lib/cms/repo-id";
-import { getWebsiteUrlsByRepoId } from "../../lib/domain";
+import { eq } from "drizzle-orm";
+import { db } from "@workspace/drizzle/index";
+import { hubProject } from "@workspace/drizzle/schema";
 
 /**
  * Page discovery for the canvas view. The single source of truth is
@@ -77,10 +79,10 @@ function titleFromPath(pathname: string): string {
 }
 
 /**
- * The project's verified custom production domain from `hub_domain`, or null.
- * A *.vercel.app result is ignored — it adds nothing over the committed
- * baseUrl. Non-fatal on purpose: repos without a `hub_project` row (or with
- * unsynced domains) fall back to the cms.json / settings baseUrl.
+ * The project's stored website URL (`hub_project.website_url`), or null. A
+ * *.vercel.app result is ignored — it adds nothing over the committed baseUrl.
+ * Non-fatal on purpose: repos without a `hub_project` row (or no stored URL)
+ * fall back to the cms.json / settings baseUrl.
  */
 async function getCustomDomainBaseUrl(
   owner: string | undefined,
@@ -88,7 +90,12 @@ async function getCustomDomainBaseUrl(
 ): Promise<string | null> {
   try {
     const repoId = await resolveRepoId(owner, repo);
-    const url = (await getWebsiteUrlsByRepoId([repoId])).get(repoId) ?? null;
+    const [row] = await db
+      .select({ websiteUrl: hubProject.websiteUrl })
+      .from(hubProject)
+      .where(eq(hubProject.repoId, repoId))
+      .limit(1);
+    const url = row?.websiteUrl ?? null;
     if (url && !new URL(url).hostname.endsWith(".vercel.app")) return url;
   } catch {
     // Fall through to the committed baseUrl.

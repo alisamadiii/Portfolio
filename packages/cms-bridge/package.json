@@ -1,6 +1,6 @@
 {
   "name": "@alisamadiillc/cms-bridge",
-  "version": "1.0.1",
+  "version": "1.0.15",
   "description": "Build-time source annotator + click-to-request overlay: stamps every element with data-cms-src and posts plain-language change requests to content-pilot",
   "private": false,
   "type": "module",

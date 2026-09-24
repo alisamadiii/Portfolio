@@ -46,19 +46,6 @@ const GoogleAnalyticsLogo = (
   </svg>
 );
 
-const CloudflareLogo = (
-  <svg className="size-6" viewBox="0 0 24 24">
-    <path
-      fill="#F38020"
-      d="M16.5 16.845c.145-.5.09-.96-.155-1.3-.225-.315-.6-.5-1.055-.52l-8.605-.11a.165.165 0 0 1-.135-.07.175.175 0 0 1-.02-.155.23.23 0 0 1 .2-.155l8.685-.11c1.03-.048 2.145-.883 2.535-1.905l.495-1.295a.31.31 0 0 0 .015-.17A5.665 5.665 0 0 0 7.57 9.82a2.55 2.55 0 0 0-1.775-.49 2.55 2.55 0 0 0-2.21 3.16A3.63 3.63 0 0 0 .05 16.12c0 .18.015.36.04.535a.17.17 0 0 0 .17.15h15.875a.215.215 0 0 0 .205-.155l.16-.805z"
-    />
-    <path
-      fill="#FAAE40"
-      d="M19.355 10.53c-.08 0-.16 0-.24.008a.14.14 0 0 0-.125.095l-.335 1.165c-.145.5-.09.96.155 1.3.225.315.6.5 1.055.52l1.835.11c.055 0 .1.025.13.07a.175.175 0 0 1 .02.155.23.23 0 0 1-.2.155l-1.91.11c-1.035.048-2.145.882-2.535 1.905l-.135.36a.1.1 0 0 0 .09.135h6.565a.175.175 0 0 0 .17-.13c.115-.41.175-.84.175-1.285a4.685 4.685 0 0 0-4.715-4.673z"
-    />
-  </svg>
-);
-
 export const INTEGRATION_APPS: IntegrationApp[] = [
   {
     id: "google-analytics",
@@ -76,20 +63,6 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
       ),
     unlinkWarning:
       "This unlinks your whole Google account from sign-in, not just Analytics.",
-  },
-  {
-    id: "cloudflare",
-    name: "Cloudflare",
-    description:
-      "Grant access to your Cloudflare account so Workers and DNS for your domains can be managed for you.",
-    logo: CloudflareLogo,
-    connect: async (callbackURL) =>
-      toError(
-        await authClient.oauth2.link({
-          providerId: "cloudflare",
-          callbackURL,
-        })
-      ),
   },
   {
     id: "github",

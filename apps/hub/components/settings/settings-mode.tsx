@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CreditCard,
   FileText,
-  Globe,
   House,
-  Network,
   Newspaper,
   TriangleAlert,
 } from "@/components/icon";
@@ -23,8 +21,6 @@ import { SpeedPanel } from "@/components/settings/speed-panel";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { useSeoDraft } from "@/components/settings/use-seo-draft";
 import { BlogPanel } from "@/components/settings/blog-panel";
-import { DomainsPanel } from "@/components/settings/domains-panel";
-import { DnsPanel } from "@/components/settings/dns-panel";
 import { EmailsPanel } from "@/components/settings/emails-panel";
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
 import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
@@ -32,8 +28,6 @@ import { PanelError } from "@/components/settings/panel-error";
 
 /** Sentinels for the Site Settings entries in the settings nav. */
 const BILLING = "$billing";
-const DOMAIN = "$domain";
-const DNS = "$dns";
 const BLOG = "$blog";
 const EMAILS = "$emails";
 const ANALYTICS = "$analytics";
@@ -51,7 +45,7 @@ export function SettingsMode() {
   const seo = useSeoDraft();
   // General / Variables / Page Settings all read the root _site.json. Without it
   // there is no manifest — show an error instead of empty forms. Billing /
-  // Domain / Blog / Emails are repo-level and stay available.
+  // Blog / Emails are repo-level and stay available.
   const noSite = !isV2;
   const [selected, setSelected] = useState<string>(BILLING);
 
@@ -72,8 +66,6 @@ export function SettingsMode() {
 
   const selectedPage =
     selected === BILLING ||
-    selected === DOMAIN ||
-    selected === DNS ||
     selected === BLOG ||
     selected === EMAILS ||
     selected === ANALYTICS ||
@@ -94,18 +86,6 @@ export function SettingsMode() {
           label="Billing"
           active={selected === BILLING}
           onClick={() => setSelected(BILLING)}
-        />
-        <NavRow
-          icon={<Globe className="size-4" />}
-          label="Domain"
-          active={selected === DOMAIN}
-          onClick={() => setSelected(DOMAIN)}
-        />
-        <NavRow
-          icon={<Network className="size-4" />}
-          label="DNS"
-          active={selected === DNS}
-          onClick={() => setSelected(DNS)}
         />
         <NavRow
           icon={
@@ -167,10 +147,6 @@ export function SettingsMode() {
       <main className="bg-shell min-w-0 flex-1 overflow-y-auto">
         {selected === BILLING ? (
           <ProjectBillingPanel />
-        ) : selected === DOMAIN ? (
-          <DomainsPanel />
-        ) : selected === DNS ? (
-          <DnsPanel />
         ) : selected === BLOG ? (
           <BlogPanel />
         ) : selected === EMAILS ? (
