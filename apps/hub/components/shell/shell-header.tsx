@@ -150,13 +150,15 @@ export function ShellHeader({
             active={canvasActive}
             onClick={() => onModeChange("canvas")}
           />
-          <SegButton
-            icon={Table2}
-            label="CMS"
-            active={cmsActive}
-            onClick={onOpenCms}
-            iconColor={REGION_COLORS.collection}
-          />
+          {canEdit && (
+            <SegButton
+              icon={Table2}
+              label="CMS"
+              active={cmsActive}
+              onClick={onOpenCms}
+              iconColor={REGION_COLORS.collection}
+            />
+          )}
           {canManage && (
             <SegButton
               icon={Settings2}
@@ -165,13 +167,15 @@ export function ShellHeader({
               onClick={() => onModeChange("settings")}
             />
           )}
-          <SegButton
-            icon={Rocket}
-            label="Deployments"
-            active={deploymentsActive}
-            onClick={() => onModeChange("deployments")}
-            dot={hasPendingDeploy}
-          />
+          {canEdit && (
+            <SegButton
+              icon={Rocket}
+              label="Deployments"
+              active={deploymentsActive}
+              onClick={() => onModeChange("deployments")}
+              dot={hasPendingDeploy}
+            />
+          )}
         </div>
       </div>
 

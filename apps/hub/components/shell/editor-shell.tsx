@@ -19,6 +19,8 @@ import { PageTree } from "@/components/shell/page-tree";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { SettingsMode } from "@/components/settings/settings-mode";
 import { DeploymentsMode } from "@/components/deployments/deployments-mode";
+import { useRepo } from "@/contexts/repo-context";
+import { roleAtLeast } from "@/lib/authz-shared";
 
 /**
  * Framer-style single-page editor shell: docked header, left page tree, one
@@ -44,6 +46,9 @@ function ShellBody() {
     setCmsOverlay,
     settingsRequest,
   } = useCanvasEditor();
+  const { myRole } = useRepo();
+  // view-only collaborators never see the CMS overlay or Deployments view.
+  const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const [mode, setMode] = useState<ShellMode>("canvas");
 
   // A settings request (e.g. a variant click) flips the shell into Settings
@@ -83,7 +88,7 @@ function ShellBody() {
 
       {mode === "settings" ? (
         <SettingsMode />
-      ) : mode === "deployments" ? (
+      ) : mode === "deployments" && canEdit ? (
         <DeploymentsMode />
       ) : (
         <div className="flex min-h-0 flex-1">
@@ -149,7 +154,7 @@ function ShellBody() {
       {/* Floating editors (link / group) + CMS overlay */}
       <EditorOverlays />
       <CmsOverlay
-        open={cmsOverlay.open}
+        open={cmsOverlay.open && canEdit}
         onOpenChange={(open) =>
           setCmsOverlay(open ? { ...cmsOverlay, open } : { open })
         }

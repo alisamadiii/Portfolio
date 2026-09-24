@@ -116,7 +116,7 @@ export function DevTools({
       // Block new feedback if at limit (allow re-selecting existing ones)
       if (!existing && feedback.changes.length >= MAX_FEEDBACK) {
         setToast({
-          message: `Limit reached (${MAX_FEEDBACK}). Copy feedback & create a ClickUp task, then reset to continue.`,
+          message: `Limit reached (${MAX_FEEDBACK}). Copy feedback and file it, then reset to continue.`,
           variant: "warning",
         });
         inspector.clearSelection();

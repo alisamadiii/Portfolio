@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   Blocks,
   BookOpen,
-  Bot,
   CreditCard,
   Globe,
   HelpCircle,
@@ -104,8 +103,8 @@ const productLinks = [
 ];
 
 // The Website group is hand-rolled (instead of NavPages) because the Website
-// item carries a live status dot and the AI Requests item a "Soon" badge —
-// neither fits the plain link list NavPages renders.
+// item carries a live status dot that doesn't fit the plain link list NavPages
+// renders.
 const WebsiteGroup = () => {
   const pathname = usePathname();
 
@@ -134,18 +133,6 @@ const WebsiteGroup = () => {
             <span>Website</span>
             <span className="ml-auto flex items-center">
               <WebsiteStatusDot />
-            </span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            className={linkClass("/requests")}
-            render={<Link href="/requests" />}
-          >
-            <Bot />
-            <span>AI Requests</span>
-            <span className="bg-status-warning-bg text-status-warning ml-auto rounded-full px-2 py-0.5 text-[10.5px] font-semibold">
-              Soon
             </span>
           </SidebarMenuButton>
         </SidebarMenuItem>

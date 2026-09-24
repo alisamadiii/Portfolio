@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, sql } from "drizzle-orm";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
+import { roleAtLeast } from "../../lib/authz-shared";
 import { signEditToken } from "@workspace/trpc/lib/cms/edit-token";
 import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { listEditJobs } from "@workspace/trpc/lib/content-pilot";
@@ -15,7 +16,11 @@ export const aiEditsRouter = createTRPCRouter({
    * content-pilot API key never reaches the browser. Access is gated by
    * `cmsProcedure` (the caller must already have CMS access to owner/repo).
    */
-  mintEditToken: cmsProcedure.query(async ({ input }) => {
+  mintEditToken: cmsProcedure.query(async ({ ctx, input }) => {
+    // Request-a-change is an edit action — view-only collaborators can't mint.
+    if (!roleAtLeast(ctx.role, "content-editor")) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "View-only access." });
+    }
     const secret = process.env.EDIT_TOKEN_SECRET;
     if (!secret) {
       throw new TRPCError({

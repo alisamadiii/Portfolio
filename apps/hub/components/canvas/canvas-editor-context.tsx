@@ -11,8 +11,10 @@ import {
   type ReactNode,
 } from "react";
 import { useConfig } from "@/contexts/config-context";
+import { useRepo } from "@/contexts/repo-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
+import { roleAtLeast } from "@/lib/authz-shared";
 import { toast } from "sonner";
 
 import { useMediaLibrary } from "@/components/media/media-library-context";
@@ -189,6 +191,10 @@ export function useCanvasEditor(): CanvasEditorValue {
 
 export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const { config } = useConfig();
+  const { myRole } = useRepo();
+  // view-only collaborators get a read-only canvas: no edit token (no
+  // request-a-change overlay), no armed inline editing.
+  const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const trpc = useTRPC();
   const { open: openMediaLibrary } = useMediaLibrary();
 
@@ -211,7 +217,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     trpc.cms.aiEdits.mintEditToken.queryOptions(
       { owner, repo },
       {
-        enabled: Boolean(owner && repo),
+        enabled: Boolean(owner && repo) && canEdit,
         staleTime: 25 * 60 * 1000,
         refetchInterval: 25 * 60 * 1000,
       }
@@ -492,13 +498,16 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       if (!fields) return; // frame hasn't announced `ready`
       const iframe = framesRef.current.get(framePath);
       if (!iframe?.contentWindow) return;
+      // view-only: arm nothing so no field is inline-editable.
       postEditable(
         iframe.contentWindow,
         siteOrigin,
-        classifyEditable(candidatesFor(entryMap, framePath), fields)
+        canEdit
+          ? classifyEditable(candidatesFor(entryMap, framePath), fields)
+          : { arm: [], media: [], link: [] }
       );
     },
-    [entryMap, siteOrigin]
+    [entryMap, siteOrigin, canEdit]
   );
 
   /** Broadcast one changed value to every mounted frame that shows it. */
@@ -886,6 +895,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         }
       }
       if (!framePath) return;
+      // view-only: ignore every editing action from the frame. `ready` (arms
+      // nothing, see pushEditableToFrame) and `link-info` stay allowed.
+      if (!canEdit && msg.type !== "ready" && msg.type !== "link-info") return;
       switch (msg.type) {
         case "ready": {
           if (msg.v >= 2 && msg.groups?.length) {
@@ -959,6 +971,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("message", onMessage);
   }, [
     siteOrigin,
+    canEdit,
     commitEdit,
     activateField,
     pushDraftsToFrame,

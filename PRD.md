@@ -167,7 +167,6 @@ A reusable SaaS landing page template that gets forked and deployed for new exte
 | Build system    | Turborepo                                           |
 | Email           | useSend (self-hosted)                               |
 | Payments        | Polar (+ Stripe)                                    |
-| Notifications   | ClickUp integration via tRPC `notifications` router |
 
 ---
 
