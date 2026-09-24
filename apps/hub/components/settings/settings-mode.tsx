@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Blocks,
   CreditCard,
   FileText,
   Globe,
   House,
   Network,
   Newspaper,
-  SlidersHorizontal,
   TriangleAlert,
 } from "@/components/icon";
 
@@ -29,14 +27,10 @@ import { DomainsPanel } from "@/components/settings/domains-panel";
 import { DnsPanel } from "@/components/settings/dns-panel";
 import { EmailsPanel } from "@/components/settings/emails-panel";
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
-import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
-import { VariablesPanel } from "@/components/settings/variables-panel";
 import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
 import { PanelError } from "@/components/settings/panel-error";
 
 /** Sentinels for the Site Settings entries in the settings nav. */
-const GENERAL = "$general";
-const VARIABLES = "$variables";
 const BILLING = "$billing";
 const DOMAIN = "$domain";
 const DNS = "$dns";
@@ -59,12 +53,7 @@ export function SettingsMode() {
   // there is no manifest — show an error instead of empty forms. Billing /
   // Domain / Blog / Emails are repo-level and stay available.
   const noSite = !isV2;
-  const [selected, setSelected] = useState<string>(GENERAL);
-  // Field to scroll-to + flash in the Variables form (from a variant click).
-  const [focusField, setFocusField] = useState<{ field: string; key: number } | null>(
-    null
-  );
-  const focusKey = useRef(0);
+  const [selected, setSelected] = useState<string>(BILLING);
 
   const pageRows = useMemo(
     () => pages.filter((page) => page.kind !== "collection"),
@@ -75,19 +64,13 @@ export function SettingsMode() {
   // field is named, flashes its input so the user knows what to edit.
   useEffect(() => {
     if (!settingsRequest) return;
-    if (settingsRequest.section === "variables") {
-      setSelected(VARIABLES);
-      if (settingsRequest.field)
-        setFocusField({ field: settingsRequest.field, key: ++focusKey.current });
-    } else if (settingsRequest.section === "blog") {
+    if (settingsRequest.section === "blog") {
       setSelected(BLOG);
     }
     setSettingsRequest(null);
   }, [settingsRequest, setSettingsRequest]);
 
   const selectedPage =
-    selected === GENERAL ||
-    selected === VARIABLES ||
     selected === BILLING ||
     selected === DOMAIN ||
     selected === DNS ||
@@ -106,23 +89,6 @@ export function SettingsMode() {
         <p className="text-muted-foreground px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
           Site Settings
         </p>
-        <NavRow
-          icon={<SlidersHorizontal className="size-4" />}
-          label="General"
-          active={selected === GENERAL}
-          onClick={() => setSelected(GENERAL)}
-        />
-        <NavRow
-          icon={
-            <Blocks
-              className="size-4"
-              style={{ color: REGION_COLORS.variant }}
-            />
-          }
-          label="Variables"
-          active={selected === VARIABLES}
-          onClick={() => setSelected(VARIABLES)}
-        />
         <NavRow
           icon={<CreditCard className="size-4" />}
           label="Billing"
@@ -225,14 +191,7 @@ export function SettingsMode() {
           </div>
         ) : selectedPage ? (
           <PageSettingsPanel page={selectedPage} seo={seo} />
-        ) : selected === VARIABLES ? (
-          <VariablesPanel
-            focusField={focusField?.field}
-            focusKey={focusField?.key}
-          />
-        ) : (
-          <GeneralSettingsPanel seo={seo} />
-        )}
+        ) : null}
       </main>
     </div>
   );

@@ -18,6 +18,7 @@ import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
 import { PageTree } from "@/components/shell/page-tree";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { SettingsMode } from "@/components/settings/settings-mode";
+import { DeploymentsMode } from "@/components/deployments/deployments-mode";
 
 /**
  * Framer-style single-page editor shell: docked header, left page tree, one
@@ -38,7 +39,6 @@ function ShellBody() {
     pages,
     selectedPath,
     pagesError,
-    pagesMissing,
     isV2,
     cmsOverlay,
     setCmsOverlay,
@@ -83,6 +83,8 @@ function ShellBody() {
 
       {mode === "settings" ? (
         <SettingsMode />
+      ) : mode === "deployments" ? (
+        <DeploymentsMode />
       ) : (
         <div className="flex min-h-0 flex-1">
           {/* Left: page tree */}
@@ -104,23 +106,6 @@ function ShellBody() {
                       Add a <code>_site.json</code> at the repo root (with{" "}
                       <code>cms</code>, <code>seo</code>, <code>variables</code>)
                       so the CMS can load this project's pages and settings.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {pagesMissing && (
-              <div className="absolute bottom-4 right-4 z-20 max-w-xs rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs shadow-sm dark:border-amber-500/40 dark:bg-amber-950/60">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <div>
-                    <p className="font-semibold text-amber-800 dark:text-amber-200">
-                      No _pages.json
-                    </p>
-                    <p className="mt-0.5 text-amber-700 dark:text-amber-300/90">
-                      This project has no <code>_pages.json</code> at its repo
-                      root. Add one to edit page content — changes can't be
-                      published until it exists.
                     </p>
                   </div>
                 </div>

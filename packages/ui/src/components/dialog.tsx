@@ -44,13 +44,20 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  overlayClassName,
+  overlayChildren,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
+  /** Extra classes for the backdrop (e.g. a custom background). */
+  overlayClassName?: string;
+  /** Rendered inside the backdrop, behind the popup (e.g. an animation). */
+  overlayChildren?: React.ReactNode;
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay>
+      <DialogOverlay className={overlayClassName}>
+        {overlayChildren}
         <DialogPrimitive.Popup
           data-slot="dialog-content"
           className={cn(

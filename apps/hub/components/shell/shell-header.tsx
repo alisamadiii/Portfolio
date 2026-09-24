@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@workspace/trpc/client";
 import { useRepo } from "@/contexts/repo-context";
 
 import {
@@ -26,16 +28,18 @@ import {
   GitBranch,
   LayoutGrid,
   PanelRight,
+  Rocket,
   Settings2,
   Table2,
   UploadCloud,
   type LucideProps,
 } from "@/components/icon";
 import { usePublish } from "@/components/publish/publish-context";
+import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
 import { User } from "@/components/user";
 
-export type ShellMode = "canvas" | "settings";
+export type ShellMode = "canvas" | "settings" | "deployments";
 
 /**
  * Docked top bar (warm off-white). Left: back arrow (home) + agency brand mark
@@ -65,6 +69,32 @@ export function ShellHeader({
   const canvasActive = mode === "canvas" && !cmsOverlay.open;
   const cmsActive = cmsOverlay.open;
   const settingsActive = mode === "settings" && !cmsOverlay.open;
+  const deploymentsActive = mode === "deployments" && !cmsOverlay.open;
+
+  // Drives the yellow dot on the Deployments pill when an AI edit is in flight.
+  // Shares its query cache with the Deployments view (same key), so no double
+  // fetch; polls only while something is pending.
+  const trpc = useTRPC();
+  const editJobsQuery = useQuery(
+    trpc.cms.aiEdits.listJobs.queryOptions(
+      { owner, repo },
+      {
+        enabled: Boolean(owner && repo),
+        staleTime: 30_000,
+        refetchInterval: (query) => {
+          const jobs = query.state.data ?? [];
+          return jobs.some(
+            (job) => job.status === "queued" || job.status === "running"
+          )
+            ? 10_000
+            : false;
+        },
+      }
+    )
+  );
+  const hasPendingDeploy = (editJobsQuery.data ?? []).some(
+    (job) => job.status === "queued" || job.status === "running"
+  );
 
   return (
     <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">
@@ -135,6 +165,13 @@ export function ShellHeader({
               onClick={() => onModeChange("settings")}
             />
           )}
+          <SegButton
+            icon={Rocket}
+            label="Deployments"
+            active={deploymentsActive}
+            onClick={() => onModeChange("deployments")}
+            dot={hasPendingDeploy}
+          />
         </div>
       </div>
 
@@ -148,6 +185,7 @@ export function ShellHeader({
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
+        <AiIntroDialog />
         <Button
           variant="ghost"
           size="icon-sm"
@@ -186,6 +224,7 @@ function SegButton({
   active,
   onClick,
   iconColor,
+  dot,
 }: {
   icon: (props: LucideProps) => React.ReactNode;
   label: string;
@@ -193,6 +232,8 @@ function SegButton({
   onClick: () => void;
   /** Tint the icon with a region-type color (CMS = purple). */
   iconColor?: string;
+  /** Show a small yellow activity dot (e.g. a deployment in flight). */
+  dot?: boolean;
 }) {
   return (
     <button
@@ -200,7 +241,7 @@ function SegButton({
       onClick={onClick}
       data-active={active}
       className={cn(
-        "flex h-[26px] items-center gap-1.5 rounded-md px-2.5 text-[12.5px] font-semibold transition-colors",
+        "relative flex h-[26px] items-center gap-1.5 rounded-md px-2.5 text-[12.5px] font-semibold transition-colors",
         active
           ? "bg-card text-foreground shadow-sm"
           : "text-muted-foreground hover:text-foreground"
@@ -208,6 +249,9 @@ function SegButton({
     >
       <Icon className="size-4" style={iconColor ? { color: iconColor } : undefined} />
       <span className="max-md:hidden">{label}</span>
+      {dot && (
+        <span className="ring-background absolute -top-0.5 -right-0.5 size-2 rounded-full bg-amber-500 ring-2" />
+      )}
     </button>
   );
 }

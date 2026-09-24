@@ -55,6 +55,10 @@ import { inferFields } from "@/lib/engine/infer";
 import { entryHasChanges } from "@/lib/entry-diff";
 import type { Field } from "@workspace/cms-core/types/field";
 
+// The URL param the cms-bridge overlay watches to turn edit mode on. Must match
+// EDIT_PARAM in the bridge client (packages/cms-bridge/src/client.ts).
+const EDIT_PARAM = "e7k9x2fq";
+
 /**
  * True when `next` genuinely differs from the published `base`, using the same
  * normalized, inference-driven diff the publish dialog renders. Fields are
@@ -199,6 +203,21 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       { enabled: Boolean(owner && repo && branch), staleTime: 60_000 }
     )
   );
+
+  // Short-lived, repo-scoped token for the edit iframe (server-minted by
+  // cms.aiEdits.mintEditToken). Keeps the long-lived content-pilot key off the
+  // browser; refetch inside the token's TTL so a long session stays valid.
+  const editTokenQuery = useQuery(
+    trpc.cms.aiEdits.mintEditToken.queryOptions(
+      { owner, repo },
+      {
+        enabled: Boolean(owner && repo),
+        staleTime: 25 * 60 * 1000,
+        refetchInterval: 25 * 60 * 1000,
+      }
+    )
+  );
+  const editToken = editTokenQuery.data?.token ?? "";
 
   const pages: CanvasPageInfo[] = useMemo(
     () => pagesQuery.data?.pages ?? [],
@@ -1016,15 +1035,24 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     [siteOrigin]
   );
 
-  const editSrcFor = useCallback((url: string) => {
-    try {
-      const parsed = new URL(url);
-      parsed.searchParams.set("cms-preview", "edit");
-      return parsed.href;
-    } catch {
-      return url;
-    }
-  }, []);
+  const editSrcFor = useCallback(
+    (url: string) => {
+      // No token yet → load the page without edit mode; the frame reloads with
+      // the param once the mint query resolves.
+      if (!editToken) return url;
+      try {
+        const parsed = new URL(url);
+        // The cms-bridge overlay activates on this param; its value is the
+        // short-lived, repo-scoped token the overlay sends as a Bearer to the
+        // content-pilot intake.
+        parsed.searchParams.set(EDIT_PARAM, editToken);
+        return parsed.href;
+      } catch {
+        return url;
+      }
+    },
+    [editToken]
+  );
 
   // Subscribe to the drafts store so publish/refresh stay in sync.
   const drafts = useDrafts(owner, repo, branch);
