@@ -40,6 +40,7 @@ export function EditorShell() {
 function ShellBody() {
   const {
     pages,
+    entryPages,
     selectedPath,
     pagesError,
     needsDomain,
@@ -64,7 +65,10 @@ function ShellBody() {
   const [reloadNonce, setReloadNonce] = useState(0);
 
   const selectedPage =
-    pages.find((page) => page.path === selectedPath) ?? null;
+    pages.find((page) => page.path === selectedPath) ??
+    // Sitemap-discovered dynamic pages render in the iframe like any page.
+    entryPages.find((page) => page.path === selectedPath) ??
+    null;
 
   const frameUrl = useMemo(() => {
     if (!selectedPage?.url) return null;

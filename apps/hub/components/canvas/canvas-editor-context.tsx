@@ -103,6 +103,20 @@ export type CanvasPageInfo = {
   parentPath?: string;
 };
 
+/**
+ * A dynamic page discovered from the live site's sitemap (collection entry,
+ * legal page, …) — not in the manifest, but viewable in the iframe like any
+ * page. `parentPath` is the deepest manifest page it nests under, or null for
+ * the tree's "More pages" group.
+ */
+export type SitemapPageInfo = {
+  path: string;
+  url: string;
+  title: string;
+  kind: "page";
+  parentPath: string | null;
+};
+
 type WorkingCopy = {
   entry: EntryRoute;
   sha: string | null;
@@ -128,6 +142,12 @@ type CanvasEditorValue = {
   branch: string;
   repoBase: string;
   pages: CanvasPageInfo[];
+  /** Sitemap-discovered dynamic pages (not in the manifest). */
+  entryPages: SitemapPageInfo[];
+  /** Every pathname in the live sitemap (raw, incl. manifest pages). */
+  sitemapPaths: string[];
+  /** Sitemap fetch settled successfully — gate SEO warnings on this. */
+  sitemapLoaded: boolean;
   siteOrigin: string | null;
   pagesLoading: boolean;
   pagesError: Error | null;
@@ -235,13 +255,53 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const siteOrigin = pagesQuery.data?.origin || null;
   const needsDomain = pagesQuery.data?.needsDomain ?? false;
 
+  // Dynamic pages from the deployed sitemap: everything the live site serves
+  // that the manifest doesn't know about (collection entries, legal pages, …).
+  // Each nests under the deepest manifest page prefixing its path.
+  const sitemapQuery = useQuery(
+    trpc.cms.pages.sitemap.queryOptions(
+      { owner, repo },
+      {
+        enabled: Boolean(owner && repo && siteOrigin),
+        staleTime: 5 * 60 * 1000,
+      }
+    )
+  );
+  const entryPages: SitemapPageInfo[] = useMemo(() => {
+    if (!siteOrigin) return [];
+    const known = new Set(pages.map((page) => page.path));
+    const parents = pages
+      .filter((page) => page.kind !== "collection" && page.path !== "/")
+      .map((page) => page.path)
+      .sort((a, b) => b.length - a.length);
+    const result: SitemapPageInfo[] = [];
+    for (const path of sitemapQuery.data?.paths ?? []) {
+      if (known.has(path)) continue;
+      const parentPath =
+        parents.find((parent) => path.startsWith(parent + "/")) ?? null;
+      result.push({
+        path,
+        url: new URL(path, siteOrigin).href,
+        title: path.split("/").filter(Boolean).pop() ?? path,
+        kind: "page",
+        parentPath,
+      });
+    }
+    return result;
+  }, [pages, siteOrigin, sitemapQuery.data]);
+
   // Which page's iframe is currently shown. Defaults to the first page.
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   useEffect(() => {
-    if (selectedPath && pages.some((page) => page.path === selectedPath)) return;
+    if (
+      selectedPath &&
+      (pages.some((page) => page.path === selectedPath) ||
+        entryPages.some((page) => page.path === selectedPath))
+    )
+      return;
     const firstPage = pages.find((page) => page.kind !== "collection");
     setSelectedPath(firstPage?.path ?? pages[0]?.path ?? null);
-  }, [pages, selectedPath]);
+  }, [pages, entryPages, selectedPath]);
 
   // ------------------------------------------------------------------
   // The repo's root _site.json manifest is schema-less — the entry map is built
@@ -1144,6 +1204,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       branch,
       repoBase,
       pages,
+      entryPages,
+      sitemapPaths: sitemapQuery.data?.paths ?? [],
+      sitemapLoaded: sitemapQuery.isSuccess,
       siteOrigin,
       pagesLoading: pagesQuery.isLoading,
       pagesError:
@@ -1182,6 +1245,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       branch,
       repoBase,
       pages,
+      entryPages,
+      sitemapQuery.data,
+      sitemapQuery.isSuccess,
       siteOrigin,
       pagesQuery.isLoading,
       pagesQuery.error,

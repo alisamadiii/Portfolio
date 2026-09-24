@@ -262,4 +262,69 @@ export const pagesRouter = createTRPCRouter({
         throw toTRPCError(error);
       }
     }),
+
+  /**
+   * Pathnames of every page in the live site's sitemap. The page tree diffs
+   * this against the manifest pages to surface dynamic routes (collection
+   * entries, legal pages) without any CMS-side route declarations — the
+   * deployed sitemap is the ground truth. Best-effort: no domain, no sitemap,
+   * or a fetch error all return an empty list and the tree shows no arrows.
+   */
+  sitemap: cmsProcedure.query(async ({ input }) => {
+    const baseUrl = await getCustomDomainBaseUrl(input.owner, input.repo);
+    if (!baseUrl) return { paths: [] as string[] };
+
+    let origin: string;
+    try {
+      origin = new URL(baseUrl).origin;
+    } catch {
+      return { paths: [] as string[] };
+    }
+
+    const fetchText = async (url: string): Promise<string | null> => {
+      try {
+        const res = await fetch(url, {
+          signal: AbortSignal.timeout(5000),
+          headers: { Accept: "application/xml, text/xml" },
+        });
+        if (!res.ok) return null;
+        return await res.text();
+      } catch {
+        return null;
+      }
+    };
+    const locsOf = (xml: string): string[] =>
+      Array.from(xml.matchAll(/<loc>\s*([^<\s][^<]*?)\s*<\/loc>/g)).map(
+        (m) => m[1]
+      );
+
+    // @astrojs/sitemap serves an index at /sitemap-index.xml; plain sites use
+    // /sitemap.xml. An index's <loc>s are child sitemaps, capped defensively.
+    let xml = await fetchText(origin + "/sitemap-index.xml");
+    let pageLocs: string[] = [];
+    if (xml && /<sitemapindex[\s>]/i.test(xml)) {
+      const children = locsOf(xml).slice(0, 5);
+      for (const child of children) {
+        const childXml = await fetchText(child);
+        if (childXml) pageLocs.push(...locsOf(childXml));
+      }
+    } else if (xml) {
+      pageLocs = locsOf(xml);
+    } else {
+      xml = await fetchText(origin + "/sitemap.xml");
+      if (xml) pageLocs = locsOf(xml);
+    }
+
+    const paths = new Set<string>();
+    for (const loc of pageLocs) {
+      try {
+        const url = new URL(loc);
+        if (url.origin !== origin) continue;
+        paths.add(normalizePathname(url.pathname));
+      } catch {
+        // Skip malformed <loc> values.
+      }
+    }
+    return { paths: Array.from(paths).sort() };
+  }),
 });
