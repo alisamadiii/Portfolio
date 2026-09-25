@@ -25,6 +25,7 @@ export type {
   VariantOpenMessage,
   BlogOpenMessage,
   EditSubmittedMessage,
+  ElementPickMessage,
 } from "./bridge-protocol";
 
 /**

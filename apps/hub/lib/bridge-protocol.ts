@@ -210,6 +210,26 @@ export interface EditSubmittedMessage {
   jobId?: number;
 }
 
+/**
+ * The AI-analyzer preview overlay reported a clicked element. Preview sessions
+ * only — the analyzer replaces cms-bridge in the dev-server build. The hub
+ * attaches this element's source ref + text + page to the next AI chat message
+ * so the AI edits the right file without scanning the repo. No write happens.
+ */
+export interface ElementPickMessage {
+  cms: 1;
+  v: number;
+  type: "element-pick";
+  /** `<project?>:src/…/File.astro:LINE` from data-cms-src (may be ""). */
+  sourceRef: string;
+  /** Human-readable label of the element (text, or `image src/alt`). */
+  elementText: string;
+  /** Full URL of the previewed page. */
+  pageUrl: string;
+  /** Route path of the previewed page. */
+  pagePath: string;
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
@@ -221,7 +241,8 @@ export type BridgeToCmsMessage =
   | CollectionOpenMessage
   | VariantOpenMessage
   | BlogOpenMessage
-  | EditSubmittedMessage;
+  | EditSubmittedMessage
+  | ElementPickMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge

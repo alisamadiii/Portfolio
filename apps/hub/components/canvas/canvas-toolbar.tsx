@@ -1,6 +1,13 @@
 "use client";
 
-import { Lock, Monitor, RotateCw, Smartphone, Tablet } from "@/components/icon";
+import {
+  ExternalLink,
+  Lock,
+  Monitor,
+  RotateCw,
+  Smartphone,
+  Tablet,
+} from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -29,11 +36,14 @@ export function CanvasToolbar({
   onDeviceChange,
   url,
   onReload,
+  previewUrl,
 }: {
   device: CanvasDevice;
   onDeviceChange: (device: CanvasDevice) => void;
   url: { host: string; path: string } | null;
   onReload: () => void;
+  /** Live AI-session preview URL for the current page, or null when no session. */
+  previewUrl?: string | null;
 }) {
   return (
     <div className="flex shrink-0 items-center justify-center gap-2.5 px-3.5 pb-1.5 pt-2.5">
@@ -59,14 +69,14 @@ export function CanvasToolbar({
         ))}
       </div>
 
-      {/* URL pill */}
+      {/* URL pill — path only; the domain is noise inside the editor. */}
       {url && (
-        <div className="border-border text-muted-foreground flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs">
+        <div
+          title={`${url.host}${url.path}`}
+          className="border-border text-muted-foreground flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs"
+        >
           <Lock className="text-primary size-3" />
-          <span className="max-w-[280px] truncate">
-            {url.host}
-            <span className="text-muted-foreground/70">{url.path}</span>
-          </span>
+          <span className="max-w-[280px] truncate">{url.path}</span>
         </div>
       )}
 
@@ -79,6 +89,19 @@ export function CanvasToolbar({
         <RotateCw className="size-3.5" />
         Reload
       </button>
+
+      {/* Open the live AI preview in its own tab */}
+      {previewUrl && (
+        <a
+          href={previewUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="border-border text-muted-foreground hover:bg-muted flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors"
+        >
+          <ExternalLink className="size-3.5" />
+          Preview
+        </a>
+      )}
     </div>
   );
 }

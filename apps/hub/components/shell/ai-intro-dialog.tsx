@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@workspace/ui/components/dialog";
 
-import { HelpCircle, Sparkles } from "@/components/icon";
+import { HelpCircle, PaintbrushSparkle } from "@/components/icon";
 
 // Bump this suffix if the intro changes enough that everyone should see it again.
 const SEEN_KEY = "cms-ai-intro-seen-v2";
@@ -73,7 +73,7 @@ export function AiIntroDialog() {
         >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="size-5 text-primary" />
+              <PaintbrushSparkle className="size-5 text-primary" />
               A simpler way to edit your site
             </DialogTitle>
             <DialogDescription>

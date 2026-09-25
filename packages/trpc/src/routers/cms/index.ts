@@ -10,6 +10,7 @@ import { filesRouter } from "./files";
 import { manifestRouter } from "./manifest";
 import { mediaRouter } from "./media";
 import { pagesRouter } from "./pages";
+import { previewSessionRouter } from "./preview-session";
 import { publishRouter } from "./publish";
 import { referencesRouter } from "./references";
 import { reposRouter } from "./repos";
@@ -28,6 +29,7 @@ export const cmsRouter = createTRPCRouter({
   manifest: manifestRouter,
   media: mediaRouter,
   pages: pagesRouter,
+  previewSession: previewSessionRouter,
   publish: publishRouter,
   references: referencesRouter,
   cache: cacheRouter,

@@ -30,6 +30,7 @@ import {
   PanelRight,
   Rocket,
   Settings2,
+  PaintbrushSparkle,
   Table2,
   Upload,
   UploadCloud,
@@ -55,11 +56,15 @@ export function ShellHeader({
   onModeChange,
   onOpenCms,
   onToggleDocs,
+  onToggleAi,
+  aiActive,
 }: {
   mode: ShellMode;
   onModeChange: (mode: ShellMode) => void;
   onOpenCms: () => void;
   onToggleDocs: () => void;
+  onToggleAi: () => void;
+  aiActive: boolean;
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -197,6 +202,20 @@ export function ShellHeader({
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
         <AiIntroDialog />
+        {canEdit && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onToggleAi}
+            aria-label="Edit with AI"
+            className={cn(
+              "hover:text-foreground",
+              aiActive ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <PaintbrushSparkle className="size-5" />
+          </Button>
+        )}
         {mediaLibrary.isAvailable && canEdit && (
           <Button
             variant="ghost"

@@ -11,6 +11,7 @@ import {
 } from "@/components/canvas/canvas-editor-context";
 import { EditorOverlays } from "@/components/canvas/editor-overlays";
 import { PageFrame } from "@/components/canvas/page-frame";
+import { SessionChatPanel } from "@/components/canvas/session-chat-panel";
 import {
   CanvasToolbar,
   type CanvasDevice,
@@ -49,6 +50,7 @@ function ShellBody() {
     setCmsOverlay,
     settingsRequest,
     setSettingsRequest,
+    session,
   } = useCanvasEditor();
   const { myRole } = useRepo();
   // view-only collaborators never see the CMS overlay or Deployments view.
@@ -63,6 +65,17 @@ function ShellBody() {
   const [docsOpen, setDocsOpen] = useState(true);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
   const [reloadNonce, setReloadNonce] = useState(0);
+
+  // AI chat panel: manually opened, and auto-opened when a live session
+  // appears (another tab or a page reload surfaces the running session) —
+  // but the X still closes the panel; the session keeps running server-side
+  // and the header toggle brings it back.
+  const [aiOpen, setAiOpen] = useState(false);
+  const sessionId = session?.id ?? null;
+  useEffect(() => {
+    if (sessionId) setAiOpen(true);
+  }, [sessionId]);
+  const showChat = canEdit && aiOpen;
 
   const selectedPage =
     pages.find((page) => page.path === selectedPath) ??
@@ -84,6 +97,17 @@ function ShellBody() {
     selectedPage && selectedPage.kind !== "collection" && !pagesError
   );
 
+  // "Preview ↗" opens the AI session's dev server on the current page in its
+  // own tab — only meaningful once the session is serving.
+  const previewTabUrl = useMemo(() => {
+    if (session?.status !== "ready") return null;
+    try {
+      return new URL(frameUrl?.path ?? "/", session.previewUrl).toString();
+    } catch {
+      return session.previewUrl;
+    }
+  }, [session?.status, session?.previewUrl, frameUrl?.path]);
+
   return (
     <div className="bg-background flex h-full w-full flex-col overflow-hidden">
       <ShellHeader
@@ -91,6 +115,8 @@ function ShellBody() {
         onModeChange={setMode}
         onOpenCms={() => setCmsOverlay({ open: true })}
         onToggleDocs={() => setDocsOpen((open) => !open)}
+        onToggleAi={() => setAiOpen((open) => !open)}
+        aiActive={showChat}
       />
 
       {mode === "settings" ? (
@@ -156,6 +182,7 @@ function ShellBody() {
                   onDeviceChange={setDevice}
                   url={frameUrl}
                   onReload={() => setReloadNonce((nonce) => nonce + 1)}
+                  previewUrl={previewTabUrl}
                 />
                 <PageFrame
                   page={selectedPage}
@@ -170,12 +197,16 @@ function ShellBody() {
             )}
           </main>
 
-          {/* Right: client docs */}
-          {docsOpen && (
+          {/* Right: AI session chat (wins while open/live), else client docs */}
+          {showChat ? (
+            <aside className="bg-background w-96 shrink-0 border-l">
+              <SessionChatPanel onClose={() => setAiOpen(false)} />
+            </aside>
+          ) : docsOpen ? (
             <aside className="bg-background w-72 shrink-0 border-l">
               <DocsPanel />
             </aside>
-          )}
+          ) : null}
         </div>
       )}
 

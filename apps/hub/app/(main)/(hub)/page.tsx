@@ -2,6 +2,7 @@
 
 import { useUser } from "@/contexts/user-context";
 
+import { ActiveSessionsBanner } from "@/components/active-sessions-banner";
 import { DocumentTitle } from "@/components/document-title";
 import { ProjectGallery } from "@/components/project-gallery";
 
@@ -22,6 +23,8 @@ export default function HomePage() {
           Everything about your website, in one place.
         </p>
       </div>
+
+      <ActiveSessionsBanner />
 
       <ProjectGallery />
     </div>

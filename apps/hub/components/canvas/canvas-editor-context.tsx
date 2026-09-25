@@ -78,6 +78,38 @@ const contentDiffers = (
     next
   );
 
+/**
+ * A live-preview AI session (content-pilot dev server on a preview branch).
+ * Mirrors PreviewSession in @workspace/trpc/lib/content-pilot — declared
+ * locally so the client bundle never imports the server-only lib.
+ */
+export type PreviewSessionInfo = {
+  id: string;
+  repoId: number;
+  status:
+    | "starting"
+    | "installing"
+    | "ready"
+    | "restarting"
+    | "needs_config"
+    | "failed"
+    | "closed"
+    | "published"
+    | "expired";
+  branch: string;
+  previewUrl: string;
+  error: string | null;
+  createdAt: string;
+};
+
+/** An element the client clicked in the AI preview (analyzer overlay). */
+export type PickedElement = {
+  sourceRef: string;
+  elementText: string;
+  pageUrl: string;
+  pagePath: string;
+};
+
 /** Controlled state for the full-screen CMS entry-management overlay. */
 export type CmsOverlayState = { open: boolean; collection?: string };
 
@@ -149,6 +181,12 @@ type CanvasEditorValue = {
   /** Sitemap fetch settled successfully — gate SEO warnings on this. */
   sitemapLoaded: boolean;
   siteOrigin: string | null;
+  /** The active AI session, when one exists for this project. */
+  session: PreviewSessionInfo | null;
+  /** Origin of the session's dev-server preview while it is ready, else null. */
+  previewOrigin: string | null;
+  /** Short-lived repo-scoped token — the chat panel auths SSE/API with it. */
+  editToken: string;
   pagesLoading: boolean;
   pagesError: Error | null;
   /** No website URL set for the project — the canvas prompts to add a domain. */
@@ -164,6 +202,11 @@ type CanvasEditorValue = {
 
   selectedPath: string | null;
   setSelectedPath: (path: string | null) => void;
+  /** The page currently shown in the canvas (route + absolute URL). */
+  currentPage: { path: string; url: string | null } | null;
+  /** Element the client clicked in the AI preview, attached to the next message. */
+  pickedElement: PickedElement | null;
+  clearPickedElement: () => void;
 
   registerFrame: (path: string, iframe: HTMLIFrameElement | null) => void;
   editSrcFor: (url: string) => string;
@@ -255,6 +298,38 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const siteOrigin = pagesQuery.data?.origin || null;
   const needsDomain = pagesQuery.data?.needsDomain ?? false;
 
+  // Live-preview AI session: while one is ready, the canvas swaps to the
+  // dev-server preview and the chat panel drives edits. Fast poll during
+  // startup (install + boot take a while), slow heartbeat once ready.
+  const sessionQuery = useQuery(
+    trpc.cms.previewSession.get.queryOptions(
+      { owner, repo },
+      {
+        enabled: Boolean(owner && repo) && canEdit,
+        refetchInterval: (query) => {
+          const status = query.state.data?.session?.status;
+          return status === "starting" ||
+            status === "installing" ||
+            status === "restarting"
+            ? 2_000
+            : 15_000;
+        },
+      }
+    )
+  );
+  const session = (sessionQuery.data?.session ?? null) as PreviewSessionInfo | null;
+  const previewOrigin = useMemo(() => {
+    if (session?.status !== "ready") return null;
+    try {
+      return new URL(session.previewUrl).origin;
+    } catch {
+      return null;
+    }
+  }, [session?.status, session?.previewUrl]);
+  // Everything postMessage-shaped targets the origin the iframe actually
+  // shows: the preview during a session, the live site otherwise.
+  const activeOrigin = previewOrigin ?? siteOrigin;
+
   // Dynamic pages from the deployed sitemap: everything the live site serves
   // that the manifest doesn't know about (collection entries, legal pages, …).
   // Each nests under the deepest manifest page prefixing its path.
@@ -302,6 +377,21 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     const firstPage = pages.find((page) => page.kind !== "collection");
     setSelectedPath(firstPage?.path ?? pages[0]?.path ?? null);
   }, [pages, entryPages, selectedPath]);
+
+  // The page currently shown in the canvas — attached to every AI chat message
+  // so the AI knows where to look without scanning the repo.
+  const currentPage = useMemo(() => {
+    if (!selectedPath) return null;
+    const page =
+      pages.find((entry) => entry.path === selectedPath) ??
+      entryPages.find((entry) => entry.path === selectedPath) ??
+      null;
+    return { path: selectedPath, url: page?.url ?? null };
+  }, [selectedPath, pages, entryPages]);
+
+  // Element the client clicked in the AI preview (analyzer overlay → element-pick).
+  const [pickedElement, setPickedElement] = useState<PickedElement | null>(null);
+  const clearPickedElement = useCallback(() => setPickedElement(null), []);
 
   // ------------------------------------------------------------------
   // The repo's root _site.json manifest is schema-less — the entry map is built
@@ -492,7 +582,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   /** Push current draft values into one frame (used on ready + remount). */
   const pushDraftsToFrame = useCallback(
     (framePath: string) => {
-      if (!siteOrigin) return;
+      if (!activeOrigin) return;
       const iframe = framesRef.current.get(framePath);
       if (!iframe?.contentWindow) return;
       const values: Array<{ path: string; value: string }> = [];
@@ -501,9 +591,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         const copy = copiesRef.current.get(entry.name);
         if (copy) values.push(...flattenTextValues(copy.values));
       }
-      postSet(iframe.contentWindow, siteOrigin, values);
+      postSet(iframe.contentWindow, activeOrigin, values);
     },
-    [entryMap, siteOrigin]
+    [entryMap, activeOrigin]
   );
 
   /**
@@ -556,7 +646,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
    */
   const pushEditableToFrame = useCallback(
     (framePath: string) => {
-      if (!siteOrigin) return;
+      if (!activeOrigin) return;
       if (entryMap.routes.length === 0) return; // schema not loaded yet
       const fields = frameFieldsRef.current.get(framePath);
       if (!fields) return; // frame hasn't announced `ready`
@@ -565,32 +655,32 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       // view-only: arm nothing so no field is inline-editable.
       postEditable(
         iframe.contentWindow,
-        siteOrigin,
+        activeOrigin,
         canEdit
           ? classifyEditable(candidatesFor(entryMap, framePath), fields)
           : { arm: [], media: [], link: [] }
       );
     },
-    [entryMap, siteOrigin, canEdit]
+    [entryMap, activeOrigin, canEdit]
   );
 
   /** Broadcast one changed value to every mounted frame that shows it. */
   const propagate = useCallback(
     (entryName: string, fieldPath: string, value: string, exclude?: string) => {
-      if (!siteOrigin) return;
+      if (!activeOrigin) return;
       for (const [framePath, iframe] of framesRef.current) {
         if (framePath === exclude || !iframe.contentWindow) continue;
         const shows = candidatesFor(entryMap, framePath).some(
           (entry) => entry.name === entryName
         );
         if (shows) {
-          postSet(iframe.contentWindow, siteOrigin, [
+          postSet(iframe.contentWindow, activeOrigin, [
             { path: fieldPath, value },
           ]);
         }
       }
     },
-    [entryMap, siteOrigin]
+    [entryMap, activeOrigin]
   );
 
   /**
@@ -765,13 +855,13 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
 
   const handleGroupOp = useCallback(
     (framePath: string, msg: GroupOpMessage) => {
-      if (!siteOrigin) return;
+      if (!activeOrigin) return;
       const iframe = framesRef.current.get(framePath);
       const reply = (
         ok: boolean,
         values?: Array<{ path: string; value: string }>
       ) =>
-        postToFrame(iframe?.contentWindow, siteOrigin, {
+        postToFrame(iframe?.contentWindow, activeOrigin, {
           type: "group-apply",
           ok,
           path: msg.path,
@@ -834,7 +924,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           (candidate) => candidate.name === resolved.entry.name
         );
         if (shows) {
-          postToFrame(otherFrame.contentWindow, siteOrigin, {
+          postToFrame(otherFrame.contentWindow, activeOrigin, {
             type: "group-apply",
             ok: true,
             path: msg.path,
@@ -852,12 +942,12 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [entryMap, siteOrigin, persistEntryDraft, recomputeDirty]
+    [entryMap, activeOrigin, persistEntryDraft, recomputeDirty]
   );
 
   const reconcileFrameGroups = useCallback(
     (framePath: string) => {
-      if (!siteOrigin) return;
+      if (!activeOrigin) return;
       const iframe = framesRef.current.get(framePath);
       if (!iframe?.contentWindow) return;
       const groups = frameGroupsRef.current.get(framePath);
@@ -874,7 +964,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         const values = flattenTextValues(draftArray, group.path);
         if (draftArray.length > group.count) {
           for (let i = group.count; i < draftArray.length; i++) {
-            postToFrame(iframe.contentWindow, siteOrigin, {
+            postToFrame(iframe.contentWindow, activeOrigin, {
               type: "group-apply",
               ok: true,
               path: group.path,
@@ -885,7 +975,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           }
         } else {
           for (let i = group.count - 1; i >= draftArray.length; i--) {
-            postToFrame(iframe.contentWindow, siteOrigin, {
+            postToFrame(iframe.contentWindow, activeOrigin, {
               type: "group-apply",
               ok: true,
               path: group.path,
@@ -898,7 +988,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         group.count = draftArray.length;
       }
     },
-    [entryMap, siteOrigin]
+    [entryMap, activeOrigin]
   );
 
   /** Write a non-text field value (media URL / link href) and reflect it live. */
@@ -906,11 +996,11 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     (framePath: string, fieldPath: string, value: string) => {
       commitEdit(framePath, fieldPath, value);
       const iframe = framesRef.current.get(framePath);
-      if (iframe?.contentWindow && siteOrigin) {
-        postSet(iframe.contentWindow, siteOrigin, [{ path: fieldPath, value }]);
+      if (iframe?.contentWindow && activeOrigin) {
+        postSet(iframe.contentWindow, activeOrigin, [{ path: fieldPath, value }]);
       }
     },
-    [commitEdit, siteOrigin]
+    [commitEdit, activeOrigin]
   );
 
   /** Open the matching editor when a page reports a non-text field click. */
@@ -947,9 +1037,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
 
   // Single window-level message listener; frames identified by event.source.
   useEffect(() => {
-    if (!siteOrigin) return;
+    if (!activeOrigin) return;
     const onMessage = (event: MessageEvent) => {
-      const msg = parseBridgeMessage(event, siteOrigin);
+      const msg = parseBridgeMessage(event, activeOrigin);
       if (!msg) return;
       let framePath: string | null = null;
       for (const [key, iframe] of framesRef.current) {
@@ -1027,6 +1117,16 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
               .queryKey,
           });
           break;
+        case "element-pick":
+          // AI preview: the client clicked an element to point the AI at it.
+          // Stash it — the chat panel attaches it to the next message.
+          setPickedElement({
+            sourceRef: msg.sourceRef,
+            elementText: msg.elementText,
+            pageUrl: msg.pageUrl,
+            pagePath: msg.pagePath,
+          });
+          break;
         case "link-info": {
           const href = msg.href;
           toast(`Links to ${href || "(no href)"}`, {
@@ -1034,7 +1134,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
               label: "Open in new tab",
               onClick: () => {
                 try {
-                  const url = new URL(href || "/", siteOrigin ?? undefined).href;
+                  const url = new URL(href || "/", activeOrigin ?? undefined).href;
                   window.open(url, "_blank", "noopener");
                 } catch {
                   /* malformed href — nothing to open */
@@ -1051,7 +1151,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [
-    siteOrigin,
+    activeOrigin,
     canEdit,
     commitEdit,
     activateField,
@@ -1112,44 +1212,62 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         return;
       }
       setCopiesVersion((version) => version + 1);
-      if (siteOrigin) {
+      if (activeOrigin) {
         const flattened = flattenTextValues(values);
         for (const iframe of framesRef.current.values()) {
-          postSet(iframe.contentWindow, siteOrigin, flattened);
+          postSet(iframe.contentWindow, activeOrigin, flattened);
         }
       }
     },
-    [globalEntry, persistEntryDraft, siteOrigin]
+    [globalEntry, persistEntryDraft, activeOrigin]
   );
 
   const handleSiteConfigLiveChange = useCallback(
     (values: Record<string, unknown>) => {
-      if (!siteOrigin) return;
+      if (!activeOrigin) return;
       const flattened = flattenTextValues(values);
       for (const iframe of framesRef.current.values()) {
-        postSet(iframe.contentWindow, siteOrigin, flattened);
+        postSet(iframe.contentWindow, activeOrigin, flattened);
       }
     },
-    [siteOrigin]
+    [activeOrigin]
   );
 
   const editSrcFor = useCallback(
     (url: string) => {
+      let href = url;
+      // Live-preview session: rebase the page onto the dev-server origin so
+      // the canvas shows the preview branch (path + params preserved).
+      if (previewOrigin) {
+        try {
+          const parsed = new URL(url);
+          const preview = new URL(previewOrigin);
+          parsed.protocol = preview.protocol;
+          parsed.host = preview.host;
+          href = parsed.href;
+        } catch {
+          // fall through with the original URL
+        }
+        // The chat panel is the sole write path during a session — leaving the
+        // overlay dormant stops request-a-change jobs being filed against main
+        // while edits are happening on the preview branch.
+        return href;
+      }
       // No token yet → load the page without edit mode; the frame reloads with
       // the param once the mint query resolves.
-      if (!editToken) return url;
+      if (!editToken) return href;
       try {
-        const parsed = new URL(url);
+        const parsed = new URL(href);
         // The cms-bridge overlay activates on this param; its value is the
         // short-lived, repo-scoped token the overlay sends as a Bearer to the
         // content-pilot intake.
         parsed.searchParams.set(EDIT_PARAM, editToken);
         return parsed.href;
       } catch {
-        return url;
+        return href;
       }
     },
-    [editToken]
+    [editToken, previewOrigin]
   );
 
   // Subscribe to the drafts store so publish/refresh stay in sync.
@@ -1208,6 +1326,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       sitemapPaths: sitemapQuery.data?.paths ?? [],
       sitemapLoaded: sitemapQuery.isSuccess,
       siteOrigin,
+      session,
+      previewOrigin,
+      editToken,
       pagesLoading: pagesQuery.isLoading,
       pagesError:
         pagesQuery.error instanceof Error ? pagesQuery.error : null,
@@ -1220,6 +1341,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       dirtyPagePaths,
       selectedPath,
       setSelectedPath,
+      currentPage,
+      pickedElement,
+      clearPickedElement,
       registerFrame,
       editSrcFor,
       refreshFrameFromStore,
@@ -1249,6 +1373,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       sitemapQuery.data,
       sitemapQuery.isSuccess,
       siteOrigin,
+      session,
+      previewOrigin,
+      editToken,
       pagesQuery.isLoading,
       pagesQuery.error,
       needsDomain,
@@ -1259,6 +1386,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       copiesVersion,
       dirtyPagePaths,
       selectedPath,
+      currentPage,
+      pickedElement,
+      clearPickedElement,
       registerFrame,
       editSrcFor,
       refreshFrameFromStore,
