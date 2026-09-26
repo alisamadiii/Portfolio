@@ -9,6 +9,18 @@ import {
   type CanvasDevice,
 } from "@/components/canvas/canvas-toolbar";
 
+/** Same normalization as the context's preview-navigate matching. */
+const normPath = (value: string): string => {
+  let path = value;
+  try {
+    path = new URL(value, "http://x").pathname;
+  } catch {
+    // keep as-is
+  }
+  path = path.replace(/\/+$/, "");
+  return path === "" ? "/" : path;
+};
+
 /**
  * The single active page as a live, always-interactive iframe on a dot-grid
  * canvas. Loads the published page with `?cms-preview=edit`, registers with the
@@ -16,6 +28,12 @@ import {
  * the selected page changes so the bridge handshake re-runs cleanly. The frame
  * width follows the selected device; `reloadNonce` (bumped by the toolbar)
  * re-seeds from the drafts store and reloads.
+ *
+ * AI-session mode is different: the frame must survive both in-frame
+ * navigation (client clicks links; the tree follows via preview-navigate) and
+ * tree-driven navigation without a remount. The iframe identity stays stable,
+ * src is set once on mount, and navigation is imperative — only when the tree
+ * selects a page the frame is NOT already on.
  */
 export function PageFrame({
   page,
@@ -26,8 +44,14 @@ export function PageFrame({
   device: CanvasDevice;
   reloadNonce: number;
 }) {
-  const { registerFrame, editSrcFor, refreshFrameFromStore } =
-    useCanvasEditor();
+  const {
+    registerFrame,
+    editSrcFor,
+    refreshFrameFromStore,
+    session,
+    previewFramePath,
+  } = useCanvasEditor();
+  const sessionMode = Boolean(session);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loaded, setLoaded] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -36,7 +60,17 @@ export function PageFrame({
     const iframe = iframeRef.current;
     registerFrame(page.path, iframe);
     return () => registerFrame(page.path, null);
-  }, [page.path, registerFrame, reloadKey]);
+  }, [page.path, registerFrame, reloadKey, sessionMode]);
+
+  // Session mode: the mount-time src (captured once; navigation afterwards is
+  // imperative — see the effect below).
+  const initialSrc = useRef<string | null>(null);
+  if (sessionMode && initialSrc.current === null) {
+    initialSrc.current = editSrcFor(page.url);
+  }
+  if (!sessionMode && initialSrc.current !== null) {
+    initialSrc.current = null;
+  }
 
   // Toolbar-driven reload: re-seed working copy from localStorage, then remount.
   const lastNonce = useRef(reloadNonce);
@@ -44,9 +78,30 @@ export function PageFrame({
     if (reloadNonce === lastNonce.current) return;
     lastNonce.current = reloadNonce;
     refreshFrameFromStore(page.path);
+    // Session mode: recapture the mount src for the CURRENT page, or the
+    // remounted frame would reload whatever page the session started on.
+    initialSrc.current = null;
     setLoaded(false);
     setReloadKey((key) => key + 1);
   }, [reloadNonce, page.path, refreshFrameFromStore]);
+
+  // Session mode: navigate imperatively, and ONLY when the frame isn't
+  // already on the selected page — a tree update caused by in-frame
+  // navigation must not reload the page the client just landed on.
+  useEffect(() => {
+    if (!sessionMode) return;
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    // Until the first preview-navigate arrives the frame is still loading its
+    // mount src — touching it here would double-load.
+    if (!previewFramePath) return;
+    if (normPath(previewFramePath) === normPath(page.path)) return;
+    // The frame is on a different page than the tree selection → tree-driven
+    // navigation. Assign unconditionally: the src attribute can be stale
+    // (in-frame navigation doesn't update it), so comparing against it lies.
+    setLoaded(false);
+    iframe.src = editSrcFor(page.url);
+  }, [sessionMode, page.path, page.url, previewFramePath, editSrcFor]);
 
   return (
     <div
@@ -70,9 +125,9 @@ export function PageFrame({
               </div>
             )}
             <iframe
-              key={`${page.path}:${reloadKey}`}
+              key={sessionMode ? `session:${reloadKey}` : `${page.path}:${reloadKey}`}
               ref={iframeRef}
-              src={editSrcFor(page.url)}
+              src={sessionMode ? (initialSrc.current ?? undefined) : editSrcFor(page.url)}
               title={page.path}
               className="h-full w-full border-0"
               onLoad={() => setLoaded(true)}

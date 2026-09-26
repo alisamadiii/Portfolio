@@ -230,6 +230,21 @@ export interface ElementPickMessage {
   pagePath: string;
 }
 
+/**
+ * The AI-analyzer preview overlay reports every page load inside the preview
+ * iframe (sent on init, active or not) so the hub's page tree can follow
+ * in-frame navigation.
+ */
+export interface PreviewNavigateMessage {
+  cms: 1;
+  v: number;
+  type: "preview-navigate";
+  /** Route path of the page the frame is now on. */
+  pagePath: string;
+  /** Full URL of the page the frame is now on. */
+  pageUrl: string;
+}
+
 export type BridgeToCmsMessage =
   | ReadyMessage
   | FieldInputMessage
@@ -242,7 +257,8 @@ export type BridgeToCmsMessage =
   | VariantOpenMessage
   | BlogOpenMessage
   | EditSubmittedMessage
-  | ElementPickMessage;
+  | ElementPickMessage
+  | PreviewNavigateMessage;
 
 // ---------------------------------------------------------------------------
 // CMS → Bridge

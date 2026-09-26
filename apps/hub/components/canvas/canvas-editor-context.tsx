@@ -102,6 +102,19 @@ export type PreviewSessionInfo = {
   createdAt: string;
 };
 
+/** Route-path normalizer for matching frame navigation against page entries:
+ *  accepts full URLs or bare paths, strips trailing slashes, '' → '/'. */
+const normalizePagePath = (value: string): string => {
+  let path = value;
+  try {
+    path = new URL(value, "http://x").pathname;
+  } catch {
+    // keep as-is
+  }
+  path = path.replace(/\/+$/, "");
+  return path === "" ? "/" : path;
+};
+
 /** An element the client clicked in the AI preview (analyzer overlay). */
 export type PickedElement = {
   sourceRef: string;
@@ -207,6 +220,8 @@ type CanvasEditorValue = {
   /** Element the client clicked in the AI preview, attached to the next message. */
   pickedElement: PickedElement | null;
   clearPickedElement: () => void;
+  /** Path the preview iframe is actually on (follows in-frame navigation). */
+  previewFramePath: string | null;
 
   registerFrame: (path: string, iframe: HTMLIFrameElement | null) => void;
   editSrcFor: (url: string) => string;
@@ -392,6 +407,11 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // Element the client clicked in the AI preview (analyzer overlay → element-pick).
   const [pickedElement, setPickedElement] = useState<PickedElement | null>(null);
   const clearPickedElement = useCallback(() => setPickedElement(null), []);
+
+  // The path the preview iframe is actually on (analyzer → preview-navigate).
+  // Lets the page tree follow in-frame navigation, and lets PageFrame skip
+  // re-navigating a frame that's already on the selected page.
+  const [previewFramePath, setPreviewFramePath] = useState<string | null>(null);
 
   // ------------------------------------------------------------------
   // The repo's root _site.json manifest is schema-less — the entry map is built
@@ -1057,7 +1077,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         !canEdit &&
         msg.type !== "ready" &&
         msg.type !== "link-info" &&
-        msg.type !== "edit-submitted"
+        msg.type !== "edit-submitted" &&
+        // navigation is not an edit — view-only collaborators browse too
+        msg.type !== "preview-navigate"
       )
         return;
       switch (msg.type) {
@@ -1127,6 +1149,20 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
             pagePath: msg.pagePath,
           });
           break;
+        case "preview-navigate": {
+          // The client navigated inside the preview iframe — follow with the
+          // page tree. Match by URL pathname (page.path may be a slug form).
+          const framePath = normalizePagePath(msg.pagePath);
+          setPreviewFramePath(framePath);
+          const match = [...pages, ...entryPages].find((entry) => {
+            const entryPath = normalizePagePath(entry.url || entry.path);
+            return entryPath === framePath;
+          });
+          if (match && match.path !== selectedPath) {
+            setSelectedPath(match.path);
+          }
+          break;
+        }
         case "link-info": {
           const href = msg.href;
           toast(`Links to ${href || "(no href)"}`, {
@@ -1163,6 +1199,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     trpc,
     owner,
     repo,
+    pages,
+    entryPages,
+    selectedPath,
   ]);
 
   // Copies can finish seeding AFTER a frame announced `ready` — re-run the
@@ -1344,6 +1383,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       currentPage,
       pickedElement,
       clearPickedElement,
+      previewFramePath,
       registerFrame,
       editSrcFor,
       refreshFrameFromStore,
@@ -1389,6 +1429,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       currentPage,
       pickedElement,
       clearPickedElement,
+      previewFramePath,
       registerFrame,
       editSrcFor,
       refreshFrameFromStore,
