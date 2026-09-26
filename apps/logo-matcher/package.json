@@ -1,0 +1,14 @@
+{
+  "name": "logo-matcher",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3025",
+    "build": "vite build",
+    "preview": "vite preview --port 3025"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
