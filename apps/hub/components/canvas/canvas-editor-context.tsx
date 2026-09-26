@@ -357,8 +357,14 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
     )
   );
+  // Pages discovered by browsing the preview during an AI session (e.g. a
+  // brand-new collection entry the AI just created) — served by the dev
+  // server but absent from the live sitemap. Added on visit via
+  // preview-navigate; session-local by nature.
+  const [sessionPages, setSessionPages] = useState<SitemapPageInfo[]>([]);
+
   const entryPages: SitemapPageInfo[] = useMemo(() => {
-    if (!siteOrigin) return [];
+    if (!siteOrigin) return sessionPages;
     const known = new Set(pages.map((page) => page.path));
     const parents = pages
       .filter((page) => page.kind !== "collection" && page.path !== "/")
@@ -377,8 +383,12 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         parentPath,
       });
     }
+    const listed = new Set([...known, ...result.map((entry) => entry.path)]);
+    for (const entry of sessionPages) {
+      if (!listed.has(entry.path)) result.push(entry);
+    }
     return result;
-  }, [pages, siteOrigin, sitemapQuery.data]);
+  }, [pages, siteOrigin, sitemapQuery.data, sessionPages]);
 
   // Which page's iframe is currently shown. Defaults to the first page.
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -412,6 +422,14 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // Lets the page tree follow in-frame navigation, and lets PageFrame skip
   // re-navigating a frame that's already on the selected page.
   const [previewFramePath, setPreviewFramePath] = useState<string | null>(null);
+
+  // Discovered pages belong to one session's branch — drop them when the
+  // session changes or ends (the live site doesn't have those pages).
+  const sessionId = session?.id ?? null;
+  useEffect(() => {
+    setSessionPages([]);
+    setPreviewFramePath(null);
+  }, [sessionId]);
 
   // ------------------------------------------------------------------
   // The repo's root _site.json manifest is schema-less — the entry map is built
@@ -1158,9 +1176,35 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
             const entryPath = normalizePagePath(entry.url || entry.path);
             return entryPath === framePath;
           });
-          if (match && match.path !== selectedPath) {
-            setSelectedPath(match.path);
+          if (match) {
+            if (match.path !== selectedPath) setSelectedPath(match.path);
+            break;
           }
+          // Unknown path: a page that exists only on the session branch (the
+          // AI just created it). Add a session-local entry so the tree shows
+          // it and select it — otherwise PageFrame would read the tree/frame
+          // mismatch as tree-driven navigation and bounce the iframe back.
+          const parentPath =
+            pages
+              .filter(
+                (page) => page.kind !== "collection" && page.path !== "/"
+              )
+              .map((page) => page.path)
+              .sort((a, b) => b.length - a.length)
+              .find((parent) => framePath.startsWith(parent + "/")) ?? null;
+          const discovered: SitemapPageInfo = {
+            path: framePath,
+            url: msg.pageUrl,
+            title: framePath.split("/").filter(Boolean).pop() ?? framePath,
+            kind: "page",
+            parentPath,
+          };
+          setSessionPages((prev) =>
+            prev.some((entry) => entry.path === framePath)
+              ? prev
+              : [...prev, discovered]
+          );
+          setSelectedPath(framePath);
           break;
         }
         case "link-info": {
