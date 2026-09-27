@@ -5,7 +5,9 @@ import SearchTrigger from "./SearchTrigger.astro";
 <nav
   class="fixed top-0 left-0 z-40 w-full border-b border-charcoal/[0.07] bg-cream/70 px-6 py-4 backdrop-blur-[14px] md:px-10"
 >
-  <div class="mx-auto flex max-w-[1200px] items-center justify-between">
+  <div
+    class="mx-auto grid max-w-[1200px] grid-cols-[1fr_auto] items-center md:grid-cols-3"
+  >
     <a
       href="#"
       class="flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.02em]"
@@ -19,46 +21,26 @@ import SearchTrigger from "./SearchTrigger.astro";
       />
       alisamadii
     </a>
-    <div class="hidden items-center gap-8 text-[14.5px] text-warmgray md:flex">
+    <div
+      class="hidden items-center justify-center gap-8 text-[14.5px] text-warmgray md:flex"
+    >
       <a
         href="/services"
         class="transition-colors duration-300 hover:text-accent">Services</a
       >
-      <a
-        href="/ecommerce"
-        class="transition-colors duration-300 hover:text-accent">E-commerce</a
-      >
-      <a
-        href="/newsletter"
-        class="transition-colors duration-300 hover:text-accent">Newsletter</a
-      >
-      <a href="/about" class="transition-colors duration-300 hover:text-accent"
-        >About</a
-      >
       <a href="/work" class="transition-colors duration-300 hover:text-accent"
         >Work</a
       >
-      <a href="/blog" class="transition-colors duration-300 hover:text-accent"
-        >Blog</a
+      <a href="/about" class="transition-colors duration-300 hover:text-accent"
+        >About</a
       >
       <a
         href="#pricing"
         class="transition-colors duration-300 hover:text-accent">Pricing</a
       >
-      <a
-        href="#contact"
-        class="transition-colors duration-300 hover:text-accent">Contact</a
-      >
     </div>
-    <div class="hidden items-center gap-4 md:flex">
+    <div class="hidden items-center justify-end gap-4 md:flex">
       <SearchTrigger />
-      <a
-        href="https://hub.alisamadii.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sm text-warmgray transition-colors duration-300 hover:text-charcoal"
-        >I am a customer &rarr;</a
-      >
       <a
         href="#contact"
         class="mag-btn inline-flex items-center gap-2 rounded-[9px] bg-charcoal px-[17px] py-[9px] text-sm font-medium text-cream hover:bg-accent"

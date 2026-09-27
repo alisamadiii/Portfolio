@@ -1,21 +1,22 @@
 ---
 // Animated "How We Work" band — a video-style canvas animation.
 // Left: typographic frames (DOM, crisp + indexable). Right: <canvas>
-// where the platform nodes (GitHub, Cloudflare, Proton Pass, Client Hub)
+// where the platform nodes (GitHub, Netlify, Proton Pass, Client Hub)
 // orbit and morph between scene layouts using real brand marks.
 // One timeline drives both. Vanilla only — no dependencies.
 // On lg+ the canvas bleeds past the 1200px container to the viewport edge;
 // the text column stays aligned with the site container.
 ---
 
-<section id="process" class="relative overflow-hidden bg-charcoal text-cream" aria-label="How we work">
+<section id="process" class="relative overflow-hidden" aria-label="How we work">
+  <div class="pm-grad" aria-hidden="true"></div>
   <div
     class="mx-auto max-w-[1200px] px-6 py-24 md:px-10 md:py-28 lg:max-w-none lg:pr-0 lg:pl-[max(2.5rem,calc((100vw-1200px)/2+2.5rem))]"
   >
     <div
-      class="mb-12 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-cream/50 uppercase"
+      class="pm-label mb-12 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] uppercase"
     >
-      <span class="h-px w-[26px] bg-accent"></span>02 &mdash; How We Work
+      <span class="pm-bar h-px w-[26px]"></span>02 &mdash; How We Work
     </div>
 
     <div
@@ -30,7 +31,7 @@
             >
               You own <span class="text-accent">everything.</span>
             </h2>
-            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] md:text-[17px]">
               Before we build anything &mdash; here&rsquo;s how the whole thing works.
             </p>
           </div>
@@ -41,9 +42,9 @@
             >
               Set up together, <span class="text-accent">shared from day one.</span>
             </h2>
-            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] md:text-[17px]">
               We start from one shared email &mdash; yours, or a business address like
-              you&#64;alihq.org. I use it to create your GitHub, Cloudflare, and Proton Pass, so
+              you&#64;alihq.org. I use it to create your GitHub, Netlify, and Proton Pass, so
               both of us have access to everything.
             </p>
           </div>
@@ -54,7 +55,7 @@
             >
               Your code lives in <span class="text-accent">your GitHub.</span>
             </h2>
-            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] md:text-[17px]">
               Everything we build is saved to a repository you own &mdash; every page, every change.
             </p>
           </div>
@@ -63,9 +64,9 @@
             <h2
               class="max-w-[18ch] text-[clamp(30px,3.8vw,52px)] leading-[1.06] font-semibold tracking-[-0.03em]"
             >
-              Cloudflare runs <span class="text-accent">the engine.</span>
+              Netlify runs <span class="text-accent">the engine.</span>
             </h2>
-            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] md:text-[17px]">
               Your domain, DNS, hosting, and assets &mdash; fast, secure, and free for most local
               businesses.
             </p>
@@ -77,7 +78,7 @@
             >
               Your Client Hub <span class="text-accent">does the rest.</span>
             </h2>
-            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] md:text-[17px]">
               Edit your site without touching code. Watch your Google Analytics traffic, see every
               email we send, run a speed test &mdash; one dashboard.
             </p>
@@ -89,7 +90,7 @@
             >
               You stay in <span class="text-accent">control.</span>
             </h2>
-            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] text-cream/60 md:text-[17px]">
+            <p class="pm-sub mt-5 max-w-[48ch] text-[15.5px] leading-[1.6] md:text-[17px]">
               Never locked out of your own business.
             </p>
           </div>
@@ -115,6 +116,83 @@
 </section>
 
 <style is:global>
+  /* Registered so the vars themselves interpolate — every color-mix()
+     and var() consumer below then crossfades with the section. */
+  @property --pm-bg {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #1b1a17;
+  }
+  @property --pm-fg {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #f6f5f3;
+  }
+  @property --pm-accent {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #fc8464;
+  }
+  #process {
+    --pm-bg: var(--color-charcoal);
+    --pm-fg: var(--color-cream);
+    --pm-accent: var(--color-accent);
+    isolation: isolate;
+    background: var(--pm-bg);
+    color: var(--pm-fg);
+    transition:
+      --pm-bg 1s ease,
+      --pm-fg 1s ease,
+      --pm-accent 1s ease;
+  }
+  #process[data-theme="1"] {
+    --pm-bg: #6d4aff;
+    --pm-fg: #ffffff;
+    --pm-accent: #ffd580;
+  }
+  #process[data-theme="2"] {
+    --pm-bg: #ffffff;
+    --pm-fg: var(--color-charcoal);
+  }
+  #process[data-theme="3"] {
+    --pm-bg: #00c7b7;
+    --pm-fg: #0e1e25;
+    --pm-accent: #0e1e25;
+  }
+  #process[data-theme="4"] {
+    --pm-bg: var(--color-accent);
+    --pm-fg: var(--color-charcoal);
+    --pm-accent: var(--color-charcoal);
+  }
+  /* Proton scene backdrop — background-color can't tween to a gradient,
+     so the gradient lives on its own layer and fades in over the solid. */
+  .pm-grad {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      130% 150% at 85% 115%,
+      #ffd580 0%,
+      #d397be 32%,
+      #8b57f2 64%,
+      #6d4aff 100%
+    );
+    transition: opacity 1s ease;
+  }
+  #process[data-theme="1"] .pm-grad {
+    opacity: 1;
+  }
+  #process .text-accent {
+    color: var(--pm-accent);
+  }
+  .pm-bar {
+    background: var(--pm-accent);
+  }
+  .pm-label {
+    color: color-mix(in srgb, var(--pm-fg) 52%, transparent);
+  }
   .pm-frame {
     position: absolute;
     inset: 0;
@@ -134,6 +212,7 @@
     opacity: 0;
     transform: translateY(12px);
     transition: all 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s;
+    color: color-mix(in srgb, var(--pm-fg) 62%, transparent);
   }
   .pm-frame.active .pm-sub {
     opacity: 1;
@@ -143,12 +222,12 @@
     height: 5px;
     width: 5px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-cream) 25%, transparent);
+    background: color-mix(in srgb, var(--pm-fg) 25%, transparent);
     transition: all 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .pm-dot.active {
     width: 18px;
-    background: var(--color-accent);
+    background: var(--pm-accent);
   }
   @media (prefers-reduced-motion: reduce) {
     .pm-frame,
@@ -180,17 +259,35 @@
 
     const EASE = 0.075; // node position chase factor
     const CREAM = [246, 245, 243];
+    const CHARCOAL = [27, 26, 23];
     const ACCENT = [252, 132, 100];
-    const CREAM_STR = "rgb(246,245,243)";
-    const CF_ORANGE = "#F38020";
+    const NETLIFY_TEAL = [0, 199, 183];
+    const NETLIFY_NAVY = [14, 30, 37];
     const GA_YELLOW = "#F9AB00";
+
+    // Per-scene canvas palette — mirrors the CSS [data-theme] blocks so the
+    // canvas art crossfades with the section background.
+    // nf = Netlify glyph color: brand teal where it reads, dark navy on the
+    // teal/orange scenes where teal has no contrast.
+    const THEMES = [
+      { fg: CREAM, accent: ACCENT, nf: NETLIFY_TEAL }, // 0 intro — charcoal
+      { fg: [255, 255, 255], accent: [255, 213, 128], nf: [255, 255, 255] }, // 1 Proton — purple gradient
+      { fg: CHARCOAL, accent: ACCENT, nf: NETLIFY_TEAL }, // 2 GitHub — white
+      { fg: NETLIFY_NAVY, accent: NETLIFY_NAVY, nf: NETLIFY_NAVY }, // 3 Netlify — teal
+      { fg: CHARCOAL, accent: CHARCOAL, nf: NETLIFY_NAVY }, // 4 Client Hub — orange
+      { fg: CREAM, accent: ACCENT, nf: NETLIFY_TEAL }, // 5 closing — charcoal
+    ];
+    const THEME_EASE = 0.05; // ≈1s color chase, matches the CSS crossfade
+    const theme = { fg: CREAM.slice(), accent: ACCENT.slice(), nf: NETLIFY_TEAL.slice() };
+    const rgb = (c) => `rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;
+    const rgba = (c, a) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a})`;
 
     // Official brand paths (simple-icons, 24-unit viewBox)
     const GH_PATH = new Path2D(
       "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
     );
-    const CF_PATH = new Path2D(
-      "M16.5088 16.8447c.1475-.5068.0908-.9707-.1553-1.3154-.2246-.3164-.6045-.499-1.0615-.5205l-8.6592-.1123a.1559.1559 0 0 1-.1333-.0713c-.0283-.042-.0351-.0986-.021-.1553.0278-.084.1123-.1484.2036-.1562l8.7359-.1123c1.0351-.0489 2.1601-.8868 2.5537-1.9136l.499-1.3013c.0215-.0561.0293-.1128.0147-.168-.5625-2.5463-2.835-4.4453-5.5499-4.4453-2.5039 0-4.6284 1.6177-5.3876 3.8614-.4927-.3658-1.1187-.5625-1.794-.499-1.2026.119-2.1665 1.083-2.2861 2.2856-.0283.31-.0069.6128.0635.894C1.5683 13.171 0 14.7754 0 16.752c0 .1748.0142.3515.0352.5273.0141.083.0844.1475.1689.1475h15.9814c.0909 0 .1758-.0645.2032-.1553l.12-.4268zm2.7568-5.5634c-.0771 0-.1611 0-.2383.0112-.0566 0-.1054.0415-.127.0976l-.3378 1.1744c-.1475.5068-.0918.9707.1543 1.3164.2256.3164.6055.498 1.0625.5195l1.8437.1133c.0557 0 .1055.0263.1329.0703.0283.043.0351.1074.0214.1562-.0283.084-.1132.1485-.204.1553l-1.921.1123c-1.041.0488-2.1582.8867-2.5527 1.914l-.1406.3585c-.0283.0713.0215.1416.0986.1416h6.5977c.0771 0 .1474-.0489.169-.126.1122-.4082.1757-.837.1757-1.2803 0-2.6025-2.125-4.727-4.7344-4.727",
+    const NETLIFY_PATH = new Path2D(
+      "M6.49 19.04h-.23L5.13 17.9v-.23l1.73-1.71h1.2l.15.15v1.2L6.5 19.04ZM5.13 6.31V6.1l1.13-1.13h.23L8.2 6.68v1.2l-.15.15h-1.2L5.13 6.31Zm9.96 9.09h-1.65l-.14-.13v-3.83c0-.68-.27-1.2-1.1-1.23-.42 0-.9 0-1.43.02l-.07.08v4.96l-.14.14H8.9l-.13-.14V8.73l.13-.14h3.7a2.6 2.6 0 0 1 2.61 2.6v4.08l-.13.14Zm-8.37-2.44H.14L0 12.82v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14Zm17.14 0h-6.58l-.14-.14v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14ZM11.05 6.55V1.64l.14-.14h1.65l.14.14v4.9l-.14.14h-1.65l-.14-.13Zm0 15.81v-4.9l.14-.14h1.65l.14.13v4.91l-.14.14h-1.65l-.14-.14Z",
     );
     const GA_PATH = new Path2D(
       "M22.84 2.9982v17.9987c.0086 1.6473-1.3197 2.9897-2.967 2.9984a2.9808 2.9808 0 01-.3677-.0208c-1.528-.226-2.6477-1.5558-2.6105-3.1V3.1204c-.0369-1.5458 1.0856-2.8762 2.6157-3.1 1.6361-.1915 3.1178.9796 3.3093 2.6158.014.1201.0208.241.0202.3619zM4.1326 18.0548c-1.6417 0-2.9726 1.331-2.9726 2.9726C1.16 22.6691 2.4909 24 4.1326 24s2.9726-1.3309 2.9726-2.9726-1.331-2.9726-2.9726-2.9726zm7.8728-9.0098c-.0171 0-.0342 0-.0513.0003-1.6495.0904-2.9293 1.474-2.891 3.1256v7.9846c0 2.167.9535 3.4825 2.3505 3.763 1.6118.3266 3.1832-.7152 3.5098-2.327.04-.1974.06-.3983.0593-.5998v-8.9585c.003-1.6474-1.33-2.9852-2.9773-2.9882z",
@@ -211,14 +308,14 @@
     // ---- nodes: 4 platforms + 4 hub-feature satellites
     const nodes = [
       { id: "github", label: "GITHUB" },
-      { id: "cloudflare", label: "CLOUDFLARE" },
+      { id: "netlify", label: "NETLIFY" },
       { id: "proton", label: "PROTON PASS" },
       { id: "hub", label: "CLIENT HUB" },
       { id: "m-edit", label: "EDIT", mini: true },
       { id: "m-ga", label: "ANALYTICS", mini: true },
       { id: "m-mail", label: "EMAILS", mini: true },
       { id: "m-speed", label: "SPEED", mini: true },
-    ].map((n) => ({ ...n, x: 0.5, y: 0.5, s: 0.4, a: 0, h: 0 }));
+    ].map((n) => ({ ...n, x: 0.5, y: 0.5, s: 0.4, a: 0, h: 0, p: 0 }));
 
     const HIDDEN = { x: 0.5, y: 0.5, s: 0.3, a: 0, h: 0 };
     const orbit = (cx, cy, r, ang, s, a, h) => ({
@@ -229,7 +326,7 @@
       h: h ? 1 : 0,
     });
     const fixed = (x, y, s, a, h) => ({ x, y, s, a, h: h ? 1 : 0 });
-    const MAIN = { github: 0, cloudflare: 1, proton: 2, hub: 3 };
+    const MAIN = { github: 0, netlify: 1, proton: 2, hub: 3 };
     const MINI = { "m-edit": 0, "m-ga": 1, "m-mail": 2, "m-speed": 3 };
 
     // ---- scenes: each returns a target layout per node id; lines fade in per scene
@@ -249,12 +346,12 @@
         hold: 5600,
         lines: [
           ["github", "proton"],
-          ["cloudflare", "proton"],
+          ["netlify", "proton"],
           ["hub", "proton"],
         ],
         layout(id, t) {
           if (id === "proton") return fixed(0.5, 0.48, 1.3, 1, true);
-          const ring = { github: 0, cloudflare: 1, hub: 2 };
+          const ring = { github: 0, netlify: 1, hub: 2 };
           if (id in ring)
             return orbit(0.5, 0.48, 0.34, t * 0.00022 + (ring[id] * Math.PI * 2) / 3, 0.85, 1, false);
           return HIDDEN;
@@ -266,19 +363,19 @@
         lines: [],
         layout(id) {
           if (id === "github") return fixed(0.5, 0.42, 1.45, 1, true);
-          if (id === "cloudflare") return fixed(0.2, 0.82, 0.65, 0.35, false);
+          if (id === "netlify") return fixed(0.2, 0.82, 0.65, 0.35, false);
           if (id === "proton") return fixed(0.5, 0.86, 0.65, 0.35, false);
           if (id === "hub") return fixed(0.8, 0.82, 0.65, 0.35, false);
           return HIDDEN;
         },
       },
       {
-        // 3 — pipeline: repo feeds Cloudflare
+        // 3 — pipeline: repo feeds Netlify
         hold: 5200,
-        lines: [["github", "cloudflare"]],
+        lines: [["github", "netlify"]],
         layout(id) {
           if (id === "github") return fixed(0.22, 0.46, 1, 1, false);
-          if (id === "cloudflare") return fixed(0.68, 0.46, 1.35, 1, true);
+          if (id === "netlify") return fixed(0.68, 0.46, 1.35, 1, true);
           if (id === "proton") return fixed(0.24, 0.86, 0.6, 0.3, false);
           if (id === "hub") return fixed(0.72, 0.86, 0.6, 0.3, false);
           return HIDDEN;
@@ -293,7 +390,7 @@
           if (id in MINI)
             return orbit(0.5, 0.46, 0.235, t * 0.00024 + (MINI[id] * Math.PI) / 2, 1.35, 1, false);
           if (id === "github") return fixed(0.2, 0.87, 0.55, 0.25, false);
-          if (id === "cloudflare") return fixed(0.5, 0.9, 0.55, 0.25, false);
+          if (id === "netlify") return fixed(0.5, 0.9, 0.55, 0.25, false);
           if (id === "proton") return fixed(0.8, 0.87, 0.55, 0.25, false);
           return HIDDEN;
         },
@@ -352,12 +449,21 @@
       ctx.restore();
     }
 
-    // Brand glyphs keep their real colors — highlight never tints them.
-    function drawGlyph(id, r) {
+    function drawGlyph(n, r) {
+      const id = n.id;
+      // The Proton mark can't be recolored — a soft cream plate fades in
+      // behind it so it reads on its own purple-gradient scene.
+      if (n.p > 0.02 && id === "proton") {
+        ctx.fillStyle = rgba(CREAM, n.p * 0.95);
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
       if (id === "github") {
-        fillPath(GH_PATH, r * 1.05, CREAM_STR);
-      } else if (id === "cloudflare") {
-        fillPath(CF_PATH, r * 1.35, CF_ORANGE);
+        // Monochrome mark rides the theme — charcoal on the white scene.
+        fillPath(GH_PATH, r * 1.05, rgb(theme.fg));
+      } else if (id === "netlify") {
+        fillPath(NETLIFY_PATH, r * 1.2, rgb(theme.nf));
       } else if (id === "proton") {
         if (PROTON_IMG.complete && PROTON_IMG.naturalWidth) {
           const d = r * 1.6;
@@ -373,8 +479,8 @@
 
     // Small stroked icons for the hub-feature satellites.
     function drawMiniIcon(id, s) {
-      ctx.strokeStyle = CREAM_STR;
-      ctx.fillStyle = CREAM_STR;
+      ctx.strokeStyle = rgb(theme.fg);
+      ctx.fillStyle = rgb(theme.fg);
       ctx.lineWidth = 1.5;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -426,28 +532,28 @@
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(0, 0, R, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(246,245,243,0.05)";
+        ctx.fillStyle = rgba(theme.fg, 0.05);
         ctx.fill();
-        ctx.strokeStyle = "rgba(246,245,243,0.28)";
+        ctx.strokeStyle = rgba(theme.fg, 0.28);
         ctx.stroke();
         drawMiniIcon(n.id, SZ * n.s);
         ctx.globalAlpha = n.a * 0.55;
-        ctx.fillStyle = CREAM_STR;
+        ctx.fillStyle = rgb(theme.fg);
         ctx.font = `500 ${SZ < 0.85 ? 8.5 : 9.5}px "Geist Mono Variable", "Geist Mono", ui-monospace, monospace`;
         ctx.textAlign = "center";
         ctx.fillText(n.label, 0, R + 16 * SZ + 2);
       } else {
         const R = 34 * SZ * n.s;
         ctx.lineWidth = 1;
-        ctx.strokeStyle = mix(CREAM, ACCENT, n.h);
+        ctx.strokeStyle = mix(theme.fg, theme.accent, n.h);
         ctx.globalAlpha = n.a * (0.28 + n.h * 0.5);
         ctx.beginPath();
         ctx.arc(0, 0, R + 13 * SZ * n.s, 0, Math.PI * 2);
         ctx.stroke();
         ctx.globalAlpha = n.a;
-        drawGlyph(n.id, R);
+        drawGlyph(n, R);
         ctx.globalAlpha = n.a * (0.5 + n.h * 0.4);
-        ctx.fillStyle = mix(CREAM, ACCENT, n.h * 0.8);
+        ctx.fillStyle = mix(theme.fg, theme.accent, n.h * 0.8);
         ctx.font = `500 ${SZ < 0.85 ? 9 : 10.5}px "Geist Mono Variable", "Geist Mono", ui-monospace, monospace`;
         ctx.textAlign = "center";
         ctx.letterSpacing = "1px";
@@ -456,55 +562,23 @@
       ctx.restore();
     }
 
-    // Ambient dot grid in the bottom-right corner — its color follows the
-    // platform each scene is talking about.
-    const DOT_COLORS = [
-      [246, 245, 243], // 0 intro — dim cream
-      [128, 96, 255], // 1 Proton — purple
-      [255, 255, 255], // 2 GitHub — white
-      [243, 128, 32], // 3 Cloudflare — orange
-      [252, 132, 100], // 4 Client Hub — accent
-      [246, 245, 243], // 5 closing — dim cream
-    ];
-    // Color changes ripple out from the corner: each dot scales down in the
-    // old color, then pops back up in the new one, staggered by distance.
+    // Ambient dot grid in the bottom-right corner — drawn in the theme
+    // foreground so it stays legible on every scene background.
     const DOT_GAP = 15;
     const DOT_R = 1.1;
-    const DOT_WAVE = 500; // stagger spread (ms)
-    const DOT_DUR = 480; // per-dot down+up time (ms)
-    const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
-    let dotFrom = DOT_COLORS[0];
-    let dotTo = DOT_COLORS[0];
-    let dotChangeAt = -1e9;
 
-    function drawDots(now) {
+    function drawDots() {
       // Small canvas → keep the field a corner accent, not a backdrop.
       const reach = Math.min(cssW, cssH) * (cssH >= 500 ? 0.85 : 0.5);
-      const tt = now - dotChangeAt;
-      const animating = tt < DOT_WAVE + DOT_DUR;
-      const colFrom = rgb(dotFrom);
-      const colTo = rgb(dotTo);
+      ctx.fillStyle = rgb(theme.fg);
       for (let x = cssW - DOT_GAP / 2; x > cssW - reach; x -= DOT_GAP) {
         for (let y = cssH - DOT_GAP / 2; y > cssH - reach; y -= DOT_GAP) {
           const dist = Math.hypot(cssW - x, cssH - y);
           const a = Math.max(0, 1 - dist / reach) * 0.38;
           if (a < 0.03) continue;
-          let scale = 1;
-          let col = colTo;
-          if (animating) {
-            const p = Math.min(1, Math.max(0, (tt - (dist / reach) * DOT_WAVE) / DOT_DUR));
-            if (p < 0.5) {
-              scale = 1 - p * 2;
-              col = colFrom;
-            } else {
-              scale = p * 2 - 1;
-            }
-            if (scale < 0.05) continue;
-          }
           ctx.globalAlpha = a;
-          ctx.fillStyle = col;
           ctx.beginPath();
-          ctx.arc(x, y, DOT_R * scale, 0, Math.PI * 2);
+          ctx.arc(x, y, DOT_R, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -518,18 +592,19 @@
       // Scene advancement rides the rAF clock (setTimeout throttles in
       // occluded windows) — pauses off-screen, resumes where it left off.
       if (now - sceneStart >= SCENES[sceneIdx].hold) {
-        const next = (sceneIdx + 1) % SCENES.length;
-        if (DOT_COLORS[next].join() !== DOT_COLORS[sceneIdx].join()) {
-          dotFrom = DOT_COLORS[sceneIdx];
-          dotTo = DOT_COLORS[next];
-          dotChangeAt = now;
-        }
-        sceneIdx = next;
+        sceneIdx = (sceneIdx + 1) % SCENES.length;
         sceneStart = now;
         show(sceneIdx);
       }
       const scene = SCENES[sceneIdx];
-      drawDots(now);
+
+      // Chase the scene's palette so canvas colors ride the CSS crossfade.
+      for (let k = 0; k < 3; k++) {
+        theme.fg[k] += (THEMES[sceneIdx].fg[k] - theme.fg[k]) * THEME_EASE;
+        theme.accent[k] += (THEMES[sceneIdx].accent[k] - theme.accent[k]) * THEME_EASE;
+        theme.nf[k] += (THEMES[sceneIdx].nf[k] - theme.nf[k]) * THEME_EASE;
+      }
+      drawDots();
 
       for (const n of nodes) {
         const t = scene.layout(n.id, now) || HIDDEN;
@@ -538,13 +613,15 @@
         n.s += (t.s - n.s) * EASE;
         n.a += (t.a - n.a) * EASE;
         n.h += (t.h - n.h) * EASE;
+        const plate = n.id === "proton" && sceneIdx === 1 ? 1 : 0;
+        n.p += (plate - n.p) * EASE;
       }
 
       // connection hairlines, fading in after the morph settles
       const lineAlpha = Math.max(0, Math.min(1, (now - sceneStart - 900) / 700)) * 0.3;
       if (lineAlpha > 0.01 && scene.lines.length) {
         ctx.save();
-        ctx.strokeStyle = `rgba(246,245,243,${lineAlpha})`;
+        ctx.strokeStyle = rgba(theme.fg, lineAlpha);
         ctx.lineWidth = 1;
         for (const [aId, bId] of scene.lines) {
           const a = nodes.find((n) => n.id === aId);
@@ -568,9 +645,13 @@
       window.__pmRaf = requestAnimationFrame(tick);
     }
 
+    const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     function show(i) {
       frames.forEach((f, n) => f.classList.toggle("active", n === i));
       dots.forEach((d, n) => d.classList.toggle("active", n === i));
+      // Reduced motion keeps the static charcoal theme — no color animation.
+      if (!REDUCED) section.dataset.theme = i;
     }
 
     function drawStatic() {
@@ -580,11 +661,11 @@
         Object.assign(n, { x: t.x, y: t.y, s: t.s, a: t.a, h: t.h });
       }
       ctx.clearRect(0, 0, cssW, cssH);
-      drawDots(0);
+      drawDots();
       for (const n of nodes) drawNode(n);
     }
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (REDUCED) {
       // Static: ownership frame + a still ring, no loops.
       show(1);
       drawStatic();
