@@ -431,13 +431,16 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Keep editing</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() =>
+                  onClick={() => {
+                    // Close immediately — the chat-UI Publish button shows the
+                    // loading spinner (publishMutation.isPending) from here on.
+                    setConfirmPublish(false);
                     publishMutation.mutate({
                       owner,
                       repo,
                       sessionId: session.id,
-                    })
-                  }
+                    });
+                  }}
                 >
                   Publish
                 </AlertDialogAction>
