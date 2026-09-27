@@ -1,24 +1,41 @@
 "use client";
 
+import { company } from "@workspace/ui/lib/company";
+
 import {
   MousePointerClick,
+  Sparkles,
+  PaintbrushSparkle,
   Database,
   Search,
   UploadCloud,
+  Rocket,
+  ArrowUpRight,
 } from "@/components/icon";
 
 import { usePublish } from "@/components/publish/publish-context";
+import { DOCS_RESOURCES } from "@/lib/docs-links";
 
 /**
- * Right sidebar: a static, client-facing guide on how to update the site, with
- * a live "unpublished changes" banner when drafts exist. No backend — pure
- * reference content the shell can collapse.
+ * Right sidebar: a static, client-facing guide on how to update the site —
+ * quick how-to items, links to the full docs on the agency site, and a live
+ * "unpublished changes" banner when drafts exist. No backend.
  */
 const SECTIONS = [
   {
     icon: MousePointerClick,
     title: "Edit text & images",
     body: "Click anything in the preview to select it, then edit it right there. Changes show instantly.",
+  },
+  {
+    icon: Sparkles,
+    title: "Ask AI (quick edits)",
+    body: "Click an element and describe the change. AI applies it in the background — if it can't, you get an email explaining why.",
+  },
+  {
+    icon: PaintbrushSparkle,
+    title: "AI chat session",
+    body: "For bigger changes, start a session: you get a preview URL where every change shows live, so you publish with confidence.",
   },
   {
     icon: Database,
@@ -34,6 +51,11 @@ const SECTIONS = [
     icon: UploadCloud,
     title: "Publish your changes",
     body: "Edits are drafts on this device until you click Publish — review everything, then it all goes live at once.",
+  },
+  {
+    icon: Rocket,
+    title: "Deployments",
+    body: "Every background AI edit is tracked in the Deployments tab — what was asked, what changed, and the resulting publish.",
   },
 ];
 
@@ -60,6 +82,41 @@ export function DocsPanel() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-5 border-t pt-4">
+        <h2 className="text-[13.5px] font-bold">Learn more</h2>
+        <p className="text-muted-foreground mt-0.5 text-[11.5px]">
+          Full guides with screenshots and videos.
+        </p>
+        <div className="mt-2.5 flex flex-col">
+          {DOCS_RESOURCES.map((resource) => (
+            <a
+              key={resource.href}
+              href={resource.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group hover:bg-muted -mx-1.5 flex items-center justify-between gap-2 rounded-md px-1.5 py-[7px]"
+            >
+              <span className="text-xs font-medium">{resource.title}</span>
+              <ArrowUpRight className="text-muted-foreground group-hover:text-foreground size-3.5 shrink-0" />
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 border-t pt-4">
+        <h3 className="text-xs font-semibold">Need help?</h3>
+        <p className="text-muted-foreground mt-0.5 text-[11.5px] leading-relaxed">
+          Email{" "}
+          <a
+            href={`mailto:${company.agencyEmail}`}
+            className="text-primary font-medium underline underline-offset-2"
+          >
+            {company.agencyEmail}
+          </a>{" "}
+          — a real person answers.
+        </p>
       </div>
 
       {draftCount > 0 && (

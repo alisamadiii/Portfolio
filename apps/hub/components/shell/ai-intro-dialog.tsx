@@ -12,10 +12,12 @@ import {
   DialogTitle,
 } from "@workspace/ui/components/dialog";
 
-import { HelpCircle, PaintbrushSparkle } from "@/components/icon";
+import { ArrowUpRight, HelpCircle, PaintbrushSparkle } from "@/components/icon";
+
+import { docsUrl } from "@/lib/docs-links";
 
 // Bump this suffix if the intro changes enough that everyone should see it again.
-const SEEN_KEY = "cms-ai-intro-seen-v2";
+const SEEN_KEY = "cms-ai-intro-seen-v3";
 
 // Walkthrough video (direct MP4). Leave empty to show the "coming soon" box.
 const VIDEO_URL = "https://cdn.alisamadii.com/ai.mp4";
@@ -123,6 +125,30 @@ export function AiIntroDialog() {
               developer&apos;s job.
             </Step>
           </ol>
+
+          <div className="bg-muted/60 flex flex-col gap-1 rounded-lg border p-3 text-sm">
+            <span className="text-muted-foreground text-xs font-medium">
+              Want more detail?
+            </span>
+            <a
+              href={docsUrl("client-hub/ai-editing")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary inline-flex items-center gap-1 font-medium hover:underline"
+            >
+              Read the full AI editing guide
+              <ArrowUpRight className="size-3.5" />
+            </a>
+            <a
+              href={docsUrl("client-hub/getting-started")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary inline-flex items-center gap-1 font-medium hover:underline"
+            >
+              Getting started with your Hub
+              <ArrowUpRight className="size-3.5" />
+            </a>
+          </div>
 
           <DialogFooter>
             <Button
