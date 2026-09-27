@@ -245,14 +245,15 @@ export const collaboratorsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { repoAccess, isActorAdmin } = ctx;
+        const { repoAccess, isActorAdmin, isActorOwner } = ctx;
+        const canManageFullAccess = isActorAdmin || isActorOwner;
         const { owner, repo } = input;
         const user = ctx.session.user;
 
-        if (!isActorAdmin && input.role === "full-access") {
+        if (!canManageFullAccess && input.role === "full-access") {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Only admins can grant full access.",
+            message: "Only admins or the project owner can grant full access.",
           });
         }
 
@@ -379,7 +380,8 @@ export const collaboratorsRouter = createTRPCRouter({
     .input(z.object({ collaboratorId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const { repoAccess, isActorAdmin } = ctx;
+        const { repoAccess, isActorAdmin, isActorOwner } = ctx;
+        const canManageFullAccess = isActorAdmin || isActorOwner;
         const { owner, repo } = input;
 
         const collaborator = await db.query.hubCollaborator.findFirst({
@@ -392,10 +394,11 @@ export const collaboratorsRouter = createTRPCRouter({
           });
         }
 
-        if (!isActorAdmin && collaborator.role === "full-access") {
+        if (!canManageFullAccess && collaborator.role === "full-access") {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Only admins can remove full-access collaborators.",
+            message:
+              "Only admins or the project owner can remove full-access collaborators.",
           });
         }
 
@@ -511,7 +514,8 @@ export const collaboratorsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { repoAccess, isActorAdmin } = ctx;
+        const { repoAccess, isActorAdmin, isActorOwner } = ctx;
+        const canManageFullAccess = isActorAdmin || isActorOwner;
 
         const collaborator = await db.query.hubCollaborator.findFirst({
           where: and(
@@ -527,13 +531,14 @@ export const collaboratorsRouter = createTRPCRouter({
         }
 
         if (
-          !isActorAdmin &&
+          !canManageFullAccess &&
           (input.role === "full-access" ||
             collaborator.role === "full-access")
         ) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Only admins can manage full-access collaborators.",
+            message:
+              "Only admins or the project owner can manage full-access collaborators.",
           });
         }
 

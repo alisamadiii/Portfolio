@@ -43,12 +43,14 @@ type Collaborator = { id: number; email: string; role: CollaboratorRole };
  */
 export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
   const { user } = useUser();
-  const { myRole } = useRepo();
+  const { myRole, isOwner } = useRepo();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const canManage = myRole === "full-access";
   const isAdmin = isAdminUser(user);
+  // Admins and the project owner may grant/remove full-access collaborators.
+  const canManageFullAccess = isAdmin || Boolean(isOwner);
 
   const addMutation = useMutation(trpc.cms.collaborators.add.mutationOptions());
   const removeMutation = useMutation(
@@ -172,7 +174,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
-              {isAdmin && (
+              {canManageFullAccess && (
                 <SelectItem value="full-access">
                   {ROLE_LABELS["full-access"]}
                 </SelectItem>
@@ -190,8 +192,8 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
         <div className="bg-border h-px" />
 
         <ul className="flex flex-col gap-0.5">
-          {/* Owner (current admin) */}
-          {user && (
+          {/* Owner row — only for the actual project owner. */}
+          {user && isOwner && (
             <li className="flex items-center gap-2.5 rounded-md px-1 py-1.5">
               <Avatar className="size-7">
                 <AvatarImage
@@ -235,7 +237,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
                   {ROLE_LABELS[collaborator.role] ?? collaborator.role}
                 </div>
               </div>
-              {(isAdmin || collaborator.role !== "full-access") && (
+              {(canManageFullAccess || collaborator.role !== "full-access") && (
                 <Button
                   variant="ghost"
                   size="icon-xs"

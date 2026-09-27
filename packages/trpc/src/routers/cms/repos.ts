@@ -330,9 +330,13 @@ export const reposRouter = createTRPCRouter({
           );
         }
 
-        // The project's stored live URL (used by the thumbnail/preview + hooks).
+        // The project's stored live URL (used by the thumbnail/preview + hooks)
+        // and the owner id (the user who connected GitHub for this project).
         const [project] = await db
-          .select({ websiteUrl: hubProject.websiteUrl })
+          .select({
+            websiteUrl: hubProject.websiteUrl,
+            githubConnectedUserId: hubProject.githubConnectedUserId,
+          })
           .from(hubProject)
           .where(
             and(
@@ -342,7 +346,15 @@ export const reposRouter = createTRPCRouter({
           )
           .limit(1);
 
-        return { ...snapshot, myRole: role, websiteUrl: project?.websiteUrl ?? null };
+        const isOwner =
+          project?.githubConnectedUserId === ctx.session.user.id;
+
+        return {
+          ...snapshot,
+          myRole: role,
+          isOwner,
+          websiteUrl: project?.websiteUrl ?? null,
+        };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

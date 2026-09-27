@@ -36,23 +36,23 @@ const requireCollaboratorManageAccess = async (
   const isActorAdmin = isAdminUser(user);
   const repoAccess = await getRepoAccessFromDb(owner, repo);
 
-  if (!isActorAdmin) {
-    // The user who connected GitHub for this project manages it like an owner.
-    const isOwner = repoAccess.githubConnectedUserId === user.id;
-    if (!isOwner) {
-      const row = await db.query.hubCollaborator.findFirst({
-        where: collaboratorMatchesUserForRepo(user, owner, repo),
-      });
-      if (row?.role !== "full-access") {
-        throw createHttpError(
-          "Only admins, the project owner, or full-access collaborators can manage collaborators.",
-          403
-        );
-      }
+  // The user who connected GitHub for this project manages it like an owner —
+  // full parity with an admin over collaborators.
+  const isActorOwner = repoAccess.githubConnectedUserId === user.id;
+
+  if (!isActorAdmin && !isActorOwner) {
+    const row = await db.query.hubCollaborator.findFirst({
+      where: collaboratorMatchesUserForRepo(user, owner, repo),
+    });
+    if (row?.role !== "full-access") {
+      throw createHttpError(
+        "Only admins, the project owner, or full-access collaborators can manage collaborators.",
+        403
+      );
     }
   }
 
-  return { repoAccess, isActorAdmin };
+  return { repoAccess, isActorAdmin, isActorOwner };
 };
 
 // Can this user read/act on this project? Admin, the importing owner

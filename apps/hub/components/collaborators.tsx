@@ -62,6 +62,7 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { useRepo } from "@/contexts/repo-context";
 import { useUser } from "@/contexts/user-context";
 import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
 
@@ -203,7 +204,10 @@ export function Collaborators({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { user } = useUser();
+  const { isOwner } = useRepo();
   const isAdmin = isAdminUser(user);
+  // Admins and the project owner may grant/remove full-access collaborators.
+  const canManageFullAccess = isAdmin || Boolean(isOwner);
 
   const collaboratorsQuery = useQuery(
     trpc.cms.collaborators.list.queryOptions({ owner, repo })
@@ -385,7 +389,7 @@ export function Collaborators({
             value={emails}
             onValueChange={setEmails}
             disabled={isLoading}
-            canGrantFullAccess={isAdmin}
+            canGrantFullAccess={canManageFullAccess}
             triggerVariant="default"
             triggerSize="default"
           />
@@ -399,7 +403,7 @@ export function Collaborators({
     emails,
     error,
     inviteDialogOpen,
-    isAdmin,
+    canManageFullAccess,
     isLoading,
   ]);
 
@@ -464,16 +468,16 @@ export function Collaborators({
                 removing.includes(collaborator.id) ||
                 resending.includes(collaborator.id) ||
                 changingRole.includes(collaborator.id);
-              // Non-admin actors cannot touch full-access collaborators,
-              // nor grant full access (mirrors the server-side rules).
+              // Only admins/owner can touch full-access collaborators or grant
+              // full access (mirrors the server-side rules).
               const canManageRow =
-                isAdmin || collaborator.role !== "full-access";
+                canManageFullAccess || collaborator.role !== "full-access";
               const assignableRoles = (
                 Object.keys(ROLE_LABELS) as CollaboratorRole[]
               ).filter(
                 (role) =>
                   role !== collaborator.role &&
-                  (isAdmin || role !== "full-access")
+                  (canManageFullAccess || role !== "full-access")
               );
 
               return (
@@ -598,7 +602,7 @@ export function Collaborators({
                 value={emails}
                 onValueChange={setEmails}
                 disabled={isLoading}
-                canGrantFullAccess={isAdmin}
+                canGrantFullAccess={canManageFullAccess}
                 triggerLabel="Invite a collaborator"
                 triggerVariant="default"
                 triggerSize="default"

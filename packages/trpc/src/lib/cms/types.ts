@@ -23,4 +23,6 @@ export interface Repo {
   isPrivate: boolean;
   /** The caller's collaborator role for this repo (admins = full-access). */
   myRole?: CollaboratorRole;
+  /** Whether the caller is the project owner (connected GitHub for it). */
+  isOwner?: boolean;
 }
