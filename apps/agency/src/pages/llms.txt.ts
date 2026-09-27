@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
 import { cities } from "../data/cities";
+import { getDocsTree } from "../data/docs";
 import { fmtPrice, PRICING } from "../data/pricing";
 
 // Plain-markdown summary for LLMs / answer engines. Prices come from
@@ -22,6 +23,15 @@ export const GET: APIRoute = async () => {
         `- [Web design in ${c.name}, FL](https://agency.alisamadii.com/locations/${c.slug})`
     )
     .join("\n");
+  const docsTree = await getDocsTree();
+  const docsList = docsTree
+    .flatMap((g) =>
+      g.docs.map(
+        (d) =>
+          `- [${g.label}: ${d.data.title}](https://agency.alisamadii.com/docs/${d.id}) — ${d.data.description}`
+      )
+    )
+    .join("\n");
 
   const body = `# Ali Samadi Agency
 
@@ -39,6 +49,7 @@ export const GET: APIRoute = async () => {
 - [Pricing](https://agency.alisamadii.com/pricing): plans and how pricing works.
 - [Contact](https://agency.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://agency.alisamadii.com/blog): articles on how websites get built.
+- [Docs](https://agency.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
 - [Business Newsletter](https://agency.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
 
 ## Services
@@ -62,6 +73,14 @@ Terms and privacy pages are always included free.
 Headquartered in Jacksonville, FL; serving businesses across Florida remotely.
 
 ${locations}
+
+## Docs
+
+Guides for clients: how the Client Hub works (AI editing, analytics, emails,
+speed tests), the step-by-step build process, and the ownership/handoff
+model where the client owns every account.
+
+${docsList}
 
 ## Writing
 

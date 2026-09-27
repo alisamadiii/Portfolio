@@ -28,4 +28,17 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+// Docs live in folders — the folder is the sidebar group (see src/data/docs.ts
+// for group labels/order). `order` sorts docs within their group.
+const docs = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/docs" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    order: z.number().default(0),
+    updatedDate: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { blog, docs };

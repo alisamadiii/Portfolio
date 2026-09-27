@@ -1,0 +1,175 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import BackNav from "../../components/BackNav.astro";
+import HomeFooter from "../../components/HomeFooter.astro";
+import DocsSidebar from "../../components/DocsSidebar.astro";
+import DocsRail from "../../components/DocsRail.astro";
+import { getDocsTree, GROUP_LABELS } from "../../data/docs";
+
+export async function getStaticPaths() {
+  const docs = await getCollection("docs", ({ data }) => !data.draft);
+  return docs.map((doc) => ({
+    params: { slug: doc.id },
+    props: { doc },
+  }));
+}
+
+const { doc } = Astro.props;
+const { Content } = await render(doc);
+const { data } = doc;
+
+const tree = await getDocsTree();
+// Prev/next across the whole tree, in sidebar order.
+const flat = tree.flatMap((g) => g.docs);
+const idx = flat.findIndex((d) => d.id === doc.id);
+const prev = idx > 0 ? flat[idx - 1] : undefined;
+const next = idx < flat.length - 1 ? flat[idx + 1] : undefined;
+
+const group = doc.id.split("/")[0];
+const groupLabel = GROUP_LABELS[group] ?? group;
+
+const SITE = "https://agency.alisamadii.com";
+const pageUrl = `${SITE}/docs/${doc.id}`;
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "Docs", item: `${SITE}/docs` },
+      { "@type": "ListItem", position: 3, name: data.title, item: pageUrl },
+    ],
+  },
+  {
+    "@type": "TechArticle",
+    "@id": `${pageUrl}#article`,
+    headline: data.title,
+    description: data.description,
+    articleSection: groupLabel,
+    ...(data.updatedDate && {
+      dateModified: data.updatedDate.toISOString(),
+    }),
+    author: { "@id": `${SITE}/#person-ali` },
+    publisher: { "@id": `${SITE}/#organization` },
+    mainEntityOfPage: pageUrl,
+    isPartOf: { "@id": `${SITE}/docs#docs` },
+  },
+];
+---
+
+<Layout
+  title={`${data.title} · Docs`}
+  description={data.description}
+  canonical={pageUrl}
+  og={{
+    title: `${data.title} · Docs`,
+    description: data.description,
+    url: pageUrl,
+    twitterDescription: data.description,
+  }}
+  schema={schema}
+  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+>
+  <BackNav backHref="/docs" backLabel="All Docs" fixed />
+
+  <main class="px-4 pt-32 pb-16 md:px-8 md:pt-36 md:pb-20">
+    <div
+      class="mx-auto max-w-[760px] xl:grid xl:max-w-[1290px] xl:grid-cols-[220px_minmax(0,1fr)_280px] xl:gap-12"
+    >
+      <DocsSidebar tree={tree} activeId={doc.id} />
+
+      <article class="min-w-0">
+        <p
+          class="font-mono text-[12.5px] tracking-[0.08em] text-accent-ink uppercase"
+        >
+          {groupLabel}
+        </p>
+        <h1
+          class="mt-3 text-[clamp(28px,3.6vw,44px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        >
+          {data.title}
+        </h1>
+        <p class="mt-4 text-[17px] leading-[1.55] text-warmgray">
+          {data.description}
+        </p>
+        {
+          data.updatedDate && (
+            <p class="mt-3 font-mono text-[12px] tracking-[0.06em] text-muted uppercase">
+              Updated{" "}
+              {data.updatedDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </p>
+          )
+        }
+
+        <div class="prose mt-10 max-w-none">
+          <Content />
+        </div>
+
+        <!-- Prev / next -->
+        <nav
+          class="mt-14 grid gap-4 border-t border-charcoal/[0.08] pt-8 sm:grid-cols-2"
+        >
+          {
+            prev ? (
+              <a
+                href={`/docs/${prev.id}`}
+                class="group rounded-[14px] border border-charcoal/[0.08] px-5 py-4 transition-colors duration-300 hover:border-charcoal/20"
+              >
+                <p class="font-mono text-[11px] tracking-[0.08em] text-muted uppercase">
+                  &larr; Previous
+                </p>
+                <p class="mt-1.5 text-[15px] font-medium text-charcoal group-hover:text-accent-ink">
+                  {prev.data.title}
+                </p>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next && (
+              <a
+                href={`/docs/${next.id}`}
+                class="group rounded-[14px] border border-charcoal/[0.08] px-5 py-4 text-right transition-colors duration-300 hover:border-charcoal/20"
+              >
+                <p class="font-mono text-[11px] tracking-[0.08em] text-muted uppercase">
+                  Next &rarr;
+                </p>
+                <p class="mt-1.5 text-[15px] font-medium text-charcoal group-hover:text-accent-ink">
+                  {next.data.title}
+                </p>
+              </a>
+            )
+          }
+        </nav>
+      </article>
+
+      <DocsRail />
+    </div>
+  </main>
+  <HomeFooter />
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+  }
+  /* Anchor targets clear the fixed BackNav on jump. */
+  .prose :is(h2, h3) {
+    scroll-margin-top: 6rem;
+  }
+  .mag-btn {
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .mag-btn:active {
+    transform: scale(0.97);
+  }
+</style>

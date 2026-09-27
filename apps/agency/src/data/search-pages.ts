@@ -23,6 +23,13 @@ export const SEARCH_PAGES: SearchPage[] = [
     keywords: ["homepage", "start", "agency", "ali samadi"],
   },
   {
+    title: "Docs",
+    description:
+      "Plain-language guides: your Client Hub, our build process, and what you own.",
+    url: "/docs",
+    keywords: ["docs", "documentation", "guide", "help", "how it works", "manual"],
+  },
+  {
     title: "Get a Quote",
     description:
       "Tell us about your project — scope, timeline, and a clear price within a day.",

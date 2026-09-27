@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import mdx from "@astrojs/mdx";
 import node from "@astrojs/node";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
@@ -18,10 +19,12 @@ export default defineConfig({
   // Next.js-Link-style speed: prefetch every internal link on hover.
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   integrations: [
+    mdx(),
     sitemap({
       // Emit a build-date lastmod so crawlers get a real freshness signal.
       serialize: (item) => ({ ...item, lastmod: new Date().toISOString() }),
     }),
   ],
+  markdown: { shikiConfig: { theme: "github-light" } },
   vite: { plugins: [tailwindcss()] },
 });

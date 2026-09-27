@@ -149,6 +149,43 @@
   margin-top: 2.2em;
   margin-bottom: 2.2em;
 }
+.prose video {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(27, 26, 23, 0.08);
+  margin-top: 2.2em;
+  margin-bottom: 2.2em;
+}
+/* Code blocks: light theme (shiki github-light), rounded, capped height,
+   slim scrollbars. */
+.prose pre {
+  border-radius: 20px;
+  border: 1px solid rgba(27, 26, 23, 0.08);
+  max-height: 480px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(27, 26, 23, 0.22) transparent;
+}
+.prose pre::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+.prose pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.prose pre::-webkit-scrollbar-thumb {
+  background: rgba(27, 26, 23, 0.18);
+  border-radius: 999px;
+}
+.prose pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(27, 26, 23, 0.32);
+}
+/* Markdown code blocks wrap instead of scrolling sideways — the whole text
+   stays visible (long URLs break mid-word rather than overflow). */
+.prose pre[data-language="md"] {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 /* "The Direct Answer" callout box (AEO posts) — wrap the answer content
    in <div class="direct-answer"> in the post markdown. */

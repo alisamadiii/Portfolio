@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="One shared email creates your Proton Pass, GitHub, and Netlify accounts">
+  <defs>
+    <radialGradient id="pp0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12.4504 32.5457) rotate(-58.142) scale(23.3731 36.5508)">
+      <stop stop-color="#FFD580"/><stop offset="0.09375" stop-color="#F6C592"/><stop offset="0.205" stop-color="#EBB6A2"/><stop offset="0.324466" stop-color="#DFA5AF"/><stop offset="0.42875" stop-color="#D397BE"/><stop offset="0.53375" stop-color="#C486CB"/><stop offset="0.64875" stop-color="#B578D9"/><stop offset="0.77125" stop-color="#A166E5"/><stop offset="0.89125" stop-color="#8B57F2"/><stop offset="1" stop-color="#704CFF"/>
+    </radialGradient>
+    <linearGradient id="pp1" x1="11.486" y1="-1.5597" x2="16.9312" y2="31.6785" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/><stop offset="0.392009" stop-color="#B39FFB" stop-opacity="0.978022"/><stop offset="1" stop-color="#FFE8DB" stop-opacity="0.8"/>
+    </linearGradient>
+    <radialGradient id="pp2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(10.3973 29.6995) rotate(-58.142) scale(18.8001 29.3996)">
+      <stop stop-color="#FFD580"/><stop offset="0.09375" stop-color="#F6C592"/><stop offset="0.205" stop-color="#EBB6A2"/><stop offset="0.324466" stop-color="#DFA5AF"/><stop offset="0.42875" stop-color="#D397BE"/><stop offset="0.53375" stop-color="#C486CB"/><stop offset="0.64875" stop-color="#B578D9"/><stop offset="0.77125" stop-color="#A166E5"/><stop offset="0.89125" stop-color="#8B57F2"/><stop offset="1" stop-color="#704CFF"/>
+    </radialGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#1b1a17" opacity="0.06"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#f6f5f3"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+
+  <!-- Eyebrow -->
+  <g font-family="ui-monospace, Menlo, monospace" font-size="14" letter-spacing="2.5" fill="#9b958c">
+    <text x="600" y="78" text-anchor="middle">ONE SHARED EMAIL</text>
+  </g>
+
+  <!-- Email chip -->
+  <g>
+    <rect x="428" y="104" width="344" height="68" rx="34" fill="#ffffff" stroke="#1b1a17" stroke-opacity="0.08"/>
+    <!-- envelope icon -->
+    <g transform="translate(464 124)" stroke="#fc8464" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="0" y="3" width="26" height="20" rx="4"/>
+      <path d="M1.5 6.5 13 15 24.5 6.5"/>
+    </g>
+    <text x="508" y="145" font-family="ui-monospace, Menlo, monospace" font-size="21" fill="#1b1a17">yourname@alihq.org</text>
+  </g>
+
+  <!-- Connectors -->
+  <g stroke="#1b1a17" stroke-opacity="0.14" stroke-width="1.6" fill="none">
+    <path d="M540 172 C 460 240, 300 250, 232 318"/>
+    <path d="M600 172 L 600 318"/>
+    <path d="M660 172 C 740 240, 900 250, 968 318"/>
+  </g>
+  <g fill="#fc8464">
+    <circle cx="232" cy="318" r="4"/>
+    <circle cx="600" cy="318" r="4"/>
+    <circle cx="968" cy="318" r="4"/>
+  </g>
+
+  <!-- Card: Proton Pass -->
+  <g>
+    <rect x="82" y="332" width="300" height="216" rx="24" fill="#ffffff" stroke="#1b1a17" stroke-opacity="0.08"/>
+    <g transform="translate(202 362) scale(2)">
+      <path d="M12.4198 7.53718C14.3731 5.58394 15.3497 4.60731 16.4758 4.2414C17.4665 3.91953 18.5335 3.91953 19.5241 4.2414C20.6503 4.60731 21.6269 5.58394 23.5802 7.53718L28.4628 12.4198C30.4161 14.3731 31.3927 15.3497 31.7586 16.4759C32.0805 17.4665 32.0805 18.5335 31.7586 19.5241C31.3927 20.6503 30.4161 21.6269 28.4628 23.5802L23.5802 28.4628C21.6269 30.4161 20.6503 31.3927 19.5241 31.7586C18.5335 32.0805 17.4665 32.0805 16.4758 31.7586C15.3497 31.3927 14.3731 30.4161 12.4198 28.4628L11.5018 27.4337C10.9463 26.8109 10.6686 26.4995 10.4705 26.1453C10.2949 25.8312 10.166 25.4931 10.088 25.1418C10 24.7457 10 24.3284 10 23.4939L10 12.5061C10 11.6716 10 11.2543 10.088 10.8582C10.166 10.5069 10.2949 10.1688 10.4705 9.85469C10.6685 9.50052 10.9463 9.18913 11.5018 8.56634L12.4198 7.53718Z" fill="url(#pp0)"/>
+      <path d="M12.4198 7.53718C14.3731 5.58394 15.3497 4.60731 16.4758 4.2414C17.4665 3.91953 18.5335 3.91953 19.5241 4.2414C20.6503 4.60731 21.6269 5.58394 23.5802 7.53718L28.4628 12.4198C30.4161 14.3731 31.3927 15.3497 31.7586 16.4759C32.0805 17.4665 32.0805 18.5335 31.7586 19.5241C31.3927 20.6503 30.4161 21.6269 28.4628 23.5802L23.5802 28.4628C21.6269 30.4161 20.6503 31.3927 19.5241 31.7586C18.5335 32.0805 17.4665 32.0805 16.4758 31.7586C15.3497 31.3927 14.3731 30.4161 12.4198 28.4628L11.5018 27.4337C10.9463 26.8109 10.6686 26.4995 10.4705 26.1453C10.2949 25.8312 10.166 25.4931 10.088 25.1418C10 24.7457 10 24.3284 10 23.4939L10 12.5061C10 11.6716 10 11.2543 10.088 10.8582C10.166 10.5069 10.2949 10.1688 10.4705 9.85469C10.6685 9.50052 10.9463 9.18913 11.5018 8.56634L12.4198 7.53718Z" fill="url(#pp1)"/>
+      <path d="M12.0711 7.88565C13.0477 6.90903 13.536 6.42072 14.0991 6.23777C14.5944 6.07683 15.1279 6.07683 15.6232 6.23777C16.1863 6.42072 16.6746 6.90903 17.6512 7.88565L24.9752 15.2096C25.9518 16.1863 26.4401 16.6746 26.6231 17.2376C26.784 17.7329 26.784 18.2665 26.6231 18.7618C26.4401 19.3249 25.9518 19.8132 24.9752 20.7898L17.6512 28.1138C16.6746 29.0904 16.1863 29.5787 15.6232 29.7617C15.1279 29.9226 14.5944 29.9226 14.0991 29.7617C13.536 29.5787 13.0477 29.0904 12.0711 28.1138L7.53718 23.5799C5.58394 21.6266 4.60731 20.65 4.2414 19.5239C3.91953 18.5332 3.91953 17.4662 4.2414 16.4756C4.60731 15.3494 5.58394 14.3728 7.53718 12.4195L12.0711 7.88565Z" fill="url(#pp2)"/>
+    </g>
+    <text x="232" y="480" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="600" fill="#1b1a17">Proton Pass</text>
+    <text x="232" y="512" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" letter-spacing="1.5" fill="#9b958c">PASSWORDS</text>
+  </g>
+
+  <!-- Card: GitHub -->
+  <g>
+    <rect x="450" y="332" width="300" height="216" rx="24" fill="#ffffff" stroke="#1b1a17" stroke-opacity="0.08"/>
+    <g transform="translate(564 364) scale(3)" fill="#1b1a17">
+      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+    </g>
+    <text x="600" y="480" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="600" fill="#1b1a17">GitHub</text>
+    <text x="600" y="512" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" letter-spacing="1.5" fill="#9b958c">CODE</text>
+  </g>
+
+  <!-- Card: Netlify -->
+  <g>
+    <rect x="818" y="332" width="300" height="216" rx="24" fill="#ffffff" stroke="#1b1a17" stroke-opacity="0.08"/>
+    <g transform="translate(932 364) scale(3)" fill="#00C7B7">
+      <path d="M6.49 19.04h-.23L5.13 17.9v-.23l1.73-1.71h1.2l.15.15v1.2L6.5 19.04ZM5.13 6.31V6.1l1.13-1.13h.23L8.2 6.68v1.2l-.15.15h-1.2L5.13 6.31Zm9.96 9.09h-1.65l-.14-.13v-3.83c0-.68-.27-1.2-1.1-1.23-.42 0-.9 0-1.43.02l-.07.08v4.96l-.14.14H8.9l-.13-.14V8.73l.13-.14h3.7a2.6 2.6 0 0 1 2.61 2.6v4.08l-.13.14Zm-8.37-2.44H.14L0 12.82v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14Zm17.14 0h-6.58l-.14-.14v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14ZM11.05 6.55V1.64l.14-.14h1.65l.14.14v4.9l-.14.14h-1.65l-.14-.13Zm0 15.81v-4.9l.14-.14h1.65l.14.13v4.91l-.14.14h-1.65l-.14-.14Z"/>
+    </g>
+    <text x="968" y="480" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="600" fill="#1b1a17">Netlify</text>
+    <text x="968" y="512" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" letter-spacing="1.5" fill="#9b958c">HOSTING</text>
+  </g>
+</svg>

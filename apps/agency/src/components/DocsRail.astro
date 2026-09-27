@@ -1,0 +1,49 @@
+---
+// Right rail on docs pages — a few real projects + a CTA, so readers who
+// came for the docs see the work behind them.
+import { PROJECTS } from "../data/projects";
+
+const featured = PROJECTS.filter((p) => p.image).slice(0, 3);
+---
+
+<aside class="hidden xl:block">
+  <div class="sticky top-28 space-y-5">
+    <p class="font-mono text-[11.5px] tracking-[0.1em] text-muted uppercase">
+      Built with this process
+    </p>
+    {
+      featured.map((p) => (
+        <a
+          href={p.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group block overflow-hidden rounded-[14px] border border-charcoal/[0.08] bg-white/60 transition-colors duration-300 hover:border-charcoal/20"
+        >
+          <div class="aspect-[16/10] overflow-hidden">
+            <img
+              src={p.image!.src}
+              alt={p.image!.alt}
+              width="600"
+              height="375"
+              loading="lazy"
+              class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </div>
+          <div class="px-4 py-3.5">
+            <p class="text-[14.5px] font-medium text-charcoal">{p.name}</p>
+            <p class="mt-0.5 font-mono text-[11px] tracking-[0.06em] text-muted uppercase">
+              {p.category}
+            </p>
+          </div>
+        </a>
+      ))
+    }
+    <a
+      href="/quote"
+      class="mag-btn flex items-center justify-center gap-2 rounded-[12px] bg-charcoal px-5 py-3.5 text-[14.5px] font-medium text-cream transition-colors duration-300 hover:bg-accent hover:text-charcoal"
+    >
+      Start a Project
+      <span class="text-[13px]">&#8599;</span>
+    </a>
+  </div>
+</aside>

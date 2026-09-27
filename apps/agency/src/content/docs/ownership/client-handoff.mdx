@@ -1,0 +1,160 @@
+---
+title: "Your Handoff Document"
+description: "Every client gets a handoff document: the complete map of your website setup, what you own, and how to take over if you ever need to."
+order: 1
+---
+
+When your website launches, you receive a **handoff document**: a plain-
+language map of your entire setup. It's your insurance policy, holding
+everything a future you (or a future developer) needs to know, in one place.
+
+The document lives in a **shared <svg class="inline-block h-[1em] w-auto align-[-0.125em]" viewBox="0 0 87.3 78" aria-hidden="true"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0-1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.5c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg> Google Drive** folder, so both of us
+have access to everything at all times. You can open it, share it with your
+team, and always find the latest version there.
+
+Here's a real one, with the client's details swapped for example values:
+
+```md
+# Acme Bakery: Website Handoff
+
+Prepared by: Ali R Samadi
+Contact: a@alisamadii.com
+Last updated: September 27, 2026
+
+## 1. Overview
+
+This document explains where your website lives, what each service does, and how everything is connected. Keep it somewhere safe. It is your map to the whole setup.
+
+- Live site: https://www.acmebakery.com
+- What it's built with: Astro (a modern website framework)
+- Content editing: Client Hub (edit text and images without touching code)
+
+## 2. Who Owns What
+
+- Domain (acmebakery.com): owned by Acme Bakery. Ali's access: developer / manager.
+- GitHub code repository: owned by Acme Bakery (it@acmebakery.com). Ali's access: developer.
+- Netlify hosting account: owned by Acme Bakery (it@acmebakery.com). Ali's access: developer.
+- Passwords / secrets: stored in Proton Pass, owned by Acme Bakery (it@acmebakery.com). Ali's access: shared.
+
+You are the owner of every account. Ali has developer access to build and maintain the site. You can revoke this access at any time.
+
+## 3. The Services (What Each One Does)
+
+### Domain
+- What it is: Your web address, acmebakery.com.
+- Why it matters: Points visitors to your website.
+
+### GitHub
+- What it is: Where the website's code is stored and version-controlled.
+- Repository: https://github.com/acme-bakery/website
+- Sign in: Google sign-in
+- Why it matters: Every change to the site is saved here. Nothing is lost.
+
+### Netlify
+- What it is: The hosting service that puts your website online.
+- Project dashboard: https://app.netlify.com/projects/acme-bakery/overview
+- Sign in: Google sign-in
+- Why it matters: When code changes in GitHub, Netlify automatically rebuilds and publishes the live site, usually within a minute.
+
+### Proton Pass (Password Manager)
+- What it is: A secure vault holding all logins and secret keys.
+- URL: https://pass.proton.me
+- Why it matters: Passwords are NOT stored in this document. They live in Proton Pass, which is encrypted. Ask Ali for secure access. You can also email it@acmebakery.com to request a password reset if Ali isn't available.
+
+## 4. How It All Connects
+
+You edit content  ->  saved to GitHub  ->  Netlify rebuilds  ->  live site updates
+  (Client Hub)         (code repo)          (hosting)          (acmebakery.com)
+
+1. Content or code changes are saved to GitHub.
+2. Netlify notices the change and rebuilds the site automatically.
+3. The updated site goes live at acmebakery.com.
+
+No manual "publish" step needed. It's automatic.
+
+## 5. Editing Your Website Content
+
+You can edit text and images yourself through hub.alisamadii.com. No coding required.
+
+- How to log in: Ask Ali for the editor link and access.
+- What you can change: Page text, images, events, team members, etc.
+- What happens after you save: The site rebuilds and updates on its own.
+
+## 6. Common Questions
+
+Q: How do I make a small text change?
+A: Log in to hub.alisamadii.com, edit, and save. The site updates automatically.
+
+Q: Something looks broken. What do I do?
+A: Contact Ali. Because everything is version-controlled in GitHub, any change can be undone.
+
+Q: How do I get my passwords?
+A: They are in Proton Pass. Ask Ali for secure, shared access. Never share passwords over email or chat.
+
+Q: Can I add a team member to help manage the site?
+A: Yes. For content editing, additional people can be given Client Hub access. Ask Ali to set this up.
+
+## 7. Support
+
+For any changes, questions, or issues:
+
+- Ali R Samadi, a@alisamadii.com
+
+> Security note: This document contains links and account names only. It does NOT contain passwords or secret keys. Those are stored in Proton Pass. Keep this document's sharing settings restricted to people who need it.
+```
+
+## What's in it
+
+### Overview
+Where your site lives, what it's built with, and how to edit content.
+
+### Who owns what
+
+| Item | Owner | Our access |
+| --- | --- | --- |
+| Domain | You | Developer / manager |
+| GitHub code repository | You | Developer |
+| Hosting account | You | Developer |
+| Passwords & secrets | You (Proton Pass) | Shared access |
+
+You are the owner of every account. We have developer access to build and
+maintain, and you can revoke that access at any time.
+
+### The services, explained
+What Proton Pass, GitHub, and your hosting each do and why they matter. The
+same story as [How We Work](/docs/how-we-work/process), written for whoever
+holds the document.
+
+### How it all connects
+
+```
+You edit content  ->  saved to GitHub  ->  hosting rebuilds  ->  live site updates
+```
+
+No manual publish step. It's automatic.
+
+### Common questions
+How to make a text change, what to do if something looks broken, how to get
+your passwords, and how to add a team member.
+
+## What's deliberately NOT in it
+
+**Passwords.** The document contains links and account names only. Actual
+passwords and secret keys live in your encrypted Proton Pass vault, never in
+a document that might get forwarded around.
+
+## Why we do this
+
+Most agencies keep clients dependent: the hosting is on the agency's account,
+the domain is in the agency's name, and leaving means starting over. We think
+that's wrong.
+
+Your handoff document, together with accounts you own, means you can:
+
+- **Move to another developer** and hand them the document; they'll know the
+  whole setup in ten minutes.
+- **Take it in-house** when your team grows.
+- **Keep running** even if we're unreachable. Nothing about your website
+  depends on us being available.
+
+Want yours updated or re-sent? [Contact us](/#contact) any time.

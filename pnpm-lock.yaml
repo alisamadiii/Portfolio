@@ -174,6 +174,9 @@ importers:
 
   apps/agency:
     dependencies:
+      '@astrojs/mdx':
+        specifier: ^4.3.14
+        version: 4.3.14(astro@5.18.2(@types/node@26.1.1)(aws4fetch@1.0.20)(jiti@2.7.0)(lightningcss@1.33.0)(rollup@4.62.2)(terser@5.49.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0))
       '@astrojs/node':
         specifier: ^9.4.4
         version: 9.5.5(astro@5.18.2(@types/node@26.1.1)(aws4fetch@1.0.20)(jiti@2.7.0)(lightningcss@1.33.0)(rollup@4.62.2)(terser@5.49.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0))
@@ -1595,6 +1598,12 @@ packages:
 
   '@astrojs/markdown-remark@6.3.11':
     resolution: {integrity: sha512-hcaxX/5aC6lQgHeGh1i+aauvSwIT6cfyFjKWvExYSxUhZZBBdvCliOtu06gbQyhbe0pGJNoNmqNlQZ5zYUuIyQ==}
+
+  '@astrojs/mdx@4.3.14':
+    resolution: {integrity: sha512-FBrqJQORVm+rkRa2TS5CjU9PBA6hkhrwLVBSS9A77gN2+iehvjq1w6yya/d0YKC7osiVorKkr3Qd9wNbl0ZkGA==}
+    engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
+    peerDependencies:
+      astro: ^5.0.0
 
   '@astrojs/node@9.5.5':
     resolution: {integrity: sha512-rtU2BGU5u3SfGURpANfMxVzCIoR86MkaN05ncza9rbtuMKJ/XnRJt/BbyVknDbOJ71hoci0SIsJwKcJR8vvi/A==}
@@ -12444,6 +12453,25 @@ snapshots:
       unist-util-remove-position: 5.0.0
       unist-util-visit: 5.1.0
       unist-util-visit-parents: 6.0.2
+      vfile: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@astrojs/mdx@4.3.14(astro@5.18.2(@types/node@26.1.1)(aws4fetch@1.0.20)(jiti@2.7.0)(lightningcss@1.33.0)(rollup@4.62.2)(terser@5.49.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0))':
+    dependencies:
+      '@astrojs/markdown-remark': 6.3.11
+      '@mdx-js/mdx': 3.1.1
+      acorn: 8.17.0
+      astro: 5.18.2(@types/node@26.1.1)(aws4fetch@1.0.20)(jiti@2.7.0)(lightningcss@1.33.0)(rollup@4.62.2)(terser@5.49.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0)
+      es-module-lexer: 1.7.0
+      estree-util-visit: 2.0.0
+      hast-util-to-html: 9.0.5
+      piccolore: 0.1.3
+      rehype-raw: 7.0.0
+      remark-gfm: 4.0.1
+      remark-smartypants: 3.0.3
+      source-map: 0.7.6
+      unist-util-visit: 5.1.0
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color

@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
 import { cities } from "../data/cities";
+import { getDocsTree } from "../data/docs";
 import { PROJECTS } from "../data/projects";
 import { SEARCH_PAGES } from "../data/search-pages";
 import { services } from "../data/services";
@@ -75,6 +76,18 @@ export const GET: APIRoute = async () => {
         ...(c.searchKeywords ?? []),
       ],
     })),
+    ...(await getDocsTree()).flatMap((g) =>
+      g.docs.map(
+        (d): SearchDoc => ({
+          id: `docs:${d.id}`,
+          type: "page",
+          title: `${d.data.title} — Docs`,
+          description: trim(d.data.description),
+          url: `/docs/${d.id}`,
+          keywords: ["docs", "guide", "help", g.label.toLowerCase()],
+        }),
+      ),
+    ),
     ...posts.map((p): SearchDoc => ({
       id: `blog:${p.id}`,
       type: "blog",
