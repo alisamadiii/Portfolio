@@ -579,7 +579,7 @@ export function Entry({
             setPath(newPath);
             setIsFilenameUnlocked(false);
             router.replace(
-              `/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
+              `/p/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
             );
 
             invalidateCollectionList();
@@ -606,7 +606,7 @@ export function Entry({
 
           if (!path && schemaType === "collection")
             router.push(
-              `/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(data.data.path ?? savePath)}`
+              `/p/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(data.data.path ?? savePath)}`
             );
           if (schemaType === "collection") {
             invalidateCollectionList();
@@ -723,7 +723,7 @@ export function Entry({
         setPath(newPath);
         setIsFilenameUnlocked(false);
         router.replace(
-          `/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
+          `/p/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
         );
 
         invalidateCollectionList();
@@ -874,7 +874,7 @@ export function Entry({
       if (schemaType === "collection") {
         invalidateCollectionList();
         router.push(
-          `/${config.repo}/collection/${encodeURIComponent(name)}`
+          `/p/${config.repo}/collection/${encodeURIComponent(name)}`
         );
       } else {
         // Clear the cached entry and refetch — the 404 flips the view to the
@@ -920,7 +920,7 @@ export function Entry({
       rekeyDraft(oldPath, newPath);
       setPath(newPath);
       router.replace(
-        `/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
+        `/p/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(newPath)}`
       );
     },
     [
@@ -987,7 +987,7 @@ export function Entry({
             <BreadcrumbLink
               render={
                 <Link
-                  href={`/${config.repo}/collection/${encodeURIComponent(name)}`}
+                  href={`/p/${config.repo}/collection/${encodeURIComponent(name)}`}
                 >
                   {rootLabel}
                 </Link>
@@ -1038,7 +1038,7 @@ export function Entry({
           <BreadcrumbLink
             render={
               <Link
-                href={`/${config.repo}/collection/${encodeURIComponent(name)}`}
+                href={`/p/${config.repo}/collection/${encodeURIComponent(name)}`}
               >
                 {rootLabel}
               </Link>
@@ -1061,7 +1061,7 @@ export function Entry({
                       key={entry.path}
                       render={
                         <Link
-                          href={`/${config.repo}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(entry.path)}`}
+                          href={`/p/${config.repo}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(entry.path)}`}
                         >
                           {entry.name}
                         </Link>
@@ -1081,7 +1081,7 @@ export function Entry({
               <BreadcrumbLink
                 render={
                   <Link
-                    href={`/${config.repo}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(immediateParent.path)}`}
+                    href={`/p/${config.repo}/collection/${encodeURIComponent(name)}?path=${encodeURIComponent(immediateParent.path)}`}
                   >
                     {immediateParent.name}
                   </Link>
@@ -1302,7 +1302,7 @@ export function Entry({
             <EmptyContent>
               <Link
                 className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium shadow-xs"
-                href={`/${config.repo}/configuration`}
+                href={`/p/${config.repo}/configuration`}
               >
                 Go to configuration
               </Link>
@@ -1326,7 +1326,7 @@ export function Entry({
           <EmptyContent>
             <Link
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium shadow-xs"
-              href={`/${config.repo}/collection/${encodeURIComponent(name)}`}
+              href={`/p/${config.repo}/collection/${encodeURIComponent(name)}`}
             >
               Back to collection
             </Link>

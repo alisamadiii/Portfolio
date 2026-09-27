@@ -636,7 +636,7 @@ export function Collection({
           loading: `Renaming "${path}" to "${newPath}"`,
           success: (data) => {
             router.push(
-              `/${config.repo}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
+              `/p/${config.repo}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
             );
             return data.message;
           },
@@ -724,7 +724,7 @@ export function Collection({
                     ) : (
                       <Link
                         className="truncate font-medium"
-                        href={`/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
+                        href={`/p/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
                       >
                         {CellView}
                       </Link>
@@ -810,7 +810,7 @@ export function Collection({
                     className={cn(
                       buttonVariants({ variant: "outline", size: "sm" })
                     )}
-                    href={`/${config.repo}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
+                    href={`/p/${config.repo}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
                   >
                     Edit
                   </Link>
@@ -1437,7 +1437,7 @@ export function Collection({
           ) : (
             <Link
               className={buttonVariants({ variant: "default" })}
-              href={`/${config.repo}/configuration`}
+              href={`/p/${config.repo}/configuration`}
             >
               Go to configuration
             </Link>

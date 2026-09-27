@@ -54,7 +54,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
           ) : (
             <FileText className="mr-2 h-5 w-5" />
           ),
-        href: `/${config.repo}/${item.type}/${encodeURIComponent(item.name)}`,
+        href: `/p/${config.repo}/${item.type}/${encodeURIComponent(item.name)}`,
         label: item.label || item.name,
       })) || [];
 
@@ -67,14 +67,14 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
           {
             key: "media-library",
             icon: <FolderOpen className="mr-2 h-5 w-5" />,
-            href: `/${config.repo}/media/library`,
+            href: `/p/${config.repo}/media/library`,
             label: "Media",
           },
         ]
       : configObject.media?.map((item: any) => ({
           key: item.name || "media",
           icon: <FolderOpen className="mr-2 h-5 w-5" />,
-          href: `/${config.repo}/media/${item.name}`,
+          href: `/p/${config.repo}/media/${item.name}`,
           label: item.label || item.name || "Media",
         })) || [];
 
@@ -85,7 +85,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
         ? {
             key: "configuration",
             icon: <Settings className="mr-2 h-5 w-5" />,
-            href: `/${config.repo}/configuration`,
+            href: `/p/${config.repo}/configuration`,
             label: "Configuration",
           }
         : null;
@@ -95,7 +95,7 @@ const RepoNav = ({ onClick }: { onClick?: () => void }) => {
         ? {
             key: "collaborators",
             icon: <Users className="mr-2 h-5 w-5" />,
-            href: `/${config.repo}/collaborators`,
+            href: `/p/${config.repo}/collaborators`,
             label: "Collaborators",
           }
         : null;

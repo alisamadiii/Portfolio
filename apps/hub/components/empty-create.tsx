@@ -37,7 +37,7 @@ const EmptyCreate = ({
   let path = "";
   let content: string | Record<string, any> = "";
   let toCreate = "";
-  let redirectTo = `/${config.repo}`;
+  let redirectTo = `/p/${config.repo}`;
 
   if (type === "settings") {
     path = ".pages.yml";
