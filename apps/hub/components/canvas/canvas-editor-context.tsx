@@ -297,7 +297,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
   const branch = config?.branch ?? "";
-  const repoBase = repoPath(repo);
+  const repoBase = repoPath(config?.repoId ?? 0);
 
   const pagesQuery = useQuery(
     trpc.cms.pages.list.queryOptions(

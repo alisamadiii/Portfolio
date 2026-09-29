@@ -13,10 +13,12 @@ import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
 import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import {
+  cancelPreviewMessage,
   closePreviewSession,
   createPreviewSession,
   getPreviewSession,
   listLivePreviewSessions,
+  resetPreviewSession,
 } from "@workspace/trpc/lib/content-pilot";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
@@ -124,6 +126,36 @@ export const previewSessionRouter = createTRPCRouter({
       await closePreviewSession(session.id, "discard");
       await deleteBranchRef(ctx.token, input.owner, input.repo, session.branch);
       return { closed: true };
+    }),
+
+  /**
+   * Discards this session's changes but KEEPS it live: content-pilot resets the
+   * preview branch back to production main and clears the AI context +
+   * transcript. The branch is kept (now == main), so no deleteBranchRef.
+   */
+  reset: cmsWriteProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .mutation(async ({ input }) => {
+      const session = await sessionForRepo(
+        input.owner,
+        input.repo,
+        input.sessionId
+      );
+      await resetPreviewSession(session.id);
+      return { reset: true };
+    }),
+
+  /** Pauses the in-flight AI run for this session; the partial edit is reverted. */
+  cancel: cmsWriteProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .mutation(async ({ input }) => {
+      const session = await sessionForRepo(
+        input.owner,
+        input.repo,
+        input.sessionId
+      );
+      await cancelPreviewMessage(session.id);
+      return { canceled: true };
     }),
 
   /**

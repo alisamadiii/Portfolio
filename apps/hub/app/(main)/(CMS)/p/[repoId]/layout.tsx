@@ -52,9 +52,18 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ repo: string }>;
+  params: Promise<{ repoId: string }>;
 }) {
-  const { repo } = await params;
+  const { repoId: repoIdParam } = await params;
+  const repoId = Number(repoIdParam);
+  if (!Number.isInteger(repoId) || repoId <= 0) {
+    return (
+      <ErrorCard
+        title="Project not found"
+        description="This project no longer exists in Client Hub — it may have been removed or renamed."
+      />
+    );
+  }
   const requestHeaders = await headers();
   const session = await getServerSession();
   const user = session?.user;
@@ -71,7 +80,7 @@ export default async function Layout({
   // catalog, `branch` defaults to the repo's default branch — neither is in the URL.
   let repoInfo;
   try {
-    repoInfo = await caller.cms.repos.getSnapshot.query({ repo });
+    repoInfo = await caller.cms.repos.getSnapshot.query({ repoId });
   } catch (error: any) {
     switch (error?.data?.code) {
       case "NOT_FOUND":
@@ -131,13 +140,15 @@ export default async function Layout({
   }
 
   const owner = repoInfo.owner;
+  // The repo name is no longer in the URL — it comes back on the snapshot.
+  const repo = repoInfo.repo;
   const branch = repoInfo.defaultBranch as string;
 
   // Agency-access gate: the agency GitHub account must be a collaborator on the
   // repo (content-pilot commits with it). If it's missing, the repo owner/admin
   // gets a blocking (but translucent) overlay over the canvas to add it. Only
   // admins ever see `missing`.
-  const agency = await caller.cms.repos.agencyAccess.query({ repo });
+  const agency = await caller.cms.repos.agencyAccess.query({ repoId });
   const agencyGate =
     agency.status === "missing" || agency.status === "invited"
       ? {
@@ -153,6 +164,7 @@ export default async function Layout({
   const config: Config = {
     owner: owner.toLowerCase(),
     repo: repo.toLowerCase(),
+    repoId,
     branch,
     sha: "",
     version: "",
@@ -170,6 +182,7 @@ export default async function Layout({
               owner={agencyGate.owner}
               login={agencyGate.login}
               repo={repo}
+              repoId={repoId}
               invited={agencyGate.invited}
             />
           )}

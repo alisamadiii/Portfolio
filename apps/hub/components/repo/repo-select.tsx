@@ -158,7 +158,7 @@ export function RepoSelect({
             >
               <Link
                 className="truncate font-medium hover:underline"
-                href={repoPath(result.repo)}
+                href={repoPath(result.repoId)}
               >
                 {result.repo}
               </Link>
@@ -173,7 +173,7 @@ export function RepoSelect({
                   "ml-auto",
                   buttonVariants({ variant: "outline", size: "xs" })
                 )}
-                href={repoPath(result.repo)}
+                href={repoPath(result.repoId)}
               >
                 Open
               </Link>

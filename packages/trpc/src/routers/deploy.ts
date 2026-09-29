@@ -155,6 +155,6 @@ export const deployRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       const ghRepo = await resolveRepo(userId, input.repoFullName);
       await upsertProject(userId, ghRepo, `https://${input.domain}`);
-      return { repo: ghRepo.repo };
+      return { repo: ghRepo.repo, repoId: ghRepo.id };
     }),
 });

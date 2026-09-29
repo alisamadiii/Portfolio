@@ -206,6 +206,7 @@ export function BlogComposer({
 
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
+  const repoId = config?.repoId ?? 0;
   const branch = config?.branch ?? "";
   const enabled = Boolean(owner && repo && branch);
 
@@ -290,7 +291,7 @@ export function BlogComposer({
     return (
       <div className="py-24 text-center">
         <p className="text-muted-foreground text-sm">No blog configured.</p>
-        <Button variant="outline" className="mt-4" render={<Link href={repoPath(repo, "blog")}>Back to blog</Link>} />
+        <Button variant="outline" className="mt-4" render={<Link href={repoPath(repoId, "blog")}>Back to blog</Link>} />
       </div>
     );
   }
@@ -299,7 +300,7 @@ export function BlogComposer({
     return (
       <div className="py-24 text-center">
         <p className="text-muted-foreground text-sm">Could not load this post.</p>
-        <Button variant="outline" className="mt-4" render={<Link href={repoPath(repo, "blog")}>Back to blog</Link>} />
+        <Button variant="outline" className="mt-4" render={<Link href={repoPath(repoId, "blog")}>Back to blog</Link>} />
       </div>
     );
   }
@@ -315,6 +316,7 @@ export function BlogComposer({
         sha={fetched?.sha ?? localDraft?.sha ?? null}
         owner={owner}
         repo={repo}
+        repoId={repoId}
         branch={branch}
         seoOpen={seoOpen}
         setSeoOpen={setSeoOpen}
@@ -322,7 +324,7 @@ export function BlogComposer({
         setSaving={setSaving}
         onCreated={(newPath) =>
           router.replace(
-            `${repoPath(repo, "blog")}/edit/${newPath
+            `${repoPath(repoId, "blog")}/edit/${newPath
               .split("/")
               .map(encodeURIComponent)
               .join("/")}`
@@ -342,6 +344,7 @@ function ComposerForm({
   sha,
   owner,
   repo,
+  repoId,
   branch,
   seoOpen,
   setSeoOpen,
@@ -357,6 +360,7 @@ function ComposerForm({
   sha: string | null;
   owner: string;
   repo: string;
+  repoId: number;
   branch: string;
   seoOpen: boolean;
   setSeoOpen: (open: boolean) => void;
@@ -486,7 +490,7 @@ function ComposerForm({
             size="sm"
             className="-ml-2 shrink-0"
             render={
-              <Link href={repoPath(repo, "blog")}>
+              <Link href={repoPath(repoId, "blog")}>
                 <ArrowLeft className="size-4" />
                 Blog
               </Link>

@@ -20,9 +20,10 @@ export function DomainPanel() {
   const { config } = useConfig();
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
+  const repoId = config?.repoId ?? 0;
 
   const snapshot = useQuery(
-    trpc.cms.repos.getSnapshot.queryOptions({ repo }, { enabled: !!repo })
+    trpc.cms.repos.getSnapshot.queryOptions({ repoId }, { enabled: !!repoId })
   );
   const current = snapshot.data?.websiteUrl ?? "";
   const [value, setValue] = useState("");

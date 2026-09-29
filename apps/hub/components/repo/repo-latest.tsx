@@ -68,7 +68,7 @@ export function RepoLatest() {
           />
           <Link
             className="truncate font-medium hover:underline"
-            href={repoPath(visit.repo)}
+            href={repoPath(visit.repoId)}
           >
             {visit.repo}
           </Link>
@@ -80,7 +80,7 @@ export function RepoLatest() {
               "ml-auto",
               buttonVariants({ variant: "outline", size: "xs" })
             )}
-            href={repoPath(visit.repo)}
+            href={repoPath(visit.repoId)}
           >
             Open
           </Link>

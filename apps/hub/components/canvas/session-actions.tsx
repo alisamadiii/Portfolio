@@ -30,7 +30,8 @@ import { roleAtLeast } from "@/lib/authz-shared";
 /**
  * Header Publish / Discard for the live AI session (moved out of the chat
  * panel). Publish squash-merges the preview branch onto the site; Discard
- * closes the session and throws its changes away.
+ * resets the preview back to the live production site (throwing away this
+ * session's changes + chat) while keeping the session open.
  */
 export function SessionActions() {
   const { owner, repo, session, editToken } = useCanvasEditor();
@@ -60,11 +61,15 @@ export function SessionActions() {
       onError: (error) => toast.error(error.message),
     })
   );
-  const closeMutation = useMutation(
-    trpc.cms.previewSession.close.mutationOptions({
+  const resetMutation = useMutation(
+    trpc.cms.previewSession.reset.mutationOptions({
       onSuccess: () => {
         invalidateSession();
-        toast.success("Session discarded");
+        // The transcript was cleared server-side — refetch the (empty) log.
+        queryClient.invalidateQueries({
+          queryKey: ["preview-session-transcript", session?.id],
+        });
+        toast.success("Changes discarded — preview reset to your live site.");
       },
       onError: (error) => toast.error(error.message),
     })
@@ -94,10 +99,10 @@ export function SessionActions() {
       <Button
         size="sm"
         variant="outline"
-        disabled={busy || closeMutation.isPending}
+        disabled={busy || resetMutation.isPending}
         onClick={() => setConfirmDiscard(true)}
       >
-        {closeMutation.isPending ? (
+        {resetMutation.isPending ? (
           <Loader2 className="size-4 animate-spin" />
         ) : null}
         Discard
@@ -148,18 +153,20 @@ export function SessionActions() {
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard this session?</AlertDialogTitle>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
             <AlertDialogDescription>
-              The preview closes and the changes from this session are thrown
-              away. Your live site is not affected.
+              This throws away every change from this session and resets the
+              preview to your live production site. Your chat history clears and
+              the preview stays open so you can keep editing.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep editing</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() =>
-                closeMutation.mutate({ owner, repo, sessionId: session.id })
-              }
+              onClick={() => {
+                setConfirmDiscard(false);
+                resetMutation.mutate({ owner, repo, sessionId: session.id });
+              }}
             >
               Discard
             </AlertDialogAction>

@@ -9,6 +9,8 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
+import { assertRepoAccessByRepoId } from "@workspace/trpc/lib/cms/authz";
+import { resolveProjectByRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
 import { revalidateRepoCache } from "@workspace/trpc/lib/cms/revalidate";
@@ -118,32 +120,6 @@ const listProjectRows = async (owner?: string, keyword?: string) => {
     updatedAt: row.githubUpdatedAt.toISOString(),
     websiteUrl: row.websiteUrl ?? null,
   }));
-};
-
-/**
- * The owner login for a repo when the URL carries only the repo name. Reads
- * hub_project. Prefers the row the caller connected GitHub for, then any row;
- * undefined when no project row exists (getSnapshot then 404s).
- */
-const resolveOwnerForRepo = async (
-  userId: string,
-  repo: string
-): Promise<string | undefined> => {
-  const rows = await db
-    .select({
-      owner: hubProject.owner,
-      githubConnectedUserId: hubProject.githubConnectedUserId,
-    })
-    .from(hubProject)
-    .where(
-      and(
-        eq(hubProject.hidden, false),
-        sql`lower(${hubProject.repo}) = lower(${repo})`
-      )
-    );
-  if (rows.length === 0) return undefined;
-  const mine = rows.find((r) => r.githubConnectedUserId === userId);
-  return (mine ?? rows[0]).owner;
 };
 
 export const reposRouter = createTRPCRouter({
@@ -262,6 +238,7 @@ export const reposRouter = createTRPCRouter({
         return rows.map((row) => ({
           owner: row.owner,
           repo: row.repo,
+          repoId: row.repoId,
           private: row.private,
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
@@ -281,31 +258,31 @@ export const reposRouter = createTRPCRouter({
    * server-side: getToken + getRepoSnapshot). Access control = getToken.
    */
   getSnapshot: authenticatedProcedure
-    .input(z.object({ owner: z.string().optional(), repo: z.string() }))
+    .input(z.object({ repoId: z.number().int().positive() }))
     .query(async ({ input, ctx }) => {
       try {
-        const owner =
-          input.owner ??
-          (await resolveOwnerForRepo(ctx.session.user.id, input.repo));
-        if (!owner) throw createHttpError("Project not found", 404);
-
-        const { token, role } = await getToken(
+        // repoId is globally unique in hub_project — resolves the exact project
+        // (owner + name) and enforces the caller's Hub access in one step.
+        const project = await assertRepoAccessByRepoId(
           ctx.session.user,
-          owner,
-          input.repo
+          input.repoId
         );
+        const owner = project.owner;
+        const repo = project.repo;
+
+        const { token, role } = await getToken(ctx.session.user, owner, repo);
         if (!token) throw createHttpError("Token not found", 401);
 
         // Spread copy: the snapshot is module-cached per repo and shared
         // across users — the caller's role must never be written into it.
         let snapshot;
         try {
-          snapshot = await getRepoSnapshot(owner, input.repo, token);
+          snapshot = await getRepoSnapshot(owner, repo, token);
         } catch (snapshotError) {
-          // We already confirmed the project exists (owner resolved) and the
-          // caller has Hub access (getToken). So a GitHub 404/403 here means
-          // the caller's own GitHub account can't reach the repo — a distinct,
-          // actionable case, NOT "repository removed".
+          // We already confirmed the project exists (repoId resolved) and the
+          // caller has Hub access (assertRepoAccessByRepoId). So a GitHub 404/403
+          // here means the caller's own GitHub account can't reach the repo — a
+          // distinct, actionable case, NOT "repository removed".
           const status =
             (snapshotError as { status?: number; statusCode?: number })
               ?.status ??
@@ -313,7 +290,7 @@ export const reposRouter = createTRPCRouter({
           if (status === 404 || status === 403) {
             throw new TRPCError({
               code: "UNPROCESSABLE_CONTENT",
-              message: `Your connected GitHub account can't access "${owner}/${input.repo}". You have access to this project in Client Hub, but not to its GitHub repository — ask the repository owner to add you as a collaborator on GitHub (with repository access), then reconnect your GitHub here.`,
+              message: `Your connected GitHub account can't access "${owner}/${repo}". You have access to this project in Client Hub, but not to its GitHub repository — ask the repository owner to add you as a collaborator on GitHub (with repository access), then reconnect your GitHub here.`,
             });
           }
           throw snapshotError;
@@ -322,38 +299,20 @@ export const reposRouter = createTRPCRouter({
         // Opening a project reconciles its cache with the live branch HEAD
         // (replaces the old push webhook). Best-effort — never blocks the open.
         if (snapshot.defaultBranch) {
-          await revalidateRepoCache(
-            owner,
-            input.repo,
-            snapshot.defaultBranch,
-            token
-          );
+          await revalidateRepoCache(owner, repo, snapshot.defaultBranch, token);
         }
 
-        // The project's stored live URL (used by the thumbnail/preview + hooks)
-        // and the owner id (the user who connected GitHub for this project).
-        const [project] = await db
-          .select({
-            websiteUrl: hubProject.websiteUrl,
-            githubConnectedUserId: hubProject.githubConnectedUserId,
-          })
-          .from(hubProject)
-          .where(
-            and(
-              sql`lower(${hubProject.owner}) = lower(${owner})`,
-              sql`lower(${hubProject.repo}) = lower(${input.repo})`
-            )
-          )
-          .limit(1);
-
+        // websiteUrl (thumbnail/preview + hooks) and ownership both come from the
+        // project row already loaded by assertRepoAccessByRepoId.
         const isOwner =
-          project?.githubConnectedUserId === ctx.session.user.id;
+          project.githubConnectedUserId === ctx.session.user.id;
 
         return {
           ...snapshot,
+          repoId: input.repoId,
           myRole: role,
           isOwner,
-          websiteUrl: project?.websiteUrl ?? null,
+          websiteUrl: project.websiteUrl ?? null,
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -368,17 +327,18 @@ export const reposRouter = createTRPCRouter({
    * blocks a project on a transient error or an unset AGENCY_GITHUB_LOGIN.
    */
   agencyAccess: authenticatedProcedure
-    .input(z.object({ repo: z.string() }))
+    .input(z.object({ repoId: z.number().int().positive() }))
     .query(async ({ input, ctx }) => {
       const login = process.env.AGENCY_GITHUB_LOGIN;
       if (!login) return { status: "ok" as const };
       try {
-        const owner = await resolveOwnerForRepo(ctx.session.user.id, input.repo);
-        if (!owner) return { status: "ok" as const };
-        const { token } = await getToken(ctx.session.user, owner, input.repo);
+        const project = await resolveProjectByRepoId(input.repoId);
+        if (!project) return { status: "ok" as const };
+        const { owner, repo } = project;
+        const { token } = await getToken(ctx.session.user, owner, repo);
         if (!token) return { status: "ok" as const };
         const res = await fetch(
-          `https://api.github.com/repos/${owner}/${input.repo}/collaborators/${login}`,
+          `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
           { headers: ghHeaders(token) }
         );
         if (res.status === 204) return { status: "ok" as const };
@@ -386,7 +346,7 @@ export const reposRouter = createTRPCRouter({
           // Not a collaborator — but an invite may already be pending.
           const invited = await hasPendingAgencyInvite(
             owner,
-            input.repo,
+            repo,
             login,
             token
           );
@@ -410,15 +370,16 @@ export const reposRouter = createTRPCRouter({
    * manual GitHub link.
    */
   grantAgencyAccess: authenticatedProcedure
-    .input(z.object({ repo: z.string() }))
+    .input(z.object({ repoId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       const login = process.env.AGENCY_GITHUB_LOGIN;
       if (!login) return { status: "active" as const };
-      const owner = await resolveOwnerForRepo(ctx.session.user.id, input.repo);
-      if (!owner) {
+      const project = await resolveProjectByRepoId(input.repoId);
+      if (!project) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
       }
-      const { token } = await getToken(ctx.session.user, owner, input.repo);
+      const { owner, repo } = project;
+      const { token } = await getToken(ctx.session.user, owner, repo);
       if (!token) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -426,7 +387,7 @@ export const reposRouter = createTRPCRouter({
         });
       }
       const res = await fetch(
-        `https://api.github.com/repos/${owner}/${input.repo}/collaborators/${login}`,
+        `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
         {
           method: "PUT",
           headers: ghHeaders(token),
@@ -450,9 +411,9 @@ export const reposRouter = createTRPCRouter({
       // 201 = a pending invitation was created — try to auto-accept it, then
       // report whether the agency account ended up active or still invited.
       if (res.status === 204) return { status: "active" as const };
-      await acceptAgencyInvite(owner, input.repo);
+      await acceptAgencyInvite(owner, repo);
       const check = await fetch(
-        `https://api.github.com/repos/${owner}/${input.repo}/collaborators/${login}`,
+        `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
         { headers: ghHeaders(token) }
       );
       return {

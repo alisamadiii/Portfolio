@@ -36,6 +36,7 @@ import {
   MousePointerClick,
   PaintbrushSparkle,
   Settings,
+  Square,
   TriangleAlert,
   Users,
   X,
@@ -240,6 +241,13 @@ export function SessionChatPanel() {
     onSessionChange: invalidateSession,
   });
 
+  const cancelMutation = useMutation(
+    trpc.cms.previewSession.cancel.mutationOptions({
+      onSuccess: () => void transcriptQuery.refetch(),
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
   const sendMutation = useMutation({
     mutationFn: async ({
       content,
@@ -283,6 +291,12 @@ export function SessionChatPanel() {
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [input]);
+
+  // Picking an element in design mode means the user is about to describe a
+  // change to it — drop the cursor straight into the composer so they can type.
+  useEffect(() => {
+    if (pickedElement) textareaRef.current?.focus();
+  }, [pickedElement]);
 
   // "/" skills menu: the client repo's .claude/skills, listed by content-pilot
   // from the workspace clone. A selected skill just becomes "/name " in the
@@ -382,9 +396,16 @@ export function SessionChatPanel() {
   const canSend = Boolean(
     session && !TERMINAL_STATUSES.includes(session.status)
   );
+  // While the AI is working we don't queue more tasks — the send button turns
+  // into a pause control (below) instead.
+  const pause = () => {
+    if (!session || cancelMutation.isPending) return;
+    cancelMutation.mutate({ owner, repo, sessionId: session.id });
+  };
+
   const send = () => {
     const content = input.trim();
-    if (!content || sendMutation.isPending || !canSend) return;
+    if (!content || sendMutation.isPending || !canSend || busy) return;
     const key = Date.now();
     // Optimistic: bubble + cleared input immediately; restored on failure.
     setPendingSends((current) => [...current, { key, content, at: key }]);
@@ -595,12 +616,23 @@ export function SessionChatPanel() {
               <div className="flex items-center justify-end px-2 pb-2">
                 <Button
                   size="icon"
-                  aria-label="Send"
+                  aria-label={busy ? "Pause" : "Send"}
+                  title={busy ? "Pause the AI" : "Send"}
                   className="size-7 shrink-0 rounded-full"
-                  disabled={!input.trim() || sendMutation.isPending || !canSend}
-                  onClick={send}
+                  disabled={
+                    busy
+                      ? cancelMutation.isPending || !session
+                      : !input.trim() || sendMutation.isPending || !canSend
+                  }
+                  onClick={busy ? pause : send}
                 >
-                  {sendMutation.isPending ? (
+                  {busy ? (
+                    cancelMutation.isPending ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Square className="size-3 fill-current" />
+                    )
+                  ) : sendMutation.isPending ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
                     <ArrowUp className="size-3.5" />
@@ -764,6 +796,20 @@ function UserExchange({
   const inFlight = message.status === "queued" || message.status === "running";
   const [showDetails, setShowDetails] = useState(false);
   const steps = run?.activities ?? [];
+  // Persistent progress state: keep a live indicator through long silent gaps
+  // (e.g. the post-edit verify step, which streams no events for 15-20s) so the
+  // run never *looks* finished while it's still working. Hidden only while the
+  // assistant answer is actively streaming (the bubble itself shows motion).
+  const streamingText = Boolean(run?.text && !run?.done);
+  const showProgress = inFlight && !streamingText;
+  const progressLabel =
+    message.status === "queued"
+      ? "Queued…"
+      : run?.thinking
+        ? "Thinking…"
+        : run?.done
+          ? "Saving changes…"
+          : "Working…";
   return (
     <div className="flex flex-col gap-1.5">
       {/* User bubble, right-aligned */}
@@ -798,30 +844,20 @@ function UserExchange({
               </div>
             )
           )}
-          {run?.thinking && (
-            <div className="flex items-center gap-1.5 px-1 text-[12px]">
-              <span className="shimmer-text">Thinking…</span>
-            </div>
-          )}
-          {!run?.thinking && !run?.text && message.status === "queued" && (
-            <div className="flex items-center gap-1.5 px-1 text-[12px]">
-              <span className="shimmer-text">Queued…</span>
-            </div>
-          )}
-          {!run?.thinking &&
-            !run?.text &&
-            message.status === "running" &&
-            !run?.activities.length && (
-              <div className="flex items-center gap-1.5 px-1 text-[12px]">
-                <span className="shimmer-text">Working…</span>
-              </div>
-            )}
           {/* Streaming assistant text */}
           {(run?.text || run?.done?.reply) && (
             <AssistantBubble
               text={run.done?.reply || run.text}
               streaming={!run.done}
             />
+          )}
+          {/* Persistent progress line — survives long silent gaps between
+              steps so the run never looks done while it's still working. */}
+          {showProgress && (
+            <div className="flex items-center gap-1.5 px-1 text-[12px]">
+              <Loader2 className="text-muted-foreground size-3 shrink-0 animate-spin" />
+              <span className="shimmer-text">{progressLabel}</span>
+            </div>
           )}
         </div>
       )}

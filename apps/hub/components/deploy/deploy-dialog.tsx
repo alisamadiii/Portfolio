@@ -197,7 +197,7 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
         toast.success("Project imported.");
         await queryClient.invalidateQueries();
         onClose();
-        router.push(repoPath(res.repo));
+        router.push(repoPath(res.repoId));
       },
       onError: (err) => toast.error(err.message),
     })

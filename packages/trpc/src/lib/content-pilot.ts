@@ -180,3 +180,25 @@ export async function closePreviewSession(
   });
   if (!res.ok && res.status !== 404) await pilotError(res);
 }
+
+/**
+ * Discards a session's changes: the supervisor resets preview/<id> back to
+ * production main and clears the AI context + transcript, keeping the session
+ * live. The dev server stays up and HMRs the reverted files.
+ */
+export async function resetPreviewSession(sessionId: string): Promise<void> {
+  const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
+    method: "POST",
+    body: JSON.stringify({ action: "reset" }),
+  });
+  if (!res.ok && res.status !== 404) await pilotError(res);
+}
+
+/** Pauses a session's in-flight AI run; the supervisor aborts + reverts it. */
+export async function cancelPreviewMessage(sessionId: string): Promise<void> {
+  const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
+    method: "POST",
+    body: JSON.stringify({ action: "cancel" }),
+  });
+  if (!res.ok && res.status !== 404) await pilotError(res);
+}

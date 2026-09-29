@@ -16,9 +16,7 @@ export default function Page({
   params,
 }: {
   params: Promise<{
-    owner: string;
-    repo: string;
-    branch: string;
+    repoId: string;
     name: string;
     path: string;
   }>;

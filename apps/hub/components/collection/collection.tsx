@@ -636,7 +636,7 @@ export function Collection({
           loading: `Renaming "${path}" to "${newPath}"`,
           success: (data) => {
             router.push(
-              `/p/${config.repo}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
+              `/p/${config.repoId}/collection/${encodeURIComponent(name)}/new?parent=${encodeURIComponent(getParentPath(normalizedNewPath))}`
             );
             return data.message;
           },
@@ -724,7 +724,7 @@ export function Collection({
                     ) : (
                       <Link
                         className="truncate font-medium"
-                        href={`/p/${config.repo}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
+                        href={`/p/${config.repoId}/collection/${encodeURIComponent(name)}/edit/${encodeURIComponent(row.original.path)}`}
                       >
                         {CellView}
                       </Link>
@@ -810,7 +810,7 @@ export function Collection({
                     className={cn(
                       buttonVariants({ variant: "outline", size: "sm" })
                     )}
-                    href={`/p/${config.repo}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
+                    href={`/p/${config.repoId}/collection/${name}/edit/${encodeURIComponent(row.original.path)}`}
                   >
                     Edit
                   </Link>
@@ -1404,7 +1404,7 @@ export function Collection({
 
   useRepoHeader({
     header: headerNode,
-    backHref: repoPath(config.repo),
+    backHref: repoPath(config.repoId ?? 0),
     backLabel: "Canvas",
   });
 
@@ -1437,7 +1437,7 @@ export function Collection({
           ) : (
             <Link
               className={buttonVariants({ variant: "default" })}
-              href={`/p/${config.repo}/configuration`}
+              href={`/p/${config.repoId}/configuration`}
             >
               Go to configuration
             </Link>

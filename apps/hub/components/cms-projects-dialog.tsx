@@ -85,7 +85,7 @@ export function CmsProjectsDialog({
   const decide = (repos: any) => {
     if (repos?.length === 1) {
       const p = repos[0];
-      router.push(repoPath(p.repo));
+      router.push(repoPath(p.repoId));
     } else {
       setOpen(true);
     }

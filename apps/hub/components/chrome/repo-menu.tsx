@@ -28,7 +28,7 @@ import { getVisits } from "@/lib/tracker";
 export function RepoMenu() {
   const { owner, repo } = useRepo();
   const [recentRepos, setRecentRepos] = useState<
-    Array<{ owner: string; repo: string; branch: string }>
+    Array<{ owner: string; repo: string; repoId: number; branch: string }>
   >([]);
 
   const loadRecentRepos = useCallback(() => {
@@ -44,6 +44,7 @@ export function RepoMenu() {
       .map((visit) => ({
         owner: visit.owner,
         repo: visit.repo,
+        repoId: visit.repoId,
         branch: visit.branch,
       }));
     setRecentRepos(visits);
@@ -105,7 +106,7 @@ export function RepoMenu() {
                 <DropdownMenuItem
                   key={`${visit.owner}/${visit.repo}/${visit.branch}`}
                   render={
-                    <Link href={repoPath(visit.repo)}>
+                    <Link href={repoPath(visit.repoId)}>
                       <img
                         src={`https://github.com/${visit.owner}.png`}
                         alt={`${visit.owner}'s avatar`}

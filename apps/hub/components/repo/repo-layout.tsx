@@ -19,7 +19,7 @@ import {
 } from "@/components/repo/repo-header-context";
 
 function RepoHeader() {
-  const { repo } = useRepo();
+  const { id: repoId } = useRepo();
   const { header, backHref, backLabel } = useRepoHeaderState();
   const hasHeaderContent =
     header !== null &&
@@ -36,7 +36,7 @@ function RepoHeader() {
         size="sm"
         className="mr-2 shrink-0"
         render={
-          <Link href={backHref ?? repoPath(repo)}>
+          <Link href={backHref ?? repoPath(repoId)}>
             <ArrowLeft className="size-4" />
             {backLabel ?? "Canvas"}
           </Link>
@@ -49,13 +49,13 @@ function RepoHeader() {
 
 export function RepoLayout({ children }: { children: React.ReactNode }) {
   const { config } = useConfig();
-  const { owner, repo } = useRepo();
+  const { owner, repo, id: repoId } = useRepo();
 
   useEffect(() => {
     if (config?.owner && config?.repo && config?.branch) {
-      trackVisit(owner, repo, config.branch);
+      trackVisit(owner, repo, config.branch, repoId);
     }
-  }, [config, owner, repo]);
+  }, [config, owner, repo, repoId]);
 
   return (
     <RepoHeaderProvider>

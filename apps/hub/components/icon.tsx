@@ -50,6 +50,10 @@ export function ArrowUp(props: LucideProps) {
   return <Lucide.ArrowUp {...props} />;
 }
 
+export function Square(props: LucideProps) {
+  return <Lucide.Square {...props} />;
+}
+
 export function ArrowUpRight(props: LucideProps) {
   return <Lucide.ArrowUpRight {...props} />;
 }

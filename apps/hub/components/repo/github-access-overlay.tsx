@@ -33,11 +33,13 @@ export function GitHubAccessOverlay({
   owner,
   login,
   repo,
+  repoId,
   invited = false,
 }: {
   owner: string;
   login: string;
   repo: string;
+  repoId: number;
   invited?: boolean;
 }) {
   const trpc = useTRPC();
@@ -57,7 +59,7 @@ export function GitHubAccessOverlay({
   // "ok"), play the success + exit sequence, then re-run the server layout.
   const poll = useQuery(
     trpc.cms.repos.agencyAccess.queryOptions(
-      { repo },
+      { repoId },
       { enabled: pending && !success, refetchInterval: 4000 }
     )
   );
@@ -233,7 +235,7 @@ export function GitHubAccessOverlay({
                 <Button
                   className="h-12 w-full"
                   isLoading={grant.isPending}
-                  onClick={() => grant.mutate({ repo })}
+                  onClick={() => grant.mutate({ repoId })}
                   size="lg"
                 >
                   Grant access

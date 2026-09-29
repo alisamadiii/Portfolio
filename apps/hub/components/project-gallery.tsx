@@ -26,6 +26,7 @@ const FRAME_H = 800;
 type Project = {
   owner: string;
   repo: string;
+  repoId: number;
   private?: boolean;
   updatedAt?: string | null;
   websiteUrl?: string | null;
@@ -164,7 +165,7 @@ const ProjectCard = ({
   const url = project.websiteUrl ?? null;
   return (
     <Link
-      href={repoPath(project.repo)}
+      href={repoPath(project.repoId)}
       className="bg-card hover:border-foreground/20 group flex flex-col overflow-hidden rounded-lg border transition"
     >
       <PreviewFrame url={url} />

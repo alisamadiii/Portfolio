@@ -86,7 +86,7 @@ export function RepoCommandPalette({
 
   const fieldResults = useMemo<CommandItem[]>(() => {
     if (!config) return [];
-    const base = `/p/${config.repo}`;
+    const base = `/p/${config.repoId}`;
     return filterFieldIndex(fieldIndex, query).map(
       (item: FieldSearchItem) => ({
         key: `field-${item.schemaName}-${item.fieldPath}`,

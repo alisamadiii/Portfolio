@@ -264,7 +264,7 @@ export function CmsOverlay({
                 <Button
                   variant="default"
                   render={
-                    <Link href={`/p/${config.repo}/configuration`}>
+                    <Link href={`/p/${config.repoId}/configuration`}>
                       Open configuration
                     </Link>
                   }

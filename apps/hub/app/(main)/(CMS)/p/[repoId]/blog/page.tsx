@@ -62,7 +62,7 @@ type BlogRow = {
  */
 export default function BlogManagerPage() {
   const { config } = useConfig();
-  const { repo } = useRepo();
+  const { repo, id: repoId } = useRepo();
   const router = useRouter();
   const trpc = useTRPC();
   const { draftCount, openPublishDialog } = usePublish();
@@ -181,7 +181,7 @@ export default function BlogManagerPage() {
     return null;
   };
 
-  const blogBase = repoPath(repo, "blog");
+  const blogBase = repoPath(repoId, "blog");
   const openNew = () => router.push(`${blogBase}/create`);
   const openEdit = (path: string) =>
     router.push(
@@ -197,7 +197,7 @@ export default function BlogManagerPage() {
           size="sm"
           className="-ml-2 shrink-0"
           render={
-            <Link href={repoPath(repo)}>
+            <Link href={repoPath(repoId)}>
               <ArrowLeft className="size-4" />
               Canvas
             </Link>

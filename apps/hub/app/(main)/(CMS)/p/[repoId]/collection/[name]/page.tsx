@@ -1,23 +1,22 @@
 "use client";
 
 import { use, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
 
 import { getSchemaByName } from "@workspace/cms-core/schema";
 
+import { Collection } from "@/components/collection/collection";
 import {
   DocumentTitle,
   formatRepoBranchTitle,
 } from "@/components/document-title";
-import { Entry } from "@/components/entry/entry";
 
 export default function Page({
   params,
 }: {
   params: Promise<{
-    owner: string;
-    repo: string;
-    branch: string;
+    repoId: string;
     name: string;
   }>;
 }) {
@@ -25,15 +24,15 @@ export default function Page({
   const { config } = useConfig();
   if (!config) throw new Error(`Configuration not found.`);
 
+  const name = decodeURIComponent(resolvedParams.name);
   const schema = useMemo(
-    () =>
-      getSchemaByName(config?.object, decodeURIComponent(resolvedParams.name)),
-    [config, resolvedParams.name]
+    () => getSchemaByName(config?.object, name),
+    [config, name]
   );
-  if (!schema)
-    throw new Error(
-      `Schema not found for ${decodeURIComponent(resolvedParams.name)}.`
-    );
+  if (!schema) throw new Error(`Schema not found for ${name}.`);
+
+  const searchParams = useSearchParams();
+  const path = searchParams.get("path") || "";
 
   return (
     <>
@@ -45,11 +44,7 @@ export default function Page({
           config.branch
         )}
       />
-      <Entry
-        name={resolvedParams.name}
-        path={schema.path}
-        title={schema.label || schema.name}
-      />
+      <Collection name={name} path={path} />
     </>
   );
 }

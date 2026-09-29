@@ -79,7 +79,7 @@ export function ActiveSessionsBanner() {
               })}
             </span>
             <Button asChild size="sm" variant="outline">
-              <Link href={repoPath(session.repo)}>Open</Link>
+              <Link href={repoPath(session.repoId)}>Open</Link>
             </Button>
             <Button
               size="sm"
