@@ -4,8 +4,6 @@ import { and, sql } from "drizzle-orm";
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { roleAtLeast } from "../../lib/authz-shared";
 import { signEditToken } from "@workspace/trpc/lib/cms/edit-token";
-import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
-import { listEditJobs } from "@workspace/trpc/lib/content-pilot";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
@@ -45,14 +43,5 @@ export const aiEditsRouter = createTRPCRouter({
 
     const token = signEditToken({ repoId: project.repoId }, secret);
     return { token };
-  }),
-
-  /**
-   * Lists this repo's AI edit jobs from content-pilot (the "Deployments" view).
-   * Access is gated by `cmsProcedure`; the content-pilot key stays server-side.
-   */
-  listJobs: cmsProcedure.query(async ({ input }) => {
-    const repoId = await resolveRepoId(input.owner, input.repo);
-    return listEditJobs(repoId);
   }),
 });

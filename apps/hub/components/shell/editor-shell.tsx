@@ -22,16 +22,15 @@ import { type CanvasDevice } from "@/components/canvas/canvas-toolbar";
 import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { SettingsMode } from "@/components/settings/settings-mode";
-import { DeploymentsMode } from "@/components/deployments/deployments-mode";
 import { useRepo } from "@/contexts/repo-context";
 import { roleAtLeast } from "@/lib/authz-shared";
 
 /**
  * v0-style single-page editor shell: full-width header, a permanent AI chat
  * panel on the left and the canvas on the right, split by a resizable handle.
- * The canvas only ever shows the live preview session; Settings/Deployments
- * render as layers over it so the iframe never remounts. All editing state
- * lives in CanvasEditorProvider.
+ * The canvas only ever shows the live preview session; Settings renders as a
+ * layer over it so the iframe never remounts. All editing state lives in
+ * CanvasEditorProvider.
  */
 export function EditorShell() {
   return (
@@ -71,7 +70,7 @@ function ShellBody() {
     session,
   } = useCanvasEditor();
   const { myRole } = useRepo();
-  // view-only collaborators never see the Deployments view.
+  // view-only collaborators get the guide instead of the AI chat panel.
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const [mode, setMode] = useState<ShellMode>("canvas");
   const [docsOpen, setDocsOpen] = useState(false);
@@ -161,7 +160,7 @@ function ShellBody() {
               <div className="relative min-h-0 flex-1">
                 {/* Canvas layer — ALWAYS mounted at this tree position so the
                     preview iframe survives mode switches (only `hidden`
-                    toggles). Settings/Deployments overlay on top of it. */}
+                    toggles). Settings overlays on top of it. */}
                 <div
                   className={
                     mode === "canvas"
@@ -208,11 +207,6 @@ function ShellBody() {
                 {mode === "settings" && (
                   <div className="bg-background absolute inset-0 z-10 flex min-h-0">
                     <SettingsMode />
-                  </div>
-                )}
-                {mode === "deployments" && canEdit && (
-                  <div className="bg-background absolute inset-0 z-10 flex min-h-0">
-                    <DeploymentsMode />
                   </div>
                 )}
 

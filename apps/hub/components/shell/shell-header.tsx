@@ -24,7 +24,6 @@ import {
   ArrowLeft,
   Info,
   LayoutGrid,
-  Rocket,
   Settings2,
   Upload,
   type LucideProps,
@@ -36,14 +35,14 @@ import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
 import { User } from "@/components/user";
 
-export type ShellMode = "canvas" | "settings" | "deployments";
+export type ShellMode = "canvas" | "settings";
 
 /**
  * Docked top bar (warm off-white). Left: back arrow (home) + agency brand
- * mark. The Canvas / Settings / Deployments tabs float at the canvas panel's
- * left edge — `--chat-w` (set by the resizable split) keeps them aligned at
- * any splitter position. Center: project name + branch. Right: media upload,
- * guide, user menu, Invite (full access), Publish (content editor+).
+ * mark. The Canvas / Settings tabs float at the canvas panel's left edge —
+ * `--chat-w` (set by the resizable split) keeps them aligned at any splitter
+ * position. Center: project name + branch. Right: media upload, guide, user
+ * menu, Invite (full access), Publish (content editor+).
  */
 export function ShellHeader({
   mode,
@@ -67,7 +66,6 @@ export function ShellHeader({
 
   const canvasActive = mode === "canvas";
   const settingsActive = mode === "settings";
-  const deploymentsActive = mode === "deployments";
 
   return (
     <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">
@@ -129,14 +127,6 @@ export function ShellHeader({
             label="Settings"
             active={settingsActive}
             onClick={() => onModeChange("settings")}
-          />
-        )}
-        {canEdit && (
-          <SegButton
-            icon={Rocket}
-            label="Deployments"
-            active={deploymentsActive}
-            onClick={() => onModeChange("deployments")}
           />
         )}
       </div>

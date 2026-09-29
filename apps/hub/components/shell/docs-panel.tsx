@@ -6,7 +6,6 @@ import {
   MousePointerClick,
   PaintbrushSparkle,
   UploadCloud,
-  Rocket,
   ArrowUpRight,
 } from "@/components/icon";
 
@@ -31,11 +30,6 @@ const SECTIONS = [
     icon: UploadCloud,
     title: "Publish your changes",
     body: "When the preview looks right, click Publish. Your changes go live on your real site in one step.",
-  },
-  {
-    icon: Rocket,
-    title: "Deployments",
-    body: "The Deployments tab tracks every AI edit: what was asked, what changed, and when it went live.",
   },
 ];
 
