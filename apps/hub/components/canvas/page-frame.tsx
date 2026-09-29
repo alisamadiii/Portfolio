@@ -112,12 +112,12 @@ export function PageFrame({
         backgroundSize: "20px 20px",
       }}
     >
-      <div className="flex min-h-full items-stretch justify-center px-6 pb-6 pt-1">
+      <div className="flex min-h-full items-stretch justify-center">
         <div
           className="transition-[width] duration-300 ease-out"
           style={{ width: DEVICE_WIDTH[device], maxWidth: "100%" }}
         >
-          <div className="bg-card relative h-full w-full overflow-hidden rounded-xl border shadow-sm">
+          <div className="bg-card relative h-full w-full overflow-hidden">
             {!loaded && (
               <div className="text-muted-foreground absolute inset-0 z-10 flex items-center justify-center gap-2 text-sm">
                 <Loader2 className="size-4 animate-spin" />

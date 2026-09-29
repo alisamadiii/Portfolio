@@ -40,7 +40,9 @@ import {
 } from "@/lib/engine/v2";
 import {
   parseBridgeMessage,
+  postChrome,
   postEditable,
+  postPickMode,
   postSet,
   postToFrame,
   type GroupMember,
@@ -204,6 +206,10 @@ type CanvasEditorValue = {
   editToken: string;
   /** Auto-start hit the preview capacity cap — the chat panel explains it. */
   capacityMessage: string | null;
+  /** Preview service unreachable or the start call hard-failed — retryable. */
+  previewError: string | null;
+  /** Boot ran past the timeout while still starting/installing — retryable. */
+  previewTimedOut: boolean;
   /** Retry the auto-start after a capacity block (or any silent failure). */
   retryStart: () => void;
   pagesLoading: boolean;
@@ -226,6 +232,9 @@ type CanvasEditorValue = {
   /** Element the client clicked in the AI preview, attached to the next message. */
   pickedElement: PickedElement | null;
   clearPickedElement: () => void;
+  /** Element-pick mode, armed from the canvas header cursor button. */
+  pickModeActive: boolean;
+  setPickMode: (active: boolean) => void;
   /** Path the preview iframe is actually on (follows in-frame navigation). */
   previewFramePath: string | null;
 
@@ -344,10 +353,13 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // the chat is usable the moment the client arrives — no start button. One
   // attempt per project open; capacity blocks surface in the chat panel.
   const [capacityMessage, setCapacityMessage] = useState<string | null>(null);
+  const [autoStartError, setAutoStartError] = useState<string | null>(null);
+  const [bootTimedOut, setBootTimedOut] = useState(false);
   const autoStartMutation = useMutation(
     trpc.cms.previewSession.start.mutationOptions({
       onSuccess: () => {
         setCapacityMessage(null);
+        setAutoStartError(null);
         void queryClient.invalidateQueries({
           queryKey: trpc.cms.previewSession.get.queryOptions({ owner, repo })
             .queryKey,
@@ -356,9 +368,13 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       onError: (error) => {
         if (error.data?.code === "TOO_MANY_REQUESTS") {
           setCapacityMessage(error.message);
+        } else {
+          // The preview service is unreachable or refused — surface it so the
+          // canvas shows a retryable error instead of spinning forever.
+          setAutoStartError(
+            "We could not reach the preview service. Please try again in a moment."
+          );
         }
-        // Other errors stay silent here — the session query keeps polling and
-        // the panel's explicit retry path reports loudly.
       },
     })
   );
@@ -379,11 +395,42 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     session,
     autoStartMutate,
   ]);
+
+  // Boot watchdog: if the session stays in a booting status past the timeout
+  // (dev server never came up, supervisor wedged), stop spinning and offer a
+  // retry. Each status transition (starting → installing → ...) resets the
+  // timer, so real progress keeps it alive.
+  const bootingStatus =
+    session?.status === "starting" ||
+    session?.status === "installing" ||
+    session?.status === "restarting";
+  useEffect(() => {
+    if (!bootingStatus) {
+      setBootTimedOut(false);
+      return;
+    }
+    setBootTimedOut(false);
+    const timer = setTimeout(() => setBootTimedOut(true), 180_000);
+    return () => clearTimeout(timer);
+  }, [bootingStatus, session?.status, session?.id]);
+
   const retryStart = useCallback(() => {
     setCapacityMessage(null);
+    setAutoStartError(null);
+    setBootTimedOut(false);
     autoStartAttempted.current = null;
+    void sessionQuery.refetch();
     autoStartMutate({ owner, repo });
-  }, [owner, repo, autoStartMutate]);
+  }, [owner, repo, autoStartMutate, sessionQuery]);
+
+  // The preview service is down when the status poll errors and we have no
+  // session to show. Auto-start also can't fire (it waits on a successful
+  // poll), so this is the signal that nothing is coming.
+  const previewError =
+    autoStartError ??
+    (sessionQuery.isError && !session
+      ? "We could not reach the preview service. Please try again in a moment."
+      : null);
 
   // Keep the session alive while the tab is open and visible.
   useSessionHeartbeat({
@@ -477,6 +524,12 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const [pickedElement, setPickedElement] = useState<PickedElement | null>(null);
   const clearPickedElement = useCallback(() => setPickedElement(null), []);
 
+  // Element-pick mode, driven by the canvas-header cursor button. The ref
+  // mirrors the state so the frame message listener can re-assert it on every
+  // frame (re)load without re-subscribing.
+  const [pickModeActive, setPickModeActive] = useState(false);
+  const pickModeRef = useRef(false);
+
   // The path the preview iframe is actually on (analyzer → preview-navigate).
   // Lets the page tree follow in-frame navigation, and lets PageFrame skip
   // re-navigating a frame that's already on the selected page.
@@ -566,6 +619,18 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
     },
     []
+  );
+
+  const setPickMode = useCallback(
+    (active: boolean) => {
+      pickModeRef.current = active;
+      setPickModeActive(active);
+      if (!activeOrigin) return;
+      for (const iframe of framesRef.current.values()) {
+        postPickMode(iframe.contentWindow, activeOrigin, active);
+      }
+    },
+    [activeOrigin]
   );
 
   const copiesRef = useRef<Map<string, WorkingCopy>>(new Map());
@@ -1173,6 +1238,15 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
             frameFieldsRef.current.set(framePath, msg.fields);
             pushEditableToFrame(framePath);
           }
+          // The hub renders its own overlay controls in the canvas header —
+          // hide the in-frame launcher and re-assert pick mode (a frame
+          // reload resets overlay state).
+          postChrome(event.source as Window, activeOrigin, "hidden");
+          postPickMode(
+            event.source as Window,
+            activeOrigin,
+            pickModeRef.current
+          );
           break;
         }
         case "field-commit":
@@ -1222,6 +1296,15 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           });
           break;
         case "preview-navigate": {
+          // The analyzer overlay (re)initialized with this page — hide its
+          // floating launcher (the hub's canvas header owns those controls)
+          // and re-assert the current pick-mode state.
+          postChrome(event.source as Window, activeOrigin, "hidden");
+          postPickMode(
+            event.source as Window,
+            activeOrigin,
+            pickModeRef.current
+          );
           // The client navigated inside the preview iframe — follow with the
           // page tree. Match by URL pathname (page.path may be a slug form).
           const framePath = normalizePagePath(msg.pagePath);
@@ -1467,6 +1550,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       previewOrigin,
       editToken,
       capacityMessage,
+      previewError,
+      previewTimedOut: bootTimedOut,
       retryStart,
       pagesLoading: pagesQuery.isLoading,
       pagesError:
@@ -1483,6 +1568,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       currentPage,
       pickedElement,
       clearPickedElement,
+      pickModeActive,
+      setPickMode,
       previewFramePath,
       registerFrame,
       editSrcFor,
@@ -1517,6 +1604,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       previewOrigin,
       editToken,
       capacityMessage,
+      previewError,
+      bootTimedOut,
       retryStart,
       pagesQuery.isLoading,
       pagesQuery.error,
@@ -1531,6 +1620,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       currentPage,
       pickedElement,
       clearPickedElement,
+      pickModeActive,
+      setPickMode,
       previewFramePath,
       registerFrame,
       editSrcFor,

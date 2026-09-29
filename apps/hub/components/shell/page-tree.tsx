@@ -108,6 +108,82 @@ export function PageTree() {
     [pages]
   );
 
+  // Group deep routes under a virtual folder by their parent prefix, e.g.
+  // /services/swimming + /services/soccer-team collapse under a "/services"
+  // folder — even when no bare /services page exists. Only groups when 2+
+  // pages share the prefix and the prefix isn't itself a page (a lone deep
+  // page, or a real parent page, stays inline).
+  const virtualGroups = useMemo(() => {
+    const parentPrefix = (path: string) => {
+      const segments = path.split("/").filter(Boolean);
+      return segments.length < 2
+        ? null
+        : "/" + segments.slice(0, -1).join("/");
+    };
+    const realPage = new Set(pageRows.map((page) => page.path));
+    const map = new Map<string, CanvasPageInfo[]>();
+    for (const page of visibleRows) {
+      const prefix = parentPrefix(page.path);
+      if (prefix && !realPage.has(prefix)) {
+        const list = map.get(prefix) ?? [];
+        list.push(page);
+        map.set(prefix, list);
+      }
+    }
+    for (const [prefix, group] of map) {
+      if (group.length < 2) map.delete(prefix);
+    }
+    return map;
+  }, [visibleRows, pageRows]);
+  const groupedPaths = useMemo(
+    () => new Set([...virtualGroups.values()].flat().map((page) => page.path)),
+    [virtualGroups]
+  );
+  const topRows = useMemo(
+    () => visibleRows.filter((page) => !groupedPaths.has(page.path)),
+    [visibleRows, groupedPaths]
+  );
+
+  // Sitemap-discovered pages with no parent page (the old flat "More pages"
+  // bucket) get the same treatment: deep routes sharing a prefix collapse
+  // under a folder, the rest fall back to a "More pages" group.
+  const parentlessGroups = useMemo<
+    Array<[string, SitemapPageInfo[]]>
+  >(() => {
+    const nulls = childrenByParent.get(null) ?? [];
+    const prefixOf = (path: string) => {
+      const segments = path.split("/").filter(Boolean);
+      return segments.length < 2
+        ? null
+        : "/" + segments.slice(0, -1).join("/");
+    };
+    const counts = new Map<string, number>();
+    for (const page of nulls) {
+      const prefix = prefixOf(page.path);
+      if (prefix) counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
+    }
+    const byPrefix = new Map<string, SitemapPageInfo[]>();
+    const rest: SitemapPageInfo[] = [];
+    for (const page of nulls) {
+      const prefix = prefixOf(page.path);
+      if (prefix && (counts.get(prefix) ?? 0) >= 2) {
+        const list = byPrefix.get(prefix) ?? [];
+        list.push(page);
+        byPrefix.set(prefix, list);
+      } else {
+        rest.push(page);
+      }
+    }
+    const groups: Array<[string, SitemapPageInfo[]]> = [...byPrefix.entries()];
+    if (rest.length) groups.push(["__more__", rest]);
+    return groups;
+  }, [childrenByParent]);
+  const groupLookup = useMemo(() => {
+    const map = new Map<string, SitemapPageInfo[]>();
+    for (const [key, pagesInGroup] of parentlessGroups) map.set(key, pagesInGroup);
+    return map;
+  }, [parentlessGroups]);
+
   // One entry-count query per collection (light — a single dir listing).
   const countQueries = useQueries({
     queries: collections.map((collection) =>
@@ -225,7 +301,35 @@ export function PageTree() {
       ) : null}
 
       <div className="flex flex-col gap-px">
-        {visibleRows.map(renderPageRow)}
+        {topRows.map(renderPageRow)}
+
+        {[...virtualGroups.entries()].map(([prefix, children]) => {
+          const isOpen = expanded.has(prefix);
+          return (
+            <div key={prefix}>
+              <button
+                type="button"
+                onClick={() => toggleExpanded(prefix)}
+                className="text-muted-foreground hover:bg-muted/60 hover:text-foreground flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[12.5px] transition-colors"
+              >
+                {isOpen ? (
+                  <ChevronDown className="size-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="size-3.5 shrink-0 opacity-60" />
+                )}
+                <span className="flex-1 truncate">{prefix}</span>
+                <span className="text-muted-foreground ml-auto text-[10.5px] tabular-nums">
+                  {children.length}
+                </span>
+              </button>
+              {isOpen && (
+                <div className="border-border/60 ml-3.5 border-l pl-1.5">
+                  {children.map(renderPageRow)}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {orphanCollections.map((collection) => (
           <CollectionRow
@@ -236,33 +340,38 @@ export function PageTree() {
           />
         ))}
 
-        {(childrenByParent.get(null) ?? []).length > 0 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => toggleExpanded("__more__")}
-              className="text-muted-foreground hover:bg-muted/60 hover:text-foreground flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[12.5px] transition-colors"
-            >
-              {expanded.has("__more__") ? (
-                <ChevronDown className="size-3.5 shrink-0 opacity-60" />
-              ) : (
-                <ChevronRight className="size-3.5 shrink-0 opacity-60" />
+        {parentlessGroups.map(([prefix, children]) => {
+          const key = `entry:${prefix}`;
+          const isOpen = expanded.has(key);
+          const label = prefix === "__more__" ? "More pages" : prefix;
+          return (
+            <div key={key}>
+              <button
+                type="button"
+                onClick={() => toggleExpanded(key)}
+                className="text-muted-foreground hover:bg-muted/60 hover:text-foreground flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[12.5px] transition-colors"
+              >
+                {isOpen ? (
+                  <ChevronDown className="size-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="size-3.5 shrink-0 opacity-60" />
+                )}
+                <span className="flex-1 truncate">{label}</span>
+                <span className="text-muted-foreground ml-auto text-[10.5px] tabular-nums">
+                  {children.length}
+                </span>
+              </button>
+              {isOpen && (
+                <EntryPageList
+                  pages={children}
+                  selectedPath={selectedPath}
+                  onSelect={setSelectedPath}
+                  onSeeAll={() => setDialogGroup(prefix)}
+                />
               )}
-              <span className="flex-1 truncate">More pages</span>
-              <span className="text-muted-foreground ml-auto text-[10.5px] tabular-nums">
-                {(childrenByParent.get(null) ?? []).length}
-              </span>
-            </button>
-            {expanded.has("__more__") && (
-              <EntryPageList
-                pages={childrenByParent.get(null) ?? []}
-                selectedPath={selectedPath}
-                onSelect={setSelectedPath}
-                onSeeAll={() => setDialogGroup("__more__")}
-              />
-            )}
-          </div>
-        )}
+            </div>
+          );
+        })}
       </div>
 
       {hiddenRows.length > 0 && (
@@ -284,9 +393,9 @@ export function PageTree() {
         pages={
           dialogGroup === null
             ? []
-            : (childrenByParent.get(
-                dialogGroup === "__more__" ? null : dialogGroup
-              ) ?? [])
+            : (groupLookup.get(dialogGroup) ??
+              childrenByParent.get(dialogGroup) ??
+              [])
         }
         selectedPath={selectedPath}
         onSelect={(path) => {

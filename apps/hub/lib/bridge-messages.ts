@@ -91,6 +91,24 @@ export function postSet(
   postToFrame(win, origin, { type: "set", values });
 }
 
+/** Hide or restore the overlay's own floating launcher chrome. */
+export function postChrome(
+  win: Window | null | undefined,
+  origin: string,
+  launcher: "hidden" | "visible"
+): void {
+  postToFrame(win, origin, { type: "chrome", launcher });
+}
+
+/** Arm or disarm element picking in the preview overlay. */
+export function postPickMode(
+  win: Window | null | undefined,
+  origin: string,
+  active: boolean
+): void {
+  postToFrame(win, origin, { type: "pick-mode", active });
+}
+
 /** Tell a page which tagged fields are editable, and how (text / media / link). */
 export function postEditable(
   win: Window | null | undefined,

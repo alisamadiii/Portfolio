@@ -28,8 +28,9 @@ const DEVICES: Array<{ id: CanvasDevice; icon: typeof Monitor; label: string }> 
   ];
 
 /**
- * The bar above the canvas frame: device-width toggle, the live page URL, and
- * a Reload button. Purely presentational — state lives in the shell.
+ * The canvas controls: device-width toggle, the live page URL, and a Reload
+ * button. Purely presentational — state lives in the shell, and the canvas
+ * panel header positions this cluster.
  */
 export function CanvasToolbar({
   device,
@@ -46,7 +47,7 @@ export function CanvasToolbar({
   previewUrl?: string | null;
 }) {
   return (
-    <div className="flex shrink-0 items-center justify-center gap-2.5 px-3.5 pb-1.5 pt-2.5">
+    <div className="flex min-w-0 items-center gap-2">
       {/* Device toggle */}
       <div className="border-border flex items-center gap-px rounded-lg border p-0.5">
         {DEVICES.map(({ id, icon: Icon, label }) => (
@@ -73,10 +74,10 @@ export function CanvasToolbar({
       {url && (
         <div
           title={`${url.host}${url.path}`}
-          className="border-border text-muted-foreground flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs"
+          className="border-border text-muted-foreground flex h-7 w-[140px] items-center gap-1.5 rounded-lg border px-2.5 text-xs"
         >
-          <Lock className="text-primary size-3" />
-          <span className="max-w-[280px] truncate">{url.path}</span>
+          <Lock className="text-primary size-3 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{url.path}</span>
         </div>
       )}
 

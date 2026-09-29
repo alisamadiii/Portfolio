@@ -323,12 +323,39 @@ export interface GroupApplyMessage {
   values?: Array<{ path: string; value: string }>;
 }
 
+/**
+ * Hide (or restore) the overlay's own floating chrome — the bottom-right
+ * launcher/toggle button. Sent by the hub when it renders equivalent controls
+ * in its own canvas header. Overlays that predate this message ignore it.
+ */
+export interface ChromeMessage {
+  cms: 1;
+  v: number;
+  type: "chrome";
+  launcher: "hidden" | "visible";
+}
+
+/**
+ * Arm or disarm element picking in the preview overlay from the parent. The
+ * hub's canvas-header cursor button drives this; the overlay's own toggle
+ * (when visible) keeps working independently. Overlays without a pick concept
+ * ignore it.
+ */
+export interface PickModeMessage {
+  cms: 1;
+  v: number;
+  type: "pick-mode";
+  active: boolean;
+}
+
 export type CmsToBridgeMessage =
   | FocusMessage
   | SetMessage
   | ModeMessage
   | EditableMessage
-  | GroupApplyMessage;
+  | GroupApplyMessage
+  | ChromeMessage
+  | PickModeMessage;
 
 // ---------------------------------------------------------------------------
 // Legacy (v1) shapes

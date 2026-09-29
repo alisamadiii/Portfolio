@@ -71,6 +71,33 @@ declare global {
 
   if (!active()) return;
 
+  // ---------- parent control (hub → bridge) ----------
+  // The hub can hide the floating launcher (it renders equivalent controls in
+  // its own canvas header) and suspend the hover/click editing chrome via
+  // postMessage. Old CMS builds never send these, so both default off.
+  let launcherHidden = false;
+  let suspended = false;
+
+  window.addEventListener("message", function (e) {
+    if (e.source !== window.parent) return;
+    const d = e.data as {
+      cms?: unknown;
+      type?: unknown;
+      launcher?: unknown;
+      active?: unknown;
+    } | null;
+    if (!d || d.cms !== 1 || typeof d.type !== "string") return;
+    if (d.type === "chrome") {
+      launcherHidden = d.launcher === "hidden";
+      const el = document.getElementById("cms-bridge-launcher");
+      if (el) el.style.display = launcherHidden ? "none" : "";
+    } else if (d.type === "pick-mode") {
+      suspended = d.active === false;
+      const dotEl = document.getElementById("cms-bridge-dot");
+      if (dotEl) dotEl.style.display = suspended ? "none" : "";
+    }
+  });
+
   // ---------- payload ----------
 
   function sourceRefFor(el: Element): string {
@@ -299,6 +326,10 @@ declare global {
       e.stopPropagation();
       togglePagePopover();
     });
+
+    // The chrome message can arrive before the overlay exists — honor it here.
+    if (launcherHidden) launcher.style.display = "none";
+    if (suspended) dot.style.display = "none";
 
     document.body.appendChild(dot);
     document.body.appendChild(chip);
@@ -911,6 +942,7 @@ declare global {
 
     // ----- drag-select (marquee) -----
     document.addEventListener("mousedown", function (e) {
+      if (suspended) return;
       if (e.button !== 0 || e.metaKey || e.ctrlKey) return;
       if (e.target instanceof Element && inOwnUi(e.target)) return;
       dragStart = { x: e.clientX, y: e.clientY };
@@ -976,6 +1008,7 @@ declare global {
     document.addEventListener(
       "mouseover",
       function (e) {
+        if (suspended) return;
         const el = editableFrom(e.target);
         if (el) target = el;
       },
@@ -1010,6 +1043,8 @@ declare global {
         }
         // Cmd/Ctrl-click passes through — lets the client follow links.
         if (e.metaKey || e.ctrlKey) return;
+        // Parent suspended the editing chrome — the page behaves normally.
+        if (suspended) return;
         // Clicks inside our own UI pass through to their own handlers.
         if (
           e.target instanceof Element &&

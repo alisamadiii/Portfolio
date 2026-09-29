@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Frame, Globe } from "@/components/icon";
 import { Button } from "@workspace/ui/components/button";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@workspace/ui/components/resizable";
+import { Sheet, SheetContent, SheetTitle } from "@workspace/ui/components/sheet";
 
 import { CmsOverlay } from "@/components/cms/cms-overlay";
 import {
@@ -10,14 +16,12 @@ import {
   useCanvasEditor,
 } from "@/components/canvas/canvas-editor-context";
 import { EditorOverlays } from "@/components/canvas/editor-overlays";
+import { CanvasLoading } from "@/components/canvas/canvas-loading";
+import { CanvasPanelHeader } from "@/components/canvas/canvas-panel-header";
 import { PageFrame } from "@/components/canvas/page-frame";
 import { SessionChatPanel } from "@/components/canvas/session-chat-panel";
-import {
-  CanvasToolbar,
-  type CanvasDevice,
-} from "@/components/canvas/canvas-toolbar";
+import { type CanvasDevice } from "@/components/canvas/canvas-toolbar";
 import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
-import { PageTree } from "@/components/shell/page-tree";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { SettingsMode } from "@/components/settings/settings-mode";
 import { DeploymentsMode } from "@/components/deployments/deployments-mode";
@@ -25,10 +29,11 @@ import { useRepo } from "@/contexts/repo-context";
 import { roleAtLeast } from "@/lib/authz-shared";
 
 /**
- * Framer-style single-page editor shell: docked header, left page tree, one
- * active iframe on the gray canvas, and a collapsible docs panel. Header
- * Canvas/CMS/Settings toggle flips the center between modes. All editing
- * state lives in CanvasEditorProvider.
+ * v0-style single-page editor shell: full-width header, a permanent AI chat
+ * panel on the left and the canvas on the right, split by a resizable handle.
+ * The canvas only ever shows the live preview session; Settings/Deployments
+ * render as layers over it so the iframe never remounts. All editing state
+ * lives in CanvasEditorProvider.
  */
 export function EditorShell() {
   return (
@@ -36,6 +41,26 @@ export function EditorShell() {
       <ShellBody />
     </CanvasEditorProvider>
   );
+}
+
+/**
+ * The chat panel's persisted width (%) from react-resizable-panels' localStorage
+ * (keyed by autoSaveId), so the header tabs are positioned correctly on the
+ * first paint after a refresh instead of jumping once onLayout fires.
+ */
+function readPersistedChatWidth(autoSaveId: string, fallback: number): number {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(
+      `react-resizable-panels:${autoSaveId}`
+    );
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as Record<string, { layout?: number[] }>;
+    const size = Object.values(parsed)[0]?.layout?.[0];
+    return typeof size === "number" && size > 0 ? size : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function ShellBody() {
@@ -62,20 +87,19 @@ function ShellBody() {
   useEffect(() => {
     if (settingsRequest) setMode("settings");
   }, [settingsRequest]);
-  const [docsOpen, setDocsOpen] = useState(true);
+  const [docsOpen, setDocsOpen] = useState(false);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
   const [reloadNonce, setReloadNonce] = useState(0);
-
-  // AI chat panel: manually opened, and auto-opened when a live session
-  // appears (another tab or a page reload surfaces the running session) —
-  // but the X still closes the panel; the session keeps running server-side
-  // and the header toggle brings it back.
-  const [aiOpen, setAiOpen] = useState(false);
-  const sessionId = session?.id ?? null;
-  useEffect(() => {
-    if (sessionId) setAiOpen(true);
-  }, [sessionId]);
-  const showChat = canEdit && aiOpen;
+  // Splitter drag: a transparent shield keeps the iframe from swallowing
+  // pointer events mid-drag.
+  const [dragging, setDragging] = useState(false);
+  // The header's mode tabs align with the canvas left edge — the chat panel's
+  // width (%) drives their offset. Initialized from the persisted layout so
+  // they are placed correctly on first paint (before onLayout fires), then
+  // kept live by onLayout.
+  const [chatWidth, setChatWidth] = useState(() =>
+    readPersistedChatWidth("hub-canvas-shell", 26)
+  );
 
   const selectedPage =
     pages.find((page) => page.path === selectedPath) ??
@@ -93,8 +117,13 @@ function ShellBody() {
     }
   }, [selectedPage?.url]);
 
+  // The canvas is preview-only now: the iframe mounts once the session serves.
+  const sessionReady = session?.status === "ready";
   const showFrame = Boolean(
-    selectedPage && selectedPage.kind !== "collection" && !pagesError
+    sessionReady &&
+      selectedPage &&
+      selectedPage.kind !== "collection" &&
+      !pagesError
   );
 
   // "Preview ↗" opens the AI session's dev server on the current page in its
@@ -113,102 +142,122 @@ function ShellBody() {
       <ShellHeader
         mode={mode}
         onModeChange={setMode}
-        onOpenCms={() => setCmsOverlay({ open: true })}
         onToggleDocs={() => setDocsOpen((open) => !open)}
-        onToggleAi={() => setAiOpen((open) => !open)}
-        aiActive={showChat}
+        chatWidth={chatWidth}
       />
 
-      {mode === "settings" ? (
-        <SettingsMode />
-      ) : mode === "deployments" && canEdit ? (
-        <DeploymentsMode />
-      ) : needsDomain ? (
-        <div className="bg-shell flex min-h-0 flex-1 items-center justify-center p-6">
-          <div className="bg-background w-full max-w-md rounded-2xl border p-7 text-center shadow-sm">
-            <div className="bg-primary/10 text-primary mx-auto flex size-11 items-center justify-center rounded-xl">
-              <Globe className="size-5" />
+      <div className="min-h-0 flex-1">
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId="hub-canvas-shell"
+          onLayout={(sizes) => setChatWidth(sizes[0] ?? 26)}
+        >
+          {/* Left: the AI chat is the primary editing surface — always open.
+              View-only collaborators get the guide instead. */}
+          <ResizablePanel id="chat" order={1} defaultSize={26} minSize={18} maxSize={42}>
+            <div className="bg-background h-full">
+              {canEdit ? <SessionChatPanel /> : <DocsPanel />}
             </div>
-            <h2 className="mt-4 text-[19px] font-semibold tracking-tight">
-              Add your website URL
-            </h2>
-            <p className="text-muted-foreground mx-auto mt-1.5 max-w-sm text-[14px] leading-relaxed">
-              The canvas previews your live site. Add the project's domain so we
-              know where it lives.
-            </p>
-            <Button
-              className="mt-5"
-              onClick={() => setSettingsRequest({ section: "domain" })}
-            >
-              Add domain
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex min-h-0 flex-1">
-          {/* Left: page tree */}
-          <aside className="bg-background w-60 shrink-0 border-r">
-            <PageTree />
-          </aside>
+          </ResizablePanel>
+          <ResizableHandle onDragging={setDragging} />
 
-          {/* Center: dot-grid canvas with toolbar + a single iframe */}
-          <main className="bg-shell relative flex min-w-0 flex-1 flex-col">
-            {!isV2 && (
-              <div className="absolute bottom-4 right-4 z-20 max-w-xs rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs shadow-sm dark:border-amber-500/40 dark:bg-amber-950/60">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <div>
-                    <p className="font-semibold text-amber-800 dark:text-amber-200">
-                      No _site.json
-                    </p>
-                    <p className="mt-0.5 text-amber-700 dark:text-amber-300/90">
-                      Add a <code>_site.json</code> at the repo root (with{" "}
-                      <code>cms</code>, <code>seo</code>, <code>variables</code>)
-                      so the CMS can load this project's pages and settings.
-                    </p>
-                  </div>
+          {/* Right: canvas panel */}
+          <ResizablePanel id="canvas" order={2} defaultSize={74} minSize={50}>
+            <div className="flex h-full flex-col">
+              <CanvasPanelHeader
+                device={device}
+                onDeviceChange={setDevice}
+                url={frameUrl}
+                onReload={() => setReloadNonce((nonce) => nonce + 1)}
+                previewUrl={previewTabUrl}
+              />
+              <div className="relative min-h-0 flex-1">
+                {/* Canvas layer — ALWAYS mounted at this tree position so the
+                    preview iframe survives mode switches (only `hidden`
+                    toggles). Settings/Deployments overlay on top of it. */}
+                <div
+                  className={
+                    mode === "canvas"
+                      ? "flex h-full min-h-0 flex-col"
+                      : "hidden"
+                  }
+                >
+                  {!isV2 && (
+                    <div className="absolute bottom-4 right-4 z-20 max-w-xs rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs shadow-sm dark:border-amber-500/40 dark:bg-amber-950/60">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <div>
+                          <p className="font-semibold text-amber-800 dark:text-amber-200">
+                            No _site.json
+                          </p>
+                          <p className="mt-0.5 text-amber-700 dark:text-amber-300/90">
+                            Add a <code>_site.json</code> at the repo root
+                            (with <code>cms</code>, <code>seo</code>,{" "}
+                            <code>variables</code>) so the CMS can load this
+                            project's pages and settings.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {needsDomain ? (
+                    <div className="bg-shell flex min-h-0 flex-1 items-center justify-center p-6">
+                      <div className="bg-background w-full max-w-md rounded-2xl border p-7 text-center shadow-sm">
+                        <div className="bg-primary/10 text-primary mx-auto flex size-11 items-center justify-center rounded-xl">
+                          <Globe className="size-5" />
+                        </div>
+                        <h2 className="mt-4 text-[19px] font-semibold tracking-tight">
+                          Add your website URL
+                        </h2>
+                        <p className="text-muted-foreground mx-auto mt-1.5 max-w-sm text-[14px] leading-relaxed">
+                          The canvas previews your live site. Add the project's
+                          domain so we know where it lives.
+                        </p>
+                        <Button
+                          className="mt-5"
+                          onClick={() =>
+                            setSettingsRequest({ section: "domain" })
+                          }
+                        >
+                          Add domain
+                        </Button>
+                      </div>
+                    </div>
+                  ) : pagesError ? (
+                    <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 text-sm">
+                      <Frame className="size-6" />
+                      {pagesError.message}
+                    </div>
+                  ) : showFrame && selectedPage ? (
+                    <PageFrame
+                      page={selectedPage}
+                      device={device}
+                      reloadNonce={reloadNonce}
+                    />
+                  ) : (
+                    <CanvasLoading status={session?.status ?? null} />
+                  )}
                 </div>
-              </div>
-            )}
-            {pagesError ? (
-              <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 text-sm">
-                <Frame className="size-6" />
-                {pagesError.message}
-              </div>
-            ) : showFrame && selectedPage ? (
-              <>
-                <CanvasToolbar
-                  device={device}
-                  onDeviceChange={setDevice}
-                  url={frameUrl}
-                  onReload={() => setReloadNonce((nonce) => nonce + 1)}
-                  previewUrl={previewTabUrl}
-                />
-                <PageFrame
-                  page={selectedPage}
-                  device={device}
-                  reloadNonce={reloadNonce}
-                />
-              </>
-            ) : (
-              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-                Select a page to start editing.
-              </div>
-            )}
-          </main>
 
-          {/* Right: AI session chat (wins while open/live), else client docs */}
-          {showChat ? (
-            <aside className="bg-background w-96 shrink-0 border-l">
-              <SessionChatPanel onClose={() => setAiOpen(false)} />
-            </aside>
-          ) : docsOpen ? (
-            <aside className="bg-background w-72 shrink-0 border-l">
-              <DocsPanel />
-            </aside>
-          ) : null}
-        </div>
-      )}
+                {/* Mode overlays — mounted AFTER the canvas layer so its tree
+                    position (and the iframe) stays stable. */}
+                {mode === "settings" && (
+                  <div className="bg-background absolute inset-0 z-10 flex min-h-0">
+                    <SettingsMode />
+                  </div>
+                )}
+                {mode === "deployments" && canEdit && (
+                  <div className="bg-background absolute inset-0 z-10 flex min-h-0">
+                    <DeploymentsMode />
+                  </div>
+                )}
+
+                {dragging && <div className="absolute inset-0 z-20" />}
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
 
       {/* Floating editors (link / group) + CMS overlay */}
       <EditorOverlays />
@@ -219,6 +268,14 @@ function ShellBody() {
         }
         initialCollection={cmsOverlay.collection}
       />
+
+      {/* Client guide — opened from the header's info button. */}
+      <Sheet open={docsOpen} onOpenChange={setDocsOpen}>
+        <SheetContent side="right" className="w-80 gap-0 p-0 sm:max-w-80">
+          <SheetTitle className="sr-only">Guide</SheetTitle>
+          <DocsPanel />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

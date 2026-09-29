@@ -505,6 +505,10 @@ export function ListOrdered(props: LucideProps) {
   return <Lucide.ListOrdered {...props} />;
 }
 
+export function Info(props: LucideProps) {
+  return <Lucide.Info {...props} />;
+}
+
 export function Loader(props: LucideProps) {
   return <Lucide.Loader {...props} />;
 }

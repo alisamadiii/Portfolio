@@ -16,27 +16,23 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
-import { REGION_COLORS } from "@/lib/region-colors";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import {
   ArrowLeft,
-  GitBranch,
+  Info,
   LayoutGrid,
-  PanelRight,
   Rocket,
   Settings2,
-  PaintbrushSparkle,
-  Table2,
   Upload,
-  UploadCloud,
   type LucideProps,
 } from "@/components/icon";
 import { useMediaLibrary } from "@/components/media/media-library-context";
 import { toast } from "sonner";
 import { usePublish } from "@/components/publish/publish-context";
+import { SessionActions } from "@/components/canvas/session-actions";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
 import { User } from "@/components/user";
@@ -44,43 +40,36 @@ import { User } from "@/components/user";
 export type ShellMode = "canvas" | "settings" | "deployments";
 
 /**
- * Docked top bar (warm off-white). Left: back arrow (home) + agency brand mark
- * + a segmented Canvas / CMS / Settings toggle (settings = full access).
- * Center: project name + branch. Right: guide toggle, user menu, Invite (full
- * access), Publish (content editor+).
+ * Docked top bar (warm off-white). Left: back arrow (home) + agency brand
+ * mark. The Canvas / Settings / Deployments tabs float at the canvas panel's
+ * left edge — `--chat-w` (set by the resizable split) keeps them aligned at
+ * any splitter position. Center: project name + branch. Right: media upload,
+ * guide, user menu, Invite (full access), Publish (content editor+).
  */
 export function ShellHeader({
   mode,
   onModeChange,
-  onOpenCms,
   onToggleDocs,
-  onToggleAi,
-  aiActive,
+  chatWidth,
 }: {
   mode: ShellMode;
   onModeChange: (mode: ShellMode) => void;
-  onOpenCms: () => void;
   onToggleDocs: () => void;
-  onToggleAi: () => void;
-  aiActive: boolean;
+  /** Chat-panel width (%) — offsets the tabs to the canvas panel's left edge. */
+  chatWidth: number;
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const { owner, repo, branch, cmsOverlay } = useCanvasEditor();
-  const { draftCount, openPublishDialog } = usePublish();
+  const { owner, repo, cmsOverlay } = useCanvasEditor();
+  const { draftCount } = usePublish();
   const { myRole } = useRepo();
   const mediaLibrary = useMediaLibrary();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canManage = (myRole ?? "full-access") === "full-access";
 
   const canvasActive = mode === "canvas" && !cmsOverlay.open;
-  const cmsActive = cmsOverlay.open;
   const settingsActive = mode === "settings" && !cmsOverlay.open;
   const deploymentsActive = mode === "deployments" && !cmsOverlay.open;
-
-  // The batch AI-edit-jobs pipeline is retired — chat sessions are the only
-  // AI path, so there is no in-flight job to signal on the Deployments pill.
-  const hasPendingDeploy = false;
 
   return (
     <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">
@@ -125,74 +114,42 @@ export function ShellHeader({
           />
           <span className="text-[13px] font-bold tracking-tight">Canvas</span>
         </div>
-
-        <div className="bg-border mx-0.5 h-5 w-px" />
-
-        {/* Mode segmented control */}
-        <div className="bg-muted flex items-center gap-0.5 rounded-lg p-0.5">
-          <SegButton
-            icon={LayoutGrid}
-            label="Canvas"
-            active={canvasActive}
-            onClick={() => onModeChange("canvas")}
-          />
-          {/* CMS tab hidden (not removed) — clients now request collection
-              changes through the AI overlay instead of editing entries here.
-              Flip back to `canEdit &&` to restore. */}
-          {false && (
-            <SegButton
-              icon={Table2}
-              label="CMS"
-              active={cmsActive}
-              onClick={onOpenCms}
-              iconColor={REGION_COLORS.collection}
-            />
-          )}
-          {canManage && (
-            <SegButton
-              icon={Settings2}
-              label="Settings"
-              active={settingsActive}
-              onClick={() => onModeChange("settings")}
-            />
-          )}
-          {canEdit && (
-            <SegButton
-              icon={Rocket}
-              label="Deployments"
-              active={deploymentsActive}
-              onClick={() => onModeChange("deployments")}
-              dot={hasPendingDeploy}
-            />
-          )}
-        </div>
       </div>
 
-      {/* Center */}
-      <div className="text-muted-foreground pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-[12.5px]">
-        <span className="text-foreground font-medium">{repo}</span>
-        <span className="text-muted-foreground/50">·</span>
-        <GitBranch className="size-3.5" />
-        <span>{branch || "main"}</span>
+      {/* Mode tabs — pinned to the canvas panel's left edge. `--chat-w` is
+          the live chat-panel width (%) set by the resizable split, so the
+          tabs stay flush with the canvas at any splitter position. */}
+      <div
+        className="bg-muted absolute flex items-center gap-0.5 rounded-lg p-0.5"
+        style={{ left: `calc(${chatWidth}% + 12px)` }}
+      >
+        <SegButton
+          icon={LayoutGrid}
+          label="Canvas"
+          active={canvasActive}
+          onClick={() => onModeChange("canvas")}
+        />
+        {canManage && (
+          <SegButton
+            icon={Settings2}
+            label="Settings"
+            active={settingsActive}
+            onClick={() => onModeChange("settings")}
+          />
+        )}
+        {canEdit && (
+          <SegButton
+            icon={Rocket}
+            label="Deployments"
+            active={deploymentsActive}
+            onClick={() => onModeChange("deployments")}
+          />
+        )}
       </div>
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
         <AiIntroDialog />
-        {canEdit && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onToggleAi}
-            aria-label="Edit with AI"
-            className={cn(
-              "hover:text-foreground",
-              aiActive ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <PaintbrushSparkle className="size-5" />
-          </Button>
-        )}
         {mediaLibrary.isAvailable && canEdit && (
           <Button
             variant="ghost"
@@ -221,28 +178,14 @@ export function ShellHeader({
           variant="ghost"
           size="icon-sm"
           onClick={onToggleDocs}
-          aria-label="Toggle guide"
+          aria-label="Open guide"
           className="text-muted-foreground hover:text-foreground"
         >
-          <PanelRight className="size-5" />
+          <Info className="size-5" />
         </Button>
         <User align="end" />
         <InviteButton owner={owner} repo={repo} />
-        {canEdit && (
-          <Button
-            size="sm"
-            variant={draftCount > 0 ? "default" : "outline"}
-            onClick={openPublishDialog}
-          >
-            <UploadCloud className="size-4" />
-            Publish
-            {draftCount > 0 && (
-              <span className="bg-primary-foreground/20 ml-1 rounded-full px-1.5 text-xs tabular-nums">
-                {draftCount}
-              </span>
-            )}
-          </Button>
-        )}
+        <SessionActions />
       </div>
     </header>
   );

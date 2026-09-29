@@ -148,3 +148,30 @@
     text-transform: uppercase;
   }
 }
+
+/* Shimmer sweep for pending chat labels (Thinking / Working / Sending): a
+   light highlight travels left→right across the text on a loop, v0-style. */
+@keyframes cms-text-shimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--muted-foreground) 55%, transparent) 0%,
+    color-mix(in oklch, var(--muted-foreground) 55%, transparent) 35%,
+    var(--foreground) 50%,
+    color-mix(in oklch, var(--muted-foreground) 55%, transparent) 65%,
+    color-mix(in oklch, var(--muted-foreground) 55%, transparent) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cms-text-shimmer 1.4s linear infinite;
+}

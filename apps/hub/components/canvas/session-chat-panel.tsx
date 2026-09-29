@@ -1,20 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRepo } from "@/contexts/repo-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
@@ -22,6 +11,10 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useSessionEvents, type MessageRun } from "@/hooks/use-session-events";
+import {
+  useSessionTranscript,
+  type TranscriptMessage,
+} from "@/hooks/use-session-transcript";
 import {
   filterSkills,
   SlashSkillsMenu,
@@ -34,15 +27,16 @@ import {
   type PickedElement,
 } from "@/components/canvas/canvas-editor-context";
 import {
+  ArrowUp,
   Check,
+  ChevronRight,
   CircleCheck,
+  Copy,
   Loader2,
   MousePointerClick,
   PaintbrushSparkle,
-  Send,
   Settings,
   TriangleAlert,
-  UploadCloud,
   Users,
   X,
 } from "@/components/icon";
@@ -53,22 +47,6 @@ import {
  * Claude CLI's stream Claude-style — thinking shimmer, tool activity lines,
  * streamed reply text — then a commit/status row per exchange.
  */
-
-type TranscriptMessage = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  status: "queued" | "running" | "done" | "failed" | "rejected";
-  commitSha: string | null;
-  error: string | null;
-  createdAt: string;
-};
-
-type Transcript = {
-  id: string;
-  status: string;
-  messages: TranscriptMessage[];
-};
 
 const pilotUrl = (process.env.NEXT_PUBLIC_CONTENT_PILOT_URL ?? "").replace(
   /\/+$/,
@@ -102,20 +80,117 @@ function buildContext(
 const shortText = (value: string, max = 40) =>
   value.length > max ? value.slice(0, max).trimEnd() + "…" : value;
 
-export function SessionChatPanel({ onClose }: { onClose: () => void }) {
+/** Compact display for a long URL: host + a trimmed path. */
+const shortenUrl = (url: string) => {
+  try {
+    const u = new URL(url);
+    const tail = (u.pathname + u.search).replace(/\/$/, "");
+    return u.host + (tail.length > 20 ? tail.slice(0, 20) + "…" : tail);
+  } catch {
+    return url.length > 42 ? url.slice(0, 42) + "…" : url;
+  }
+};
+
+/**
+ * Render message text, turning long URLs into short underlined links. Link
+ * color adapts to the bubble: white on the orange user bubble, blue on the
+ * gray assistant bubble.
+ */
+const linkify = (text: string, onPrimary = false): React.ReactNode[] =>
+  text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={index}
+        href={part}
+        target="_blank"
+        rel="noreferrer"
+        title={part}
+        className={cn(
+          "underline [overflow-wrap:anywhere]",
+          onPrimary
+            ? "decoration-primary-foreground/50 font-medium underline-offset-2"
+            : "text-blue-600 dark:text-blue-400"
+        )}
+      >
+        {shortenUrl(part)}
+      </a>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+
+const formatTime = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+};
+
+/** Compact token total for a turn, e.g. "1.2k tokens" / "840 tokens". */
+const formatTokens = (input: number | null, output: number | null) => {
+  const total = (input ?? 0) + (output ?? 0);
+  if (!total) return null;
+  const label = total >= 1000 ? `${(total / 1000).toFixed(1)}k` : `${total}`;
+  return `${label} tokens`;
+};
+
+/** Small time + copy (+ token count) row shown under a persisted bubble. */
+function MessageMeta({
+  createdAt,
+  content,
+  align,
+  tokens,
+}: {
+  createdAt: string;
+  content: string;
+  align: "start" | "end";
+  /** Turn's token usage, shown beside copy (assistant side only). */
+  tokens?: string | null;
+}) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div
+      className={cn(
+        "text-muted-foreground/60 flex items-center gap-1 px-1 text-[10.5px]",
+        align === "end" ? "flex-row-reverse self-end" : "self-start"
+      )}
+    >
+      <span className="tabular-nums">{formatTime(createdAt)}</span>
+      <button
+        type="button"
+        aria-label="Copy message"
+        className="hover:text-foreground rounded p-0.5 transition-colors"
+        onClick={() => {
+          navigator.clipboard?.writeText(content).catch(() => {});
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1200);
+        }}
+      >
+        {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+      </button>
+      {tokens && <span className="tabular-nums">{tokens}</span>}
+    </div>
+  );
+}
+
+export function SessionChatPanel() {
   const {
     owner,
     repo,
     session,
     editToken,
     capacityMessage,
+    previewError,
+    previewTimedOut,
     retryStart,
     currentPage,
     pickedElement,
     clearPickedElement,
   } = useCanvasEditor();
-  const { myRole } = useRepo();
-  const canPublish = (myRole ?? "full-access") === "full-access";
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -152,35 +227,9 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
       onError: (error) => toast.error(error.message),
     })
   );
-  const publishMutation = useMutation(
-    trpc.cms.previewSession.publish.mutationOptions({
-      onSuccess: (result) => {
-        invalidateSession();
-        toast.success(
-          result.merged
-            ? "Published! Your site is deploying now."
-            : "Nothing to publish — session closed."
-        );
-      },
-      onError: (error) => toast.error(error.message),
-    })
-  );
-
-  // Transcript straight from content-pilot (edit token, CORS'd) — the hub
-  // stores nothing session-shaped. SSE message-done events drive refetches;
-  // the interval is only a fallback for a dropped stream.
-  const transcriptQuery = useQuery({
-    queryKey: ["preview-session-transcript", session?.id],
-    enabled: Boolean(session?.id && editToken && pilotUrl),
-    refetchInterval: 60_000,
-    queryFn: async (): Promise<Transcript> => {
-      const res = await fetch(`${pilotUrl}/api/v1/sessions/${session!.id}`, {
-        headers: { Authorization: `Bearer ${editToken}` },
-      });
-      if (!res.ok) throw new Error(`transcript ${res.status}`);
-      return (await res.json()) as Transcript;
-    },
-  });
+  // Transcript straight from content-pilot — shared with the header's
+  // session actions via the same query key.
+  const transcriptQuery = useSessionTranscript(session?.id, editToken);
 
   const { runs } = useSessionEvents({
     sessionId: session?.id ?? null,
@@ -224,8 +273,16 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
   });
 
   const [input, setInput] = useState("");
-  const [confirmPublish, setConfirmPublish] = useState(false);
-  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  // v0-style composer: the textarea grows with its content (capped), and
+  // shrinks back when the input is cleared or restored programmatically.
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [input]);
 
   // "/" skills menu: the client repo's .claude/skills, listed by content-pilot
   // from the workspace clone. A selected skill just becomes "/name " in the
@@ -285,6 +342,8 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
         commitSha: null,
         error: null,
         createdAt: new Date(pending.at).toISOString(),
+        inputTokens: null,
+        outputTokens: null,
       })),
   ];
   // Prune matched entries so the list doesn't rescan forever.
@@ -346,23 +405,20 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
+      {/* Header — the chat is the editor's primary surface, never closable. */}
       <div className="flex h-10 shrink-0 items-center gap-2 border-b px-3">
         <span className="text-[13px] font-semibold">Edit with AI</span>
         <SessionStatusPill session={session} />
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="ml-auto"
-          aria-label="Close panel"
-          onClick={onClose}
-        >
-          <X className="size-4" />
-        </Button>
       </div>
 
       {!session ? (
-        (capacityMessage ?? capacityBlocked) ? (
+        previewError ? (
+          <ErrorPane
+            message={previewError}
+            retrying={startMutation.isPending}
+            onRetry={retryStart}
+          />
+        ) : (capacityMessage ?? capacityBlocked) ? (
           <CapacityPane
             message={capacityMessage ?? capacityBlocked ?? ""}
             retrying={startMutation.isPending}
@@ -370,12 +426,17 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
               setCapacityBlocked(null);
               retryStart();
             }}
-            onUseClassic={onClose}
           />
         ) : (
           // Auto-start fires on project open — no start button, just boot state.
           <BootPane status="starting" />
         )
+      ) : previewTimedOut ? (
+        <ErrorPane
+          message="The preview is taking longer than expected to start. It may be having trouble booting."
+          retrying={startMutation.isPending}
+          onRetry={retryStart}
+        />
       ) : session.status === "needs_config" ? (
         <NeedsConfigPane
           message={session.error}
@@ -426,17 +487,35 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
               </p>
             )}
             <div className="flex flex-col gap-3">
-              {messages.map((message) =>
-                message.role === "user" ? (
-                  <UserExchange
-                    key={message.id}
-                    message={message}
-                    run={runs.get(message.id)}
-                  />
-                ) : (
-                  <AssistantBubble key={message.id} text={message.content} />
-                )
-              )}
+              {messages.map((message, index) => {
+                if (message.role === "user") {
+                  return (
+                    <UserExchange
+                      key={message.id}
+                      message={message}
+                      run={runs.get(message.id)}
+                    />
+                  );
+                }
+                // Usage is stored on the user message that drove this reply
+                // (the row right before it) — surface it beside the copy icon.
+                const prev = messages[index - 1];
+                const tokens =
+                  prev?.role === "user"
+                    ? formatTokens(prev.inputTokens, prev.outputTokens)
+                    : null;
+                return (
+                  <div key={message.id} className="flex flex-col gap-1">
+                    <AssistantBubble text={message.content} />
+                    <MessageMeta
+                      createdAt={message.createdAt}
+                      content={message.content}
+                      align="start"
+                      tokens={tokens}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -464,7 +543,7 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
             )}
-            <div className="relative flex items-end gap-1.5">
+            <div className="relative">
               {slashOpen && (
                 <SlashSkillsMenu
                   query={slashQuery ?? ""}
@@ -473,7 +552,11 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
                   onSelect={pickSkill}
                 />
               )}
+              {/* overflow-hidden clips the textarea's square corners to the
+                  card radius; the slash menu sits outside so it isn't cut. */}
+              <div className="bg-card focus-within:ring-primary overflow-hidden rounded-2xl border shadow-sm transition-shadow focus-within:ring-2">
               <Textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
@@ -506,108 +589,33 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
                   }
                 }}
                 placeholder='e.g. "Change the hero headline to…"'
-                rows={2}
-                className="bg-muted/60 max-h-32 min-h-16 min-w-0 flex-1 resize-none rounded-xl px-3 py-2 text-[13px] shadow-none"
+                rows={1}
+                className="max-h-40 min-h-[44px] w-full resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 text-[13px] shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
-              <Button
-                size="icon"
-                aria-label="Send"
-                className="size-9 shrink-0 rounded-xl"
-                disabled={!input.trim() || sendMutation.isPending || !canSend}
-                onClick={send}
-              >
-                {sendMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
-              </Button>
-            </div>
-
-            {/* Session actions */}
-            <div className="mt-2 flex items-center gap-1.5">
-              {canPublish && (
+              <div className="flex items-center justify-end px-2 pb-2">
                 <Button
-                  className="flex-1"
-                  disabled={
-                    busy ||
-                    publishMutation.isPending ||
-                    (session.status !== "ready" && session.status !== "paused")
-                  }
-                  onClick={() => setConfirmPublish(true)}
+                  size="icon"
+                  aria-label="Send"
+                  className="size-7 shrink-0 rounded-full"
+                  disabled={!input.trim() || sendMutation.isPending || !canSend}
+                  onClick={send}
                 >
-                  {publishMutation.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
+                  {sendMutation.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    <UploadCloud className="size-4" />
+                    <ArrowUp className="size-3.5" />
                   )}
-                  Publish
                 </Button>
-              )}
-              <Button
-                variant="outline"
-                className="flex-1"
-                disabled={busy || closeMutation.isPending}
-                onClick={() => setConfirmDiscard(true)}
-              >
-                Discard
-              </Button>
+              </div>
+              </div>
             </div>
+            <p className="text-muted-foreground/70 mt-2 px-1 text-[11px] leading-relaxed">
+              Please avoid sharing confidential or private details for now.
+              While we test on the free plan, messages may be reviewed by
+              Google. Once we move to the paid plan, your content stays
+              completely private.
+            </p>
           </div>
-
-          <AlertDialog open={confirmPublish} onOpenChange={setConfirmPublish}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Publish these changes?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Everything you see in the preview goes live on your website.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Keep editing</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    // Close immediately — the chat-UI Publish button shows the
-                    // loading spinner (publishMutation.isPending) from here on.
-                    setConfirmPublish(false);
-                    publishMutation.mutate({
-                      owner,
-                      repo,
-                      sessionId: session.id,
-                    });
-                  }}
-                >
-                  Publish
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Discard this session?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  The preview closes and the changes from this session are
-                  thrown away. Your live site is not affected.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Keep editing</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() =>
-                    closeMutation.mutate({
-                      owner,
-                      repo,
-                      sessionId: session.id,
-                    })
-                  }
-                >
-                  Discard
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </>
       )}
     </div>
@@ -628,7 +636,7 @@ function StatusBanner({ status }: { status: string }) {
   return (
     <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b bg-amber-500/5 px-3 py-1.5 text-[12px]">
       <Loader2 className="size-3 animate-spin" />
-      {bootLabel(status)}
+      <span className="shimmer-text font-medium">{bootLabel(status)}</span>
       <span className="text-muted-foreground/60">
         You can type now — requests run as soon as it's up.
       </span>
@@ -640,12 +648,10 @@ function CapacityPane({
   message,
   retrying,
   onRetry,
-  onUseClassic,
 }: {
   message: string;
   retrying: boolean;
   onRetry: () => void;
-  onUseClassic: () => void;
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
@@ -667,21 +673,6 @@ function CapacityPane({
         )}
         Try again
       </Button>
-      <div className="mt-2 border-t pt-3">
-        <p className="text-muted-foreground/80 max-w-[250px] text-[12px] leading-relaxed">
-          No need to wait — you can still request changes the classic way: close
-          this panel and click any text or image on your site to send it.
-        </p>
-        <Button
-          size="sm"
-          variant="outline"
-          className="mt-2"
-          onClick={onUseClassic}
-        >
-          <MousePointerClick className="size-4" />
-          Edit the classic way
-        </Button>
-      </div>
     </div>
   );
 }
@@ -726,6 +717,30 @@ function NeedsConfigPane({
   );
 }
 
+/** Preview service unreachable, or boot ran past the timeout — retryable. */
+function ErrorPane({
+  message,
+  retrying,
+  onRetry,
+}: {
+  message: string;
+  retrying: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <TriangleAlert className="size-6 text-red-500" />
+      <p className="text-muted-foreground max-w-[250px] text-[13px] leading-relaxed">
+        {message}
+      </p>
+      <Button size="sm" variant="outline" disabled={retrying} onClick={onRetry}>
+        {retrying ? <Loader2 className="size-4 animate-spin" /> : null}
+        Try again
+      </Button>
+    </div>
+  );
+}
+
 function BootPane({ status }: { status: string }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
@@ -747,12 +762,19 @@ function UserExchange({
   run: MessageRun | undefined;
 }) {
   const inFlight = message.status === "queued" || message.status === "running";
+  const [showDetails, setShowDetails] = useState(false);
+  const steps = run?.activities ?? [];
   return (
     <div className="flex flex-col gap-1.5">
       {/* User bubble, right-aligned */}
-      <div className="bg-primary text-primary-foreground ml-8 min-w-0 self-end rounded-2xl rounded-br-md px-3 py-2 text-[13px] leading-relaxed break-words whitespace-pre-wrap">
-        {message.content}
+      <div className="bg-primary text-primary-foreground ml-8 max-w-[85%] min-w-0 self-end rounded-2xl rounded-br-md px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
+        {linkify(message.content, true)}
       </div>
+      <MessageMeta
+        createdAt={message.createdAt}
+        content={message.content}
+        align="end"
+      />
 
       {/* Live activity while the run is in flight (Claude-style). */}
       {inFlight && (
@@ -777,23 +799,21 @@ function UserExchange({
             )
           )}
           {run?.thinking && (
-            <div className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]">
-              <span className="animate-pulse">Thinking…</span>
+            <div className="flex items-center gap-1.5 px-1 text-[12px]">
+              <span className="shimmer-text">Thinking…</span>
             </div>
           )}
           {!run?.thinking && !run?.text && message.status === "queued" && (
-            <div className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]">
-              <Loader2 className="size-3 animate-spin" />
-              Queued…
+            <div className="flex items-center gap-1.5 px-1 text-[12px]">
+              <span className="shimmer-text">Queued…</span>
             </div>
           )}
           {!run?.thinking &&
             !run?.text &&
             message.status === "running" &&
             !run?.activities.length && (
-              <div className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]">
-                <Loader2 className="size-3 animate-spin" />
-                Working…
+              <div className="flex items-center gap-1.5 px-1 text-[12px]">
+                <span className="shimmer-text">Working…</span>
               </div>
             )}
           {/* Streaming assistant text */}
@@ -813,6 +833,51 @@ function UserExchange({
           <span>{message.error ?? "This request failed."}</span>
         </div>
       )}
+
+      {/* Details: after the run finishes, the live steps collapse into a
+          toggle so the whole history stays reviewable (files read/edited). */}
+      {!inFlight && steps.length > 0 && (
+        <div className="mr-6 flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => setShowDetails((open) => !open)}
+            className="text-muted-foreground/70 hover:text-foreground flex items-center gap-1 self-start px-1 text-[11px] transition-colors"
+          >
+            <ChevronRight
+              className={cn(
+                "size-3 transition-transform",
+                showDetails && "rotate-90"
+              )}
+            />
+            {showDetails ? "Hide details" : `Details · ${steps.length} steps`}
+          </button>
+          {showDetails && (
+            <div className="border-border/60 ml-2 flex flex-col gap-1 border-l pl-2.5">
+              {steps.map((activity, index) =>
+                activity.kind === "tool" ? (
+                  <div
+                    key={index}
+                    className="text-muted-foreground flex items-center gap-1.5 text-[12px]"
+                  >
+                    <Check className="size-3 shrink-0 opacity-60" />
+                    <span className="[overflow-wrap:anywhere]">
+                      {activity.label}
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    key={index}
+                    className="text-muted-foreground flex items-center gap-1.5 text-[12px]"
+                  >
+                    <CircleCheck className="size-3 shrink-0 text-emerald-500" />
+                    Saved to preview ({activity.sha.slice(0, 7)})
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -827,11 +892,11 @@ function AssistantBubble({
   return (
     <div
       className={cn(
-        "bg-muted mr-6 min-w-0 self-start rounded-2xl rounded-bl-md px-3 py-2 text-[13px] leading-relaxed break-words whitespace-pre-wrap",
+        "bg-muted mr-6 max-w-[85%] min-w-0 self-start rounded-2xl rounded-bl-md px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]",
         streaming && "after:ml-0.5 after:animate-pulse after:content-['▍']"
       )}
     >
-      {text}
+      {linkify(text)}
     </div>
   );
 }
