@@ -1,17 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  CreditCard,
-  FileText,
-  Globe,
-  House,
-  Newspaper,
-  TriangleAlert,
-} from "@/components/icon";
+import { useState } from "react";
+import { CreditCard, Globe, TriangleAlert } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
-import { REGION_COLORS } from "@/lib/region-colors";
 
 import { ProjectBillingPanel } from "@/components/billing/project-billing";
 import { AnalyticsPanel } from "@/components/settings/analytics-panel";
@@ -19,66 +11,25 @@ import { DangerPanel } from "@/components/settings/danger-panel";
 import { ChartMark } from "@/components/analytics/chart-mark";
 import { SpeedMark } from "@/components/analytics/speed-mark";
 import { SpeedPanel } from "@/components/settings/speed-panel";
-import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
-import { useSeoDraft } from "@/components/settings/use-seo-draft";
-import { BlogPanel } from "@/components/settings/blog-panel";
 import { DomainPanel } from "@/components/settings/domain-panel";
 import { EmailsPanel } from "@/components/settings/emails-panel";
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
-import { PageSettingsPanel } from "@/components/settings/page-settings-panel";
-import { PanelError } from "@/components/settings/panel-error";
 
 /** Sentinels for the Site Settings entries in the settings nav. */
 const BILLING = "$billing";
 const DOMAIN = "$domain";
-const BLOG = "$blog";
 const EMAILS = "$emails";
 const ANALYTICS = "$analytics";
 const SPEED = "$speed";
 const DANGER = "$danger";
 
 /**
- * In-shell Settings view (the logo-dropdown flips into this). Own left nav —
- * Site Settings › General and Page Settings › [pages] — with SEO/site forms on
- * the right. Base-path/advanced config still lives on the standalone route.
+ * In-shell Settings view (the logo-dropdown flips into this). Repo-level
+ * project settings only — Billing, Domain, Emails, Analytics, Speed, Danger.
+ * Site content + page settings are edited through the AI chat now.
  */
 export function SettingsMode() {
-  const { pages, settingsRequest, setSettingsRequest, isV2 } =
-    useCanvasEditor();
-  const seo = useSeoDraft();
-  // General / Variables / Page Settings all read the root _site.json. Without it
-  // there is no manifest — show an error instead of empty forms. Billing /
-  // Blog / Emails are repo-level and stay available.
-  const noSite = !isV2;
   const [selected, setSelected] = useState<string>(BILLING);
-
-  const pageRows = useMemo(
-    () => pages.filter((page) => page.kind !== "collection"),
-    [pages]
-  );
-
-  // A variant click (or any settings request) selects the section and, when a
-  // field is named, flashes its input so the user knows what to edit.
-  useEffect(() => {
-    if (!settingsRequest) return;
-    if (settingsRequest.section === "blog") {
-      setSelected(BLOG);
-    } else if (settingsRequest.section === "domain") {
-      setSelected(DOMAIN);
-    }
-    setSettingsRequest(null);
-  }, [settingsRequest, setSettingsRequest]);
-
-  const selectedPage =
-    selected === BILLING ||
-    selected === DOMAIN ||
-    selected === BLOG ||
-    selected === EMAILS ||
-    selected === ANALYTICS ||
-    selected === SPEED ||
-    selected === DANGER
-      ? null
-      : (pageRows.find((page) => page.path === selected) ?? null);
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -98,17 +49,6 @@ export function SettingsMode() {
           label="Domain"
           active={selected === DOMAIN}
           onClick={() => setSelected(DOMAIN)}
-        />
-        <NavRow
-          icon={
-            <Newspaper
-              className="size-4"
-              style={{ color: REGION_COLORS.blog }}
-            />
-          }
-          label="Blog"
-          active={selected === BLOG}
-          onClick={() => setSelected(BLOG)}
         />
         <NavRow
           icon={<EnvelopeMark className="size-4" />}
@@ -134,25 +74,6 @@ export function SettingsMode() {
           active={selected === DANGER}
           onClick={() => setSelected(DANGER)}
         />
-
-        <p className="text-muted-foreground mt-3 px-2 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.09em]">
-          Page Settings
-        </p>
-        {pageRows.map((page) => (
-          <NavRow
-            key={page.path}
-            icon={
-              page.path === "/" ? (
-                <House className="size-4" />
-              ) : (
-                <FileText className="size-4" />
-              )
-            }
-            label={page.path === "/" ? "Home" : page.path}
-            active={selected === page.path}
-            onClick={() => setSelected(page.path)}
-          />
-        ))}
       </aside>
 
       {/* Content */}
@@ -161,8 +82,6 @@ export function SettingsMode() {
           <ProjectBillingPanel />
         ) : selected === DOMAIN ? (
           <DomainPanel />
-        ) : selected === BLOG ? (
-          <BlogPanel />
         ) : selected === EMAILS ? (
           <EmailsPanel />
         ) : selected === ANALYTICS ? (
@@ -171,16 +90,6 @@ export function SettingsMode() {
           <SpeedPanel />
         ) : selected === DANGER ? (
           <DangerPanel />
-        ) : noSite ? (
-          <div className="mx-auto max-w-2xl p-6">
-            <PanelError
-              title="This project has no _site.json"
-              message="Add a _site.json file to the repo root (with cms, seo, and variables) to manage site settings. Site settings are read from that file — there's nothing to configure until it exists."
-              onRetry={() => window.location.reload()}
-            />
-          </div>
-        ) : selectedPage ? (
-          <PageSettingsPanel page={selectedPage} seo={seo} />
         ) : null}
       </main>
     </div>

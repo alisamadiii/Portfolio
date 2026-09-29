@@ -31,7 +31,6 @@ import {
 } from "@/components/icon";
 import { useMediaLibrary } from "@/components/media/media-library-context";
 import { toast } from "sonner";
-import { usePublish } from "@/components/publish/publish-context";
 import { SessionActions } from "@/components/canvas/session-actions";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
@@ -60,16 +59,15 @@ export function ShellHeader({
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const { owner, repo, cmsOverlay } = useCanvasEditor();
-  const { draftCount } = usePublish();
+  const { owner, repo } = useCanvasEditor();
   const { myRole } = useRepo();
   const mediaLibrary = useMediaLibrary();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canManage = (myRole ?? "full-access") === "full-access";
 
-  const canvasActive = mode === "canvas" && !cmsOverlay.open;
-  const settingsActive = mode === "settings" && !cmsOverlay.open;
-  const deploymentsActive = mode === "deployments" && !cmsOverlay.open;
+  const canvasActive = mode === "canvas";
+  const settingsActive = mode === "settings";
+  const deploymentsActive = mode === "deployments";
 
   return (
     <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">
@@ -88,11 +86,7 @@ export function ShellHeader({
             <AlertDialogHeader>
               <AlertDialogTitle>Leave the editor?</AlertDialogTitle>
               <AlertDialogDescription>
-                {draftCount > 0
-                  ? `You have ${draftCount} unpublished ${
-                      draftCount === 1 ? "draft" : "drafts"
-                    }. ${draftCount === 1 ? "It stays" : "They stay"} saved on this device — publish when you're back.`
-                  : "You'll return to your projects list."}
+                You'll return to your projects list.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -197,17 +191,11 @@ function SegButton({
   label,
   active,
   onClick,
-  iconColor,
-  dot,
 }: {
   icon: (props: LucideProps) => React.ReactNode;
   label: string;
   active: boolean;
   onClick: () => void;
-  /** Tint the icon with a region-type color (CMS = purple). */
-  iconColor?: string;
-  /** Show a small yellow activity dot (e.g. a deployment in flight). */
-  dot?: boolean;
 }) {
   return (
     <button
@@ -221,11 +209,8 @@ function SegButton({
           : "text-muted-foreground hover:text-foreground"
       )}
     >
-      <Icon className="size-4" style={iconColor ? { color: iconColor } : undefined} />
+      <Icon className="size-4" />
       <span className="max-md:hidden">{label}</span>
-      {dot && (
-        <span className="ring-background absolute -top-0.5 -right-0.5 size-2 rounded-full bg-amber-500 ring-2" />
-      )}
     </button>
   );
 }

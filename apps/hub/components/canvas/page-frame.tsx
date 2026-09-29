@@ -44,13 +44,8 @@ export function PageFrame({
   device: CanvasDevice;
   reloadNonce: number;
 }) {
-  const {
-    registerFrame,
-    editSrcFor,
-    refreshFrameFromStore,
-    session,
-    previewFramePath,
-  } = useCanvasEditor();
+  const { registerFrame, editSrcFor, session, previewFramePath } =
+    useCanvasEditor();
   const sessionMode = Boolean(session);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loaded, setLoaded] = useState(false);
@@ -72,18 +67,17 @@ export function PageFrame({
     initialSrc.current = null;
   }
 
-  // Toolbar-driven reload: re-seed working copy from localStorage, then remount.
+  // Toolbar-driven reload: remount the frame.
   const lastNonce = useRef(reloadNonce);
   useEffect(() => {
     if (reloadNonce === lastNonce.current) return;
     lastNonce.current = reloadNonce;
-    refreshFrameFromStore(page.path);
     // Session mode: recapture the mount src for the CURRENT page, or the
     // remounted frame would reload whatever page the session started on.
     initialSrc.current = null;
     setLoaded(false);
     setReloadKey((key) => key + 1);
-  }, [reloadNonce, page.path, refreshFrameFromStore]);
+  }, [reloadNonce, page.path]);
 
   // Session mode: navigate imperatively, and ONLY when the frame isn't
   // already on the selected page — a tree update caused by in-frame

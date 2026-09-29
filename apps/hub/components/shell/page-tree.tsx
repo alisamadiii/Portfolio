@@ -1,12 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQueries } from "@tanstack/react-query";
-import { useTRPC } from "@workspace/trpc/client";
 import {
   ChevronDown,
   ChevronRight,
-  Database,
   FileText,
   House,
 } from "@/components/icon";
@@ -25,34 +22,25 @@ import {
   type CanvasPageInfo,
   type SitemapPageInfo,
 } from "@/components/canvas/canvas-editor-context";
-import { isBlogCollection } from "@/lib/engine/blog-schema";
 
 /** Children shown inline under an expanded parent before "See all…". */
 const INLINE_CHILD_LIMIT = 10;
 
 /**
- * Left sidebar: the site's pages as a flat list (Framer-style). A page that
- * owns a CMS collection shows the collection as an indented sub-row with a
- * live entry-count badge; selecting it opens the CMS overlay. Selecting a
- * page loads that page's iframe.
+ * Left sidebar: the site's pages as a flat list (Framer-style). Deep routes
+ * sharing a prefix collapse under a virtual folder; sitemap-discovered pages
+ * nest under their parent page. Selecting a page loads that page's iframe.
  */
 export function PageTree() {
   const {
-    owner,
-    repo,
-    branch,
     pages,
     entryPages,
     sitemapPaths,
     sitemapLoaded,
     selectedPath,
     setSelectedPath,
-    setCmsOverlay,
-    setSettingsRequest,
     pagesLoading,
-    dirtyPagePaths,
   } = useCanvasEditor();
-  const trpc = useTRPC();
 
   // Sitemap children grouped by their parent page path (null = no parent —
   // rendered in the "More pages" group at the bottom).
@@ -78,15 +66,6 @@ export function PageTree() {
       return next;
     });
 
-  // Blog is managed on its own Settings page, not the generic CMS overlay.
-  const openCollection = (name?: string) => {
-    if (isBlogCollection({ name: name ?? "" })) {
-      setSettingsRequest({ section: "blog" });
-    } else {
-      setCmsOverlay({ open: true, collection: name });
-    }
-  };
-
   const pageRows = useMemo(
     () => pages.filter((page) => page.kind !== "collection"),
     [pages]
@@ -103,10 +82,6 @@ export function PageTree() {
   const hiddenRows = splitBySitemap
     ? pageRows.filter((page) => !inSitemap.has(page.path))
     : [];
-  const collections = useMemo(
-    () => pages.filter((page) => page.kind === "collection"),
-    [pages]
-  );
 
   // Group deep routes under a virtual folder by their parent prefix, e.g.
   // /services/swimming + /services/soccer-team collapse under a "/services"
@@ -184,43 +159,12 @@ export function PageTree() {
     return map;
   }, [parentlessGroups]);
 
-  // One entry-count query per collection (light — a single dir listing).
-  const countQueries = useQueries({
-    queries: collections.map((collection) =>
-      trpc.cms.collections.listV2.queryOptions(
-        { owner, repo, branch, name: collection.collection ?? "" },
-        {
-          enabled: Boolean(owner && repo && branch && collection.collection),
-          staleTime: 60_000,
-        }
-      )
-    ),
-  });
-  const countByName = useMemo(() => {
-    const map = new Map<string, number>();
-    collections.forEach((collection, index) => {
-      const data = countQueries[index]?.data;
-      if (data && collection.collection)
-        map.set(collection.collection, data.entries.length);
-    });
-    return map;
-  }, [collections, countQueries]);
-
-  const collectionsFor = (page: CanvasPageInfo) =>
-    collections.filter((collection) => collection.parentPath === page.path);
-  const orphanCollections = collections.filter(
-    (collection) =>
-      !pageRows.some((page) => page.path === collection.parentPath)
-  );
-
-  // One page row (icon, label, dirty dot, expand arrow, nested collection
-  // rows) — shared by both sidebar sections.
+  // One page row (icon, label, expand arrow, nested sitemap children) —
+  // shared by both sidebar sections.
   const renderPageRow = (page: CanvasPageInfo) => {
-          const nested = collectionsFor(page);
           const children = childrenByParent.get(page.path) ?? [];
           const isExpanded = expanded.has(page.path);
           const active = selectedPath === page.path;
-          const dirty = dirtyPagePaths.has(page.path);
           return (
             <div key={page.path}>
               <div
@@ -244,12 +188,6 @@ export function PageTree() {
                   <span className="flex-1 truncate">
                     {page.path === "/" ? "Home" : page.path}
                   </span>
-                  {dirty && (
-                    <span
-                      className="bg-draft size-[5px] shrink-0 rounded-full"
-                      title="Unpublished changes"
-                    />
-                  )}
                 </button>
                 {children.length > 0 && (
                   <button
@@ -278,15 +216,6 @@ export function PageTree() {
                   onSeeAll={() => setDialogGroup(page.path)}
                 />
               )}
-              {nested.map((collection) => (
-                <CollectionRow
-                  key={collection.path}
-                  label={collection.title}
-                  count={countByName.get(collection.collection ?? "")}
-                  onClick={() => openCollection(collection.collection)}
-                  indented
-                />
-              ))}
             </div>
           );
   };
@@ -330,15 +259,6 @@ export function PageTree() {
             </div>
           );
         })}
-
-        {orphanCollections.map((collection) => (
-          <CollectionRow
-            key={collection.path}
-            label={collection.title}
-            count={countByName.get(collection.collection ?? "")}
-            onClick={() => openCollection(collection.collection)}
-          />
-        ))}
 
         {parentlessGroups.map(([prefix, children]) => {
           const key = `entry:${prefix}`;
@@ -406,8 +326,7 @@ export function PageTree() {
       />
 
       <p className="text-muted-foreground mt-auto border-t px-2 pb-1 pt-2.5 text-[11px] leading-relaxed">
-        Click anything in the preview to edit it. Drafts stay on this device
-        until you publish.
+        Pick a page to preview it, then ask the AI to change anything on it.
       </p>
     </nav>
   );
@@ -525,36 +444,5 @@ function SeeAllDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function CollectionRow({
-  label,
-  count,
-  onClick,
-  indented,
-}: {
-  label: string;
-  count?: number;
-  onClick: () => void;
-  indented?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "text-muted-foreground hover:bg-muted/60 hover:text-foreground flex h-7 w-full items-center gap-2 rounded-md pr-2 text-left text-[12.5px] transition-colors",
-        indented ? "pl-8" : "pl-2"
-      )}
-    >
-      <Database className="size-4 shrink-0 opacity-60" />
-      <span className="truncate">{label}</span>
-      {typeof count === "number" && (
-        <span className="text-muted-foreground ml-auto text-[10.5px] tabular-nums">
-          {count}
-        </span>
-      )}
-    </button>
   );
 }

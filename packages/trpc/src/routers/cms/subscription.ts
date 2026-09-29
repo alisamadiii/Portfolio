@@ -4,7 +4,6 @@ import Stripe from "stripe";
 import z from "zod";
 
 import {
-  adminProcedure,
   authenticatedProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
@@ -147,24 +146,5 @@ export const subscriptionRouter = createTRPCRouter({
         return_url: input.returnUrl,
       });
       return { url: session.url };
-    }),
-
-  // Admin: grant a free / free-for-life plan (no Stripe subscription), or reset.
-  setPlan: adminProcedure
-    .input(
-      z.object({
-        repoId: z.number().int().positive(),
-        plan: z.enum(["free", "free_lifetime", "paid"]),
-      })
-    )
-    .mutation(async ({ input }) => {
-      await db
-        .insert(hubSubscription)
-        .values({ repoId: input.repoId, plan: input.plan })
-        .onConflictDoUpdate({
-          target: hubSubscription.repoId,
-          set: { plan: input.plan, updatedAt: new Date() },
-        });
-      return { ok: true };
     }),
 });

@@ -10,9 +10,7 @@ import { Button } from "@workspace/ui/components/button";
 import { repoPath } from "@/lib/paths";
 import { trackVisit } from "@/lib/tracker";
 
-import { CommandPaletteProvider } from "@/components/chrome/command-palette-provider";
 import { ArrowLeft } from "@/components/icon";
-import { PublishProvider } from "@/components/publish/publish-context";
 import {
   RepoHeaderProvider,
   useRepoHeaderState,
@@ -59,16 +57,12 @@ export function RepoLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <RepoHeaderProvider>
-      <PublishProvider>
-        <CommandPaletteProvider>
-          <div className="bg-shell flex min-h-screen flex-col">
-            <RepoHeader />
-            <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
-              {children}
-            </main>
-          </div>
-        </CommandPaletteProvider>
-      </PublishProvider>
+      <div className="bg-shell flex min-h-screen flex-col">
+        <RepoHeader />
+        <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
+          {children}
+        </main>
+      </div>
     </RepoHeaderProvider>
   );
 }

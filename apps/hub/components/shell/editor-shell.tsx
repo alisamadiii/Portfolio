@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Frame, Globe } from "@/components/icon";
+import { useMemo, useState } from "react";
+import { Frame, Globe } from "@/components/icon";
 import { Button } from "@workspace/ui/components/button";
 import {
   ResizableHandle,
@@ -10,12 +10,10 @@ import {
 } from "@workspace/ui/components/resizable";
 import { Sheet, SheetContent, SheetTitle } from "@workspace/ui/components/sheet";
 
-import { CmsOverlay } from "@/components/cms/cms-overlay";
 import {
   CanvasEditorProvider,
   useCanvasEditor,
 } from "@/components/canvas/canvas-editor-context";
-import { EditorOverlays } from "@/components/canvas/editor-overlays";
 import { CanvasLoading } from "@/components/canvas/canvas-loading";
 import { CanvasPanelHeader } from "@/components/canvas/canvas-panel-header";
 import { PageFrame } from "@/components/canvas/page-frame";
@@ -70,23 +68,12 @@ function ShellBody() {
     selectedPath,
     pagesError,
     needsDomain,
-    isV2,
-    cmsOverlay,
-    setCmsOverlay,
-    settingsRequest,
-    setSettingsRequest,
     session,
   } = useCanvasEditor();
   const { myRole } = useRepo();
-  // view-only collaborators never see the CMS overlay or Deployments view.
+  // view-only collaborators never see the Deployments view.
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const [mode, setMode] = useState<ShellMode>("canvas");
-
-  // A settings request (e.g. a variant click) flips the shell into Settings
-  // mode; settings-mode then selects the section + flashes the field.
-  useEffect(() => {
-    if (settingsRequest) setMode("settings");
-  }, [settingsRequest]);
   const [docsOpen, setDocsOpen] = useState(false);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -182,24 +169,6 @@ function ShellBody() {
                       : "hidden"
                   }
                 >
-                  {!isV2 && (
-                    <div className="absolute bottom-4 right-4 z-20 max-w-xs rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs shadow-sm dark:border-amber-500/40 dark:bg-amber-950/60">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                        <div>
-                          <p className="font-semibold text-amber-800 dark:text-amber-200">
-                            No _site.json
-                          </p>
-                          <p className="mt-0.5 text-amber-700 dark:text-amber-300/90">
-                            Add a <code>_site.json</code> at the repo root
-                            (with <code>cms</code>, <code>seo</code>,{" "}
-                            <code>variables</code>) so the CMS can load this
-                            project's pages and settings.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   {needsDomain ? (
                     <div className="bg-shell flex min-h-0 flex-1 items-center justify-center p-6">
                       <div className="bg-background w-full max-w-md rounded-2xl border p-7 text-center shadow-sm">
@@ -213,12 +182,7 @@ function ShellBody() {
                           The canvas previews your live site. Add the project's
                           domain so we know where it lives.
                         </p>
-                        <Button
-                          className="mt-5"
-                          onClick={() =>
-                            setSettingsRequest({ section: "domain" })
-                          }
-                        >
+                        <Button className="mt-5" onClick={() => setMode("settings")}>
                           Add domain
                         </Button>
                       </div>
@@ -258,16 +222,6 @@ function ShellBody() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-
-      {/* Floating editors (link / group) + CMS overlay */}
-      <EditorOverlays />
-      <CmsOverlay
-        open={cmsOverlay.open && canEdit}
-        onOpenChange={(open) =>
-          setCmsOverlay(open ? { ...cmsOverlay, open } : { open })
-        }
-        initialCollection={cmsOverlay.collection}
-      />
 
       {/* Client guide — opened from the header's info button. */}
       <Sheet open={docsOpen} onOpenChange={setDocsOpen}>

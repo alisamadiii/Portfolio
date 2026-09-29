@@ -1,9 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import z from "zod";
 
 import {
-  adminProcedure,
   authenticatedProcedure,
   collaboratorProcedure,
   createTRPCRouter,
@@ -94,39 +93,7 @@ async function acceptAgencyInvite(owner: string, repo: string) {
   }
 }
 
-// Every project is a hub_project row (created by the import flow). Pure DB
-// listing, optionally scoped to one owner + a repo-name keyword.
-const listProjectRows = async (owner?: string, keyword?: string) => {
-  const trimmed = keyword?.trim();
-
-  const rows = await db
-    .select()
-    .from(hubProject)
-    // Exclude Danger-tab tombstones (hidden) from every listing.
-    .where(
-      and(
-        eq(hubProject.hidden, false),
-        owner ? sql`lower(${hubProject.owner}) = lower(${owner})` : undefined,
-        trimmed ? ilike(hubProject.repo, `%${trimmed}%`) : undefined
-      )
-    )
-    .orderBy(desc(hubProject.githubUpdatedAt));
-
-  return rows.map((row) => ({
-    owner: row.owner,
-    repo: row.repo,
-    private: row.private,
-    defaultBranch: row.defaultBranch,
-    updatedAt: row.githubUpdatedAt.toISOString(),
-    websiteUrl: row.websiteUrl ?? null,
-  }));
-};
-
 export const reposRouter = createTRPCRouter({
-  listRepos: adminProcedure
-    .input(z.object({ keyword: z.string().optional() }).optional())
-    .query(async ({ input }) => listProjectRows(undefined, input?.keyword)),
-
   /**
    * GitHub accounts the current user can act as. Admins act as every owner that
    * has a project; collaborators get the distinct owners they were invited to.
