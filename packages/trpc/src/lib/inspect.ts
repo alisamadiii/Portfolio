@@ -214,11 +214,16 @@ function trimAround(text: string, index: number, span = 600): string {
   return (start > 0 ? "…" : "") + chunk + (start + span < text.length ? "…" : "");
 }
 
-export async function inspectSite(rawDomain: string): Promise<InspectResult> {
-  const domain = rawDomain
-    .trim()
-    .replace(/^https?:\/\//i, "")
-    .replace(/\/.*$/, "");
+export async function inspectSite(
+  rawDomain: string,
+  opts?: { keepPath?: boolean }
+): Promise<InspectResult> {
+  const withoutProtocol = rawDomain.trim().replace(/^https?:\/\//i, "");
+  // Default: inspect the site root (drop any path). keepPath preserves the
+  // path so a specific page can be inspected (only a trailing slash is dropped).
+  const domain = opts?.keepPath
+    ? withoutProtocol.replace(/\/+$/, "")
+    : withoutProtocol.replace(/\/.*$/, "");
 
   const tryFetch = async (url: string) =>
     fetch(url, {

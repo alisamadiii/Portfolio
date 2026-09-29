@@ -2,8 +2,7 @@ import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
-import { getConfig } from "../../lib/cms/config-store";
-import { createHttpError, toTRPCError } from "../../lib/cms/errors";
+import { toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
 import { resolveRepoId } from "../../lib/cms/repo-id";
 import { eq } from "drizzle-orm";
@@ -37,25 +36,6 @@ export type CanvasPage = {
   parentPath?: string;
 };
 
-/** Flatten `content` (groups included) into leaf entries keyed by name. */
-function flattenEntries(content: unknown): Map<string, Record<string, any>> {
-  const out = new Map<string, Record<string, any>>();
-  const visit = (items: unknown) => {
-    if (!Array.isArray(items)) return;
-    for (const item of items) {
-      if (!item || typeof item !== "object") continue;
-      const node = item as Record<string, any>;
-      if (node.type === "group") {
-        visit(node.items);
-        continue;
-      }
-      if (typeof node.name === "string") out.set(node.name, node);
-    }
-  };
-  visit(content);
-  return out;
-}
-
 /** Drop the `{…}` token segment(s) from a route template → the parent list path. */
 function listPathFromTemplate(template: string): string {
   const kept = template
@@ -84,7 +64,7 @@ function titleFromPath(pathname: string): string {
  * Non-fatal on purpose: repos without a `hub_project` row (or no stored URL)
  * fall back to the cms.json / settings baseUrl.
  */
-async function getCustomDomainBaseUrl(
+export async function getCustomDomainBaseUrl(
   owner: string | undefined,
   repo: string
 ): Promise<string | null> {
@@ -183,80 +163,13 @@ export const pagesRouter = createTRPCRouter({
           };
         }
 
-        const config = await getConfig(input.owner, input.repo, input.branch, {
-          getToken: async () => token,
-        });
-        if (!config)
-          throw createHttpError(
-            `Configuration not found for ${input.owner}/${input.repo}/${input.branch}.`,
-            404
-          );
-
-        const settings = config.object?.settings;
-
-        const byPath = new Map<string, CanvasPage>();
-        const entriesByName = flattenEntries(config.object?.content);
-
-        const previewPaths: Record<string, string> | undefined =
-          settings && typeof settings === "object"
-            ? settings.preview?.paths
-            : undefined;
-        for (const [entry, template] of Object.entries(previewPaths ?? {})) {
-          const isCollection = entriesByName.get(entry)?.type === "collection";
-          if (template.includes("{")) {
-            // Templated route. A collection collapses to one table card; any
-            // other templated entry stays out of scope (no single URL).
-            if (!isCollection) continue;
-            // The card's key is the template itself (e.g. /hervoice/{slug}) so
-            // it never collides with the collection's own list page, which is a
-            // separate `file` entry mapped to the parent path (/hervoice).
-            const key = normalizePathname(template);
-            const listPath = listPathFromTemplate(template);
-            if (!byPath.has(key)) {
-              byPath.set(key, {
-                path: key,
-                url: new URL(listPath, baseUrl).href,
-                title:
-                  entriesByName.get(entry)?.label ?? titleFromPath(listPath),
-                entry,
-                kind: "collection",
-                collection: entry,
-                parentPath: listPath,
-              });
-            }
-            continue;
-          }
-          try {
-            const url = new URL(template, baseUrl);
-            const pathname = normalizePathname(url.pathname);
-            if (!byPath.has(pathname)) {
-              byPath.set(pathname, {
-                path: pathname,
-                url: url.href,
-                title: pathname === "/" ? "Home" : titleFromPath(pathname),
-                entry,
-                kind: "page",
-              });
-            }
-          } catch {
-            // Ignore malformed templates.
-          }
-        }
-
-        if (byPath.size === 0) {
-          byPath.set("/", {
-            path: "/",
-            url: new URL("/", baseUrl).href,
-            title: "Home",
-          });
-        }
-
-        // Tile order follows `preview.paths` declaration order (byPath is built
-        // in that order) — the author controls the canvas layout, not an
-        // alphabetical sort.
-        const pages = Array.from(byPath.values());
-
-        return { baseUrl, origin, pages, needsDomain: false as const };
+        // No cms.json manifest → nothing to show on the canvas.
+        return {
+          baseUrl,
+          origin,
+          pages: [] as CanvasPage[],
+          needsDomain: false as const,
+        };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

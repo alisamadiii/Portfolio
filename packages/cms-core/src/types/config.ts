@@ -6,7 +6,7 @@ export type Config = {
   /**
    * GitHub-stable numeric repo id — the unique key that drives the /p/<repoId>
    * URL. Always set on the hub canvas config (populated by the [repoId] layout);
-   * optional because the server-side CMS engine config-store is keyed by
+   * optional because the server-side CMS engine is keyed by
    * (owner, repo, branch) and never builds project URLs.
    */
   repoId?: number;
@@ -17,7 +17,7 @@ export type Config = {
   lastCheckedAt?: Date;
   /**
    * Per-repo media provider settings (public config only — secrets stripped).
-   * Attached dynamically by `getConfig`, never persisted with the cached config.
+   * Attached dynamically at read time, never persisted with the cached config.
    */
   mediaSettings?: {
     // ImageKit is the only provider today. Kept wide (not the narrowed

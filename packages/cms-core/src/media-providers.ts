@@ -39,7 +39,7 @@ export type MediaProviderDef = {
   label: string;
   /**
    * `true` when media is committed into the repository itself (GitHub flow:
-   * Upload / Select / Link buttons, `.pages.yml` media config required).
+   * Upload / Select / Link buttons, cms.json media config required).
    * `false` for hosted services browsed via the media-provider proxy.
    */
   supportsRepoUpload: boolean;

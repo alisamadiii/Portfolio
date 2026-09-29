@@ -1,5 +1,5 @@
 /**
- * Helper functions for the schema defined in .pages.yml
+ * Helper functions for the CMS field schema.
  */
 
 import { defaultValues, schemas } from "./fields/registry";

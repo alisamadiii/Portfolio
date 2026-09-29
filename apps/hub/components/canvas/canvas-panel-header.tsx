@@ -16,11 +16,13 @@ import {
   type CanvasDevice,
 } from "@/components/canvas/canvas-toolbar";
 import { PageTree } from "@/components/shell/page-tree";
+import { SeoPanel } from "@/components/canvas/seo-panel";
 import {
   ChevronDown,
   FileText,
   GitBranch,
   MousePointerClick,
+  Search,
 } from "@/components/icon";
 
 /**
@@ -41,9 +43,17 @@ export function CanvasPanelHeader({
   onReload: () => void;
   previewUrl?: string | null;
 }) {
-  const { selectedPath, session, repo, branch, pickModeActive, setPickMode } =
-    useCanvasEditor();
+  const {
+    selectedPath,
+    session,
+    repo,
+    branch,
+    currentPage,
+    pickModeActive,
+    setPickMode,
+  } = useCanvasEditor();
   const [pagesOpen, setPagesOpen] = useState(false);
+  const [seoOpen, setSeoOpen] = useState(false);
 
   // Picking a page closes the popover; opening a collection (CMS overlay) or
   // a "See all" dialog portals outside it, so those keep working.
@@ -96,6 +106,17 @@ export function CanvasPanelHeader({
           onReload={onReload}
           previewUrl={previewUrl}
         />
+        <button
+          type="button"
+          title="Check this page's SEO"
+          disabled={!currentPage}
+          onClick={() => setSeoOpen(true)}
+          className="border-border text-muted-foreground hover:bg-muted flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Search className="size-3.5" />
+          SEO
+        </button>
+        <SeoPanel open={seoOpen} onOpenChange={setSeoOpen} />
         <button
           type="button"
           title="Select an element to edit"

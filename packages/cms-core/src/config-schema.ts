@@ -863,7 +863,7 @@ const ConfigSchema = z
                 )
                 .optional(),
               // Live-preview panel: the site's live URL and optional per-entry
-              // route overrides. Consumed by `lib/preview.ts` `getPreviewUrl`.
+              // route overrides.
               baseUrl: z
                 .string({ message: "'baseUrl' must be a string." })
                 .optional(),
