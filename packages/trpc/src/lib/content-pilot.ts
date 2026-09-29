@@ -87,6 +87,7 @@ export type PreviewSession = {
     | "installing"
     | "ready"
     | "restarting"
+    | "paused"
     | "needs_config"
     | "failed"
     | "closed"

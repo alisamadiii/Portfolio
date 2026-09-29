@@ -22,6 +22,12 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useSessionEvents, type MessageRun } from "@/hooks/use-session-events";
+import {
+  filterSkills,
+  SlashSkillsMenu,
+  useSlashMenuSelection,
+  type SessionSkill,
+} from "@/components/canvas/slash-skills-menu";
 
 import {
   useCanvasEditor,
@@ -102,6 +108,8 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
     repo,
     session,
     editToken,
+    capacityMessage,
+    retryStart,
     currentPage,
     pickedElement,
     clearPickedElement,
@@ -159,11 +167,12 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
   );
 
   // Transcript straight from content-pilot (edit token, CORS'd) — the hub
-  // stores nothing session-shaped.
+  // stores nothing session-shaped. SSE message-done events drive refetches;
+  // the interval is only a fallback for a dropped stream.
   const transcriptQuery = useQuery({
     queryKey: ["preview-session-transcript", session?.id],
     enabled: Boolean(session?.id && editToken && pilotUrl),
-    refetchInterval: 15_000,
+    refetchInterval: 60_000,
     queryFn: async (): Promise<Transcript> => {
       const res = await fetch(`${pilotUrl}/api/v1/sessions/${session!.id}`, {
         headers: { Authorization: `Bearer ${editToken}` },
@@ -209,18 +218,91 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
       }
     },
     onSuccess: () => {
-      setInput("");
       clearPickedElement();
       void transcriptQuery.refetch();
     },
-    onError: (error) => toast.error(error.message),
   });
 
   const [input, setInput] = useState("");
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
-  const messages = transcriptQuery.data?.messages ?? [];
+  // "/" skills menu: the client repo's .claude/skills, listed by content-pilot
+  // from the workspace clone. A selected skill just becomes "/name " in the
+  // message — the Agent SDK resolves it from the repo itself.
+  const skillsQuery = useQuery({
+    queryKey: ["preview-session-skills", session?.id],
+    enabled: Boolean(session?.id && editToken && pilotUrl),
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<SessionSkill[]> => {
+      const res = await fetch(
+        `${pilotUrl}/api/v1/sessions/${session!.id}/skills`,
+        { headers: { Authorization: `Bearer ${editToken}` } }
+      );
+      if (!res.ok) return [];
+      const body = (await res.json()) as { skills?: SessionSkill[] };
+      return body.skills ?? [];
+    },
+  });
+  const skills = skillsQuery.data ?? [];
+  const slashMatch = /^\/(\S*)$/.exec(input);
+  const slashQuery = slashMatch?.[1] ?? null;
+  const slashItems =
+    slashQuery !== null ? filterSkills(skills, slashQuery) : [];
+  const slashOpen = slashQuery !== null && slashItems.length > 0;
+  const { selectedIndex, move } = useSlashMenuSelection(
+    slashItems.length,
+    slashQuery ?? ""
+  );
+  const pickSkill = (name: string) => {
+    setInput(`/${name} `);
+  };
+
+  // Optimistic sends: the user bubble appears instantly; each entry is dropped
+  // once the transcript refetch returns a matching user message (or the send
+  // fails). Synthetic ids are negative so they never collide with real ones.
+  const [pendingSends, setPendingSends] = useState<
+    { key: number; content: string; at: number }[]
+  >([]);
+  const rawMessages = transcriptQuery.data?.messages ?? [];
+  const messages: TranscriptMessage[] = [
+    ...rawMessages,
+    ...pendingSends
+      .filter(
+        (pending) =>
+          !rawMessages.some(
+            (message) =>
+              message.role === "user" &&
+              message.content === pending.content &&
+              new Date(message.createdAt).getTime() >= pending.at - 5_000
+          )
+      )
+      .map((pending) => ({
+        id: -pending.key,
+        role: "user" as const,
+        content: pending.content,
+        status: "queued" as const,
+        commitSha: null,
+        error: null,
+        createdAt: new Date(pending.at).toISOString(),
+      })),
+  ];
+  // Prune matched entries so the list doesn't rescan forever.
+  useEffect(() => {
+    setPendingSends((current) =>
+      current.filter(
+        (pending) =>
+          !rawMessages.some(
+            (message) =>
+              message.role === "user" &&
+              message.content === pending.content &&
+              new Date(message.createdAt).getTime() >= pending.at - 5_000
+          )
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcriptQuery.dataUpdatedAt]);
+
   const busy = messages.some(
     (message) =>
       message.role === "user" &&
@@ -235,14 +317,31 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length, lastRun?.activities.length, lastRun?.text, busy]);
 
+  // Messages queue server-side while the preview boots (and revive a paused
+  // session), so the composer only locks for broken/finished sessions.
+  const TERMINAL_STATUSES = ["needs_config", "failed", "closed", "published", "expired"];
+  const canSend = Boolean(
+    session && !TERMINAL_STATUSES.includes(session.status)
+  );
   const send = () => {
     const content = input.trim();
-    if (!content || sendMutation.isPending || session?.status !== "ready")
-      return;
-    sendMutation.mutate({
-      content,
-      context: buildContext(currentPage, pickedElement),
-    });
+    if (!content || sendMutation.isPending || !canSend) return;
+    const key = Date.now();
+    // Optimistic: bubble + cleared input immediately; restored on failure.
+    setPendingSends((current) => [...current, { key, content, at: key }]);
+    setInput("");
+    sendMutation.mutate(
+      { content, context: buildContext(currentPage, pickedElement) },
+      {
+        onError: (error) => {
+          setPendingSends((current) =>
+            current.filter((pending) => pending.key !== key)
+          );
+          setInput(content);
+          toast.error(error.message);
+        },
+      }
+    );
   };
 
   return (
@@ -263,21 +362,19 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {!session ? (
-        capacityBlocked ? (
+        (capacityMessage ?? capacityBlocked) ? (
           <CapacityPane
-            message={capacityBlocked}
+            message={capacityMessage ?? capacityBlocked ?? ""}
             retrying={startMutation.isPending}
             onRetry={() => {
               setCapacityBlocked(null);
-              startMutation.mutate({ owner, repo });
+              retryStart();
             }}
             onUseClassic={onClose}
           />
         ) : (
-          <StartPane
-            starting={startMutation.isPending}
-            onStart={() => startMutation.mutate({ owner, repo })}
-          />
+          // Auto-start fires on project open — no start button, just boot state.
+          <BootPane status="starting" />
         )
       ) : session.status === "needs_config" ? (
         <NeedsConfigPane
@@ -310,10 +407,13 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
             Close session
           </Button>
         </div>
-      ) : session.status !== "ready" ? (
-        <BootPane status={session.status} />
       ) : (
         <>
+          {/* Booting/waking states keep the transcript + composer usable —
+              messages queue server-side and run once the preview is ready. */}
+          {session.status !== "ready" && (
+            <StatusBanner status={session.status} />
+          )}
           {/* Transcript */}
           <div
             ref={scrollRef}
@@ -364,11 +464,42 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
             )}
-            <div className="flex items-end gap-1.5">
+            <div className="relative flex items-end gap-1.5">
+              {slashOpen && (
+                <SlashSkillsMenu
+                  query={slashQuery ?? ""}
+                  skills={skills}
+                  selectedIndex={selectedIndex}
+                  onSelect={pickSkill}
+                />
+              )}
               <Textarea
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
+                  if (slashOpen) {
+                    if (event.key === "ArrowUp") {
+                      event.preventDefault();
+                      move(-1);
+                      return;
+                    }
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      move(1);
+                      return;
+                    }
+                    if (event.key === "Enter" || event.key === "Tab") {
+                      event.preventDefault();
+                      const picked = slashItems[selectedIndex];
+                      if (picked) pickSkill(picked.name);
+                      return;
+                    }
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      setInput("");
+                      return;
+                    }
+                  }
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     send();
@@ -382,7 +513,7 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
                 size="icon"
                 aria-label="Send"
                 className="size-9 shrink-0 rounded-xl"
-                disabled={!input.trim() || sendMutation.isPending}
+                disabled={!input.trim() || sendMutation.isPending || !canSend}
                 onClick={send}
               >
                 {sendMutation.isPending ? (
@@ -398,7 +529,11 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
               {canPublish && (
                 <Button
                   className="flex-1"
-                  disabled={busy || publishMutation.isPending}
+                  disabled={
+                    busy ||
+                    publishMutation.isPending ||
+                    (session.status !== "ready" && session.status !== "paused")
+                  }
                   onClick={() => setConfirmPublish(true)}
                 >
                   {publishMutation.isPending ? (
@@ -479,32 +614,24 @@ export function SessionChatPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function StartPane({
-  starting,
-  onStart,
-}: {
-  starting: boolean;
-  onStart: () => void;
-}) {
+const bootLabel = (status: string) =>
+  status === "installing"
+    ? "Preparing your site…"
+    : status === "restarting"
+      ? "Restarting the preview…"
+      : status === "paused"
+        ? "Waking your preview…"
+        : "Starting your preview…";
+
+/** Slim in-session banner — the transcript and composer stay usable below. */
+function StatusBanner({ status }: { status: string }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-      <div className="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-xl">
-        {starting ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <PaintbrushSparkle className="size-5" />
-        )}
-      </div>
-      <h3 className="text-[15px] font-semibold tracking-tight">
-        Edit your site with AI
-      </h3>
-      <p className="text-muted-foreground max-w-[240px] text-[13px] leading-relaxed">
-        Start a session to chat about changes and watch them live in a private
-        preview. Publish only when you're happy.
-      </p>
-      <Button disabled={starting} onClick={onStart}>
-        Start editing session
-      </Button>
+    <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b bg-amber-500/5 px-3 py-1.5 text-[12px]">
+      <Loader2 className="size-3 animate-spin" />
+      {bootLabel(status)}
+      <span className="text-muted-foreground/60">
+        You can type now — requests run as soon as it's up.
+      </span>
     </div>
   );
 }
@@ -600,16 +727,10 @@ function NeedsConfigPane({
 }
 
 function BootPane({ status }: { status: string }) {
-  const label =
-    status === "installing"
-      ? "Preparing your site…"
-      : status === "restarting"
-        ? "Restarting the preview…"
-        : "Starting your preview…";
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
       <Loader2 className="text-primary size-5 animate-spin" />
-      <p className="text-muted-foreground text-[13px]">{label}</p>
+      <p className="text-muted-foreground text-[13px]">{bootLabel(status)}</p>
       <p className="text-muted-foreground/70 max-w-[230px] text-[12px] leading-relaxed">
         First start can take a minute or two while the preview is built.
       </p>
@@ -741,7 +862,9 @@ function SessionStatusPill({
         ? "Live preview"
         : session.status === "needs_config"
           ? "Needs setup"
-          : "Starting"}
+          : session.status === "paused"
+            ? "Waking"
+            : "Starting"}
     </span>
   );
 }

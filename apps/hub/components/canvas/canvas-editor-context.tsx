@@ -12,12 +12,13 @@ import {
 } from "react";
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import { roleAtLeast } from "@/lib/authz-shared";
 import { toast } from "sonner";
 
 import { useMediaLibrary } from "@/components/media/media-library-context";
+import { useSessionHeartbeat } from "@/hooks/use-session-heartbeat";
 
 import {
   candidatesFor,
@@ -91,6 +92,7 @@ export type PreviewSessionInfo = {
     | "installing"
     | "ready"
     | "restarting"
+    | "paused"
     | "needs_config"
     | "failed"
     | "closed"
@@ -200,6 +202,10 @@ type CanvasEditorValue = {
   previewOrigin: string | null;
   /** Short-lived repo-scoped token — the chat panel auths SSE/API with it. */
   editToken: string;
+  /** Auto-start hit the preview capacity cap — the chat panel explains it. */
+  capacityMessage: string | null;
+  /** Retry the auto-start after a capacity block (or any silent failure). */
+  retryStart: () => void;
   pagesLoading: boolean;
   pagesError: Error | null;
   /** No website URL set for the project — the canvas prompts to add a domain. */
@@ -333,6 +339,59 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     )
   );
   const session = (sessionQuery.data?.session ?? null) as PreviewSessionInfo | null;
+
+  // Warm previews: opening the project auto-starts (or revives) the session so
+  // the chat is usable the moment the client arrives — no start button. One
+  // attempt per project open; capacity blocks surface in the chat panel.
+  const [capacityMessage, setCapacityMessage] = useState<string | null>(null);
+  const autoStartMutation = useMutation(
+    trpc.cms.previewSession.start.mutationOptions({
+      onSuccess: () => {
+        setCapacityMessage(null);
+        void queryClient.invalidateQueries({
+          queryKey: trpc.cms.previewSession.get.queryOptions({ owner, repo })
+            .queryKey,
+        });
+      },
+      onError: (error) => {
+        if (error.data?.code === "TOO_MANY_REQUESTS") {
+          setCapacityMessage(error.message);
+        }
+        // Other errors stay silent here — the session query keeps polling and
+        // the panel's explicit retry path reports loudly.
+      },
+    })
+  );
+  const autoStartAttempted = useRef<string | null>(null);
+  const autoStartMutate = autoStartMutation.mutate;
+  useEffect(() => {
+    if (!canEdit || !owner || !repo || !sessionQuery.isSuccess) return;
+    if (session && session.status !== "paused") return;
+    const key = `${owner}/${repo}`;
+    if (autoStartAttempted.current === key) return;
+    autoStartAttempted.current = key;
+    autoStartMutate({ owner, repo });
+  }, [
+    canEdit,
+    owner,
+    repo,
+    sessionQuery.isSuccess,
+    session,
+    autoStartMutate,
+  ]);
+  const retryStart = useCallback(() => {
+    setCapacityMessage(null);
+    autoStartAttempted.current = null;
+    autoStartMutate({ owner, repo });
+  }, [owner, repo, autoStartMutate]);
+
+  // Keep the session alive while the tab is open and visible.
+  useSessionHeartbeat({
+    sessionId: session?.id ?? null,
+    status: session?.status ?? null,
+    editToken,
+  });
+
   const previewOrigin = useMemo(() => {
     if (session?.status !== "ready") return null;
     try {
@@ -1149,13 +1208,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           setSettingsRequest({ section: "blog" });
           break;
         case "edit-submitted":
-          // The overlay created an AI-edit job — refresh the Deployments list
-          // (and the header's pending dot) right away instead of waiting for
-          // the 30s poll.
-          queryClient.invalidateQueries({
-            queryKey: trpc.cms.aiEdits.listJobs.queryOptions({ owner, repo })
-              .queryKey,
-          });
+          // Deployed bridges may still emit this, but the jobs pipeline is
+          // retired — nothing to refresh.
           break;
         case "element-pick":
           // AI preview: the client clicked an element to point the AI at it.
@@ -1412,6 +1466,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       session,
       previewOrigin,
       editToken,
+      capacityMessage,
+      retryStart,
       pagesLoading: pagesQuery.isLoading,
       pagesError:
         pagesQuery.error instanceof Error ? pagesQuery.error : null,
@@ -1460,6 +1516,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       session,
       previewOrigin,
       editToken,
+      capacityMessage,
+      retryStart,
       pagesQuery.isLoading,
       pagesQuery.error,
       needsDomain,

@@ -6,8 +6,9 @@
  * is preferred so each collaborator commits as themselves; the stored project
  * owner (githubConnectedUserId) backstops the caller-less webhook path.
  *
- * One place for the rule so getToken (editor reads + commits) and the push
- * webhook cache refetch stay in sync.
+ * Used by the caller-less webhook cache refetch. Editor requests go through
+ * getToken (lib/cms/token.ts), which adds a role-aware rule: view-only
+ * collaborators without GitHub fall back to the project owner's token.
  */
 
 import { sql } from "drizzle-orm";

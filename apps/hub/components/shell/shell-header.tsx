@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@workspace/trpc/client";
 import { useRepo } from "@/contexts/repo-context";
 
 import {
@@ -80,30 +78,9 @@ export function ShellHeader({
   const settingsActive = mode === "settings" && !cmsOverlay.open;
   const deploymentsActive = mode === "deployments" && !cmsOverlay.open;
 
-  // Drives the yellow dot on the Deployments pill when an AI edit is in flight.
-  // Shares its query cache with the Deployments view (same key), so no double
-  // fetch; polls only while something is pending.
-  const trpc = useTRPC();
-  const editJobsQuery = useQuery(
-    trpc.cms.aiEdits.listJobs.queryOptions(
-      { owner, repo },
-      {
-        enabled: Boolean(owner && repo),
-        staleTime: 30_000,
-        refetchInterval: (query) => {
-          const jobs = query.state.data ?? [];
-          return jobs.some(
-            (job) => job.status === "queued" || job.status === "running"
-          )
-            ? 10_000
-            : false;
-        },
-      }
-    )
-  );
-  const hasPendingDeploy = (editJobsQuery.data ?? []).some(
-    (job) => job.status === "queued" || job.status === "running"
-  );
+  // The batch AI-edit-jobs pipeline is retired — chat sessions are the only
+  // AI path, so there is no in-flight job to signal on the Deployments pill.
+  const hasPendingDeploy = false;
 
   return (
     <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">

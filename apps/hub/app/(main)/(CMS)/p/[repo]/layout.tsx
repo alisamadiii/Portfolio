@@ -91,13 +91,14 @@ export default async function Layout({
           />
         );
       case "PRECONDITION_FAILED":
-        // GitHub isn't connected at all — Client Hub opens every project with
-        // the signed-in user's own GitHub token (whether they own it or were
-        // invited as a collaborator).
+        // An editing role (owner / full-access / content-editor / admin) has no
+        // GitHub connected. Editing requires the user's own token so commits
+        // are attributed to them; view-only collaborators never hit this —
+        // their reads ride the project owner's token.
         return (
           <ErrorCard
             title="Connect your GitHub"
-            description="Connect your GitHub account — one that has access to this repository — to open, edit, and publish this project."
+            description="Connect your GitHub account — one that has access to this repository — to edit and publish this project."
             action={{ href: "/integrations", label: "Connect GitHub" }}
           />
         );
