@@ -180,8 +180,7 @@ function MessageMeta({
 
 export function SessionChatPanel() {
   const {
-    owner,
-    repo,
+    repoId,
     session,
     editToken,
     capacityMessage,
@@ -196,8 +195,7 @@ export function SessionChatPanel() {
   const queryClient = useQueryClient();
 
   const sessionQueryKey = trpc.cms.previewSession.get.queryOptions({
-    owner,
-    repo,
+    repoId,
   }).queryKey;
   const invalidateSession = () =>
     queryClient.invalidateQueries({ queryKey: sessionQueryKey });
@@ -400,7 +398,7 @@ export function SessionChatPanel() {
   // into a pause control (below) instead.
   const pause = () => {
     if (!session || cancelMutation.isPending) return;
-    cancelMutation.mutate({ owner, repo, sessionId: session.id });
+    cancelMutation.mutate({ repoId, sessionId: session.id });
   };
 
   const send = () => {
@@ -466,11 +464,10 @@ export function SessionChatPanel() {
             // The stuck session is terminal — clear it, then start fresh so the
             // supervisor re-reads the (now fixed) app-folder setting.
             await closeMutation.mutateAsync({
-              owner,
-              repo,
+              repoId,
               sessionId: session.id,
             });
-            startMutation.mutate({ owner, repo });
+            startMutation.mutate({ repoId });
           }}
         />
       ) : session.status === "failed" ? (
@@ -483,7 +480,7 @@ export function SessionChatPanel() {
             size="sm"
             variant="outline"
             onClick={() =>
-              closeMutation.mutate({ owner, repo, sessionId: session.id })
+              closeMutation.mutate({ repoId, sessionId: session.id })
             }
           >
             Close session

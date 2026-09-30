@@ -84,9 +84,8 @@ export function EmailsPanel() {
   const { config } = useConfig();
   const { data: currentUser } = useCurrentUser();
 
-  const owner = config?.owner;
-  const repo = config?.repo;
-  const hasProject = !!owner && !!repo;
+  const repoId = config?.repoId ?? 0;
+  const hasProject = !!repoId;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -118,7 +117,7 @@ export function EmailsPanel() {
   // setup card instead.
   const { data: gate, isLoading: gateLoading } = useQuery(
     trpc.emails.enabled.queryOptions(
-      { owner: owner ?? "", repo: repo ?? "" },
+      { repoId },
       { enabled: hasProject }
     )
   );
@@ -127,8 +126,7 @@ export function EmailsPanel() {
   const { data, isLoading, error } = useQuery(
     trpc.emails.list.queryOptions(
       {
-        owner: owner ?? "",
-        repo: repo ?? "",
+        repoId,
         ...filterInput,
         page,
         limit: PAGE_SIZE,
@@ -140,8 +138,7 @@ export function EmailsPanel() {
   const { data: stats } = useQuery(
     trpc.emails.stats.queryOptions(
       {
-        owner: owner ?? "",
-        repo: repo ?? "",
+        repoId,
         from: filterInput.from,
         to: filterInput.to,
       },
@@ -171,7 +168,7 @@ export function EmailsPanel() {
       ? `${format(range.from, "MMM d, yyyy")} – ${format(range.to, "MMM d, yyyy")}`
       : "All time";
 
-  if (!owner || !repo) return null;
+  if (!repoId) return null;
 
   if (gateLoading) {
     return (
@@ -191,7 +188,7 @@ export function EmailsPanel() {
     return (
       <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
         <PanelHeading />
-        <DomainConnectFlow owner={owner} repo={repo} />
+        <DomainConnectFlow repoId={repoId} />
       </div>
     );
   }
@@ -200,8 +197,7 @@ export function EmailsPanel() {
     return (
       <div className="mx-auto w-full max-w-screen-md p-6">
         <EmailDetail
-          owner={owner}
-          repo={repo}
+          repoId={repoId}
           id={selectedId}
           onBack={() => setSelectedId(null)}
         />
@@ -327,8 +323,7 @@ export function EmailsPanel() {
         />
         {total > 0 && (
           <ExportEmailsPdfButton
-            owner={owner}
-            repo={repo}
+            repoId={repoId}
             input={filterInput}
             meta={{
               clientName:
@@ -558,13 +553,11 @@ const BackButton = ({ onBack }: { onBack: () => void }) => (
 );
 
 function EmailDetail({
-  owner,
-  repo,
+  repoId,
   id,
   onBack,
 }: {
-  owner: string;
-  repo: string;
+  repoId: number;
   id: string;
   onBack: () => void;
 }) {
@@ -575,7 +568,7 @@ function EmailDetail({
     isLoading,
     error,
   } = useQuery(
-    trpc.emails.get.queryOptions({ owner, repo, id }, { enabled: !!id })
+    trpc.emails.get.queryOptions({ repoId, id }, { enabled: !!id })
   );
 
   // HTML fetched fresh from useSend — once for the inline preview, and again
@@ -584,14 +577,14 @@ function EmailDetail({
   const { mutate: loadPreview } = view;
 
   useEffect(() => {
-    if (email) loadPreview({ owner, repo, id: email.id });
+    if (email) loadPreview({ repoId, id: email.id });
   }, [email?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openInNewTab = () => {
     // Open synchronously so popup blockers don't eat the tab.
     const tab = window.open("", "_blank");
     view.mutate(
-      { owner, repo, id },
+      { repoId, id },
       {
         onSuccess: ({ html }) => {
           if (tab) {
@@ -735,7 +728,7 @@ function EmailDetail({
             <Button
               variant="outline"
               className="mt-4 rounded-full px-5"
-              onClick={() => loadPreview({ owner, repo, id: email.id })}
+              onClick={() => loadPreview({ repoId, id: email.id })}
             >
               Retry
             </Button>
@@ -795,7 +788,7 @@ const recordBadge = (status?: string | null) =>
  * which is when (and only when) usesend_domain_id gets written and the Emails
  * dashboard takes over. Viewers get an informational card instead.
  */
-function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
+function DomainConnectFlow({ repoId }: { repoId: number }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { websiteUrl } = useWebsiteUrl();
@@ -803,14 +796,14 @@ function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
 
   const setup = useQuery(
     trpc.emails.domainSetup.queryOptions(
-      { owner, repo },
+      { repoId },
       { retry: false, refetchInterval: (query) => (query.state.data?.pending ? 30_000 : false) }
     )
   );
 
   const invalidateSetup = () =>
     queryClient.invalidateQueries({
-      queryKey: trpc.emails.domainSetup.queryOptions({ owner, repo }).queryKey,
+      queryKey: trpc.emails.domainSetup.queryOptions({ repoId }).queryKey,
     });
 
   const create = useMutation(
@@ -826,7 +819,7 @@ function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
         if (result.verified) {
           toast.success("Domain verified — emails are live");
           queryClient.invalidateQueries({
-            queryKey: trpc.emails.enabled.queryOptions({ owner, repo }).queryKey,
+            queryKey: trpc.emails.enabled.queryOptions({ repoId }).queryKey,
           });
         } else {
           toast.info("Records not verified yet — DNS changes can take up to an hour");
@@ -892,7 +885,7 @@ function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
           onSubmit={(event) => {
             event.preventDefault();
             const value = (domain || suggested).trim();
-            if (value) create.mutate({ owner, repo, domain: value });
+            if (value) create.mutate({ repoId, domain: value });
           }}
         >
           <Input
@@ -943,7 +936,7 @@ function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Keep setup</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => cancel.mutate({ owner, repo })}
+                  onClick={() => cancel.mutate({ repoId })}
                 >
                   Cancel setup
                 </AlertDialogAction>
@@ -954,7 +947,7 @@ function DomainConnectFlow({ owner, repo }: { owner: string; repo: string }) {
             type="button"
             size="sm"
             disabled={verify.isPending}
-            onClick={() => verify.mutate({ owner, repo })}
+            onClick={() => verify.mutate({ repoId })}
           >
             {verify.isPending ? "Verifying…" : "Verify records"}
           </Button>

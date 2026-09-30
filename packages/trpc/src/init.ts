@@ -7,7 +7,7 @@ import { auth } from "@workspace/auth/auth";
 
 import { isAdminUser, roleAtLeast } from "./lib/authz-shared";
 import {
-  getRepoAccessFromDb,
+  getRepoAccessByRepoId,
   requireCollaboratorManageAccess,
 } from "./lib/cms/authz";
 import { collaboratorMatchesUser } from "./lib/cms/collaborator-access";
@@ -55,19 +55,22 @@ export const authenticatedProcedure = baseProcedure.use(
     });
   }
 );
-// CMS-scoped: requires `owner`/`repo` in the input, resolves the caller's
-// token for that repo, and injects `user` + `token` into ctx. Individual
+// CMS-scoped: requires `repoId` in the input (the project's stable identity),
+// resolves the caller's token for that project, and injects `user` + `token` +
+// the derived `owner`/`repo` (display + GitHub REST) into ctx. Individual
 // procedures merge their own input on top (e.g. `branch`).
 export const cmsProcedure = authenticatedProcedure
-  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .input(z.object({ repoId: z.number().int().positive() }))
   .use(async ({ next, ctx, input }) => {
     const user = ctx.session.user;
-    const { token, role } = await getToken(user, input.owner, input.repo);
+    const { token, role, owner, repo } = await getToken(user, input.repoId);
     if (!token) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Token not found" });
     }
 
-    return next({ ctx: { ...ctx, user, token, role } });
+    return next({
+      ctx: { ...ctx, user, token, role, owner, repo, repoId: input.repoId },
+    });
   });
 
 // Server-to-server only: guarded by a shared secret header, never a browser session.
@@ -145,14 +148,13 @@ export const cmsFullAccessProcedure = cmsProcedure.use(
 // Collaborator management: admins or full-access collaborators of the repo.
 // Injects `repoAccess` (DB-only lookup) and `isActorAdmin`.
 export const collaboratorManageProcedure = authenticatedProcedure
-  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .input(z.object({ repoId: z.number().int().positive() }))
   .use(async ({ next, ctx, input }) => {
     let access;
     try {
       access = await requireCollaboratorManageAccess(
         ctx.session.user,
-        input.owner,
-        input.repo
+        input.repoId
       );
     } catch (error) {
       throw toTRPCError(error);
@@ -163,13 +165,15 @@ export const collaboratorManageProcedure = authenticatedProcedure
 
 // Admin-only repo access. Injects the admin's own GitHub token + DB repoAccess.
 export const adminRepoProcedure = adminProcedure
-  .input(z.object({ owner: z.string(), repo: z.string() }))
+  .input(z.object({ repoId: z.number().int().positive() }))
   .use(async ({ next, ctx, input }) => {
     try {
-      const [token, repoAccess] = await Promise.all([
-        resolveRepoToken(input.owner, input.repo, ctx.session.user.id),
-        getRepoAccessFromDb(input.owner, input.repo),
-      ]);
+      const repoAccess = await getRepoAccessByRepoId(input.repoId);
+      const token = await resolveRepoToken(
+        repoAccess.ownerLogin,
+        repoAccess.repoName,
+        ctx.session.user.id
+      );
       return next({ ctx: { ...ctx, token, repoAccess } });
     } catch (error) {
       throw toTRPCError(error);

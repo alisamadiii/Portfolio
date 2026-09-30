@@ -18,8 +18,6 @@ export function DomainPanel() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { config } = useConfig();
-  const owner = config?.owner ?? "";
-  const repo = config?.repo ?? "";
   const repoId = config?.repoId ?? 0;
 
   const snapshot = useQuery(
@@ -59,7 +57,7 @@ export function DomainPanel() {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && value.trim() !== current.trim()) {
-              save.mutate({ owner, repo, websiteUrl: value });
+              save.mutate({ repoId, websiteUrl: value });
             }
           }}
         />
@@ -73,7 +71,7 @@ export function DomainPanel() {
         <Button
           isLoading={save.isPending}
           disabled={value.trim() === current.trim()}
-          onClick={() => save.mutate({ owner, repo, websiteUrl: value })}
+          onClick={() => save.mutate({ repoId, websiteUrl: value })}
         >
           Save
         </Button>

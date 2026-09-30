@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, or, type SQL } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -56,17 +56,12 @@ async function hasPendingAgencyInvite(
 /** Best-effort accept of a pending repo invitation from the agency account's
  * own stored token (only works when the importing user IS the agency account —
  * the invite only appears in that account's list). Never throws. */
-async function acceptAgencyInvite(owner: string, repo: string) {
+async function acceptAgencyInvite(repoId: number, owner: string, repo: string) {
   try {
     const [row] = await db
       .select({ uid: hubProject.githubConnectedUserId })
       .from(hubProject)
-      .where(
-        and(
-          eq(hubProject.hidden, false),
-          sql`lower(${hubProject.repo}) = lower(${repo})`
-        )
-      )
+      .where(eq(hubProject.repoId, repoId))
       .limit(1);
     if (!row?.uid) return;
     const token = await getIntegrationAccessToken(row.uid, "github", "GitHub");
@@ -165,12 +160,10 @@ export const reposRouter = createTRPCRouter({
       // plus their own imported repos — the user who connected GitHub gets
       // access without a collaborator invite.
       if (!ctx.isAdmin) {
-        const collabConds = (ctx.collaborations ?? []).map((c) =>
-          and(
-            sql`lower(${hubProject.owner}) = lower(${c.owner})`,
-            sql`lower(${hubProject.repo}) = lower(${c.repo})`
-          )
-        );
+        const collabConds = (ctx.collaborations ?? [])
+          .map((c) => c.repoId)
+          .filter((id): id is number => id != null)
+          .map((id) => eq(hubProject.repoId, id));
         const ownConnected = eq(
           hubProject.githubConnectedUserId,
           ctx.session.user.id
@@ -237,7 +230,10 @@ export const reposRouter = createTRPCRouter({
         const owner = project.owner;
         const repo = project.repo;
 
-        const { token, role } = await getToken(ctx.session.user, owner, repo);
+        const { token, role } = await getToken(
+          ctx.session.user,
+          input.repoId
+        );
         if (!token) throw createHttpError("Token not found", 401);
 
         // Spread copy: the snapshot is module-cached per repo and shared
@@ -302,7 +298,7 @@ export const reposRouter = createTRPCRouter({
         const project = await resolveProjectByRepoId(input.repoId);
         if (!project) return { status: "ok" as const };
         const { owner, repo } = project;
-        const { token } = await getToken(ctx.session.user, owner, repo);
+        const { token } = await getToken(ctx.session.user, input.repoId);
         if (!token) return { status: "ok" as const };
         const res = await fetch(
           `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
@@ -346,7 +342,7 @@ export const reposRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
       }
       const { owner, repo } = project;
-      const { token } = await getToken(ctx.session.user, owner, repo);
+      const { token } = await getToken(ctx.session.user, input.repoId);
       if (!token) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -378,7 +374,7 @@ export const reposRouter = createTRPCRouter({
       // 201 = a pending invitation was created — try to auto-accept it, then
       // report whether the agency account ended up active or still invited.
       if (res.status === 204) return { status: "active" as const };
-      await acceptAgencyInvite(owner, repo);
+      await acceptAgencyInvite(input.repoId, owner, repo);
       const check = await fetch(
         `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
         { headers: ghHeaders(token) }

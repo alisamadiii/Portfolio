@@ -48,13 +48,12 @@ export const ProjectBillingPanel = () => {
   const { config } = useConfig();
   const { user } = useUser();
 
-  const owner = config?.owner;
-  const repo = config?.repo;
+  const repoId = config?.repoId ?? 0;
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(
     trpc.cms.subscription.getProject.queryOptions(
-      { owner: owner ?? undefined, repo: repo ?? "" },
-      { enabled: !!repo }
+      { repoId },
+      { enabled: !!repoId }
     )
   );
 
@@ -96,7 +95,7 @@ export const ProjectBillingPanel = () => {
       ) : data.freeLife ? (
         <FreeForLifePanel />
       ) : !data.subscription ? (
-        user && repo ? (
+        user && repoId ? (
           <ProjectPlans
             repoId={data.repoId}
             userId={user.id}

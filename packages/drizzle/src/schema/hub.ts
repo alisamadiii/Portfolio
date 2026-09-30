@@ -52,6 +52,11 @@ export const hubCollaborator = pgTable(
     idxHubCollaboratorUserId: index("idx_hub_collaborator_user_id").on(
       table.userId
     ),
+    // Identity/access match key: collaborators are scoped by repoId (owner/repo
+    // are display-only and can drift on GitHub rename/transfer).
+    idxHubCollaboratorRepoId: index("idx_hub_collaborator_repo_id").on(
+      table.repoId
+    ),
     uqHubCollaboratorOwnerRepoEmailCi: uniqueIndex(
       "uq_hub_collaborator_owner_repo_email_ci"
     ).on(
@@ -68,6 +73,10 @@ export const hubCollaboratorInvite = pgTable(
     id: serial("id").primaryKey(),
     token: text("token").notNull(),
     email: text("email").notNull(),
+    // = hubProject.repoId. Invites are scoped by repoId; owner/repo stay for
+    // display + the destination path. Nullable only so drizzle-kit push +
+    // backfill are clean on the existing table.
+    repoId: integer("repo_id"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -81,6 +90,9 @@ export const hubCollaboratorInvite = pgTable(
     idxHubCollaboratorInviteOwnerRepoEmail: index(
       "idx_hub_collaborator_invite_owner_repo_email"
     ).on(table.owner, table.repo, table.email),
+    idxHubCollaboratorInviteRepoId: index(
+      "idx_hub_collaborator_invite_repo_id"
+    ).on(table.repoId),
     uqHubCollaboratorInviteOwnerRepoEmailCi: uniqueIndex(
       "uq_hub_collaborator_invite_owner_repo_email_ci"
     ).on(

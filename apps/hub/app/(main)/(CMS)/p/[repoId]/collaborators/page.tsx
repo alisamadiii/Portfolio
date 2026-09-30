@@ -48,6 +48,7 @@ export default function Page() {
         <Collaborators
           owner={config.owner}
           repo={config.repo}
+          repoId={config.repoId ?? 0}
           branch={config?.branch}
         />
       </div>

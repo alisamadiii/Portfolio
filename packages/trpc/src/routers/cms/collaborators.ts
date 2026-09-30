@@ -46,8 +46,8 @@ type InviteState =
 
 type InviteRow = typeof collaboratorInviteTable.$inferSelect;
 
-const getDestinationPath = (invite: InviteRow) =>
-  `/${invite.owner}/${invite.repo}`;
+// Projects are addressed by repoId (/p/<repoId>); owner/repo are display-only.
+const getDestinationPath = (invite: InviteRow) => `/p/${invite.repoId}`;
 
 const maskEmail = (address: string) => {
   const [name, domain] = address.split("@");
@@ -71,13 +71,14 @@ const loadInvite = async (token: string): Promise<InviteRow | null> => {
     return null;
   }
 
-  const collaborator = await db.query.hubCollaborator.findFirst({
-    where: and(
-      sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
-      sql`lower(${collaboratorTable.owner}) = lower(${invite.owner})`,
-      sql`lower(${collaboratorTable.repo}) = lower(${invite.repo})`
-    ),
-  });
+  const collaborator = invite.repoId
+    ? await db.query.hubCollaborator.findFirst({
+        where: and(
+          sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
+          eq(collaboratorTable.repoId, invite.repoId)
+        ),
+      })
+    : null;
   if (!collaborator) {
     await db
       .delete(collaboratorInviteTable)
@@ -96,16 +97,17 @@ const claimInviteForUser = async (
     return false;
   }
 
-  await db
-    .update(collaboratorTable)
-    .set({ userId: user.id })
-    .where(
-      and(
-        sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
-        sql`lower(${collaboratorTable.owner}) = lower(${invite.owner})`,
-        sql`lower(${collaboratorTable.repo}) = lower(${invite.repo})`
-      )
-    );
+  if (invite.repoId) {
+    await db
+      .update(collaboratorTable)
+      .set({ userId: user.id })
+      .where(
+        and(
+          sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
+          eq(collaboratorTable.repoId, invite.repoId)
+        )
+      );
+  }
 
   await db
     .delete(collaboratorInviteTable)
@@ -127,10 +129,12 @@ const generateInviteToken = () => {
 // Creates (or replaces) a pending invite for an email and returns the hub link.
 const createInviteUrl = async ({
   email,
+  repoId,
   owner,
   repo,
 }: {
   email: string;
+  repoId: number;
   owner: string;
   repo: string;
 }) => {
@@ -145,14 +149,13 @@ const createInviteUrl = async ({
     .where(
       and(
         sql`lower(${collaboratorInviteTable.email}) = lower(${email})`,
-        sql`lower(${collaboratorInviteTable.owner}) = lower(${owner})`,
-        sql`lower(${collaboratorInviteTable.repo}) = lower(${repo})`
+        eq(collaboratorInviteTable.repoId, repoId)
       )
     );
 
   await db
     .insert(collaboratorInviteTable)
-    .values({ token, email, owner, repo, expiresAt });
+    .values({ token, email, repoId, owner, repo, expiresAt });
 
   const inviteUrl = new URL("/sign-in/collaborator", getHubBaseUrl());
   inviteUrl.searchParams.set("token", token);
@@ -247,7 +250,9 @@ export const collaboratorsRouter = createTRPCRouter({
       try {
         const { repoAccess, isActorAdmin, isActorOwner } = ctx;
         const canManageFullAccess = isActorAdmin || isActorOwner;
-        const { owner, repo } = input;
+        // Display strings only — access is scoped by repoAccess.repoId.
+        const owner = repoAccess.ownerLogin;
+        const repo = repoAccess.repoName;
         const user = ctx.session.user;
 
         if (!canManageFullAccess && input.role === "full-access") {
@@ -294,7 +299,12 @@ export const collaboratorsRouter = createTRPCRouter({
           }
 
           if (!existingUser) {
-            const inviteUrl = await createInviteUrl({ email, owner, repo });
+            const inviteUrl = await createInviteUrl({
+              email,
+              repoId: repoAccess.repoId,
+              owner,
+              repo,
+            });
             const { error } = await emailService.send({
               from: EMAIL_FROM,
               to: email,
@@ -382,7 +392,9 @@ export const collaboratorsRouter = createTRPCRouter({
       try {
         const { repoAccess, isActorAdmin, isActorOwner } = ctx;
         const canManageFullAccess = isActorAdmin || isActorOwner;
-        const { owner, repo } = input;
+        // Display strings only — scoping is by repoAccess.repoId.
+        const owner = repoAccess.ownerLogin;
+        const repo = repoAccess.repoName;
 
         const collaborator = await db.query.hubCollaborator.findFirst({
           where: eq(collaboratorTable.id, input.collaboratorId),
@@ -424,8 +436,7 @@ export const collaboratorsRouter = createTRPCRouter({
           .where(
             and(
               sql`lower(${collaboratorInviteTable.email}) = lower(${collaborator.email})`,
-              sql`lower(${collaboratorInviteTable.owner}) = lower(${owner})`,
-              sql`lower(${collaboratorInviteTable.repo}) = lower(${repo})`
+              eq(collaboratorInviteTable.repoId, repoAccess.repoId)
             )
           );
 
@@ -445,7 +456,10 @@ export const collaboratorsRouter = createTRPCRouter({
     .input(z.object({ collaboratorId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const { owner, repo } = input;
+        const { repoAccess } = ctx;
+        // Display strings only — scoping is by repoAccess.repoId.
+        const owner = repoAccess.ownerLogin;
+        const repo = repoAccess.repoName;
         const user = ctx.session.user;
 
         const collaborator = await db.query.hubCollaborator.findFirst({
@@ -458,10 +472,7 @@ export const collaboratorsRouter = createTRPCRouter({
           });
         }
 
-        if (
-          collaborator.owner.toLowerCase() !== owner.toLowerCase() ||
-          collaborator.repo.toLowerCase() !== repo.toLowerCase()
-        ) {
+        if (collaborator.repoId !== repoAccess.repoId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Collaborator does not belong to this repository.",
@@ -471,6 +482,7 @@ export const collaboratorsRouter = createTRPCRouter({
         const baseUrl = getHubBaseUrl();
         const inviteUrl = await createInviteUrl({
           email: collaborator.email,
+          repoId: repoAccess.repoId,
           owner,
           repo,
         });

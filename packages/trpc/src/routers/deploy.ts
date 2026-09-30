@@ -73,7 +73,16 @@ async function upsertProject(
   if (existing) {
     await db
       .update(hubProject)
-      .set(fields)
+      .set({
+        ...fields,
+        // Identity is repoId; owner/repo are display-only. Refresh them from the
+        // live GitHub metadata so a rename/transfer keeps the label honest.
+        owner: ghRepo.owner,
+        repo: ghRepo.repo,
+        private: ghRepo.private,
+        defaultBranch: ghRepo.defaultBranch,
+        githubUpdatedAt: new Date(ghRepo.updatedAt ?? Date.now()),
+      })
       .where(eq(hubProject.repoId, ghRepo.id));
   } else {
     await db.insert(hubProject).values({

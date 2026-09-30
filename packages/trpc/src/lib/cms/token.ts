@@ -11,14 +11,14 @@
 
 import { cache } from "react";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
 
 import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
 import { isAdminUser } from "../authz-shared";
-import { collaboratorMatchesUserForRepo } from "./collaborator-access";
+import { collaboratorMatchesUserForRepoId } from "./collaborator-access";
 import { db } from "./db";
 import { createHttpError } from "./errors";
 
@@ -31,23 +31,23 @@ const isReconnectError = (err: unknown) =>
 const getToken = cache(
   async (
     user: { id: string; email: string; role?: string | null },
-    owner: string,
-    repo: string,
+    repoId: number,
     _verifyGithubAccess: boolean = false
   ) => {
+    // repoId is the project's stable, globally-unique identity. owner/repo are
+    // derived from the row (display + GitHub REST), never used to decide access.
     const [project] = await db
       .select({
+        owner: hubProject.owner,
+        repo: hubProject.repo,
         githubConnectedUserId: hubProject.githubConnectedUserId,
       })
       .from(hubProject)
-      .where(
-        and(
-          sql`lower(${hubProject.owner}) = lower(${owner})`,
-          sql`lower(${hubProject.repo}) = lower(${repo})`,
-          eq(hubProject.hidden, false)
-        )
-      )
+      .where(and(eq(hubProject.repoId, repoId), eq(hubProject.hidden, false)))
       .limit(1);
+
+    const owner = project?.owner ?? "";
+    const repo = project?.repo ?? "";
 
     // Role first — pure DB authorization, independent of GitHub.
     let role: CollaboratorRole;
@@ -55,7 +55,7 @@ const getToken = cache(
       role = "full-access";
     } else {
       const permission = await db.query.hubCollaborator.findFirst({
-        where: collaboratorMatchesUserForRepo(user, owner, repo),
+        where: collaboratorMatchesUserForRepoId(user, repoId),
       });
       if (!permission) {
         throw createHttpError(
@@ -70,7 +70,7 @@ const getToken = cache(
     // attributed to them); viewers fall back to the project owner's token.
     try {
       const token = await getIntegrationAccessToken(user.id, "github", "GitHub");
-      return { token, source: "user" as const, role };
+      return { token, source: "user" as const, role, owner, repo };
     } catch (err) {
       if (!isReconnectError(err) || role !== "view-only") throw err;
     }
@@ -79,7 +79,7 @@ const getToken = cache(
     if (ownerId) {
       try {
         const token = await getIntegrationAccessToken(ownerId, "github", "GitHub");
-        return { token, source: "owner" as const, role };
+        return { token, source: "owner" as const, role, owner, repo };
       } catch {
         // fall through to the owner-directed error below
       }

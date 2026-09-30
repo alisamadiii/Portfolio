@@ -8,7 +8,6 @@ import { hubProject } from "@workspace/drizzle/schema";
 
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
-import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { settleAndCancel } from "@workspace/trpc/lib/cms/settle-subscription";
 
 export const projectRouter = createTRPCRouter({
@@ -20,9 +19,9 @@ export const projectRouter = createTRPCRouter({
    * Never touches the GitHub repo, the user's integration tokens, or
    * usesend/email resources.
    */
-  delete: cmsFullAccessProcedure.mutation(async ({ ctx, input }) => {
+  delete: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
     try {
-      const repoId = await resolveRepoId(input.owner, input.repo);
+      const repoId = ctx.repoId;
 
       // 1. Billing first — hard gate. A failed cancel/refund aborts the delete.
       await settleAndCancel(repoId);
@@ -53,9 +52,9 @@ export const projectRouter = createTRPCRouter({
    */
   setWebsiteUrl: cmsFullAccessProcedure
     .input(z.object({ websiteUrl: z.string().trim().max(255) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const repoId = await resolveRepoId(input.owner, input.repo);
+        const repoId = ctx.repoId;
         const raw = input.websiteUrl.trim();
         let url: string | null = null;
         if (raw) {

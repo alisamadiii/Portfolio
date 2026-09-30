@@ -18,26 +18,18 @@ const collaboratorMatchesUser = (user: { id: string; email: string }) =>
     )
   );
 
-const collaboratorMatchesUserForRepo = (
+// Access is keyed by repoId (the project's stable, globally-unique identity).
+// owner/repo on the collaborator row are display-only and can drift on a GitHub
+// rename/transfer, so they are never used to decide access.
+const collaboratorMatchesUserForRepoId = (
   user: { id: string; email: string },
-  owner: string,
-  repo: string
-) =>
-  and(
-    collaboratorMatchesUser(user),
-    sql`lower(${collaboratorTable.owner}) = lower(${owner})`,
-    sql`lower(${collaboratorTable.repo}) = lower(${repo})`
-  );
+  repoId: number
+) => and(collaboratorMatchesUser(user), eq(collaboratorTable.repoId, repoId));
 
-const collaboratorMatchesInvite = (
-  email: string,
-  owner: string,
-  repo: string
-) =>
+const collaboratorMatchesEmailForRepoId = (email: string, repoId: number) =>
   and(
     sql`lower(${collaboratorTable.email}) = lower(${email})`,
-    sql`lower(${collaboratorTable.owner}) = lower(${owner})`,
-    sql`lower(${collaboratorTable.repo}) = lower(${repo})`
+    eq(collaboratorTable.repoId, repoId)
   );
 
 const findVerifiedUserByEmail = async (email: string) => {
@@ -73,9 +65,9 @@ const bindCollaboratorInvitesToUser = async (
 
 export {
   bindCollaboratorInvitesToUser,
-  collaboratorMatchesInvite,
+  collaboratorMatchesEmailForRepoId,
   collaboratorMatchesUser,
-  collaboratorMatchesUserForRepo,
+  collaboratorMatchesUserForRepoId,
   findVerifiedUserByEmail,
   normalizeEmail,
 };

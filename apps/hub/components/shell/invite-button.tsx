@@ -41,7 +41,7 @@ type Collaborator = { id: number; email: string; role: CollaboratorRole };
  * collaborator server actions and list query (no modal). Only admins can grant
  * (or remove) Full Access.
  */
-export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
+export function InviteButton({ repoId }: { repoId: number }) {
   const { user } = useUser();
   const { myRole, isOwner } = useRepo();
   const trpc = useTRPC();
@@ -64,7 +64,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
 
   const collaboratorsQuery = useQuery(
     trpc.cms.collaborators.list.queryOptions(
-      { owner, repo },
+      { repoId },
       { enabled: canManage }
     )
   );
@@ -72,7 +72,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
 
   const setCollaborators = (updater: (prev: Collaborator[]) => Collaborator[]) =>
     queryClient.setQueryData<Collaborator[]>(
-      trpc.cms.collaborators.list.queryKey({ owner, repo }),
+      trpc.cms.collaborators.list.queryKey({ repoId }),
       (prev) => updater(prev ?? [])
     );
 
@@ -81,8 +81,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
     if (!value) return;
     try {
       const res = await addMutation.mutateAsync({
-        owner,
-        repo,
+        repoId,
         emails: [value],
         role,
       });
@@ -106,8 +105,7 @@ export function InviteButton({ owner, repo }: { owner: string; repo: string }) {
     setRemoving((prev) => [...prev, id]);
     try {
       const res = await removeMutation.mutateAsync({
-        owner,
-        repo,
+        repoId,
         collaboratorId: id,
       });
       setCollaborators((prev) => prev.filter((c) => c.id !== id));

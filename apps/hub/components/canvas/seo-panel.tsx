@@ -43,15 +43,15 @@ export function SeoPanel({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { owner, repo, currentPage } = useCanvasEditor();
+  const { repoId, currentPage } = useCanvasEditor();
   const trpc = useTRPC();
   const path = currentPage?.path ?? "/";
 
   const { data, isLoading, error } = useQuery(
     trpc.cms.seo.inspectPage.queryOptions(
-      { owner, repo, path },
+      { repoId, path },
       {
-        enabled: open && Boolean(owner && repo && currentPage?.path),
+        enabled: open && Boolean(repoId && currentPage?.path),
         staleTime: 60_000,
         retry: false,
       }

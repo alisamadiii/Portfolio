@@ -43,8 +43,8 @@ export const DangerPanel = () => {
   const trpc = useTRPC();
   const router = useRouter();
   const { config } = useConfig();
-  const owner = config?.owner;
   const repo = config?.repo;
+  const repoId = config?.repoId ?? 0;
 
   const [open, setOpen] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -59,7 +59,7 @@ export const DangerPanel = () => {
     })
   );
 
-  if (!owner || !repo) return null;
+  if (!repo || !repoId) return null;
 
   return (
     <div className="mx-auto w-full max-w-screen-md p-6">
@@ -164,7 +164,7 @@ export const DangerPanel = () => {
                 </AlertDialogCancel>
                 <Button
                   variant="destructive"
-                  onClick={() => deleteMutation.mutate({ owner, repo })}
+                  onClick={() => deleteMutation.mutate({ repoId })}
                   isLoading={deleteMutation.isPending}
                   size="lg"
                 >

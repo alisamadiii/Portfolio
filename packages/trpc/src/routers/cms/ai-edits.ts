@@ -1,11 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { and, sql } from "drizzle-orm";
 
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { roleAtLeast } from "../../lib/authz-shared";
 import { signEditToken } from "@workspace/trpc/lib/cms/edit-token";
-import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
 
 export const aiEditsRouter = createTRPCRouter({
   /**
@@ -14,7 +11,7 @@ export const aiEditsRouter = createTRPCRouter({
    * content-pilot API key never reaches the browser. Access is gated by
    * `cmsProcedure` (the caller must already have CMS access to owner/repo).
    */
-  mintEditToken: cmsProcedure.query(async ({ ctx, input }) => {
+  mintEditToken: cmsProcedure.query(async ({ ctx }) => {
     // Request-a-change is an edit action — view-only collaborators can't mint.
     if (!roleAtLeast(ctx.role, "content-editor")) {
       throw new TRPCError({ code: "FORBIDDEN", message: "View-only access." });
@@ -27,21 +24,7 @@ export const aiEditsRouter = createTRPCRouter({
       });
     }
 
-    const [project] = await db
-      .select({ repoId: hubProject.repoId })
-      .from(hubProject)
-      .where(
-        and(
-          sql`lower(${hubProject.owner}) = lower(${input.owner})`,
-          sql`lower(${hubProject.repo}) = lower(${input.repo})`
-        )
-      )
-      .limit(1);
-    if (!project) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
-    }
-
-    const token = signEditToken({ repoId: project.repoId }, secret);
+    const token = signEditToken({ repoId: ctx.repoId }, secret);
     return { token };
   }),
 });

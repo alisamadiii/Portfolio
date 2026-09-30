@@ -107,6 +107,7 @@ export type SitemapPageInfo = {
 type CanvasEditorValue = {
   owner: string;
   repo: string;
+  repoId: number;
   branch: string;
   repoBase: string;
   pages: CanvasPageInfo[];
@@ -173,12 +174,13 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const owner = config?.owner ?? "";
   const repo = config?.repo ?? "";
   const branch = config?.branch ?? "";
-  const repoBase = repoPath(config?.repoId ?? 0);
+  const repoId = config?.repoId ?? 0;
+  const repoBase = repoPath(repoId);
 
   const pagesQuery = useQuery(
     trpc.cms.pages.list.queryOptions(
-      { owner, repo, branch },
-      { enabled: Boolean(owner && repo && branch), staleTime: 60_000 }
+      { repoId, branch },
+      { enabled: Boolean(repoId && branch), staleTime: 60_000 }
     )
   );
 
@@ -187,9 +189,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // browser; refetch inside the token's TTL so a long session stays valid.
   const editTokenQuery = useQuery(
     trpc.cms.aiEdits.mintEditToken.queryOptions(
-      { owner, repo },
+      { repoId },
       {
-        enabled: Boolean(owner && repo) && canEdit,
+        enabled: Boolean(repoId) && canEdit,
         staleTime: 25 * 60 * 1000,
         refetchInterval: 25 * 60 * 1000,
       }
@@ -209,9 +211,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // startup (install + boot take a while), slow heartbeat once ready.
   const sessionQuery = useQuery(
     trpc.cms.previewSession.get.queryOptions(
-      { owner, repo },
+      { repoId },
       {
-        enabled: Boolean(owner && repo) && canEdit,
+        enabled: Boolean(repoId) && canEdit,
         refetchInterval: (query) => {
           const status = query.state.data?.session?.status;
           return status === "starting" ||
@@ -237,7 +239,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         setCapacityMessage(null);
         setAutoStartError(null);
         void queryClient.invalidateQueries({
-          queryKey: trpc.cms.previewSession.get.queryOptions({ owner, repo })
+          queryKey: trpc.cms.previewSession.get.queryOptions({ repoId })
             .queryKey,
         });
       },
@@ -257,16 +259,15 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const autoStartAttempted = useRef<string | null>(null);
   const autoStartMutate = autoStartMutation.mutate;
   useEffect(() => {
-    if (!canEdit || !owner || !repo || !sessionQuery.isSuccess) return;
+    if (!canEdit || !repoId || !sessionQuery.isSuccess) return;
     if (session && session.status !== "paused") return;
-    const key = `${owner}/${repo}`;
+    const key = String(repoId);
     if (autoStartAttempted.current === key) return;
     autoStartAttempted.current = key;
-    autoStartMutate({ owner, repo });
+    autoStartMutate({ repoId });
   }, [
     canEdit,
-    owner,
-    repo,
+    repoId,
     sessionQuery.isSuccess,
     session,
     autoStartMutate,
@@ -296,8 +297,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     setBootTimedOut(false);
     autoStartAttempted.current = null;
     void sessionQuery.refetch();
-    autoStartMutate({ owner, repo });
-  }, [owner, repo, autoStartMutate, sessionQuery]);
+    autoStartMutate({ repoId });
+  }, [repoId, autoStartMutate, sessionQuery]);
 
   // The preview service is down when the status poll errors and we have no
   // session to show. Auto-start also can't fire (it waits on a successful
@@ -332,9 +333,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // Each nests under the deepest manifest page prefixing its path.
   const sitemapQuery = useQuery(
     trpc.cms.pages.sitemap.queryOptions(
-      { owner, repo },
+      { repoId },
       {
-        enabled: Boolean(owner && repo && siteOrigin),
+        enabled: Boolean(repoId && siteOrigin),
         staleTime: 5 * 60 * 1000,
       }
     )
@@ -594,6 +595,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     () => ({
       owner,
       repo,
+      repoId,
       branch,
       repoBase,
       pages,
@@ -626,6 +628,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     [
       owner,
       repo,
+      repoId,
       branch,
       repoBase,
       pages,

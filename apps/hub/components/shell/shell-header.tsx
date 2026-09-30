@@ -58,7 +58,7 @@ export function ShellHeader({
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const { owner, repo } = useCanvasEditor();
+  const { repoId } = useCanvasEditor();
   const { myRole } = useRepo();
   const mediaLibrary = useMediaLibrary();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
@@ -168,7 +168,7 @@ export function ShellHeader({
           <Info className="size-5" />
         </Button>
         <User align="end" />
-        <InviteButton owner={owner} repo={repo} />
+        <InviteButton repoId={repoId} />
         <SessionActions />
       </div>
     </header>

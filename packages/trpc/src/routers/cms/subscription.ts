@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import z from "zod";
 
@@ -64,27 +64,16 @@ export const subscriptionRouter = createTRPCRouter({
   // The per-project subscription row (or null) for the Billing tab. Drives the
   // products-vs-manage-vs-free-life branch.
   getProject: authenticatedProcedure
-    .input(z.object({ owner: z.string().optional(), repo: z.string() }))
+    .input(z.object({ repoId: z.number().int().positive() }))
     .query(async ({ input, ctx }) => {
-      const org = input.owner;
-      if (!org) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
-      }
       const [project] = await db
         .select({
           repoId: hubProject.repoId,
           freeLife: hubProject.freeLife,
-          owner: hubProject.owner,
-          repo: hubProject.repo,
           githubConnectedUserId: hubProject.githubConnectedUserId,
         })
         .from(hubProject)
-        .where(
-          and(
-            sql`lower(${hubProject.owner}) = lower(${org})`,
-            sql`lower(${hubProject.repo}) = lower(${input.repo})`
-          )
-        )
+        .where(eq(hubProject.repoId, input.repoId))
         .limit(1);
       if (!project) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, inArray, or, type SQL } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -11,7 +11,6 @@ import {
 } from "../../init";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
-import { resolveRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import {
   cancelPreviewMessage,
   closePreviewSession,
@@ -30,12 +29,7 @@ import { hubProject } from "@workspace/drizzle/schema";
  * Session state lives in content-pilot's DB — the hub proxies, never stores.
  */
 
-const sessionForRepo = async (
-  owner: string,
-  repo: string,
-  sessionId: string
-) => {
-  const repoId = await resolveRepoId(owner, repo);
+const sessionForRepo = async (repoId: number, sessionId: string) => {
   const session = await getPreviewSession(repoId);
   if (!session || session.id !== sessionId) {
     throw new TRPCError({
@@ -62,10 +56,9 @@ const deleteBranchRef = async (
 
 export const previewSessionRouter = createTRPCRouter({
   /** Starts (or joins) the live-preview session for this project. */
-  start: cmsWriteProcedure.mutation(async ({ ctx, input }) => {
-    const repoId = await resolveRepoId(input.owner, input.repo);
+  start: cmsWriteProcedure.mutation(async ({ ctx }) => {
     return createPreviewSession(
-      repoId,
+      ctx.repoId,
       ctx.user.name || ctx.user.email || undefined
     );
   }),
@@ -87,12 +80,10 @@ export const previewSessionRouter = createTRPCRouter({
       ),
     ];
     if (!ctx.isAdmin) {
-      const collabConds = (ctx.collaborations ?? []).map((c) =>
-        and(
-          sql`lower(${hubProject.owner}) = lower(${c.owner})`,
-          sql`lower(${hubProject.repo}) = lower(${c.repo})`
-        )
-      );
+      const collabConds = (ctx.collaborations ?? [])
+        .map((c) => c.repoId)
+        .filter((id): id is number => id != null)
+        .map((id) => eq(hubProject.repoId, id));
       const ownConnected = eq(
         hubProject.githubConnectedUserId,
         ctx.session.user.id
@@ -108,9 +99,8 @@ export const previewSessionRouter = createTRPCRouter({
   }),
 
   /** The active session (canvas polls this while starting). */
-  get: cmsProcedure.query(async ({ input }) => {
-    const repoId = await resolveRepoId(input.owner, input.repo);
-    const session = await getPreviewSession(repoId);
+  get: cmsProcedure.query(async ({ ctx }) => {
+    const session = await getPreviewSession(ctx.repoId);
     return { session };
   }),
 
@@ -118,13 +108,9 @@ export const previewSessionRouter = createTRPCRouter({
   close: cmsWriteProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const session = await sessionForRepo(
-        input.owner,
-        input.repo,
-        input.sessionId
-      );
+      const session = await sessionForRepo(ctx.repoId, input.sessionId);
       await closePreviewSession(session.id, "discard");
-      await deleteBranchRef(ctx.token, input.owner, input.repo, session.branch);
+      await deleteBranchRef(ctx.token, ctx.owner, ctx.repo, session.branch);
       return { closed: true };
     }),
 
@@ -135,12 +121,8 @@ export const previewSessionRouter = createTRPCRouter({
    */
   reset: cmsWriteProcedure
     .input(z.object({ sessionId: z.string() }))
-    .mutation(async ({ input }) => {
-      const session = await sessionForRepo(
-        input.owner,
-        input.repo,
-        input.sessionId
-      );
+    .mutation(async ({ ctx, input }) => {
+      const session = await sessionForRepo(ctx.repoId, input.sessionId);
       await resetPreviewSession(session.id);
       return { reset: true };
     }),
@@ -148,12 +130,8 @@ export const previewSessionRouter = createTRPCRouter({
   /** Pauses the in-flight AI run for this session; the partial edit is reverted. */
   cancel: cmsWriteProcedure
     .input(z.object({ sessionId: z.string() }))
-    .mutation(async ({ input }) => {
-      const session = await sessionForRepo(
-        input.owner,
-        input.repo,
-        input.sessionId
-      );
+    .mutation(async ({ ctx, input }) => {
+      const session = await sessionForRepo(ctx.repoId, input.sessionId);
       await cancelPreviewMessage(session.id);
       return { canceled: true };
     }),
@@ -166,18 +144,12 @@ export const previewSessionRouter = createTRPCRouter({
   publish: cmsFullAccessProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const session = await sessionForRepo(
-        input.owner,
-        input.repo,
-        input.sessionId
-      );
+      const session = await sessionForRepo(ctx.repoId, input.sessionId);
 
       const [project] = await db
         .select({ defaultBranch: hubProject.defaultBranch })
         .from(hubProject)
-        .where(
-          sql`lower(${hubProject.owner}) = lower(${input.owner}) and lower(${hubProject.repo}) = lower(${input.repo})`
-        )
+        .where(eq(hubProject.repoId, ctx.repoId))
         .limit(1);
       const base = project?.defaultBranch || "main";
 
@@ -185,8 +157,8 @@ export const previewSessionRouter = createTRPCRouter({
       let prNumber: number;
       try {
         const { data: pr } = await octokit.rest.pulls.create({
-          owner: input.owner,
-          repo: input.repo,
+          owner: ctx.owner,
+          repo: ctx.repo,
           title: `Site edits — AI session ${session.id}`,
           head: session.branch,
           base,
@@ -201,8 +173,8 @@ export const previewSessionRouter = createTRPCRouter({
           await closePreviewSession(session.id, "published");
           await deleteBranchRef(
             ctx.token,
-            input.owner,
-            input.repo,
+            ctx.owner,
+            ctx.repo,
             session.branch
           );
           return { merged: false, sha: null };
@@ -212,16 +184,16 @@ export const previewSessionRouter = createTRPCRouter({
 
       try {
         const { data: merge } = await octokit.rest.pulls.merge({
-          owner: input.owner,
-          repo: input.repo,
+          owner: ctx.owner,
+          repo: ctx.repo,
           pull_number: prNumber,
           merge_method: "squash",
         });
         await closePreviewSession(session.id, "published");
         await deleteBranchRef(
           ctx.token,
-          input.owner,
-          input.repo,
+          ctx.owner,
+          ctx.repo,
           session.branch
         );
         return { merged: true, sha: merge.sha };

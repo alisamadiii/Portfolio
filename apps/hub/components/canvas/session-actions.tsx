@@ -34,7 +34,7 @@ import { roleAtLeast } from "@/lib/authz-shared";
  * session's changes + chat) while keeping the session open.
  */
 export function SessionActions() {
-  const { owner, repo, session, editToken } = useCanvasEditor();
+  const { repoId, session, editToken } = useCanvasEditor();
   const { myRole } = useRepo();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canPublish = (myRole ?? "full-access") === "full-access";
@@ -42,8 +42,7 @@ export function SessionActions() {
   const queryClient = useQueryClient();
 
   const sessionQueryKey = trpc.cms.previewSession.get.queryOptions({
-    owner,
-    repo,
+    repoId,
   }).queryKey;
   const invalidateSession = () =>
     queryClient.invalidateQueries({ queryKey: sessionQueryKey });
@@ -141,7 +140,7 @@ export function SessionActions() {
                 // Close immediately — the header Publish button shows the
                 // loading spinner (publishMutation.isPending) from here on.
                 setConfirmPublish(false);
-                publishMutation.mutate({ owner, repo, sessionId: session.id });
+                publishMutation.mutate({ repoId, sessionId: session.id });
               }}
             >
               Publish
@@ -165,7 +164,7 @@ export function SessionActions() {
             <AlertDialogAction
               onClick={() => {
                 setConfirmDiscard(false);
-                resetMutation.mutate({ owner, repo, sessionId: session.id });
+                resetMutation.mutate({ repoId, sessionId: session.id });
               }}
             >
               Discard

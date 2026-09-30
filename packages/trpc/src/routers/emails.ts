@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
@@ -36,20 +36,14 @@ const NOT_FOUND = () =>
 
 const emailId = z.string().min(1).max(100);
 
-async function resolveProject(owner: string | undefined, repo: string) {
-  const org = owner;
-  if (!org) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Missing owner" });
-  }
+async function resolveProject(repoId: number) {
   const [row] = await db
     .select({
       usesendDomainId: hubProject.usesendDomainId,
       usesendPendingDomainId: hubProject.usesendPendingDomainId,
     })
     .from(hubProject)
-    .where(
-      sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`
-    )
+    .where(eq(hubProject.repoId, repoId))
     .limit(1);
   if (!row) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
@@ -60,10 +54,7 @@ async function resolveProject(owner: string | undefined, repo: string) {
   };
 }
 
-const projectWhere = (owner: string | undefined, repo: string) => {
-  const org = owner;
-  return sql`lower(${hubProject.owner}) = lower(${org}) and lower(${hubProject.repo}) = lower(${repo})`;
-};
+const projectWhere = (repoId: number) => eq(hubProject.repoId, repoId);
 
 // The connect flow's public view of a pending domain.
 const toPendingDomain = (domain: UseSendDomain) => ({
@@ -117,13 +108,13 @@ async function authorizeEmailById(
     // Outside the snapshot window (or undomained) → no way to scope it.
     if (domainId == null) throw NOT_FOUND();
     const projects = await db
-      .select({ owner: hubProject.owner, repo: hubProject.repo })
+      .select({ repoId: hubProject.repoId })
       .from(hubProject)
       .where(eq(hubProject.usesendDomainId, domainId));
     let allowed = false;
     for (const project of projects) {
       try {
-        await getToken(user, project.owner, project.repo);
+        await getToken(user, project.repoId);
         allowed = true;
         break;
       } catch {
@@ -140,8 +131,8 @@ export const emailsRouter = createTRPCRouter({
   // Cheap gate for the Emails tab — the UI checks this before firing
   // list/stats, and shows a setup card when the project has no sending
   // domain configured.
-  enabled: cmsProcedure.query(async ({ input }) => {
-    const project = await resolveProject(input.owner, input.repo);
+  enabled: cmsProcedure.query(async ({ ctx }) => {
+    const project = await resolveProject(ctx.repoId);
     return { enabled: !!project.usesendDomainId };
   }),
 
@@ -149,8 +140,8 @@ export const emailsRouter = createTRPCRouter({
 
   // Current setup state: the pending domain with fresh per-record DNS
   // statuses, or null when nothing is in flight.
-  domainSetup: cmsFullAccessProcedure.query(async ({ input }) => {
-    const project = await resolveProject(input.owner, input.repo);
+  domainSetup: cmsFullAccessProcedure.query(async ({ ctx }) => {
+    const project = await resolveProject(ctx.repoId);
     if (!project.usesendPendingDomainId) return { pending: null };
     const domain = await getUsesendDomain(
       Number(project.usesendPendingDomainId)
@@ -160,7 +151,7 @@ export const emailsRouter = createTRPCRouter({
       await db
         .update(hubProject)
         .set({ usesendPendingDomainId: null })
-        .where(projectWhere(input.owner, input.repo));
+        .where(projectWhere(ctx.repoId));
       return { pending: null };
     }
     return { pending: toPendingDomain(domain) };
@@ -177,8 +168,8 @@ export const emailsRouter = createTRPCRouter({
           .pipe(z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "Enter a valid domain")),
       })
     )
-    .mutation(async ({ input }) => {
-      const project = await resolveProject(input.owner, input.repo);
+    .mutation(async ({ ctx, input }) => {
+      const project = await resolveProject(ctx.repoId);
       if (project.usesendDomainId || project.usesendPendingDomainId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -194,12 +185,12 @@ export const emailsRouter = createTRPCRouter({
       await db
         .update(hubProject)
         .set({ usesendPendingDomainId: String(domain.id) })
-        .where(projectWhere(input.owner, input.repo));
+        .where(projectWhere(ctx.repoId));
       return { pending: toPendingDomain(domain) };
     }),
 
-  verifyDomain: cmsFullAccessProcedure.mutation(async ({ input }) => {
-    const project = await resolveProject(input.owner, input.repo);
+  verifyDomain: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    const project = await resolveProject(ctx.repoId);
     if (!project.usesendPendingDomainId) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
@@ -224,21 +215,21 @@ export const emailsRouter = createTRPCRouter({
           usesendDomainId: String(domain.id),
           usesendPendingDomainId: null,
         })
-        .where(projectWhere(input.owner, input.repo));
+        .where(projectWhere(ctx.repoId));
       return { verified: true as const };
     }
     return { verified: false as const, pending: toPendingDomain(domain) };
   }),
 
-  cancelDomainSetup: cmsFullAccessProcedure.mutation(async ({ input }) => {
-    const project = await resolveProject(input.owner, input.repo);
+  cancelDomainSetup: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    const project = await resolveProject(ctx.repoId);
     // Never touches usesendDomainId — a connected domain can't be deleted here.
     if (project.usesendPendingDomainId) {
       await deleteUsesendDomain(Number(project.usesendPendingDomainId));
       await db
         .update(hubProject)
         .set({ usesendPendingDomainId: null })
-        .where(projectWhere(input.owner, input.repo));
+        .where(projectWhere(ctx.repoId));
     }
     return { ok: true };
   }),
@@ -255,8 +246,8 @@ export const emailsRouter = createTRPCRouter({
         limit: z.number().int().min(1).max(5000).default(10),
       })
     )
-    .query(async ({ input }) => {
-      const project = await resolveProject(input.owner, input.repo);
+    .query(async ({ ctx, input }) => {
+      const project = await resolveProject(ctx.repoId);
       const emails = await projectEmails(project);
 
       const fromTs = input.from?.getTime();
@@ -291,8 +282,8 @@ export const emailsRouter = createTRPCRouter({
         to: z.coerce.date().optional(),
       })
     )
-    .query(async ({ input }) => {
-      const project = await resolveProject(input.owner, input.repo);
+    .query(async ({ ctx, input }) => {
+      const project = await resolveProject(ctx.repoId);
       const emails = await projectEmails(project);
 
       const fromTs = input.from?.getTime();
@@ -323,8 +314,8 @@ export const emailsRouter = createTRPCRouter({
 
   get: cmsProcedure
     .input(z.object({ id: emailId }))
-    .query(async ({ input }) => {
-      const project = await resolveProject(input.owner, input.repo);
+    .query(async ({ ctx, input }) => {
+      const project = await resolveProject(ctx.repoId);
       const emails = await projectEmails(project);
       const email = emails.find((e) => e.id === input.id);
       if (!email) throw NOT_FOUND();
@@ -335,8 +326,8 @@ export const emailsRouter = createTRPCRouter({
   // react-query.
   getViewUrl: cmsProcedure
     .input(z.object({ id: emailId }))
-    .mutation(async ({ input }) => {
-      const project = await resolveProject(input.owner, input.repo);
+    .mutation(async ({ ctx, input }) => {
+      const project = await resolveProject(ctx.repoId);
 
       // The detail endpoint has no domainId — scope by requiring the id in
       // the project's snapshot. NOT_FOUND for foreign emails too, don't leak

@@ -4,7 +4,6 @@ import z from "zod";
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { inspectSite } from "../../lib/inspect";
 import { getPreviewSession } from "../../lib/content-pilot";
-import { resolveRepoId } from "../../lib/cms/repo-id";
 import { getCustomDomainBaseUrl } from "./pages";
 
 /**
@@ -21,14 +20,13 @@ export const seoRouter = createTRPCRouter({
   /** Inspects the SEO head of one page — the preview branch if a session is up. */
   inspectPage: cmsProcedure
     .input(z.object({ path: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       // Preview origin (the session dev server) if one is ready — that reflects
       // the client's unpublished edits. Best-effort: a content-pilot outage
       // just drops us to the published site.
       let base: string | null = null;
       try {
-        const repoId = await resolveRepoId(input.owner, input.repo);
-        const session = await getPreviewSession(repoId);
+        const session = await getPreviewSession(ctx.repoId);
         if (session?.status === "ready" && session.previewUrl) {
           base = new URL(session.previewUrl).origin;
         }
@@ -37,7 +35,7 @@ export const seoRouter = createTRPCRouter({
       }
 
       // Fallback: the project's published domain.
-      if (!base) base = await getCustomDomainBaseUrl(input.owner, input.repo);
+      if (!base) base = await getCustomDomainBaseUrl(ctx.repoId);
       if (!base) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",

@@ -88,8 +88,7 @@ export function ActiveSessionsBanner() {
               disabled={closeMutation.isPending}
               onClick={() =>
                 closeMutation.mutate({
-                  owner: session.owner,
-                  repo: session.repo,
+                  repoId: session.repoId,
                   sessionId: session.id,
                 })
               }

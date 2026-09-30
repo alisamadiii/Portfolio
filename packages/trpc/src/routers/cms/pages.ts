@@ -4,7 +4,6 @@ import z from "zod";
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
-import { resolveRepoId } from "../../lib/cms/repo-id";
 import { eq } from "drizzle-orm";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
@@ -65,11 +64,9 @@ function titleFromPath(pathname: string): string {
  * fall back to the cms.json / settings baseUrl.
  */
 export async function getCustomDomainBaseUrl(
-  owner: string | undefined,
-  repo: string
+  repoId: number
 ): Promise<string | null> {
   try {
-    const repoId = await resolveRepoId(owner, repo);
     const [row] = await db
       .select({ websiteUrl: hubProject.websiteUrl })
       .from(hubProject)
@@ -91,18 +88,15 @@ export const pagesRouter = createTRPCRouter({
         // CMS v2: tiles come straight from the cms.json manifest — one tile
         // per `pages` entry plus one table card per collection.
         const manifest = await getManifest(
-          input.owner,
-          input.repo,
+          ctx.owner,
+          ctx.repo,
           input.branch,
           { getToken: async () => token }
         );
         // The canvas base URL is the project's own website URL only — no dev
         // override, no manifest/settings fallback. Without one, tell the client
         // to add a domain in Settings › Domain.
-        const domainBaseUrl = await getCustomDomainBaseUrl(
-          input.owner,
-          input.repo
-        );
+        const domainBaseUrl = await getCustomDomainBaseUrl(ctx.repoId);
         if (!domainBaseUrl) {
           return {
             baseUrl: "",
@@ -183,8 +177,8 @@ export const pagesRouter = createTRPCRouter({
    * deployed sitemap is the ground truth. Best-effort: no domain, no sitemap,
    * or a fetch error all return an empty list and the tree shows no arrows.
    */
-  sitemap: cmsProcedure.query(async ({ input }) => {
-    const baseUrl = await getCustomDomainBaseUrl(input.owner, input.repo);
+  sitemap: cmsProcedure.query(async ({ ctx }) => {
+    const baseUrl = await getCustomDomainBaseUrl(ctx.repoId);
     if (!baseUrl) return { paths: [] as string[] };
 
     let origin: string;

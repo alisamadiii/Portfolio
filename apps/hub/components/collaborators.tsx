@@ -196,9 +196,11 @@ export function InviteCollaboratorsDialog({
 export function Collaborators({
   owner,
   repo,
+  repoId,
 }: {
   owner: string;
   repo: string;
+  repoId: number;
   branch?: string;
 }) {
   const trpc = useTRPC();
@@ -210,7 +212,7 @@ export function Collaborators({
   const canManageFullAccess = isAdmin || Boolean(isOwner);
 
   const collaboratorsQuery = useQuery(
-    trpc.cms.collaborators.list.queryOptions({ owner, repo })
+    trpc.cms.collaborators.list.queryOptions({ repoId })
   );
   const collaborators = collaboratorsQuery.data ?? [];
   const isLoading = collaboratorsQuery.isPending;
@@ -219,11 +221,11 @@ export function Collaborators({
   const setCollaborators = useCallback(
     (updater: (prev: Collaborator[]) => Collaborator[]) => {
       queryClient.setQueryData<Collaborator[]>(
-        trpc.cms.collaborators.list.queryKey({ owner, repo }),
+        trpc.cms.collaborators.list.queryKey({ repoId }),
         (prev) => (prev ? updater(prev) : prev)
       );
     },
-    [queryClient, trpc, owner, repo]
+    [queryClient, trpc, repoId]
   );
 
   const addMutation = useMutation(trpc.cms.collaborators.add.mutationOptions());
@@ -265,8 +267,7 @@ export function Collaborators({
   ) => {
     try {
       const result = await addMutation.mutateAsync({
-        owner,
-        repo,
+        repoId,
         emails: parsedEmails,
         role,
       });
@@ -289,8 +290,7 @@ export function Collaborators({
 
     try {
       const removed = await removeMutation.mutateAsync({
-        owner,
-        repo,
+        repoId,
         collaboratorId,
       });
       setCollaborators((prev) =>
@@ -313,8 +313,7 @@ export function Collaborators({
 
     try {
       const changed = await changeRoleMutation.mutateAsync({
-        owner,
-        repo,
+        repoId,
         collaboratorId,
         role,
       });
@@ -338,8 +337,7 @@ export function Collaborators({
 
     try {
       const resent = await resendMutation.mutateAsync({
-        owner,
-        repo,
+        repoId,
         collaboratorId,
       });
       toast.success(resent.message);
