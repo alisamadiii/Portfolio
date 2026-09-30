@@ -4,8 +4,6 @@ import { z } from "zod";
 import { sendEmail, UseSendError } from "@workspace/email/usesend";
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 
-import { createLeadFromQuote, isTwentyConfigured } from "@/lib/twenty";
-
 // ─── CORS ───────────────────────────────────────────────────────
 // Live Server (static agency site during local dev) is not in the
 // shared allowlist, so it's added here.
@@ -209,16 +207,6 @@ export async function POST(req: Request) {
       { error: "Failed to send quote request" },
       { status: 500, headers }
     );
-  }
-
-  // CRM lead capture is best-effort: the email is already out, so a Twenty
-  // failure must never fail the response.
-  if (isTwentyConfigured()) {
-    try {
-      await createLeadFromQuote(data);
-    } catch (error) {
-      console.error("Twenty CRM lead creation failed", error);
-    }
   }
 
   return NextResponse.json({ ok: true }, { headers });

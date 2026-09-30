@@ -91,7 +91,6 @@ export const COOLIFY_DASHBOARD_LINKS: Record<string, string> = {
   uejrtzyasfzvjy6hyit34lwl: `${COOLIFY_BASE}/project/${P.family}/application/uejrtzyasfzvjy6hyit34lwl`, // dad-portfolio
   r2kur4i4z1pes0mzy3gjcf1n: `${COOLIFY_BASE}/project/${P.openSource}/service/r2kur4i4z1pes0mzy3gjcf1n`, // wallos
   "19mzkqnmdibuozcfznsc9z66": `${COOLIFY_BASE}/project/${P.openSource}/service/19mzkqnmdibuozcfznsc9z66`, // usesend
-  "1rancjve7xk4iq9twnm4wus7": `${COOLIFY_BASE}/project/${P.openSource}/service/1rancjve7xk4iq9twnm4wus7`, // twenty
   drjr4oz2d6kb4kk9uqsvqetu: `${COOLIFY_BASE}/project/${P.empowerher}/service/drjr4oz2d6kb4kk9uqsvqetu`, // EmpowerHer usesend
 };
 
