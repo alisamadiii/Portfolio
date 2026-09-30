@@ -93,22 +93,47 @@ function ShellBody() {
     entryPages.find((page) => page.path === selectedPath) ??
     null;
 
-  const frameUrl = useMemo(() => {
-    if (!selectedPage?.url) return null;
+  // The canvas is preview-only now: the iframe mounts once the session serves.
+  const sessionReady = session?.status === "ready";
+
+  // Framework-agnostic fallback: a repo with no CMS manifest (`_site.json`) and
+  // no deployed sitemap has an empty page tree, so nothing is selectable. Once
+  // the preview is serving, load its root `/` so ANY project (vanilla Vite,
+  // Next, etc.) renders instead of hanging on the loader forever.
+  const rootFallback = useMemo(() => {
+    if (!session?.previewUrl) return null;
     try {
-      const parsed = new URL(selectedPage.url);
+      return {
+        path: "/",
+        url: new URL("/", session.previewUrl).toString(),
+        title: "Home",
+        kind: "page" as const,
+        parentPath: null,
+      };
+    } catch {
+      return null;
+    }
+  }, [session?.previewUrl]);
+
+  // When nothing in the tree is selected (no manifest pages to auto-select
+  // from), show the preview root so the canvas renders instead of hanging.
+  // Picking a page from the tree sets selectedPath and this yields to it.
+  const effectivePage = selectedPage ?? (sessionReady ? rootFallback : null);
+
+  const frameUrl = useMemo(() => {
+    if (!effectivePage?.url) return null;
+    try {
+      const parsed = new URL(effectivePage.url);
       return { host: parsed.host, path: parsed.pathname };
     } catch {
       return null;
     }
-  }, [selectedPage?.url]);
+  }, [effectivePage?.url]);
 
-  // The canvas is preview-only now: the iframe mounts once the session serves.
-  const sessionReady = session?.status === "ready";
   const showFrame = Boolean(
     sessionReady &&
-      selectedPage &&
-      selectedPage.kind !== "collection" &&
+      effectivePage &&
+      effectivePage.kind !== "collection" &&
       !pagesError
   );
 
@@ -168,7 +193,16 @@ function ShellBody() {
                       : "hidden"
                   }
                 >
-                  {needsDomain ? (
+                  {/* Canvas is preview-only: once the session's dev server is
+                      serving, show it — even without a live-site domain (the
+                      domain only drives the manifest page tree + publish). */}
+                  {showFrame && effectivePage ? (
+                    <PageFrame
+                      page={effectivePage}
+                      device={device}
+                      reloadNonce={reloadNonce}
+                    />
+                  ) : needsDomain ? (
                     <div className="bg-shell flex min-h-0 flex-1 items-center justify-center p-6">
                       <div className="bg-background w-full max-w-md rounded-2xl border p-7 text-center shadow-sm">
                         <div className="bg-primary/10 text-primary mx-auto flex size-11 items-center justify-center rounded-xl">
@@ -191,12 +225,6 @@ function ShellBody() {
                       <Frame className="size-6" />
                       {pagesError.message}
                     </div>
-                  ) : showFrame && selectedPage ? (
-                    <PageFrame
-                      page={selectedPage}
-                      device={device}
-                      reloadNonce={reloadNonce}
-                    />
                   ) : (
                     <CanvasLoading status={session?.status ?? null} />
                   )}

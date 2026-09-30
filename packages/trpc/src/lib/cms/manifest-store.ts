@@ -2,11 +2,11 @@
  * CMS v2 manifest store.
  *
  * A v2 repo ships exactly one root `_site.json` (keys `cms` = the manifest:
- * baseUrl, media, page→route map; plus schema-less `seo` and `variables` bags)
- * and a root `_pages.json` for page content. Collections are NOT declared in the
- * file — they are discovered by listing the root `_collections/` folder. There is
- * NO fallback: a repo without a root `_site.json` is simply not a v2 repo, and the
- * hub surfaces that to the user rather than reading anything under `src/data`.
+ * baseUrl, media, page→route map; plus schema-less `seo` and `variables` bags).
+ * Collections are NOT declared in the file — they are discovered by listing the
+ * root `_collections/` folder. There is NO fallback: a repo without a root
+ * `_site.json` is simply not a v2 repo, and the hub surfaces that to the user
+ * rather than reading anything under `src/data`.
  *
  * The cache reuses the legacy `hubConfig` table: a repo is either legacy or
  * v2, so the (owner, repo, branch) row is never contested. Rows are
@@ -27,13 +27,11 @@ const manifestVersion = "cms-v2.1";
 
 /**
  * The v2 contract: one config file `_site.json` (keys `cms`, `seo`, `variables`)
- * plus the page-content file `_pages.json`, both at the basePath ROOT. The
- * leading underscore groups every CMS-owned artifact (these two + the
- * `_collections/` folder) at the top of the file tree. Repo-relative
- * (pre-basePath) locations below.
+ * at the basePath ROOT. The leading underscore groups every CMS-owned artifact
+ * (`_site.json` + the `_collections/` folder) at the top of the file tree.
+ * Repo-relative (pre-basePath) locations below.
  */
 const SITE_FILE = "_site.json";
-const PAGES_FILE = "_pages.json";
 // Collections are AUTO-DISCOVERED from this folder — they are NOT declared in
 // _site.json. Each subfolder is a directory collection (md/json entries); each
 // top-level `.json` file is an array collection; a folder named `blog` is the
@@ -65,7 +63,8 @@ const CollectionSchema = z.object({
 });
 
 const ManifestObjectSchema = z.object({
-  // 1 = nested per-page _pages.json; 2 = flat global map (auto mode v3).
+  // Legacy layout marker carried in _site.json; kept lenient for back-compat
+  // (the hub no longer reads page content, so it is otherwise unused).
   version: z.union([z.literal(1), z.literal(2)]),
   baseUrl: z.string().url(),
   media: z
@@ -94,7 +93,6 @@ type ManifestPaths = {
   manifest: string;
   /** The single root config file (equals `manifest`). */
   site: string;
-  pages: string;
   /** variables + seo live inside _site.json, so both resolve to it. */
   variables: string;
   seo: string;
@@ -203,8 +201,7 @@ const rebaseCms = (
 /**
  * Validate the fetched `_site.json` (`cms`/`seo`/`variables`) and attach physical
  * paths. `collections` come from folder discovery, not the file. seo + variables
- * ride inline; every config path resolves to the one root _site.json, page
- * content to the root _pages.json.
+ * ride inline; every config path resolves to the one root _site.json.
  */
 const normalizeManifest = (
   raw: unknown,
@@ -219,7 +216,6 @@ const normalizeManifest = (
     paths: {
       manifest: rebase(basePath, SITE_FILE),
       site: rebase(basePath, SITE_FILE),
-      pages: rebase(basePath, PAGES_FILE),
       variables: rebase(basePath, SITE_FILE),
       seo: rebase(basePath, SITE_FILE),
     },
@@ -449,6 +445,5 @@ export {
   manifestVersion,
   ManifestObjectSchema,
   SITE_FILE,
-  PAGES_FILE,
 };
 export type { Manifest, ManifestObject };
