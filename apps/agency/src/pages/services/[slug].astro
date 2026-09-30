@@ -15,7 +15,7 @@ export function getStaticPaths() {
 
 const { service } = Astro.props as { service: Service };
 
-const SITE = "https://agency.alisamadii.com";
+const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/services/${service.slug}`;
 
 const schema: Record<string, unknown>[] = [

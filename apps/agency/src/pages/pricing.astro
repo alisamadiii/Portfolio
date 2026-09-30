@@ -7,7 +7,7 @@ import { PRICING, fmtPrice } from "../data/pricing";
 
 // The monthly anchor is rendered into the HTML at build time so crawlers/LLMs
 // see a real number. Custom projects are quote-only — no figure anywhere.
-const SITE = "https://agency.alisamadii.com";
+const SITE = "https://www.alisamadii.com";
 // Page-specific structured data — prices sourced from src/data/pricing.ts so
 // the schema can never drift from the visible page or from Stripe.
 const pricingSchema = [
@@ -62,12 +62,12 @@ const pricingSchema = [
 <Layout
   title="Pricing — Ali Samadi | Creative Agency"
   description="Simple, honest pricing for local and small businesses. An all-inclusive plan at $1,299 + $100/mo or a fully custom project — web design, hosting, CMS, and email."
-  canonical="https://agency.alisamadii.com/pricing"
+  canonical="https://www.alisamadii.com/pricing"
   og={{
     title: "Pricing — Ali Samadi",
     description:
       "Simple, honest pricing for local and small businesses. An all-inclusive plan at $1,299 + $100/mo or a fully custom project.",
-    url: "https://agency.alisamadii.com/pricing",
+    url: "https://www.alisamadii.com/pricing",
     twitterDescription:
       "Simple pricing for local and small businesses. All-inclusive at $1,299 + $100/mo, or fully custom.",
   }}

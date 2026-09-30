@@ -5,7 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  site: "https://agency.alisamadii.com",
+  site: "https://www.alisamadii.com",
   // Static by default — every marketing page is still prerendered. The Node
   // adapter only kicks in for routes that opt out via `prerender = false`
   // (currently just the URL-shortener [slug] redirect).

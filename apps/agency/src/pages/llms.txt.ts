@@ -14,13 +14,13 @@ export const GET: APIRoute = async () => {
   const writing = posts
     .map(
       (p) =>
-        `- [${p.data.title}](https://agency.alisamadii.com/blog/${p.id}) — ${p.data.description}`
+        `- [${p.data.title}](https://www.alisamadii.com/blog/${p.id}) — ${p.data.description}`
     )
     .join("\n");
   const locations = cities
     .map(
       (c) =>
-        `- [Web design in ${c.name}, FL](https://agency.alisamadii.com/locations/${c.slug})`
+        `- [Web design in ${c.name}, FL](https://www.alisamadii.com/locations/${c.slug})`
     )
     .join("\n");
   const docsTree = await getDocsTree();
@@ -28,7 +28,7 @@ export const GET: APIRoute = async () => {
     .flatMap((g) =>
       g.docs.map(
         (d) =>
-          `- [${g.label}: ${d.data.title}](https://agency.alisamadii.com/docs/${d.id}) — ${d.data.description}`
+          `- [${g.label}: ${d.data.title}](https://www.alisamadii.com/docs/${d.id}) — ${d.data.description}`
       )
     )
     .join("\n");
@@ -42,24 +42,24 @@ export const GET: APIRoute = async () => {
 
 ## Pages
 
-- [Home](https://agency.alisamadii.com/): services, process, work, and about.
-- [About](https://agency.alisamadii.com/about): who we are, how we work, the founder.
-- [Work](https://agency.alisamadii.com/work): live client sites and concept projects.
-- [Services](https://agency.alisamadii.com/services): everything we offer.
-- [Pricing](https://agency.alisamadii.com/pricing): plans and how pricing works.
-- [Contact](https://agency.alisamadii.com/contact): email, booking, phone.
-- [Blog](https://agency.alisamadii.com/blog): articles on how websites get built.
-- [Docs](https://agency.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
-- [Business Newsletter](https://agency.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
+- [Home](https://www.alisamadii.com/): services, process, work, and about.
+- [About](https://www.alisamadii.com/about): who we are, how we work, the founder.
+- [Work](https://www.alisamadii.com/work): live client sites and concept projects.
+- [Services](https://www.alisamadii.com/services): everything we offer.
+- [Pricing](https://www.alisamadii.com/pricing): plans and how pricing works.
+- [Contact](https://www.alisamadii.com/contact): email, booking, phone.
+- [Blog](https://www.alisamadii.com/blog): articles on how websites get built.
+- [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
+- [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
 
 ## Services
 
-- [Web development](https://agency.alisamadii.com/services/web-development) — custom sites on Next.js, React, Postgres
-- [UI/UX design](https://agency.alisamadii.com/services/ui-ux-design) — interfaces designed to convert
-- [Brand identity](https://agency.alisamadii.com/services/brand-identity) — logo, color, typography systems
-- [SEO & analytics](https://agency.alisamadii.com/services/seo-analytics) — technical SEO + AI-search readiness
-- [Website management](https://agency.alisamadii.com/services/website-management) — CMS access + managed hosting
-- [Custom web apps](https://agency.alisamadii.com/services/custom-web-apps) — dashboards, auth, databases
+- [Web development](https://www.alisamadii.com/services/web-development) — custom sites on Next.js, React, Postgres
+- [UI/UX design](https://www.alisamadii.com/services/ui-ux-design) — interfaces designed to convert
+- [Brand identity](https://www.alisamadii.com/services/brand-identity) — logo, color, typography systems
+- [SEO & analytics](https://www.alisamadii.com/services/seo-analytics) — technical SEO + AI-search readiness
+- [Website management](https://www.alisamadii.com/services/website-management) — CMS access + managed hosting
+- [Custom web apps](https://www.alisamadii.com/services/custom-web-apps) — dashboards, auth, databases
 
 ## Pricing
 
