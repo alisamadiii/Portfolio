@@ -108,7 +108,7 @@ export const AdminSidebar = () => {
                   className="rounded-lg"
                   render={
                     <a
-                      href={`${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`}
+                      href="https://dashboard.stripe.com/subscriptions"
                       target="_blank"
                       rel="noreferrer"
                     />

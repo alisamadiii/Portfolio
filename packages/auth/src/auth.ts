@@ -1,45 +1,16 @@
 import { expo } from "@better-auth/expo";
-import { polar, portal, usage, webhooks } from "@polar-sh/better-auth";
-import { Polar } from "@polar-sh/sdk";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin, emailOTP, magicLink } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { db } from "@workspace/drizzle/index";
-import {
-  account,
-  previousCustomers,
-  session,
-  user,
-  verification,
-  webhookEvents,
-} from "@workspace/drizzle/schema";
+import { account, session, user, verification } from "@workspace/drizzle/schema";
 import { email as emailService } from "@workspace/email";
 import MagicLink from "@workspace/email/emails/magic-link";
 import ResetPassword from "@workspace/email/emails/reset-password";
 import VerifyEmail from "@workspace/email/emails/verify-email";
-
-import {
-  createOrder,
-  createProduct,
-  createSubscription,
-  deleteCustomer,
-  revokeSubscriptionOnRefund,
-  updateOrder,
-  updateProduct,
-  updateSubscription,
-} from "./auth-action";
-
-export const polarClient = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  // Use 'sandbox' if you're using the Polar Sandbox environment
-  // Remember that access tokens, products, etc. are completely separated between environments.
-  // Access tokens obtained in Production are for instance not usable in the Sandbox environment.
-  server: process.env.POLAR_SERVER as "sandbox" | "production",
-});
 
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -158,53 +129,6 @@ export const auth = betterAuth({
           // Send the OTP for password reset
         }
       },
-    }),
-    polar({
-      client: polarClient,
-      createCustomerOnSignUp: true,
-      use: [
-        portal(),
-        usage(),
-        webhooks({
-          secret: process.env.POLAR_WEBHOOK_SECRET!,
-          onPayload: async (payload) => {
-            await db.insert(webhookEvents).values({
-              timestamp: payload.timestamp,
-              type: payload.type,
-              payload: payload.data,
-            });
-
-            if (payload.type === "order.updated") {
-              await updateOrder(payload.data);
-            }
-          },
-          onProductCreated: async ({ data }) => {
-            await createProduct(data);
-          },
-          onProductUpdated: async ({ data }) => {
-            await updateProduct(data);
-          },
-          onOrderCreated: async ({ data }) => {
-            await createOrder(data);
-            await db
-              .delete(previousCustomers)
-              .where(eq(previousCustomers.email, data.customer.email ?? ""));
-          },
-          onOrderRefunded: async ({ data }) => {
-            await updateOrder(data);
-            await revokeSubscriptionOnRefund(data.subscriptionId ?? "");
-          },
-          // onCustomerDeleted: async ({ data }) => {
-          //   await deleteCustomer(data);
-          // },
-          onSubscriptionCreated: async ({ data }) => {
-            await createSubscription(data);
-          },
-          onSubscriptionUpdated: async ({ data }) => {
-            await updateSubscription(data);
-          },
-        }),
-      ],
     }),
     nextCookies(),
   ],

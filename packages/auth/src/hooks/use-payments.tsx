@@ -2,25 +2,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
-import { authClient } from "@workspace/auth/auth-client";
 
 /**
  * Custom hook for fetching customer state and subscription information
- * @returns UseQueryResult<CustomerState> - Query result containing customer state data
+ * (DB mirror of Stripe subscriptions/orders, synced by the Stripe webhook).
  */
 export const useGetCustomerState = () => {
-  return useQuery({
-    queryKey: ["customer-state"],
-    queryFn: async () => {
-      const product = await authClient.customer.state();
-
-      if (product.error) {
-        throw new Error(product.error.message || product.error.statusText);
-      }
-
-      return product;
-    },
-  });
+  const trpc = useTRPC();
+  return useQuery(trpc.payments.getCustomerState.queryOptions());
 };
 
 /**
@@ -31,15 +20,10 @@ export const useIsUserHaveAccess = () => {
   const customerStateQuery = useGetCustomerState();
 
   return {
-    isUserHaveAccess:
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.status ===
-        "active" ||
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.status ===
-        "trialing",
-    currentProductId:
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.productId,
+    isUserHaveAccess: customerStateQuery.data?.isUserHaveAccess ?? false,
+    currentProductId: customerStateQuery.data?.currentPlan ?? undefined,
     currentSubscriptionId:
-      customerStateQuery.data?.data?.activeSubscriptions?.[0]?.id,
+      customerStateQuery.data?.currentSubscriptionId ?? undefined,
     ...customerStateQuery,
   };
 };
@@ -90,28 +74,32 @@ export const useSwitchPlan = () => {
   return useMutation(
     trpc.payments.switchPlan.mutationOptions({
       onSuccess: async () => {
-        // Wait for 3 seconds to simulate the switch plan process
+        // The webhook needs a beat to sync the mirror before refetching.
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        queryClient.invalidateQueries({ queryKey: ["customer-state"] });
+        queryClient.invalidateQueries({
+          queryKey: trpc.payments.getCustomerState.queryKey(),
+        });
       },
     })
   );
 };
 
 /**
- * Custom hook for generating customer portal link
- * @returns UseMutationResult for generating portal link operation
+ * Custom hook for generating the Stripe billing-portal link and sending the
+ * user there.
  */
 export const useGeneratePortalLink = () => {
-  return useMutation({
-    mutationFn: async () => {
-      const { data, error } = await authClient.customer.portal();
+  const trpc = useTRPC();
 
-      if (error) {
-        throw new Error(error.message || error.statusText);
-      }
-
-      return data;
-    },
-  });
+  return useMutation(
+    trpc.payments.customerPortal.mutationOptions({
+      onSuccess: (data) => {
+        /* eslint-disable-next-line react-hooks/immutability */
+        window.location.href = data.url;
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    })
+  );
 };

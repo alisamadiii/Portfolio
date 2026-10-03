@@ -55,9 +55,11 @@ const getOrderProductName = (order: Order): string => {
 
 const getMark = (label: string) => label.trim().charAt(0).toUpperCase() || "•";
 
-// ─── Polar Billing ──────────────────────────────────────────────
+// ─── Purchases Billing ──────────────────────────────────────────
+// One-time purchases + product subscriptions from the Stripe mirror tables
+// (synced by the Stripe webhook).
 
-export const PolarBilling = () => {
+export const PurchasesBilling = () => {
   const [filter, setFilter] = useState<ProjectFilter>("all");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const { data: user } = useCurrentUser();

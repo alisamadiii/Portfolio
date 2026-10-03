@@ -1,18 +1,17 @@
 /**
- * Run with: npx tsx scripts/seed-agency-products.ts
- * From the repo root. Requires POLAR_ACCESS_TOKEN and POLAR_SERVER in env.
+ * Run from the repo root: npx tsx packages/trpc/scripts/seed-agency-products.ts
+ * Requires STRIPE_SECRET_KEY in apps/api/.env. Creates the agency products in
+ * Stripe (product + recurring price); the webhook mirrors them into the DB.
  */
 
 import * as path from "path";
-import { Polar } from "@polar-sh/sdk";
 import * as dotenv from "dotenv";
+import Stripe from "stripe";
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+dotenv.config({ path: path.resolve(process.cwd(), "apps/api/.env") });
+dotenv.config({ path: path.resolve(process.cwd(), "apps/api/.env.local") });
 
-const polar = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server: process.env.POLAR_SERVER as "sandbox" | "production",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const AGENCY_PRODUCTS = [
   {
@@ -61,28 +60,28 @@ Need more than 3 pages? Add one page at a time to your plan. Each add-on gives y
 ];
 
 async function main() {
+  const mode = process.env.STRIPE_SECRET_KEY!.includes("_live_")
+    ? "LIVE"
+    : "test";
   console.log(
-    `Creating ${AGENCY_PRODUCTS.length} products in Polar (${process.env.POLAR_SERVER})...\n`
+    `Creating ${AGENCY_PRODUCTS.length} products in Stripe (${mode})...\n`
   );
 
   for (const p of AGENCY_PRODUCTS) {
     try {
-      const result = await polar.products.create({
+      const product = await stripe.products.create({
         name: p.name,
         description: p.description,
-        prices: [
-          {
-            amountType: "fixed",
-            priceAmount: p.priceAmount,
-            priceCurrency: "usd",
-          },
-        ],
-        recurringInterval: "month",
-        metadata: {
-          project: "AGENCY",
-        },
+        metadata: { project: "AGENCY" },
       });
-      console.log(`✓  ${result.name}  (id: ${result.id})`);
+      const price = await stripe.prices.create({
+        product: product.id,
+        unit_amount: p.priceAmount,
+        currency: "usd",
+        recurring: { interval: "month" },
+      });
+      await stripe.products.update(product.id, { default_price: price.id });
+      console.log(`✓  ${product.name}  (${product.id}, ${price.id})`);
     } catch (err) {
       console.error(`✗  ${p.name}:`, err instanceof Error ? err.message : err);
     }

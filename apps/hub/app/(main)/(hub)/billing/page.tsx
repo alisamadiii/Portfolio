@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { PolarBilling } from "@/components/billing/polar-billing";
+import { PurchasesBilling } from "@/components/billing/purchases-billing";
 import { StripeBilling } from "@/components/billing/stripe-billing";
 import { DocumentTitle } from "@/components/document-title";
 
@@ -58,7 +58,7 @@ const BillingTabs = () => {
           ))}
         </div>
       </div>
-      {tab === "plan" ? <StripeBilling /> : <PolarBilling />}
+      {tab === "plan" ? <StripeBilling /> : <PurchasesBilling />}
     </div>
   );
 };

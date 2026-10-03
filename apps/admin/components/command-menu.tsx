@@ -158,12 +158,12 @@ export const CommandMenu = () => {
             </Command.Item>
           ))}
           <Command.Item
-            value="go-subscriptions-polar"
-            keywords={["subscriptions", "polar"]}
+            value="go-subscriptions-stripe"
+            keywords={["subscriptions", "stripe"]}
             onSelect={() =>
               run(() =>
                 window.open(
-                  `${process.env.NEXT_PUBLIC_POLAR_URL}/sales/subscriptions`,
+                  "https://dashboard.stripe.com/subscriptions",
                   "_blank"
                 )
               )
@@ -171,7 +171,7 @@ export const CommandMenu = () => {
             className={itemClass}
           >
             <ArrowUpRight />
-            Subscriptions (Polar)
+            Subscriptions (Stripe)
           </Command.Item>
         </Command.Group>
 

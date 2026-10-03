@@ -3,23 +3,31 @@ import { and, eq, isNull } from "drizzle-orm";
 import type Stripe from "stripe";
 
 import { stripe } from "@workspace/trpc/lib/stripe";
+import { MIRROR_EVENTS, syncStripeEvent } from "@workspace/trpc/lib/stripe-sync";
 import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
 import { hubSubscription, user, webhookEvents } from "@workspace/drizzle/schema";
 
-// Standalone Stripe webhook for per-project CMS subscriptions.
+// Standalone Stripe webhook — the single billing sync point.
 //
-// State-sync pattern: we do NOT trust the event body. Every relevant event
-// funnels to syncCmsSubscription(customerId), which re-fetches the customer's
-// current subscription from Stripe and upserts one row per project. This is
-// idempotent and order-independent — duplicate or out-of-order events all
-// converge to the same final state, sidestepping Stripe's event-ordering pain.
+// Two concerns, split by subscription metadata:
+//  1. Per-project CMS subscriptions (metadata.repoId) -> hub_subscription via
+//     syncCmsSubscription.
+//  2. Everything else (Motion/agency/template purchases) -> the product /
+//     subscription / order mirror tables via the stripe-sync helpers.
+//
+// State-sync pattern: we do NOT trust the event body where ordering matters.
+// CMS events funnel to syncCmsSubscription(customerId), which re-fetches the
+// customer's current subscription from Stripe and upserts one row per
+// project; product events re-fetch the product + price. This is idempotent
+// and order-independent — duplicate or out-of-order events all converge to
+// the same final state, sidestepping Stripe's event-ordering pain.
 //
 // The project<->payment join key is `subscription.metadata.repoId` (set on
 // both website checkouts and raw payment links), NEVER email — Stripe emails
 // aren't unique and a payment link lets the client pay with any email.
 
-const RELEVANT_EVENTS = new Set<string>([
+const CMS_EVENTS = new Set<string>([
   "customer.subscription.created",
   "customer.subscription.updated",
   "customer.subscription.deleted",
@@ -116,7 +124,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Audit log, mirroring the Polar webhook's webhookEvents parity.
+  // Audit log — every received event lands in webhook_events.
   try {
     await db.insert(webhookEvents).values({
       timestamp: new Date(event.created * 1000),
@@ -127,7 +135,7 @@ export async function POST(req: Request) {
     console.error("Failed to log Stripe webhook event", error);
   }
 
-  if (!RELEVANT_EVENTS.has(event.type)) {
+  if (!CMS_EVENTS.has(event.type) && !MIRROR_EVENTS.has(event.type)) {
     return NextResponse.json({ received: true });
   }
 
@@ -137,15 +145,11 @@ export async function POST(req: Request) {
       ? object.customer
       : object.customer?.id;
 
-  if (!customerId) {
-    return NextResponse.json({ received: true });
-  }
-
   // GA4 Monetization: fire a discrete purchase per actual payment — NOT from
   // the state-sync below, which re-runs on every subscription update. GA
   // dedupes on transaction_id, so Stripe retries are safe. Fire-and-forget:
   // trackPurchase never throws, and analytics must never 500 the webhook.
-  if (event.type === "checkout.session.completed") {
+  if (event.type === "checkout.session.completed" && customerId) {
     // Covers one-time payments and the first subscription payment.
     const session = event.data.object as Stripe.Checkout.Session;
     if (session.payment_status === "paid" && session.amount_total != null) {
@@ -160,11 +164,16 @@ export async function POST(req: Request) {
         ],
       });
     }
-  } else if (event.type === "invoice.paid") {
+  } else if (event.type === "invoice.paid" && customerId) {
     // Renewals only — the first invoice (subscription_create) is already
-    // counted by checkout.session.completed under a different transaction_id.
+    // counted by checkout.session.completed under a different transaction_id,
+    // and one-time checkout invoices (billing_reason "manual") are likewise
+    // counted by their checkout.session.completed event.
     const invoice = event.data.object as Stripe.Invoice;
-    if (invoice.billing_reason !== "subscription_create") {
+    if (
+      invoice.billing_reason !== "subscription_create" &&
+      invoice.billing_reason !== "manual"
+    ) {
       const value = invoice.amount_paid / 100;
       void trackPurchase({
         clientId: customerId,
@@ -183,10 +192,22 @@ export async function POST(req: Request) {
   }
 
   try {
-    await syncCmsSubscription(customerId);
+    // Catalog/billing mirror (product / subscription / order tables).
+    // One dynamic entry point — the event only identifies WHICH object
+    // changed; syncStripeEvent re-fetches it fresh from the Stripe API
+    // before writing, so duplicate or out-of-order events (Stripe does not
+    // guarantee ordering) always converge to the current state.
+    if (MIRROR_EVENTS.has(event.type)) {
+      await syncStripeEvent(event);
+    }
+
+    // Per-project CMS subscription (hub_subscription).
+    if (CMS_EVENTS.has(event.type) && customerId) {
+      await syncCmsSubscription(customerId);
+    }
   } catch (error) {
     // Return 500 so Stripe retries.
-    console.error("syncCmsSubscription failed", error);
+    console.error("Stripe webhook sync failed", error);
     return NextResponse.json({ error: "Sync failed" }, { status: 500 });
   }
 

@@ -1,4 +1,3 @@
-import { polarClient } from "@polar-sh/better-auth";
 import {
   adminClient,
   emailOTPClient,
@@ -10,8 +9,6 @@ import { createAuthClient } from "better-auth/react";
 
 import { auth } from "./auth";
 
-// Type assertion to work around TypeScript's inability to name the inferred type
-// due to deep pnpm path references in the polar checkout plugin types
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
   plugins: [
@@ -20,6 +17,5 @@ export const authClient = createAuthClient({
     emailOTPClient(),
     genericOAuthClient(),
     magicLinkClient(),
-    polarClient(),
   ],
 });

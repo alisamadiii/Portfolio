@@ -1,6 +1,6 @@
-import type { SubscriptionProrationBehavior } from "@polar-sh/sdk/models/components/subscriptionprorationbehavior.js";
 import { TRPCError } from "@trpc/server";
-import { asc, desc, eq, or } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
+import type Stripe from "stripe";
 import { z } from "zod";
 
 import { resolveRedirectUrl, urls } from "@workspace/ui/lib/company";
@@ -11,17 +11,46 @@ import {
   baseProcedure,
   createTRPCRouter,
 } from "@workspace/trpc/init";
-import { polarClient } from "@workspace/auth/auth";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
+import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
   previousCustomers,
   products,
   subscriptions,
+  user,
 } from "@workspace/drizzle/schema";
 
 import { stripeRouter } from "../stripe/payments";
+
+/**
+ * Returns the user's Stripe customer id, creating the customer (and
+ * persisting the id on the user row) on first use.
+ */
+const ensureStripeCustomer = async (sessionUser: {
+  id: string;
+  email: string;
+  name: string;
+}): Promise<string> => {
+  const [record] = await db
+    .select({ stripeCustomerId: user.stripeCustomerId })
+    .from(user)
+    .where(eq(user.id, sessionUser.id))
+    .limit(1);
+  if (record?.stripeCustomerId) return record.stripeCustomerId;
+
+  const customer = await stripe.customers.create({
+    email: sessionUser.email,
+    name: sessionUser.name,
+    metadata: { externalId: sessionUser.id },
+  });
+  await db
+    .update(user)
+    .set({ stripeCustomerId: customer.id })
+    .where(eq(user.id, sessionUser.id));
+  return customer.id;
+};
 
 export const paymentsRouter = createTRPCRouter({
   getProducts: baseProcedure.query(async () => {
@@ -96,6 +125,7 @@ export const paymentsRouter = createTRPCRouter({
         project: z
           .enum(["MOTION", "AGENCY", "DOCS", "TEMPLATE", "SAASKIT"])
           .optional(),
+        /** Stripe coupon (or promotion code) id. */
         discountId: z.string().optional(),
       })
     )
@@ -103,18 +133,19 @@ export const paymentsRouter = createTRPCRouter({
       try {
         const { productId, callbackUrl, project, discountId } = input;
 
-        // Ensure customer exists in Polar with user.id as externalId
-        try {
-          await polarClient.customers.getExternal({
-            externalId: ctx.session.user.id,
-          });
-        } catch {
-          await polarClient.customers.create({
-            email: ctx.session.user.email,
-            name: ctx.session.user.name,
-            externalId: ctx.session.user.id,
+        const [product] = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, productId))
+          .limit(1);
+        if (!product?.stripePriceId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Product is not available for purchase",
           });
         }
+
+        const customerId = await ensureStripeCustomer(ctx.session.user);
 
         // Every checkout lands on the hub success page — it is the single
         // source of truth for purchase confirmation across all apps.
@@ -122,19 +153,48 @@ export const paymentsRouter = createTRPCRouter({
         params.set("callbackUrl", resolveRedirectUrl(callbackUrl, urls.cms));
         if (project) params.set("project", project);
 
-        // `{CHECKOUT_ID}` is a Polar placeholder and must stay unencoded, so it
-        // is appended after URLSearchParams has done its escaping.
+        // `{CHECKOUT_SESSION_ID}` is a Stripe placeholder and must stay
+        // unencoded, so it is appended after URLSearchParams has escaped.
         const base = urls.cms.replace(/\/$/, "");
-        const url = `${base}/success?${params.toString()}&checkout_id={CHECKOUT_ID}`;
+        const successUrl = `${base}/success?${params.toString()}&session_id={CHECKOUT_SESSION_ID}`;
 
-        const response = await polarClient.checkouts.create({
-          products: [productId],
-          externalCustomerId: ctx.session.user.id,
-          successUrl: url,
-          discountId: discountId ?? undefined,
+        const metadata = {
+          userId: ctx.session.user.id,
+          productId: product.id,
+          project: project ?? "",
+        };
+
+        const session = await stripe.checkout.sessions.create({
+          mode: product.isRecurring ? "subscription" : "payment",
+          customer: customerId,
+          line_items: [{ price: product.stripePriceId, quantity: 1 }],
+          success_url: successUrl,
+          cancel_url: resolveRedirectUrl(callbackUrl, urls.cms),
+          metadata,
+          ...(product.isRecurring
+            ? { subscription_data: { metadata } }
+            : // One-time purchases still produce an invoice so the webhook
+              // mirrors them into the order table via invoice.paid.
+              { invoice_creation: { enabled: true } }),
+          ...(discountId
+            ? {
+                discounts: [
+                  discountId.startsWith("promo_")
+                    ? { promotion_code: discountId }
+                    : { coupon: discountId },
+                ],
+              }
+            : {}),
         });
-        return response;
+        if (!session.url) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Stripe returned no checkout URL",
+          });
+        }
+        return { url: session.url };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
@@ -146,18 +206,18 @@ export const paymentsRouter = createTRPCRouter({
       }
     }),
 
-  // Mints the buyer's Polar customer portal URL (manage billing, connect the
-  // GitHub benefit). Same source as the Better Auth `customer/portal` route,
-  // exposed over tRPC so non-Next clients use the one shared router too.
+  // Mints the buyer's Stripe billing-portal URL (manage payment methods,
+  // cancel subscriptions, download invoices).
   customerPortal: authenticatedProcedure
     .input(z.object({ returnUrl: z.string().optional() }).optional())
     .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
       try {
-        const session = await polarClient.customerSessions.create({
-          externalCustomerId: ctx.session.user.id,
-          returnUrl: input?.returnUrl,
+        const customerId = await ensureStripeCustomer(ctx.session.user);
+        const session = await stripe.billingPortal.sessions.create({
+          customer: customerId,
+          return_url: input?.returnUrl ?? urls.cms,
         });
-        return { url: session.customerPortalUrl };
+        return { url: session.url };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -176,26 +236,40 @@ export const paymentsRouter = createTRPCRouter({
         subscriptionId: z.string(),
         toProductId: z.string(),
         prorationBehavior: z
-          .enum([
-            "prorate",
-            "invoice",
-          ] as const satisfies readonly SubscriptionProrationBehavior[])
+          .enum(["create_prorations", "always_invoice", "none"])
           .optional()
-          .default("prorate"),
+          .default("create_prorations"),
       })
     )
     .mutation(async ({ input, ctx }) => {
       try {
         const { subscriptionId, toProductId, prorationBehavior } = input;
 
-        const sub = await polarClient.subscriptions.get({
-          id: subscriptionId,
-        });
+        const [product] = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, toProductId))
+          .limit(1);
+        if (!product?.stripePriceId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Target plan is not available",
+          });
+        }
+
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
 
         // Only the subscription's own customer (or an admin) may change it.
+        const customerId =
+          typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+        const [owner] = await db
+          .select({ stripeCustomerId: user.stripeCustomerId })
+          .from(user)
+          .where(eq(user.id, ctx.session.user.id))
+          .limit(1);
         if (
           !isAdminUser(ctx.session.user) &&
-          sub.customer.externalId !== ctx.session.user.id
+          owner?.stripeCustomerId !== customerId
         ) {
           throw new TRPCError({
             code: "NOT_FOUND",
@@ -211,13 +285,18 @@ export const paymentsRouter = createTRPCRouter({
           });
         }
 
-        const response = await polarClient.subscriptions.update({
-          id: subscriptionId,
-          subscriptionUpdate: {
-            productId: toProductId,
-            prorationBehavior:
-              prorationBehavior as SubscriptionProrationBehavior,
-          },
+        const item = sub.items.data[0];
+        if (!item) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Subscription has no items",
+          });
+        }
+
+        const response = await stripe.subscriptions.update(subscriptionId, {
+          items: [{ id: item.id, price: product.stripePriceId }],
+          proration_behavior:
+            prorationBehavior as Stripe.SubscriptionUpdateParams.ProrationBehavior,
         });
         return response;
       } catch (error) {
@@ -303,44 +382,6 @@ export const paymentsRouter = createTRPCRouter({
       }));
     }),
 
-  verifyCheckout: authenticatedProcedure
-    .input(z.object({ sessionId: z.string() }))
-    .query(async ({ input, ctx }) => {
-      try {
-        const checkout = await polarClient.checkouts.get({
-          id: input.sessionId,
-        });
-        // Only the customer who owns the checkout (or an admin) may read it.
-        // The Polar customer is created with the user's email, so the checkout
-        // email identifies the owner.
-        const owns =
-          !!checkout.customerEmail &&
-          checkout.customerEmail.toLowerCase() ===
-            ctx.session.user.email.toLowerCase();
-        if (!isAdminUser(ctx.session.user) && !owns) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Checkout session not found",
-          });
-        }
-        // Return only what the success page needs — no billing address, tax id,
-        // or IP.
-        return {
-          status: checkout.status,
-          product: checkout.product ? { name: checkout.product.name } : null,
-          totalAmount: checkout.totalAmount,
-          currency: checkout.currency,
-          customerEmail: checkout.customerEmail,
-        };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Checkout session not found",
-        });
-      }
-    }),
-
   getCustomerState: authenticatedProcedure.query(async ({ ctx }) => {
     const [subs, paidOrders] = await Promise.all([
       db
@@ -406,9 +447,7 @@ export const paymentsRouter = createTRPCRouter({
     .input(z.object({ subscriptionId: z.string() }))
     .query(async ({ input }) => {
       try {
-        return await polarClient.subscriptions.get({
-          id: input.subscriptionId,
-        });
+        return await stripe.subscriptions.retrieve(input.subscriptionId);
       } catch {
         throw new TRPCError({
           code: "NOT_FOUND",
