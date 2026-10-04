@@ -16,7 +16,7 @@
     "audit": "pnpm audit --audit-level moderate",
     "audit:fix": "pnpm audit --fix",
     "db:generate": "cd packages/drizzle && npx drizzle-kit generate",
-    "db:migrate": "cd packages/drizzle && npx drizzle-kit migrate",
+    "db:migrate": "pnpm --filter @workspace/drizzle migrate",
     "db:push": "cd packages/drizzle && npx drizzle-kit push",
     "db:studio": "cd packages/drizzle && npx drizzle-kit studio",
     "reset": "pnpm -r exec rm -rf node_modules .next .turbo && rm -rf node_modules .next .turbo",
