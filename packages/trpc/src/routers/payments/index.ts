@@ -173,8 +173,16 @@ export const paymentsRouter = createTRPCRouter({
           ...(product.isRecurring
             ? { subscription_data: { metadata } }
             : // One-time purchases still produce an invoice so the webhook
-              // mirrors them into the order table via invoice.paid.
-              { invoice_creation: { enabled: true } }),
+              // mirrors them into the order table via invoice.paid. Session
+              // metadata is NOT copied onto that invoice automatically —
+              // invoice_data.metadata is what the order sync (and the
+              // project-based access gates) read.
+              {
+                invoice_creation: {
+                  enabled: true,
+                  invoice_data: { metadata },
+                },
+              }),
           ...(discountId
             ? {
                 discounts: [

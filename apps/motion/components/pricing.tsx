@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
 
+import { Spinner } from "@workspace/ui/components/spinner";
 import { PageLoading } from "@workspace/ui/custom/page-loading";
 import { urls } from "@workspace/ui/lib/company";
 import { cn } from "@workspace/ui/lib/utils";
@@ -101,8 +102,9 @@ export function Pricing() {
               </button>
             ) : (
               <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                whileHover={checkout.isPending ? undefined : { scale: 1.01 }}
+                whileTap={checkout.isPending ? undefined : { scale: 0.99 }}
+                disabled={checkout.isPending || checkout.isSuccess}
                 onClick={() =>
                   checkout.mutate({
                     productId: product.data?.id || "",
@@ -110,9 +112,16 @@ export function Pricing() {
                     project: "MOTION",
                   })
                 }
-                className="bg-primary text-primary-foreground w-full cursor-pointer rounded-xl py-4 text-sm font-semibold transition-colors"
+                className="bg-primary text-primary-foreground flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-4 text-sm font-semibold transition-opacity disabled:cursor-default disabled:opacity-70"
               >
-                Get Motion
+                {checkout.isPending || checkout.isSuccess ? (
+                  <>
+                    <Spinner className="size-4" />
+                    {checkout.isSuccess ? "Redirecting" : "Processing"}
+                  </>
+                ) : (
+                  "Get Motion"
+                )}
               </motion.button>
             )}
           </div>

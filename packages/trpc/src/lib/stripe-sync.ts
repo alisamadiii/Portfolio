@@ -206,10 +206,29 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
     0
   );
 
+  // The access gates key on metadata.project. When neither the subscription
+  // nor the invoice carries it (payment links, dashboard-created invoices),
+  // inherit it from the purchased product's mirror metadata.
+  const metadata: Record<string, unknown> = {
+    ...subMetadata,
+    ...invoice.metadata,
+  };
+  const productId = linePricing?.product ?? "";
+  if (!metadata.project && productId) {
+    const [productRow] = await db
+      .select({ metadata: products.metadata })
+      .from(products)
+      .where(eq(products.id, productId))
+      .limit(1);
+    const project = (productRow?.metadata as { project?: string } | null)
+      ?.project;
+    if (project) metadata.project = project;
+  }
+
   const values = {
     userId: resolved?.userId ?? "",
     email,
-    productId: linePricing?.product ?? "",
+    productId,
     billingName: invoice.customer_name ?? "",
     subscriptionId: subscriptionIdOf(invoice),
     billingReason: invoice.billing_reason ?? "manual",
@@ -218,7 +237,7 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
     status: "paid" as const,
     discountAmount,
     updatedAt: new Date(),
-    metadata: { ...subMetadata, ...invoice.metadata },
+    metadata,
   };
 
   await db
