@@ -1,14 +1,14 @@
 import "server-only";
 
-import { and, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
+import { hubProject, subscriptions } from "@workspace/drizzle/schema";
 
 import { hasFeatureAccess } from "../feature-access-check";
 import { FEATURES, type FeatureKey } from "../features";
 import { isAdminUser } from "../authz-shared";
-import { createHttpError } from "./errors";
+import { createHttpError, toTRPCError } from "./errors";
 
 /**
  * Whether a project (owner/repo) is flagged free-for-life on hubProject — an
@@ -79,6 +79,80 @@ const requireFeatureAccess = async (
   }
 };
 
+/** Subscription statuses that keep a paid project unlocked. */
+const ACTIVE_PLAN_STATUSES = new Set(["active", "trialing", "past_due"]);
+
+/**
+ * Whether a project's own subscription row unlocks it: an admin-granted
+ * free/free_lifetime plan, or a paid plan whose Stripe status is still good.
+ */
+const projectPlanActive = async (repoId: number): Promise<boolean> => {
+  const [row] = await db
+    .select({ plan: subscriptions.plan, status: subscriptions.status })
+    .from(subscriptions)
+    .where(eq(subscriptions.repoId, repoId))
+    .limit(1);
+  if (!row) return false;
+  if (row.plan === "free" || row.plan === "free_lifetime") return true;
+  return row.plan === "paid" && ACTIVE_PLAN_STATUSES.has(row.status);
+};
+
+/**
+ * Per-project plan gate for write/publish procedures. $100/mo buys ONE
+ * project, so enforcement reads the project's own subscription row (synced by
+ * the Stripe webhook on metadata.repoId) — never a per-email Stripe lookup.
+ * Throws 402 (the client opens the purchase dialog on any 402); DB failure is
+ * a 503 so "store is down" never reads as "not subscribed".
+ *
+ * Bypasses: admin user, hubProject.freeLife, free/free_lifetime plan rows.
+ */
+const requireProjectPlan = async (
+  user: { email: string; role?: string | null },
+  repoId: number,
+  repo?: { owner?: string; repo: string }
+): Promise<void> => {
+  if (isAdminUser(user)) return;
+  if (repo && (await repoHasFreeLife(repo))) return;
+
+  let active: boolean;
+  try {
+    active = await projectPlanActive(repoId);
+  } catch (error) {
+    console.error(`Project plan check failed for repo ${repoId}`, error);
+    // Thrown as a ready TRPCError: gate call sites sit outside the routers'
+    // try/toTRPCError blocks, and a raw Error would surface as
+    // INTERNAL_SERVER_ERROR — losing the status code the client keys on.
+    throw toTRPCError(
+      createHttpError(
+        "Could not verify this project's subscription. Please try again.",
+        503
+      )
+    );
+  }
+
+  if (!active) {
+    // PAYMENT_REQUIRED is what opens the client's purchase dialog.
+    throw toTRPCError(
+      createHttpError(
+        `An active ${FEATURES.cms.label} subscription is required for this project.`,
+        402
+      )
+    );
+  }
+};
+
+/**
+ * Fresh per-project re-check for the post-purchase refresh path — plain DB
+ * read, no caching involved.
+ */
+const refreshProjectPlan = async (
+  user: { email: string; role?: string | null },
+  repoId: number
+): Promise<boolean> => {
+  if (isAdminUser(user)) return true;
+  return projectPlanActive(repoId);
+};
+
 /**
  * Uncached re-check that also revalidates the cached Stripe data.
  * Called from the refresh endpoint after the user reports a purchase.
@@ -97,4 +171,9 @@ const refreshFeatureAccess = async (
   return hasAccess;
 };
 
-export { refreshFeatureAccess, requireFeatureAccess };
+export {
+  refreshFeatureAccess,
+  refreshProjectPlan,
+  requireFeatureAccess,
+  requireProjectPlan,
+};

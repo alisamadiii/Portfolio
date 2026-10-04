@@ -16,7 +16,10 @@ import {
   assertRepoAccessByRepoId,
 } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { refreshFeatureAccess } from "@workspace/trpc/lib/cms/feature-access";
+import {
+  refreshFeatureAccess,
+  refreshProjectPlan,
+} from "@workspace/trpc/lib/cms/feature-access";
 import { featureKeys } from "@workspace/trpc/lib/features";
 
 const mapInvoice = (inv: Stripe.Invoice) => ({
@@ -46,13 +49,19 @@ export const subscriptionRouter = createTRPCRouter({
    * Port of POST /api/subscription/[feature]/refresh.
    */
   refresh: authenticatedProcedure
-    .input(z.object({ feature: z.enum(featureKeys) }))
+    .input(
+      z.object({
+        feature: z.enum(featureKeys),
+        // Per-project plan: when present, check the project's own
+        // subscription row (fresh DB read) instead of the per-email path.
+        repoId: z.number().int().positive().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       try {
-        const hasAccess = await refreshFeatureAccess(
-          ctx.session.user,
-          input.feature
-        );
+        const hasAccess = input.repoId
+          ? await refreshProjectPlan(ctx.session.user, input.repoId)
+          : await refreshFeatureAccess(ctx.session.user, input.feature);
 
         return { hasAccess };
       } catch (error) {

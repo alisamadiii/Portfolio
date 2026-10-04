@@ -1,5 +1,6 @@
 "use client";
 
+import { handleCmsError, SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -212,7 +213,8 @@ export function SessionChatPanel() {
         if (error.data?.code === "TOO_MANY_REQUESTS") {
           setCapacityBlocked(error.message);
         } else {
-          toast.error(error.message);
+          // PAYMENT_REQUIRED opens the purchase dialog.
+          toast.error(handleCmsError(error, error.message));
         }
       },
     })
@@ -404,6 +406,16 @@ export function SessionChatPanel() {
   const send = () => {
     const content = input.trim();
     if (!content || sendMutation.isPending || !canSend || busy) return;
+    // AI chat is plan-gated: no edit token means the server refused the mint
+    // (402) — open the purchase dialog instead of posting with a dead token.
+    if (!editToken) {
+      window.dispatchEvent(
+        new CustomEvent(SUBSCRIPTION_REQUIRED_EVENT, {
+          detail: { feature: "cms" },
+        })
+      );
+      return;
+    }
     const key = Date.now();
     // Optimistic: bubble + cleared input immediately; restored on failure.
     setPendingSends((current) => [...current, { key, content, at: key }]);

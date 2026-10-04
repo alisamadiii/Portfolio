@@ -13,6 +13,7 @@ import { SpeedMark } from "@/components/analytics/speed-mark";
 import { SpeedPanel } from "@/components/settings/speed-panel";
 import { DomainPanel } from "@/components/settings/domain-panel";
 import { EmailsPanel } from "@/components/settings/emails-panel";
+import { ProjectFeatureGate } from "@/components/settings/project-paywall";
 import { EnvelopeMark } from "@/components/emails/envelope-mark";
 
 /** Sentinels for the Site Settings entries in the settings nav. */
@@ -83,9 +84,13 @@ export function SettingsMode() {
         ) : selected === DOMAIN ? (
           <DomainPanel />
         ) : selected === EMAILS ? (
-          <EmailsPanel />
+          <ProjectFeatureGate feature="Emails">
+            <EmailsPanel />
+          </ProjectFeatureGate>
         ) : selected === ANALYTICS ? (
-          <AnalyticsPanel />
+          <ProjectFeatureGate feature="Analytics">
+            <AnalyticsPanel />
+          </ProjectFeatureGate>
         ) : selected === SPEED ? (
           <SpeedPanel />
         ) : selected === DANGER ? (

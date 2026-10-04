@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useUser } from "@/contexts/user-context";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -19,6 +21,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { FEATURES, type FeatureKey } from "@workspace/trpc/lib/features";
 
 import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
+import { PlanCard } from "@/components/billing/plan-card";
 
 /**
  * App-wide purchase dialog for subscription-gated features. Any mutation that
@@ -33,10 +36,17 @@ export function SubscriptionGateProvider({
 }) {
   const { user } = useUser();
   const trpc = useTRPC();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [feature, setFeature] = useState<FeatureKey>("cms");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const verifiedOnReturnRef = useRef(false);
+
+  // The plan is per-project: every 402 fires from inside /p/[repoId], so the
+  // current path identifies which project the checkout must bind to (the
+  // webhook keys the subscription on metadata.repoId).
+  const repoIdMatch = pathname?.match(/^\/p\/(\d+)(?:\/|$)/);
+  const repoId = repoIdMatch ? Number(repoIdMatch[1]) : undefined;
 
   const verifyMutation = useMutation(
     trpc.cms.subscription.refresh.mutationOptions({
@@ -80,8 +90,8 @@ export function SubscriptionGateProvider({
     verifiedOnReturnRef.current = true;
     url.searchParams.delete("purchase");
     window.history.replaceState(null, "", url.toString());
-    verifyAccess({ feature: "cms" });
-  }, [verifyAccess]);
+    verifyAccess({ feature: "cms", repoId });
+  }, [verifyAccess, repoId]);
 
   const handleSubscribe = async () => {
     if (!user?.email) {
@@ -99,6 +109,8 @@ export function SubscriptionGateProvider({
             plan: feature,
             email: user.email,
             name: user.name ?? undefined,
+            repoId,
+            userId: user.id,
             returnUrl: window.location.href,
           }),
         }
@@ -116,49 +128,41 @@ export function SubscriptionGateProvider({
     }
   };
 
-  const featureConfig = FEATURES[feature];
-
   return (
     <>
       {children}
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {featureConfig.label} subscription required
-            </AlertDialogTitle>
+            <AlertDialogTitle>Subscribe to unlock</AlertDialogTitle>
             <AlertDialogDescription>
-              Saving changes requires an active {featureConfig.label}{" "}
-              subscription ({featureConfig.priceLabel}). Your edits stay in the
-              editor — subscribe and save again.
-              {user?.email ? (
-                <>
-                  {" "}
-                  The subscription must be purchased with{" "}
-                  <span className="text-foreground font-medium">
-                    {user.email}
-                  </span>
-                  , the email you&apos;re signed in with.
-                </>
-              ) : null}
+              This project needs an active plan for publishing, AI editing,
+              emails, and analytics. Your edits stay in the editor — subscribe
+              and continue where you left off.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+
+          <PlanCard
+            compact
+            isCheckingOut={isCheckingOut}
+            onSubscribe={() => void handleSubscribe()}
+          />
+
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
               variant="outline"
+              className="w-full"
               disabled={isVerifying || isCheckingOut}
-              onClick={() => verifyAccess({ feature })}
+              onClick={() => verifyAccess({ feature, repoId })}
             >
               {isVerifying ? "Checking…" : "I already subscribed"}
             </Button>
-            <Button
-              disabled={isCheckingOut || isVerifying}
-              onClick={() => void handleSubscribe()}
+            <AlertDialogCancel
+              className="w-full"
+              disabled={isCheckingOut}
             >
-              {isCheckingOut
-                ? "Redirecting…"
-                : `Subscribe — ${featureConfig.priceLabel}`}
-            </Button>
+              Not now
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

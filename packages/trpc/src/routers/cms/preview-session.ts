@@ -1,3 +1,4 @@
+import { requireProjectPlan } from "@workspace/trpc/lib/cms/feature-access";
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, or, type SQL } from "drizzle-orm";
 import z from "zod";
@@ -55,7 +56,11 @@ const deleteBranchRef = async (
 };
 
 export const previewSessionRouter = createTRPCRouter({
-  /** Starts (or joins) the live-preview session for this project. */
+  /**
+   * Starts (or joins) the live-preview session for this project. Deliberately
+   * NOT plan-gated: previewing the website is free — only AI chat (edit-token
+   * mint) and publish require the plan.
+   */
   start: cmsWriteProcedure.mutation(async ({ ctx }) => {
     return createPreviewSession(
       ctx.repoId,
@@ -144,6 +149,10 @@ export const previewSessionRouter = createTRPCRouter({
   publish: cmsFullAccessProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await requireProjectPlan(ctx.user, ctx.repoId, {
+        owner: ctx.owner,
+        repo: ctx.repo,
+      });
       const session = await sessionForRepo(ctx.repoId, input.sessionId);
 
       const [project] = await db

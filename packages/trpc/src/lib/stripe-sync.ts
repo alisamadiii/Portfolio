@@ -107,7 +107,15 @@ const syncStripeProduct = async (productId: string) => {
     isRecurring: !!price?.recurring,
     isArchived: !product.active,
     stripePriceId: price?.id ?? null,
-    metadata: product.metadata ?? {},
+    metadata: {
+      ...(product.metadata ?? {}),
+      // Dashboard-editable feature checklist (Stripe "Marketing features")
+      // — rendered by the hub's plan card, so copy edits go live without a
+      // deploy.
+      features: (product.marketing_features ?? [])
+        .map((f) => f.name)
+        .filter(Boolean),
+    },
     updatedAt: new Date(),
   };
 

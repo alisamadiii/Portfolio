@@ -34,6 +34,8 @@ import {
   StatusPill,
 } from "@/components/billing/shared";
 import { PanelError } from "@/components/settings/panel-error";
+import { PlanCard } from "@/components/billing/plan-card";
+import { startPlanCheckout } from "@/hooks/use-project-access";
 
 type ProjectSubscription = NonNullable<
   RouterOutputs["cms"]["subscription"]["getProject"]["subscription"]
@@ -94,7 +96,11 @@ export const ProjectBillingPanel = () => {
         </div>
       ) : data.freeLife ? (
         <FreeForLifePanel />
-      ) : !data.subscription ? (
+      ) : !data.subscription ||
+        // Fully canceled = no plan anymore — back to the picker to
+        // resubscribe (distinct from cancelAtPeriodEnd, which stays managed
+        // as "Canceling" until the period actually ends).
+        data.subscription.status === "canceled" ? (
         user && repoId ? (
           <ProjectPlans
             repoId={data.repoId}
@@ -113,39 +119,6 @@ export const ProjectBillingPanel = () => {
   );
 };
 
-// ─── Plans (products) ───────────────────────────────────────────
-// The recurring plans the project checkout supports. Price is intentionally
-// not hardcoded here — Stripe's checkout page shows the live price, and the
-// app's prices live in the portfolio's pricing.ts. Extend as products grow.
-
-type PlanKey = "monthly" | "cms";
-
-const PROJECT_PLANS: {
-  key: PlanKey;
-  name: string;
-  description: string;
-  features: string[];
-  icon: React.ReactNode;
-  popular?: boolean;
-}[] = [
-  {
-    key: "monthly",
-    name: "Website Management",
-    description:
-      "Fully managed website — hosting, domain, email, and ongoing updates.",
-    features: ["Hosting & domain", "Priority updates", "Email included"],
-    icon: <Globe className="size-5" />,
-    popular: true,
-  },
-  {
-    key: "cms",
-    name: "CMS Access",
-    description: "Edit your site content yourself, anytime, from the hub.",
-    features: ["Self-serve editing", "Media library", "Draft & publish"],
-    icon: <Sparkles className="size-5" />,
-  },
-];
-
 // ─── Products picker (no subscription yet) ──────────────────────
 
 export const ProjectPlans = ({
@@ -159,93 +132,40 @@ export const ProjectPlans = ({
   userEmail: string;
   userName?: string;
 }) => {
-  const [checkingOut, setCheckingOut] = useState<PlanKey | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const subscribe = async (plan: PlanKey) => {
+  const subscribe = async () => {
     if (!userEmail) {
       toast.error("Sign in with your email before subscribing.");
       return;
     }
-    setCheckingOut(plan);
+    setCheckingOut(true);
     try {
-      const returnUrl = `${window.location.origin}${window.location.pathname}?purchase=success`;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agency/checkouts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            plan,
-            email: userEmail,
-            name: userName || undefined,
-            repoId,
-            userId,
-            returnUrl,
-          }),
-        }
-      );
-      const payload = await res.json().catch(() => null);
-      if (!res.ok || !payload?.url) {
-        throw new Error(payload?.error || "Failed to start checkout.");
-      }
-      window.location.assign(payload.url);
+      await startPlanCheckout({
+        repoId,
+        userId,
+        email: userEmail,
+        name: userName,
+      });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to start checkout."
       );
-      setCheckingOut(null);
+      setCheckingOut(false);
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <SectionHeading>Choose a plan</SectionHeading>
+        <SectionHeading>One plan. Everything included.</SectionHeading>
         <p className="text-muted-foreground text-[14.5px]">
-          This project doesn&apos;t have an active subscription yet. Pick a plan
-          to get started.
+          This project doesn&apos;t have an active subscription yet. One
+          subscription covers everything for this website.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {PROJECT_PLANS.map((plan) => (
-          <div
-            key={plan.key}
-            className="bg-card relative flex flex-col rounded-lg border p-5.5"
-          >
-            {plan.popular && (
-              <span className="bg-accent text-accent-foreground absolute -top-2.5 right-5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
-                Popular
-              </span>
-            )}
-            <div className="bg-accent text-accent-foreground grid size-11 place-items-center rounded-[12px]">
-              {plan.icon}
-            </div>
-            <p className="mt-4 text-[18px] font-extrabold tracking-tight">
-              {plan.name}
-            </p>
-            <p className="text-muted-foreground mt-1 text-[13.5px]">
-              {plan.description}
-            </p>
-            <ul className="mt-4 space-y-2">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-[13.5px]">
-                  <Check className="text-status-success size-4 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              className="mt-5 w-full rounded-full"
-              disabled={checkingOut !== null}
-              isLoading={checkingOut === plan.key}
-              onClick={() => subscribe(plan.key)}
-            >
-              Subscribe
-            </Button>
-          </div>
-        ))}
-      </div>
+      <PlanCard onSubscribe={() => void subscribe()} isCheckingOut={checkingOut} />
     </div>
   );
 };
@@ -374,8 +294,9 @@ export const ProjectManage = ({
       return next;
     });
 
-  const isCanceling =
-    subscription.cancelAtPeriodEnd || subscription.status === "canceled";
+  // Only the scheduled state — fully canceled subs never reach this panel
+  // (the billing branch sends them back to the plan picker).
+  const isCanceling = subscription.cancelAtPeriodEnd;
   const renewal = subscription.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd)
     : null;

@@ -31,6 +31,7 @@ type Project = {
   updatedAt?: string | null;
   websiteUrl?: string | null;
   plan?: string | null;
+  status?: string | null;
   freeLife?: boolean;
 };
 
@@ -226,7 +227,10 @@ export function ProjectGallery() {
   const siteFor = (p: Project): Site | undefined =>
     (sites as Site[] | undefined)?.find((s) => s.id === `${p.owner}/${p.repo}`);
 
-  const planFor = (p: Project): string | undefined => p.plan ?? undefined;
+  // A fully canceled paid sub is no plan at all — badge as "No plan", not
+  // a green "Paid".
+  const planFor = (p: Project): string | undefined =>
+    p.plan === "paid" && p.status === "canceled" ? undefined : (p.plan ?? undefined);
 
   const freeLifeFor = (p: Project): boolean => !!p.freeLife;
 

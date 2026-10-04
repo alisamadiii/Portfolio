@@ -19,6 +19,7 @@ import { Button } from "@workspace/ui/components/button";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
+import { handleCmsError } from "@/lib/trpc-errors";
 import {
   transcriptBusy,
   useSessionTranscript,
@@ -57,7 +58,8 @@ export function SessionActions() {
             : "Nothing to publish — session closed."
         );
       },
-      onError: (error) => toast.error(error.message),
+      // PAYMENT_REQUIRED opens the purchase dialog instead of a toast.
+      onError: (error) => toast.error(handleCmsError(error, error.message)),
     })
   );
   const resetMutation = useMutation(

@@ -197,6 +197,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
     )
   );
+  // AI editing is plan-gated server-side: the mint 402s for unpaid projects,
+  // leaving editToken empty. The chat composer opens the purchase dialog on
+  // send — previewing stays free, so no auto-popup here.
   const editToken = editTokenQuery.data?.token ?? "";
 
   const pages: CanvasPageInfo[] = useMemo(

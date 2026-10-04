@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { cmsProcedure, createTRPCRouter } from "../../init";
 import { roleAtLeast } from "../../lib/authz-shared";
 import { signEditToken } from "@workspace/trpc/lib/cms/edit-token";
+import { requireProjectPlan } from "@workspace/trpc/lib/cms/feature-access";
 
 export const aiEditsRouter = createTRPCRouter({
   /**
@@ -16,6 +17,12 @@ export const aiEditsRouter = createTRPCRouter({
     if (!roleAtLeast(ctx.role, "content-editor")) {
       throw new TRPCError({ code: "FORBIDDEN", message: "View-only access." });
     }
+    // AI chat is a paid feature: messages go straight to content-pilot with
+    // this token, so gating the mint blocks chat server-side.
+    await requireProjectPlan(ctx.user, ctx.repoId, {
+      owner: ctx.owner,
+      repo: ctx.repo,
+    });
     const secret = process.env.EDIT_TOKEN_SECRET;
     if (!secret) {
       throw new TRPCError({

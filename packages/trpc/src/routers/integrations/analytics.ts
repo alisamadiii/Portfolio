@@ -1,5 +1,6 @@
 import "server-only";
 
+import { requireProjectPlan } from "@workspace/trpc/lib/cms/feature-access";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import z from "zod";
@@ -304,6 +305,10 @@ export const analyticsRouter = createTRPCRouter({
   // GA4 properties the CALLER's freshly-linked Google account can read —
   // powers the property dropdown right after the consent flow.
   properties: cmsFullAccessProcedure.query(async ({ ctx }) => {
+    await requireProjectPlan(ctx.user, ctx.repoId, {
+      owner: ctx.owner,
+      repo: ctx.repo,
+    });
     const token = await getGoogleAccessToken(ctx.user.id);
     return listGa4Properties(token);
   }),
@@ -313,6 +318,10 @@ export const analyticsRouter = createTRPCRouter({
   connect: cmsFullAccessProcedure
     .input(z.object({ propertyId: z.string().regex(/^\d+$/) }))
     .mutation(async ({ ctx, input }) => {
+      await requireProjectPlan(ctx.user, ctx.repoId, {
+        owner: ctx.owner,
+        repo: ctx.repo,
+      });
       // Verify the caller's token can actually see this property before saving.
       const token = await getGoogleAccessToken(ctx.user.id);
       const properties = await listGa4Properties(token);
@@ -340,6 +349,10 @@ export const analyticsRouter = createTRPCRouter({
   report: cmsProcedure
     .input(z.object({ range: z.enum(["7d", "28d", "90d"]).default("28d") }))
     .query(async ({ ctx, input }) => {
+      await requireProjectPlan(ctx.user, ctx.repoId, {
+        owner: ctx.owner,
+        repo: ctx.repo,
+      });
       const project = await resolveProject(ctx.repoId);
       if (!project.gaPropertyId || !project.gaConnectedUserId) {
         throw RECONNECT();

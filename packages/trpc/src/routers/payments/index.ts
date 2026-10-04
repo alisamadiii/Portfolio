@@ -37,7 +37,16 @@ const ensureStripeCustomer = async (sessionUser: {
     .from(user)
     .where(eq(user.id, sessionUser.id))
     .limit(1);
-  if (record?.stripeCustomerId) return record.stripeCustomerId;
+  if (record?.stripeCustomerId) {
+    // Verify the stored id exists in the CURRENT key's mode — a live id
+    // stored while testing (or vice versa) breaks checkout with
+    // 'No such customer'. Fall through to create a fresh one if not.
+    const valid = await stripe.customers
+      .retrieve(record.stripeCustomerId)
+      .then((c) => !("deleted" in c && c.deleted))
+      .catch(() => false);
+    if (valid) return record.stripeCustomerId;
+  }
 
   const customer = await stripe.customers.create({
     email: sessionUser.email,

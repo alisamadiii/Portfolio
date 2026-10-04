@@ -83,7 +83,9 @@ export async function POST(req: Request) {
   };
 
   // Reuse the user's existing Stripe customer so a user never spawns duplicate
-  // customers across their multiple project subscriptions.
+  // customers across their multiple project subscriptions. Verify it exists in
+  // the CURRENT key's mode first — a live customer id stored while testing
+  // (or vice versa) would make sessions.create throw 'No such customer'.
   let existingCustomerId: string | null = null;
   if (userId) {
     const [record] = await db
@@ -91,7 +93,13 @@ export async function POST(req: Request) {
       .from(user)
       .where(eq(user.id, userId))
       .limit(1);
-    existingCustomerId = record?.stripeCustomerId ?? null;
+    const stored = record?.stripeCustomerId ?? null;
+    if (stored) {
+      existingCustomerId = await stripe.customers
+        .retrieve(stored)
+        .then((c) => ("deleted" in c && c.deleted ? null : stored))
+        .catch(() => null);
+    }
   }
 
   // Feature purchases bounce back to the page the user was on (e.g. the CMS
@@ -124,9 +132,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url }, { headers });
   } catch (error) {
     console.error("Feature checkout failed", error);
-    return NextResponse.json(
-      { error: "Failed to create checkout session" },
-      { status: 500, headers }
-    );
+    // Surface the real Stripe message — 'Failed to create checkout session'
+    // hides exactly the detail needed to debug (bad price id, mode-mismatched
+    // customer, …). Stripe error messages are safe to show.
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Failed to create checkout session";
+    return NextResponse.json({ error: message }, { status: 500, headers });
   }
 }
