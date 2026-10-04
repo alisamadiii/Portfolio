@@ -8,7 +8,7 @@ const IS_PROD = process.env.VERCEL_ENV === "production";
 
 export const PRICE_IDS = IS_PROD
   ? {
-      plan: "", // TODO: run seed-project-plan.mts with the live key
+      plan: "price_1UMr7QEhKQbL1BLm2o3DHJ1P", // Website Management $100/mo (live)
     }
   : {
       plan: "price_1UMoKjEhKQbL1BLm0xZuUQiw", // Website Management $100/mo (sandbox)
