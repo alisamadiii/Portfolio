@@ -5,7 +5,6 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
-  previousCustomers,
   products,
   subscriptions,
   user,
@@ -230,14 +229,6 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
       createdAt: new Date(invoice.created * 1000),
     })
     .onConflictDoUpdate({ target: orders.id, set: values });
-
-  // First paid order clears any previous-customer discount marker (ports the
-  // old Polar onOrderCreated cleanup).
-  if (email) {
-    await db
-      .delete(previousCustomers)
-      .where(eq(previousCustomers.email, email));
-  }
 };
 
 /** Mark the mirrored order refunded when its charge is refunded. */

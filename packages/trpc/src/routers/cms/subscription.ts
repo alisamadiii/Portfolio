@@ -9,7 +9,7 @@ import {
 } from "@workspace/trpc/init";
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
-import { hubProject, hubSubscription } from "@workspace/drizzle/schema";
+import { hubProject, subscriptions } from "@workspace/drizzle/schema";
 
 import {
   assertProjectAccess,
@@ -81,8 +81,8 @@ export const subscriptionRouter = createTRPCRouter({
       await assertProjectAccess(ctx.session.user, project);
       const [row] = await db
         .select()
-        .from(hubSubscription)
-        .where(eq(hubSubscription.repoId, project.repoId))
+        .from(subscriptions)
+        .where(eq(subscriptions.repoId, project.repoId))
         .limit(1);
       return {
         repoId: project.repoId,
@@ -97,9 +97,9 @@ export const subscriptionRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
       const [row] = await db
-        .select({ stripeCustomerId: hubSubscription.stripeCustomerId })
-        .from(hubSubscription)
-        .where(eq(hubSubscription.repoId, input.repoId))
+        .select({ stripeCustomerId: subscriptions.stripeCustomerId })
+        .from(subscriptions)
+        .where(eq(subscriptions.repoId, input.repoId))
         .limit(1);
       if (!row?.stripeCustomerId) return [];
       const invoices = await stripe.invoices.list({
@@ -120,9 +120,9 @@ export const subscriptionRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
       const [row] = await db
-        .select({ stripeCustomerId: hubSubscription.stripeCustomerId })
-        .from(hubSubscription)
-        .where(eq(hubSubscription.repoId, input.repoId))
+        .select({ stripeCustomerId: subscriptions.stripeCustomerId })
+        .from(subscriptions)
+        .where(eq(subscriptions.repoId, input.repoId))
         .limit(1);
       if (!row?.stripeCustomerId) {
         throw new TRPCError({

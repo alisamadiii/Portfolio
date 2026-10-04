@@ -12,7 +12,6 @@ import { hubLoginUrl, urls } from "@workspace/ui/lib/company";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
-import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
 import { LeadsProviders } from "@/components/providers";
 import { NavPills } from "@/components/nav-pills";
@@ -104,11 +103,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       >
         <TRPCReactProvider>
           <LeadsProviders>
-            <SessionRefreshProvider>
-              <Suspense>
-                <LeadsLayout>{children}</LeadsLayout>
-              </Suspense>
-            </SessionRefreshProvider>
+            <Suspense>
+              <LeadsLayout>{children}</LeadsLayout>
+            </Suspense>
           </LeadsProviders>
         </TRPCReactProvider>
       </body>

@@ -12,7 +12,6 @@ import { TRPCReactProvider } from "@workspace/trpc/client";
 
 import { MotionFooter } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
-import { PreviousCustomerBanner } from "@/components/previous-customer-banner";
 
 const fontDisplay = Outfit({
   subsets: ["latin"],
@@ -84,7 +83,6 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <Providers>
             <Suspense>
-              <PreviousCustomerBanner />
               {children}
               <Suspense>
                 <MotionFooter />

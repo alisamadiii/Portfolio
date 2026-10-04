@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -145,7 +145,9 @@ export const productsRouter = createTRPCRouter({
           .where(
             and(
               eq(subscriptions.userId, userId),
-              eq(subscriptions.status, "active")
+              eq(subscriptions.status, "active"),
+              // CMS website subs (repoId set) never grant product access.
+              isNull(subscriptions.repoId)
             )
           )
           .limit(1);

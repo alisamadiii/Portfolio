@@ -3,7 +3,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
-import { hubSubscription } from "@workspace/drizzle/schema";
+import { subscriptions } from "@workspace/drizzle/schema";
 
 import { stripe } from "@workspace/trpc/lib/stripe";
 
@@ -19,16 +19,23 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 export async function settleAndCancel(repoId: number): Promise<void> {
   const [row] = await db
     .select({
-      plan: hubSubscription.plan,
-      status: hubSubscription.status,
-      stripeSubscriptionId: hubSubscription.stripeSubscriptionId,
+      id: subscriptions.id,
+      plan: subscriptions.plan,
+      status: subscriptions.status,
     })
-    .from(hubSubscription)
-    .where(eq(hubSubscription.repoId, repoId))
+    .from(subscriptions)
+    .where(eq(subscriptions.repoId, repoId))
     .limit(1);
 
-  const subId = row?.stripeSubscriptionId;
-  if (!row || row.plan !== "paid" || !subId || row.status === "canceled") {
+  // Paid rows carry the Stripe sub id as the row id; free rows use a
+  // 'free_<repoId>' placeholder and have nothing to settle.
+  const subId = row?.id;
+  if (
+    !row ||
+    row.plan !== "paid" ||
+    !subId?.startsWith("sub_") ||
+    row.status === "canceled"
+  ) {
     return;
   }
 

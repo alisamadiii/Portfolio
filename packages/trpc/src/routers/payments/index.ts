@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import type Stripe from "stripe";
 import { z } from "zod";
 
@@ -16,7 +16,6 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
-  previousCustomers,
   products,
   subscriptions,
   user,
@@ -331,7 +330,11 @@ export const paymentsRouter = createTRPCRouter({
           })
           .from(subscriptions)
           .leftJoin(products, eq(products.id, subscriptions.productId))
-          .where(eq(subscriptions.userId, userId))
+          // Product subscriptions only — per-project CMS rows (repoId set)
+          // belong to the hub's per-project Billing panel.
+          .where(
+            and(eq(subscriptions.userId, userId), isNull(subscriptions.repoId))
+          )
           .orderBy(desc(subscriptions.createdAt));
 
         return rows.map(({ subscription: sub, productName }) => {
@@ -387,7 +390,13 @@ export const paymentsRouter = createTRPCRouter({
       db
         .select()
         .from(subscriptions)
-        .where(eq(subscriptions.userId, ctx.session.user.id)),
+        // Product subscriptions only — CMS website subs don't grant products.
+        .where(
+          and(
+            eq(subscriptions.userId, ctx.session.user.id),
+            isNull(subscriptions.repoId)
+          )
+        ),
       db
         .select()
         .from(orders)
@@ -408,16 +417,6 @@ export const paymentsRouter = createTRPCRouter({
       currentSubscriptionId: activeSub?.id ?? null,
       subscribedProductIds: activeSub ? [activeSub.productId] : [],
     };
-  }),
-
-  getPreviousCustomer: authenticatedProcedure.query(async ({ ctx }) => {
-    const customer = await db
-      .select()
-      .from(previousCustomers)
-      .where(eq(previousCustomers.email, ctx.session.user.email))
-      .limit(1)
-      .then((result) => result[0]);
-    return customer;
   }),
 
   // Stripe routes (flat-merged)

@@ -62,17 +62,6 @@ export const shortLink = pgTable("short_link", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const previousCustomers = pgTable("previous_customers", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-
-  email: text("email").notNull(),
-  code: text("code").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
 // Written by the uptime-monitor Worker (apps/monitor/src/dblog.ts) via raw
 // SQL on failing/near-miss runs only — full check snapshot + deep sub-probes
 // on the flapping target. 30-day retention enforced by the worker.

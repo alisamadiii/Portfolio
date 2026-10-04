@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 
 import { stripe } from "@workspace/trpc/lib/stripe";
 import { MIRROR_EVENTS, syncStripeEvent } from "@workspace/trpc/lib/stripe-sync";
 import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
-import { hubSubscription, user, webhookEvents } from "@workspace/drizzle/schema";
+import { subscriptions, user, webhookEvents } from "@workspace/drizzle/schema";
 
 // Standalone Stripe webhook — the single billing sync point.
 //
-// Two concerns, split by subscription metadata:
-//  1. Per-project CMS subscriptions (metadata.repoId) -> hub_subscription via
-//     syncCmsSubscription.
+// Two concerns in ONE subscription table, split by metadata.repoId:
+//  1. Per-project CMS subscriptions (metadata.repoId) -> upserted on the
+//     repoId partial-unique index via syncCmsSubscription.
 //  2. Everything else (Motion/agency/template purchases) -> the product /
-//     subscription / order mirror tables via the stripe-sync helpers.
+//     subscription / order mirror rows via the stripe-sync helpers (keyed on
+//     the Stripe sub id).
 //
 // State-sync pattern: we do NOT trust the event body where ordering matters.
 // CMS events funnel to syncCmsSubscription(customerId), which re-fetches the
@@ -63,7 +64,7 @@ async function syncCmsSubscription(customerId: string) {
   const price = item?.price;
   const productId =
     price?.product == null
-      ? null
+      ? ""
       : typeof price.product === "string"
         ? price.product
         : price.product.id;
@@ -72,35 +73,34 @@ async function syncCmsSubscription(customerId: string) {
     ? new Date(item.current_period_end * 1000)
     : null;
 
+  const values = {
+    // Also set on upgrade: a free row ('free_<repoId>') becomes the real
+    // Stripe sub row the moment the project goes paid.
+    id: sub.id,
+    repoId,
+    userId: userId ?? "",
+    email: sub.metadata.email || "",
+    plan: "paid" as const,
+    amount: (price?.unit_amount ?? 0) * (item?.quantity ?? 1),
+    currency: sub.currency,
+    stripeCustomerId: customerId,
+    status: sub.status,
+    priceId: price?.id ?? null,
+    productId,
+    recurringInterval: price?.recurring?.interval ?? null,
+    currentPeriodEnd: periodEnd,
+    cancelAtPeriodEnd: sub.cancel_at_period_end,
+    updatedAt: new Date(),
+  };
+
   await db
-    .insert(hubSubscription)
-    .values({
-      repoId,
-      userId,
-      email: sub.metadata.email || null,
-      plan: "paid",
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: sub.id,
-      status: sub.status,
-      priceId: price?.id ?? null,
-      productId,
-      currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: sub.cancel_at_period_end,
-    })
+    .insert(subscriptions)
+    .values({ ...values, createdAt: new Date(sub.created * 1000) })
     .onConflictDoUpdate({
-      target: hubSubscription.repoId,
-      set: {
-        userId,
-        plan: "paid",
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: sub.id,
-        status: sub.status,
-        priceId: price?.id ?? null,
-        productId,
-        currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: sub.cancel_at_period_end,
-        updatedAt: new Date(),
-      },
+      // Partial unique index: one CMS row per project.
+      target: subscriptions.repoId,
+      targetWhere: sql`repo_id is not null`,
+      set: values,
     });
 }
 

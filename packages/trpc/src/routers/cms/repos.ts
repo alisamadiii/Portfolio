@@ -15,7 +15,7 @@ import { getToken } from "@workspace/trpc/lib/cms/token";
 import { revalidateRepoCache } from "@workspace/trpc/lib/cms/revalidate";
 import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
 import { db } from "@workspace/drizzle/index";
-import { hubProject, hubSubscription } from "@workspace/drizzle/schema";
+import { hubProject, subscriptions } from "@workspace/drizzle/schema";
 
 // ─── Agency-access gate ──────────────────────────────────────────
 // A specific GitHub account (AGENCY_GITHUB_LOGIN) — the one whose PAT
@@ -184,13 +184,13 @@ export const reposRouter = createTRPCRouter({
             updatedAt: hubProject.githubUpdatedAt,
             freeLife: hubProject.freeLife,
             websiteUrl: hubProject.websiteUrl,
-            plan: hubSubscription.plan,
-            status: hubSubscription.status,
+            plan: subscriptions.plan,
+            status: subscriptions.status,
           })
           .from(hubProject)
           .leftJoin(
-            hubSubscription,
-            eq(hubSubscription.repoId, hubProject.repoId)
+            subscriptions,
+            eq(subscriptions.repoId, hubProject.repoId)
           )
           .where(and(...conds))
           .orderBy(desc(hubProject.githubUpdatedAt));

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, gte, isNull, sql, sum } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
@@ -30,7 +30,10 @@ export const statsRouter = createTRPCRouter({
         db
           .select({ count: count() })
           .from(subscriptions)
-          .where(eq(subscriptions.status, "active")),
+          // Product subscriptions only — CMS website rows have repoId set.
+          .where(
+            and(eq(subscriptions.status, "active"), isNull(subscriptions.repoId))
+          ),
         db.select({ count: count() }).from(source),
       ]);
 

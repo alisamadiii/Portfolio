@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ImpersonationBanner } from "@workspace/auth/components/impersonation-banner";
-import { SessionRefreshProvider } from "@workspace/auth/providers/session-refresh-provider";
 
 import { SubscriptionGateProvider } from "@/components/subscription/subscription-gate";
 import { UserProvider } from "@/contexts/user-context";
@@ -42,10 +41,8 @@ export default async function Layout({
   return (
     <UserProvider user={userWithAccounts}>
       <SubscriptionGateProvider>
-        <SessionRefreshProvider>
-          <ImpersonationBanner />
-          {children}
-        </SessionRefreshProvider>
+        <ImpersonationBanner />
+        {children}
       </SubscriptionGateProvider>
     </UserProvider>
   );
