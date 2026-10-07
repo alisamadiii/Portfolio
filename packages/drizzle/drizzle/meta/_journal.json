@@ -36,6 +36,13 @@
       "when": 1791367003243,
       "tag": "0004_leads_working_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791371013379,
+      "tag": "0005_leads_subscription_tiers",
+      "breakpoints": true
     }
   ]
 }

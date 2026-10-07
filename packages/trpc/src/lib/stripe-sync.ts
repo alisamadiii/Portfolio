@@ -5,12 +5,17 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
+  prices,
   products,
   subscriptions,
   user,
 } from "@workspace/drizzle/schema";
 
-import { grantPurchaseCredits, revokePurchaseCredits } from "./credits";
+import {
+  grantPurchaseCredits,
+  resetCreditsToAllowance,
+  revokePurchaseCredits,
+} from "./credits";
 
 // Syncs the Stripe catalog/billing mirror tables (product / subscription /
 // order) from webhook events. Single entry point: syncStripeEvent(event).
@@ -131,6 +136,30 @@ const syncStripeProduct = async (productId: string) => {
     .onConflictDoUpdate({ target: products.id, set: values });
 };
 
+/**
+ * Mirror a single Stripe price. The `product` mirror only keeps the default
+ * price, so multi-price products (Lead Finder tiers) read from this table.
+ */
+const syncStripePrice = async (price: Stripe.Price) => {
+  const values = {
+    productId: productIdOf(price.product) ?? "",
+    amount: price.unit_amount ?? 0,
+    currency: price.currency,
+    recurringInterval: toInterval(price.recurring?.interval),
+    active: price.active,
+    metadata: price.metadata ?? {},
+    updatedAt: new Date(),
+  };
+  await db
+    .insert(prices)
+    .values({
+      id: price.id,
+      ...values,
+      createdAt: new Date(price.created * 1000),
+    })
+    .onConflictDoUpdate({ target: prices.id, set: values });
+};
+
 // ─── Subscriptions ──────────────────────────────────────────────
 
 /**
@@ -162,6 +191,9 @@ const syncStripeSubscription = async (sub: Stripe.Subscription) => {
     canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
     cancelAtPeriodEnd: sub.cancel_at_period_end,
     recurringInterval: toInterval(item?.price?.recurring?.interval),
+    // Current tier — multi-price products (Lead Finder) key "current plan"
+    // off this.
+    priceId: item?.price?.id ?? null,
     metadata: sub.metadata ?? {},
   };
 
@@ -263,16 +295,61 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
     })
     .onConflictDoUpdate({ target: orders.id, set: values });
 
-  // Lead-finder credit packs: paying the invoice grants the credits. The
-  // ledger's partial unique index makes webhook retries a no-op.
+  // Lead-finder billing. Subscription invoices (tier plans) RESET the
+  // balance to the tier's allowance every cycle; legacy one-time pack
+  // invoices add credits. Both idempotent per invoice id via the ledger's
+  // partial unique index.
   if (metadata.project === "LEADS") {
+    // Tier allowance lives on the PRICE metadata (one product, many prices).
+    // For subscription invoices the SUBSCRIPTION's current price is the
+    // truth — upgrade invoices carry proration lines where line[0] can be
+    // the OLD price's credit line. Fall back to the invoice line price,
+    // then invoice/sub metadata, then the product mirror.
+    const subscriptionId = subscriptionIdOf(invoice);
+    let priceId: string | null = null;
+    if (subscriptionId) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        priceId = sub.items.data[0]?.price?.id ?? null;
+      } catch {
+        priceId = null;
+      }
+    }
+    if (!priceId) {
+      const linePrice = linePricing?.price;
+      priceId =
+        linePrice == null
+          ? null
+          : typeof linePrice === "string"
+            ? linePrice
+            : (linePrice as Stripe.Price).id;
+    }
+    let priceCredits: string | undefined;
+    if (priceId) {
+      const [priceRow] = await db
+        .select({ metadata: prices.metadata })
+        .from(prices)
+        .where(eq(prices.id, priceId))
+        .limit(1);
+      priceCredits = (priceRow?.metadata as { credits?: string } | null)
+        ?.credits;
+    }
     const credits = Number(
-      (metadata.credits as string | undefined) ?? productMetadata?.credits ?? 0
+      priceCredits ??
+        (metadata.credits as string | undefined) ??
+        productMetadata?.credits ??
+        0
     );
     if (!resolved?.userId || !Number.isFinite(credits) || credits <= 0) {
       console.error(
         `[stripe-sync] LEADS invoice ${invoice.id}: cannot grant credits (userId=${resolved?.userId}, credits=${credits})`
       );
+    } else if (subscriptionId) {
+      await resetCreditsToAllowance({
+        userId: resolved.userId,
+        allowance: credits,
+        invoiceId: invoice.id,
+      });
     } else {
       await grantPurchaseCredits({
         userId: resolved.userId,
@@ -350,8 +427,11 @@ export const syncStripeEvent = async (event: Stripe.Event) => {
 
     case "price.created":
     case "price.updated": {
-      const price = event.data.object as Stripe.Price;
-      await syncStripeProduct(productIdOf(price.product)!);
+      const fresh = await stripe.prices.retrieve(
+        (event.data.object as Stripe.Price).id
+      );
+      await syncStripePrice(fresh);
+      await syncStripeProduct(productIdOf(fresh.product)!);
       break;
     }
 

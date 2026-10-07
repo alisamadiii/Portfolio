@@ -16,6 +16,7 @@ import { stripe } from "@workspace/trpc/lib/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
+  prices,
   products,
   subscriptions,
   user,
@@ -124,10 +125,29 @@ export const paymentsRouter = createTRPCRouter({
       return updatedProduct;
     }),
 
+  // Active prices of one product, cheapest first — for multi-price products
+  // (Lead Finder tiers) whose product mirror only holds the default price.
+  getProductPrices: baseProcedure
+    .input(z.object({ productId: z.string() }))
+    .query(async ({ input }) => {
+      return db
+        .select()
+        .from(prices)
+        .where(
+          and(eq(prices.productId, input.productId), eq(prices.active, true))
+        )
+        .orderBy(asc(prices.amount));
+    }),
+
   createCheckout: authenticatedProcedure
     .input(
       z.object({
         productId: z.string(),
+        /**
+         * Specific tier price for multi-price products; must belong to the
+         * product. Omitted → the product's default price.
+         */
+        priceId: z.string().optional(),
         /** Where the portal success page sends the user once they're done. */
         callbackUrl: z.string().optional(),
         project: z
@@ -139,14 +159,35 @@ export const paymentsRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }): Promise<{ url: string }> => {
       try {
-        const { productId, callbackUrl, project, discountId } = input;
+        const { productId, priceId, callbackUrl, project, discountId } = input;
 
         const [product] = await db
           .select()
           .from(products)
           .where(eq(products.id, productId))
           .limit(1);
-        if (!product?.stripePriceId) {
+        let checkoutPriceId = product?.stripePriceId ?? null;
+        if (product && priceId) {
+          const [priceRow] = await db
+            .select({ id: prices.id })
+            .from(prices)
+            .where(
+              and(
+                eq(prices.id, priceId),
+                eq(prices.productId, product.id),
+                eq(prices.active, true)
+              )
+            )
+            .limit(1);
+          if (!priceRow) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "That plan is not available",
+            });
+          }
+          checkoutPriceId = priceRow.id;
+        }
+        if (!product || !checkoutPriceId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Product is not available for purchase",
@@ -175,7 +216,7 @@ export const paymentsRouter = createTRPCRouter({
         const session = await stripe.checkout.sessions.create({
           mode: product.isRecurring ? "subscription" : "payment",
           customer: customerId,
-          line_items: [{ price: product.stripePriceId, quantity: 1 }],
+          line_items: [{ price: checkoutPriceId, quantity: 1 }],
           success_url: successUrl,
           cancel_url: resolveRedirectUrl(callbackUrl, urls.cms),
           metadata,
@@ -251,6 +292,8 @@ export const paymentsRouter = createTRPCRouter({
       z.object({
         subscriptionId: z.string(),
         toProductId: z.string(),
+        /** Specific tier price on the target product (multi-price products). */
+        toPriceId: z.string().optional(),
         prorationBehavior: z
           .enum(["create_prorations", "always_invoice", "none"])
           .optional()
@@ -259,14 +302,38 @@ export const paymentsRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        const { subscriptionId, toProductId, prorationBehavior } = input;
+        const { subscriptionId, toProductId, toPriceId, prorationBehavior } =
+          input;
 
         const [product] = await db
           .select()
           .from(products)
           .where(eq(products.id, toProductId))
           .limit(1);
-        if (!product?.stripePriceId) {
+        let targetPriceId = product?.stripePriceId ?? null;
+        let targetAmount: number | null = null;
+        if (product && toPriceId) {
+          const [priceRow] = await db
+            .select({ id: prices.id, amount: prices.amount })
+            .from(prices)
+            .where(
+              and(
+                eq(prices.id, toPriceId),
+                eq(prices.productId, product.id),
+                eq(prices.active, true)
+              )
+            )
+            .limit(1);
+          if (!priceRow) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Target plan is not available",
+            });
+          }
+          targetPriceId = priceRow.id;
+          targetAmount = priceRow.amount;
+        }
+        if (!product || !targetPriceId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Target plan is not available",
@@ -309,12 +376,63 @@ export const paymentsRouter = createTRPCRouter({
           });
         }
 
-        const response = await stripe.subscriptions.update(subscriptionId, {
-          items: [{ id: item.id, price: product.stripePriceId }],
-          proration_behavior:
-            prorationBehavior as Stripe.SubscriptionUpdateParams.ProrationBehavior,
+        // Tier switches (explicit toPriceId): upgrades apply immediately
+        // with an immediate invoice (invoice.paid resets credit balances);
+        // downgrades are scheduled for the end of the current period so the
+        // user keeps what they paid for until the cycle rolls over.
+        const currentAmount = item.price?.unit_amount ?? 0;
+        const scheduleRef = (sub as Stripe.Subscription & {
+          schedule?: string | Stripe.SubscriptionSchedule | null;
+        }).schedule;
+        const scheduleId =
+          scheduleRef == null
+            ? null
+            : typeof scheduleRef === "string"
+              ? scheduleRef
+              : scheduleRef.id;
+
+        if (toPriceId && targetAmount !== null && targetAmount < currentAmount) {
+          const schedule = scheduleId
+            ? await stripe.subscriptionSchedules.retrieve(scheduleId)
+            : await stripe.subscriptionSchedules.create({
+                from_subscription: subscriptionId,
+              });
+          const phaseStart =
+            schedule.current_phase?.start_date ??
+            schedule.phases[0]?.start_date;
+          const phaseEnd =
+            schedule.current_phase?.end_date ?? schedule.phases[0]?.end_date;
+          await stripe.subscriptionSchedules.update(schedule.id, {
+            end_behavior: "release",
+            phases: [
+              {
+                items: [{ price: item.price!.id, quantity: 1 }],
+                start_date: phaseStart,
+                end_date: phaseEnd,
+              },
+              { items: [{ price: targetPriceId, quantity: 1 }] },
+            ],
+          });
+          return {
+            scheduled: true as const,
+            effectiveAt: phaseEnd ? new Date(phaseEnd * 1000) : null,
+          };
+        }
+
+        // Upgrade (or legacy product switch). A pending downgrade schedule
+        // would reject a direct update — release it first.
+        if (toPriceId && scheduleId) {
+          await stripe.subscriptionSchedules
+            .release(scheduleId)
+            .catch(() => {});
+        }
+        await stripe.subscriptions.update(subscriptionId, {
+          items: [{ id: item.id, price: targetPriceId }],
+          proration_behavior: (toPriceId
+            ? "always_invoice"
+            : prorationBehavior) as Stripe.SubscriptionUpdateParams.ProrationBehavior,
         });
-        return response;
+        return { scheduled: false as const, effectiveAt: null };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({

@@ -196,7 +196,7 @@ export const ScanDashboard = () => {
           });
           toast.success(
             result.lockedCount > 0
-              ? `Found ${result.noWebsiteCount} leads. ${result.lockedCount} locked, buy credits to unlock them.`
+              ? `Found ${result.noWebsiteCount} leads. ${result.lockedCount} locked, subscribe or upgrade to unlock them.`
               : `Found ${result.totalFound} businesses, ${result.noWebsiteCount} without a real website`
           );
           router.push(`/scans/${result.scanId}`);
@@ -311,7 +311,7 @@ export const ScanDashboard = () => {
                   onClick={() => setBuyOpen(true)}
                   className="btn-pill btn-violet h-9 px-4 text-sm"
                 >
-                  Buy credits to keep scanning
+                  Subscribe to keep scanning
                 </button>
               ) : (
                 <button

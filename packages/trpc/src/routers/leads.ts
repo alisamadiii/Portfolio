@@ -33,6 +33,7 @@ import {
   isAddressResult,
   isSocialOnly,
   isWebsiteDead,
+  mapLimit,
   searchNearbyLite,
   searchPlaces,
   searchPlacesLite,
@@ -309,7 +310,7 @@ export const leadsRouter = createTRPCRouter({
             throw new TRPCError({
               code: "PRECONDITION_FAILED",
               message:
-                "You're out of credits. Buy a credit pack to add this lead.",
+                "You're out of credits. Subscribe or upgrade your plan to add this lead.",
             });
           }
         }
@@ -404,7 +405,7 @@ export const leadsRouter = createTRPCRouter({
         if (balance < 1) {
           throw new TRPCError({
             code: "PRECONDITION_FAILED",
-            message: "You're out of credits. Buy a credit pack to keep scanning.",
+            message: "You're out of credits. Subscribe or upgrade your plan to keep scanning.",
           });
         }
 
@@ -464,16 +465,15 @@ export const leadsRouter = createTRPCRouter({
             });
           }
 
-          // Liveness-check real websites in parallel.
-          const classified = await Promise.all(
-            operational.map(async (p) => {
-              const website = p.websiteUri ?? null;
-              const socialOnly = website ? isSocialOnly(website) : false;
-              const websiteDead =
-                website && !socialOnly ? await isWebsiteDead(website) : false;
-              return { place: p, website, socialOnly, websiteDead };
-            })
-          );
+          // Liveness-check real websites — bounded concurrency: a 60-site
+          // burst from one IP invites throttling that reads as "dead".
+          const classified = await mapLimit(operational, 8, async (p) => {
+            const website = p.websiteUri ?? null;
+            const socialOnly = website ? isSocialOnly(website) : false;
+            const websiteDead =
+              website && !socialOnly ? await isWebsiteDead(website) : false;
+            return { place: p, website, socialOnly, websiteDead };
+          });
 
           // Leads this user already owns are refreshed for free — only
           // never-seen billable prospects cost credits.
@@ -785,7 +785,7 @@ export const leadsRouter = createTRPCRouter({
       if (result.unlocked === 0) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: "You're out of credits. Buy a credit pack to unlock leads.",
+          message: "You're out of credits. Subscribe or upgrade your plan to unlock leads.",
         });
       }
       return result;

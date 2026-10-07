@@ -63,6 +63,32 @@ export const products = pgTable("product", {
   updatedAt: timestamp("updated_at").notNull(),
 });
 
+// Mirror of Stripe prices for products that carry MORE than one price (the
+// `product` mirror keeps a single default `stripePriceId`). First consumer:
+// the Lead Finder subscription product with three monthly tiers.
+export const prices = pgTable(
+  "price",
+  {
+    // Stripe price id (price_…).
+    id: text("id").primaryKey(),
+    // Stripe product id (prod_…) the price belongs to.
+    productId: text("product_id").notNull(),
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull().default("usd"),
+    recurringInterval: text("recurring_interval", {
+      enum: ["day", "week", "month", "year"],
+    }),
+    active: boolean("active").notNull().default(true),
+    // Per-tier data, e.g. { credits: "500", popular: "true" } for LEADS.
+    metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    idxPriceProduct: index("idx_price_product").on(table.productId),
+  })
+);
+
 // The single subscription table — product subscriptions (Motion etc.) AND
 // per-project CMS subscriptions live here, distinguished by `repoId`:
 //   repoId NULL     -> product subscription, keyed/upserted on `id` (sub_…)

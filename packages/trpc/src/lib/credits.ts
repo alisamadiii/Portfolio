@@ -45,6 +45,38 @@ export async function grantPurchaseCredits(opts: {
     .onConflictDoNothing();
 }
 
+// Subscription billing: every paid cycle RESETS the balance to the tier's
+// allowance (no rollover). One ledger row per invoice (idempotent via the
+// partial unique index); delta is whatever bridges current balance to the
+// allowance, so it can be negative after a downgrade or an unspent month.
+export async function resetCreditsToAllowance(opts: {
+  userId: string;
+  allowance: number;
+  invoiceId: string;
+}): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${opts.userId}))`
+    );
+    const [row] = await tx
+      .select({
+        balance: sql<number>`coalesce(sum(${leadCreditLedger.delta}), 0)`,
+      })
+      .from(leadCreditLedger)
+      .where(eq(leadCreditLedger.userId, opts.userId));
+    const balance = Number(row?.balance ?? 0);
+    await tx
+      .insert(leadCreditLedger)
+      .values({
+        userId: opts.userId,
+        delta: opts.allowance - balance,
+        reason: "reset",
+        refId: opts.invoiceId,
+      })
+      .onConflictDoNothing();
+  });
+}
+
 // Refund claws the credits back; balance may go negative (abuse visibility).
 export async function revokePurchaseCredits(opts: {
   userId: string;

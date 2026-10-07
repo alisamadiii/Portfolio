@@ -15,47 +15,51 @@ import { hubSignupUrl, urls } from "@workspace/ui/lib/company";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 
-type Pack = {
-  id: string;
-  name: string;
-  priceAmount: number;
+type Tier = {
+  priceId: string;
+  amount: number;
   credits: number;
   popular: boolean;
 };
 
-async function getPacks(): Promise<Pack[]> {
+// The Lead Finder subscription: one product, one price per monthly tier.
+async function getTiers(): Promise<Tier[]> {
   try {
     const httpCaller = createHttpCaller(await headers());
     const products = await httpCaller.payments.getProducts.query();
-    return products
-      .filter(
-        (p) =>
-          (p.metadata as { project?: string } | null)?.project === "LEADS" &&
-          !p.isArchived &&
-          !p.isRecurring
-      )
+    const product = products.find(
+      (p) =>
+        (p.metadata as { project?: string } | null)?.project === "LEADS" &&
+        !p.isArchived &&
+        p.isRecurring
+    );
+    if (!product) return [];
+    const prices = await httpCaller.payments.getProductPrices.query({
+      productId: product.id,
+    });
+    return prices
+      .filter((p) => p.recurringInterval === "month")
       .map((p) => ({
-        id: p.id,
-        name: p.name,
-        priceAmount: p.priceAmount,
+        priceId: p.id,
+        amount: p.amount,
         credits: Number((p.metadata as { credits?: string }).credits ?? 0),
-        popular: p.popular,
-      }))
-      .sort((a, b) => a.priceAmount - b.priceAmount);
+        popular:
+          (p.metadata as { popular?: string } | null)?.popular === "true",
+      }));
   } catch {
     return [];
   }
 }
 
 export async function MarketingPage() {
-  const packs = await getPacks();
+  const tiers = await getTiers();
   const signupUrl = hubSignupUrl(urls.leads);
 
   return (
     <div className="flex flex-col gap-6">
       <Hero signupUrl={signupUrl} />
       <HowItWorks />
-      <Pricing packs={packs} signupUrl={signupUrl} />
+      <Pricing tiers={tiers} signupUrl={signupUrl} />
       <InspectPitch />
     </div>
   );
@@ -132,52 +136,59 @@ function HowItWorks() {
   );
 }
 
-function Pricing({ packs, signupUrl }: { packs: Pack[]; signupUrl: string }) {
+function Pricing({ tiers, signupUrl }: { tiers: Tier[]; signupUrl: string }) {
   return (
     <section className="bg-card rounded-3xl px-6 py-12 shadow-sm sm:px-12">
       <div className="text-center">
         <h2 className="text-3xl font-semibold tracking-tight">
-          Pay only for the leads you find
+          One simple monthly plan
         </h2>
         <p className="text-muted-foreground mx-auto mt-3 max-w-lg text-balance">
-          No subscription. 1 credit unlocks 1 real prospect: a business with no
-          working website. Businesses that already have a healthy site show up
-          free.
+          Your credits reset to your plan&apos;s allowance every month. 1
+          credit unlocks 1 real prospect: a business with no working website.
+          Businesses that already have a healthy site show up free.
         </p>
       </div>
-      {packs.length > 0 && (
+      {tiers.length > 0 && (
         <div className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-3">
-          {packs.map((pack) => (
+          {tiers.map((tier) => (
             <div
-              key={pack.id}
+              key={tier.priceId}
               className={
-                pack.popular
+                tier.popular
                   ? "border-primary relative rounded-2xl border-2 p-6"
                   : "border-border rounded-2xl border p-6"
               }
             >
-              {pack.popular && (
+              {tier.popular && (
                 <span className="bg-primary text-primary-foreground absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-0.5 text-xs font-medium">
                   Most popular
                 </span>
               )}
               <p className="text-3xl font-semibold tracking-tight">
-                ${(pack.priceAmount / 100).toFixed(0)}
+                ${(tier.amount / 100).toFixed(0)}
+                <span className="text-muted-foreground text-base font-normal">
+                  /mo
+                </span>
               </p>
               <p className="mt-1 font-medium">
-                {pack.credits.toLocaleString()} credits
+                {tier.credits.toLocaleString()} credits every month
               </p>
               <ul className="text-muted-foreground mt-4 space-y-2 text-sm">
                 <li className="flex items-center gap-2">
                   <Check className="text-primary size-4 shrink-0" />
-                  {(pack.priceAmount / pack.credits)
-                    .toFixed(1)
-                    .replace(/\.0$/, "")}
+                  {(tier.amount / tier.credits)
+                    .toFixed(2)
+                    .replace(/\.?0+$/, "")}
                   ¢ per lead
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="text-primary size-4 shrink-0" />
-                  Credits never expire
+                  Resets on every billing cycle
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="text-primary size-4 shrink-0" />
+                  Cancel anytime
                 </li>
               </ul>
             </div>
@@ -186,9 +197,13 @@ function Pricing({ packs, signupUrl }: { packs: Pack[]; signupUrl: string }) {
       )}
       <div className="mt-10 text-center">
         <a href={signupUrl} className="btn-pill btn-violet">
-          Get 25 free credits
+          Start with 25 free credits
           <ArrowRight />
         </a>
+        <p className="text-muted-foreground mt-3 text-sm">
+          No card required to try it. Subscribe when you&apos;re ready to
+          scale.
+        </p>
       </div>
     </section>
   );

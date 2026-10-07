@@ -21,7 +21,13 @@ import { useTRPC } from "@workspace/trpc/client";
 
 // ─── Types ──────────────────────────────────────────────────────
 
-type SuccessProject = "MOTION" | "AGENCY" | "DOCS" | "TEMPLATE" | "SAASKIT";
+type SuccessProject =
+  | "MOTION"
+  | "AGENCY"
+  | "DOCS"
+  | "TEMPLATE"
+  | "SAASKIT"
+  | "LEADS";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -43,6 +49,8 @@ const getDescription = (
     case "AGENCY":
     case "TEMPLATE":
       return "This is where we start building your project. We'll get back to you shortly with a timeline and next steps.";
+    case "LEADS":
+      return "Your Lead Finder subscription is active and your monthly credits are loaded. Head back and start scanning.";
     default:
       return `${productName} is yours. Everything is unlocked and ready to use.`;
   }

@@ -25,6 +25,7 @@ export type LeadCreditReason =
   | "signup"
   | "purchase"
   | "refund"
+  | "reset"
   | "scan"
   | "unlock"
   | "adjustment";
@@ -147,10 +148,11 @@ export const leadCreditLedger = pgTable(
   },
   (table) => ({
     idxCreditUser: index("lead_credit_user_idx").on(table.userId),
-    // Grants must be idempotent (webhook retries, lazy signup grant);
-    // scan/unlock debits may repeat per refId so they are excluded.
+    // Grants must be idempotent (webhook retries, lazy signup grant,
+    // per-invoice subscription resets); scan/unlock debits may repeat per
+    // refId so they are excluded.
     uqCreditGrant: uniqueIndex("lead_credit_grant_uq")
       .on(table.reason, table.refId)
-      .where(sql`${table.reason} in ('signup', 'purchase', 'refund')`),
+      .where(sql`${table.reason} in ('signup', 'purchase', 'refund', 'reset')`),
   })
 );

@@ -234,7 +234,8 @@ export const SiteInspector = () => {
 };
 
 // At-a-glance chips under the inspect form — detail lives in the cards below.
-const QuickSummary = ({ result }: { result: InspectResult }) => {
+// Exported for the lead sheet's inspect dialog.
+export const QuickSummary = ({ result }: { result: InspectResult }) => {
   const find = (name: string) =>
     result.findings.find((f) => f.name.startsWith(name));
 
@@ -304,7 +305,7 @@ const QuickSummary = ({ result }: { result: InspectResult }) => {
   );
 };
 
-const InspectorResults = ({ result }: { result: InspectResult }) => {
+export const InspectorResults = ({ result }: { result: InspectResult }) => {
   const stack = result.findings.filter(
     (f) => f.category === "platform" || f.category === "framework"
   );

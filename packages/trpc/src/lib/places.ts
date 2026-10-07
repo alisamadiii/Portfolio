@@ -283,27 +283,76 @@ export function distanceMiles(
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-// HEAD (fallback GET) with timeout; true = site unreachable/dead.
+// True = site dead. CONSERVATIVE on purpose: a false "site down" bills the
+// user a credit, a false "has site" is just a free row. Dead means only a
+// network-level failure (DNS, refused, timeout — after one retry) or a hard
+// 404/410 on the root URL. Any other HTTP response proves a server answers
+// for the domain — WAF bot blocks (403), Cloudflare challenges (403/503),
+// auth walls (401), and rate limits (429) all come from LIVE sites; the old
+// "non-2xx = dead" check flagged whole scans dead because of them.
 export async function isWebsiteDead(website: string): Promise<boolean> {
-  const attempt = async (method: "HEAD" | "GET") => {
+  const attempt = async () => {
     const res = await fetch(website, {
-      method,
       redirect: "follow",
-      signal: AbortSignal.timeout(5000),
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; LeadScan/1.0)" },
+      signal: AbortSignal.timeout(8000),
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
     });
-    return res.ok || (res.status >= 300 && res.status < 400);
+    // Status is all we need — drop the body without downloading it.
+    void res.body?.cancel().catch(() => {});
+    return res.status === 404 || res.status === 410;
+  };
+
+  // Misconfigured-but-live TLS (incomplete chains, hostname mismatches):
+  // browsers tolerate these, strict clients throw. A server that presented a
+  // certificate is answering — not dead.
+  const isTlsError = (err: unknown): boolean => {
+    let current = err as { code?: string; cause?: unknown } | null;
+    for (let depth = 0; current && depth < 5; depth++) {
+      const code = String(current.code ?? "");
+      if (code.includes("CERT") || code.includes("SSL") || code.includes("TLS"))
+        return true;
+      current = current.cause as typeof current;
+    }
+    return false;
   };
 
   try {
-    if (await attempt("HEAD")) return false;
-    // Some servers reject HEAD — retry with GET before calling it dead.
-    return !(await attempt("GET"));
-  } catch {
+    return await attempt();
+  } catch (err) {
+    if (isTlsError(err)) return false;
+    // Transient DNS/conn hiccups happen under parallel scan load — one retry
+    // before a billable "dead" verdict.
     try {
-      return !(await attempt("GET"));
-    } catch {
-      return true;
+      return await attempt();
+    } catch (retryErr) {
+      return !isTlsError(retryErr);
     }
   }
+}
+
+/** Promise.all with bounded concurrency — order-preserving. */
+export async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (next < items.length) {
+        const i = next++;
+        results[i] = await fn(items[i]!);
+      }
+    }
+  );
+  await Promise.all(workers);
+  return results;
 }

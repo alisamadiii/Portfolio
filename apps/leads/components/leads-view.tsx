@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -13,12 +13,14 @@ import {
   Lock,
   Phone,
   Play,
+  ScanSearch,
   Star,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { BuyCreditsDialog } from "@/components/buy-credits-dialog";
+import { InspectDialog } from "@/components/inspect-dialog";
 import { MeetingScheduler } from "@/components/meeting-scheduler";
 
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
@@ -175,6 +177,16 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
   const searchParams = useSearchParams();
 
   const [noWebsiteOnly, setNoWebsiteOnly] = useState(true);
+  // Persisted preference — hydrated in an effect so SSR markup stays stable.
+  useEffect(() => {
+    if (localStorage.getItem("leads:no-website-only") === "false") {
+      setNoWebsiteOnly(false);
+    }
+  }, []);
+  const toggleNoWebsiteOnly = (value: boolean) => {
+    setNoWebsiteOnly(value);
+    localStorage.setItem("leads:no-website-only", String(value));
+  };
   const [status, setStatus] = useState<string>("all");
   // ?lead=<id> deep-links straight into a lead's sheet (meetings card rows).
   const [openLeadId, setOpenLeadId] = useState<number | null>(() => {
@@ -182,6 +194,10 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
     return Number.isInteger(param) && param > 0 ? param : null;
   });
   const [buyOpen, setBuyOpen] = useState(false);
+  // Inspect dialog lives OUTSIDE the Sheet subtree — nesting a second Base UI
+  // dialog inside the sheet popup swallowed the open, so the sheet passes the
+  // website up and the dialog renders as a sibling above it.
+  const [inspectWebsite, setInspectWebsite] = useState<string | null>(null);
 
   const scan = useQuery(trpc.leads.scan.get.queryOptions({ scanId }));
   const leads = useQuery(
@@ -296,7 +312,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
             <Switch
               id="no-website"
               checked={noWebsiteOnly}
-              onCheckedChange={setNoWebsiteOnly}
+              onCheckedChange={toggleNoWebsiteOnly}
             />
             <Label htmlFor="no-website" className="text-sm">
               Leads only
@@ -356,7 +372,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
               className="btn-pill btn-violet h-9 px-4 text-sm"
               onClick={() => setBuyOpen(true)}
             >
-              Buy credits to unlock
+              Upgrade to unlock
             </button>
           )}
         </div>
@@ -527,12 +543,22 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
               onSaveNotes={(notes) =>
                 updateNotes.mutate({ id: openLead.id, notes })
               }
+              onInspect={setInspectWebsite}
             />
           )}
         </SheetContent>
       </Sheet>
 
       <BuyCreditsDialog open={buyOpen} onOpenChange={setBuyOpen} />
+
+      {inspectWebsite && (
+        <InspectDialog
+          key={inspectWebsite}
+          website={inspectWebsite}
+          open
+          onOpenChange={(open) => !open && setInspectWebsite(null)}
+        />
+      )}
     </div>
   );
 };
@@ -578,12 +604,14 @@ const LeadSheet = ({
   city,
   statusSelect,
   onSaveNotes,
+  onInspect,
 }: {
   lead: UnlockedLead;
   niche: string;
   city: string;
   statusSelect: React.ReactNode;
   onSaveNotes: (notes: string) => void;
+  onInspect: (website: string) => void;
 }) => {
   const trpc = useTRPC();
   const [notes, setNotes] = useState(lead.notes ?? "");
@@ -612,7 +640,7 @@ const LeadSheet = ({
     `${lead.name} ${lead.address ?? `${city}`}`
   );
   const externalLinks = (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       {lead.mapsUrl && (
         <a
           href={lead.mapsUrl}
@@ -624,14 +652,22 @@ const LeadSheet = ({
         </a>
       )}
       {lead.website && (
-        <a
-          href={lead.website}
-          target="_blank"
-          rel="noreferrer"
-          className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
-        >
-          <ExternalLink /> Website
-        </a>
+        <>
+          <a
+            href={lead.website}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+          >
+            <ExternalLink /> Website
+          </a>
+          <button
+            className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+            onClick={() => onInspect(lead.website!)}
+          >
+            <ScanSearch /> Inspect
+          </button>
+        </>
       )}
     </div>
   );
@@ -709,22 +745,38 @@ const LeadSheet = ({
           // so scripts and inputs get the room.
           <div className="divide-border bg-card divide-y rounded-2xl border text-sm">
             <InfoRow label="Website">
-              {!lead.website ? (
-                <span className="font-medium text-rose-600">No website</span>
-              ) : lead.socialOnly ? (
-                <span className="font-medium text-amber-600">Social only</span>
-              ) : lead.websiteDead ? (
-                <span className="font-medium text-orange-600">Site down</span>
-              ) : (
-                <a
-                  href={lead.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-emerald-700 underline"
-                >
-                  {lead.website.replace(/^https?:\/\//, "")}
-                </a>
-              )}
+              <span className="inline-flex items-center gap-1.5">
+                {!lead.website ? (
+                  <span className="font-medium text-rose-600">No website</span>
+                ) : lead.socialOnly ? (
+                  <span className="font-medium text-amber-600">
+                    Social only
+                  </span>
+                ) : lead.websiteDead ? (
+                  <span className="font-medium text-orange-600">
+                    Site down
+                  </span>
+                ) : (
+                  <a
+                    href={lead.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-emerald-700 underline"
+                  >
+                    {lead.website.replace(/^https?:\/\//, "")}
+                  </a>
+                )}
+                {lead.website && (
+                  <button
+                    title="Inspect site"
+                    aria-label="Inspect site"
+                    onClick={() => onInspect(lead.website!)}
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted flex size-6 cursor-pointer items-center justify-center rounded-full transition-colors"
+                  >
+                    <ScanSearch className="size-3.5" />
+                  </button>
+                )}
+              </span>
             </InfoRow>
             {lead.phone && (
               <InfoRow label="Phone">
@@ -770,6 +822,7 @@ const LeadSheet = ({
                 </span>
               </InfoRow>
             )}
+            <div className="px-4 py-3">{externalLinks}</div>
           </div>
         ) : (
           <div className="space-y-2">
