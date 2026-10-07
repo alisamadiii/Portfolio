@@ -1,5 +1,15 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  or,
+  sql,
+} from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
@@ -14,10 +24,18 @@ import {
 } from "../lib/credits";
 import { inspectSite } from "../lib/inspect";
 import {
+  createLeadMeeting,
+  deleteLeadMeeting,
+} from "../lib/integrations/calendar";
+import {
   distanceMiles,
+  getPlaceDetails,
+  isAddressResult,
   isSocialOnly,
   isWebsiteDead,
+  searchNearbyLite,
   searchPlaces,
+  searchPlacesLite,
 } from "../lib/places";
 import { rateLimit } from "../middleware/rate-limit";
 
@@ -53,6 +71,7 @@ const LEAD_STATUSES = [
   "new",
   "contacted",
   "interested",
+  "meeting",
   "won",
   "lost",
 ] as const;
@@ -117,12 +136,234 @@ function maskLockedLead(l: typeof lead.$inferSelect) {
     score: l.score,
     status: l.status,
     notes: null,
+    email: null,
+    startedAt: null,
+    meetingEventId: null,
+    meetingAt: null,
+    meetingUrl: null,
     createdAt: l.createdAt,
     updatedAt: l.updatedAt,
   };
 }
 
+const MANUAL_QUERY = "manual";
+
+// The per-user bucket every hand-added lead lives in — a normal lead_scan
+// row so the scan list/detail UI needs no special cases.
+async function getManualScan(userId: string) {
+  const [existing] = await db
+    .select()
+    .from(leadScan)
+    .where(
+      and(
+        eq(leadScan.userId, userId),
+        eq(leadScan.query, MANUAL_QUERY),
+        eq(leadScan.nearMe, false)
+      )
+    )
+    .limit(1);
+  if (existing) return existing;
+  const [created] = await db
+    .insert(leadScan)
+    .values({
+      userId,
+      query: MANUAL_QUERY,
+      city: "Added by hand",
+      state: "",
+      status: "done",
+    })
+    .returning();
+  if (!created) throw new Error("Failed to create manual scan");
+  return created;
+}
+
+// Manual searches bill Google too — book them on the manual scan row so
+// monthApiCalls() keeps counting every call against the global cap.
+async function recordManualCalls(userId: string, calls: number) {
+  if (calls <= 0) return;
+  const scan = await getManualScan(userId);
+  await db
+    .update(leadScan)
+    .set({ apiCalls: sql`${leadScan.apiCalls} + ${calls}` })
+    .where(eq(leadScan.id, scan.id));
+}
+
+function assertCapHeadroom(used: number) {
+  if (used + 1 > MONTHLY_CALL_CAP) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message:
+        "Scanning is temporarily paused this month. Please try again after the 1st.",
+    });
+  }
+}
+
+const manualResult = (p: {
+  id: string;
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  types?: string[];
+  location?: { latitude?: number; longitude?: number };
+}) => ({
+  placeId: p.id,
+  name: p.displayName?.text ?? "Unknown",
+  address: p.formattedAddress ?? null,
+  isAddress: isAddressResult(p.types),
+  lat: p.location?.latitude ?? null,
+  lng: p.location?.longitude ?? null,
+});
+
 export const leadsRouter = createTRPCRouter({
+  manual: createTRPCRouter({
+    // tRPC query on purpose: react-query caches per search string, so
+    // retyping the same text never re-bills Google.
+    search: leadsUserProcedure
+      .input(
+        z.object({
+          query: z.string().min(3).max(120),
+          region: z
+            .string()
+            .regex(/^[A-Za-z]{2}$/)
+            .default("US"),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        const userId = ctx.session.user.id;
+        assertCapHeadroom(await monthApiCalls());
+        const { places, apiCalls, error } = await searchPlacesLite(
+          input.query,
+          input.region.toUpperCase()
+        );
+        await recordManualCalls(userId, apiCalls);
+        if (error) {
+          throw new TRPCError({ code: "BAD_GATEWAY", message: error });
+        }
+        return { results: places.map(manualResult) };
+      }),
+
+    // Businesses at a picked address (the lite search already returned its
+    // coordinates, so no extra details call is needed).
+    atAddress: leadsUserProcedure
+      .input(z.object({ lat: z.number(), lng: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.session.user.id;
+        assertCapHeadroom(await monthApiCalls());
+        const { places, apiCalls, error } = await searchNearbyLite(input);
+        await recordManualCalls(userId, apiCalls);
+        if (error) {
+          throw new TRPCError({ code: "BAD_GATEWAY", message: error });
+        }
+        return {
+          results: places.map(manualResult).filter((r) => !r.isAddress),
+        };
+      }),
+
+    add: leadsUserProcedure
+      .input(z.object({ placeId: z.string().min(5).max(512) }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.session.user.id;
+        const isAdmin = ctx.session.user.role === "admin";
+
+        // Already owned → just point at it, no Google call, no charge.
+        const [owned] = await db
+          .select({ id: lead.id, scanId: lead.scanId })
+          .from(lead)
+          .where(
+            and(eq(lead.userId, userId), eq(lead.placeId, input.placeId))
+          )
+          .limit(1);
+        if (owned) {
+          return {
+            existing: true as const,
+            scanId: owned.scanId,
+            leadId: owned.id,
+          };
+        }
+
+        assertCapHeadroom(await monthApiCalls());
+        await recordManualCalls(userId, 1);
+        const place = await getPlaceDetails(input.placeId);
+
+        const website = place.websiteUri ?? null;
+        const socialOnly = website ? isSocialOnly(website) : false;
+        const websiteDead =
+          website && !socialOnly ? await isWebsiteDead(website) : false;
+        const billable = isBillable({ website, socialOnly, websiteDead });
+        const score = scoreLead({
+          noWebsite: !website,
+          socialOnly,
+          websiteDead,
+          phone: !!place.nationalPhoneNumber,
+          rating: place.rating ?? null,
+          reviewCount: place.userRatingCount ?? 0,
+        });
+
+        if (billable && !isAdmin) {
+          const res = await debitCredits({
+            userId,
+            amount: 1,
+            reason: "scan",
+            refId: `manual:${input.placeId}`,
+          });
+          if (!res.ok) {
+            throw new TRPCError({
+              code: "PRECONDITION_FAILED",
+              message:
+                "You're out of credits. Buy a credit pack to add this lead.",
+            });
+          }
+        }
+
+        const scan = await getManualScan(userId);
+        const values = {
+          userId,
+          scanId: scan.id,
+          placeId: place.id,
+          name: place.displayName?.text ?? "Unknown",
+          address: place.formattedAddress ?? null,
+          phone: place.nationalPhoneNumber ?? null,
+          website,
+          socialOnly,
+          websiteDead,
+          distanceMiles: null,
+          rating: place.rating ?? null,
+          reviewCount: place.userRatingCount ?? 0,
+          mapsUrl: place.googleMapsUri ?? null,
+          category:
+            place.primaryTypeDisplayName?.text ?? place.types?.[0] ?? null,
+          score,
+        };
+        // Same exclusion rule as scan.run: `set` never touches unlocked,
+        // status, notes, email, startedAt, or meeting* columns.
+        const [row] = await db
+          .insert(lead)
+          .values({ ...values, unlocked: true })
+          .onConflictDoUpdate({
+            target: [lead.userId, lead.placeId],
+            set: { ...values, updatedAt: new Date() },
+          })
+          .returning({ id: lead.id });
+
+        await db
+          .update(leadScan)
+          .set({
+            totalFound: sql`${leadScan.totalFound} + 1`,
+            ...(billable
+              ? { noWebsiteCount: sql`${leadScan.noWebsiteCount} + 1` }
+              : {}),
+          })
+          .where(eq(leadScan.id, scan.id));
+
+        return {
+          existing: false as const,
+          scanId: scan.id,
+          leadId: row!.id,
+          billable,
+          balance: isAdmin ? null : await getCreditBalance(userId),
+        };
+      }),
+  }),
+
   scan: createTRPCRouter({
     run: leadsUserProcedure
       .input(
@@ -335,8 +576,9 @@ export const leadsRouter = createTRPCRouter({
             };
 
             // Re-scans refresh place data but must NEVER touch unlocked,
-            // status, or notes — those are user-owned state the upsert's
-            // `set` deliberately excludes.
+            // status, notes, email, startedAt, or the meeting* columns —
+            // those are user-owned state the upsert's `set` deliberately
+            // excludes.
             await db
               .insert(lead)
               .values({
@@ -612,6 +854,222 @@ export const leadsRouter = createTRPCRouter({
             eq(lead.unlocked, true)
           )
         );
+      return { success: true };
+    }),
+
+  // Flip the lead into working mode (scripts, email, scheduling). Idempotent.
+  startWork: leadsUserProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db
+        .update(lead)
+        .set({
+          startedAt: sql`coalesce(${lead.startedAt}, now())`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, ctx.session.user.id),
+            eq(lead.unlocked, true)
+          )
+        );
+      return { success: true };
+    }),
+
+  // Every scheduled meeting across the user's leads, newest first — the
+  // dashboard splits upcoming/past client-side.
+  meetings: leadsUserProcedure.query(async ({ ctx }) => {
+    return db
+      .select({
+        id: lead.id,
+        scanId: lead.scanId,
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        status: lead.status,
+        meetingAt: lead.meetingAt,
+        meetingUrl: lead.meetingUrl,
+      })
+      .from(lead)
+      .where(
+        and(eq(lead.userId, ctx.session.user.id), isNotNull(lead.meetingAt))
+      )
+      .orderBy(desc(lead.meetingAt))
+      .limit(100);
+  }),
+
+  // Every lead marked won, across all scans — the dashboard trophy card.
+  won: leadsUserProcedure.query(async ({ ctx }) => {
+    return db
+      .select({
+        id: lead.id,
+        scanId: lead.scanId,
+        name: lead.name,
+        category: lead.category,
+        address: lead.address,
+        updatedAt: lead.updatedAt,
+      })
+      .from(lead)
+      .where(
+        and(eq(lead.userId, ctx.session.user.id), eq(lead.status, "won"))
+      )
+      .orderBy(desc(lead.updatedAt))
+      .limit(100);
+  }),
+
+  // Leave working mode; email/meeting/notes stay untouched.
+  stopWork: leadsUserProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db
+        .update(lead)
+        .set({ startedAt: null, updatedAt: new Date() })
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, ctx.session.user.id),
+            eq(lead.unlocked, true)
+          )
+        );
+      return { success: true };
+    }),
+
+  updateEmail: leadsUserProcedure
+    .input(
+      z.object({ id: z.number(), email: z.string().email().or(z.literal("")) })
+    )
+    .mutation(async ({ input, ctx }) => {
+      await db
+        .update(lead)
+        .set({ email: input.email || null, updatedAt: new Date() })
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, ctx.session.user.id),
+            eq(lead.unlocked, true)
+          )
+        );
+      return { success: true };
+    }),
+
+  // Create (or replace) the lead's Google Calendar meeting on the caller's
+  // primary calendar and email the invite. Needs the google-calendar
+  // integration — a missing/unscoped token throws the reconnect
+  // PRECONDITION_FAILED the UI turns into a Connect button.
+  scheduleMeeting: leadsUserProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        startsAt: z.string().datetime({ offset: true }),
+        durationMinutes: z.union([
+          z.literal(15),
+          z.literal(30),
+          z.literal(60),
+        ]),
+        email: z.string().email(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.session.user.id;
+      const [row] = await db
+        .select()
+        .from(lead)
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, userId),
+            eq(lead.unlocked, true)
+          )
+        )
+        .limit(1);
+      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const start = new Date(input.startsAt);
+      if (start.getTime() < Date.now()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Pick a time in the future.",
+        });
+      }
+      const end = new Date(
+        start.getTime() + input.durationMinutes * 60 * 1000
+      );
+
+      // Scheduling again = reschedule: drop the old event first.
+      if (row.meetingEventId) {
+        await deleteLeadMeeting({ userId, eventId: row.meetingEventId });
+      }
+
+      const description = [
+        row.phone && `Phone: ${row.phone}`,
+        `Email: ${input.email}`,
+        row.address && `Address: ${row.address}`,
+        row.website && `Website: ${row.website}`,
+        row.mapsUrl && `Maps: ${row.mapsUrl}`,
+        row.category && `Category: ${row.category}`,
+        "Scheduled from Lead Finder.",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const event = await createLeadMeeting({
+        userId,
+        summary: `Meeting: ${row.name}`,
+        description,
+        location: row.address,
+        startISO: start.toISOString(),
+        endISO: end.toISOString(),
+        attendeeEmail: input.email,
+      });
+
+      await db
+        .update(lead)
+        .set({
+          email: input.email,
+          meetingEventId: event.id,
+          meetingAt: start,
+          meetingUrl: event.htmlLink,
+          status: "meeting",
+          startedAt: row.startedAt ?? new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(lead.id, row.id));
+
+      return { meetingAt: start, meetingUrl: event.htmlLink };
+    }),
+
+  // Remove the meeting from Google Calendar (attendee gets the cancellation
+  // email) and clear it off the lead. Pipeline stage stays manual.
+  cancelMeeting: leadsUserProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.session.user.id;
+      const [row] = await db
+        .select({ id: lead.id, meetingEventId: lead.meetingEventId })
+        .from(lead)
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, userId),
+            eq(lead.unlocked, true)
+          )
+        )
+        .limit(1);
+      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (row.meetingEventId) {
+        await deleteLeadMeeting({ userId, eventId: row.meetingEventId });
+      }
+      await db
+        .update(lead)
+        .set({
+          meetingEventId: null,
+          meetingAt: null,
+          meetingUrl: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(lead.id, row.id));
       return { success: true };
     }),
 });

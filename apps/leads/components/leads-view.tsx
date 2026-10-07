@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -11,13 +12,17 @@ import {
   Loader2,
   Lock,
   Phone,
+  Play,
   Star,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { BuyCreditsDialog } from "@/components/buy-credits-dialog";
+import { MeetingScheduler } from "@/components/meeting-scheduler";
 
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
+import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import {
   Select,
@@ -35,6 +40,12 @@ import {
 } from "@workspace/ui/components/sheet";
 import { Switch } from "@workspace/ui/components/switch";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@workspace/ui/components/tabs";
+import {
   Table,
   TableBody,
   TableCell,
@@ -49,7 +60,14 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 type Lead = RouterOutputs["leads"]["list"]["leads"][number];
 type UnlockedLead = Extract<Lead, { locked: false }>;
 
-const STATUSES = ["new", "contacted", "interested", "won", "lost"] as const;
+const STATUSES = [
+  "new",
+  "contacted",
+  "interested",
+  "meeting",
+  "won",
+  "lost",
+] as const;
 
 function websiteBadge(lead: Lead) {
   const pill = "rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap";
@@ -101,10 +119,20 @@ That matters because most people check a business online before they call — an
 I already put together a quick mockup of what a site for ${lead.name} could look like. It costs nothing to take a look — would tomorrow morning or afternoon work better for a five-minute walkthrough?`;
 }
 
+// 20-second no-answer version of the pitch.
+function voicemailScript(lead: UnlockedLead, niche: string, city: string) {
+  return `Hi, this message is for ${lead.name}.
+
+My name is Ali, I build websites for ${niche} businesses around ${city}. I noticed your Google listing doesn't point to a working website, which means people who look you up online can't find you.
+
+I put together a quick mockup of what a site for you could look like, free to check out. Give me a call back at your convenience, or I'll try you again tomorrow. Thanks!`;
+}
+
 function exportCsv(leads: UnlockedLead[], filename: string) {
   const header = [
     "Name",
     "Phone",
+    "Email",
     "Address",
     "Website",
     "Rating",
@@ -119,6 +147,7 @@ function exportCsv(leads: UnlockedLead[], filename: string) {
     [
       l.name,
       l.phone,
+      l.email,
       l.address,
       l.website ?? "none",
       l.rating,
@@ -143,9 +172,15 @@ function exportCsv(leads: UnlockedLead[], filename: string) {
 export const LeadsView = ({ scanId }: { scanId: number }) => {
   const trpc = useTRPC();
 
+  const searchParams = useSearchParams();
+
   const [noWebsiteOnly, setNoWebsiteOnly] = useState(true);
   const [status, setStatus] = useState<string>("all");
-  const [openLeadId, setOpenLeadId] = useState<number | null>(null);
+  // ?lead=<id> deep-links straight into a lead's sheet (meetings card rows).
+  const [openLeadId, setOpenLeadId] = useState<number | null>(() => {
+    const param = Number(searchParams.get("lead"));
+    return Number.isInteger(param) && param > 0 ? param : null;
+  });
   const [buyOpen, setBuyOpen] = useState(false);
 
   const scan = useQuery(trpc.leads.scan.get.queryOptions({ scanId }));
@@ -163,7 +198,13 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
     queryClient.invalidateQueries({ queryKey: trpc.leads.list.queryKey() });
 
   const updateStatus = useMutation(
-    trpc.leads.updateStatus.mutationOptions({ onSuccess: invalidateLeads })
+    trpc.leads.updateStatus.mutationOptions({
+      onSuccess: () => {
+        invalidateLeads();
+        // Dashboard cards keyed on status (won) stay in sync.
+        queryClient.invalidateQueries({ queryKey: trpc.leads.won.queryKey() });
+      },
+    })
   );
   const updateNotes = useMutation(
     trpc.leads.updateNotes.mutationOptions({
@@ -237,8 +278,16 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
           </Link>
           {scan.data && (
             <h1 className="text-lg font-semibold tracking-tight capitalize">
-              {scan.data.query} —{" "}
-              {scan.data.nearMe ? "near me" : `${scan.data.city}, ${scan.data.state}`}
+              {scan.data.query === "manual" ? (
+                "Manual additions"
+              ) : (
+                <>
+                  {scan.data.query} —{" "}
+                  {scan.data.nearMe
+                    ? "near me"
+                    : `${scan.data.city}, ${scan.data.state}`}
+                </>
+              )}
             </h1>
           )}
         </div>
@@ -398,7 +447,15 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                     </TableCell>
                   )}
                   <TableCell className="max-w-80 whitespace-normal">
-                    <div className="font-medium break-words">{lead.name}</div>
+                    <div className="font-medium break-words">
+                      {lead.name}
+                      {lead.startedAt && !lead.meetingAt && (
+                        <span
+                          title="In progress"
+                          className="ml-1.5 inline-block size-1.5 rounded-full bg-amber-400 align-middle"
+                        />
+                      )}
+                    </div>
                     <div className="text-muted-foreground text-xs">
                       {lead.category ?? ""}
                       {lead.mapsUrl && (
@@ -456,7 +513,11 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
         open={!!openLead}
         onOpenChange={(open) => !open && setOpenLeadId(null)}
       >
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent
+          className={`w-full overflow-y-auto transition-[max-width] duration-300 ${
+            openLead?.startedAt ? "sm:max-w-2xl" : "sm:max-w-lg"
+          }`}
+        >
           {openLead && (
             <LeadSheet
               lead={openLead}
@@ -476,6 +537,41 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
   );
 };
 
+const InfoRow = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div className="flex items-baseline justify-between gap-3 px-4 py-2.5">
+    <span className="text-muted-foreground shrink-0 text-xs font-medium tracking-wide uppercase">
+      {label}
+    </span>
+    <span className="min-w-0 text-right break-words">{children}</span>
+  </div>
+);
+
+const ScriptBlock = ({ label, script }: { label: string; script: string }) => (
+  <div>
+    <div className="mb-1 flex items-center justify-between">
+      <Label>{label}</Label>
+      <button
+        className="btn-pill btn-light h-8 px-3 text-xs [&_svg]:size-3.5"
+        onClick={() => {
+          navigator.clipboard.writeText(script);
+          toast.success(`${label} copied`);
+        }}
+      >
+        <Copy /> Copy
+      </button>
+    </div>
+    <p className="bg-muted rounded-2xl p-4 text-sm whitespace-pre-wrap">
+      {script}
+    </p>
+  </div>
+);
+
 const LeadSheet = ({
   lead,
   niche,
@@ -489,34 +585,81 @@ const LeadSheet = ({
   statusSelect: React.ReactNode;
   onSaveNotes: (notes: string) => void;
 }) => {
+  const trpc = useTRPC();
   const [notes, setNotes] = useState(lead.notes ?? "");
-  const script = callScript(lead, niche, city);
+  const [email, setEmail] = useState(lead.email ?? "");
+  const started = !!lead.startedAt;
+
+  const invalidateLeads = () =>
+    queryClient.invalidateQueries({ queryKey: trpc.leads.list.queryKey() });
+  const startWork = useMutation(
+    trpc.leads.startWork.mutationOptions({ onSuccess: invalidateLeads })
+  );
+  const stopWork = useMutation(
+    trpc.leads.stopWork.mutationOptions({ onSuccess: invalidateLeads })
+  );
+  const updateEmail = useMutation(
+    trpc.leads.updateEmail.mutationOptions({
+      onSuccess: () => {
+        invalidateLeads();
+        toast.success("Email saved");
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
   const mapQuery = encodeURIComponent(
     `${lead.name} ${lead.address ?? `${city}`}`
+  );
+  const externalLinks = (
+    <div className="flex gap-2">
+      {lead.mapsUrl && (
+        <a
+          href={lead.mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+        >
+          <ExternalLink /> Open in Google Maps
+        </a>
+      )}
+      {lead.website && (
+        <a
+          href={lead.website}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+        >
+          <ExternalLink /> Website
+        </a>
+      )}
+    </div>
   );
 
   return (
     <>
       <SheetHeader>
         <SheetTitle className="pr-8 text-xl">{lead.name}</SheetTitle>
-        <SheetDescription className="flex flex-wrap items-center gap-2">
-          {lead.category && <span>{lead.category}</span>}
-          {websiteBadge(lead)}
-          <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-medium">
-            Score {lead.score}
-          </span>
-          {lead.distanceMiles !== null && (
-            <span className="bg-emerald-100 text-emerald-700 rounded-full px-2.5 py-1 text-xs font-medium">
-              {lead.distanceMiles} mi away
+        {!started && (
+          <SheetDescription className="flex flex-wrap items-center gap-2">
+            {lead.category && <span>{lead.category}</span>}
+            {websiteBadge(lead)}
+            <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-medium">
+              Score {lead.score}
             </span>
-          )}
-          {lead.rating ? (
-            <span className="flex items-center gap-1">
-              <Star className="size-3.5 fill-current text-amber-500" />
-              {lead.rating} ({lead.reviewCount} reviews)
-            </span>
-          ) : null}
-        </SheetDescription>
+            {lead.distanceMiles !== null && (
+              <span className="bg-emerald-100 text-emerald-700 rounded-full px-2.5 py-1 text-xs font-medium">
+                {lead.distanceMiles} mi away
+              </span>
+            )}
+            {lead.rating ? (
+              <span className="flex items-center gap-1">
+                <Star className="size-3.5 fill-current text-amber-500" />
+                {lead.rating} ({lead.reviewCount} reviews)
+              </span>
+            ) : null}
+          </SheetDescription>
+        )}
       </SheetHeader>
 
       <div className="space-y-5 px-4 pb-6">
@@ -529,63 +672,198 @@ const LeadSheet = ({
           </a>
         )}
 
-        <div className="space-y-2">
-          {lead.address && (
-            <p className="text-muted-foreground text-sm">{lead.address}</p>
-          )}
-          <iframe
-            title={`Map of ${lead.name}`}
-            src={`https://maps.google.com/maps?q=${mapQuery}&z=14&output=embed`}
-            className="aspect-video w-full rounded-md border"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          <div className="flex gap-2">
-            {lead.mapsUrl && (
-              <a
-                href={lead.mapsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
-              >
-                <ExternalLink /> Open in Google Maps
-              </a>
+        {!started && (
+          <button
+            className="btn-pill btn-dark h-11 w-full text-sm font-semibold [&_svg]:size-4"
+            disabled={startWork.isPending}
+            onClick={() => startWork.mutate({ id: lead.id })}
+          >
+            {startWork.isPending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Play />
             )}
-            {lead.website && (
-              <a
-                href={lead.website}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
-              >
-                <ExternalLink /> Website
-              </a>
+            Start working this lead
+          </button>
+        )}
+
+        {started && (
+          <div className="flex justify-end">
+            <button
+              className="btn-pill btn-light h-8 px-3 text-xs [&_svg]:size-3.5"
+              disabled={stopWork.isPending}
+              onClick={() => stopWork.mutate({ id: lead.id })}
+            >
+              {stopWork.isPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <X />
+              )}
+              Exit work mode
+            </button>
+          </div>
+        )}
+
+        {started ? (
+          // Working mode: compact colored fact list instead of pills + map,
+          // so scripts and inputs get the room.
+          <div className="divide-border bg-card divide-y rounded-2xl border text-sm">
+            <InfoRow label="Website">
+              {!lead.website ? (
+                <span className="font-medium text-rose-600">No website</span>
+              ) : lead.socialOnly ? (
+                <span className="font-medium text-amber-600">Social only</span>
+              ) : lead.websiteDead ? (
+                <span className="font-medium text-orange-600">Site down</span>
+              ) : (
+                <a
+                  href={lead.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-emerald-700 underline"
+                >
+                  {lead.website.replace(/^https?:\/\//, "")}
+                </a>
+              )}
+            </InfoRow>
+            {lead.phone && (
+              <InfoRow label="Phone">
+                <a href={`tel:${lead.phone}`} className="font-medium underline">
+                  {lead.phone}
+                </a>
+              </InfoRow>
+            )}
+            {lead.address && (
+              <InfoRow label="Address">
+                {lead.mapsUrl ? (
+                  <a
+                    href={lead.mapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline"
+                  >
+                    {lead.address}
+                  </a>
+                ) : (
+                  lead.address
+                )}
+              </InfoRow>
+            )}
+            {lead.category && (
+              <InfoRow label="Category">{lead.category}</InfoRow>
+            )}
+            <InfoRow label="Score">
+              <span className="text-primary font-semibold">{lead.score}</span>
+            </InfoRow>
+            {lead.rating ? (
+              <InfoRow label="Rating">
+                <span className="flex items-center gap-1">
+                  <Star className="size-3.5 fill-current text-amber-500" />
+                  {lead.rating} ({lead.reviewCount} reviews)
+                </span>
+              </InfoRow>
+            ) : null}
+            {lead.distanceMiles !== null && (
+              <InfoRow label="Distance">
+                <span className="font-medium text-emerald-700">
+                  {lead.distanceMiles} mi away
+                </span>
+              </InfoRow>
             )}
           </div>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            {lead.address && (
+              <p className="text-muted-foreground text-sm">{lead.address}</p>
+            )}
+            <iframe
+              title={`Map of ${lead.name}`}
+              src={`https://maps.google.com/maps?q=${mapQuery}&z=14&output=embed`}
+              className="aspect-video w-full rounded-md border"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            {externalLinks}
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <Label>Pipeline</Label>
           {statusSelect}
         </div>
 
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <Label>Call script</Label>
-            <button
-              className="btn-pill btn-light h-8 px-3 text-xs [&_svg]:size-3.5"
-              onClick={() => {
-                navigator.clipboard.writeText(script);
-                toast.success("Script copied");
-              }}
-            >
-              <Copy /> Copy
-            </button>
+        {started ? (
+          <div>
+            {/* flex-col inline: the ui Tabs relies on a data-horizontal
+                custom variant no app defines, so stacking is broken there. */}
+            <Tabs defaultValue="call" className="flex-col">
+              <TabsList className="gap-1 rounded-full p-1">
+                <TabsTrigger
+                  value="call"
+                  className="h-auto flex-none rounded-full px-4 py-1.5 data-active:shadow-sm"
+                >
+                  Call script
+                </TabsTrigger>
+                <TabsTrigger
+                  value="voicemail"
+                  className="h-auto flex-none rounded-full px-4 py-1.5 data-active:shadow-sm"
+                >
+                  Voicemail
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="call">
+                <ScriptBlock
+                  label="Call script"
+                  script={callScript(lead, niche, city)}
+                />
+              </TabsContent>
+              <TabsContent value="voicemail">
+                <ScriptBlock
+                  label="Voicemail script"
+                  script={voicemailScript(lead, niche, city)}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
-          <p className="bg-muted rounded-2xl p-4 text-sm whitespace-pre-wrap">
-            {script}
-          </p>
-        </div>
+        ) : (
+          <ScriptBlock
+            label="Call script"
+            script={callScript(lead, niche, city)}
+          />
+        )}
+
+        {started && (
+          <>
+            <div>
+              <Label htmlFor={`email-${lead.id}`}>Contact email</Label>
+              <div className="mt-1 flex gap-2">
+                <Input
+                  id={`email-${lead.id}`}
+                  type="email"
+                  placeholder="owner@business.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <button
+                  className="btn-pill btn-light h-9 px-4 text-sm"
+                  disabled={
+                    updateEmail.isPending || email === (lead.email ?? "")
+                  }
+                  onClick={() => updateEmail.mutate({ id: lead.id, email })}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            <MeetingScheduler
+              leadId={lead.id}
+              email={email}
+              meetingAt={lead.meetingAt ? new Date(lead.meetingAt) : null}
+              meetingUrl={lead.meetingUrl}
+            />
+          </>
+        )}
 
         <div>
           <Label htmlFor={`notes-${lead.id}`}>Notes</Label>

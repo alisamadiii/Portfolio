@@ -14,7 +14,13 @@ import {
 import { user } from "./auth";
 
 export type LeadScanStatus = "pending" | "done" | "error";
-export type LeadStatus = "new" | "contacted" | "interested" | "won" | "lost";
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "interested"
+  | "meeting"
+  | "won"
+  | "lost";
 export type LeadCreditReason =
   | "signup"
   | "purchase"
@@ -90,6 +96,18 @@ export const lead = pgTable(
     score: integer("score").notNull().default(0),
     status: text("status").$type<LeadStatus>().notNull().default("new"),
     notes: text("notes"),
+
+    // User-entered — Places never returns emails. Meeting invites go here.
+    email: text("email"),
+    // Set when the user hits "Start" on the lead; flips the sheet into
+    // working mode permanently.
+    startedAt: timestamp("started_at"),
+    // One upcoming Google Calendar meeting per lead; scheduling again
+    // replaces the event. htmlLink is stored because it can't be rebuilt
+    // from the event id.
+    meetingEventId: text("meeting_event_id"),
+    meetingAt: timestamp("meeting_at"),
+    meetingUrl: text("meeting_url"),
 
     // false = billable prospect the user hasn't paid a credit for yet;
     // contact fields are masked server-side until unlocked.

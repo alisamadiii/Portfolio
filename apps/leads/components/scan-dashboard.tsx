@@ -16,6 +16,9 @@ import {
 import { toast } from "sonner";
 
 import { BuyCreditsDialog } from "@/components/buy-credits-dialog";
+import { ManualScanDialog } from "@/components/manual-scan-dialog";
+import { MeetingsCard } from "@/components/meetings-card";
+import { WonCard } from "@/components/won-card";
 
 import {
   Combobox,
@@ -174,6 +177,7 @@ export const ScanDashboard = () => {
   const [state, setState] = useState("FL");
   const [nearMe, setNearMe] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const scans = useQuery(trpc.leads.scan.list.queryOptions());
   const runScan = useMutation(trpc.leads.scan.run.mutationOptions());
@@ -222,6 +226,14 @@ export const ScanDashboard = () => {
               Find businesses without a real website
             </p>
           </div>
+          <button
+            aria-label="Add a business manually"
+            title="Add a business manually"
+            onClick={() => setManualOpen(true)}
+            className="btn-pill btn-light ml-auto size-10 [&_svg]:size-4"
+          >
+            <Search />
+          </button>
         </div>
         <div>
           <form
@@ -346,6 +358,12 @@ export const ScanDashboard = () => {
       </div>
 
       <BuyCreditsDialog open={buyOpen} onOpenChange={setBuyOpen} />
+      <ManualScanDialog open={manualOpen} onOpenChange={setManualOpen} />
+
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <MeetingsCard />
+        <WonCard />
+      </div>
 
       <div className="bg-card rounded-3xl p-6 shadow-sm sm:p-7">
         <div className="mb-4 flex items-center gap-3">

@@ -110,6 +110,143 @@ export async function searchPlaces(
   return { places, apiCalls };
 }
 
+// ─── Manual-add helpers ──────────────────────────────────────────
+// Lite search/nearby use a Pro-tier field mask (no phone/website — those are
+// Enterprise SKU) since suggestion lists only need name + address. Details is
+// the single Enterprise call made once a business is actually picked.
+
+const LITE_FIELD_MASK = [
+  "places.id",
+  "places.displayName",
+  "places.formattedAddress",
+  "places.types",
+  "places.location",
+].join(",");
+
+const DETAILS_FIELD_MASK = [
+  "id",
+  "displayName",
+  "formattedAddress",
+  "nationalPhoneNumber",
+  "websiteUri",
+  "rating",
+  "userRatingCount",
+  "googleMapsUri",
+  "types",
+  "primaryTypeDisplayName",
+  "businessStatus",
+  "location",
+].join(",");
+
+function placesKey(): string {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY is not set");
+  return apiKey;
+}
+
+type LiteResult = { places: PlaceResult[]; apiCalls: number; error?: string };
+
+async function litePost(url: string, body: object): Promise<LiteResult> {
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": placesKey(),
+        "X-Goog-FieldMask": LITE_FIELD_MASK,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    return {
+      places: [],
+      apiCalls: 1,
+      error: error instanceof Error ? error.message : "Network error",
+    };
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    return {
+      places: [],
+      apiCalls: 1,
+      error: `Places API ${res.status}: ${text.slice(0, 300)}`,
+    };
+  }
+  const data = (await res.json()) as { places?: PlaceResult[] };
+  return { places: data.places ?? [], apiCalls: 1 };
+}
+
+/** One cheap Text Search page for the manual-add suggestion list. */
+export function searchPlacesLite(
+  textQuery: string,
+  regionCode = "US"
+): Promise<LiteResult> {
+  return litePost("https://places.googleapis.com/v1/places:searchText", {
+    textQuery,
+    pageSize: 8,
+    // Without a region, partial brand names ("fla2z") return nothing at all;
+    // with it the same query ranks the actual business first.
+    regionCode,
+  });
+}
+
+/** Businesses at/around a specific address (~50m circle). */
+export function searchNearbyLite(center: {
+  lat: number;
+  lng: number;
+}): Promise<LiteResult> {
+  return litePost("https://places.googleapis.com/v1/places:searchNearby", {
+    maxResultCount: 12,
+    locationRestriction: {
+      circle: {
+        center: { latitude: center.lat, longitude: center.lng },
+        radius: 50,
+      },
+    },
+  });
+}
+
+/** Full Enterprise-tier record for one picked place. Throws on failure. */
+export async function getPlaceDetails(placeId: string): Promise<PlaceResult> {
+  const res = await fetch(
+    `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`,
+    {
+      headers: {
+        "X-Goog-Api-Key": placesKey(),
+        "X-Goog-FieldMask": DETAILS_FIELD_MASK,
+      },
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Places API ${res.status}: ${text.slice(0, 300)}`);
+  }
+  return (await res.json()) as PlaceResult;
+}
+
+// Pure-location result types: picking one of these means "list the
+// businesses at this address", not "add this as a lead".
+const ADDRESS_TYPES = new Set([
+  "street_address",
+  "premise",
+  "subpremise",
+  "route",
+  "plus_code",
+  "postal_code",
+  "locality",
+  "sublocality",
+  "neighborhood",
+  "geocode",
+]);
+
+export function isAddressResult(types: string[] | undefined): boolean {
+  if (!types?.length) return false;
+  if (types.includes("establishment") || types.includes("point_of_interest"))
+    return false;
+  return types.some((t) => ADDRESS_TYPES.has(t));
+}
+
 // Hosts that count as "no real website" — social pages and free site builders.
 const SOCIAL_HOSTS = [
   "facebook.com",

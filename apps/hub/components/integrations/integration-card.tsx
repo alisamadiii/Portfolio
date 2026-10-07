@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -20,7 +20,6 @@ import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { authClient } from "@workspace/auth/auth-client";
 
 import type { IntegrationApp } from "@/lib/integrations";
 
@@ -53,22 +52,27 @@ export const IntegrationCard = ({
     }
   };
 
-  const disconnect = async () => {
-    if (!status?.accountId) return;
+  // Server-side disconnect — Better Auth's unlink-account endpoint demands a
+  // fresh session and rejects older ones, which made it unusable here.
+  const disconnectMutation = useMutation(
+    trpc.integrations.disconnect.mutationOptions({
+      onSuccess: () => {
+        toast.success(`${app.name} disconnected.`);
+        queryClient.invalidateQueries({
+          queryKey: trpc.integrations.status.queryOptions().queryKey,
+        });
+      },
+      onError: (error) =>
+        toast.error(error.message || `Could not disconnect ${app.name}.`),
+      onSettled: () => setBusy(false),
+    })
+  );
+
+  const disconnect = () => {
     setBusy(true);
-    const { error } = await authClient.unlinkAccount({
-      providerId: status.providerId,
-      accountId: status.accountId,
+    disconnectMutation.mutate({
+      id: app.id as "google-analytics" | "google-calendar" | "github",
     });
-    if (error) {
-      toast.error(error.message ?? `Could not disconnect ${app.name}.`);
-    } else {
-      toast.success(`${app.name} disconnected.`);
-      await queryClient.invalidateQueries({
-        queryKey: trpc.integrations.status.queryOptions().queryKey,
-      });
-    }
-    setBusy(false);
   };
 
   return (

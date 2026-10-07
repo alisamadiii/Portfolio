@@ -29,6 +29,13 @@
       "when": 1791332577549,
       "tag": "0003_leads_user_not_null",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791367003243,
+      "tag": "0004_leads_working_mode",
+      "breakpoints": true
     }
   ]
 }

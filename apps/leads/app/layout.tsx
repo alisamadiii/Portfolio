@@ -14,6 +14,7 @@ import { createHttpCaller } from "@workspace/trpc/http-caller";
 
 import { BillingHistoryButton } from "@/components/billing-history-button";
 import { CreditsBalance } from "@/components/credits-balance";
+import { IntegrationsButton } from "@/components/integrations-button";
 import { LeadsProviders } from "@/components/providers";
 import { NavPills } from "@/components/nav-pills";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -105,6 +106,7 @@ async function LeadsLayout({ children }: { children: React.ReactNode }) {
         {currentUser ? (
           <div className="flex items-center gap-2">
             <CreditsBalance />
+            <IntegrationsButton />
             <BillingHistoryButton />
             <SignOutButton />
           </div>

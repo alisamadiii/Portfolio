@@ -18,8 +18,11 @@ import { account } from "@workspace/drizzle/schema";
 
 export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 export const GITHUB_REPO_SCOPE = "repo";
+// Event CRUD on the user's calendars (we only touch `primary`) — narrower
+// than the full calendar scope, no calendar-list access needed.
+export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 
-export type IntegrationId = "google-analytics" | "github";
+export type IntegrationId = "google-analytics" | "google-calendar" | "github";
 
 type IntegrationProvider = {
   id: IntegrationId;
@@ -31,6 +34,7 @@ type IntegrationProvider = {
 
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
+  { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
   { id: "github", providerId: "github", requiredScope: GITHUB_REPO_SCOPE },
 ];
 
