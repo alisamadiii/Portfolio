@@ -1,0 +1,98 @@
+---
+// Hand-drawn insect silhouettes for the /pest-control industry page.
+// Rendered inside the coral tiles on the dark theme — fills and strokes
+// inherit currentColor, same convention as BenefitGlyph.astro.
+interface Props {
+  icon: "roach" | "spider" | "ant" | "termite" | "rodent";
+}
+const { icon } = Astro.props;
+
+const common = {
+  class: "block size-[30px]",
+  viewBox: "0 0 48 48",
+  fill: "none",
+  "aria-hidden": "true",
+};
+const stroke = {
+  stroke: "currentColor",
+  "stroke-width": "2.2",
+  "stroke-linecap": "round" as const,
+};
+---
+
+{
+  icon === "roach" && (
+    <svg {...common}>
+      <path {...stroke} d="M14 16 8 10M34 16l6-6" />
+      <path
+        {...stroke}
+        d="M12 22H5M12 28l-6 3M36 22h7M36 28l6 3M14 35l-4 6M34 35l4 6"
+      />
+      <ellipse cx="24" cy="26" rx="10" ry="15" fill="currentColor" />
+      <path
+        d="M24 11c4 0 7 2.5 7 6H17c0-3.5 3-6 7-6Z"
+        fill="currentColor"
+        opacity="0.7"
+      />
+      <path stroke="#0a0f0c" stroke-width="1.5" d="M24 17v22" opacity="0.5" />
+    </svg>
+  )
+}
+{
+  icon === "spider" && (
+    <svg {...common}>
+      <path
+        {...stroke}
+        d="M18 20 8 12M30 20l10-8M16 25H4M32 25h12M17 30 7 36M31 30l10 6M19 33l-6 10M29 33l6 10"
+      />
+      <circle cx="24" cy="18" r="5" fill="currentColor" />
+      <ellipse cx="24" cy="31" rx="7.5" ry="9" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "ant" && (
+    <svg {...common}>
+      <path {...stroke} d="M20 10 14 4M28 10l6-6" />
+      <path
+        {...stroke}
+        d="M17 22H6M17 28l-9 4M31 22h11M31 28l9 4M20 32l-5 9M28 32l5 9"
+      />
+      <circle cx="24" cy="11" r="5" fill="currentColor" />
+      <ellipse cx="24" cy="23" rx="5" ry="6.5" fill="currentColor" />
+      <ellipse cx="24" cy="37" rx="6.5" ry="8" fill="currentColor" />
+    </svg>
+  )
+}
+{
+  icon === "termite" && (
+    <svg {...common}>
+      <path {...stroke} d="M20 8l-5-4M28 8l5-4" />
+      <path
+        {...stroke}
+        d="M17 20H8M17 27H7M31 20h9M31 27h10M20 33l-4 8M28 33l4 8"
+      />
+      <circle cx="24" cy="10" r="5.5" fill="currentColor" />
+      <ellipse cx="24" cy="21" rx="5.5" ry="6" fill="currentColor" />
+      <path
+        d="M18.5 24c0 9 1.5 18 5.5 20 4-2 5.5-11 5.5-20a5.5 6 0 0 1-11 0Z"
+        fill="currentColor"
+        opacity="0.85"
+      />
+    </svg>
+  )
+}
+{
+  icon === "rodent" && (
+    <svg {...common}>
+      <path {...stroke} d="M37 33c5 0 8-3 7-8" />
+      <path
+        d="M5 31c0-8 7-14 16-14 7 0 12 3.5 15 9l4 4c1.5 1.5.5 4-1.7 4H12c-4.5 0-7-1-7-3Z"
+        fill="currentColor"
+      />
+      <circle cx="31" cy="14" r="5" fill="currentColor" />
+      <path {...stroke} d="M14 34v6M26 34v6" />
+      <circle cx="33.5" cy="23.5" r="1.4" fill="#0a0f0c" />
+    </svg>
+  )
+}

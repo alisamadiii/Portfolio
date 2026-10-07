@@ -27,7 +27,14 @@ export const SEARCH_PAGES: SearchPage[] = [
     description:
       "Plain-language guides: your Client Hub, our build process, and what you own.",
     url: "/docs",
-    keywords: ["docs", "documentation", "guide", "help", "how it works", "manual"],
+    keywords: [
+      "docs",
+      "documentation",
+      "guide",
+      "help",
+      "how it works",
+      "manual",
+    ],
   },
   {
     title: "Get a Quote",
@@ -133,6 +140,21 @@ export const SEARCH_PAGES: SearchPage[] = [
       "campaigns",
       "subscribers",
       "local business",
+    ],
+  },
+  {
+    title: "Pest Control Websites",
+    description:
+      "Custom websites for pest control companies: click-to-call, city pages that rank, review walls, and booking forms.",
+    url: "/pest-control",
+    keywords: [
+      "pest control",
+      "exterminator",
+      "pest control website",
+      "industry",
+      "roach",
+      "termite",
+      "local business website",
     ],
   },
   {

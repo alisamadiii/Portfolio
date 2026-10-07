@@ -2,6 +2,7 @@
 // The single site-wide footer — used on the homepage and every inner page.
 import NewsletterBand from "./NewsletterBand.astro";
 import { services } from "../data/services";
+import { industries } from "../data/industries";
 
 const year = new Date().getFullYear();
 ---
@@ -150,6 +151,26 @@ const year = new Date().getFullYear();
                 class="transition-colors duration-300 hover:text-accent"
               >
                 {s.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <h4
+        class="mt-7 mb-3.5 font-mono text-[11.5px] tracking-[0.08em] text-muted uppercase"
+      >
+        Industries
+      </h4>
+      <ul class="space-y-2.5 text-[13.5px] text-warmgray">
+        {
+          industries.map((i) => (
+            <li>
+              <a
+                href={`/${i.slug}`}
+                class="transition-colors duration-300 hover:text-accent"
+              >
+                {i.name}
               </a>
             </li>
           ))

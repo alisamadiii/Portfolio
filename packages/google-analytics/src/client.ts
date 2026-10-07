@@ -9,6 +9,7 @@ export const PLANS = [
   "ecommerce",
   "custom",
   "newsletter",
+  "pest-control",
 ] as const;
 export type Plan = (typeof PLANS)[number];
 

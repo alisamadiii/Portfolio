@@ -51,6 +51,7 @@ export const GET: APIRoute = async () => {
 - [Blog](https://www.alisamadii.com/blog): articles on how websites get built.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
 - [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
+- [Pest Control Websites](https://www.alisamadii.com/pest-control): custom websites for pest control companies — click-to-call, per-pest and per-city pages that rank, review walls, booking forms. ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/mo.
 
 ## Services
 

@@ -13,6 +13,13 @@
   /* Darker accent for text on light surfaces — #fc8464 fails WCAG on cream.
      Bright accent is kept for fills, borders, and text on dark surfaces. */
   --color-accent-ink: #c2451f;
+  /* Pest-control industry page — dark exterminator theme. Scoped by naming:
+     only /pest-control uses pest-* utilities. */
+  --color-pest-void: #0a0f0c;
+  --color-pest-deep: #121b15;
+  --color-pest-bone: #ece9e2;
+  --color-pest-fog: #93a098;
+  --font-display: "Anton", "Arial Narrow", "Impact", sans-serif;
 }
 
 /* Accent text defaults to the readable ink shade on light backgrounds; the
@@ -23,6 +30,7 @@
   }
   .bg-ink .text-accent,
   .bg-charcoal .text-accent,
+  .bg-pest-void .text-accent,
   .text-cream .text-accent {
     color: var(--color-accent);
   }

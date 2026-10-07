@@ -1,0 +1,832 @@
+---
+// Industry landing page for pest control companies. First of the per-vertical
+// family (roofing, handyman later): a standalone bespoke page, deliberately
+// NOT templated. Dark exterminator theme scoped via the pest-* tokens in
+// global.css; Anton display font is imported here only so no other page
+// pays for it. Every CTA routes to /quote?plan=pest-control.
+import "@fontsource/anton";
+import Layout from "../layouts/Layout.astro";
+import HomeFooter from "../components/HomeFooter.astro";
+import QuoteForm from "../components/QuoteForm.astro";
+import PestIcon from "../components/PestIcon.astro";
+import { PRICING, fmtPrice } from "../data/pricing";
+
+const SITE = "https://www.alisamadii.com";
+const pageUrl = `${SITE}/pest-control`;
+
+const needs = [
+  {
+    icon: "phone",
+    title: "Click-to-call everywhere",
+    body: "A sticky call bar on mobile and your number in every section. Pest problems are emergencies: the visitor who has to hunt for your number calls someone else.",
+  },
+  {
+    icon: "map",
+    title: "Service area pages",
+    body: "One page per city you cover, each one built to rank for searches like pest control near me. This is how local companies show up without buying ads.",
+  },
+  {
+    icon: "star",
+    title: "A review wall",
+    body: "Your Google reviews pulled onto the site, front and center. Nobody lets a stranger into their house without checking what the neighbors said first.",
+  },
+  {
+    icon: "form",
+    title: "Booking and quote form",
+    body: "A short form that lands in your inbox with the pest, the address, and a photo if they have one. You quote from your truck, not from voicemail tag.",
+  },
+  {
+    icon: "proof",
+    title: "Before and after proof",
+    body: "Photos of real jobs: the termite damage, the treated baseboards, the sealed entry points. Proof beats promises on every service website.",
+  },
+  {
+    icon: "badge",
+    title: "License and trust badges",
+    body: "State license number, insurance, guarantees, association logos. The things that separate a real operator from a guy with a sprayer and a magnet sign.",
+  },
+];
+
+const pests = [
+  { icon: "roach", name: "Roaches" },
+  { icon: "spider", name: "Spiders" },
+  { icon: "ant", name: "Ants" },
+  { icon: "termite", name: "Termites" },
+  { icon: "rodent", name: "Rodents" },
+] as const;
+
+const faqs = [
+  {
+    q: "How much does a pest control website cost?",
+    a: `${fmtPrice(PRICING.setup)} to design and build it, then ${fmtPrice(PRICING.monthly)} a month. The monthly covers hosting, edits, updates, and keeping everything running. No surprise invoices, and the price is in writing before we start.`,
+  },
+  {
+    q: "I already have a website. Can you redesign it?",
+    a: "Yes, and that is most of this work. We rebuild it from scratch on a modern stack, move your content and reviews over, and redirect every old page so you keep the Google rankings you already earned.",
+  },
+  {
+    q: "Do you write the content?",
+    a: "Yes. You tell us what you treat, where you work, and what makes you different. We write every page, including the per-pest and per-city pages, in plain language your customers actually search for.",
+  },
+  {
+    q: "Can you add online booking?",
+    a: "Yes. At minimum you get a quote form that emails you the pest, the address, and photos. If you use a scheduling tool, we wire it in so customers can book a slot directly.",
+  },
+  {
+    q: "What about my Google Business Profile?",
+    a: "The website and your profile work as a pair: we link them, match your name and address exactly, and feed your reviews onto the site. That consistency is a big part of ranking in the map results.",
+  },
+  {
+    q: "How long does it take?",
+    a: "You see a homepage design within the first week. A typical pest control site is live in two to three weeks, including the service and city pages.",
+  },
+];
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Pest Control Websites",
+        item: pageUrl,
+      },
+    ],
+  },
+  {
+    "@type": "Service",
+    "@id": `${pageUrl}#service`,
+    name: "Pest Control Website Design",
+    serviceType: "Web design for pest control companies",
+    description:
+      "Custom websites for pest control and exterminator companies: click-to-call, service area pages, review walls, and booking forms, built and managed for a flat monthly price.",
+    provider: { "@id": `${SITE}/#organization` },
+    areaServed: "US",
+    url: pageUrl,
+  },
+  {
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
+];
+---
+
+<Layout
+  title="Pest Control Website Design | Websites That Make the Phone Ring"
+  description="Custom websites for pest control companies: click-to-call, service area pages that rank, review walls, and booking forms. Built, hosted, and managed for a flat monthly price."
+  canonical={pageUrl}
+  og={{
+    title: "Websites for Pest Control Companies | Ali Samadi Agency",
+    description:
+      "When someone finds a roach at 11pm, they call the first company that looks legit on their phone. We build pest control websites that win that call.",
+    url: pageUrl,
+    twitterDescription:
+      "Pest control websites that make the phone ring: click-to-call, city pages that rank, reviews, booking. Flat monthly price.",
+    image: "/og/pest-control.jpg",
+  }}
+  schema={schema}
+  bodyClass="noise bg-pest-void text-pest-bone selection:bg-accent/30 selection:text-pest-void font-sans"
+>
+  <!-- ==================== TOP BAR ==================== -->
+  <header
+    class="fixed top-0 right-0 left-0 z-40 border-b border-pest-bone/10 bg-pest-void/80 backdrop-blur-md"
+  >
+    <div
+      class="mx-auto flex max-w-[1300px] items-center justify-between px-6 py-4 md:px-10"
+    >
+      <a href="/" class="flex items-center gap-3">
+        <img
+          src="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
+          alt="Ali Samadi Agency logo"
+          width="32"
+          height="32"
+          class="size-8 rounded-[9px]"
+        />
+        <span class="text-[15px] font-medium tracking-[-0.01em]"
+          >Ali Samadi <span class="text-pest-fog">Agency</span></span
+        >
+      </a>
+      <nav class="flex items-center gap-2 md:gap-5">
+        <a
+          href="/"
+          class="hidden text-[14px] text-pest-fog transition-colors hover:text-pest-bone sm:block"
+          >Main site</a
+        >
+        <a
+          href="/quote?plan=pest-control"
+          class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[14px] font-medium text-pest-void hover:bg-pest-bone"
+        >
+          Get a free quote
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="overflow-x-clip">
+    <!-- ==================== HERO ==================== -->
+    <section
+      class="mx-auto max-w-[1300px] px-6 pt-32 pb-[70px] md:px-10 md:pt-40"
+    >
+      <div
+        class="grid grid-cols-1 items-center gap-14 lg:grid-cols-[1fr_1.1fr]"
+      >
+        <div class="stagger">
+          <div
+            class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+          >
+            <span class="h-px w-[26px] bg-accent"></span>Websites for pest
+            control companies
+          </div>
+          <h1
+            class="reveal font-display text-[clamp(44px,6.5vw,88px)] leading-[0.96] tracking-[0.01em] uppercase"
+          >
+            Pest control websites that make the
+            <span class="text-accent">phone ring</span>
+          </h1>
+          <p
+            class="reveal mt-4 font-mono text-[14px] tracking-[0.04em] text-pest-fog uppercase"
+          >
+            While your competitors' sites collect dust.
+          </p>
+          <p
+            class="reveal mt-6 max-w-[50ch] text-[17px] leading-[1.6] text-pest-bone/80 md:text-[18px]"
+          >
+            When someone finds a roach at 11pm, they search, tap the first
+            company that looks legit on their phone, and call. We design, build,
+            and run the website that wins that call for you.
+          </p>
+          <div class="reveal mt-9 flex flex-wrap items-center gap-3.5">
+            <a
+              href="/quote?plan=pest-control"
+              class="mag-btn inline-flex items-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-semibold text-pest-void hover:bg-pest-bone"
+            >
+              Get a free quote
+              <span>&#8599;</span>
+            </a>
+            <a
+              href="#what-it-needs"
+              class="mag-btn px-2 py-3.5 text-[15px] text-pest-fog hover:text-pest-bone"
+              >See what it takes &darr;</a
+            >
+          </div>
+          <p class="reveal mt-6 font-mono text-[12.5px] text-pest-fog">
+            New build or redesign &middot; {fmtPrice(PRICING.setup)} + {
+              fmtPrice(PRICING.monthly)
+            }/mo &middot; live in weeks
+          </p>
+        </div>
+
+        <!-- Mock pest control site in a browser frame -->
+        <div class="reveal relative lg:pl-6" aria-hidden="true">
+          <div
+            class="pointer-events-none overflow-hidden rounded-xl bg-[#f8f7f4] text-[#1c2520] shadow-2xl ring-1 ring-pest-bone/15 select-none lg:rotate-[1.5deg]"
+          >
+            <div
+              class="flex items-center gap-2 border-b border-black/[0.07] bg-[#eceae5] px-4 py-2.5"
+            >
+              <span class="size-2.5 rounded-full bg-black/[0.14]"></span>
+              <span class="size-2.5 rounded-full bg-black/[0.14]"></span>
+              <span class="size-2.5 rounded-full bg-black/[0.14]"></span>
+              <span
+                class="ml-3 flex-1 rounded-full bg-white px-3 py-1 font-mono text-[10px] text-black/45"
+                >palmettoshieldpest.com</span
+              >
+            </div>
+            <div class="px-5 pt-3.5 pb-5 sm:px-7">
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-1.5 text-[11px] font-bold">
+                  <span class="size-2.5 rounded-full bg-[#1e5c3a]"></span>
+                  Palmetto Shield Pest Control
+                </span>
+                <span
+                  class="rounded-md bg-[#1e5c3a] px-2.5 py-1 text-[9px] font-semibold text-white"
+                  >Call (904) 555-0142</span
+                >
+              </div>
+              <div class="mt-5 max-w-[30ch]">
+                <p
+                  class="text-[clamp(16px,1.8vw,24px)] leading-[1.1] font-extrabold tracking-[-0.02em]"
+                >
+                  Same-Day Pest Control in Jacksonville
+                </p>
+                <p class="mt-1.5 flex items-center gap-1 text-[9.5px]">
+                  <span class="tracking-[0.1em] text-[#d98a00]"
+                    >&#9733;&#9733;&#9733;&#9733;&#9733;</span
+                  >
+                  <span class="text-black/55">4.9 from 212 Google reviews</span>
+                </p>
+                <div class="mt-3.5 flex gap-2">
+                  <span
+                    class="rounded-md bg-[#1e5c3a] px-3 py-1.5 text-[9.5px] font-semibold text-white"
+                    >Get a Free Inspection</span
+                  >
+                  <span
+                    class="rounded-md border border-black/15 px-3 py-1.5 text-[9.5px] font-semibold"
+                    >Call Now</span
+                  >
+                </div>
+              </div>
+              <div class="mt-5 flex gap-1.5">
+                <span
+                  class="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[8.5px] font-medium"
+                  >Roaches</span
+                >
+                <span
+                  class="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[8.5px] font-medium"
+                  >Termites</span
+                >
+                <span
+                  class="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[8.5px] font-medium"
+                  >Rodents</span
+                >
+                <span
+                  class="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[8.5px] font-medium"
+                  >Mosquitoes</span
+                >
+              </div>
+              <div
+                class="mt-5 flex items-center justify-between rounded-lg bg-[#13281c] px-3.5 py-2.5"
+              >
+                <span class="text-[9px] font-medium text-white/85"
+                  >Bugs back between visits? We re-treat free.</span
+                >
+                <span
+                  class="rounded-md bg-white px-2.5 py-1 text-[8.5px] font-bold text-[#13281c]"
+                  >&#9742; Tap to Call</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Annotations (desktop only) -->
+          <div
+            class="absolute -top-5 right-2 hidden items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-accent uppercase lg:flex"
+          >
+            click-to-call<span class="block h-px w-8 bg-accent/60"></span>
+          </div>
+          <div
+            class="absolute top-[46%] right-full hidden -translate-x-2 items-center gap-2 font-mono text-[11px] tracking-[0.08em] whitespace-nowrap text-accent uppercase lg:flex"
+          >
+            review proof<span class="block h-px w-8 bg-accent/60"></span>
+          </div>
+          <div
+            class="absolute right-6 -bottom-6 hidden items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-accent uppercase lg:flex"
+          >
+            <span class="block h-px w-8 bg-accent/60"></span>always one tap from
+            a call
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAIN STRIP ==================== -->
+    <section class="border-y border-pest-bone/10 bg-pest-deep">
+      <div
+        class="stagger mx-auto grid max-w-[1300px] grid-cols-1 gap-8 px-6 py-12 md:grid-cols-3 md:px-10"
+      >
+        <p class="reveal font-mono text-[13.5px] leading-[1.7] text-pest-fog">
+          <span class="text-accent">01&nbsp;</span>Your customer finds a spider
+          on the wall at 11pm and grabs their phone.
+        </p>
+        <p class="reveal font-mono text-[13.5px] leading-[1.7] text-pest-fog">
+          <span class="text-accent">02&nbsp;</span>They call the first company
+          whose site loads fast, shows reviews, and has a number they can tap.
+        </p>
+        <p class="reveal font-mono text-[13.5px] leading-[1.7] text-pest-fog">
+          <span class="text-accent">03&nbsp;</span>If that site is not yours,
+          the other guy just booked your customer.
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== WHAT IT NEEDS ==================== -->
+    <section
+      id="what-it-needs"
+      class="mx-auto max-w-[1300px] scroll-mt-24 px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>The Checklist
+      </div>
+      <div
+        class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+      >
+        <h2
+          class="reveal font-display text-[clamp(32px,4.2vw,56px)] leading-[1] tracking-[0.01em] uppercase"
+        >
+          What a pest control website
+          <span class="text-accent">actually needs</span>
+        </h2>
+        <p class="reveal text-[15.5px] leading-[1.6] text-pest-fog">
+          Most pest control sites are a logo, a phone number in the footer, and
+          a photo of a handshake. These six things are what turn a visitor into
+          a booked job, and every site we build ships with all of them.
+        </p>
+      </div>
+
+      <div
+        class="stagger mt-11 grid grid-cols-1 gap-[18px] md:grid-cols-2 lg:grid-cols-3"
+      >
+        {
+          needs.map((n) => (
+            <div class="reveal rounded-[18px] border border-pest-bone/[0.08] bg-pest-deep p-7">
+              <div class="flex size-11 items-center justify-center rounded-xl bg-accent/15 text-accent">
+                {n.icon === "phone" && (
+                  <svg
+                    class="size-[22px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2Z" />
+                  </svg>
+                )}
+                {n.icon === "map" && (
+                  <svg
+                    class="size-[22px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                )}
+                {n.icon === "star" && (
+                  <svg
+                    class="size-[22px]"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1Z" />
+                  </svg>
+                )}
+                {n.icon === "form" && (
+                  <svg
+                    class="size-[22px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="4" y="3" width="16" height="18" rx="2" />
+                    <path d="M8 8h8M8 12h8M8 16h5" />
+                  </svg>
+                )}
+                {n.icon === "proof" && (
+                  <svg
+                    class="size-[22px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="M12 5v14M7 12l2.5-2.5M15 14l3-3" />
+                  </svg>
+                )}
+                {n.icon === "badge" && (
+                  <svg
+                    class="size-[22px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5Z" />
+                    <path d="m9 11.5 2 2 4-4.5" />
+                  </svg>
+                )}
+              </div>
+              <h3 class="mt-5 text-[18px] font-semibold tracking-[-0.01em]">
+                {n.title}
+              </h3>
+              <p class="mt-2 text-[14.5px] leading-[1.6] text-pest-fog">
+                {n.body}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== PEST PAGES ==================== -->
+    <section
+      class="border-y border-pest-bone/10 bg-pest-deep px-6 py-[70px] md:px-10"
+    >
+      <div class="mx-auto max-w-[1300px]">
+        <div
+          class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+        >
+          <span class="h-px w-[26px] bg-accent"></span>One Page Per Pest
+        </div>
+        <div
+          class="grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
+        >
+          <h2
+            class="reveal font-display text-[clamp(32px,4.2vw,56px)] leading-[1] tracking-[0.01em] uppercase"
+          >
+            Whatever you treat, we build the page that
+            <span class="text-accent">ranks for it</span>
+          </h2>
+          <p class="reveal text-[15.5px] leading-[1.6] text-pest-fog">
+            Nobody searches for pest control in general. They search for termite
+            treatment in their city, or how to get rid of roaches. Each pest you
+            handle gets its own page written to catch exactly that search.
+          </p>
+        </div>
+
+        <div
+          class="stagger mt-11 grid grid-cols-2 gap-[14px] sm:grid-cols-3 lg:grid-cols-5"
+        >
+          {
+            pests.map((p) => (
+              <div class="reveal group flex flex-col items-center gap-4 rounded-[18px] border border-pest-bone/[0.08] bg-pest-void px-5 py-8 transition-colors duration-300 hover:border-accent/40">
+                <span class="pest-tile text-accent">
+                  <PestIcon icon={p.icon} />
+                </span>
+                <span class="font-mono text-[12.5px] tracking-[0.12em] uppercase">
+                  {p.name}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+        <p class="reveal mt-7 font-mono text-[12.5px] text-pest-fog">
+          Plus mosquitoes, bed bugs, wildlife, wasps: whatever is on your truck
+          wrap goes on the site.
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== HOW WE WORK ==================== -->
+    <section class="mx-auto max-w-[1300px] px-6 py-[70px] md:px-10">
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>How We Work
+      </div>
+      <h2
+        class="reveal max-w-[22ch] font-display text-[clamp(32px,4.2vw,56px)] leading-[1] tracking-[0.01em] uppercase"
+      >
+        You keep treating houses. <span class="text-accent"
+          >We handle the website.</span
+        >
+      </h2>
+
+      <div class="stagger mt-11 grid grid-cols-1 gap-[18px] md:grid-cols-3">
+        <div
+          class="reveal rounded-[18px] border border-pest-bone/[0.08] bg-pest-deep p-7"
+        >
+          <span class="font-display text-[34px] text-accent">01</span>
+          <h3 class="mt-4 text-[18px] font-semibold tracking-[-0.01em]">
+            We design and build it
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.6] text-pest-fog">
+            Tell us what you treat and where you work. You see a homepage design
+            within a week, with your trucks, your colors, and your service area,
+            not a template.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-pest-bone/[0.08] bg-pest-deep p-7"
+        >
+          <span class="font-display text-[34px] text-accent">02</span>
+          <h3 class="mt-4 text-[18px] font-semibold tracking-[-0.01em]">
+            You approve, we launch
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.6] text-pest-fog">
+            We connect your phone number, pull in your Google reviews, set up
+            the quote form, and point your domain. If you have an old site, we
+            redirect every page so rankings carry over.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[18px] border border-pest-bone/[0.08] bg-pest-deep p-7"
+        >
+          <span class="font-display text-[34px] text-accent">03</span>
+          <h3 class="mt-4 text-[18px] font-semibold tracking-[-0.01em]">
+            We run it
+          </h3>
+          <p class="mt-2 text-[14.5px] leading-[1.6] text-pest-fog">
+            Hosting, security, edits, new pages, seasonal updates: all covered
+            by the monthly. You call us like your customers call you, and it
+            gets handled.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PRICING ==================== -->
+    <section
+      class="border-y border-pest-bone/10 bg-pest-deep px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="mx-auto grid max-w-[1100px] grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1fr]"
+      >
+        <div class="stagger">
+          <div
+            class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+          >
+            <span class="h-px w-[26px] bg-accent"></span>Pricing
+          </div>
+          <h2
+            class="reveal font-display text-[clamp(32px,4.2vw,56px)] leading-[1] tracking-[0.01em] uppercase"
+          >
+            One flat price. <span class="text-accent">No surprises.</span>
+          </h2>
+          <p
+            class="reveal mt-6 max-w-[48ch] text-[15.5px] leading-[1.6] text-pest-fog"
+          >
+            The same price whether we build from scratch or rebuild what you
+            have. You get the number in writing before we start, and the monthly
+            covers everything a website needs to stay fast, secure, and up to
+            date.
+          </p>
+        </div>
+        <div
+          class="reveal rounded-[22px] border border-accent/30 bg-pest-void p-8 md:p-10"
+        >
+          <p
+            class="font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+          >
+            Pest control website
+          </p>
+          <p class="mt-4 font-display text-[clamp(36px,4vw,52px)] leading-none">
+            {fmtPrice(PRICING.setup)}
+            <span class="text-[0.5em] text-pest-fog"
+              >setup + {fmtPrice(PRICING.monthly)}/mo</span
+            >
+          </p>
+          <ul
+            class="mt-7 space-y-3 text-[14.5px] leading-[1.5] text-pest-bone/85"
+          >
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-accent">&#10003;</span>Custom
+              design, built around your trucks and brand
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-accent">&#10003;</span>Per-pest
+              and per-city pages written for you
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-accent">&#10003;</span
+              >Click-to-call, quote form, and review wall wired in
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-accent">&#10003;</span>Hosting,
+              security, edits, and updates all included
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 font-mono text-accent">&#10003;</span>You own
+              the domain and the site, always
+            </li>
+          </ul>
+          <a
+            href="/quote?plan=pest-control"
+            class="mag-btn mt-8 inline-flex w-full items-center justify-center gap-2.5 rounded-[11px] bg-accent px-6 py-3.5 text-[15.5px] font-semibold text-pest-void hover:bg-pest-bone"
+          >
+            Get a free quote
+            <span>&#8599;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section class="mx-auto max-w-[1300px] px-6 py-[70px] md:px-10">
+      <div
+        class="reveal mb-8 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-pest-fog uppercase"
+      >
+        <span class="h-px w-[26px] bg-accent"></span>FAQ
+      </div>
+      <h2
+        class="reveal font-display text-[clamp(32px,4.2vw,56px)] leading-[1] tracking-[0.01em] uppercase"
+      >
+        Common questions
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
+        {
+          faqs.map((faq) => (
+            <div class="reveal">
+              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
+                {faq.q}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.65] text-pest-fog">
+                {faq.a}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ==================== FINAL CTA + FORM ==================== -->
+    <section
+      class="border-t border-pest-bone/10 bg-pest-deep px-6 py-[70px] md:px-10"
+    >
+      <div
+        class="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.1fr]"
+      >
+        <div class="stagger">
+          <h2
+            class="reveal font-display text-[clamp(36px,5vw,66px)] leading-[0.98] tracking-[0.01em] uppercase"
+          >
+            The next roach is <span class="text-accent">your lead</span>
+          </h2>
+          <p
+            class="reveal mt-6 max-w-[46ch] text-[16px] leading-[1.6] text-pest-fog"
+          >
+            Tell us your company name, the pests you treat, and the cities you
+            cover. We reply within a day with a plan and a flat price in
+            writing. If you have a site already, send the link and we will tell
+            you honestly what is worth keeping.
+          </p>
+          <p class="reveal mt-8 font-mono text-[12.5px] text-pest-fog">
+            No contracts to sign today &middot; no pressure &middot; just a
+            price
+          </p>
+        </div>
+        <div class="reveal">
+          <QuoteForm heading="Tell us about your pest control company" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="bg-cream text-charcoal">
+    <HomeFooter />
+  </div>
+</Layout>
+
+<style is:global>
+  html {
+    scrollbar-gutter: stable;
+  }
+  .mag-btn {
+    transition:
+      transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
+      background-color 0.3s,
+      border-color 0.3s,
+      color 0.3s;
+  }
+  .mag-btn:active {
+    transform: scale(0.97);
+  }
+  .stagger > .reveal:nth-child(1) {
+    transition-delay: 0ms;
+  }
+  .stagger > .reveal:nth-child(2) {
+    transition-delay: 80ms;
+  }
+  .stagger > .reveal:nth-child(3) {
+    transition-delay: 160ms;
+  }
+  .stagger > .reveal:nth-child(4) {
+    transition-delay: 240ms;
+  }
+  .stagger > .reveal:nth-child(5) {
+    transition-delay: 320ms;
+  }
+  .stagger > .reveal:nth-child(6) {
+    transition-delay: 400ms;
+  }
+
+  /* Pest icon tiles: a tiny idle wiggle, like something's alive in there. */
+  @keyframes pest-wiggle {
+    0%,
+    92%,
+    100% {
+      transform: rotate(0deg);
+    }
+    94% {
+      transform: rotate(-6deg);
+    }
+    96% {
+      transform: rotate(5deg);
+    }
+    98% {
+      transform: rotate(-3deg);
+    }
+  }
+  .pest-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    animation: pest-wiggle 7s ease-in-out infinite;
+  }
+  .group:nth-child(2) .pest-tile {
+    animation-delay: 1.3s;
+  }
+  .group:nth-child(3) .pest-tile {
+    animation-delay: 2.7s;
+  }
+  .group:nth-child(4) .pest-tile {
+    animation-delay: 4.1s;
+  }
+  .group:nth-child(5) .pest-tile {
+    animation-delay: 5.4s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pest-tile {
+      animation: none;
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  // The embedded QuoteForm only preselects from ?plan=, and this page is
+  // reached without one. Default its select to pest-control.
+  document.querySelectorAll(".quote-form select[name='plan']").forEach((s) => {
+    if (!new URLSearchParams(location.search).get("plan"))
+      s.value = "pest-control";
+  });
+</script>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-60px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  })();
+</script>

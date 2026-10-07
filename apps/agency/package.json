@@ -11,6 +11,7 @@
     "locations:images": "node scripts/fetch-location-images.mjs",
     "audiences:images": "node scripts/fetch-audience-images.mjs",
     "locations:og": "node --experimental-strip-types scripts/generate-location-og.mjs",
+    "pest:og": "node scripts/generate-pest-control-og.mjs",
     "blog:images": "node scripts/fetch-blog-images.mjs",
     "clients:screenshots": "node --experimental-strip-types scripts/fetch-client-screenshots.mjs",
     "format": "prettier --write \"src/**/*.{astro,ts,css,md}\" \"scripts/*.mjs\"",
@@ -21,6 +22,7 @@
     "@astrojs/node": "^9.4.4",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource/anton": "^5.3.0",
     "@workspace/google-analytics": "workspace:*",
     "astro": "^5.17.3",
     "minisearch": "^7.2.0"
