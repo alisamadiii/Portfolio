@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -7,41 +8,68 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+import { user } from "./auth";
 
 export type LeadScanStatus = "pending" | "done" | "error";
 export type LeadStatus = "new" | "contacted" | "interested" | "won" | "lost";
+export type LeadCreditReason =
+  | "signup"
+  | "purchase"
+  | "refund"
+  | "scan"
+  | "unlock"
+  | "adjustment";
 
 // One Places Text Search run ("plumbers in Cape Coral, FL").
-export const leadScan = pgTable("lead_scan", {
-  id: serial("id").primaryKey(),
+export const leadScan = pgTable(
+  "lead_scan",
+  {
+    id: serial("id").primaryKey(),
 
-  query: text("query").notNull(),
-  city: text("city").notNull(),
-  state: text("state").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
 
-  // Scan searched around home base instead of a picked city.
-  nearMe: boolean("near_me").notNull().default(false),
+    query: text("query").notNull(),
+    city: text("city").notNull(),
+    state: text("state").notNull(),
 
-  status: text("status").$type<LeadScanStatus>().notNull().default("pending"),
-  totalFound: integer("total_found").notNull().default(0),
-  noWebsiteCount: integer("no_website_count").notNull().default(0),
-  // Places Enterprise SKU calls consumed (free tier = 1,000/month).
-  apiCalls: integer("api_calls").notNull().default(0),
-  error: text("error"),
+    // Scan searched around home base instead of a picked city.
+    nearMe: boolean("near_me").notNull().default(false),
 
-  createdAt: timestamp("created_at").defaultNow(),
-});
+    status: text("status").$type<LeadScanStatus>().notNull().default("pending"),
+    totalFound: integer("total_found").notNull().default(0),
+    noWebsiteCount: integer("no_website_count").notNull().default(0),
+    // Places Enterprise SKU calls consumed (global monthly spend guard).
+    apiCalls: integer("api_calls").notNull().default(0),
+    error: text("error"),
+
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    idxScanUser: index("lead_scan_user_idx").on(
+      table.userId,
+      table.createdAt.desc()
+    ),
+  })
+);
 
 export const lead = pgTable(
   "lead",
   {
     id: serial("id").primaryKey(),
 
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+
     scanId: integer("scan_id")
       .notNull()
       .references(() => leadScan.id, { onDelete: "cascade" }),
-    placeId: text("place_id").notNull().unique(),
+    placeId: text("place_id").notNull(),
 
     name: text("name").notNull(),
     address: text("address"),
@@ -63,11 +91,48 @@ export const lead = pgTable(
     status: text("status").$type<LeadStatus>().notNull().default("new"),
     notes: text("notes"),
 
+    // false = billable prospect the user hasn't paid a credit for yet;
+    // contact fields are masked server-side until unlocked.
+    unlocked: boolean("unlocked").notNull().default(true),
+
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => ({
     idxLeadScan: index("lead_scan_id_idx").on(table.scanId),
     idxLeadScore: index("lead_score_idx").on(table.score.desc()),
+    idxLeadUser: index("lead_user_idx").on(table.userId),
+    uqUserPlace: uniqueIndex("lead_user_place_uq").on(
+      table.userId,
+      table.placeId
+    ),
+  })
+);
+
+// Credit ledger: balance = sum(delta) per user. Grants are positive,
+// debits negative. No cached balance column on purpose.
+export const leadCreditLedger = pgTable(
+  "lead_credit_ledger",
+  {
+    id: serial("id").primaryKey(),
+
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+
+    delta: integer("delta").notNull(),
+    reason: text("reason").$type<LeadCreditReason>().notNull(),
+    // signup → userId, purchase/refund → Stripe invoice id, scan/unlock → scanId.
+    refId: text("ref_id"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    idxCreditUser: index("lead_credit_user_idx").on(table.userId),
+    // Grants must be idempotent (webhook retries, lazy signup grant);
+    // scan/unlock debits may repeat per refId so they are excluded.
+    uqCreditGrant: uniqueIndex("lead_credit_grant_uq")
+      .on(table.reason, table.refId)
+      .where(sql`${table.reason} in ('signup', 'purchase', 'refund')`),
   })
 );

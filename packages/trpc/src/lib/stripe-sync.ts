@@ -10,6 +10,8 @@ import {
   user,
 } from "@workspace/drizzle/schema";
 
+import { grantPurchaseCredits, revokePurchaseCredits } from "./credits";
+
 // Syncs the Stripe catalog/billing mirror tables (product / subscription /
 // order) from webhook events. Single entry point: syncStripeEvent(event).
 //
@@ -222,15 +224,19 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
     ...invoice.metadata,
   };
   const productId = linePricing?.product ?? "";
-  if (!metadata.project && productId) {
+  let productMetadata: { project?: string; credits?: string } | null = null;
+  if (productId) {
     const [productRow] = await db
       .select({ metadata: products.metadata })
       .from(products)
       .where(eq(products.id, productId))
       .limit(1);
-    const project = (productRow?.metadata as { project?: string } | null)
-      ?.project;
-    if (project) metadata.project = project;
+    productMetadata = (productRow?.metadata ?? null) as {
+      project?: string;
+      credits?: string;
+    } | null;
+    if (!metadata.project && productMetadata?.project)
+      metadata.project = productMetadata.project;
   }
 
   const values = {
@@ -256,6 +262,25 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
       createdAt: new Date(invoice.created * 1000),
     })
     .onConflictDoUpdate({ target: orders.id, set: values });
+
+  // Lead-finder credit packs: paying the invoice grants the credits. The
+  // ledger's partial unique index makes webhook retries a no-op.
+  if (metadata.project === "LEADS") {
+    const credits = Number(
+      (metadata.credits as string | undefined) ?? productMetadata?.credits ?? 0
+    );
+    if (!resolved?.userId || !Number.isFinite(credits) || credits <= 0) {
+      console.error(
+        `[stripe-sync] LEADS invoice ${invoice.id}: cannot grant credits (userId=${resolved?.userId}, credits=${credits})`
+      );
+    } else {
+      await grantPurchaseCredits({
+        userId: resolved.userId,
+        credits,
+        invoiceId: invoice.id,
+      });
+    }
+  }
 };
 
 /** Mark the mirrored order refunded when its charge is refunded. */
@@ -272,13 +297,41 @@ const markStripeOrderRefunded = async (charge: Stripe.Charge) => {
         : invoiceRef.id;
   if (!invoiceId) return;
 
-  await db
+  const [order] = await db
     .update(orders)
     .set({
       status: charge.amount_refunded < charge.amount ? "partially_refunded" : "refunded",
       updatedAt: new Date(),
     })
-    .where(eq(orders.id, invoiceId));
+    .where(eq(orders.id, invoiceId))
+    .returning();
+
+  // Fully refunded credit pack → claw the credits back (idempotent; balance
+  // may go negative if they were already spent — that's abuse visibility).
+  if (
+    order &&
+    order.status === "refunded" &&
+    (order.metadata as { project?: string } | null)?.project === "LEADS" &&
+    order.userId
+  ) {
+    const [productRow] = await db
+      .select({ metadata: products.metadata })
+      .from(products)
+      .where(eq(products.id, order.productId))
+      .limit(1);
+    const credits = Number(
+      (order.metadata as { credits?: string } | null)?.credits ??
+        (productRow?.metadata as { credits?: string } | null)?.credits ??
+        0
+    );
+    if (credits > 0) {
+      await revokePurchaseCredits({
+        userId: order.userId,
+        credits,
+        invoiceId,
+      });
+    }
+  }
 };
 
 // ─── Dispatcher ─────────────────────────────────────────────────

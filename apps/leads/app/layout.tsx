@@ -5,16 +5,18 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 import { Crosshair } from "lucide-react";
 
-import { hubLoginUrl, urls } from "@workspace/ui/lib/company";
+import { hubLoginUrl, hubSignupUrl, urls } from "@workspace/ui/lib/company";
 
 import { TRPCReactProvider } from "@workspace/trpc/client";
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 
+import { BillingHistoryButton } from "@/components/billing-history-button";
+import { CreditsBalance } from "@/components/credits-balance";
 import { LeadsProviders } from "@/components/providers";
 import { NavPills } from "@/components/nav-pills";
+import { SignOutButton } from "@/components/sign-out-button";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -28,11 +30,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lead Finder | Ali Samadi",
+    default: "Lead Finder | Ali Samadii LLC",
     template: "%s | Lead Finder",
   },
   description:
-    "Internal tool: find local businesses without websites and turn them into leads.",
+    "Find local businesses without a working website and turn them into clients. Pay only for the leads you find.",
 };
 
 /** tRPC surfaces the error code on `data` — checking it beats matching copy. */
@@ -48,35 +50,32 @@ async function LeadsLayout({ children }: { children: React.ReactNode }) {
   const headersStore = await headers();
   const httpCaller = createHttpCaller(headersStore);
 
-  let currentUser;
+  let currentUser = null;
 
   try {
-    // Leads has no login UI of its own — the Client Hub owns auth
+    // Leads has no login UI of its own — the Client Hub owns auth. Signed-out
+    // visitors stay here and get the marketing experience.
     currentUser = await httpCaller.users.getSession.query();
   } catch (error) {
-    if (isUnauthorized(error)) {
-      redirect(hubLoginUrl(urls.leads));
+    if (!isUnauthorized(error)) {
+      console.error(error);
+      return (
+        <div>
+          Internal Server Error{" "}
+          {error instanceof Error ? error.message : "Unknown error"}
+        </div>
+      );
     }
-
-    console.error(error);
-    return (
-      <div>
-        Internal Server Error{" "}
-        {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
-  }
-
-  // Signed in but not an admin — 404 rather than bounce, which would loop
-  if (currentUser?.role !== "admin") {
-    return notFound();
   }
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4">
       <header className="bg-card mt-4 flex items-center justify-between rounded-full px-3 py-2.5 shadow-sm sm:px-5">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link
+            href={currentUser ? "/" : "/home"}
+            className="flex items-center gap-2.5"
+          >
             <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-full">
               <Crosshair className="size-4.5" />
             </span>
@@ -84,11 +83,47 @@ async function LeadsLayout({ children }: { children: React.ReactNode }) {
               Lead Finder
             </span>
           </Link>
-          <NavPills />
+          {currentUser ? (
+            <NavPills />
+          ) : (
+            <nav className="bg-muted flex items-center gap-1 rounded-full p-1">
+              <Link
+                href="/home"
+                className="text-muted-foreground hover:text-foreground rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                href="/inspect"
+                className="text-muted-foreground hover:text-foreground rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+              >
+                Inspect
+              </Link>
+            </nav>
+          )}
         </div>
-        <span className="text-muted-foreground text-sm max-md:hidden">
-          Local businesses without websites
-        </span>
+        {currentUser ? (
+          <div className="flex items-center gap-2">
+            <CreditsBalance />
+            <BillingHistoryButton />
+            <SignOutButton />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <a
+              href={hubLoginUrl(urls.leads)}
+              className="text-muted-foreground hover:text-foreground rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+            >
+              Sign in
+            </a>
+            <a
+              href={hubSignupUrl(urls.leads)}
+              className="bg-foreground text-background rounded-full px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90"
+            >
+              Get started
+            </a>
+          </div>
+        )}
       </header>
       <main className="flex-1 py-8">{children}</main>
     </div>

@@ -1,12 +1,17 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
-import { lead, leadScan } from "@workspace/drizzle/schema";
+import { lead, leadCreditLedger, leadScan } from "@workspace/drizzle/schema";
 import type { LeadStatus } from "@workspace/drizzle/schema";
 
-import { adminProcedure, createTRPCRouter } from "../init";
+import { authenticatedProcedure, baseProcedure, createTRPCRouter } from "../init";
+import {
+  debitCredits,
+  ensureSignupGrant,
+  getCreditBalance,
+} from "../lib/credits";
 import { inspectSite } from "../lib/inspect";
 import {
   distanceMiles,
@@ -14,8 +19,10 @@ import {
   isWebsiteDead,
   searchPlaces,
 } from "../lib/places";
+import { rateLimit } from "../middleware/rate-limit";
 
 // Home base for near-me scans (566 Kit St, Jacksonville FL 32216).
+// Admin-only — regular users must pick a city.
 const HOME = {
   lat: 30.3048973,
   lng: -81.5660117,
@@ -25,9 +32,10 @@ const HOME = {
   maxMiles: 12, // hard cutoff — close enough to drive to
 };
 
-// Google Places Enterprise SKU free tier. Scans are blocked before the
-// month's counted calls could cross this — nothing ever gets billed.
-const FREE_TIER_CALLS = 1000;
+// Global circuit breaker on Google spend — paying users fund calls now, so
+// this is a budget guard, not a quota. Scans are blocked before the month's
+// counted calls could cross it.
+const MONTHLY_CALL_CAP = Number(process.env.GOOGLE_MONTHLY_CALL_CAP ?? 5000);
 const CALLS_PER_SCAN = 3; // worst case: 3 paginated requests
 
 async function monthApiCalls(): Promise<number> {
@@ -71,9 +79,52 @@ function scoreLead(input: {
   return score;
 }
 
+// A billable prospect — what 1 credit buys. Businesses with a healthy
+// website are shown free; they're not what anyone pays for.
+function isBillable(l: {
+  website: string | null;
+  socialOnly: boolean;
+  websiteDead: boolean;
+}): boolean {
+  return !l.website || l.socialOnly || l.websiteDead;
+}
+
+// Every signed-in leads user gets the lazy 25-credit signup grant
+// (idempotent via the ledger's partial unique index).
+const leadsUserProcedure = authenticatedProcedure.use(async ({ next, ctx }) => {
+  await ensureSignupGrant(ctx.session.user.id);
+  return next({ ctx });
+});
+
+// Fields a locked row is allowed to expose. Contact info stays server-side
+// until the lead is unlocked — never ship it masked-by-CSS.
+function maskLockedLead(l: typeof lead.$inferSelect) {
+  return {
+    id: l.id,
+    scanId: l.scanId,
+    locked: true as const,
+    name: null,
+    address: null,
+    phone: null,
+    website: null,
+    socialOnly: l.socialOnly,
+    websiteDead: l.websiteDead,
+    distanceMiles: l.distanceMiles,
+    rating: l.rating,
+    reviewCount: l.reviewCount,
+    mapsUrl: null,
+    category: l.category,
+    score: l.score,
+    status: l.status,
+    notes: null,
+    createdAt: l.createdAt,
+    updatedAt: l.updatedAt,
+  };
+}
+
 export const leadsRouter = createTRPCRouter({
   scan: createTRPCRouter({
-    run: adminProcedure
+    run: leadsUserProcedure
       .input(
         z
           .object({
@@ -86,14 +137,33 @@ export const leadsRouter = createTRPCRouter({
             message: "City and state are required unless scanning near me",
           })
       )
-      .mutation(async ({ input }) => {
-        // Hard stop before the free tier can be crossed — a scan may use up
-        // to CALLS_PER_SCAN requests, so reserve that much headroom.
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.session.user.id;
+        const isAdmin = ctx.session.user.role === "admin";
+
+        if (input.nearMe && !isAdmin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Near-me scans are not available. Pick a city instead.",
+          });
+        }
+
+        // Hard stop before the global spend cap can be crossed — a scan may
+        // use up to CALLS_PER_SCAN requests, so reserve that much headroom.
         const used = await monthApiCalls();
-        if (used + CALLS_PER_SCAN > FREE_TIER_CALLS) {
+        if (used + CALLS_PER_SCAN > MONTHLY_CALL_CAP) {
           throw new TRPCError({
             code: "PRECONDITION_FAILED",
-            message: `Free tier exhausted: ${used}/${FREE_TIER_CALLS} calls used this month. Resets on the 1st.`,
+            message:
+              "Scanning is temporarily paused this month. Please try again after the 1st.",
+          });
+        }
+
+        const balance = isAdmin ? Infinity : await getCreditBalance(userId);
+        if (balance < 1) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "You're out of credits. Buy a credit pack to keep scanning.",
           });
         }
 
@@ -105,7 +175,13 @@ export const leadsRouter = createTRPCRouter({
 
         const [scan] = await db
           .insert(leadScan)
-          .values({ query: input.niche, city, state, nearMe: input.nearMe })
+          .values({
+            userId,
+            query: input.niche,
+            city,
+            state,
+            nearMe: input.nearMe,
+          })
           .returning();
         if (!scan) throw new Error("Failed to create scan");
 
@@ -158,36 +234,29 @@ export const leadsRouter = createTRPCRouter({
             })
           );
 
-          let noWebsiteCount = 0;
-          for (const c of classified) {
-            const noWebsite = !c.website;
-            if (noWebsite || c.socialOnly || c.websiteDead) noWebsiteCount++;
+          // Leads this user already owns are refreshed for free — only
+          // never-seen billable prospects cost credits.
+          const placeIds = classified.map((c) => c.place.id);
+          const owned =
+            placeIds.length > 0
+              ? await db
+                  .select({ placeId: lead.placeId })
+                  .from(lead)
+                  .where(
+                    and(
+                      eq(lead.userId, userId),
+                      inArray(lead.placeId, placeIds)
+                    )
+                  )
+              : [];
+          const ownedIds = new Set(owned.map((o) => o.placeId));
 
-            const values = {
-              scanId: scan.id,
-              placeId: c.place.id,
-              name: c.place.displayName?.text ?? "Unknown",
-              address: c.place.formattedAddress ?? null,
-              phone: c.place.nationalPhoneNumber ?? null,
-              website: c.website,
-              socialOnly: c.socialOnly,
-              websiteDead: c.websiteDead,
-              distanceMiles:
-                input.nearMe && c.place.location?.latitude !== undefined
-                  ? Math.round(
-                      distanceMiles(HOME, {
-                        lat: c.place.location.latitude!,
-                        lng: c.place.location.longitude!,
-                      }) * 10
-                    ) / 10
-                  : null,
-              rating: c.place.rating ?? null,
-              reviewCount: c.place.userRatingCount ?? 0,
-              mapsUrl: c.place.googleMapsUri ?? null,
-              category:
-                c.place.primaryTypeDisplayName?.text ??
-                c.place.types?.[0] ??
-                null,
+          const rows = classified.map((c) => {
+            const noWebsite = !c.website;
+            return {
+              ...c,
+              isNew: !ownedIds.has(c.place.id),
+              billable: isBillable(c),
               score: scoreLead({
                 noWebsite,
                 socialOnly: c.socialOnly,
@@ -197,13 +266,86 @@ export const leadsRouter = createTRPCRouter({
                 reviewCount: c.place.userRatingCount ?? 0,
               }),
             };
+          });
 
-            // Re-scans refresh place data but keep status/notes.
+          // Debit before insert: best prospects unlock first, the rest stay
+          // locked until more credits are bought. Retry once on a lost race.
+          const newBillable = rows
+            .filter((r) => r.isNew && r.billable)
+            .sort((a, b) => b.score - a.score);
+          let unlockedCount = newBillable.length;
+          if (!isAdmin && newBillable.length > 0) {
+            let attempt = Math.min(balance, newBillable.length);
+            let res = await debitCredits({
+              userId,
+              amount: attempt,
+              reason: "scan",
+              refId: String(scan.id),
+            });
+            if (!res.ok) {
+              attempt = Math.max(0, Math.min(res.balance, newBillable.length));
+              res =
+                attempt > 0
+                  ? await debitCredits({
+                      userId,
+                      amount: attempt,
+                      reason: "scan",
+                      refId: String(scan.id),
+                    })
+                  : { ok: false, balance: 0 };
+              if (!res.ok) attempt = 0;
+            }
+            unlockedCount = attempt;
+          }
+          const unlockedIds = new Set(
+            newBillable.slice(0, unlockedCount).map((r) => r.place.id)
+          );
+
+          let noWebsiteCount = 0;
+          for (const r of rows) {
+            if (r.billable) noWebsiteCount++;
+
+            const values = {
+              userId,
+              scanId: scan.id,
+              placeId: r.place.id,
+              name: r.place.displayName?.text ?? "Unknown",
+              address: r.place.formattedAddress ?? null,
+              phone: r.place.nationalPhoneNumber ?? null,
+              website: r.website,
+              socialOnly: r.socialOnly,
+              websiteDead: r.websiteDead,
+              distanceMiles:
+                input.nearMe && r.place.location?.latitude !== undefined
+                  ? Math.round(
+                      distanceMiles(HOME, {
+                        lat: r.place.location.latitude!,
+                        lng: r.place.location.longitude!,
+                      }) * 10
+                    ) / 10
+                  : null,
+              rating: r.place.rating ?? null,
+              reviewCount: r.place.userRatingCount ?? 0,
+              mapsUrl: r.place.googleMapsUri ?? null,
+              category:
+                r.place.primaryTypeDisplayName?.text ??
+                r.place.types?.[0] ??
+                null,
+              score: r.score,
+            };
+
+            // Re-scans refresh place data but must NEVER touch unlocked,
+            // status, or notes — those are user-owned state the upsert's
+            // `set` deliberately excludes.
             await db
               .insert(lead)
-              .values(values)
+              .values({
+                ...values,
+                unlocked:
+                  !r.billable || unlockedIds.has(r.place.id) || !r.isNew,
+              })
               .onConflictDoUpdate({
-                target: lead.placeId,
+                target: [lead.userId, lead.placeId],
                 set: { ...values, updatedAt: new Date() },
               });
           }
@@ -218,7 +360,15 @@ export const leadsRouter = createTRPCRouter({
             })
             .where(eq(leadScan.id, scan.id));
 
-          return { scanId: scan.id, totalFound: operational.length, noWebsiteCount };
+          const lockedCount = newBillable.length - unlockedCount;
+          return {
+            scanId: scan.id,
+            totalFound: operational.length,
+            noWebsiteCount,
+            newLeads: rows.filter((r) => r.isNew).length,
+            lockedCount,
+            balance: isAdmin ? null : await getCreditBalance(userId),
+          };
         } catch (error) {
           await db
             .update(leadScan)
@@ -231,39 +381,54 @@ export const leadsRouter = createTRPCRouter({
         }
       }),
 
-    list: adminProcedure.query(async () => {
+    list: leadsUserProcedure.query(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+      const isAdmin = ctx.session.user.role === "admin";
+
       const scans = await db
         .select()
         .from(leadScan)
+        .where(eq(leadScan.userId, userId))
         .orderBy(desc(leadScan.createdAt))
         .limit(50);
 
-      const used = await monthApiCalls();
+      const balance = await getCreditBalance(userId);
 
+      if (!isAdmin) return { scans, balance, isAdmin };
+
+      // Global Google spend telemetry — admin eyes only.
+      const used = await monthApiCalls();
       return {
         scans,
+        balance,
+        isAdmin,
         monthApiCalls: used,
-        freeTier: FREE_TIER_CALLS,
+        callCap: MONTHLY_CALL_CAP,
         scansLeft: Math.max(
           0,
-          Math.floor((FREE_TIER_CALLS - used) / CALLS_PER_SCAN)
+          Math.floor((MONTHLY_CALL_CAP - used) / CALLS_PER_SCAN)
         ),
       };
     }),
 
-    get: adminProcedure
+    get: leadsUserProcedure
       .input(z.object({ scanId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const [scan] = await db
           .select()
           .from(leadScan)
-          .where(eq(leadScan.id, input.scanId))
+          .where(
+            and(
+              eq(leadScan.id, input.scanId),
+              eq(leadScan.userId, ctx.session.user.id)
+            )
+          )
           .limit(1);
         return scan ?? null;
       }),
   }),
 
-  list: adminProcedure
+  list: leadsUserProcedure
     .input(
       z.object({
         scanId: z.number(),
@@ -272,8 +437,9 @@ export const leadsRouter = createTRPCRouter({
         minRating: z.number().optional(),
       })
     )
-    .query(async ({ input }) => {
-      const filters = [eq(lead.scanId, input.scanId)];
+    .query(async ({ input, ctx }) => {
+      const userId = ctx.session.user.id;
+      const filters = [eq(lead.scanId, input.scanId), eq(lead.userId, userId)];
       if (input.noWebsiteOnly) {
         filters.push(
           or(
@@ -290,10 +456,12 @@ export const leadsRouter = createTRPCRouter({
       const [scan] = await db
         .select({ nearMe: leadScan.nearMe })
         .from(leadScan)
-        .where(eq(leadScan.id, input.scanId))
+        .where(
+          and(eq(leadScan.id, input.scanId), eq(leadScan.userId, userId))
+        )
         .limit(1);
 
-      return db
+      const rows = await db
         .select()
         .from(lead)
         .where(and(...filters))
@@ -303,23 +471,122 @@ export const leadsRouter = createTRPCRouter({
             ? [sql`${lead.distanceMiles} asc nulls last`, desc(lead.score)]
             : [desc(lead.score), desc(lead.reviewCount)])
         );
+
+      const [locked] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(lead)
+        .where(
+          and(
+            eq(lead.scanId, input.scanId),
+            eq(lead.userId, userId),
+            eq(lead.unlocked, false)
+          )
+        );
+
+      return {
+        leads: rows.map((l) =>
+          l.unlocked ? { ...l, locked: false as const } : maskLockedLead(l)
+        ),
+        lockedCount: Number(locked?.count ?? 0),
+      };
     }),
 
-  updateStatus: adminProcedure
+  // Spend credits to reveal locked leads in a scan, best-scored first.
+  unlock: leadsUserProcedure
+    .input(z.object({ scanId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.session.user.id;
+
+      const result = await db.transaction(async (tx) => {
+        // Same per-user lock as debitCredits — serializes against concurrent
+        // scans/unlocks so rows can't be paid for twice.
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
+
+        const lockedRows = await tx
+          .select({ id: lead.id })
+          .from(lead)
+          .where(
+            and(
+              eq(lead.scanId, input.scanId),
+              eq(lead.userId, userId),
+              eq(lead.unlocked, false)
+            )
+          )
+          .orderBy(desc(lead.score), desc(lead.reviewCount));
+
+        const [row] = await tx
+          .select({
+            balance: sql<number>`coalesce(sum(${leadCreditLedger.delta}), 0)`,
+          })
+          .from(leadCreditLedger)
+          .where(eq(leadCreditLedger.userId, userId));
+        const balance = Number(row?.balance ?? 0);
+
+        const n = Math.min(Math.max(0, balance), lockedRows.length);
+        if (n === 0) return { unlocked: 0, remainingLocked: lockedRows.length };
+
+        const ids = lockedRows.slice(0, n).map((r) => r.id);
+        await tx
+          .update(lead)
+          .set({ unlocked: true, updatedAt: new Date() })
+          .where(inArray(lead.id, ids));
+        await tx.insert(leadCreditLedger).values({
+          userId,
+          delta: -n,
+          reason: "unlock",
+          refId: String(input.scanId),
+        });
+
+        return { unlocked: n, remainingLocked: lockedRows.length - n };
+      });
+
+      if (result.unlocked === 0) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "You're out of credits. Buy a credit pack to unlock leads.",
+        });
+      }
+      return result;
+    }),
+
+  credits: createTRPCRouter({
+    get: leadsUserProcedure.query(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+      const [balance, ledger] = await Promise.all([
+        getCreditBalance(userId),
+        db
+          .select()
+          .from(leadCreditLedger)
+          .where(eq(leadCreditLedger.userId, userId))
+          .orderBy(desc(leadCreditLedger.createdAt))
+          .limit(20),
+      ]);
+      return { balance, ledger };
+    }),
+  }),
+
+  updateStatus: leadsUserProcedure
     .input(z.object({ id: z.number(), status: z.enum(LEAD_STATUSES) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       await db
         .update(lead)
         .set({ status: input.status as LeadStatus, updatedAt: new Date() })
-        .where(eq(lead.id, input.id));
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, ctx.session.user.id),
+            eq(lead.unlocked, true)
+          )
+        );
       return { success: true };
     }),
 
-  // Fetches a client site's HTML and reports vendors/scripts to port over.
-  // No Google API involved — plain HTTP, no quota impact.
-  inspect: adminProcedure
+  // Fetches a site's HTML and reports vendors/scripts to port over.
+  // No Google API involved — plain HTTP. Public, IP rate-limited.
+  inspect: baseProcedure
     .input(z.object({ domain: z.string().min(3).max(255) }))
     .mutation(async ({ input }) => {
+      await rateLimit(10, 10 * 60 * 1000);
       try {
         return await inspectSite(input.domain);
       } catch (error) {
@@ -332,13 +599,19 @@ export const leadsRouter = createTRPCRouter({
       }
     }),
 
-  updateNotes: adminProcedure
+  updateNotes: leadsUserProcedure
     .input(z.object({ id: z.number(), notes: z.string().max(5000) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       await db
         .update(lead)
         .set({ notes: input.notes, updatedAt: new Date() })
-        .where(eq(lead.id, input.id));
+        .where(
+          and(
+            eq(lead.id, input.id),
+            eq(lead.userId, ctx.session.user.id),
+            eq(lead.unlocked, true)
+          )
+        );
       return { success: true };
     }),
 });

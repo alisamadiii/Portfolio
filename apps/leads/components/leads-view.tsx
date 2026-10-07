@@ -8,10 +8,14 @@ import {
   Copy,
   Download,
   ExternalLink,
+  Loader2,
+  Lock,
   Phone,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { BuyCreditsDialog } from "@/components/buy-credits-dialog";
 
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { Label } from "@workspace/ui/components/label";
@@ -42,7 +46,8 @@ import { Textarea } from "@workspace/ui/components/textarea";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 
-type Lead = RouterOutputs["leads"]["list"][number];
+type Lead = RouterOutputs["leads"]["list"]["leads"][number];
+type UnlockedLead = Extract<Lead, { locked: false }>;
 
 const STATUSES = ["new", "contacted", "interested", "won", "lost"] as const;
 
@@ -80,7 +85,7 @@ function scoreChip(score: number) {
 }
 
 // Own outreach script — filled from lead data.
-function callScript(lead: Lead, niche: string, city: string) {
+function callScript(lead: UnlockedLead, niche: string, city: string) {
   const reason = !lead.website
     ? "you come up on Google Maps, but there's no website linked to the listing"
     : lead.socialOnly
@@ -96,7 +101,7 @@ That matters because most people check a business online before they call — an
 I already put together a quick mockup of what a site for ${lead.name} could look like. It costs nothing to take a look — would tomorrow morning or afternoon work better for a five-minute walkthrough?`;
 }
 
-function exportCsv(leads: Lead[], filename: string) {
+function exportCsv(leads: UnlockedLead[], filename: string) {
   const header = [
     "Name",
     "Phone",
@@ -141,6 +146,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
   const [noWebsiteOnly, setNoWebsiteOnly] = useState(true);
   const [status, setStatus] = useState<string>("all");
   const [openLeadId, setOpenLeadId] = useState<number | null>(null);
+  const [buyOpen, setBuyOpen] = useState(false);
 
   const scan = useQuery(trpc.leads.scan.get.queryOptions({ scanId }));
   const leads = useQuery(
@@ -151,6 +157,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
         status === "all" ? undefined : (status as (typeof STATUSES)[number]),
     })
   );
+  const credits = useQuery(trpc.leads.credits.get.queryOptions());
 
   const invalidateLeads = () =>
     queryClient.invalidateQueries({ queryKey: trpc.leads.list.queryKey() });
@@ -166,11 +173,31 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
       },
     })
   );
+  const unlock = useMutation(
+    trpc.leads.unlock.mutationOptions({
+      onSuccess: (result) => {
+        invalidateLeads();
+        queryClient.invalidateQueries({
+          queryKey: trpc.leads.credits.get.queryKey(),
+        });
+        toast.success(
+          result.remainingLocked > 0
+            ? `Unlocked ${result.unlocked} leads. ${result.remainingLocked} still locked.`
+            : `Unlocked ${result.unlocked} leads`
+        );
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
 
-  const rows = leads.data ?? [];
-  const openLead = rows.find((l) => l.id === openLeadId) ?? null;
+  const rows = leads.data?.leads ?? [];
+  const lockedCount = leads.data?.lockedCount ?? 0;
+  const balance = credits.data?.balance ?? 0;
+  const openLead =
+    rows.find((l): l is UnlockedLead => !l.locked && l.id === openLeadId) ??
+    null;
 
-  const statusSelect = (lead: Lead, size: "sm" | "default" = "sm") => (
+  const statusSelect = (lead: UnlockedLead, size: "sm" | "default" = "sm") => (
     <Select
       value={lead.status}
       onValueChange={(value) => {
@@ -244,10 +271,10 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
           </Select>
           <button
             className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
-            disabled={!rows.length}
+            disabled={!rows.some((l) => !l.locked)}
             onClick={() =>
               exportCsv(
-                rows,
+                rows.filter((l): l is UnlockedLead => !l.locked),
                 `leads-${scan.data?.query ?? "scan"}-${scan.data?.city ?? scanId}.csv`
               )
             }
@@ -256,6 +283,35 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
           </button>
         </div>
       </div>
+
+      {lockedCount > 0 && (
+        <div className="bg-primary/5 border-primary/20 flex flex-wrap items-center justify-between gap-3 rounded-3xl border px-5 py-4">
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <Lock className="text-primary size-4" />
+            {lockedCount} more {lockedCount === 1 ? "lead" : "leads"} in this
+            scan {lockedCount === 1 ? "is" : "are"} locked
+          </p>
+          {balance > 0 ? (
+            <button
+              className="btn-pill btn-violet h-9 px-4 text-sm"
+              disabled={unlock.isPending}
+              onClick={() => unlock.mutate({ scanId })}
+            >
+              {unlock.isPending && <Loader2 className="animate-spin" />}
+              Unlock {Math.min(balance, lockedCount)} for{" "}
+              {Math.min(balance, lockedCount)}{" "}
+              {Math.min(balance, lockedCount) === 1 ? "credit" : "credits"}
+            </button>
+          ) : (
+            <button
+              className="btn-pill btn-violet h-9 px-4 text-sm"
+              onClick={() => setBuyOpen(true)}
+            >
+              Buy credits to unlock
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="bg-card rounded-3xl p-2 shadow-sm">
         <Table>
@@ -290,7 +346,44 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map((lead) => (
+              rows.map((lead) =>
+                lead.locked ? (
+                  <TableRow key={lead.id} className="opacity-70">
+                    <TableCell>{scoreChip(lead.score)}</TableCell>
+                    {scan.data?.nearMe && (
+                      <TableCell>
+                        {lead.distanceMiles !== null
+                          ? `${lead.distanceMiles} mi`
+                          : "–"}
+                      </TableCell>
+                    )}
+                    <TableCell className="max-w-80">
+                      <div className="bg-muted h-4 w-36 rounded-full" />
+                      <div className="text-muted-foreground mt-1 text-xs">
+                        {lead.category ?? "Locked lead"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="bg-muted h-4 w-24 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      {lead.rating ? (
+                        <span className="flex items-center gap-1">
+                          <Star className="size-3.5 fill-current text-amber-500" />
+                          {lead.rating} ({lead.reviewCount})
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">–</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{websiteBadge(lead)}</TableCell>
+                    <TableCell>
+                      <span className="bg-muted text-muted-foreground flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium">
+                        <Lock className="size-3" /> Locked
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ) : (
                 <TableRow
                   key={lead.id}
                   className="cursor-pointer"
@@ -352,7 +445,8 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                     {statusSelect(lead)}
                   </TableCell>
                 </TableRow>
-              ))
+                )
+              )
             )}
           </TableBody>
         </Table>
@@ -376,6 +470,8 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
           )}
         </SheetContent>
       </Sheet>
+
+      <BuyCreditsDialog open={buyOpen} onOpenChange={setBuyOpen} />
     </div>
   );
 };
@@ -387,7 +483,7 @@ const LeadSheet = ({
   statusSelect,
   onSaveNotes,
 }: {
-  lead: Lead;
+  lead: UnlockedLead;
   niche: string;
   city: string;
   statusSelect: React.ReactNode;

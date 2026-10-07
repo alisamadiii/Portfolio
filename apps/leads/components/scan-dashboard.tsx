@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  Coins,
   History,
   Loader2,
   MapPin,
@@ -13,6 +14,8 @@ import {
   Search,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { BuyCreditsDialog } from "@/components/buy-credits-dialog";
 
 import {
   Combobox,
@@ -170,6 +173,7 @@ export const ScanDashboard = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("FL");
   const [nearMe, setNearMe] = useState(false);
+  const [buyOpen, setBuyOpen] = useState(false);
 
   const scans = useQuery(trpc.leads.scan.list.queryOptions());
   const runScan = useMutation(trpc.leads.scan.run.mutationOptions());
@@ -183,8 +187,13 @@ export const ScanDashboard = () => {
           queryClient.invalidateQueries({
             queryKey: trpc.leads.scan.list.queryKey(),
           });
+          queryClient.invalidateQueries({
+            queryKey: trpc.leads.credits.get.queryKey(),
+          });
           toast.success(
-            `Found ${result.totalFound} businesses, ${result.noWebsiteCount} without a real website`
+            result.lockedCount > 0
+              ? `Found ${result.noWebsiteCount} leads. ${result.lockedCount} locked, buy credits to unlock them.`
+              : `Found ${result.totalFound} businesses, ${result.noWebsiteCount} without a real website`
           );
           router.push(`/scans/${result.scanId}`);
         },
@@ -194,7 +203,11 @@ export const ScanDashboard = () => {
   };
 
   const usage = scans.data;
-  const usedRatio = usage ? usage.monthApiCalls / usage.freeTier : 0;
+  const outOfCredits = usage ? !usage.isAdmin && usage.balance < 1 : false;
+  const usedRatio =
+    usage?.isAdmin && usage.monthApiCalls !== undefined && usage.callCap
+      ? usage.monthApiCalls / usage.callCap
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -243,7 +256,11 @@ export const ScanDashboard = () => {
             <button
               type="submit"
               className="btn-pill btn-dark"
-              disabled={runScan.isPending || usage?.scansLeft === 0}
+              disabled={
+                runScan.isPending ||
+                outOfCredits ||
+                (usage?.isAdmin && usage.scansLeft === 0)
+              }
             >
               {runScan.isPending ? (
                 <Loader2 className="animate-spin" />
@@ -253,43 +270,82 @@ export const ScanDashboard = () => {
               Scan
             </button>
           </form>
-          <div className="mt-3 flex items-center gap-2">
-            <Switch id="near-me" checked={nearMe} onCheckedChange={setNearMe} />
-            <Label htmlFor="near-me" className="text-sm">
-              Near me — businesses within ~12 miles of home, closest first, for
-              in-person visits
-            </Label>
-          </div>
-          {usage && (
-            <div className="mt-5 space-y-2">
-              <div className="bg-muted h-2 overflow-hidden rounded-full">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    usedRatio >= 0.8 ? "bg-destructive" : "bg-primary"
-                  }`}
-                  style={{ width: `${Math.min(100, usedRatio * 100)}%` }}
-                />
-              </div>
+          {usage?.isAdmin && (
+            <div className="mt-3 flex items-center gap-2">
+              <Switch
+                id="near-me"
+                checked={nearMe}
+                onCheckedChange={setNearMe}
+              />
+              <Label htmlFor="near-me" className="text-sm">
+                Near me: businesses within ~12 miles of home, closest first,
+                for in-person visits
+              </Label>
+            </div>
+          )}
+          {usage && !usage.isAdmin && (
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <p className="text-muted-foreground text-sm">
+                <Coins className="text-primary mr-1 inline size-4 align-text-bottom" />
                 <span className="text-foreground font-medium">
-                  {usage.monthApiCalls} / {usage.freeTier}
+                  {usage.balance.toLocaleString()} credits
                 </span>{" "}
-                free Google API calls used this month — about{" "}
-                <span className="text-foreground font-medium">
-                  {usage.scansLeft} scans left
-                </span>
-                . Scans are blocked at the limit so nothing gets billed; resets
-                on the 1st.
+                left. 1 credit unlocks 1 lead; businesses with a healthy
+                website are free.
               </p>
-              {usage.scansLeft === 0 && (
-                <p className="text-destructive text-sm font-medium">
-                  Free tier exhausted — scanning re-opens next month.
-                </p>
+              {outOfCredits ? (
+                <button
+                  type="button"
+                  onClick={() => setBuyOpen(true)}
+                  className="btn-pill btn-violet h-9 px-4 text-sm"
+                >
+                  Buy credits to keep scanning
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setBuyOpen(true)}
+                  className="text-primary cursor-pointer text-sm font-medium hover:underline"
+                >
+                  Buy more
+                </button>
               )}
             </div>
           )}
+          {usage?.isAdmin &&
+            usage.monthApiCalls !== undefined &&
+            usage.callCap !== undefined && (
+              <div className="mt-5 space-y-2">
+                <div className="bg-muted h-2 overflow-hidden rounded-full">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      usedRatio >= 0.8 ? "bg-destructive" : "bg-primary"
+                    }`}
+                    style={{ width: `${Math.min(100, usedRatio * 100)}%` }}
+                  />
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  <span className="text-foreground font-medium">
+                    {usage.monthApiCalls} / {usage.callCap}
+                  </span>{" "}
+                  Google API calls used this month, about{" "}
+                  <span className="text-foreground font-medium">
+                    {usage.scansLeft} scans left
+                  </span>
+                  . Scans are blocked at the cap so spend stays bounded; resets
+                  on the 1st.
+                </p>
+                {usage.scansLeft === 0 && (
+                  <p className="text-destructive text-sm font-medium">
+                    Monthly cap reached. Scanning re-opens next month.
+                  </p>
+                )}
+              </div>
+            )}
         </div>
       </div>
+
+      <BuyCreditsDialog open={buyOpen} onOpenChange={setBuyOpen} />
 
       <div className="bg-card rounded-3xl p-6 shadow-sm sm:p-7">
         <div className="mb-4 flex items-center gap-3">

@@ -131,7 +131,7 @@ export const paymentsRouter = createTRPCRouter({
         /** Where the portal success page sends the user once they're done. */
         callbackUrl: z.string().optional(),
         project: z
-          .enum(["MOTION", "AGENCY", "DOCS", "TEMPLATE", "SAASKIT"])
+          .enum(["MOTION", "AGENCY", "DOCS", "TEMPLATE", "SAASKIT", "LEADS"])
           .optional(),
         /** Stripe coupon (or promotion code) id. */
         discountId: z.string().optional(),
