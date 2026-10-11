@@ -1,12 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import BackNav from "../components/BackNav.astro";
-import HomeFooter from "../components/HomeFooter.astro";
+// Privacy — migrated to the mockup design system (MockupLayout).
+import MockupLayout from "../layouts/MockupLayout.astro";
 
 const updated = "August 2025";
 ---
 
-<Layout
+<MockupLayout
   title="Privacy Policy — Ali Samadi Agency"
   description="How Ali Samadi Agency collects, uses, and protects the personal information you share through our website, contact forms, and checkout."
   canonical="https://alisamadii.com/privacy"
@@ -18,29 +17,25 @@ const updated = "August 2025";
     twitterDescription:
       "How Ali Samadi Agency collects, uses, and protects your personal information.",
   }}
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
 >
-  <BackNav backHref="/" backLabel="Back to Home" fixed />
-
-  <main>
-    <section class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28">
-      <div class="mx-auto max-w-[720px]">
-        <span
-          class="mb-6 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
-          >Legal</span
-        >
-        <h1
-          class="text-[clamp(34px,5vw,56px)] leading-[1.05] font-semibold tracking-[-0.03em]"
-        >
-          Privacy Policy
+  <main id="top">
+    <!-- Hero -->
+    <section style="padding: 140px 0 32px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;">
+        <p class="eyebrow"><span></span>Legal</p>
+        <h1 class="hero-h1" style="margin:0;max-width:18ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Privacy <span style="color:rgb(194,69,31);font-style:italic;">Policy</span>
         </h1>
-        <p class="mt-4 font-mono text-[12.5px] text-muted">
+        <p class="mono" style="margin:0;font-size:12.5px;letter-spacing:0.08em;text-transform:uppercase;color:rgb(107,102,93);">
           Last updated: {updated}
         </p>
+      </div>
+    </section>
 
-        <div
-          class="prose-legal mt-10 space-y-8 text-[15px] leading-[1.7] text-warmgray"
-        >
+    <!-- Body -->
+    <section style="padding: 24px 0 96px; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap" style="max-width:820px;">
+        <div class="prose" style="padding-top:48px;">
           <p>
             Ali Samadi Agency ("we", "us", "our") operates
             <strong>alisamadii.com</strong>. This policy explains what
@@ -49,82 +44,54 @@ const updated = "August 2025";
             to you and deliver our services.
           </p>
 
-          <div>
-            <h2 class="text-xl font-semibold tracking-[-0.01em] text-charcoal">
-              Information we collect
-            </h2>
-            <ul class="mt-4 list-disc space-y-2 pl-5">
-              <li>
-                <strong>Contact details</strong> you submit through our contact or
-                onboarding forms — such as your name, email address, and message.
-              </li>
-              <li>
-                <strong>Billing information</strong> when you start a project. Payments
-                are processed by Stripe; we never see or store your full card details.
-              </li>
-              <li>
-                <strong>Basic usage data</strong> (e.g. pages visited) collected by
-                privacy-respecting analytics to help us improve the site.
-              </li>
-            </ul>
-          </div>
+          <h2>Information we collect</h2>
+          <ul>
+            <li>
+              <strong>Contact details</strong> you submit through our contact or
+              onboarding forms — such as your name, email address, and message.
+            </li>
+            <li>
+              <strong>Billing information</strong> when you start a project. Payments
+              are processed by Stripe; we never see or store your full card details.
+            </li>
+            <li>
+              <strong>Basic usage data</strong> (e.g. pages visited) collected by
+              privacy-respecting analytics to help us improve the site.
+            </li>
+          </ul>
 
-          <div>
-            <h2 class="text-xl font-semibold tracking-[-0.01em] text-charcoal">
-              How we use your information
-            </h2>
-            <p class="mt-4">
-              We use your information to reply to enquiries, prepare quotes,
-              deliver and support projects, process payments, and meet our legal
-              and accounting obligations. We do not sell your personal
-              information, and we do not use it for advertising.
-            </p>
-          </div>
+          <h2>How we use your information</h2>
+          <p>
+            We use your information to reply to enquiries, prepare quotes,
+            deliver and support projects, process payments, and meet our legal
+            and accounting obligations. We do not sell your personal
+            information, and we do not use it for advertising.
+          </p>
 
-          <div>
-            <h2 class="text-xl font-semibold tracking-[-0.01em] text-charcoal">
-              Third-party services
-            </h2>
-            <p class="mt-4">
-              We rely on a small number of trusted providers to run our business
-              — including <strong>Stripe</strong> for payments and our hosting and
-              email providers for delivering the site and communicating with you.
-              Each processes data only as needed to provide their service.
-            </p>
-          </div>
+          <h2>Third-party services</h2>
+          <p>
+            We rely on a small number of trusted providers to run our business
+            — including <strong>Stripe</strong> for payments and our hosting and
+            email providers for delivering the site and communicating with you.
+            Each processes data only as needed to provide their service.
+          </p>
 
-          <div>
-            <h2 class="text-xl font-semibold tracking-[-0.01em] text-charcoal">
-              Your rights
-            </h2>
-            <p class="mt-4">
-              You can ask us to access, correct, or delete the personal
-              information we hold about you at any time. To make a request,
-              email
-              <a
-                href="mailto:agency@alisamadii.com"
-                class="text-charcoal underline decoration-accent/40 underline-offset-2"
-                >agency@alisamadii.com</a
-              > and we'll respond promptly.
-            </p>
-          </div>
+          <h2>Your rights</h2>
+          <p>
+            You can ask us to access, correct, or delete the personal
+            information we hold about you at any time. To make a request, email
+            <a href="mailto:agency@alisamadii.com">agency@alisamadii.com</a> and
+            we'll respond promptly.
+          </p>
 
-          <div>
-            <h2 class="text-xl font-semibold tracking-[-0.01em] text-charcoal">
-              Contact
-            </h2>
-            <p class="mt-4">
-              Questions about this policy? Reach us at
-              <a
-                href="mailto:agency@alisamadii.com"
-                class="text-charcoal underline decoration-accent/40 underline-offset-2"
-                >agency@alisamadii.com</a
-              >, Ali Samadi Agency, Jacksonville, FL, USA.
-            </p>
-          </div>
+          <h2>Contact</h2>
+          <p>
+            Questions about this policy? Reach us at
+            <a href="mailto:agency@alisamadii.com">agency@alisamadii.com</a>, Ali
+            Samadi Agency, Jacksonville, FL, USA.
+          </p>
         </div>
       </div>
     </section>
   </main>
-  <HomeFooter />
-</Layout>
+</MockupLayout>

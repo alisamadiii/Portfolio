@@ -1,8 +1,8 @@
 ---
+// Blog list — migrated to the mockup design system (MockupLayout). Cards reuse
+// the work.astro lift-card pattern. Content query, sorting, and schema kept.
 import { getCollection } from "astro:content";
-import Layout from "../../layouts/Layout.astro";
-import BackNav from "../../components/BackNav.astro";
-import HomeFooter from "../../components/HomeFooter.astro";
+import MockupLayout from "../../layouts/MockupLayout.astro";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/blog`;
@@ -44,7 +44,7 @@ const schema = [
 ];
 ---
 
-<Layout
+<MockupLayout
   title="Blog — Web Design, Development & SEO Tips | Ali Samadi"
   description="Practical articles on how websites get built — design process, development, SEO, and managing your own site — from Ali Samadi Agency."
   canonical={pageUrl}
@@ -57,26 +57,17 @@ const schema = [
       "How websites get built — design, development, SEO, and managing your own site.",
   }}
   schema={schema}
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+  pageType="CollectionPage"
 >
-  <BackNav backHref="/" backLabel="Back to Home" fixed />
-
-  <main>
-    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-      <div class="mx-auto max-w-[1200px]">
-        <div
-          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>Blog
-        </div>
-        <h1
-          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-        >
-          Notes on building <span class="text-accent">better websites</span>
+  <main id="top">
+    <!-- Hero -->
+    <section style="padding: 140px 0 48px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
+        <p class="eyebrow"><span></span>Blog</p>
+        <h1 class="hero-h1" style="margin:0;max-width:18ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Notes on building <span style="color:rgb(194,69,31);font-style:italic;">better websites</span>
         </h1>
-        <p
-          class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-        >
+        <p style="margin:0;max-width:60ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
           How websites actually get built — process, development, SEO, and how
           to run your own site once it's live. Written from real projects, no
           fluff.
@@ -84,55 +75,55 @@ const schema = [
       </div>
     </section>
 
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      {
-        posts.length === 0 ? (
-          <p class="text-warmgray">No posts yet — check back soon.</p>
-        ) : (
-          <div class="grid grid-cols-1 gap-[22px] md:grid-cols-2">
-            {posts.map((post) => (
-              <a
-                href={`/blog/${post.id}`}
-                class="img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-              >
-                <div class="aspect-[16/9] overflow-hidden">
-                  <img
-                    src={post.data.heroImage}
-                    alt={post.data.heroImageAlt}
-                    width="1600"
-                    height="900"
-                    class="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div class="p-7">
-                  <div class="font-mono text-[11.5px] tracking-[0.08em] text-muted uppercase">
-                    {dateFmt(post.data.publishDate)}
+    <!-- Posts -->
+    <section style="padding: 48px 0 72px; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap">
+        {
+          posts.length === 0 ? (
+            <p style="margin:0;font-size:16px;color:rgb(103,98,90);">
+              No posts yet — check back soon.
+            </p>
+          ) : (
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;">
+              {posts.map((post) => (
+                <a
+                  href={`/blog/${post.id}`}
+                  class="lift"
+                  style="text-decoration:none;color:rgb(27,26,23);padding:6px;border-radius:18px;background:rgba(27,26,23,0.03);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.1) 0px 14px 34px;display:flex;"
+                >
+                  <div style="flex:1 1 0%;border-radius:14px;background:rgb(255,254,252);padding:8px 8px 24px;display:flex;flex-direction:column;gap:20px;">
+                    <div class="zoom" style="border-radius:10px;overflow:hidden;">
+                      <img
+                        src={post.data.heroImage}
+                        alt={post.data.heroImageAlt}
+                        width="1600"
+                        height="900"
+                        loading="lazy"
+                        class="zi"
+                        style="aspect-ratio:16/9;width:100%;height:100%;object-fit:cover;display:block;"
+                      />
+                    </div>
+                    <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
+                      <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
+                        {dateFmt(post.data.publishDate)}
+                      </p>
+                      <h2 style="margin:0;font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-0.02em;">
+                        {post.data.title}{" "}
+                        <span aria-hidden="true" style="color:rgb(133,128,117);">
+                          ↗
+                        </span>
+                      </h2>
+                      <p style="margin:0;font-size:15px;line-height:1.55;color:rgb(103,98,90);">
+                        {post.data.description}
+                      </p>
+                    </div>
                   </div>
-                  <div class="mt-2.5 flex items-start justify-between gap-4">
-                    <h2 class="text-[22px] leading-[1.2] font-semibold tracking-[-0.02em]">
-                      {post.data.title}
-                    </h2>
-                    <span class="shrink-0 text-accent">&#8599;</span>
-                  </div>
-                  <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-                    {post.data.description}
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-        )
-      }
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </div>
     </section>
   </main>
-  <HomeFooter />
-</Layout>
-
-<style is:global>
-  html {
-    scrollbar-gutter: stable;
-  }
-</style>
+</MockupLayout>

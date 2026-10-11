@@ -1,8 +1,9 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import BackNav from "../components/BackNav.astro";
-import HomeFooter from "../components/HomeFooter.astro";
+// Contact — migrated to the mockup design system (MockupLayout). Keeps the
+// working QuoteForm and the contact channels. Dark CTA from the shared block.
+import MockupLayout from "../layouts/MockupLayout.astro";
 import QuoteForm from "../components/QuoteForm.astro";
+import CTA from "../html/blocks/cta.html?raw";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/contact`;
@@ -50,7 +51,7 @@ const channels = [
 ];
 ---
 
-<Layout
+<MockupLayout
   title="Contact — Ali Samadi Agency | Start Your Project"
   description="Get in touch with Ali Samadi Agency — email, book a call, or phone. Based in Jacksonville, FL, working with startups and small businesses everywhere."
   canonical={pageUrl}
@@ -64,139 +65,67 @@ const channels = [
   }}
   schema={schema}
   pageType="ContactPage"
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
 >
-  <BackNav backHref="/" backLabel="Back to Home" fixed />
-
-  <main>
-    <!-- ==================== HERO ==================== -->
-    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-      <div class="mx-auto max-w-[1200px]">
-        <div
-          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>Get in Touch
-        </div>
-        <h1
-          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-        >
-          Let's create something <span class="text-accent">amazing</span>
+  <main id="top">
+    <!-- Hero -->
+    <section style="padding: 140px 0 32px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
+        <p class="eyebrow"><span></span>Contact</p>
+        <h1 class="hero-h1" style="margin:0;max-width:16ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Let's create something <span style="color:rgb(194,69,31);font-style:italic;">amazing</span>
         </h1>
-        <p
-          class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-        >
-          Ready to elevate your digital presence? Tell us about your project —
-          the fastest way to start is an email or a quick call.
+        <p style="margin:0;max-width:56ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
+          Ready to elevate your digital presence? Tell us about your project.
+          The fastest way to start is the form below, an email, or a quick call.
         </p>
-        <div class="mt-9">
-          <a
-            href="#quote"
-            class="mag-btn inline-flex items-center gap-2.5 rounded-xl bg-accent px-[26px] py-[15px] text-base font-medium text-charcoal shadow-[0_10px_30px_rgba(252,132,100,0.35)] hover:bg-charcoal hover:text-cream"
-          >
-            Get a Quote
-            <span>&#8599;</span>
-          </a>
+      </div>
+    </section>
+
+    <!-- Quote form -->
+    <section id="quote" style="padding: 24px 0 72px; scroll-margin-top: 96px;">
+      <div class="wrap">
+        <div style="max-width:760px;margin-inline:auto;">
+          <QuoteForm heading="Start the conversation" />
         </div>
       </div>
     </section>
 
-    <!-- ==================== QUOTE FORM ==================== -->
-    <section
-      id="quote"
-      class="mx-auto max-w-[1200px] scroll-mt-24 border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div class="mx-auto max-w-[720px]">
-        <QuoteForm heading="Start the conversation" />
-      </div>
-    </section>
-
-    <!-- ==================== CHANNELS ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div
-        class="stagger grid grid-cols-1 gap-[22px] sm:grid-cols-2 lg:grid-cols-4"
-      >
-        {
-          channels.map((c) => (
-            <a
-              href={c.href}
-              target={c.external ? "_blank" : undefined}
-              rel={c.external ? "noopener noreferrer" : undefined}
-              class="reveal group block rounded-[18px] border border-charcoal/[0.08] bg-white p-6"
-            >
-              <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
-                {c.label}
-              </div>
-              <div class="mt-2.5 text-[17px] font-semibold tracking-[-0.01em] transition-colors duration-300 group-hover:text-accent">
-                {c.value}
-              </div>
-              <p class="mt-2 text-[14px] leading-[1.55] text-warmgray">
-                {c.note}
-              </p>
-            </a>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- ==================== NEXT STEPS ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div class="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.4fr] md:gap-14">
-        <h2
-          class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-        >
-          What happens next
-        </h2>
-        <div class="space-y-5 text-[16.5px] leading-[1.65] text-warmgray">
-          <p class="reveal">
-            Tell us what you're building and we'll come back with a plan —
-            scope, timeline, and a clear price. Most projects fit our
-            <a href="/pricing" class="text-accent hover:underline"
-              >standard pricing</a
-            >; bigger ideas get a custom quote.
-          </p>
-          <p class="reveal">
-            Not sure what you need yet? Browse
-            <a href="/work" class="text-accent hover:underline">our work</a> or read
-            <a href="/about" class="text-accent hover:underline"
-              >about the studio</a
-            > first — then reach out whenever you're ready.
-          </p>
+    <!-- Channels -->
+    <section style="padding: 72px 0; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap" style="display:flex;flex-direction:column;gap:36px;">
+        <div style="display:flex;flex-direction:column;gap:16px;max-width:640px;">
+          <p class="eyebrow"><span></span>Other ways to reach us</p>
+          <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
+            Pick whatever's easiest
+          </h2>
         </div>
-      </div>
-    </section>
-  </main>
-  <HomeFooter />
-</Layout>
-
-<style is:global>
-  html {
-    scrollbar-gutter: stable;
-  }
-  .mag-btn {
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  }
-  .mag-btn:active {
-    transform: scale(0.97);
-  }
-</style>
-
-<script is:inline data-astro-rerun>
-  (() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">
+          {
+            channels.map((c) => (
+              <a
+                href={c.href}
+                target={c.external ? "_blank" : undefined}
+                rel={c.external ? "noopener noreferrer" : undefined}
+                class="lift"
+                style="text-decoration:none;color:rgb(27,26,23);border-radius:18px;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.08) 0px 10px 28px;padding:26px;display:flex;flex-direction:column;gap:10px;"
+              >
+                <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
+                  {c.label}
+                </p>
+                <p style="margin:0;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:rgb(194,69,31);">
+                  {c.value}
+                </p>
+                <p style="margin:0;font-size:14px;line-height:1.55;color:rgb(103,98,90);">
+                  {c.note}
+                </p>
+              </a>
+            ))
           }
-        });
-      },
-      { threshold: 0.1, rootMargin: "-60px" }
-    );
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-  })();
-</script>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dark CTA -->
+    <Fragment set:html={CTA} />
+  </main>
+</MockupLayout>

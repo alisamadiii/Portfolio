@@ -1,8 +1,10 @@
 ---
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
-import BackNav from "../../components/BackNav.astro";
-import HomeFooter from "../../components/HomeFooter.astro";
+import "../../styles/mockup.css";
+import MockupNav from "../../components/MockupNav.astro";
+import MockupFooter from "../../components/MockupFooter.astro";
+import MockupScripts from "../../components/MockupScripts.astro";
 import DocsSidebar from "../../components/DocsSidebar.astro";
 import DocsRail from "../../components/DocsRail.astro";
 import { getDocsTree, GROUP_LABELS } from "../../data/docs";
@@ -70,9 +72,9 @@ const schema = [
     twitterDescription: data.description,
   }}
   schema={schema}
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+  bodyClass=""
 >
-  <BackNav backHref="/docs" backLabel="All Docs" fixed />
+  <MockupNav />
 
   <main class="px-4 pt-32 pb-16 md:px-8 md:pt-36 md:pb-20">
     <div
@@ -154,7 +156,8 @@ const schema = [
       <DocsRail />
     </div>
   </main>
-  <HomeFooter />
+  <MockupFooter />
+  <MockupScripts />
 </Layout>
 
 <style is:global>
@@ -162,7 +165,7 @@ const schema = [
     scrollbar-gutter: stable;
     scroll-behavior: smooth;
   }
-  /* Anchor targets clear the fixed BackNav on jump. */
+  /* Anchor targets clear the sticky nav on jump. */
   .prose :is(h2, h3) {
     scroll-margin-top: 6rem;
   }
