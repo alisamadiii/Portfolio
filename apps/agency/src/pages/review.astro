@@ -4,11 +4,11 @@
 // then sends them to the Google "write a review" link. Not indexed.
 import MockupLayout from "../layouts/MockupLayout.astro";
 
-// ⚠️ REPLACE with your Google "write a review" link once the Business Profile
-// listing is live. From Google Business Profile → "Ask for reviews" → copy the
-// short link, which looks like https://g.page/r/XXXXXXXX/review  (or the long
-// form https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID).
-const REVIEW_URL = "https://g.page/r/REPLACE_WITH_YOUR_PLACE_ID/review";
+// Google "write a review" deep link for ALI SAMADII LLC. The `#lrd=<data-id>,3`
+// fragment opens the knowledge-panel review composer for signed-in users.
+// data-id 0x222b9779ca1c9b4f:0xa7623c27b5680197 · CID 12061268893296492951.
+const REVIEW_URL =
+  "https://www.google.com/search?q=ALI+SAMADII+LLC&ludocid=12061268893296492951#lrd=0x222b9779ca1c9b4f:0xa7623c27b5680197,3";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/review`;
