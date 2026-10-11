@@ -11,7 +11,7 @@
 // businesses. The one-time "own it" build plan was retired.
 
 export const PRICING = {
-  // All-inclusive Website-as-a-Service plan — published anchor:
+  // All-inclusive Website as a Service plan — published anchor:
   // one-time setup + monthly.
   setup: 1299,
   monthly: 100,
