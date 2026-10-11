@@ -1,32 +1,46 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import BackNav from "../components/BackNav.astro";
-import PricingCards from "../components/PricingCards.astro";
-import HomeFooter from "../components/HomeFooter.astro";
+// Pricing — built in the mockup design system (MockupLayout), taking the hero,
+// pricing-card, and dark-CTA patterns from the home/services pages. Prices come
+// from src/data/pricing.ts so the page and schema never drift.
+import MockupLayout from "../layouts/MockupLayout.astro";
 import { PRICING, fmtPrice } from "../data/pricing";
+import PRICING_CARDS from "../html/blocks/pricing-cards.html?raw";
+import CTA from "../html/blocks/cta.html?raw";
 
-// The monthly anchor is rendered into the HTML at build time so crawlers/LLMs
-// see a real number. Custom projects are quote-only — no figure anywhere.
 const SITE = "https://www.alisamadii.com";
-// Page-specific structured data — prices sourced from src/data/pricing.ts so
-// the schema can never drift from the visible page or from Stripe.
+const pageUrl = `${SITE}/pricing`;
+
+const faqs = [
+  {
+    q: "What's included in the monthly plan?",
+    a: `For ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/month you get design, development, hosting, email, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs. This plan is for local and small businesses; pricing varies with scope, but for most projects this is the price.`,
+  },
+  {
+    q: "Why is custom quote-only?",
+    a: "Admin panels, user accounts, databases, and integrations vary too much to list a single price. We scope the work with you and send one fair, fixed quote before anything starts — no surprises later.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "Yes. The monthly plan has no lock-in. Your code lives in your own GitHub and your domain and hosting are in your name, so you keep the site and can take it anywhere if you ever leave.",
+  },
+  {
+    q: "Are there any hidden fees?",
+    a: "No. The setup fee and monthly price cover design, development, hosting, email, SEO basics, and ongoing updates. Larger scopes are quoted upfront in writing before we begin.",
+  },
+];
+
 const pricingSchema = [
   {
     "@type": "BreadcrumbList",
-    "@id": `${SITE}/pricing#breadcrumb`,
+    "@id": `${pageUrl}#breadcrumb`,
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Pricing",
-        item: `${SITE}/pricing`,
-      },
+      { "@type": "ListItem", position: 2, name: "Pricing", item: pageUrl },
     ],
   },
   {
     "@type": "Service",
-    "@id": `${SITE}/pricing#service`,
+    "@id": `${pageUrl}#service`,
     name: "Website Design & Development",
     provider: { "@id": `${SITE}/#organization` },
     areaServed: "US",
@@ -37,8 +51,7 @@ const pricingSchema = [
         {
           "@type": "Offer",
           name: "Website-as-a-Service (All-Inclusive)",
-          description:
-            "$1,299 + $100/mo — design, development, CMS, email, SEO, and hosting, fully managed. For local and small businesses; for most projects this is the price.",
+          description: `${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/mo — design, development, CMS, email, SEO, and hosting, fully managed.`,
           price: String(PRICING.monthly),
           priceCurrency: "USD",
           priceSpecification: {
@@ -56,168 +69,105 @@ const pricingSchema = [
       ],
     },
   },
+  {
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
 ];
 ---
 
-<Layout
-  title="Pricing — Ali Samadi | Creative Agency"
-  description="Simple, honest pricing for local and small businesses. An all-inclusive plan at $1,299 + $100/mo or a fully custom project — web design, hosting, CMS, and email."
-  canonical="https://www.alisamadii.com/pricing"
+<MockupLayout
+  title="Pricing — Simple, Transparent Website Plans | Ali Samadi"
+  description="Transparent pricing from Ali Samadi Agency: an all-inclusive Website-as-a-Service plan plus custom projects quoted fairly. No hidden fees, cancel anytime."
+  canonical={pageUrl}
   og={{
-    title: "Pricing — Ali Samadi",
+    title: "Pricing — Ali Samadi Agency",
     description:
-      "Simple, honest pricing for local and small businesses. An all-inclusive plan at $1,299 + $100/mo or a fully custom project.",
-    url: "https://www.alisamadii.com/pricing",
+      "An all-inclusive monthly website plan plus custom projects quoted fairly. No hidden fees, cancel anytime.",
+    url: pageUrl,
     twitterDescription:
-      "Simple pricing for local and small businesses. All-inclusive at $1,299 + $100/mo, or fully custom.",
+      "Simple, transparent website pricing — no hidden fees, cancel anytime.",
   }}
   schema={pricingSchema}
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
 >
-  <BackNav backHref="/" backLabel="Back to Home" fixed />
-
-  <main>
-    <!-- ==================== HERO ==================== -->
-    <section
-      id="heroSection"
-      class="px-4 pt-32 pb-20 md:px-8 md:pt-40 md:pb-28"
-    >
-      <div class="stagger mx-auto max-w-[1400px]">
-        <div class="reveal">
-          <span
-            class="mb-6 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
-            >Pricing</span
-          >
-        </div>
-        <h1
-          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-        >
-          Build Your<br />
-          <span class="text-accent">Project</span>
+  <main id="top">
+    <!-- Hero -->
+    <section style="padding: 140px 0 48px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
+        <p class="eyebrow"><span></span>Pricing</p>
+        <h1 class="hero-h1" style="margin:0;max-width:16ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Simple, <span style="color:rgb(194,69,31);font-style:italic;">transparent</span> pricing
         </h1>
-        <p
-          class="reveal mt-6 max-w-[55ch] text-base leading-relaxed text-warmgray md:text-lg"
-        >
-          Pick the plan that fits — an all-inclusive plan for local and small
-          businesses at {fmtPrice(PRICING.setup)} + {
-            fmtPrice(PRICING.monthly)
-          }/mo, or a fully custom project scoped together.
+        <p style="margin:0;max-width:60ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
+          One all-inclusive monthly plan or a fully custom project. No hidden
+          fees, cancel anytime, and you own everything from day one.
         </p>
-        <div class="reveal mt-8">
-          <div
-            class="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-5 py-2.5 ring-1 ring-emerald-200/60"
-          >
-            <svg
-              class="h-5 w-5 shrink-0 text-emerald-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-              ></path>
-            </svg>
-            <span class="text-sm font-semibold text-emerald-800"
-              >1-Day Delivery</span
-            >
-            <span class="text-xs text-emerald-800"
-              >once your project is confirmed</span
-            >
-          </div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:8px;">
+          <a href="/quote" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;">Get a Quote <span aria-hidden="true">↗</span></a>
+          <a href="/services" class="tlink" style="display:inline-flex;align-items:center;min-height:52px;padding:0 12px;font-size:15px;font-weight:500;color:rgb(103,98,90);">See what's included →</a>
         </div>
       </div>
     </section>
 
-    <!-- ==================== PLANS ==================== -->
-    <section
-      id="packageSelection"
-      class="border-t border-charcoal/[0.06] px-4 py-20 md:px-8 md:py-28"
-    >
-      <div class="mx-auto max-w-[1400px]">
-        <div class="stagger mb-12">
-          <div class="reveal">
-            <span
-              class="mb-4 inline-block rounded-full bg-charcoal/5 px-3 py-1 font-mono text-[11.5px] tracking-[0.12em] text-warmgray uppercase"
-              >Choose Your Path</span
-            >
-          </div>
-          <h2
-            class="reveal mt-2 text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-          >
-            How Would You Like<br />to
-            <span class="text-accent">Get Started</span>?
+    <!-- Pricing cards -->
+    <section style="padding: 24px 0 72px;">
+      <div class="wrap">
+        <Fragment set:html={PRICING_CARDS} />
+        <p style="margin:28px 0 0;text-align:center;font-size:14px;color:rgb(107,102,93);">
+          Prices are anchors for most projects. Final scope is confirmed in
+          writing before anything starts.
+        </p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section style="padding: 72px 0; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap" style="display:grid;grid-template-columns:1fr;gap:40px;">
+        <div style="display:flex;flex-direction:column;gap:16px;max-width:640px;">
+          <p class="eyebrow"><span></span>FAQ</p>
+          <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
+            Pricing questions
           </h2>
-          <p
-            class="reveal mt-4 max-w-[55ch] text-base leading-relaxed text-warmgray"
-          >
-            Go all-inclusive with a managed monthly plan, or reach out for
-            something fully custom. Every plan starts with a quote.
-          </p>
         </div>
-
-        <PricingCards />
+        <div style="display:flex;flex-direction:column;border-top:1px solid rgba(27,26,23,0.07);">
+          {
+            faqs.map((f, i) => (
+              <div style="border-bottom:1px solid rgba(27,26,23,0.07);">
+                <button
+                  type="button"
+                  class="faq-q"
+                  aria-expanded={i === 0 ? "true" : "false"}
+                  style="width:100%;min-height:64px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:0;background:transparent;cursor:pointer;text-align:left;font-family:inherit;font-size:17px;font-weight:600;color:rgb(27,26,23);"
+                >
+                  {f.q}
+                  <span aria-hidden="true" class="mono" style="font-size:20px;color:rgb(107,102,93);">
+                    <span>{i === 0 ? "−" : "+"}</span>
+                  </span>
+                </button>
+                {i === 0 && (
+                  <p class="fade" style="margin:0;padding:0 24px 24px;max-width:68ch;font-size:16px;line-height:1.65;color:rgb(103,98,90);">
+                    {f.a}
+                  </p>
+                )}
+              </div>
+            ))
+          }
+        </div>
       </div>
     </section>
+
+    <!-- Dark CTA -->
+    <Fragment set:html={CTA} />
   </main>
-  <HomeFooter />
 
-  <!-- ==================== JAVASCRIPT ==================== -->
-  <!-- data-astro-rerun + IIFE: re-runs after every ClientRouter swap without
-       leaking top-level consts into the persistent global scope. -->
-  <script is:inline data-astro-rerun>
-    (() => {
-      // Prices are server-rendered from src/data/pricing.ts and every card
-      // links to the quote form — this block only wires reveals.
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("visible");
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.1, rootMargin: "-60px" }
-      );
-
-      document
-        .querySelectorAll(".reveal")
-        .forEach((el) => observer.observe(el));
-    })();
-  </script>
-</Layout>
-
-<style is:global>
-  html {
-    scrollbar-gutter: stable;
-  }
-
-  /* Stagger children */
-  .stagger > .reveal:nth-child(1) {
-    transition-delay: 0ms;
-  }
-  .stagger > .reveal:nth-child(2) {
-    transition-delay: 120ms;
-  }
-  .stagger > .reveal:nth-child(3) {
-    transition-delay: 240ms;
-  }
-  .stagger > .reveal:nth-child(4) {
-    transition-delay: 360ms;
-  }
-  .stagger > .reveal:nth-child(5) {
-    transition-delay: 480ms;
-  }
-
-  /* Magnetic button */
-  .mag-btn {
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  }
-  .mag-btn:active {
-    transform: scale(0.97);
-  }
-</style>
+  <script
+    type="application/json"
+    id="faq-data"
+    set:html={JSON.stringify(faqs)}
+  ></script>
+</MockupLayout>

@@ -1,9 +1,9 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import BackNav from "../components/BackNav.astro";
-import HomeFooter from "../components/HomeFooter.astro";
-import Testimonial from "../components/Testimonial.astro";
-import { PROJECTS, CLIENT_PROJECTS } from "../data/projects";
+// Work — built in the mockup design system (MockupLayout), reusing the home
+// client-work card pattern. Projects come from src/data/projects.ts.
+import MockupLayout from "../layouts/MockupLayout.astro";
+import { PROJECTS, CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
+import CTA from "../html/blocks/cta.html?raw";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/work`;
@@ -20,7 +20,6 @@ const schema = [
   {
     "@type": "ItemList",
     "@id": `${pageUrl}#projects`,
-    name: "Projects",
     itemListElement: PROJECTS.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
@@ -31,7 +30,7 @@ const schema = [
 ];
 ---
 
-<Layout
+<MockupLayout
   title="Our Work — Client Websites & Concept Projects | Ali Samadi"
   description="Live websites we've built for real clients — nonprofits, contractors, and personal brands — plus concepts that show what we can do. All custom-coded."
   canonical={pageUrl}
@@ -45,186 +44,144 @@ const schema = [
   }}
   schema={schema}
   pageType="CollectionPage"
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
 >
-  <BackNav backHref="/" backLabel="Back to Home" fixed />
-
-  <main>
-    <!-- ==================== HERO ==================== -->
-    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-      <div class="mx-auto max-w-[1200px]">
-        <div
-          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>Our Work
-        </div>
-        <h1
-          class="text-[clamp(38px,5.5vw,72px)] leading-[1.02] font-semibold tracking-[-0.035em]"
-        >
-          Work that's <span class="text-accent">live</span> and in use
+  <main id="top">
+    <!-- Hero -->
+    <section style="padding: 140px 0 48px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
+        <p class="eyebrow"><span></span>Our work</p>
+        <h1 class="hero-h1" style="margin:0;max-width:17ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Real projects, <span style="color:rgb(194,69,31);font-style:italic;">real clients</span>
         </h1>
-        <p
-          class="mt-6 max-w-[58ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-        >
-          Real websites we've designed and built for real businesses, plus
-          concept projects that show our range. Every one is custom-coded from
-          scratch — no templates, no page builders.
+        <p style="margin:0;max-width:60ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
+          Live websites we've designed and built for real businesses, plus
+          concept builds that show what we can do. Every one custom-coded, no
+          templates.
         </p>
+        <a href="/quote" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;margin-top:8px;">Start a Project <span aria-hidden="true">↗</span></a>
       </div>
     </section>
 
-    <!-- ==================== FAST-TRACK BANNER ==================== -->
-    <section class="px-4 pb-16 md:px-8 md:pb-20">
-      <div
-        class="reveal mx-auto max-w-[1200px] rounded-[22px] bg-accent px-7 py-12 text-charcoal md:px-14 md:py-16"
-      >
-        <div
-          class="mb-5 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-charcoal uppercase"
-        >
-          <span class="h-px w-[26px] bg-charcoal/40"></span>Fast Track
+    <!-- Live client work -->
+    <section style="padding: 48px 0 24px; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
+        <div style="display:flex;flex-direction:column;gap:16px;max-width:640px;">
+          <p class="eyebrow"><span></span>Client work</p>
+          <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
+            Live sites, shipped and in use
+          </h2>
         </div>
-        <h2
-          class="max-w-[24ch] text-[clamp(28px,3.8vw,52px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-        >
-          Small business? Skip the process.
-        </h2>
-        <p
-          class="mt-5 max-w-[62ch] text-[16px] leading-[1.65] text-charcoal/90 md:text-[17px]"
-        >
-          If you're a small business looking for a fast landing page with a
-          great design, we don't need to go through all four steps &mdash;
-          Discovery, Strategy, Execution, Launch. Tell us what you do, and we'll
-          ship a clean, custom-coded page fast.
-        </p>
-        <a
-          href="/pricing"
-          class="mag-btn mt-8 inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-cream hover:text-charcoal"
-        >
-          Get a fast landing page
-          <span>&#8599;</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- ==================== CLIENT WORK ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div
-        class="mb-11 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12"
-      >
-        <h2
-          class="reveal text-[clamp(30px,3.6vw,48px)] leading-[1.08] font-semibold tracking-[-0.03em]"
-        >
-          Real projects, real clients
-        </h2>
-        <p class="reveal text-[15.5px] leading-[1.6] text-warmgray">
-          A selection of live websites we've designed and built for real
-          businesses &mdash; each one shipped, launched, and in use today.
-        </p>
-      </div>
-
-      <div class="stagger grid grid-cols-1 gap-[22px] md:grid-cols-3">
-        {
-          CLIENT_PROJECTS.map((project) => (
-            <a
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="reveal img-wrap group block overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white"
-            >
-              <div class="aspect-[16/10] overflow-hidden">
-                <img
-                  src={project.image!.src}
-                  alt={project.image!.alt}
-                  width="1120"
-                  height="700"
-                  class="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div class="p-6">
-                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
-                  {project.category}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
+          {
+            CLIENT_PROJECTS.map((p) => (
+              <a
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="lift"
+                style="text-decoration:none;color:rgb(27,26,23);padding:6px;border-radius:18px;background:rgba(27,26,23,0.03);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.1) 0px 14px 34px;display:flex;"
+              >
+                <div style="flex:1 1 0%;border-radius:14px;background:rgb(255,254,252);padding:8px 8px 24px;display:flex;flex-direction:column;gap:20px;">
+                  <div class="zoom" style="border-radius:10px;overflow:hidden;">
+                    <img
+                      src={p.image!.src}
+                      alt={p.image!.alt}
+                      width="1120"
+                      height="840"
+                      loading="lazy"
+                      class="zi"
+                      style="aspect-ratio:4/3;width:100%;height:100%;object-fit:cover;display:block;"
+                    />
+                  </div>
+                  <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;">
+                    <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
+                      {p.category}
+                    </p>
+                    <h3 style="margin:0;font-size:20px;line-height:1.4;font-weight:600;">
+                      {p.name}{" "}
+                      <span aria-hidden="true" style="color:rgb(133,128,117);">↗</span>
+                    </h3>
+                    <p style="margin:0;font-size:15px;line-height:1.55;color:rgb(103,98,90);">
+                      {p.description}
+                    </p>
+                  </div>
                 </div>
-                <div class="mt-2.5 flex items-center justify-between gap-4">
-                  <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
-                    {project.name}
-                  </h3>
-                  <span class="text-accent">&#8599;</span>
-                </div>
-                <p class="mt-2 text-[14.5px] leading-[1.55] text-warmgray">
-                  {project.description}
-                </p>
-              </div>
-            </a>
-          ))
-        }
-      </div>
-
-      <Testimonial />
-    </section>
-
-    <!-- ==================== CTA ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] text-center md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(28px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Want a site like these?
-      </h2>
-      <div class="reveal mt-8 flex flex-wrap justify-center gap-3.5">
-        <a
-          href="/pricing"
-          class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
-        >
-          View pricing
-          <span>&#8599;</span>
-        </a>
-        <a
-          href="/contact"
-          class="mag-btn inline-flex items-center rounded-full border border-charcoal/[0.16] px-6 py-3.5 text-[15px] font-medium hover:border-accent hover:text-accent"
-        >
-          Get in touch
-        </a>
-      </div>
-    </section>
-  </main>
-  <HomeFooter />
-</Layout>
-
-<style is:global>
-  html {
-    scrollbar-gutter: stable;
-  }
-  .mag-btn {
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  }
-  .mag-btn:active {
-    transform: scale(0.97);
-  }
-  .img-wrap img {
-    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .img-wrap:hover img {
-    transform: scale(1.04);
-  }
-</style>
-
-<script is:inline data-astro-rerun>
-  (() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
+              </a>
+            ))
           }
-        });
-      },
-      { threshold: 0.1, rootMargin: "-60px" }
-    );
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-  })();
-</script>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonial -->
+    <section style="padding: 64px 0;">
+      <div class="wrap">
+        <figure style="margin:0;max-width:900px;margin-inline:auto;text-align:center;display:flex;flex-direction:column;gap:20px;align-items:center;">
+          <p class="mono" style="margin:0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgb(252,132,100);">★★★★★</p>
+          <blockquote style="margin:0;font-size:clamp(20px,2.4vw,28px);line-height:1.4;font-weight:500;letter-spacing:-0.01em;">
+            &ldquo;Ali did an amazing job creating our website. He paid
+            attention to details and got us the website we wanted — professional,
+            modern, and eye-catching. Highly recommend him!&rdquo;
+          </blockquote>
+          <figcaption class="mono" style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
+            — Alitech
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Concept builds -->
+    <section style="padding: 24px 0 48px; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
+        <div style="display:flex;flex-direction:column;gap:16px;max-width:640px;">
+          <p class="eyebrow"><span></span>Concept builds</p>
+          <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
+            Demos that show the range
+          </h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
+          {
+            CONCEPT_PROJECTS.map((p) => (
+              <a
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="lift"
+                style="text-decoration:none;color:rgb(27,26,23);padding:6px;border-radius:18px;background:rgba(27,26,23,0.03);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.1) 0px 14px 34px;display:flex;"
+              >
+                <div style="flex:1 1 0%;border-radius:14px;background:rgb(255,254,252);padding:8px 8px 24px;display:flex;flex-direction:column;gap:20px;">
+                  <div class="zoom" style="border-radius:10px;overflow:hidden;">
+                    <img
+                      src={p.image!.src}
+                      alt={p.image!.alt}
+                      width="1120"
+                      height="840"
+                      loading="lazy"
+                      class="zi"
+                      style="aspect-ratio:4/3;width:100%;height:100%;object-fit:cover;display:block;"
+                    />
+                  </div>
+                  <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;">
+                    <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
+                      {p.category}
+                    </p>
+                    <h3 style="margin:0;font-size:20px;line-height:1.4;font-weight:600;">
+                      {p.name}{" "}
+                      <span aria-hidden="true" style="color:rgb(133,128,117);">↗</span>
+                    </h3>
+                    <p style="margin:0;font-size:15px;line-height:1.55;color:rgb(103,98,90);">
+                      {p.description}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Dark CTA -->
+    <Fragment set:html={CTA} />
+  </main>
+</MockupLayout>
