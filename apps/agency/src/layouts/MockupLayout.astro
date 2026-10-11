@@ -16,9 +16,11 @@ interface Props {
   og?: Record<string, unknown>;
   schema?: unknown[];
   pageType?: string;
+  robots?: string;
 }
 
-const { title, description, canonical, og, schema, pageType } = Astro.props;
+const { title, description, canonical, og, schema, pageType, robots } =
+  Astro.props;
 ---
 
 <Layout
@@ -28,6 +30,7 @@ const { title, description, canonical, og, schema, pageType } = Astro.props;
   og={og}
   schema={schema}
   pageType={pageType}
+  robots={robots}
   bodyClass=""
 >
   <div id="dc-root">
