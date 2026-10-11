@@ -5,67 +5,275 @@
 // every listener is delegated on `document` and palette elements are looked
 // up lazily inside handlers. The index is a build-time endpoint
 // (src/pages/search-index.json.ts), fetched on first open and cached.
+// Styling matches the mockup "Site search palette" frame.
 ---
 
-<dialog
-  id="search-palette"
-  class="mx-auto mt-[10vh] w-[min(640px,calc(100vw-2rem))] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white p-0 text-charcoal shadow-[0_24px_80px_-24px_rgba(27,26,23,0.35)] backdrop:bg-transparent"
->
-  <div
-    class="flex items-center gap-3 border-b border-charcoal/[0.08] px-4 py-3.5"
-  >
-    <svg
-      class="h-[18px] w-[18px] shrink-0 text-muted"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      stroke-width="1.5"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
-      ></path>
-    </svg>
-    <input
-      id="search-input"
-      type="text"
-      placeholder="Search pages, services, work, blog…"
-      autocomplete="off"
-      autocapitalize="off"
-      spellcheck="false"
-      class="w-full bg-transparent text-[15px] text-charcoal outline-none placeholder:text-muted"
-    />
-    <kbd
-      class="hidden shrink-0 rounded-[5px] border border-charcoal/[0.1] px-1.5 py-px font-mono text-[11px] text-muted sm:inline"
-      >esc</kbd
-    >
-  </div>
+<dialog id="search-palette" class="search-dialog">
+  <div class="search-panel">
+    <div class="search-inputrow">
+      <svg
+        class="search-magnifier"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
+        ></path>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search pages, services, work, blog…"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        class="search-field"
+      />
+      <span class="kbd">esc</span>
+    </div>
 
-  <div
-    id="search-results"
-    role="listbox"
-    aria-label="Search results"
-    class="max-h-[min(52vh,420px)] overflow-y-auto overscroll-contain pb-2"
-  >
-  </div>
+    <div
+      id="search-results"
+      role="listbox"
+      aria-label="Search results"
+      class="search-results"
+    >
+    </div>
 
-  <div
-    class="hidden items-center gap-4 border-t border-charcoal/[0.08] px-4 py-2.5 font-mono text-[11px] tracking-[0.06em] text-muted sm:flex"
-  >
-    <span>&#8593;&#8595; navigate</span>
-    <span>&#8629; open</span>
-    <span>esc close</span>
+    <div class="search-footer">
+      <span class="search-hints">
+        <span class="search-hint"
+          ><span class="kbd">&#8593;</span><span class="kbd">&#8595;</span
+          >navigate</span
+        >
+        <span class="search-hint"><span class="kbd">&#8629;</span>open</span>
+        <span class="search-hint"><span class="kbd">esc</span>close</span>
+      </span>
+      <span>Index rebuilt on every deploy</span>
+    </div>
   </div>
 </dialog>
 
-<style>
-  #search-palette::backdrop {
+<style is:global>
+  .search-dialog {
+    margin: 10vh auto auto;
+    padding: 6px;
+    width: min(640px, calc(100vw - 2rem));
+    border: 0;
+    border-radius: 24px;
+    background: rgba(27, 26, 23, 0.04);
+    box-shadow:
+      rgba(27, 26, 23, 0.06) 0px 0px 0px 1px,
+      rgba(27, 26, 23, 0.45) 0px 40px 120px -30px,
+      rgba(27, 26, 23, 0.1) 0px 12px 32px;
+    backdrop-filter: blur(6px);
+    color: #1b1a17;
+    overflow: visible;
+  }
+  .search-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: min(74vh, 640px);
+    border-radius: 18px;
+    background: rgb(255, 254, 252);
+    overflow: hidden;
+  }
+  .search-inputrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 60px;
+    padding: 0 16px 0 20px;
+    border-bottom: 1px solid rgba(27, 26, 23, 0.07);
+  }
+  .search-magnifier {
+    flex: 0 0 auto;
+    color: rgb(107, 102, 93);
+  }
+  .search-field {
+    flex: 1 1 0%;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: none;
+    font-size: 16px;
+    color: #1b1a17;
+  }
+  .search-field:focus,
+  .search-field:focus-visible {
+    outline: none;
+    box-shadow: none;
+    border: 0;
+  }
+  .search-field::placeholder {
+    color: #9a948b;
+  }
+  .search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .search-group {
+    padding: 12px 12px 4px;
+    font-family:
+      "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo,
+      monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(107, 102, 93);
+  }
+  .search-result {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 12px 8px 8px;
+    border-radius: 14px;
+    cursor: pointer;
+    background: transparent;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.12s ease;
+  }
+  .search-result[aria-selected="true"] {
+    background: rgba(27, 26, 23, 0.05);
+  }
+  .sr-tile {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(27, 26, 23, 0.04);
+    color: rgb(27, 26, 23);
+    box-shadow: rgba(27, 26, 23, 0.05) 0px 0px 0px 1px inset;
+  }
+  .search-result[aria-selected="true"] .sr-tile {
+    background: rgb(27, 26, 23);
+    color: rgb(246, 245, 243);
+    box-shadow: none;
+  }
+  .sr-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .sr-text {
+    flex: 1 1 0%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sr-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1b1a17;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sr-desc {
+    font-size: 13px;
+    color: rgb(103, 98, 90);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sr-enter {
+    flex: 0 0 auto;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  .search-result[aria-selected="true"] .sr-enter {
+    opacity: 1;
+  }
+  .search-empty {
+    padding: 28px 16px;
+    text-align: center;
+  }
+  .search-empty-title {
+    font-size: 14px;
+    color: rgb(103, 98, 90);
+  }
+  .search-empty-sub {
+    margin-top: 4px;
+    font-family:
+      "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(107, 102, 93);
+  }
+  .search-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(27, 26, 23, 0.07);
+    background: rgb(246, 245, 243);
+    font-family:
+      "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo,
+      monospace;
+    font-size: 11px;
+    color: rgb(107, 102, 93);
+  }
+  .search-hints {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .search-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    padding: 2px 6px;
+    border: 1px solid rgba(27, 26, 23, 0.12);
+    border-radius: 6px;
+    background: #fff;
+    font-family:
+      "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo,
+      monospace;
+    font-size: 11px;
+    line-height: 1;
+    color: rgb(107, 102, 93);
+  }
+  /* Hide the footer hint bar on narrow screens where keys don't apply. */
+  @media (max-width: 640px) {
+    .search-footer {
+      display: none;
+    }
+    .search-inputrow .kbd {
+      display: none;
+    }
+  }
+
+  .search-dialog::backdrop {
     background: rgba(246, 245, 243, 0.8);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
-  #search-palette[open] {
+  .search-dialog[open] {
     animation: search-pop 0.18s ease;
   }
   @keyframes search-pop {
@@ -79,7 +287,7 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    #search-palette[open] {
+    .search-dialog[open] {
       animation: none;
     }
   }
@@ -188,19 +396,14 @@
   }
 
   function iconTile(type: SearchDoc["type"]): HTMLElement {
-    const tile = el(
-      "span",
-      "flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-charcoal/[0.04] text-warmgray"
-    );
-    tile.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="${ICONS[type]}"></path></svg>`;
+    const tile = el("span", "sr-tile");
+    tile.setAttribute("aria-hidden", "true");
+    tile.innerHTML = `<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONS[type]}"></path></svg>`;
     return tile;
   }
 
   function resultRow(doc: SearchDoc): HTMLAnchorElement {
-    const a = el(
-      "a",
-      "search-result flex items-center gap-3.5 px-4 py-2.5 transition-colors duration-150 aria-selected:bg-charcoal/[0.04]"
-    );
+    const a = el("a", "search-result");
     a.href = doc.url;
     a.setAttribute("role", "option");
     a.setAttribute("aria-selected", "false");
@@ -210,41 +413,35 @@
     }
 
     if (doc.image) {
-      const img = el(
-        "img",
-        "h-12 w-12 shrink-0 rounded-[10px] border border-charcoal/[0.06] object-cover"
-      );
+      const tile = el("span", "sr-tile");
+      tile.setAttribute("aria-hidden", "true");
+      const img = el("img", "");
       img.src = doc.image;
       img.alt = "";
       img.loading = "lazy";
-      a.appendChild(img);
+      tile.appendChild(img);
+      a.appendChild(tile);
     } else {
       a.appendChild(iconTile(doc.type));
     }
 
-    const text = el("span", "min-w-0 flex-1");
-    const title = el(
-      "span",
-      "block truncate text-[14.5px] font-medium text-charcoal",
-      doc.title
-    );
+    const text = el("span", "sr-text");
+    const title = el("span", "sr-title", doc.title);
     if (doc.external) {
-      title.appendChild(el("span", "ml-1.5 text-[12px] text-accent", "↗"));
+      title.appendChild(el("span", "", " ↗"));
     }
     text.appendChild(title);
-    text.appendChild(
-      el("span", "block truncate text-[13px] text-warmgray", doc.description)
-    );
+    text.appendChild(el("span", "sr-desc", doc.description));
     a.appendChild(text);
+
+    const enter = el("span", "sr-enter");
+    enter.innerHTML = '<span class="kbd">&#8629;</span>';
+    a.appendChild(enter);
     return a;
   }
 
   function groupLabel(label: string): HTMLElement {
-    return el(
-      "div",
-      "px-4 pt-3.5 pb-1 font-mono text-[11px] tracking-[0.14em] text-muted uppercase",
-      label
-    );
+    return el("div", "search-group", label);
   }
 
   function renderGroups(box: HTMLElement, results: SearchDoc[], perGroup = 4) {
@@ -284,17 +481,11 @@
     const results = search(query.trim());
     box.textContent = "";
     if (results.length === 0) {
-      const empty = el("div", "px-4 py-8 text-center");
+      const empty = el("div", "search-empty");
       empty.appendChild(
-        el("p", "text-[14px] text-warmgray", `No results for “${query.trim()}”`)
+        el("p", "search-empty-title", `No results for “${query.trim()}”`)
       );
-      empty.appendChild(
-        el(
-          "p",
-          "mt-1 font-mono text-[11px] tracking-[0.06em] text-muted uppercase",
-          "Try a different word"
-        )
-      );
+      empty.appendChild(el("p", "search-empty-sub", "Try a different word"));
       box.appendChild(empty);
       renderDefault(box);
       // renderDefault cleared the box — rebuild with the message on top.
@@ -407,16 +598,4 @@
     closePalette();
     document.documentElement.style.overflow = "";
   });
-
-  // Non-Mac: show "Ctrl K" in trigger hints (re-run per swap — triggers are
-  // re-created by ClientRouter on every navigation).
-  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
-  function updateHints() {
-    if (isMac) return;
-    document
-      .querySelectorAll("[data-kbd-hint]")
-      .forEach((kbd) => (kbd.textContent = "Ctrl K"));
-  }
-  updateHints();
-  document.addEventListener("astro:page-load", updateHints);
 </script>
