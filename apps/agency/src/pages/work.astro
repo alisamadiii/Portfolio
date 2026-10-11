@@ -2,7 +2,7 @@
 // Work — built in the mockup design system (MockupLayout), reusing the home
 // client-work card pattern. Projects come from src/data/projects.ts.
 import MockupLayout from "../layouts/MockupLayout.astro";
-import { PROJECTS, CLIENT_PROJECTS, CONCEPT_PROJECTS } from "../data/projects";
+import { CLIENT_PROJECTS } from "../data/projects";
 import CTA from "../html/blocks/cta.html?raw";
 
 const SITE = "https://www.alisamadii.com";
@@ -20,7 +20,7 @@ const schema = [
   {
     "@type": "ItemList",
     "@id": `${pageUrl}#projects`,
-    itemListElement: PROJECTS.map((p, i) => ({
+    itemListElement: CLIENT_PROJECTS.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: p.name,
@@ -127,57 +127,6 @@ const schema = [
             — Alitech
           </figcaption>
         </figure>
-      </div>
-    </section>
-
-    <!-- Concept builds -->
-    <section style="padding: 24px 0 48px; border-top: 1px solid rgba(27,26,23,0.06);">
-      <div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
-        <div style="display:flex;flex-direction:column;gap:16px;max-width:640px;">
-          <p class="eyebrow"><span></span>Concept builds</p>
-          <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
-            Demos that show the range
-          </h2>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-          {
-            CONCEPT_PROJECTS.map((p) => (
-              <a
-                href={p.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="lift"
-                style="text-decoration:none;color:rgb(27,26,23);padding:6px;border-radius:18px;background:rgba(27,26,23,0.03);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.1) 0px 14px 34px;display:flex;"
-              >
-                <div style="flex:1 1 0%;border-radius:14px;background:rgb(255,254,252);padding:8px 8px 24px;display:flex;flex-direction:column;gap:20px;">
-                  <div class="zoom" style="border-radius:10px;overflow:hidden;">
-                    <img
-                      src={p.image!.src}
-                      alt={p.image!.alt}
-                      width="1120"
-                      height="840"
-                      loading="lazy"
-                      class="zi"
-                      style="aspect-ratio:4/3;width:100%;height:100%;object-fit:cover;display:block;"
-                    />
-                  </div>
-                  <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;">
-                    <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
-                      {p.category}
-                    </p>
-                    <h3 style="margin:0;font-size:20px;line-height:1.4;font-weight:600;">
-                      {p.name}{" "}
-                      <span aria-hidden="true" style="color:rgb(133,128,117);">↗</span>
-                    </h3>
-                    <p style="margin:0;font-size:15px;line-height:1.55;color:rgb(103,98,90);">
-                      {p.description}
-                    </p>
-                  </div>
-                </div>
-              </a>
-            ))
-          }
-        </div>
       </div>
     </section>
 
