@@ -3,6 +3,7 @@
 // Chrome (nav/footer/grain) + shared JS come from MockupLayout; this page
 // supplies the hero + section <main> and fills its data-driven blocks.
 import MockupLayout from "../layouts/MockupLayout.astro";
+import QuoteForm from "../components/QuoteForm.astro";
 import MAIN from "../html/main/home.html?raw";
 import { PROJECTS } from "../data/projects";
 
@@ -79,6 +80,13 @@ body = body.replace(
     return `<a href="${project.url}" target="_blank" rel="noopener noreferrer" class="lift"${attrs}>${withImg}</a>`;
   }
 );
+
+// 3) The dark "Get in Touch" CTA is rebuilt in Astro below so it can carry the
+//    real QuoteForm. Strip the <main> wrapper + the original CTA section here.
+body = body
+  .replace(/^\s*<main id="top">/, "")
+  .replace(/<\/main>\s*$/, "")
+  .replace(/<section id="contact" class="dark"[^>]*>[\s\S]*<\/section>\s*$/, "");
 ---
 
 <MockupLayout
@@ -95,7 +103,95 @@ body = body.replace(
   }}
   schema={schema}
 >
-  <Fragment set:html={body} />
+  <main id="top">
+    <Fragment set:html={body} />
+
+    <!-- Get in Touch — original CTA copy + contacts, now with the quote form. -->
+    <section
+      id="contact"
+      class="dark"
+      style="padding: 104px 0px 96px; background: rgb(23, 21, 18); color: rgb(236, 233, 226);"
+    >
+      <div
+        class="wrap"
+        style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:48px; align-items:start;"
+      >
+        <div
+          style="display:flex; flex-direction:column; align-items:flex-start; gap:22px; max-width:620px;"
+        >
+          <p class="eyebrow" style="color:rgb(201,160,141);">
+            <span></span>Get in Touch
+          </p>
+          <h2
+            style="margin:0; font-size:clamp(36px,5vw,64px); line-height:1.02; font-weight:600; letter-spacing:-0.035em;"
+          >
+            Let's create something amazing
+          </h2>
+          <p
+            style="margin:0; max-width:46ch; font-size:17px; line-height:1.55; color:rgb(184,178,169);"
+          >
+            Tell us about your business &mdash; we'll reply with a plan and a
+            fair quote.
+          </p>
+          <div
+            style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:22px 32px; margin-top:8px; width:100%; max-width:460px;"
+          >
+            <div>
+              <p
+                style="margin:0 0 6px; font-family:'Geist Mono Variable','Geist Mono',ui-monospace,monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:rgb(138,130,122);"
+              >
+                Email
+              </p>
+              <a
+                href="mailto:agency@alisamadii.com"
+                style="color:rgb(236,233,226); text-decoration:none; font-size:15.5px;"
+                >agency@alisamadii.com</a
+              >
+            </div>
+            <div>
+              <p
+                style="margin:0 0 6px; font-family:'Geist Mono Variable','Geist Mono',ui-monospace,monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:rgb(138,130,122);"
+              >
+                Schedule
+              </p>
+              <a
+                href="https://cal.com/alisamadii"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="color:rgb(236,233,226); text-decoration:none; font-size:15.5px;"
+                >Book a Meeting ↗</a
+              >
+            </div>
+            <div>
+              <p
+                style="margin:0 0 6px; font-family:'Geist Mono Variable','Geist Mono',ui-monospace,monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:rgb(138,130,122);"
+              >
+                Phone
+              </p>
+              <a
+                href="tel:+19713828969"
+                style="color:rgb(236,233,226); text-decoration:none; font-size:15.5px;"
+                >+1 (971) 382-8969</a
+              >
+            </div>
+            <div>
+              <p
+                style="margin:0 0 6px; font-family:'Geist Mono Variable','Geist Mono',ui-monospace,monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:rgb(138,130,122);"
+              >
+                Location
+              </p>
+              <p style="margin:0; color:rgb(236,233,226); font-size:15.5px;">
+                Jacksonville, FL
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <QuoteForm compact heading="Tell us about your project" />
+      </div>
+    </section>
+  </main>
+
   <script type="application/json" id="faq-data" set:html={JSON.stringify(faqs)}
   ></script>
 </MockupLayout>
