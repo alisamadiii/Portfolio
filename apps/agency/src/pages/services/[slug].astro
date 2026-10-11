@@ -1,9 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import BackNav from "../../components/BackNav.astro";
-import BenefitGlyph from "../../components/BenefitGlyph.astro";
-import HomeFooter from "../../components/HomeFooter.astro";
-import ServiceIllustration from "../../components/ServiceIllustration.astro";
+import MockupLayout from "../../layouts/MockupLayout.astro";
 import { services, type Service } from "../../data/services";
 
 export function getStaticPaths() {
@@ -60,9 +56,28 @@ schema.push({
 const relatedServices = service.related
   .map((slug) => services.find((s) => s.slug === slug))
   .filter(Boolean) as Service[];
+
+// --- View helpers (mockup-driven, data-filled) -------------------------------
+// Accent the final word of the headline, like the mockup's italic span.
+const h1Words = service.h1.trim().split(/\s+/);
+const h1Last = h1Words.length > 1 ? h1Words.pop()! : "";
+const h1Head = h1Words.join(" ");
+
+// Simple glyphs cycled across benefit cards, matching the mockup.
+const glyphs = ["→", "◐", "◎", "✓", "✦", "●"];
+
+// "At a glance" rows are the same for every service.
+const glance = [
+  { k: "Team", v: "One team designs & builds" },
+  { k: "Stack", v: "Astro, Next.js, React" },
+  { k: "Hand-off", v: "None, same team ships it" },
+  { k: "Timeline", v: "Most launch in 1 day to 2 weeks" },
+];
+
+const num = (i: number) => String(i + 1).padStart(2, "0");
 ---
 
-<Layout
+<MockupLayout
   title={service.seoTitle}
   description={service.metaDescription}
   canonical={pageUrl}
@@ -70,410 +85,458 @@ const relatedServices = service.related
     title: service.seoTitle,
     description: service.metaDescription,
     url: pageUrl,
-    twitterDescription: service.metaDescription,
   }}
   schema={schema}
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+  pageType="Service"
 >
-  <BackNav backHref="/services" backLabel="All Services" fixed />
-
-  <main>
+  <main id="top">
     <!-- ==================== HERO ==================== -->
-    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-      <div class="mx-auto max-w-[1200px]">
-        <div
-          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>{service.eyebrow} &mdash; {
-            service.name
-          }
-        </div>
-        <div
-          class="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14"
-        >
-          <div>
+    <section style="position: relative; padding-top: 40px; padding-bottom: 88px;">
+      <div class="wrap" style="display: flex; flex-direction: column; gap: 40px;">
+        <nav aria-label="Breadcrumb">
+          <ol
+            class="mono"
+            style="margin: 0px; padding: 0px; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(107, 102, 93);"
+          >
+            <li>
+              <a href="/" class="tlink" style="color: rgb(107, 102, 93);">Home</a>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <a href="/services" class="tlink" style="color: rgb(107, 102, 93);"
+                >Services</a
+              >
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" style="color: rgb(27, 26, 23);">
+              {service.name}
+            </li>
+          </ol>
+        </nav>
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 48px 64px;">
+          <div
+            style="flex: 999 1 520px; min-width: 0px; display: flex; flex-direction: column; gap: 24px;"
+          >
+            <p class="eyebrow">
+              <span
+                style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"
+              ></span>{service.eyebrow} · {service.name}
+            </p>
             {
               service.experimenting && (
-                <span class="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3.5 py-1.5 font-mono text-[11.5px] tracking-[0.12em] text-amber-700 uppercase">
-                  <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
+                <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 9999px; border: 1px solid rgba(180, 120, 40, 0.35); background: rgba(240, 190, 110, 0.14); font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(161, 98, 7);">
+                  <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(217, 119, 6);" />
                   Experimenting
                 </span>
               )
             }
             <h1
-              class="text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
+              class="hero-h1"
+              style="margin: 0px; font-size: clamp(38px, 5vw, 64px); line-height: 1.04; font-weight: 600; letter-spacing: -0.035em;"
             >
-              {service.h1}
+              {h1Head}{" "}<span
+                style="color: rgb(194, 69, 31); font-style: italic; padding-right: 0.06em;"
+                >{h1Last}</span
+              >
             </h1>
             <p
-              class="mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
+              style="margin: 0px; max-width: 560px; font-size: clamp(17px, 1.5vw, 19px); line-height: 1.55; color: rgb(103, 98, 90);"
             >
               {service.heroSub}
             </p>
-            <div class="mt-8 flex flex-wrap items-center gap-4">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;">
               <a
-                href={service.cta.href}
-                class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+                href="/quote"
+                class="btn btn-primary"
+                style="display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0px 24px; border-radius: 11px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 15px; font-weight: 500; text-decoration: none; box-shadow: rgba(252, 132, 100, 0.32) 0px 8px 24px;"
+                >Start a project ↗</a
               >
-                {service.cta.label}
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-                </svg>
-              </a>
               <a
                 href="/pricing"
-                class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
-                >View pricing</a
+                class="tlink"
+                style="font-size: 15px; font-weight: 500; color: rgb(27, 26, 23);"
+                >View pricing →</a
               >
             </div>
           </div>
-          <figure class="reveal">
+          <aside
+            aria-label="At a glance"
+            class="frame"
+            style="flex: 1 1 320px; max-width: 400px; padding: 6px; border-radius: 18px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px;"
+          >
             <div
-              class="aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white text-charcoal"
+              class="inner"
+              style="border-radius: 14px; background: rgb(255, 254, 252); padding: 24px; display: flex; flex-direction: column; gap: 16px;"
             >
-              <ServiceIllustration slug={service.slug} />
+              <p
+                class="mono"
+                style="margin: 0px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(107, 102, 93);"
+              >
+                At a glance
+              </p>
+              <dl style="margin: 0px; display: flex; flex-direction: column; font-size: 15px;">
+                {
+                  glance.map((row) => (
+                    <div style="display: flex; justify-content: space-between; gap: 16px; padding: 10px 0px; border-top: 1px solid rgba(27, 26, 23, 0.07);">
+                      <dt style="color: rgb(107, 102, 93);">{row.k}</dt>
+                      <dd style="margin: 0px; font-weight: 600; text-align: right;">
+                        {row.v}
+                      </dd>
+                    </div>
+                  ))
+                }
+              </dl>
             </div>
-          </figure>
+          </aside>
         </div>
       </div>
     </section>
 
-    <!-- ==================== EXPERIMENTING (honest-signal banner) ==================== -->
-    {
-      service.experimenting && (
-        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
-          <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
-            <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
-              <span class="h-px w-[26px] bg-amber-500" />
-              Full Transparency
-            </div>
-            <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
-              Experimenting
-            </h2>
-            <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
-              Honest note: analytics is a solid part of our workflow, but SEO is
-              a craft we're still building deep experience in. We're actively
-              running SEO for local-business clients right now — measuring what
-              moves rankings, keeping what works, and dropping what doesn't. You
-              get real effort and real data, not overpromises.
-            </p>
-          </div>
-        </section>
-      )
-    }
-
-    <!-- ==================== INTRO ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-    >
-      <p
-        class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
-      >
-        {service.intro}
-      </p>
-    </section>
-
-    <!-- ==================== NOTICE (prominent amber banner) ==================== -->
-    {
-      service.notice && (
-        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10">
-          <div class="rounded-[22px] border border-amber-300/50 bg-amber-50/60 p-8 md:p-11">
-            <div class="mb-4 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-amber-700 uppercase">
-              <span class="h-px w-[26px] bg-amber-500" />
-              {service.notice.label}
-            </div>
-            <h2 class="text-[clamp(34px,5vw,64px)] leading-[1.02] font-semibold tracking-[-0.035em] text-amber-600">
-              {service.notice.title}
-            </h2>
-            <p class="mt-5 max-w-[68ch] text-[16.5px] leading-[1.65] text-warmgray">
-              {service.notice.text}
-            </p>
-          </div>
-        </section>
-      )
-    }
-
     <!-- ==================== BENEFITS ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        What you get with our {service.name.toLowerCase()}
-      </h2>
-      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
-        {
-          service.benefits.map((b) => (
-            <div class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7">
-              {b.icon && (
-                <div class="mb-5 flex size-11 items-center justify-center rounded-[12px] bg-accent/[0.12] text-accent">
-                  <BenefitGlyph icon={b.icon} />
+    <section style="padding: 80px 0px; background: rgba(27, 26, 23, 0.03);">
+      <div class="wrap" style="display: flex; flex-direction: column; gap: 40px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 24px 64px; align-items: flex-end;">
+          <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 16px;">
+            <p class="eyebrow">
+              <span
+                style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"
+              ></span>What you get
+            </p>
+            <h2
+              style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;"
+            >
+              Why {service.name} matters
+            </h2>
+          </div>
+          <p
+            style="flex: 1 1 420px; margin: 0px; font-size: 17px; line-height: 1.6; color: rgb(103, 98, 90);"
+          >
+            {service.intro}
+          </p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+          {
+            service.benefits.map((b, i) => (
+              <article
+                class="frame lift"
+                style="padding: 6px; border-radius: 18px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px, rgba(27, 26, 23, 0.1) 0px 14px 34px; display: flex;"
+              >
+                <div
+                  class="inner"
+                  style="flex: 1 1 0%; border-radius: 14px; background: rgb(255, 254, 252); padding: 24px; display: flex; flex-direction: column; gap: 10px;"
+                >
+                  <span
+                    aria-hidden="true"
+                    style="width: 40px; height: 40px; border-radius: 9999px; background: rgba(27, 26, 23, 0.05); display: flex; align-items: center; justify-content: center;"
+                  >
+                    {glyphs[i % glyphs.length]}
+                  </span>
+                  <h3 style="margin: 6px 0px 0px; font-size: 19px; font-weight: 600;">
+                    {b.title}
+                  </h3>
+                  <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">
+                    {b.text}
+                  </p>
                 </div>
-              )}
-              <h3 class="text-[19px] font-semibold tracking-[-0.02em]">
-                {b.title}
-              </h3>
-              <p class="mt-2.5 text-[15px] leading-[1.6] text-warmgray">
-                {b.text}
-              </p>
-            </div>
-          ))
-        }
+              </article>
+            ))
+          }
+        </div>
       </div>
     </section>
 
-    <!-- ==================== SHOWCASE (product screenshots, optional) ==================== -->
+    <!-- ==================== HOW IT WORKS (optional) ==================== -->
     {
-      service.showcase && (
-        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
-          <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
-            {service.showcase.heading}
-          </h2>
-          {service.showcase.sub && (
-            <p class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray">
-              {service.showcase.sub}
-            </p>
-          )}
-          <div class="mt-12 space-y-16 md:space-y-20">
-            {service.showcase.items.map((item, i) => (
-              <div
-                class={`reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-14 ${
-                  i % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""
-                }`}
-              >
-                <div>
-                  <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-                    0{i + 1}
-                  </div>
-                  <h3 class="mt-2 text-[21px] font-semibold tracking-[-0.02em]">
-                    {item.title}
+      service.process && (
+        <section style="padding: 88px 0px;">
+          <div class="wrap" style="display: flex; flex-direction: column; gap: 40px;">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <p class="eyebrow">
+                <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);" />
+                How it works
+              </p>
+              <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
+                How we deliver {service.name.toLowerCase()}
+              </h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px 40px;">
+              {service.process.map((step, i) => (
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <p
+                    class="mono"
+                    style="margin: 0px; font-size: 13px; letter-spacing: 0.12em; color: rgb(194, 69, 31);"
+                  >
+                    {num(i)}
+                  </p>
+                  <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">
+                    {step.title}
                   </h3>
-                  <p class="mt-3 max-w-[48ch] text-[15.5px] leading-[1.65] text-warmgray">
-                    {item.text}
+                  <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">
+                    {step.text}
                   </p>
                 </div>
-                <div class="img-wrap aspect-[16/10] overflow-hidden rounded-[18px] border border-charcoal/[0.08] bg-white">
-                  <img
-                    src={item.image.src}
-                    alt={item.image.alt}
-                    width="1600"
-                    height="1000"
-                    loading="lazy"
-                    class="h-full w-full object-cover"
-                  />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {service.processCta && (
+              <a
+                href={service.processCta.href}
+                class="tlink"
+                style="align-self: flex-start; font-size: 15px; font-weight: 500; color: rgb(194, 69, 31);"
+              >
+                {service.processCta.label} →
+              </a>
+            )}
           </div>
         </section>
       )
     }
 
-    <!-- ==================== PROCESS (optional) ==================== -->
+    <!-- ==================== SHOWCASE (optional) ==================== -->
     {
-      service.process && (
-        <section class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10">
-          <h2 class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]">
-            How we deliver {service.name.toLowerCase()}
-          </h2>
-          <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-4">
-            {service.process.map((step, i) => (
-              <div class="reveal">
-                <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-                  0{i + 1}
-                </div>
-                <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-                  {step.title}
-                </h3>
-                <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-                  {step.text}
+      service.showcase && (
+        <section style="padding: 88px 0px; background: rgba(27, 26, 23, 0.03);">
+          <div class="wrap" style="display: flex; flex-direction: column; gap: 48px;">
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 640px;">
+              <p class="eyebrow">
+                <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);" />
+                Walkthrough
+              </p>
+              <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
+                {service.showcase.heading}
+              </h2>
+              {service.showcase.sub && (
+                <p style="margin: 0px; font-size: 17px; line-height: 1.6; color: rgb(103, 98, 90);">
+                  {service.showcase.sub}
                 </p>
-              </div>
-            ))}
+              )}
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 48px;">
+              {service.showcase.items.map((item, i) => (
+                <div style="display: flex; flex-wrap: wrap; gap: 32px 56px; align-items: center;">
+                  <div
+                    class="frame"
+                    style={`order: ${i % 2 === 0 ? 1 : 2}; flex: 1 1 420px; min-width: 0px; padding: 6px; border-radius: 18px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px;`}
+                  >
+                    <div
+                      class="inner"
+                      style="border-radius: 14px; overflow: hidden; background: rgb(255, 254, 252);"
+                    >
+                      <img
+                        src={item.image.src}
+                        alt={item.image.alt}
+                        width="1600"
+                        height="1000"
+                        loading="lazy"
+                        style="display: block; width: 100%; height: auto;"
+                      />
+                    </div>
+                  </div>
+                  <div
+                    style={`order: ${i % 2 === 0 ? 2 : 1}; flex: 1 1 360px; min-width: 0px; display: flex; flex-direction: column; gap: 12px;`}
+                  >
+                    <p
+                      class="mono"
+                      style="margin: 0px; font-size: 13px; letter-spacing: 0.12em; color: rgb(194, 69, 31);"
+                    >
+                      {num(i)}
+                    </p>
+                    <h3 style="margin: 0px; font-size: 21px; font-weight: 600;">
+                      {item.title}
+                    </h3>
+                    <p style="margin: 0px; max-width: 48ch; font-size: 15.5px; line-height: 1.6; color: rgb(103, 98, 90);">
+                      {item.text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          {service.processCta && (
-            <a
-              href={service.processCta.href}
-              class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-            >
-              {service.processCta.label}
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
+        </section>
+      )
+    }
+
+    <!-- ==================== NOTICE (optional) ==================== -->
+    {
+      service.notice && (
+        <section style="padding: 80px 0px;">
+          <div class="wrap">
+            <div style="padding: 32px; border-radius: 18px; border: 1px solid rgba(180, 120, 40, 0.3); background: rgba(240, 190, 110, 0.12); display: flex; flex-direction: column; gap: 14px;">
+              <p
+                class="mono"
+                style="margin: 0px; display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(161, 98, 7);"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                />
-              </svg>
-            </a>
-          )}
+                <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(217, 119, 6);" />
+                {service.notice.label}
+              </p>
+              <h2 style="margin: 0px; font-size: clamp(24px, 3vw, 32px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em;">
+                {service.notice.title}
+              </h2>
+              <p style="margin: 0px; max-width: 68ch; font-size: 16px; line-height: 1.65; color: rgb(103, 98, 90);">
+                {service.notice.text}
+              </p>
+            </div>
+          </div>
         </section>
       )
     }
 
     <!-- ==================== FAQ ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Common questions
-      </h2>
-      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
-        {
-          service.faqs.map((faq) => (
-            <div>
-              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
-                {faq.q}
-              </h3>
-              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
-                {faq.a}
-              </p>
-            </div>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- ==================== RESOURCES + RELATED ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-    >
-      <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
-        <div>
+    <section style="padding: 88px 0px;">
+      <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start;">
+        <div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 16px;">
+          <p class="eyebrow">
+            <span
+              style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"
+            ></span>FAQ
+          </p>
           <h2
-            class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
+            style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;"
           >
-            Helpful resources
+            {service.name} questions
           </h2>
-          <ul class="mt-5 space-y-3">
-            {
-              service.externalLinks.map((link) => (
-                <li>
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-                  >
-                    {link.label}
-                    <span class="text-[12px] text-accent">&#8599;</span>
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
         </div>
-        <div>
-          <h2
-            class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-          >
-            Related services
-          </h2>
-          <ul class="mt-5 space-y-3">
-            {
-              relatedServices.map((rel) => (
-                <li>
-                  <a
-                    href={`/services/${rel.slug}`}
-                    class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-                  >
-                    {rel.name}
-                    <span class="text-[12px] text-accent">&rarr;</span>
-                  </a>
-                </li>
-              ))
-            }
-            <li>
-              <a
-                href="/pricing"
-                class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
-              >
-                Pricing
-                <span class="text-[12px] text-accent">&rarr;</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== FINAL CTA ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
-        <h2
-          class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
+        <div
+          class="frame"
+          style="flex: 999 1 560px; min-width: 0px; padding: 6px; border-radius: 18px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px;"
         >
-          Ready to get started?
+          <div
+            class="inner"
+            style="border-radius: 14px; background: rgb(255, 254, 252); overflow: hidden;"
+          >
+            {
+              service.faqs.map((faq, i) => (
+                <div style="border-bottom: 1px solid rgba(27, 26, 23, 0.07);">
+                  <button
+                    type="button"
+                    class="faq-q"
+                    aria-expanded={i === 0 ? "true" : "false"}
+                    style="width: 100%; min-height: 64px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 0px; background: transparent; cursor: pointer; text-align: left; font-family: inherit; font-size: 17px; font-weight: 600; color: rgb(27, 26, 23);"
+                  >
+                    {faq.q}
+                    <span
+                      aria-hidden="true"
+                      class="mono"
+                      style="font-size: 20px; color: rgb(107, 102, 93);"
+                    >
+                      {i === 0 ? "−" : "+"}
+                    </span>
+                  </button>
+                  <p
+                    class="fade"
+                    style={`margin: 0px; padding: 0px 24px 24px; max-width: 68ch; font-size: 16px; line-height: 1.65; color: rgb(103, 98, 90); display: ${i === 0 ? "block" : "none"};`}
+                  >
+                    {faq.a}
+                  </p>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAIRS WELL WITH ==================== -->
+    <section style="padding: 80px 0px; background: rgba(27, 26, 23, 0.03);">
+      <div class="wrap" style="display: flex; flex-direction: column; gap: 28px;">
+        <h2
+          class="mono"
+          style="margin: 0px; font-size: 13px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(107, 102, 93);"
+        >
+          Pairs well with
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+          {
+            relatedServices.map((rel) => (
+              <a
+                href={`/services/${rel.slug}`}
+                class="frame lift tlink"
+                style="color: rgb(27, 26, 23); padding: 6px; border-radius: 18px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px, rgba(27, 26, 23, 0.1) 0px 14px 34px; text-decoration: none;"
+              >
+                <span
+                  class="inner"
+                  style="border-radius: 14px; background: rgb(255, 254, 252); padding: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px;"
+                >
+                  <span style="display: flex; flex-direction: column;">
+                    <span style="font-size: 18px; font-weight: 600;">
+                      {rel.name}
+                    </span>
+                    <span style="font-size: 14px; color: rgb(103, 98, 90);">
+                      {rel.eyebrow}
+                    </span>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </span>
+              </a>
+            ))
+          }
+          <a
+            href="/pricing"
+            class="frame lift tlink"
+            style="color: rgb(27, 26, 23); padding: 6px; border-radius: 18px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px, rgba(27, 26, 23, 0.1) 0px 14px 34px; text-decoration: none;"
+          >
+            <span
+              class="inner"
+              style="border-radius: 14px; background: rgb(255, 254, 252); padding: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px;"
+            >
+              <span style="display: flex; flex-direction: column;">
+                <span style="font-size: 18px; font-weight: 600;">Pricing</span>
+                <span style="font-size: 14px; color: rgb(103, 98, 90);"
+                  >Simple, transparent plans</span
+                >
+              </span>
+              <span aria-hidden="true">→</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== DARK CTA ==================== -->
+    <section
+      id="contact"
+      class="dark"
+      style="padding: 96px 0px; background: rgb(23, 21, 18); color: rgb(236, 233, 226);"
+    >
+      <div class="wrap" style="display: flex; flex-direction: column; align-items: flex-start; gap: 22px;">
+        <p class="eyebrow">
+          <span
+            style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"
+          ></span>Ready to get started?
+        </p>
+        <h2
+          style="margin: 0px; max-width: 16ch; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; font-weight: 600; letter-spacing: -0.035em;"
+        >
+          Make the next step obvious.
         </h2>
         <p
-          class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
+          style="margin: 0px; max-width: 520px; font-size: 18px; line-height: 1.55; color: rgb(184, 178, 167);"
         >
-          Simple, transparent pricing — and a real person on the other end.
-          Simple sites ship in one day once your project is confirmed.
+          Transparent pricing and a real person to talk to. Ali replies
+          directly.
         </p>
-        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 6px;">
           <a
             href={service.cta.href}
-            class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-charcoal transition-all duration-300 hover:bg-cream hover:text-charcoal"
+            class="btn btn-primary"
+            style="display: inline-flex; align-items: center; min-height: 52px; padding: 0px 24px; border-radius: 11px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 15px; font-weight: 500; text-decoration: none;"
+            >{service.cta.label}</a
           >
-            {service.cta.label}
-          </a>
           <a
-            href="/#contact"
-            class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
+            href="/quote"
+            class="btn btn-ghost"
+            style="display: inline-flex; align-items: center; min-height: 52px; padding: 0px 22px; border-radius: 11px; background: rgba(236, 233, 226, 0.08); color: rgb(236, 233, 226); font-size: 15px; font-weight: 500; text-decoration: none;"
             >Ask a question</a
           >
         </div>
       </div>
     </section>
   </main>
-  <HomeFooter />
-</Layout>
 
-<style is:global>
-  html {
-    scrollbar-gutter: stable;
-  }
-  .mag-btn {
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  }
-  .mag-btn:active {
-    transform: scale(0.97);
-  }
-</style>
-
-<script is:inline data-astro-rerun>
-  (() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "-60px" }
-    );
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-  })();
-</script>
+  <script
+    type="application/json"
+    id="faq-data"
+    set:html={JSON.stringify(service.faqs)}
+  />
+</MockupLayout>
+</content>
+</invoke>

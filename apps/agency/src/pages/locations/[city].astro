@@ -1,14 +1,8 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import BackNav from "../../components/BackNav.astro";
-import HomeFooter from "../../components/HomeFooter.astro";
-import FloridaFlag from "../../components/FloridaFlag.astro";
-import ProjectCard from "../../components/ProjectCard.astro";
+import MockupLayout from "../../layouts/MockupLayout.astro";
 import { cities, type City } from "../../data/cities";
 import { services } from "../../data/services";
-import { CLIENT_PROJECTS } from "../../data/projects";
 import { fmtPrice, PRICING } from "../../data/pricing";
-import locationCredits from "../../data/location-image-credits.json";
 
 export function getStaticPaths() {
   return cities.map((city) => ({
@@ -83,522 +77,352 @@ const nearbyCities = city.nearby
   .map((slug) => cities.find((c) => c.slug === slug))
   .filter(Boolean) as City[];
 
-const industriesLine = city.industries.join(", ");
+// ── Mockup helpers ──────────────────────────────────────────────
+const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase());
 
-const imageCredit = (
-  locationCredits as Record<
-    string,
-    { name: string; url: string; pexelsUrl: string }
-  >
-)[city.slug];
+// Hero h1: wrap the first occurrence of the city name in the accent span.
+const h1Idx = city.h1.indexOf(city.name);
+const h1Before = h1Idx >= 0 ? city.h1.slice(0, h1Idx) : "";
+const h1Accent = h1Idx >= 0 ? city.name : city.h1;
+const h1After = h1Idx >= 0 ? city.h1.slice(h1Idx + city.name.length) : "";
+
+// Short per-service tagline from the mockup (service cards are static copy).
+const serviceBlurbs: Record<string, string> = {
+  "web-development": "Fast custom sites",
+  "website-management": "Edit it yourself",
+  "seo-analytics": "Get found locally",
+  "brand-identity": "A look from your logo",
+  "ui-ux-design": "Pages that convert",
+  ecommerce: "Custom Shopify stores",
+  "custom-web-apps": "Portals, dashboards, apps",
+};
 ---
 
-<Layout
+<MockupLayout
   title={city.seoTitle}
   description={city.metaDescription}
   canonical={pageUrl}
-  og={{
-    title: city.seoTitle,
-    description: city.metaDescription,
-    url: pageUrl,
-    image: `/og/locations/${city.slug}.jpg`,
-    twitterDescription: city.metaDescription,
-  }}
+  og={{ title: city.seoTitle, description: city.metaDescription, url: pageUrl }}
   schema={schema}
-  bodyClass="noise bg-cream text-charcoal selection:bg-accent/20 selection:text-accent font-sans"
+  pageType="Service"
 >
-  <BackNav backHref="/locations" backLabel="All Locations" fixed />
-
-  <main>
+  <main id="top">
     <!-- ==================== HERO ==================== -->
-    <section class="px-4 pt-32 pb-16 md:px-8 md:pt-40 md:pb-20">
-      <div class="mx-auto max-w-[1200px]">
-        <div
-          class="mb-6 inline-flex items-center gap-2.5 font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-        >
-          <span class="h-px w-[26px] bg-accent"></span>
-          <FloridaFlag
-            class="h-[13px] w-auto rounded-[2px] ring-1 ring-charcoal/10"
-          />
-          Locations &mdash; {city.name}, Florida
-        </div>
-        <h1
-          class="max-w-[22ch] text-[clamp(34px,4.6vw,60px)] leading-[1.05] font-semibold tracking-[-0.03em]"
-        >
-          {city.h1}
-        </h1>
-        <p
-          class="mt-6 max-w-[56ch] text-[17px] leading-[1.6] text-warmgray md:text-[18px]"
-        >
-          {city.heroSub}
-        </p>
-        <div class="mt-8 flex flex-wrap items-center gap-4">
-          <a
-            href="/pricing"
-            class="mag-btn inline-flex items-center gap-2 rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-accent"
+    <section style="position: relative; padding-top: 40px; padding-bottom: 88px;">
+      <div
+        aria-hidden="true"
+        style="position: absolute; right: -8%; top: 0px; width: 720px; height: 560px; background-image: radial-gradient(rgba(27, 26, 23, 0.14) 1.1px, transparent 1.6px); background-size: 16px 16px; mask-image: radial-gradient(closest-side, rgb(0, 0, 0) 15%, transparent 100%); pointer-events: none;"
+      >
+      </div>
+      <div class="wrap" style="position: relative; display: flex; flex-direction: column; gap: 40px;">
+        <nav aria-label="Breadcrumb">
+          <ol
+            class="mono"
+            style="margin: 0px; padding: 0px; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(107, 102, 93);"
           >
-            See pricing
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-            </svg>
-          </a>
-          <a
-            href="/#contact"
-            class="inline-flex min-h-11 items-center text-[15px] font-medium text-warmgray transition-colors duration-300 hover:text-charcoal"
-            >Start a conversation</a
-          >
-        </div>
-        <div
-          class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[12px] tracking-[0.08em] text-muted uppercase"
-        >
-          <span>{city.county}</span>
-          <span class="text-accent">&middot;</span>
-          <span>{city.region}</span>
-          <span class="text-accent">&middot;</span>
-          <span>{city.populationNote}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== CITY IMAGE ==================== -->
-    {
-      city.image && (
-        <section class="mx-auto max-w-[1200px] px-6 pb-16 md:px-10 md:pb-20">
-          <figure>
-            <div class="img-wrap overflow-hidden rounded-[22px]">
-              <img
-                src={city.image.src}
-                alt={city.image.alt}
-                width="1600"
-                height="686"
-                class="aspect-[21/9] w-full object-cover"
-                loading="eager"
-                fetchpriority="high"
-              />
-            </div>
-            {imageCredit && (
-              <figcaption class="mt-2 text-right text-[11.5px] text-muted">
-                Photo by
-                <a
-                  href={imageCredit.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-                >
-                  {imageCredit.name}
-                </a>
-                on
-                <a
-                  href={imageCredit.pexelsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline underline-offset-2 transition-colors duration-300 hover:text-charcoal"
-                >
-                  Pexels
-                </a>
-              </figcaption>
-            )}
-          </figure>
-        </section>
-      )
-    }
-
-    <!-- ==================== LOCAL INTRO ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-    >
-      <p
-        class="max-w-[70ch] text-[17px] leading-[1.7] text-warmgray md:text-[18px]"
-      >
-        {city.intro}
-      </p>
-    </section>
-
-    <!-- ==================== LOCAL CONTEXT ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Who we build for in {city.name}
-      </h2>
-      <p
-        class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray"
-      >
-        {city.localContext}
-      </p>
-      <p
-        class="reveal mt-4 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray"
-      >
-        From {industriesLine} businesses to everything in between — if your customers
-        are searching in {city.name}, we build the site they find.
-      </p>
-    </section>
-
-    <!-- ==================== SERVICES GRID ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Everything a {city.name} business needs online
-      </h2>
-      <p
-        class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
-      >
-        One team, one modern stack — from first logo to ongoing management,
-        every service below is available to {city.name} clients.
-      </p>
-      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
-        {
-          services.map((s) => (
-            <a
-              href={`/services/${s.slug}`}
-              class="reveal group block rounded-[18px] border border-charcoal/[0.08] bg-white p-7 transition-colors duration-300 hover:border-accent/40"
-            >
-              <div class="flex items-center justify-between gap-4">
-                <div class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase">
-                  {s.eyebrow}
-                </div>
-                {s.experimenting && (
-                  <span class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 font-mono text-[10.5px] tracking-[0.12em] text-amber-700 uppercase">
-                    <span class="size-1.5 animate-pulse rounded-full bg-amber-500" />
-                    Experimenting
-                  </span>
-                )}
-              </div>
-              <div class="mt-2.5 flex items-center justify-between gap-4">
-                <h3 class="text-[20px] font-semibold tracking-[-0.02em]">
-                  {s.name}
-                </h3>
-                <span class="text-accent">&#8599;</span>
-              </div>
-              <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-                {s.heroSub}
-              </p>
-            </a>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- ==================== RECENT WORK ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Work we've shipped for businesses like yours
-      </h2>
-      <p
-        class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
-      >
-        Live websites we've designed and built for real clients &mdash; each one
-        shipped, launched, and in use today.
-      </p>
-      <div class="stagger mt-10 grid grid-cols-1 gap-[22px] md:grid-cols-3">
-        {CLIENT_PROJECTS.map((project) => <ProjectCard project={project} />)}
-      </div>
-      <a
-        href="/work"
-        class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-      >
-        See all our work
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-        </svg>
-      </a>
-    </section>
-
-    <!-- ==================== HOW WE WORK ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        How we work with {city.name} businesses
-      </h2>
-      {
-        city.isHeadquarters ? (
-          <p class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray">
-            Jacksonville is home — Ali Samadi Agency is headquartered right here
-            in Duval County. Local clients get the best of both: face-to-face
-            meetings when a conversation deserves one, and our Client Hub for
-            everything else — live previews of your site as it's built, a place
-            to leave feedback, and the tools to edit your own content after
-            launch.
-          </p>
-        ) : (
-          <p class="reveal mt-6 max-w-[70ch] text-[16.5px] leading-[1.7] text-warmgray">
-            We're headquartered in Jacksonville and work with {city.name}{" "}
-            clients remotely — same state, same time zone, no office markup
-            baked into your invoice. Calls happen over video, and everything
-            else lives in our Client Hub: live previews of your site as it's
-            built, a place to leave feedback directly on the work, and the tools
-            to edit your own content after launch. No fake local office, no
-            middlemen — just the team that does the work.
-          </p>
-        )
-      }
-      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-3">
-        <div class="reveal">
-          <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-            01
-          </div>
-          <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-            Talk it through
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-            A video call to understand your business, your customers, and what
-            the site needs to do. You get a clear scope and a flat price.
-          </p>
-        </div>
-        <div class="reveal">
-          <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-            02
-          </div>
-          <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-            Watch it get built
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-            Follow progress in the Client Hub with live previews. Simple sites
-            ship in one day once the project is confirmed.
-          </p>
-        </div>
-        <div class="reveal">
-          <div class="font-mono text-[13px] tracking-[0.08em] text-accent">
-            03
-          </div>
-          <h3 class="mt-2 text-[17px] font-semibold tracking-[-0.01em]">
-            Own it after launch
-          </h3>
-          <p class="mt-2 text-[14.5px] leading-[1.6] text-warmgray">
-            Edit your own text, images, and pages anytime — or let us manage it.
-            The code is yours either way, never locked to us.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== PRICING SUMMARY ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Plain pricing, no surprises
-      </h2>
-      <p
-        class="reveal mt-4 max-w-[60ch] text-[16px] leading-[1.65] text-warmgray"
-      >
-        The same honest pricing for every client in every city — a published
-        monthly anchor, and project builds scoped in the open.
-      </p>
-      <div class="stagger mt-10 grid grid-cols-1 gap-[18px] md:grid-cols-2">
-        <div
-          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
-        >
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase"
-          >
-            Website-as-a-Service
-          </div>
-          <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
-            {fmtPrice(PRICING.setup)}<span
-              class="text-[15px] font-normal text-warmgray"
-            >
-              +</span
-            >
-            {fmtPrice(PRICING.monthly)}<span
-              class="text-[15px] font-normal text-warmgray">/mo</span
-            >
-          </div>
-          <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-            All-inclusive — design, development, CMS, email, SEO, and managed
-            hosting in one plan. For local and small businesses; for most
-            projects this is the price.
-          </p>
-        </div>
-        <div
-          class="reveal rounded-[18px] border border-charcoal/[0.08] bg-white p-7"
-        >
-          <div
-            class="font-mono text-[11.5px] tracking-[0.08em] text-[#6b665d] uppercase"
-          >
-            Custom
-          </div>
-          <div class="mt-3 text-[28px] font-semibold tracking-[-0.02em]">
-            Scoped
-          </div>
-          <p class="mt-2.5 text-[14.5px] leading-[1.6] text-warmgray">
-            Web apps, dashboards, auth, databases — fully custom projects priced
-            per scope.
-          </p>
-        </div>
-      </div>
-      <a
-        href="/pricing"
-        class="reveal mt-10 inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent transition-colors duration-300 hover:text-charcoal"
-      >
-        Compare plans in detail
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-        </svg>
-      </a>
-    </section>
-
-    <!-- ==================== FAQ ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <h2
-        class="reveal text-[clamp(26px,3vw,40px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-      >
-        Questions from {city.name} businesses
-      </h2>
-      <div class="mt-10 grid grid-cols-1 gap-x-14 gap-y-9 md:grid-cols-2">
-        {
-          city.faqs.map((faq) => (
-            <div>
-              <h3 class="text-[17px] font-semibold tracking-[-0.01em]">
-                {faq.q}
-              </h3>
-              <p class="mt-2.5 text-[15px] leading-[1.65] text-warmgray">
-                {faq.a}
+            <li><a href="/" class="tlink" style="color: rgb(107, 102, 93);">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><a href="/locations" class="tlink" style="color: rgb(107, 102, 93);">Locations</a></li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" style="color: rgb(27, 26, 23);">{city.name}</li>
+          </ol>
+        </nav>
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 48px 64px;">
+          <div style="flex: 999 1 520px; min-width: 0px; display: flex; flex-direction: column; gap: 24px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+              <p class="eyebrow">
+                <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"></span>
+                {city.name} · {city.county}
               </p>
             </div>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- ==================== NEARBY CITIES ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[60px] md:px-10"
-    >
-      <h2
-        class="font-mono text-[12.5px] tracking-[0.12em] text-muted uppercase"
-      >
-        Also serving nearby
-      </h2>
-      <ul class="mt-5 flex flex-wrap gap-x-8 gap-y-3">
-        {
-          nearbyCities.map((n) => (
-            <li>
+            <h1
+              class="hero-h1"
+              style="margin: 0px; font-size: clamp(38px, 5vw, 64px); line-height: 1.04; font-weight: 600; letter-spacing: -0.035em;"
+            >
+              {h1Before}<span style="color: rgb(194, 69, 31); font-style: italic; padding-right: 0.06em;">{h1Accent}</span>{h1After}
+            </h1>
+            <p style="margin: 0px; max-width: 580px; font-size: clamp(17px, 1.5vw, 19px); line-height: 1.55; color: rgb(103, 98, 90);">
+              {city.heroSub}
+            </p>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;">
               <a
-                href={`/locations/${n.slug}`}
-                class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+                href="/quote"
+                class="btn btn-primary"
+                style="display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0px 24px; border-radius: 11px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 15px; font-weight: 500; text-decoration: none; box-shadow: rgba(252, 132, 100, 0.32) 0px 8px 24px;"
+                >Start a conversation ↗</a
               >
-                {n.name}, FL
-                <span class="text-[12px] text-accent">&rarr;</span>
-              </a>
-            </li>
-          ))
-        }
-        <li>
-          <a
-            href="/locations"
-            class="inline-flex min-h-8 items-center gap-2 text-[15px] text-warmgray transition-colors duration-300 hover:text-accent"
+              <a href="/pricing" class="tlink" style="font-size: 15px; font-weight: 500; color: rgb(27, 26, 23);">See pricing →</a>
+            </div>
+          </div>
+          <aside
+            aria-label={`${city.name} at a glance`}
+            class="frame"
+            style="flex: 1 1 320px; max-width: 400px;"
           >
-            All Florida cities
-            <span class="text-[12px] text-accent">&rarr;</span>
-          </a>
-        </li>
-      </ul>
+            <div class="inner" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+              <p class="mono" style="margin: 0px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(107, 102, 93);">
+                Serving {city.name}
+              </p>
+              <dl style="margin: 0px; display: flex; flex-direction: column; font-size: 15px;">
+                <div style="display: flex; justify-content: space-between; gap: 16px; padding: 10px 0px; border-top: 1px solid rgba(27, 26, 23, 0.07);">
+                  <dt style="color: rgb(107, 102, 93);">Region</dt>
+                  <dd style="margin: 0px; font-weight: 600; text-align: right;">{city.region}</dd>
+                </div>
+                <div style="display: flex; justify-content: space-between; gap: 16px; padding: 10px 0px; border-top: 1px solid rgba(27, 26, 23, 0.07);">
+                  <dt style="color: rgb(107, 102, 93);">County</dt>
+                  <dd style="margin: 0px; font-weight: 600; text-align: right;">{city.county}</dd>
+                </div>
+                <div style="display: flex; justify-content: space-between; gap: 16px; padding: 10px 0px; border-top: 1px solid rgba(27, 26, 23, 0.07);">
+                  <dt style="color: rgb(107, 102, 93);">Population</dt>
+                  <dd style="margin: 0px; font-weight: 600; text-align: right;">{city.populationNote}</dd>
+                </div>
+                <div style="display: flex; justify-content: space-between; gap: 16px; padding: 10px 0px; border-top: 1px solid rgba(27, 26, 23, 0.07);">
+                  <dt style="color: rgb(107, 102, 93);">Pricing</dt>
+                  <dd style="margin: 0px; font-weight: 600; text-align: right;">Same flat rates statewide</dd>
+                </div>
+              </dl>
+              <ul
+                aria-label="Industries we build for"
+                style="margin: 0px; padding: 14px 0px 0px; border-top: 1px solid rgba(27, 26, 23, 0.07); list-style: none; display: flex; flex-wrap: wrap; gap: 6px;"
+              >
+                {
+                  city.industries.map((ind) => (
+                    <li style="padding: 6px 12px; border-radius: 9999px; background: rgba(27, 26, 23, 0.05); font-size: 13px; font-weight: 500;">
+                      {titleCase(ind)}
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
     </section>
 
-    <!-- ==================== FINAL CTA ==================== -->
-    <section
-      class="mx-auto max-w-[1200px] border-t border-charcoal/[0.08] px-6 py-[70px] md:px-10"
-    >
-      <div class="rounded-[22px] bg-ink p-9 text-center text-cream md:p-14">
-        <h2
-          class="text-[clamp(26px,3.2vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em]"
-        >
+    <!-- ==================== AUDIENCE ==================== -->
+    <section style="padding: 80px 0px; background: rgba(27, 26, 23, 0.03);">
+      <div class="wrap" style="display: flex; flex-direction: column; gap: 36px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 24px 64px; align-items: flex-end;">
+          <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 16px;">
+            <p class="eyebrow">
+              <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"></span>
+              Who we build for
+            </p>
+            <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
+              Built for how {city.name} does business
+            </h2>
+          </div>
+          <p style="flex: 1 1 420px; margin: 0px; font-size: 17px; line-height: 1.6; color: rgb(103, 98, 90);">
+            {city.localContext}
+          </p>
+        </div>
+        <ul style="margin: 0px; padding: 0px; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+          {
+            city.industries.map((ind) => (
+              <li style="display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 14px; background: rgb(255, 254, 252); box-shadow: rgba(27, 26, 23, 0.06) 0px 0px 0px 1px; font-size: 16px; font-weight: 600;">
+                <span aria-hidden="true" style="color: rgb(194, 69, 31);">
+                  ✦
+                </span>
+                {titleCase(ind)}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==================== SERVICES ==================== -->
+    <section style="padding: 88px 0px;">
+      <div class="wrap" style="display: flex; flex-direction: column; gap: 36px;">
+        <div style="display: flex; flex-direction: column; gap: 16px; max-width: 680px;">
+          <p class="eyebrow">
+            <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"></span>
+            Services
+          </p>
+          <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
+            Everything a {city.name} business needs online
+          </h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+          {
+            services.map((s) => (
+              <a
+                href={`/services/${s.slug}`}
+                class="frame lift tlink"
+                style="color: rgb(27, 26, 23);"
+              >
+                <span class="inner" style="padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                  <span style="display: flex; flex-direction: column;">
+                    <span style="font-size: 16px; font-weight: 600;">{s.name}</span>
+                    <span style="font-size: 13px; color: rgb(103, 98, 90);">
+                      {serviceBlurbs[s.slug]}
+                    </span>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== HOW IT WORKS / PRICING ==================== -->
+    <section id="pricing" style="padding: 88px 0px; background: rgba(27, 26, 23, 0.03);">
+      <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 48px 64px; align-items: flex-start;">
+        <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 28px;">
+          <p class="eyebrow">
+            <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"></span>
+            How it works
+          </p>
+          <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
+            Three steps, wherever you are
+          </h2>
+          <ol style="margin: 0px; padding: 0px; list-style: none; display: flex; flex-direction: column; gap: 20px;">
+            <li style="display: flex; gap: 16px;">
+              <span class="mono" style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9999px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; align-items: center; justify-content: center; font-size: 12px;">01</span>
+              <span style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 17px; font-weight: 600;">Talk it through</span>
+                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">A video call, then a clear scope and a flat price.</span>
+              </span>
+            </li>
+            <li style="display: flex; gap: 16px;">
+              <span class="mono" style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9999px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; align-items: center; justify-content: center; font-size: 12px;">02</span>
+              <span style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 17px; font-weight: 600;">Watch it get built</span>
+                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Live previews in your Client Hub. Simple sites ship one day after confirmation.</span>
+              </span>
+            </li>
+            <li style="display: flex; gap: 16px;">
+              <span class="mono" style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9999px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; align-items: center; justify-content: center; font-size: 12px;">03</span>
+              <span style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 17px; font-weight: 600;">Own it after launch</span>
+                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Edit it yourself or let us manage it. The code is yours.</span>
+              </span>
+            </li>
+          </ol>
+        </div>
+        <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="padding: 6px; border-radius: 24px; background: rgba(252, 132, 100, 0.14); box-shadow: rgba(252, 132, 100, 0.35) 0px 0px 0px 1px, rgba(27, 26, 23, 0.1) 0px 14px 34px;">
+            <div style="border-radius: 18px; background: rgb(255, 254, 252); padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">Website-as-a-Service</h3>
+                <span class="mono" style="padding: 4px 9px; border-radius: 9999px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;">Most choose this</span>
+              </div>
+              <p style="margin: 0px; display: flex; align-items: baseline; gap: 6px;">
+                <span style="font-size: 36px; line-height: 1; font-weight: 600; letter-spacing: -0.03em;">{fmtPrice(PRICING.setup)}</span>
+                <span class="mono" style="font-size: 14px; color: rgb(103, 98, 90);">+ {fmtPrice(PRICING.monthly)}/mo</span>
+              </p>
+              <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Design, development, CMS, email, SEO, and managed hosting — all-inclusive.</p>
+            </div>
+          </div>
+          <div class="frame">
+            <div class="inner" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+              <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">Custom</h3>
+              <p style="margin: 0px; font-size: 28px; line-height: 1; font-weight: 600; letter-spacing: -0.02em;">Scoped per project</p>
+              <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Web apps, dashboards, accounts, and databases.</p>
+            </div>
+          </div>
+          <a href="/pricing" class="tlink" style="font-size: 15px; font-weight: 500;">Compare plans in detail →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FAQ + NEARBY ==================== -->
+    <section style="padding: 88px 0px;">
+      <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start;">
+        <div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 20px;">
+          <p class="eyebrow">
+            <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"></span>
+            FAQ
+          </p>
+          <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
+            Questions from {city.name} businesses
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 8px;">
+            <p class="mono" style="margin: 0px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(107, 102, 93);">Also serving nearby</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              {
+                nearbyCities.map((n) => (
+                  <a
+                    href={`/locations/${n.slug}`}
+                    class="tlink"
+                    style="display: inline-flex; align-items: center; min-height: 44px; padding: 0px 16px; border-radius: 9999px; background: rgb(255, 254, 252); box-shadow: rgba(27, 26, 23, 0.07) 0px 0px 0px 1px; color: rgb(27, 26, 23); font-size: 15px; font-weight: 500;"
+                  >
+                    {n.name}, FL
+                  </a>
+                ))
+              }
+              <a href="/locations" class="tlink" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0px 8px; font-size: 15px; font-weight: 500;">All Florida cities →</a>
+            </div>
+          </div>
+        </div>
+        <div class="frame" style="flex: 999 1 560px; min-width: 0px;">
+          <div class="inner" style="overflow: hidden;">
+            {
+              city.faqs.map((faq, i) => (
+                <div
+                  style={
+                    i < city.faqs.length - 1
+                      ? "border-bottom: 1px solid rgba(27, 26, 23, 0.07);"
+                      : ""
+                  }
+                >
+                  <button
+                    type="button"
+                    class="faq-q"
+                    aria-expanded={i === 0 ? "true" : "false"}
+                    style="width: 100%; text-align: left; border: 0px; background: transparent; cursor: pointer; font-family: inherit; min-height: 64px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 600;"
+                  >
+                    {faq.q}
+                    <span aria-hidden="true" class="mono pm" style="font-size: 20px; color: rgb(107, 102, 93);">
+                      {i === 0 ? "−" : "+"}
+                    </span>
+                  </button>
+                  <p
+                    class="fade"
+                    style={`margin: 0px; padding: 0px 24px 22px; font-size: 16px; line-height: 1.65; color: rgb(103, 98, 90);${i === 0 ? "" : " display: none;"}`}
+                  >
+                    {faq.a}
+                  </p>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== DARK CTA ==================== -->
+    <section id="contact" class="dark" style="padding: 96px 0px; background: rgb(23, 21, 18); color: rgb(236, 233, 226);">
+      <div class="wrap" style="display: flex; flex-direction: column; align-items: flex-start; gap: 22px;">
+        <p class="eyebrow">
+          <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgb(252, 132, 100);"></span>
+          {city.name}, Florida
+        </p>
+        <h2 style="margin: 0px; max-width: 16ch; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; font-weight: 600; letter-spacing: -0.035em;">
           Ready to stand out in {city.name}?
         </h2>
-        <p
-          class="mx-auto mt-4 max-w-[46ch] text-[15.5px] leading-[1.6] text-cream/70"
-        >
-          Simple, transparent pricing — and a real person on the other end.
-          Simple sites ship in one day once your project is confirmed.
+        <p style="margin: 0px; max-width: 520px; font-size: 18px; line-height: 1.55; color: rgb(184, 178, 167);">
+          Simple pricing and a real person on the other end — Ali replies directly.
         </p>
-        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 6px;">
           <a
-            href="/pricing"
-            class="mag-btn inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-[15px] font-medium text-charcoal transition-all duration-300 hover:bg-cream hover:text-charcoal"
+            href="/quote"
+            class="btn btn-primary"
+            style="display: inline-flex; align-items: center; min-height: 52px; padding: 0px 24px; border-radius: 11px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 15px; font-weight: 500; text-decoration: none;"
+            >Start a conversation ↗</a
           >
-            See pricing
-          </a>
           <a
-            href="/#contact"
-            class="inline-flex min-h-11 items-center text-[15px] font-medium text-cream/80 transition-colors duration-300 hover:text-cream"
+            href="/quote"
+            class="btn btn-ghost"
+            style="display: inline-flex; align-items: center; min-height: 52px; padding: 0px 22px; border-radius: 11px; background: rgba(236, 233, 226, 0.08); color: rgb(236, 233, 226); font-size: 15px; font-weight: 500; text-decoration: none;"
             >Ask a question</a
           >
         </div>
       </div>
     </section>
   </main>
-  <HomeFooter />
-</Layout>
 
-<style is:global>
-  html {
-    scrollbar-gutter: stable;
-  }
-  .mag-btn {
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  }
-  .mag-btn:active {
-    transform: scale(0.97);
-  }
-</style>
-
-<script is:inline data-astro-rerun>
-  (() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "-60px" }
-    );
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-  })();
-</script>
+  <script type="application/json" id="faq-data" set:html={JSON.stringify(city.faqs)}></script>
+</MockupLayout>

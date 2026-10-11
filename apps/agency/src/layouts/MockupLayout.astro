@@ -1,0 +1,61 @@
+---
+// Shared shell for every page ported from the design mockup. Renders the base
+// document (Layout: <head>, SEO, JSON-LD, GA) plus the mockup's wrapper, grain
+// texture, shared top nav and footer, and the shared interactive JS (mobile
+// menu, FAQ accordion, hero video, smooth scroll). Pages pass only their <main>.
+import Layout from "./Layout.astro";
+import "../styles/mockup.css";
+import MockupNav from "../components/MockupNav.astro";
+import MockupFooter from "../components/MockupFooter.astro";
+import MockupScripts from "../components/MockupScripts.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  og?: Record<string, unknown>;
+  schema?: unknown[];
+  pageType?: string;
+}
+
+const { title, description, canonical, og, schema, pageType } = Astro.props;
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={canonical}
+  og={og}
+  schema={schema}
+  pageType={pageType}
+  bodyClass=""
+>
+  <div id="dc-root">
+    <div class="sc-host" data-sc-name="mockup">
+      <div
+        style="position: relative; background: rgb(246, 245, 243); color: rgb(27, 26, 23); font-family: Geist, ui-sans-serif, system-ui, sans-serif; font-size: 17px; line-height: 1.55; overflow: hidden;"
+      >
+        <svg
+          aria-hidden="true"
+          style="position: absolute; inset: 0px; width: 100%; height: 100%; pointer-events: none; z-index: 60; opacity: 0.06; mix-blend-mode: multiply;"
+        >
+          <filter id="grainc">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves="3"
+              stitchTiles="stitch"></feTurbulence>
+            <feColorMatrix type="saturate" values="0"></feColorMatrix>
+          </filter>
+          <rect width="100%" height="100%" filter="url(#grainc)"></rect>
+        </svg>
+
+        <MockupNav />
+        <slot />
+        <MockupFooter />
+      </div>
+    </div>
+  </div>
+
+  <MockupScripts />
+</Layout>

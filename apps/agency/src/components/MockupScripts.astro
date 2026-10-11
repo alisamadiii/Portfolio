@@ -1,0 +1,155 @@
+---
+// Shared interactive JS for every page ported from the design mockup:
+// FAQ accordion, hero video, mobile menu, demo tab/radio selection groups,
+// pest "treat the bug" buttons, and smooth scroll. Used by MockupLayout and by
+// the self-contained industry pages (pest-control / handyman / restaurants).
+---
+
+<script is:inline data-astro-rerun>
+  (() => {
+    // ---- FAQ accordion (generic) ----------------------------------------
+    // Toggles each .faq-q's answer <p>. If a page ships answers out-of-band
+    // (a JSON script tag with id="faq-data" holding [{q,a}] pairs),
+    // inject any missing ones (the mockup only renders the first open answer).
+    const faqData = (() => {
+      try {
+        return JSON.parse(
+          document.getElementById("faq-data")?.textContent || "[]"
+        );
+      } catch {
+        return [];
+      }
+    })();
+    const answerStyle =
+      "margin:0;padding:0 24px 24px;max-width:68ch;font-size:16px;line-height:1.65;";
+    document.querySelectorAll("button.faq-q").forEach((btn) => {
+      const label = (btn.textContent || "").replace(/[−+]\s*$/, "").trim();
+      let ans = btn.nextElementSibling;
+      if (!ans || ans.tagName !== "P") {
+        const match = faqData.find((f) => label.startsWith(f.q.slice(0, 18)));
+        ans = document.createElement("p");
+        ans.className = "fade";
+        ans.setAttribute("style", answerStyle);
+        ans.textContent = match ? match.a : "";
+        btn.insertAdjacentElement("afterend", ans);
+      }
+      const open = btn.getAttribute("aria-expanded") === "true";
+      ans.style.display = open ? "" : "none";
+      const glyph = btn.querySelector(".mono span, .mono");
+      btn.addEventListener("click", () => {
+        const isOpen = btn.getAttribute("aria-expanded") === "true";
+        btn.setAttribute("aria-expanded", String(!isOpen));
+        ans.style.display = isOpen ? "none" : "";
+        if (glyph) glyph.textContent = isOpen ? "+" : "−";
+      });
+    });
+
+    // ---- Hero video ------------------------------------------------------
+    const playBtn = document.querySelector("[data-hero-play]");
+    if (playBtn) {
+      playBtn.addEventListener("click", () => {
+        const media = playBtn.closest("div[style*='aspect-ratio']");
+        if (!media) return;
+        const img = media.querySelector("img");
+        const video = document.createElement("video");
+        video.src = "/hero-video.mp4";
+        video.poster = "/hero-poster.webp";
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute(
+          "style",
+          "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:4;"
+        );
+        if (img) img.style.display = "none";
+        playBtn.parentElement.style.display = "none";
+        media.appendChild(video);
+        video.play().catch(() => {
+          if (img) img.style.display = "";
+          playBtn.parentElement.style.display = "";
+          video.remove();
+        });
+      });
+    }
+
+    // ---- Mobile menu -----------------------------------------------------
+    const menuBtn = document.querySelector('[aria-label="Open menu"]');
+    if (menuBtn && !menuBtn.dataset.wired) {
+      menuBtn.dataset.wired = "1";
+      const links = [
+        ["Services", "/services"],
+        ["Work", "/work"],
+        ["About", "/about"],
+        ["Pricing", "/pricing"],
+        ["Start a Project", "/quote"],
+        ["Open your app →", "https://hub.alisamadii.com"],
+      ];
+      const overlay = document.createElement("div");
+      overlay.setAttribute(
+        "style",
+        "position:fixed;inset:0;z-index:70;display:none;flex-direction:column;gap:14px;justify-content:center;padding:32px;background:rgba(246,245,243,0.97);backdrop-filter:blur(16px);"
+      );
+      overlay.innerHTML =
+        links
+          .map(
+            ([t, href]) =>
+              `<a href="${href}" style="font-size:30px;font-weight:600;letter-spacing:-0.03em;color:#1b1a17;text-decoration:none;">${t}</a>`
+          )
+          .join("") +
+        '<button type="button" aria-label="Close menu" data-menu-close style="position:absolute;top:24px;right:24px;width:44px;height:44px;border:0;background:rgba(27,26,23,0.05);border-radius:11px;font-size:22px;cursor:pointer;">✕</button>';
+      document.body.appendChild(overlay);
+      const toggle = (show) => {
+        overlay.style.display = show ? "flex" : "none";
+        document.body.style.overflow = show ? "hidden" : "";
+      };
+      menuBtn.addEventListener("click", () => toggle(true));
+      overlay.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t.closest("a") || t.closest("[data-menu-close]")) toggle(false);
+      });
+    }
+
+    // ---- Selection groups (tabs / radios) --------------------------------
+    const wireGroup = (items, attr) => {
+      items.forEach((it) =>
+        it.addEventListener("click", () => {
+          items.forEach((x) => x.setAttribute(attr, "false"));
+          it.setAttribute(attr, "true");
+        })
+      );
+    };
+    document.querySelectorAll('[role="tablist"]').forEach((tl) =>
+      wireGroup([...tl.querySelectorAll('[role="tab"]')], "aria-selected")
+    );
+    const radioByParent = new Map();
+    document.querySelectorAll('[role="radio"]').forEach((r) => {
+      const p = r.parentElement;
+      if (!radioByParent.has(p)) radioByParent.set(p, []);
+      radioByParent.get(p).push(r);
+    });
+    radioByParent.forEach((items) => wireGroup(items, "aria-checked"));
+
+    // ---- "Treat the bug" easter-egg buttons (pest-control) ---------------
+    document.querySelectorAll('button[aria-label^="Treat"]').forEach((b) => {
+      b.addEventListener("click", () => {
+        const done = b.getAttribute("data-treated") === "1";
+        b.setAttribute("data-treated", done ? "0" : "1");
+        b.style.opacity = done ? "" : "0.35";
+        b.style.transition = "opacity .25s ease";
+      });
+    });
+
+    // ---- Smooth scroll for in-page anchors -------------------------------
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener("click", function (e) {
+        const href = this.getAttribute("href");
+        if (!href || href === "#") return;
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
+  })();
+</script>

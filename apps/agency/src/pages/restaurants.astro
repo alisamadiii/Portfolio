@@ -1,0 +1,30 @@
+---
+// Restaurants industry page — self-contained bespoke design (own nav/footer,
+// warm-cream theme). Uses Layout directly, not the shared light MockupLayout.
+import Layout from "../layouts/Layout.astro";
+import "../styles/restaurants.css";
+import MockupScripts from "../components/MockupScripts.astro";
+import BODY from "../html/restaurants.html?raw";
+
+const SITE = "https://www.alisamadii.com";
+const pageUrl = `${SITE}/restaurants`;
+---
+
+<Layout
+  title="Restaurant Website Design | Menus, Ordering & Reservations"
+  description="Custom restaurant websites for Jacksonville and Florida — fast menus, online ordering, and reservations, built to turn visitors into tables and takeout orders."
+  canonical={pageUrl}
+  og={{
+    title: "Restaurant Website Design — Menus, Ordering & Reservations",
+    description:
+      "Custom-coded restaurant websites with fast menus, online ordering, and reservations — built to fill tables and takeout orders.",
+    url: pageUrl,
+    twitterDescription:
+      "Restaurant websites with fast menus, online ordering, and reservations.",
+  }}
+  bodyClass=""
+>
+  <Fragment set:html={BODY} />
+  <style is:global set:html={"html,body{background:rgb(251, 243, 228);}"} />
+  <MockupScripts />
+</Layout>

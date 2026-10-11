@@ -1,0 +1,30 @@
+---
+// Handyman industry page — self-contained bespoke design (own nav/footer,
+// navy + grid theme). Uses Layout directly, not the shared light MockupLayout.
+import Layout from "../layouts/Layout.astro";
+import "../styles/handyman.css";
+import MockupScripts from "../components/MockupScripts.astro";
+import BODY from "../html/handyman.html?raw";
+
+const SITE = "https://www.alisamadii.com";
+const pageUrl = `${SITE}/handyman`;
+---
+
+<Layout
+  title="Handyman Website Design | Sites That Book Jobs While You Work"
+  description="Custom websites for handymen and home-repair pros — built to answer questions, show your work, and drop ready-to-go estimate requests in your inbox while you're on the job."
+  canonical={pageUrl}
+  og={{
+    title: "Handyman Website Design — Sites That Book Jobs While You Work",
+    description:
+      "You build homes. We build the site that books the jobs — answering questions, showing your work, and sending estimate requests straight to your inbox.",
+    url: pageUrl,
+    twitterDescription:
+      "Handyman websites built to book jobs — show your work and get estimate requests while you're on the ladder.",
+  }}
+  bodyClass=""
+>
+  <Fragment set:html={BODY} />
+  <style is:global set:html={"html,body{background:rgb(242, 239, 232);}"} />
+  <MockupScripts />
+</Layout>
