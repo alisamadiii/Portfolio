@@ -22,6 +22,7 @@ import {
   useSlashMenuSelection,
   type SessionSkill,
 } from "@/components/canvas/slash-skills-menu";
+import { SkillChips } from "@/components/canvas/skill-chips";
 
 import {
   useCanvasEditor,
@@ -403,8 +404,10 @@ export function SessionChatPanel() {
     cancelMutation.mutate({ repoId, sessionId: session.id });
   };
 
-  const send = () => {
-    const content = input.trim();
+  // `text` = one-click sends (skill chips); otherwise the composer input.
+  const send = (text?: string) => {
+    const fromInput = text === undefined;
+    const content = (text ?? input).trim();
     if (!content || sendMutation.isPending || !canSend || busy) return;
     // AI chat is plan-gated: no edit token means the server refused the mint
     // (402) — open the purchase dialog instead of posting with a dead token.
@@ -419,7 +422,8 @@ export function SessionChatPanel() {
     const key = Date.now();
     // Optimistic: bubble + cleared input immediately; restored on failure.
     setPendingSends((current) => [...current, { key, content, at: key }]);
-    setInput("");
+    // Chip sends leave a half-typed draft alone.
+    if (fromInput) setInput("");
     sendMutation.mutate(
       { content, context: buildContext(currentPage, pickedElement) },
       {
@@ -427,7 +431,7 @@ export function SessionChatPanel() {
           setPendingSends((current) =>
             current.filter((pending) => pending.key !== key)
           );
-          setInput(content);
+          if (fromInput) setInput(content);
           toast.error(error.message);
         },
       }
@@ -551,6 +555,11 @@ export function SessionChatPanel() {
 
           {/* Composer */}
           <div className="shrink-0 border-t p-2.5">
+            <SkillChips
+              skills={skills}
+              disabled={busy || !canSend || sendMutation.isPending}
+              onRun={(name) => send(`/${name}`)}
+            />
             {pickedElement && (
               <div className="bg-primary/10 text-primary mb-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px]">
                 <MousePointerClick className="size-3.5 shrink-0" />
@@ -633,7 +642,7 @@ export function SessionChatPanel() {
                       ? cancelMutation.isPending || !session
                       : !input.trim() || sendMutation.isPending || !canSend
                   }
-                  onClick={busy ? pause : send}
+                  onClick={busy ? pause : () => send()}
                 >
                   {busy ? (
                     cancelMutation.isPending ? (
