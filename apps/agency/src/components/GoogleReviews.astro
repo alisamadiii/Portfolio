@@ -1,0 +1,46 @@
+---
+// Google reviews via Elfsight. The free plan meters widget loads, so
+// platform.js is only injected once the section nears the viewport;
+// visitors who never scroll this far never load it.
+const WIDGET_ID = "e41217f8-e5bf-4fa5-84ee-c82abf3ea3f4";
+---
+
+<section
+  id="reviews"
+  aria-label="Google reviews"
+  style="padding: 96px 0px; border-top: 1px solid rgba(27, 26, 23, 0.04);"
+>
+  <div class="wrap">
+    <div
+      class={`elfsight-app-${WIDGET_ID}`}
+      data-elfsight-app-lazy
+      data-reviews-widget
+      style="min-height: 420px;"
+    >
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (() => {
+    const widget = document.querySelector("[data-reviews-widget]");
+    if (!widget) return;
+    const load = () => {
+      if (document.querySelector('script[src="https://elfsightcdn.com/platform.js"]')) return;
+      const script = document.createElement("script");
+      script.src = "https://elfsightcdn.com/platform.js";
+      script.async = true;
+      document.body.appendChild(script);
+    };
+    if (!("IntersectionObserver" in window)) return load();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        load();
+      },
+      { rootMargin: "400px 0px" }
+    );
+    observer.observe(widget);
+  })();
+</script>

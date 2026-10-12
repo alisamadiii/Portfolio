@@ -4,6 +4,7 @@
 // supplies the hero + section <main> and fills its data-driven blocks.
 import MockupLayout from "../layouts/MockupLayout.astro";
 import QuoteForm from "../components/QuoteForm.astro";
+import GoogleReviews from "../components/GoogleReviews.astro";
 import MAIN from "../html/main/home.html?raw";
 import { PROJECTS } from "../data/projects";
 
@@ -87,6 +88,11 @@ body = body
   .replace(/^\s*<main id="top">/, "")
   .replace(/<\/main>\s*$/, "")
   .replace(/<section id="contact" class="dark"[^>]*>[\s\S]*<\/section>\s*$/, "");
+
+// 4) Google reviews slot in between Client Work and Pricing.
+const pricingAt = body.indexOf('<section id="pricing"');
+const bodyBeforeReviews = pricingAt === -1 ? body : body.slice(0, pricingAt);
+const bodyAfterReviews = pricingAt === -1 ? "" : body.slice(pricingAt);
 ---
 
 <MockupLayout
@@ -104,7 +110,9 @@ body = body
   schema={schema}
 >
   <main id="top">
-    <Fragment set:html={body} />
+    <Fragment set:html={bodyBeforeReviews} />
+    <GoogleReviews />
+    <Fragment set:html={bodyAfterReviews} />
 
     <!-- Get in Touch — original CTA copy + contacts, now with the quote form. -->
     <section
