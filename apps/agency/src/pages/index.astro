@@ -72,7 +72,7 @@ body = body.replace(
     const name = nameMatch?.[1]?.trim();
     const project = name ? projectByName.get(name) : undefined;
     if (!project?.image) return full;
-    const img = `<div class="zoom" style="border-radius: 10px; overflow: hidden;"><img src="${project.image.src}" alt="${project.image.alt}" width="1120" height="840" loading="lazy" class="zi" style="aspect-ratio: 4 / 3; width: 100%; height: 100%; object-fit: cover; display: block;" /></div>`;
+    const img = `<div class="zoom" style="border-radius: 10px; overflow: hidden;"><img src="${project.image.src}" alt="${project.image.alt}" width="1120" height="700" loading="lazy" class="zi" style="aspect-ratio: 8 / 5; width: 100%; height: auto; object-fit: cover; display: block;" /></div>`;
     const withImg = inner.replace(
       /<div class="zoom"[\s\S]*?<\/div>\s*<\/div>/,
       img

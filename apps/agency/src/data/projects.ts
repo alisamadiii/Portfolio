@@ -73,6 +73,19 @@ export const PROJECTS: Project[] = [
     },
   },
   {
+    slug: "fla2z-construction",
+    kind: "client",
+    name: "Florida A2Z Construction",
+    category: "Construction · Remodeling",
+    description:
+      "Site for a Jacksonville residential construction & remodeling contractor — services, process, and free-estimate requests.",
+    url: "https://fla2zconstruction.com/",
+    image: {
+      src: "/clients/fla2z-construction.webp",
+      alt: "Florida A2Z Construction website",
+    },
+  },
+  {
     slug: "mohammad-samadi",
     kind: "client",
     name: "Mohammad Samadi",

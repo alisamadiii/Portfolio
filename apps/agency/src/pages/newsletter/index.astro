@@ -83,4 +83,91 @@ const schema = [
   schema={schema}
 >
   <Fragment set:html={MAIN} />
+
+  <script is:inline data-astro-rerun>
+    (() => {
+      // Product tour: 6 tabs, each swaps the panel copy + real app screenshot.
+      const TOUR = [
+        {
+          title: "See what's working",
+          desc: "One dashboard shows every send, delivered, opened, and clicked. Bounce and complaint rates get flagged early.",
+          img: "/newsletter-app/01-analytics.webp",
+          alt: "Newsletter analytics dashboard showing delivery, open, and click rates for a local business",
+        },
+        {
+          title: "Write like a doc",
+          desc: "The editor works like a plain document. Type, format, drop in your logo and a button, and it is ready. No clunky template builder.",
+          img: "/newsletter-app/04-template-editor.webp",
+          alt: "Newsletter template editor that works like a plain document",
+        },
+        {
+          title: "Send in minutes",
+          desc: "Pick a list, write or reuse a template, and send. Schedule it or send now. The whole thing takes a few minutes.",
+          img: "/newsletter-app/08-campaigns.webp",
+          alt: "Campaigns screen for building and sending a newsletter",
+        },
+        {
+          title: "Your customers, organized",
+          desc: "Every subscriber lives in one contact book. Import your list, see who is active, and group people without a spreadsheet.",
+          img: "/newsletter-app/07-contact-book.webp",
+          alt: "Contact book listing newsletter subscribers",
+        },
+        {
+          title: "From your own domain",
+          desc: "Email goes out from your own domain with SPF, DKIM, and DMARC set up, so it lands in the inbox instead of spam.",
+          img: "/newsletter-app/11-domain-detail.webp",
+          alt: "Sending domain settings with SPF, DKIM, and DMARC verified",
+        },
+        {
+          title: "Every email, tracked",
+          desc: "Open any send to see exactly what happened: delivered, opened, clicked, or bounced, down to each contact.",
+          img: "/newsletter-app/16-email-detail.webp",
+          alt: "Detail view of a single sent email with delivery and open status",
+        },
+      ];
+
+      const tablist = document.querySelector(
+        '[role="tablist"][aria-label="Product tour"]'
+      );
+      if (!tablist || tablist.dataset.tourBound) return;
+      tablist.dataset.tourBound = "1";
+
+      const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+      const panel = tablist.parentElement.querySelector('[role="tabpanel"]');
+      if (!panel || tabs.length !== TOUR.length) return;
+
+      const numEl = panel.querySelector(".mono");
+      const titleEl = panel.querySelector("h3");
+      const descEl = panel.querySelector("p");
+      const imgEl = panel.querySelector("img");
+
+      // Preload so switching is instant.
+      TOUR.forEach((t) => {
+        const im = new Image();
+        im.src = t.img;
+      });
+
+      const select = (i) => {
+        const t = TOUR[i];
+        if (numEl)
+          numEl.textContent = `${String(i + 1).padStart(2, "0")} / 06`;
+        if (titleEl) titleEl.textContent = t.title;
+        if (descEl) descEl.textContent = t.desc;
+        if (imgEl) {
+          imgEl.src = t.img;
+          imgEl.alt = t.alt;
+        }
+        tabs.forEach((tab, j) => {
+          const on = j === i;
+          tab.setAttribute("aria-selected", on ? "true" : "false");
+          tab.style.background = on ? "rgb(27, 26, 23)" : "rgba(27, 26, 23, 0.05)";
+          tab.style.color = on ? "rgb(246, 245, 243)" : "rgb(27, 26, 23)";
+        });
+      };
+
+      tabs.forEach((tab, i) =>
+        tab.addEventListener("click", () => select(i))
+      );
+    })();
+  </script>
 </MockupLayout>
