@@ -895,7 +895,7 @@ export function SessionChatPanel() {
                 placeholder={
                   attachments.length
                     ? "Tell the AI what to do with the image"
-                    : 'e.g. "Change the hero headline to…"'
+                    : 'e.g. "Change the hero headline to…" or "Remove the first FAQ on the About page"'
                 }
                 rows={1}
                 className="max-h-40 min-h-[44px] w-full resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 text-[13px] shadow-none focus-visible:ring-0 dark:bg-transparent"
@@ -943,6 +943,14 @@ export function SessionChatPanel() {
                 </Button>
               </div>
               </div>
+              {/* Soft phrasing tip: edit-like wording (change / add / remove …
+                  plus the page) lets content-pilot hand the AI the right file
+                  up front — faster and cheaper. Any phrasing still works. */}
+              <p className="text-muted-foreground mt-1.5 px-1 text-[11px] leading-snug">
+                Tip: say what to change and where — change, add, remove,
+                update… and the page name. Or click an element in the preview
+                to point the AI at it.
+              </p>
             </div>
           </div>
         </>
