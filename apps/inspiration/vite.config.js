@@ -105,7 +105,7 @@ function safeFolder(dir) {
   return /^\d+-[a-z0-9][a-z0-9-]{0,79}$/.test(dir || "") ? dir : null;
 }
 
-const ACRONYMS = { faq: "FAQ", cta: "CTA", ui: "UI", ux: "UX", saas: "SaaS", seo: "SEO", ai: "AI", cms: "CMS", api: "API", "3d": "3D" };
+const ACRONYMS = { faq: "FAQ", hvac: "HVAC", cta: "CTA", ui: "UI", ux: "UX", saas: "SaaS", seo: "SEO", ai: "AI", cms: "CMS", api: "API", "3d": "3D" };
 const SMALL_WORDS = new Set(["and", "or", "to", "of", "in", "for", "the", "a", "on", "with"]);
 
 // "login-and-signup" → "Login & Signup", "faq" → "FAQ"
