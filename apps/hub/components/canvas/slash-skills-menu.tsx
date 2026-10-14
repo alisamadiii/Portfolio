@@ -5,6 +5,35 @@ import { PaintbrushSparkle } from "@/components/icon";
 
 export type SessionSkill = { name: string; description: string };
 
+export type SkillSummary = {
+  /** What the skill does, as one plain sentence. */
+  summary: string;
+  /** Example requests the client can type, without the surrounding quotes. */
+  examples: string[];
+};
+
+/**
+ * Turns a SKILL.md description written for Claude into client-facing copy.
+ * Our skills follow one shape: `<what it does>. Use when the user says "a",
+ * "b", or "c". <file notes for the AI>`. The summary is the first part, the
+ * examples are the quoted phrases from the "Use when" sentence, and the file
+ * notes are dropped (meaningless to a site owner).
+ */
+export function parseSkillDescription(description: string): SkillSummary {
+  const text = description.trim();
+  const marker = text.search(/\.\s+Use when\b/i);
+  const summaryRaw = marker === -1 ? text.split(/(?<=\.)\s+/)[0]! : text.slice(0, marker + 1);
+  const useWhen = marker === -1 ? "" : text.slice(marker + 1);
+  // Dash clauses read as a colon once, then commas ("site — a page — wired"
+  // becomes "site: a page, wired").
+  let dashes = 0;
+  const summary = summaryRaw
+    .replace(/\s+[—–]\s+/g, () => (dashes++ === 0 ? ": " : ", "))
+    .trim();
+  const examples = Array.from(useWhen.matchAll(/"([^"]+)"/g), (m) => m[1]!).slice(0, 4);
+  return { summary, examples };
+}
+
 /**
  * Plain-Textarea "/" dropdown for the session chat composer — lists the
  * skills shipped in the client repo's .claude/skills. Keyboard events are
@@ -45,7 +74,7 @@ export function SlashSkillsMenu({
             <span className="block text-[13px] font-medium">/{skill.name}</span>
             {skill.description && (
               <span className="text-muted-foreground block truncate text-[11.5px] leading-snug">
-                {skill.description}
+                {parseSkillDescription(skill.description).summary}
               </span>
             )}
           </span>

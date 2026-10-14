@@ -9,7 +9,10 @@ import {
 import { cn } from "@workspace/ui/lib/utils";
 
 import { HelpCircle, PaintbrushSparkle } from "@/components/icon";
-import type { SessionSkill } from "@/components/canvas/slash-skills-menu";
+import {
+  parseSkillDescription,
+  type SessionSkill,
+} from "@/components/canvas/slash-skills-menu";
 
 /** Chips shown before the "+N more" toggle. */
 const VISIBLE = 5;
@@ -43,20 +46,29 @@ export function SkillChips({
         Skills
         <Tooltip>
           <TooltipTrigger
+            delay={0}
             render={
               <button
                 type="button"
                 aria-label="What are skills?"
-                className="hover:text-foreground cursor-help rounded-full"
+                className="hover:text-foreground -m-1 cursor-help rounded-full p-1"
               >
                 <HelpCircle className="size-3.5" />
               </button>
             }
           />
-          <TooltipContent side="top" sideOffset={6} className="max-w-xs">
-            Skills are ready-made instructions for this site, like adding a
-            story or updating the team. Click one to start; the AI will ask for
-            anything it needs. You can also type / in the chat.
+          <TooltipContent
+            side="top"
+            sideOffset={6}
+            className="max-w-xs px-3 py-2.5 text-left text-wrap"
+          >
+            <p className="mb-1 font-medium">What are skills?</p>
+            <p className="text-background/85 leading-snug">
+              Ready-made tasks set up for this site, like adding a page or
+              updating your business info. Click one and the AI does it,
+              asking you for anything it needs. You can also type / in the
+              chat to pick one.
+            </p>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -69,6 +81,7 @@ export function SkillChips({
         {shown.map((skill) => (
           <Tooltip key={skill.name}>
             <TooltipTrigger
+              delay={0}
               render={
                 <button
                   type="button"
@@ -88,8 +101,12 @@ export function SkillChips({
               }
             />
             {skill.description && (
-              <TooltipContent side="top" sideOffset={6} className="max-w-xs">
-                {skill.description}
+              <TooltipContent
+                side="top"
+                sideOffset={6}
+                className="max-w-xs px-3 py-2.5 text-left text-wrap"
+              >
+                <SkillTooltipBody description={skill.description} />
               </TooltipContent>
             )}
           </Tooltip>
@@ -107,6 +124,29 @@ export function SkillChips({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function SkillTooltipBody({ description }: { description: string }) {
+  const { summary, examples } = parseSkillDescription(description);
+  return (
+    <div className="space-y-2">
+      <p className="leading-snug">{summary}</p>
+      {examples.length > 0 && (
+        <div>
+          <p className="text-background/60 mb-1 text-[10px] font-medium tracking-wide uppercase">
+            Try saying
+          </p>
+          <ul className="space-y-0.5">
+            {examples.map((example) => (
+              <li key={example} className="text-background/85 leading-snug">
+                &ldquo;{example}&rdquo;
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
