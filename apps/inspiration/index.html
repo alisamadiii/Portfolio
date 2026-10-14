@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inspiration</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title">
+        <nav class="tabs">
+          <a href="#" data-tab="folders">Folders</a>
+          <a href="#prompts" data-tab="prompts">Prompts</a>
+        </nav>
+        <nav id="crumbs"></nav>
+        <h1><span id="heading">Inspiration</span> <span id="count"></span></h1>
+        <p id="hint"></p>
+      </div>
+      <div class="actions">
+        <input id="filter" type="search" placeholder="Filter" />
+        <button id="new-folder" type="button" class="primary">New folder</button>
+        <button id="new-prompt" type="button" class="primary">New prompt</button>
+        <button id="delete-folder" type="button" class="danger">Delete folder</button>
+      </div>
+    </header>
+    <main id="grid"></main>
+    <div id="drop">Drop to save</div>
+    <div id="toast"></div>
+    <dialog id="lightbox"><img alt="" /></dialog>
+    <dialog id="prompt-dialog">
+      <form>
+        <input name="title" placeholder="Title, e.g. Dark SaaS hero" required autocomplete="off" />
+        <textarea name="body" placeholder="Write the prompt…" required></textarea>
+        <footer>
+          <button id="prompt-delete" type="button" class="danger">Delete</button>
+          <span class="spacer"></span>
+          <button id="prompt-copy" type="button">Copy</button>
+          <button id="prompt-cancel" type="button">Close</button>
+          <button id="prompt-save" type="submit" class="primary">Save</button>
+        </footer>
+      </form>
+    </dialog>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
