@@ -450,7 +450,7 @@ export const services: Service[] = [
     heroSub:
       "Client Hub gives you one dashboard to edit your content, monitor your site, and see every email it sends — while managed hosting keeps everything fast, secure, and backed up.",
     intro:
-      "Ali Samadi Agency sets every client up to edit their own website through Client Hub, our client dashboard at hub.alisamadii.com. It's more than a CMS: from one place you change text, swap images, and add pages, watch your site's uptime and response time, and browse a log of every email your website sends — receipts, notifications, contact-form messages. Every content save goes live automatically in about a minute, with no developer round-trips and no hourly fees for a typo fix. Your images live in your own free ImageKit account, your code sits in a repository you're invited to, and more features — like email marketing — are on the way. Prefer hands-off? Managed hosting keeps the site fast, secure, and backed up while you run your business.",
+      "Ali Samadi Agency sets every client up to edit their own website through Client Hub, our client dashboard at hub.alisamadii.com. It's more than a CMS: from one place you change text, swap images, and add pages, watch your site's uptime and response time, and browse a log of every email your website sends — receipts, notifications, contact-form messages. Every content save goes live automatically in about a minute, with no developer round-trips and no hourly fees for a typo fix. Your images upload straight into the chat and land in your site's own files, your code sits in a repository you're invited to, and more features — like email marketing — are on the way. Prefer hands-off? Managed hosting keeps the site fast, secure, and backed up while you run your business.",
     benefits: [
       {
         title: "Change anything, anytime",
@@ -460,7 +460,7 @@ export const services: Service[] = [
       {
         title: "Your files stay yours",
         icon: "package",
-        text: "Images and files live in your own ImageKit account — free for most use cases — connected right inside the dashboard. We never hold your media hostage; you keep full control even if we part ways.",
+        text: "Drop a photo into the chat, say where it goes, and it is committed into your own repository. No third-party media account, nothing held hostage, full control even if we part ways.",
       },
       {
         title: "More than a CMS",
@@ -484,7 +484,7 @@ export const services: Service[] = [
       },
       {
         title: "Edit your content",
-        text: "Change text, swap images, add pages — all through simple forms. Connect your own ImageKit account for full control of your files.",
+        text: "Change text, swap images, add pages — all through simple forms. Add images by dropping them into the chat.",
       },
       {
         title: "Save and it's live",
@@ -512,11 +512,11 @@ export const services: Service[] = [
           },
         },
         {
-          title: "Media — your images, your ImageKit account",
-          text: "Connect your own free ImageKit account and manage every image and file from inside the dashboard. We never store your credentials, and the files belong to your account — not ours. You keep full control, always.",
+          title: "Images, straight from the chat",
+          text: "Paste or drop a photo into the AI chat, describe it in a sentence, and the AI places it in the right spot on your site. Files live in your own code repository, so you keep full control, always.",
           image: {
             src: "/services/hub/hub-media.webp",
-            alt: "Client Hub media library with ImageKit integration for managing images",
+            alt: "Client Hub chat with an uploaded image placed on the site",
           },
         },
         {
@@ -561,7 +561,7 @@ export const services: Service[] = [
       },
       {
         q: "Who controls my images and files?",
-        a: "You do. Media is managed through your own ImageKit account — free for the majority of use cases — connected inside the dashboard. Your files live in your account, not ours, so you're never tied to us.",
+        a: "You do. Images you upload are stored in your own site's repository, the same one you are invited to on GitHub. Nothing lives in a third-party account, so you are never tied to us.",
       },
       {
         q: "What happens if my subscription lapses?",
@@ -569,10 +569,6 @@ export const services: Service[] = [
       },
     ],
     externalLinks: [
-      {
-        label: "ImageKit — free media management for your files",
-        url: "https://imagekit.io/plans/",
-      },
       {
         label: "GitHub — repository collaborators explained",
         url: "https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository",

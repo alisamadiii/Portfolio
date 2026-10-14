@@ -314,9 +314,9 @@ export default function GuidePage() {
           <ImageIcon className="text-muted-foreground mb-3 size-5" />
           <div className="mb-1 text-sm font-semibold">Images & files</div>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Pick images from the media library or upload new ones right where
-            you need them. Uploads are stored immediately so they're ready
-            when you publish.
+            Drop or paste images straight into the AI chat and say where they
+            go. The AI places them in your site and they are published with
+            your next commit.
           </p>
         </div>
         <div className="bg-card rounded-xl border p-5">

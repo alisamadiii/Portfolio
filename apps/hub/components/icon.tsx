@@ -661,6 +661,10 @@ export function PaintbrushSparkle(props: LucideProps) {
   );
 }
 
+export function Paperclip(props: LucideProps) {
+  return <Lucide.Paperclip {...props} />;
+}
+
 export function PenLine(props: LucideProps) {
   return <Lucide.PenLine {...props} />;
 }

@@ -13,6 +13,15 @@ export type TranscriptMessage = {
   /** Usage is recorded on the user message that drove the run. */
   inputTokens: number | null;
   outputTokens: number | null;
+  /** Images the user attached (user messages only). Bytes via /uploads/<id>. */
+  attachments?: TranscriptAttachment[];
+};
+
+export type TranscriptAttachment = {
+  id: string;
+  originalName: string;
+  width: number;
+  height: number;
 };
 
 export type Transcript = {

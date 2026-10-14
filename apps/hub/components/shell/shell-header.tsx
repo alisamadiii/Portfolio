@@ -17,7 +17,6 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { roleAtLeast } from "@/lib/authz-shared";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import {
@@ -25,11 +24,8 @@ import {
   Info,
   LayoutGrid,
   Settings2,
-  Upload,
   type LucideProps,
 } from "@/components/icon";
-import { useMediaLibrary } from "@/components/media/media-library-context";
-import { toast } from "sonner";
 import { SessionActions } from "@/components/canvas/session-actions";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
@@ -41,8 +37,8 @@ export type ShellMode = "canvas" | "settings";
  * Docked top bar (warm off-white). Left: back arrow (home) + agency brand
  * mark. The Canvas / Settings tabs float at the canvas panel's left edge —
  * `--chat-w` (set by the resizable split) keeps them aligned at any splitter
- * position. Center: project name + branch. Right: media upload, guide, user
- * menu, Invite (full access), Publish (content editor+).
+ * position. Center: project name + branch. Right: guide, user menu, Invite
+ * (full access), Publish (content editor+). Images are attached in the chat.
  */
 export function ShellHeader({
   mode,
@@ -60,8 +56,6 @@ export function ShellHeader({
   const [leaveOpen, setLeaveOpen] = useState(false);
   const { repoId } = useCanvasEditor();
   const { myRole } = useRepo();
-  const mediaLibrary = useMediaLibrary();
-  const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canManage = (myRole ?? "full-access") === "full-access";
 
   const canvasActive = mode === "canvas";
@@ -134,30 +128,6 @@ export function ShellHeader({
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
         <AiIntroDialog />
-        {mediaLibrary.isAvailable && canEdit && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Upload media"
-            onClick={() =>
-              mediaLibrary.open({
-                title: "Upload media",
-                onInsert: (urls) => {
-                  // Uploading is the point; inserting just hands the URL back
-                  // for pasting into an AI request.
-                  if (!urls.length) return;
-                  navigator.clipboard
-                    ?.writeText(urls.join("\n"))
-                    .then(() => toast.success("Image URL copied"))
-                    .catch(() => {});
-                },
-              })
-            }
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Upload className="size-5" />
-          </Button>
-        )}
         <Button
           variant="ghost"
           size="icon-sm"

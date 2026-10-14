@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfigProvider } from "@/contexts/config-context";
 import { RepoProvider } from "@/contexts/repo-context";
-import { DEFAULT_MEDIA_PROVIDER } from "@workspace/cms-core/media-providers";
 import type { Config } from "@workspace/cms-core/types/config";
 
 import { Button } from "@workspace/ui/components/button";
@@ -19,7 +18,6 @@ import { createHttpCaller } from "@workspace/trpc/http-caller";
 
 import { getServerSession } from "@/lib/session-server";
 
-import { MediaLibraryProvider } from "@/components/media/media-library-panel";
 import { RepoLayout } from "@/components/repo/repo-layout";
 import { GitHubAccessOverlay } from "@/components/repo/github-access-overlay";
 
@@ -159,8 +157,7 @@ export default async function Layout({
       : null;
 
   // The v2 canvas reads everything from the root _site.json manifest; the
-  // ConfigProvider only carries the repo coordinates and default media settings.
-  // (ImageKit is the sole media provider and needs no per-repo config.)
+  // ConfigProvider only carries the repo coordinates.
   const config: Config = {
     owner: owner.toLowerCase(),
     repo: repo.toLowerCase(),
@@ -169,24 +166,21 @@ export default async function Layout({
     sha: "",
     version: "",
     object: {},
-    mediaSettings: { provider: DEFAULT_MEDIA_PROVIDER, config: {} },
   };
 
   return (
     <RepoProvider repo={repoInfo}>
       <ConfigProvider value={config}>
-        <MediaLibraryProvider>
-          <RepoLayout>{children}</RepoLayout>
-          {agencyGate && (
-            <GitHubAccessOverlay
-              owner={agencyGate.owner}
-              login={agencyGate.login}
-              repo={repo}
-              repoId={repoId}
-              invited={agencyGate.invited}
-            />
-          )}
-        </MediaLibraryProvider>
+        <RepoLayout>{children}</RepoLayout>
+        {agencyGate && (
+          <GitHubAccessOverlay
+            owner={agencyGate.owner}
+            login={agencyGate.login}
+            repo={repo}
+            repoId={repoId}
+            invited={agencyGate.invited}
+          />
+        )}
       </ConfigProvider>
     </RepoProvider>
   );

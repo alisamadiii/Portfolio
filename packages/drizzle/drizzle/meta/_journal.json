@@ -43,6 +43,13 @@
       "when": 1791371013379,
       "tag": "0005_leads_subscription_tiers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791942097109,
+      "tag": "0006_drop_media_provider",
+      "breakpoints": true
     }
   ]
 }

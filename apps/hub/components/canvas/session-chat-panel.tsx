@@ -3,6 +3,7 @@
 import { handleCmsError, SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
@@ -23,6 +24,14 @@ import {
   type SessionSkill,
 } from "@/components/canvas/slash-skills-menu";
 import { SkillChips } from "@/components/canvas/skill-chips";
+import {
+  AttachmentThumbs,
+  AttachmentTray,
+  MAX_ATTACHMENTS,
+  UPLOAD_MESSAGES,
+  type StagedAttachment,
+} from "@/components/canvas/composer-attachments";
+import { shrinkImage } from "@/lib/shrink-image";
 
 import {
   useCanvasEditor,
@@ -37,6 +46,7 @@ import {
   Loader2,
   MousePointerClick,
   PaintbrushSparkle,
+  Paperclip,
   Settings,
   Square,
   TriangleAlert,
@@ -253,9 +263,11 @@ export function SessionChatPanel() {
     mutationFn: async ({
       content,
       context,
+      attachments,
     }: {
       content: string;
       context?: string;
+      attachments?: { id: string; description: string }[];
     }) => {
       const res = await fetch(
         `${pilotUrl}/api/v1/sessions/${session!.id}/messages`,
@@ -265,7 +277,11 @@ export function SessionChatPanel() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${editToken}`,
           },
-          body: JSON.stringify(context ? { content, context } : { content }),
+          body: JSON.stringify({
+            content,
+            ...(context ? { context } : {}),
+            ...(attachments?.length ? { attachments } : {}),
+          }),
         }
       );
       if (!res.ok) {
@@ -282,6 +298,155 @@ export function SessionChatPanel() {
   });
 
   const [input, setInput] = useState("");
+
+  // Chat image uploads: shrunk in the browser, posted straight to content-pilot
+  // on selection, then sent by id with the message. The AI never sees the
+  // pixels, only the required description, so the tray is part of composing.
+  const [attachments, setAttachments] = useState<StagedAttachment[]>([]);
+  const [attachNotice, setAttachNotice] = useState<string | null>(null);
+  const [triedSend, setTriedSend] = useState(false);
+  const patchAttachment = (key: string, patch: Partial<StagedAttachment>) =>
+    setAttachments((current) =>
+      current.map((item) => (item.key === key ? { ...item, ...patch } : item))
+    );
+  // Object URLs: revoked on explicit removal / failed prep here, on transcript
+  // match for sent ones (prune effect below), and on unmount for leftovers.
+  const removeAttachment = (key: string) =>
+    setAttachments((current) => {
+      for (const item of current) {
+        if (item.key === key) URL.revokeObjectURL(item.previewUrl);
+      }
+      return current.filter((item) => item.key !== key);
+    });
+  const attachmentsRef = useRef(attachments);
+  attachmentsRef.current = attachments;
+  useEffect(
+    () => () => {
+      for (const item of attachmentsRef.current) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+    },
+    []
+  );
+  const uploadMutation = useMutation({
+    mutationFn: async (file: {
+      blob: Blob;
+      fileName: string;
+      width: number;
+      height: number;
+    }) => {
+      const form = new FormData();
+      form.append("file", file.blob, file.fileName);
+      form.append("width", String(file.width));
+      form.append("height", String(file.height));
+      form.append("originalName", file.fileName);
+      // Raw fetch: the browser sets the multipart boundary; content-pilot is
+      // not the hub backend, so no api instance here.
+      const res = await fetch(
+        `${pilotUrl}/api/v1/sessions/${session!.id}/uploads`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${editToken}` },
+          body: form,
+        }
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(body?.error ?? "Upload failed.");
+      }
+      return (await res.json()) as { id: string; width: number; height: number };
+    },
+  });
+  const addFiles = (files: File[]) => {
+    if (!files.length || !session || !editToken) return;
+    const room = MAX_ATTACHMENTS - attachments.length;
+    if (room <= 0) {
+      setAttachNotice(UPLOAD_MESSAGES.tooMany);
+      return;
+    }
+    if (files.length > room) setAttachNotice(UPLOAD_MESSAGES.tooMany);
+    for (const file of files.slice(0, room)) {
+      const key = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      setAttachments((current) => [
+        ...current,
+        {
+          key,
+          previewUrl: URL.createObjectURL(file),
+          fileName: file.name,
+          status: "preparing",
+          description: "",
+        },
+      ]);
+      void (async () => {
+        const shrunk = await shrinkImage(file);
+        if (!shrunk.ok) {
+          removeAttachment(key);
+          setAttachNotice(
+            shrunk.reason === "too-large"
+              ? UPLOAD_MESSAGES.tooLarge
+              : shrunk.reason === "svg"
+                ? UPLOAD_MESSAGES.svg
+                : shrunk.reason === "heic"
+                  ? UPLOAD_MESSAGES.heic
+                  : shrunk.reason === "not-image"
+                    ? UPLOAD_MESSAGES.notImage
+                    : UPLOAD_MESSAGES.decode
+          );
+          return;
+        }
+        patchAttachment(key, { status: "uploading", fileName: shrunk.fileName });
+        try {
+          const uploaded = await uploadMutation.mutateAsync({
+            blob: shrunk.blob,
+            fileName: shrunk.fileName,
+            width: shrunk.width,
+            height: shrunk.height,
+          });
+          patchAttachment(key, {
+            status: "ready",
+            id: uploaded.id,
+            width: uploaded.width,
+            height: uploaded.height,
+          });
+        } catch (error) {
+          patchAttachment(key, {
+            status: "error",
+            error: (error as Error).message,
+          });
+        }
+      })();
+    }
+  };
+  const uploadsInFlight = attachments.some(
+    (item) => item.status === "preparing" || item.status === "uploading"
+  );
+  const attachmentsBlocked =
+    uploadsInFlight ||
+    attachments.some(
+      (item) =>
+        item.status === "error" ||
+        (item.status === "ready" && !item.description.trim())
+    );
+  // Pick + drop via react-dropzone; deliberately no drag-over styling.
+  const dropzone = useDropzone({
+    accept: { "image/*": [] },
+    multiple: true,
+    maxFiles: MAX_ATTACHMENTS,
+    noClick: true,
+    noKeyboard: true,
+    onDrop: (accepted, rejected) => {
+      if (rejected.length) {
+        setAttachNotice(
+          rejected.some((r) => r.errors.some((e) => e.code === "too-many-files"))
+            ? UPLOAD_MESSAGES.tooMany
+            : UPLOAD_MESSAGES.notImage
+        );
+      }
+      if (accepted.length) addFiles(accepted);
+    },
+  });
 
   // v0-style composer: the textarea grows with its content (capped), and
   // shrinks back when the input is cleared or restored programmatically.
@@ -334,7 +499,18 @@ export function SessionChatPanel() {
   // once the transcript refetch returns a matching user message (or the send
   // fails). Synthetic ids are negative so they never collide with real ones.
   const [pendingSends, setPendingSends] = useState<
-    { key: number; content: string; at: number }[]
+    {
+      key: number;
+      content: string;
+      at: number;
+      attachments: {
+        id: string;
+        previewUrl: string;
+        originalName: string;
+        width: number;
+        height: number;
+      }[];
+    }[]
   >([]);
   const rawMessages = transcriptQuery.data?.messages ?? [];
   const messages: TranscriptMessage[] = [
@@ -359,23 +535,47 @@ export function SessionChatPanel() {
         createdAt: new Date(pending.at).toISOString(),
         inputTokens: null,
         outputTokens: null,
+        attachments: pending.attachments.map(
+          ({ id, originalName, width, height }) => ({
+            id,
+            originalName,
+            width,
+            height,
+          })
+        ),
       })),
   ];
+  // Local previews for optimistic bubbles; once the transcript row lands the
+  // bubble switches to the server copy and the object URL is revoked.
+  const pendingPreviewById = new Map<string, string>();
+  for (const pending of pendingSends) {
+    for (const attachment of pending.attachments) {
+      pendingPreviewById.set(attachment.id, attachment.previewUrl);
+    }
+  }
   // Prune matched entries so the list doesn't rescan forever.
   useEffect(() => {
-    setPendingSends((current) =>
-      current.filter(
-        (pending) =>
-          !rawMessages.some(
-            (message) =>
-              message.role === "user" &&
-              message.content === pending.content &&
-              new Date(message.createdAt).getTime() >= pending.at - 5_000
-          )
-      )
-    );
+    setPendingSends((current) => {
+      const matched = (pending: (typeof current)[number]) =>
+        rawMessages.some(
+          (message) =>
+            message.role === "user" &&
+            message.content === pending.content &&
+            new Date(message.createdAt).getTime() >= pending.at - 5_000
+        );
+      for (const pending of current) {
+        if (!matched(pending)) continue;
+        for (const attachment of pending.attachments) {
+          URL.revokeObjectURL(attachment.previewUrl);
+        }
+      }
+      return current.filter((pending) => !matched(pending));
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcriptQuery.dataUpdatedAt]);
+  const thumbSrc = (id: string) =>
+    pendingPreviewById.get(id) ??
+    `${pilotUrl}/api/v1/sessions/${session?.id}/uploads/${id}?token=${encodeURIComponent(editToken)}`;
 
   const busy = messages.some(
     (message) =>
@@ -409,6 +609,14 @@ export function SessionChatPanel() {
     const fromInput = text === undefined;
     const content = (text ?? input).trim();
     if (!content || sendMutation.isPending || !canSend || busy) return;
+    // Images ride along only with a typed message; chip sends carry none.
+    const ready = fromInput
+      ? attachments.filter((item) => item.status === "ready")
+      : [];
+    if (fromInput && attachmentsBlocked) {
+      setTriedSend(true);
+      return;
+    }
     // AI chat is plan-gated: no edit token means the server refused the mint
     // (402) — open the purchase dialog instead of posting with a dead token.
     if (!editToken) {
@@ -421,17 +629,47 @@ export function SessionChatPanel() {
     }
     const key = Date.now();
     // Optimistic: bubble + cleared input immediately; restored on failure.
-    setPendingSends((current) => [...current, { key, content, at: key }]);
+    // The bubble takes over the preview URLs until the transcript row lands.
+    setPendingSends((current) => [
+      ...current,
+      {
+        key,
+        content,
+        at: key,
+        attachments: ready.map((item) => ({
+          id: item.id!,
+          previewUrl: item.previewUrl,
+          originalName: item.fileName,
+          width: item.width ?? 0,
+          height: item.height ?? 0,
+        })),
+      },
+    ]);
     // Chip sends leave a half-typed draft alone.
-    if (fromInput) setInput("");
+    if (fromInput) {
+      setInput("");
+      setAttachments([]);
+      setTriedSend(false);
+      setAttachNotice(null);
+    }
     sendMutation.mutate(
-      { content, context: buildContext(currentPage, pickedElement) },
+      {
+        content,
+        context: buildContext(currentPage, pickedElement),
+        attachments: ready.map((item) => ({
+          id: item.id!,
+          description: item.description.trim(),
+        })),
+      },
       {
         onError: (error) => {
           setPendingSends((current) =>
             current.filter((pending) => pending.key !== key)
           );
-          if (fromInput) setInput(content);
+          if (fromInput) {
+            setInput(content);
+            setAttachments(ready);
+          }
           toast.error(error.message);
         },
       }
@@ -528,6 +766,7 @@ export function SessionChatPanel() {
                       key={message.id}
                       message={message}
                       run={runs.get(message.id)}
+                      thumbSrc={thumbSrc}
                     />
                   );
                 }
@@ -554,7 +793,7 @@ export function SessionChatPanel() {
           </div>
 
           {/* Composer */}
-          <div className="shrink-0 border-t p-2.5">
+          <div className="mb-8 shrink-0 border-t p-2.5">
             <SkillChips
               skills={skills}
               disabled={busy || !canSend || sendMutation.isPending}
@@ -593,11 +832,37 @@ export function SessionChatPanel() {
               )}
               {/* overflow-hidden clips the textarea's square corners to the
                   card radius; the slash menu sits outside so it isn't cut. */}
-              <div className="bg-card focus-within:ring-primary overflow-hidden rounded-2xl border shadow-sm transition-shadow focus-within:ring-2">
+              <div
+                {...dropzone.getRootProps({ tabIndex: -1 })}
+                className="bg-card focus-within:ring-primary overflow-hidden rounded-lg border shadow-sm transition-shadow focus-within:ring-2"
+              >
+              <input {...dropzone.getInputProps()} />
+              <AttachmentTray
+                items={attachments}
+                onRemove={removeAttachment}
+                onDescribe={(key, description) =>
+                  patchAttachment(key, { description })
+                }
+                showMissing={triedSend}
+                notice={attachNotice}
+                onDismissNotice={() => setAttachNotice(null)}
+              />
               <Textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
+                onPaste={(event) => {
+                  const files = Array.from(event.clipboardData?.files ?? []);
+                  if (!files.length) return;
+                  event.preventDefault();
+                  const images = files.filter((file) =>
+                    file.type.startsWith("image/")
+                  );
+                  if (images.length !== files.length) {
+                    setAttachNotice(UPLOAD_MESSAGES.notImage);
+                  }
+                  if (images.length) addFiles(images);
+                }}
                 onKeyDown={(event) => {
                   if (slashOpen) {
                     if (event.key === "ArrowUp") {
@@ -627,11 +892,28 @@ export function SessionChatPanel() {
                     send();
                   }
                 }}
-                placeholder='e.g. "Change the hero headline to…"'
+                placeholder={
+                  attachments.length
+                    ? "Tell the AI what to do with the image"
+                    : 'e.g. "Change the hero headline to…"'
+                }
                 rows={1}
                 className="max-h-40 min-h-[44px] w-full resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 text-[13px] shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
-              <div className="flex items-center justify-end px-2 pb-2">
+              <div className="flex items-center justify-between px-2 pb-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="Attach images"
+                  title="Attach images"
+                  className="text-muted-foreground hover:text-foreground size-7 shrink-0 rounded-full"
+                  disabled={
+                    !canSend || !editToken || attachments.length >= MAX_ATTACHMENTS
+                  }
+                  onClick={dropzone.open}
+                >
+                  <Paperclip className="size-3.5" />
+                </Button>
                 <Button
                   size="icon"
                   aria-label={busy ? "Pause" : "Send"}
@@ -640,7 +922,10 @@ export function SessionChatPanel() {
                   disabled={
                     busy
                       ? cancelMutation.isPending || !session
-                      : !input.trim() || sendMutation.isPending || !canSend
+                      : !input.trim() ||
+                        sendMutation.isPending ||
+                        !canSend ||
+                        uploadsInFlight
                   }
                   onClick={busy ? pause : () => send()}
                 >
@@ -659,12 +944,6 @@ export function SessionChatPanel() {
               </div>
               </div>
             </div>
-            <p className="text-muted-foreground/70 mt-2 px-1 text-[11px] leading-relaxed">
-              Please avoid sharing confidential or private details for now.
-              While we test on the free plan, messages may be reviewed by
-              Google. Once we move to the paid plan, your content stays
-              completely private.
-            </p>
           </div>
         </>
       )}
@@ -807,9 +1086,11 @@ function BootPane({ status }: { status: string }) {
 function UserExchange({
   message,
   run,
+  thumbSrc,
 }: {
   message: TranscriptMessage;
   run: MessageRun | undefined;
+  thumbSrc: (id: string) => string;
 }) {
   const inFlight = message.status === "queued" || message.status === "running";
   const [showDetails, setShowDetails] = useState(false);
@@ -832,6 +1113,10 @@ function UserExchange({
     <div className="flex flex-col gap-1.5">
       {/* User bubble, right-aligned */}
       <div className="bg-primary text-primary-foreground ml-8 max-w-[85%] min-w-0 self-end rounded-2xl rounded-br-md px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
+        <AttachmentThumbs
+          attachments={message.attachments ?? []}
+          srcFor={thumbSrc}
+        />
         {linkify(message.content, true)}
       </div>
       <MessageMeta

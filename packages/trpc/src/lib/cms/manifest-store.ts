@@ -21,7 +21,7 @@ import { joinPathSegments, normalizePath } from "@workspace/cms-core/utils/file"
 
 import { db, configTable } from "./db";
 import { createOctokitInstance } from "./octokit";
-import { getBasePath, getPublicMediaSettings } from "./repo-settings";
+import { getBasePath } from "./repo-settings";
 
 const manifestVersion = "cms-v2.1";
 
@@ -114,7 +114,6 @@ type Manifest = {
   version: string;
   object: ManifestObject;
   lastCheckedAt?: Date;
-  mediaSettings?: Awaited<ReturnType<typeof getPublicMediaSettings>>;
 };
 
 /** camelCase / kebab-case key → "Title Case" label. */
@@ -421,19 +420,9 @@ const getManifest = async (
     return next;
   })();
 
-  // Media settings attach at read time (never persisted), same as getConfig.
-  const withMediaSettings = run.then(async (manifest) => {
-    if (!manifest) return null;
-    const mediaSettings = await getPublicMediaSettings(
-      normalizedOwner,
-      normalizedRepo
-    );
-    return { ...manifest, mediaSettings };
-  });
-
-  manifestSyncInFlight.set(key, withMediaSettings);
+  manifestSyncInFlight.set(key, run);
   try {
-    return await withMediaSettings;
+    return await run;
   } finally {
     manifestSyncInFlight.delete(key);
   }

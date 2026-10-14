@@ -122,13 +122,6 @@ export const hubConfig = pgTable(
   })
 );
 
-// Where hub media is stored/browsed for a project. Add new providers here.
-// (Values only — the column on hubProject is plain text, not a pgEnum, because
-// drizzle-kit push mishandles adding enum-typed columns to existing tables.)
-export const mediaProviderValues = ["imagekit"] as const;
-
-export type MediaProviderId = (typeof mediaProviderValues)[number];
-
 export const hubProject = pgTable(
   "hub_project",
   {
@@ -142,10 +135,6 @@ export const hubProject = pgTable(
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
     // Per-project settings, with defaults for new projects.
     basePath: text("base_path").notNull().default(""),
-    // Plain text (not a pgEnum): the value is always "imagekit" and never read
-    // for logic, and drizzle-kit push mishandles adding an enum-typed column
-    // to an existing table.
-    mediaProvider: text("media_provider").notNull().default("imagekit"),
     // Agency-granted free-for-life access. When true, the hub gate is bypassed
     // for this project for every user (no subscription, no Stripe), and Billing
     // shows a gratitude panel. Set directly in the DB (no admin UI).
