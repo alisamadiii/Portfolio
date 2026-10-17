@@ -23,8 +23,13 @@ const label = (status: string | null) =>
  * failure/setup detail also shows in the chat panel.
  */
 export function CanvasLoading({ status }: { status: string | null }) {
-  const { capacityMessage, previewError, previewTimedOut, retryStart } =
-    useCanvasEditor();
+  const {
+    capacityMessage,
+    previewError,
+    previewTimedOut,
+    retryStart,
+    lastEnded,
+  } = useCanvasEditor();
   const errorText =
     previewError ??
     (previewTimedOut
@@ -79,7 +84,13 @@ export function CanvasLoading({ status }: { status: string | null }) {
           </Button>
         </div>
       ) : (
-        <p className="text-muted-foreground text-[13px]">{label(status)}</p>
+        <p className="text-muted-foreground text-[13px]">
+          {lastEnded === "published"
+            ? "Published! Starting a fresh preview…"
+            : lastEnded === "closed"
+              ? "Starting a fresh preview…"
+              : label(status)}
+        </p>
       )}
     </div>
   );

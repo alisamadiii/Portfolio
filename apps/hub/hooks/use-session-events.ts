@@ -17,11 +17,17 @@ import { useEffect, useRef, useState } from "react";
 export type ToolActivity = {
   kind: "tool";
   label: string;
+  /** Raw tool name (Read / Edit / Write / Glob / Grep / mcp__pilot__…). */
+  name: string;
+  /** The tool's file_path as the agent passed it (absolute inside the clone). */
+  path: string | null;
 };
 
 export type CommitActivity = {
   kind: "commit";
   sha: string;
+  /** Repo-relative paths the turn changed (from `git status`). */
+  files: string[];
 };
 
 export type MessageRun = {
@@ -73,6 +79,10 @@ const toolLabel = (name: string, input: Record<string, unknown>) => {
       return typeof input.pattern === "string"
         ? `Searching ${input.pattern}`
         : "Searching the project";
+    case "mcp__pilot__replace_in_files":
+      return typeof input.find === "string"
+        ? `Replacing "${input.find}" everywhere`
+        : "Replacing text everywhere";
     default:
       return name;
   }
@@ -124,6 +134,13 @@ const reduceClaude = (run: MessageRun, data: ClaudeEvent): MessageRun => {
             ...next.activities,
             {
               kind: "tool",
+              name: String(block.name ?? ""),
+              path:
+                typeof (block.input as Record<string, unknown> | undefined)
+                  ?.file_path === "string"
+                  ? ((block.input as Record<string, unknown>)
+                      .file_path as string)
+                  : null,
               label: toolLabel(
                 String(block.name ?? ""),
                 (block.input as Record<string, unknown>) ?? {}
@@ -194,10 +211,14 @@ export function useSessionEvents(params: {
         const data = JSON.parse((event as MessageEvent).data) as {
           messageId: number | null;
           sha: string;
+          files?: string[];
         };
         withRun(data.messageId, (run) => ({
           ...run,
-          activities: [...run.activities, { kind: "commit", sha: data.sha }],
+          activities: [
+            ...run.activities,
+            { kind: "commit", sha: data.sha, files: data.files ?? [] },
+          ],
         }));
       } catch {
         // skip

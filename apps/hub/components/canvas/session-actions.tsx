@@ -19,6 +19,7 @@ import { Button } from "@workspace/ui/components/button";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
+import { SessionChangesDialog } from "@/components/canvas/session-changes-dialog";
 import { handleCmsError } from "@/lib/trpc-errors";
 import {
   transcriptBusy,
@@ -35,7 +36,7 @@ import { roleAtLeast } from "@/lib/authz-shared";
  * session's changes + chat) while keeping the session open.
  */
 export function SessionActions() {
-  const { repoId, session, editToken } = useCanvasEditor();
+  const { repoId, session, editToken, noteSessionEnded } = useCanvasEditor();
   const { myRole } = useRepo();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canPublish = (myRole ?? "full-access") === "full-access";
@@ -51,6 +52,7 @@ export function SessionActions() {
   const publishMutation = useMutation(
     trpc.cms.previewSession.publish.mutationOptions({
       onSuccess: (result) => {
+        noteSessionEnded(result.merged ? "published" : "closed");
         invalidateSession();
         toast.success(
           result.merged
@@ -97,6 +99,9 @@ export function SessionActions() {
 
   return (
     <>
+      {editToken && (
+        <SessionChangesDialog sessionId={session.id} editToken={editToken} />
+      )}
       <Button
         size="sm"
         variant="outline"

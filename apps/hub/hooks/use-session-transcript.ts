@@ -13,6 +13,8 @@ export type TranscriptMessage = {
   /** Usage is recorded on the user message that drove the run. */
   inputTokens: number | null;
   outputTokens: number | null;
+  /** Part of inputTokens that were prompt-cache reads (cheap). */
+  cacheReadTokens?: number | null;
   /** Images the user attached (user messages only). Bytes via /uploads/<id>. */
   attachments?: TranscriptAttachment[];
 };

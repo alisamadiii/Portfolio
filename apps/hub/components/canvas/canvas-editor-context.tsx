@@ -132,6 +132,13 @@ type CanvasEditorValue = {
   previewTimedOut: boolean;
   /** Retry the auto-start after a capacity block (or any silent failure). */
   retryStart: () => void;
+  /**
+   * Why the last session ended (publish / discard) while a fresh one boots —
+   * the boot placeholders read it so the client isn't told "starting" out of
+   * nowhere. Cleared once the new session is ready.
+   */
+  lastEnded: "published" | "closed" | null;
+  noteSessionEnded: (reason: "published" | "closed") => void;
   pagesLoading: boolean;
   pagesError: Error | null;
   /** No website URL set for the project — the canvas prompts to add a domain. */
@@ -261,6 +268,32 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   );
   const autoStartAttempted = useRef<string | null>(null);
   const autoStartMutate = autoStartMutation.mutate;
+
+  // A session that ends (publish, discard, idle expiry) drops out of the
+  // lookup, so `session` flips to null. Re-arm the one-shot auto-start guard
+  // on that transition — otherwise the canvas sits on "Starting your preview…"
+  // until a reload (which only works because it resets the ref).
+  const [lastEnded, setLastEnded] = useState<"published" | "closed" | null>(
+    null
+  );
+  const noteSessionEnded = useCallback(
+    (reason: "published" | "closed") => setLastEnded(reason),
+    []
+  );
+  const lastSessionId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sessionQuery.isSuccess) return;
+    if (session) {
+      lastSessionId.current = session.id;
+      if (session.status === "ready") setLastEnded(null);
+      return;
+    }
+    if (lastSessionId.current) {
+      lastSessionId.current = null;
+      autoStartAttempted.current = null;
+    }
+  }, [sessionQuery.isSuccess, session]);
+
   useEffect(() => {
     if (!canEdit || !repoId || !sessionQuery.isSuccess) return;
     if (session && session.status !== "paused") return;
@@ -613,6 +646,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       previewError,
       previewTimedOut: bootTimedOut,
       retryStart,
+      lastEnded,
+      noteSessionEnded,
       pagesLoading: pagesQuery.isLoading,
       pagesError:
         pagesQuery.error instanceof Error ? pagesQuery.error : null,
@@ -646,6 +681,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       previewError,
       bootTimedOut,
       retryStart,
+      lastEnded,
+      noteSessionEnded,
       pagesQuery.isLoading,
       pagesQuery.error,
       needsDomain,

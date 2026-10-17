@@ -12,7 +12,14 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useSessionEvents, type MessageRun } from "@/hooks/use-session-events";
+import {
+  useSessionEvents,
+  type CommitActivity,
+  type MessageRun,
+  type ToolActivity,
+} from "@/hooks/use-session-events";
+import { FileDiffButton } from "@/components/canvas/file-diff-dialog";
+import { sessionChangesQueryKey } from "@/components/canvas/session-changes-dialog";
 import {
   useSessionTranscript,
   type TranscriptMessage,
@@ -143,12 +150,23 @@ const formatTime = (iso: string) => {
   }
 };
 
-/** Compact token total for a turn, e.g. "1.2k tokens" / "840 tokens". */
-const formatTokens = (input: number | null, output: number | null) => {
+const compact = (value: number) =>
+  value >= 1000 ? `${(value / 1000).toFixed(1)}k` : `${value}`;
+
+/**
+ * Compact token total for a turn, e.g. "1.2k tokens" / "840 tokens". Cache
+ * reads are counted inside input but cost a fraction, so a resumed run's
+ * big number gets a "· 230k cached" qualifier.
+ */
+const formatTokens = (
+  input: number | null,
+  output: number | null,
+  cached?: number | null
+) => {
   const total = (input ?? 0) + (output ?? 0);
   if (!total) return null;
-  const label = total >= 1000 ? `${(total / 1000).toFixed(1)}k` : `${total}`;
-  return `${label} tokens`;
+  const label = `${compact(total)} tokens`;
+  return cached ? `${label} · ${compact(cached)} cached` : label;
 };
 
 /** Small time + copy (+ token count) row shown under a persisted bubble. */
@@ -198,6 +216,8 @@ export function SessionChatPanel() {
     capacityMessage,
     previewError,
     previewTimedOut,
+    lastEnded,
+    noteSessionEnded,
     retryStart,
     currentPage,
     pickedElement,
@@ -233,6 +253,7 @@ export function SessionChatPanel() {
   const closeMutation = useMutation(
     trpc.cms.previewSession.close.mutationOptions({
       onSuccess: () => {
+        noteSessionEnded("closed");
         invalidateSession();
         toast.success("Session discarded");
       },
@@ -248,6 +269,11 @@ export function SessionChatPanel() {
     editToken,
     onMessageDone: () => {
       void transcriptQuery.refetch();
+      // The Changes dialog is git-backed — a finished turn may have landed
+      // a commit, so its file list is stale now.
+      void queryClient.invalidateQueries({
+        queryKey: sessionChangesQueryKey(session?.id),
+      });
     },
     onSessionChange: invalidateSession,
   });
@@ -702,7 +728,7 @@ export function SessionChatPanel() {
           />
         ) : (
           // Auto-start fires on project open — no start button, just boot state.
-          <BootPane status="starting" />
+          <BootPane status="starting" ended={lastEnded} />
         )
       ) : previewTimedOut ? (
         <ErrorPane
@@ -767,6 +793,8 @@ export function SessionChatPanel() {
                       message={message}
                       run={runs.get(message.id)}
                       thumbSrc={thumbSrc}
+                      sessionId={session?.id ?? ""}
+                      editToken={editToken}
                     />
                   );
                 }
@@ -775,7 +803,11 @@ export function SessionChatPanel() {
                 const prev = messages[index - 1];
                 const tokens =
                   prev?.role === "user"
-                    ? formatTokens(prev.inputTokens, prev.outputTokens)
+                    ? formatTokens(
+                        prev.inputTokens,
+                        prev.outputTokens,
+                        prev.cacheReadTokens
+                      )
                     : null;
                 return (
                   <div key={message.id} className="flex flex-col gap-1">
@@ -1078,13 +1110,28 @@ function ErrorPane({
   );
 }
 
-function BootPane({ status }: { status: string }) {
+function BootPane({
+  status,
+  ended,
+}: {
+  status: string;
+  /** The previous session just ended this way — a fresh one is booting. */
+  ended?: "published" | "closed" | null;
+}) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
       <Loader2 className="text-primary size-5 animate-spin" />
-      <p className="text-muted-foreground text-[13px]">{bootLabel(status)}</p>
+      <p className="text-muted-foreground text-[13px]">
+        {ended === "published"
+          ? "Published! Starting a fresh preview…"
+          : ended === "closed"
+            ? "Starting a fresh preview…"
+            : bootLabel(status)}
+      </p>
       <p className="text-muted-foreground/70 max-w-[230px] text-[12px] leading-relaxed">
-        First start can take a minute or two while the preview is built.
+        {ended
+          ? "Your next edits will start from the site as it is now."
+          : "First start can take a minute or two while the preview is built."}
       </p>
     </div>
   );
@@ -1095,14 +1142,26 @@ function UserExchange({
   message,
   run,
   thumbSrc,
+  sessionId,
+  editToken,
 }: {
   message: TranscriptMessage;
   run: MessageRun | undefined;
   thumbSrc: (id: string) => string;
+  sessionId: string;
+  editToken: string;
 }) {
   const inFlight = message.status === "queued" || message.status === "running";
   const [showDetails, setShowDetails] = useState(false);
   const steps = run?.activities ?? [];
+  // The turn's commit — what every step's diff button is drawn against. No
+  // commit (failed / rejected / nothing changed) means nothing landed, so no
+  // buttons.
+  const commit = steps.find(
+    (activity): activity is CommitActivity => activity.kind === "commit"
+  );
+  const sha = message.commitSha ?? run?.done?.commitSha ?? commit?.sha ?? null;
+  const stepProps = { sha, files: commit?.files ?? [], sessionId, editToken };
   // Persistent progress state: keep a live indicator through long silent gaps
   // (e.g. the post-edit verify step, which streams no events for 15-20s) so the
   // run never *looks* finished while it's still working. Hidden only while the
@@ -1136,25 +1195,9 @@ function UserExchange({
       {/* Live activity while the run is in flight (Claude-style). */}
       {inFlight && (
         <div className="mr-6 flex flex-col gap-1">
-          {run?.activities.map((activity, index) =>
-            activity.kind === "tool" ? (
-              <div
-                key={index}
-                className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]"
-              >
-                <Check className="size-3 opacity-60" />
-                <span className="truncate">{activity.label}</span>
-              </div>
-            ) : (
-              <div
-                key={index}
-                className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]"
-              >
-                <CircleCheck className="size-3 text-emerald-500" />
-                Saved to preview
-              </div>
-            )
-          )}
+          {run?.activities.map((activity, index) => (
+            <StepRow key={index} activity={activity} {...stepProps} />
+          ))}
           {/* Streaming assistant text */}
           {(run?.text || run?.done?.reply) && (
             <AssistantBubble
@@ -1200,30 +1243,77 @@ function UserExchange({
           </button>
           {showDetails && (
             <div className="border-border/60 ml-2 flex flex-col gap-1 border-l pl-2.5">
-              {steps.map((activity, index) =>
-                activity.kind === "tool" ? (
-                  <div
-                    key={index}
-                    className="text-muted-foreground flex items-center gap-1.5 text-[12px]"
-                  >
-                    <Check className="size-3 shrink-0 opacity-60" />
-                    <span className="[overflow-wrap:anywhere]">
-                      {activity.label}
-                    </span>
-                  </div>
-                ) : (
-                  <div
-                    key={index}
-                    className="text-muted-foreground flex items-center gap-1.5 text-[12px]"
-                  >
-                    <CircleCheck className="size-3 shrink-0 text-emerald-500" />
-                    Saved to preview ({activity.sha.slice(0, 7)})
-                  </div>
-                )
-              )}
+              {steps.map((activity, index) => (
+                <StepRow
+                  key={index}
+                  activity={activity}
+                  showSha
+                  {...stepProps}
+                />
+              ))}
             </div>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * One activity line. Edit/Write rows and the commit row get a diff button once
+ * the turn has a commit: per file for edits, every changed file for the
+ * commit (which also covers bulk replace_in_files steps).
+ */
+function StepRow({
+  activity,
+  sha,
+  files,
+  sessionId,
+  editToken,
+  showSha,
+}: {
+  activity: ToolActivity | CommitActivity;
+  sha: string | null;
+  files: string[];
+  sessionId: string;
+  editToken: string;
+  showSha?: boolean;
+}) {
+  if (activity.kind === "commit") {
+    return (
+      <div className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]">
+        <CircleCheck className="size-3 shrink-0 text-emerald-500" />
+        <span>
+          Saved to preview
+          {showSha ? ` (${activity.sha.slice(0, 7)})` : ""}
+        </span>
+        <FileDiffButton
+          sessionId={sessionId}
+          editToken={editToken}
+          to={activity.sha}
+          files={activity.files.map((path) => ({ path }))}
+          title="Changes in this step"
+        />
+      </div>
+    );
+  }
+  const editable =
+    (activity.name === "Edit" || activity.name === "Write") &&
+    Boolean(activity.path && sha);
+  return (
+    <div className="text-muted-foreground flex items-center gap-1.5 px-1 text-[12px]">
+      <Check className="size-3 shrink-0 opacity-60" />
+      <span className="min-w-0 truncate [overflow-wrap:anywhere]">
+        {activity.label}
+      </span>
+      {editable && sha && activity.path && (
+        <FileDiffButton
+          sessionId={sessionId}
+          editToken={editToken}
+          to={sha}
+          files={[{ path: activity.path }]}
+          title={activity.label}
+        />
       )}
     </div>
   );

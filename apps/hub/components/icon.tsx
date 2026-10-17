@@ -262,6 +262,10 @@ export function FileCode(props: LucideProps) {
   return <Lucide.FileCode {...props} />;
 }
 
+export function FileDiff(props: LucideProps) {
+  return <Lucide.FileDiff {...props} />;
+}
+
 export function FileDown(props: LucideProps) {
   return <Lucide.FileDown {...props} />;
 }
@@ -333,6 +337,10 @@ export function Gift(props: LucideProps) {
 
 export function GitBranch(props: LucideProps) {
   return <Lucide.GitBranch {...props} />;
+}
+
+export function GitCompare(props: LucideProps) {
+  return <Lucide.GitCompare {...props} />;
 }
 
 export function Globe(props: LucideProps) {
