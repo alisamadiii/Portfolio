@@ -81,7 +81,9 @@ export function SkillChips({
         {shown.map((skill) => (
           <Tooltip key={skill.name}>
             <TooltipTrigger
-              delay={0}
+              // Chips sit right above the composer: a hover on the way to the
+              // input must not flash a tooltip, so wait like a native title.
+              delay={600}
               render={
                 <button
                   type="button"
