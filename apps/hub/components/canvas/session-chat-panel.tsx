@@ -265,9 +265,10 @@ export function SessionChatPanel() {
   // session actions via the same query key.
   const transcriptQuery = useSessionTranscript(session?.id, editToken);
 
-  const { runs } = useSessionEvents({
+  const { runs, reconnect: reconnectEvents } = useSessionEvents({
     sessionId: session?.id ?? null,
     editToken,
+    sessionStatus: session?.status ?? null,
     onMessageDone: () => {
       void transcriptQuery.refetch();
       // The Changes dialog is git-backed — a finished turn may have landed
@@ -321,6 +322,11 @@ export function SessionChatPanel() {
     onSuccess: () => {
       clearPickedElement();
       void transcriptQuery.refetch();
+      // A message revives a paused session server-side; the event stream was
+      // closed while it slept, so reopen it now (no-op when already live) and
+      // fast-poll the status through the boot.
+      reconnectEvents();
+      invalidateSession();
     },
   });
 
