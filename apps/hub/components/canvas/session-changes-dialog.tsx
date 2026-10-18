@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -75,7 +76,7 @@ export function SessionChangesDialog({
           </Button>
         }
       />
-      <DialogContent className="flex max-h-[85dvh] flex-col gap-3 p-0 sm:max-w-4xl">
+      <DialogContent className="bg-card flex max-h-[85dvh] min-h-[500px] flex-col gap-3 overflow-hidden p-0 md:max-w-6xl">
         {open && <Content sessionId={sessionId} editToken={editToken} />}
       </DialogContent>
     </Dialog>
@@ -90,6 +91,39 @@ const Content = ({
   editToken: string;
 }) => {
   const query = useQuery(sessionChangesQueryOptions(sessionId, editToken));
+  const queryClient = useQueryClient();
+  // Manual revert: content-pilot puts the file back to its live-site version
+  // and commits that on the session branch. The AI never reverts anything —
+  // a "revert" chat message gets pointed here instead.
+  const revertMutation = useMutation({
+    mutationFn: async (file: DiffFile) => {
+      const res = await fetch(
+        `${pilotUrl}/api/v1/sessions/${sessionId}/revert`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${editToken}`,
+          },
+          body: JSON.stringify({ path: file.path }),
+        }
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(body?.error ?? "Could not revert this file.");
+      }
+      return file;
+    },
+    onSuccess: (file) => {
+      toast.success(`Reverted ${file.path}`);
+      void queryClient.invalidateQueries({
+        queryKey: sessionChangesQueryKey(sessionId),
+      });
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   if (query.isPending) {
     return (
@@ -140,7 +174,11 @@ const Content = ({
       to={query.data.head}
       files={query.data.files}
       title="Your changes"
-      description={`${query.data.files.length} ${query.data.files.length === 1 ? "file" : "files"} changed since your live site. Red lines were removed, green lines were added.`}
+      description={`${query.data.files.length} ${query.data.files.length === 1 ? "file" : "files"} changed since your live site. Red lines were removed, green lines were added. Revert puts a file back exactly as it is live.`}
+      onRevert={(file) => revertMutation.mutate(file)}
+      revertingPath={
+        revertMutation.isPending ? revertMutation.variables?.path : null
+      }
     />
   );
 };

@@ -16,7 +16,7 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { FileDiff } from "@/components/icon";
+import { FileDiff, Loader2, Undo2 } from "@/components/icon";
 import { friendlyFileLabel } from "@/lib/file-labels";
 import {
   collapseContext,
@@ -45,9 +45,14 @@ const pilotUrl = (process.env.NEXT_PUBLIC_CONTENT_PILOT_URL ?? "").replace(
 
 type FileDiffResponse = {
   path: string;
+  /** Text per side, or data URLs when `image` is set. */
   before: string | null;
   after: string | null;
   truncated: boolean;
+  /** Image file: before/after are data URLs (or null when absent). */
+  image?: boolean;
+  /** One side exceeded the preview cap — shown as a note, no picture. */
+  tooLarge?: boolean;
 };
 
 export const fetchFileDiff = async (params: {
@@ -121,6 +126,8 @@ export function DiffDialogBody({
   files,
   title,
   description,
+  onRevert,
+  revertingPath,
 }: {
   sessionId: string;
   editToken: string;
@@ -129,10 +136,18 @@ export function DiffDialogBody({
   files: DiffFile[];
   title: string;
   description?: string;
+  /** Manual revert of the selected file to the live site (Changes dialog only). */
+  onRevert?: (file: DiffFile) => void;
+  /** Path currently being reverted (disables the button, shows a spinner). */
+  revertingPath?: string | null;
 }) {
   const [selected, setSelected] = useState(files[0]?.path ?? null);
   const current = files.find((file) => file.path === selected) ?? files[0];
   const multi = files.length > 1;
+  // Two-click revert: the first click arms the button for this file, the
+  // second fires. Switching files disarms.
+  const [armedPath, setArmedPath] = useState<string | null>(null);
+  const armed = Boolean(current && armedPath === current.path);
   return (
     <>
       <DialogHeader className="px-4 pt-4">
@@ -174,14 +189,49 @@ export function DiffDialogBody({
           </div>
         )}
         {current && (
-          <FileDiffPane
-            key={current.path}
-            sessionId={sessionId}
-            editToken={editToken}
-            to={to}
-            from={from}
-            file={current}
-          />
+          <div className="flex min-h-0 flex-1 flex-col">
+            {onRevert && (
+              <div className="flex items-center justify-between gap-3 border-b px-3 py-1.5">
+                <span className="text-muted-foreground truncate text-[11.5px]">
+                  {armed
+                    ? "Puts this file back exactly as it is on your live site."
+                    : "Changed your mind about this file?"}
+                </span>
+                <Button
+                  size="sm"
+                  variant={armed ? "destructive" : "outline"}
+                  disabled={revertingPath === current.path}
+                  onClick={() => {
+                    if (!armed) {
+                      setArmedPath(current.path);
+                      return;
+                    }
+                    setArmedPath(null);
+                    onRevert(current);
+                  }}
+                >
+                  {revertingPath === current.path ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Undo2 className="size-3.5" />
+                  )}
+                  {revertingPath === current.path
+                    ? "Reverting…"
+                    : armed
+                      ? "Yes, revert this file"
+                      : "Revert"}
+                </Button>
+              </div>
+            )}
+            <FileDiffPane
+              key={current.path}
+              sessionId={sessionId}
+              editToken={editToken}
+              to={to}
+              from={from}
+              file={current}
+            />
+          </div>
         )}
       </div>
     </>
@@ -218,7 +268,7 @@ function FileDiffPane({
       fetchFileDiff({ sessionId, editToken, to, from, path: file.path }),
   });
   const lines = useMemo<DiffLine[] | null>(() => {
-    if (!query.data) return null;
+    if (!query.data || query.data.image) return null;
     const before = query.data.before?.split("\n") ?? [];
     const after = query.data.after?.split("\n") ?? [];
     return collapseContext(computeLineDiff(before, after));
@@ -250,6 +300,8 @@ function FileDiffPane({
           <p className="text-destructive px-3 py-2 text-xs">
             Could not load this change.
           </p>
+        ) : query.data.image ? (
+          <ImageDiffView data={query.data} />
         ) : query.data.before === null && query.data.after === null ? (
           <p className="text-muted-foreground px-3 py-2 text-xs">
             This file is not in the preview anymore.
@@ -280,6 +332,44 @@ function FileDiffPane({
 }
 
 /** `−`/`+` gutters, collapsed unchanged runs — the GitHub unified look. */
+/** Before/after pictures for an image file (uploads, swapped photos). */
+function ImageDiffView({ data }: { data: FileDiffResponse }) {
+  if (data.tooLarge && !data.before && !data.after) {
+    return (
+      <p className="text-muted-foreground px-3 py-2 text-xs">
+        This image is too large to preview here.
+      </p>
+    );
+  }
+  const sides = [
+    { label: "Before", src: data.before, empty: "No image before" },
+    { label: "After", src: data.after, empty: "Image removed" },
+  ];
+  return (
+    <div className="grid gap-3 p-3 sm:grid-cols-2">
+      {sides.map((side) => (
+        <figure key={side.label} className="flex min-w-0 flex-col gap-1.5">
+          <figcaption className="text-muted-foreground text-[11px] font-medium">
+            {side.label}
+          </figcaption>
+          {side.src ? (
+            // eslint-disable-next-line @next/next/no-img-element -- data URL from the session clone
+            <img
+              src={side.src}
+              alt={`${side.label}: ${data.path}`}
+              className="bg-muted/40 max-h-72 w-full rounded-md border object-contain [background-image:linear-gradient(45deg,rgba(0,0,0,.06)_25%,transparent_25%,transparent_75%,rgba(0,0,0,.06)_75%),linear-gradient(45deg,rgba(0,0,0,.06)_25%,transparent_25%,transparent_75%,rgba(0,0,0,.06)_75%)] [background-position:0_0,8px_8px] [background-size:16px_16px]"
+            />
+          ) : (
+            <div className="text-muted-foreground bg-muted/40 flex h-24 items-center justify-center rounded-md border border-dashed text-[11px]">
+              {data.tooLarge ? "Too large to preview" : side.empty}
+            </div>
+          )}
+        </figure>
+      ))}
+    </div>
+  );
+}
+
 function LineDiffView({ lines }: { lines: DiffLine[] }) {
   if (lines.length === 0) {
     return (

@@ -904,3 +904,7 @@ export function Users(props: LucideProps) {
 export function X(props: LucideProps) {
   return <Lucide.X {...props} />;
 }
+
+export function Undo2(props: LucideProps) {
+  return <Lucide.Undo2 {...props} />;
+}
