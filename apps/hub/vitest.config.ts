@@ -1,5 +1,4 @@
 import path from "node:path";
-
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -14,6 +13,7 @@ export default defineConfig({
         __dirname,
         "../../packages/cms-core/src"
       ),
+      "@workspace/trpc": path.resolve(__dirname, "../../packages/trpc/src"),
       "@": path.resolve(__dirname, "."),
     },
   },

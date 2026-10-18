@@ -13,16 +13,17 @@ import {
 import { useConfig } from "@/contexts/config-context";
 import { useRepo } from "@/contexts/repo-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@workspace/trpc/client";
-import { roleAtLeast } from "@/lib/authz-shared";
 
-import { useSessionHeartbeat } from "@/hooks/use-session-heartbeat";
+import { useTRPC } from "@workspace/trpc/client";
+
+import { roleAtLeast } from "@/lib/authz-shared";
 import {
   parseBridgeMessage,
   postChrome,
   postPickMode,
 } from "@/lib/bridge-messages";
 import { repoPath } from "@/lib/paths";
+import { useSessionHeartbeat } from "@/hooks/use-session-heartbeat";
 
 // The URL param the cms-bridge overlay watches to turn edit mode on. Must match
 // EDIT_PARAM in the bridge client (packages/cms-bridge/src/client.ts).
@@ -33,6 +34,12 @@ const EDIT_PARAM = "e7k9x2fq";
  * Mirrors PreviewSession in @workspace/trpc/lib/content-pilot — declared
  * locally so the client bundle never imports the server-only lib.
  */
+/**
+ * Why the last session ended while a fresh one boots: publish, discard, or a
+ * branch switch (carries the branch the new session is booting on).
+ */
+export type SessionEndReason = "published" | "closed" | { switched: string };
+
 export type PreviewSessionInfo = {
   id: string;
   repoId: number;
@@ -137,8 +144,10 @@ type CanvasEditorValue = {
    * the boot placeholders read it so the client isn't told "starting" out of
    * nowhere. Cleared once the new session is ready.
    */
-  lastEnded: "published" | "closed" | null;
-  noteSessionEnded: (reason: "published" | "closed") => void;
+  lastEnded: SessionEndReason | null;
+  noteSessionEnded: (reason: SessionEndReason) => void;
+  /** True while previewing the default branch (ephemeral preview/<id>) or booting. */
+  onDefaultBranch: boolean;
   pagesLoading: boolean;
   pagesError: Error | null;
   /** No website URL set for the project — the canvas prompts to add a domain. */
@@ -235,7 +244,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
     )
   );
-  const session = (sessionQuery.data?.session ?? null) as PreviewSessionInfo | null;
+  const session = (sessionQuery.data?.session ??
+    null) as PreviewSessionInfo | null;
 
   // Warm previews: opening the project auto-starts (or revives) the session so
   // the chat is usable the moment the client arrives — no start button. One
@@ -273,13 +283,12 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // lookup, so `session` flips to null. Re-arm the one-shot auto-start guard
   // on that transition — otherwise the canvas sits on "Starting your preview…"
   // until a reload (which only works because it resets the ref).
-  const [lastEnded, setLastEnded] = useState<"published" | "closed" | null>(
-    null
-  );
+  const [lastEnded, setLastEnded] = useState<SessionEndReason | null>(null);
   const noteSessionEnded = useCallback(
-    (reason: "published" | "closed") => setLastEnded(reason),
+    (reason: SessionEndReason) => setLastEnded(reason),
     []
   );
+  const onDefaultBranch = !session || session.branch.startsWith("preview/");
   const lastSessionId = useRef<string | null>(null);
   useEffect(() => {
     if (!sessionQuery.isSuccess) return;
@@ -301,13 +310,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     if (autoStartAttempted.current === key) return;
     autoStartAttempted.current = key;
     autoStartMutate({ repoId });
-  }, [
-    canEdit,
-    repoId,
-    sessionQuery.isSuccess,
-    session,
-    autoStartMutate,
-  ]);
+  }, [canEdit, repoId, sessionQuery.isSuccess, session, autoStartMutate]);
 
   // Boot watchdog: if the session stays in a booting status past the timeout
   // (dev server never came up, supervisor wedged), stop spinning and offer a
@@ -434,7 +437,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   }, [selectedPath, pages, entryPages]);
 
   // Element the client clicked in the AI preview (analyzer overlay → element-pick).
-  const [pickedElement, setPickedElement] = useState<PickedElement | null>(null);
+  const [pickedElement, setPickedElement] = useState<PickedElement | null>(
+    null
+  );
   const clearPickedElement = useCallback(() => setPickedElement(null), []);
 
   // Element-pick mode, driven by the canvas-header cursor button. The ref
@@ -498,11 +503,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       }
       if (!framePath) return;
       // view-only collaborators browse but never point the AI at an element.
-      if (
-        !canEdit &&
-        msg.type !== "ready" &&
-        msg.type !== "preview-navigate"
-      )
+      if (!canEdit && msg.type !== "ready" && msg.type !== "preview-navigate")
         return;
       switch (msg.type) {
         case "ready": {
@@ -555,9 +556,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
           // mismatch as tree-driven navigation and bounce the iframe back.
           const parentPath =
             pages
-              .filter(
-                (page) => page.kind !== "collection" && page.path !== "/"
-              )
+              .filter((page) => page.kind !== "collection" && page.path !== "/")
               .map((page) => page.path)
               .sort((a, b) => b.length - a.length)
               .find((parent) => framePath.startsWith(parent + "/")) ?? null;
@@ -582,13 +581,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [
-    activeOrigin,
-    canEdit,
-    pages,
-    entryPages,
-    selectedPath,
-  ]);
+  }, [activeOrigin, canEdit, pages, entryPages, selectedPath]);
 
   const editSrcFor = useCallback(
     (url: string) => {
@@ -648,9 +641,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       retryStart,
       lastEnded,
       noteSessionEnded,
+      onDefaultBranch,
       pagesLoading: pagesQuery.isLoading,
-      pagesError:
-        pagesQuery.error instanceof Error ? pagesQuery.error : null,
+      pagesError: pagesQuery.error instanceof Error ? pagesQuery.error : null,
       needsDomain,
       selectedPath,
       setSelectedPath,
@@ -683,6 +676,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
       retryStart,
       lastEnded,
       noteSessionEnded,
+      onDefaultBranch,
       pagesQuery.isLoading,
       pagesQuery.error,
       needsDomain,

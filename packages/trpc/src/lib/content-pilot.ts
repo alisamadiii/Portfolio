@@ -83,14 +83,20 @@ async function pilotError(res: Response): Promise<never> {
   });
 }
 
-/** Starts (or joins) the repo's live-preview session. */
+/**
+ * Starts (or joins) the repo's live-preview session. `branch` runs it ON a
+ * named branch (commits persist there); omitted = ephemeral `preview/<id>`
+ * off the default branch. content-pilot answers 409 `branch_mismatch` when the
+ * repo's live session is on another branch (the caller closes it first).
+ */
 export async function createPreviewSession(
   repoId: number,
-  requestedBy?: string
+  requestedBy?: string,
+  branch?: string
 ): Promise<PreviewSession> {
   const res = await pilotFetch(`/api/v1/sessions`, {
     method: "POST",
-    body: JSON.stringify({ repoId, requestedBy }),
+    body: JSON.stringify({ repoId, requestedBy, branch }),
   });
   if (!res.ok) await pilotError(res);
   return (await res.json()) as PreviewSession;

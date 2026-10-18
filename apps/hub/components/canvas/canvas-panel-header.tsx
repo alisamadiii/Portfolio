@@ -10,20 +10,20 @@ import {
 } from "@workspace/ui/components/popover";
 import { cn } from "@workspace/ui/lib/utils";
 
+import { BranchMenu } from "@/components/canvas/branch-menu";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import {
   CanvasToolbar,
   type CanvasDevice,
 } from "@/components/canvas/canvas-toolbar";
-import { PageTree } from "@/components/shell/page-tree";
 import { SeoPanel } from "@/components/canvas/seo-panel";
 import {
   ChevronDown,
   FileText,
-  GitBranch,
   MousePointerClick,
   Search,
 } from "@/components/icon";
+import { PageTree } from "@/components/shell/page-tree";
 
 /**
  * Slim bar at the top of the canvas panel: the pages popover (the old left
@@ -47,7 +47,6 @@ export function CanvasPanelHeader({
     selectedPath,
     session,
     repo,
-    branch,
     currentPage,
     pickModeActive,
     setPickMode,
@@ -88,14 +87,13 @@ export function CanvasPanelHeader({
         </PopoverContent>
       </Popover>
 
-      {/* Project identity (moved out of the top header) */}
-      <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-[12px]">
+      {/* Project identity (moved out of the top header) + branch switcher */}
+      <div className="text-muted-foreground flex min-w-0 items-center gap-1 text-[12px]">
         <span className="text-foreground max-w-[160px] truncate font-medium">
           {repo}
         </span>
         <span className="text-muted-foreground/50">·</span>
-        <GitBranch className="size-3.5 shrink-0" />
-        <span className="truncate">{branch || "main"}</span>
+        <BranchMenu />
       </div>
 
       <div className="ml-auto flex min-w-0 items-center gap-2">
@@ -125,10 +123,9 @@ export function CanvasPanelHeader({
           disabled={!sessionReady}
           onClick={() => setPickMode(!pickModeActive)}
           className={cn(
-            "flex h-7 w-[30px] items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-            pickModeActive
-              ? "border-primary/40 bg-primary/10 text-primary"
-              : "border-border text-muted-foreground hover:text-foreground"
+            "flex h-7 w-[30px] items-center justify-center rounded-lg border border-transparent bg-[linear-gradient(135deg,#8b5cf6_0%,#6366f1_50%,#3b82f6_100%)] text-white shadow-[0_1px_10px_rgba(99,102,241,0.45)] transition-[filter,box-shadow,transform] hover:shadow-[0_2px_14px_rgba(99,102,241,0.6)] hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:brightness-100",
+            pickModeActive &&
+              "ring-offset-background ring-2 ring-indigo-400/70 ring-offset-1 brightness-110"
           )}
         >
           <MousePointerClick className="size-3.5" />

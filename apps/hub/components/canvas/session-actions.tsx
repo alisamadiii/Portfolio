@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRepo } from "@/contexts/repo-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -18,16 +19,16 @@ import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
-import { SessionChangesDialog } from "@/components/canvas/session-changes-dialog";
+import { roleAtLeast } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
 import {
   transcriptBusy,
   useSessionTranscript,
 } from "@/hooks/use-session-transcript";
+
+import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
+import { SessionChangesDialog } from "@/components/canvas/session-changes-dialog";
 import { Loader2, UploadCloud } from "@/components/icon";
-import { useRepo } from "@/contexts/repo-context";
-import { roleAtLeast } from "@/lib/authz-shared";
 
 /**
  * Header Publish / Discard for the live AI session (moved out of the chat
@@ -36,7 +37,8 @@ import { roleAtLeast } from "@/lib/authz-shared";
  * session's changes + chat) while keeping the session open.
  */
 export function SessionActions() {
-  const { repoId, session, editToken, noteSessionEnded } = useCanvasEditor();
+  const { repoId, session, editToken, noteSessionEnded, onDefaultBranch } =
+    useCanvasEditor();
   const { myRole } = useRepo();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canPublish = (myRole ?? "full-access") === "full-access";
@@ -159,11 +161,13 @@ export function SessionActions() {
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {onDefaultBranch ? "Discard changes?" : "Reset this branch?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This throws away every change from this session and resets the
-              preview to your live production site. Your chat history clears and
-              the preview stays open so you can keep editing.
+              {onDefaultBranch
+                ? "This throws away every change from this session and resets the preview to your live production site. Your chat history clears and the preview stays open so you can keep editing."
+                : `This resets "${session.branch}" back to your live production site. Every change made on this branch is removed, your chat history clears, and the preview stays open so you can keep editing.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

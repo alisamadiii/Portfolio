@@ -89,7 +89,9 @@ export function CanvasLoading({ status }: { status: string | null }) {
             ? "Published! Starting a fresh preview…"
             : lastEnded === "closed"
               ? "Starting a fresh preview…"
-              : label(status)}
+              : lastEnded && typeof lastEnded === "object"
+                ? `Switching to "${lastEnded.switched}"…`
+                : label(status)}
         </p>
       )}
     </div>

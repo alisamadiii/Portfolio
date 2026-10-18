@@ -1,6 +1,5 @@
 "use client";
 
-import { handleCmsError, SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDropzone } from "react-dropzone";
@@ -12,25 +11,24 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { shrinkImage } from "@/lib/shrink-image";
+import { handleCmsError, SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 import {
   useSessionEvents,
   type CommitActivity,
   type MessageRun,
   type ToolActivity,
 } from "@/hooks/use-session-events";
-import { FileDiffButton } from "@/components/canvas/file-diff-dialog";
-import { sessionChangesQueryKey } from "@/components/canvas/session-changes-dialog";
 import {
   useSessionTranscript,
   type TranscriptMessage,
 } from "@/hooks/use-session-transcript";
+
 import {
-  filterSkills,
-  SlashSkillsMenu,
-  useSlashMenuSelection,
-  type SessionSkill,
-} from "@/components/canvas/slash-skills-menu";
-import { SkillChips } from "@/components/canvas/skill-chips";
+  useCanvasEditor,
+  type PickedElement,
+  type SessionEndReason,
+} from "@/components/canvas/canvas-editor-context";
 import {
   AttachmentThumbs,
   AttachmentTray,
@@ -38,12 +36,15 @@ import {
   UPLOAD_MESSAGES,
   type StagedAttachment,
 } from "@/components/canvas/composer-attachments";
-import { shrinkImage } from "@/lib/shrink-image";
-
+import { FileDiffButton } from "@/components/canvas/file-diff-dialog";
+import { sessionChangesQueryKey } from "@/components/canvas/session-changes-dialog";
+import { SkillChips } from "@/components/canvas/skill-chips";
 import {
-  useCanvasEditor,
-  type PickedElement,
-} from "@/components/canvas/canvas-editor-context";
+  filterSkills,
+  SlashSkillsMenu,
+  useSlashMenuSelection,
+  type SessionSkill,
+} from "@/components/canvas/slash-skills-menu";
 import {
   ArrowUp,
   Check,
@@ -126,7 +127,7 @@ const linkify = (text: string, onPrimary = false): React.ReactNode[] =>
         rel="noreferrer"
         title={part}
         className={cn(
-          "underline [overflow-wrap:anywhere]",
+          "[overflow-wrap:anywhere] underline",
           onPrimary
             ? "decoration-primary-foreground/50 font-medium underline-offset-2"
             : "text-blue-600 dark:text-blue-400"
@@ -382,7 +383,11 @@ export function SessionChatPanel() {
         } | null;
         throw new Error(body?.error ?? "Upload failed.");
       }
-      return (await res.json()) as { id: string; width: number; height: number };
+      return (await res.json()) as {
+        id: string;
+        width: number;
+        height: number;
+      };
     },
   });
   const addFiles = (files: File[]) => {
@@ -422,7 +427,10 @@ export function SessionChatPanel() {
           );
           return;
         }
-        patchAttachment(key, { status: "uploading", fileName: shrunk.fileName });
+        patchAttachment(key, {
+          status: "uploading",
+          fileName: shrunk.fileName,
+        });
         try {
           const uploaded = await uploadMutation.mutateAsync({
             blob: shrunk.blob,
@@ -465,7 +473,9 @@ export function SessionChatPanel() {
     onDrop: (accepted, rejected) => {
       if (rejected.length) {
         setAttachNotice(
-          rejected.some((r) => r.errors.some((e) => e.code === "too-many-files"))
+          rejected.some((r) =>
+            r.errors.some((e) => e.code === "too-many-files")
+          )
             ? UPLOAD_MESSAGES.tooMany
             : UPLOAD_MESSAGES.notImage
         );
@@ -619,7 +629,13 @@ export function SessionChatPanel() {
 
   // Messages queue server-side while the preview boots (and revive a paused
   // session), so the composer only locks for broken/finished sessions.
-  const TERMINAL_STATUSES = ["needs_config", "failed", "closed", "published", "expired"];
+  const TERMINAL_STATUSES = [
+    "needs_config",
+    "failed",
+    "closed",
+    "published",
+    "expired",
+  ];
   const canSend = Boolean(
     session && !TERMINAL_STATUSES.includes(session.status)
   );
@@ -868,120 +884,122 @@ export function SessionChatPanel() {
                 {...dropzone.getRootProps({ tabIndex: -1 })}
                 className="bg-card focus-within:ring-primary overflow-hidden rounded-lg border shadow-sm transition-shadow focus-within:ring-2"
               >
-              <input {...dropzone.getInputProps()} />
-              <AttachmentTray
-                items={attachments}
-                onRemove={removeAttachment}
-                onDescribe={(key, description) =>
-                  patchAttachment(key, { description })
-                }
-                showMissing={triedSend}
-                notice={attachNotice}
-                onDismissNotice={() => setAttachNotice(null)}
-              />
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onPaste={(event) => {
-                  const files = Array.from(event.clipboardData?.files ?? []);
-                  if (!files.length) return;
-                  event.preventDefault();
-                  const images = files.filter((file) =>
-                    file.type.startsWith("image/")
-                  );
-                  if (images.length !== files.length) {
-                    setAttachNotice(UPLOAD_MESSAGES.notImage);
+                <input {...dropzone.getInputProps()} />
+                <AttachmentTray
+                  items={attachments}
+                  onRemove={removeAttachment}
+                  onDescribe={(key, description) =>
+                    patchAttachment(key, { description })
                   }
-                  if (images.length) addFiles(images);
-                }}
-                onKeyDown={(event) => {
-                  if (slashOpen) {
-                    if (event.key === "ArrowUp") {
-                      event.preventDefault();
-                      move(-1);
-                      return;
-                    }
-                    if (event.key === "ArrowDown") {
-                      event.preventDefault();
-                      move(1);
-                      return;
-                    }
-                    if (event.key === "Enter" || event.key === "Tab") {
-                      event.preventDefault();
-                      const picked = slashItems[selectedIndex];
-                      if (picked) pickSkill(picked.name);
-                      return;
-                    }
-                    if (event.key === "Escape") {
-                      event.preventDefault();
-                      setInput("");
-                      return;
-                    }
-                  }
-                  if (event.key === "Enter" && !event.shiftKey) {
+                  showMissing={triedSend}
+                  notice={attachNotice}
+                  onDismissNotice={() => setAttachNotice(null)}
+                />
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onPaste={(event) => {
+                    const files = Array.from(event.clipboardData?.files ?? []);
+                    if (!files.length) return;
                     event.preventDefault();
-                    send();
+                    const images = files.filter((file) =>
+                      file.type.startsWith("image/")
+                    );
+                    if (images.length !== files.length) {
+                      setAttachNotice(UPLOAD_MESSAGES.notImage);
+                    }
+                    if (images.length) addFiles(images);
+                  }}
+                  onKeyDown={(event) => {
+                    if (slashOpen) {
+                      if (event.key === "ArrowUp") {
+                        event.preventDefault();
+                        move(-1);
+                        return;
+                      }
+                      if (event.key === "ArrowDown") {
+                        event.preventDefault();
+                        move(1);
+                        return;
+                      }
+                      if (event.key === "Enter" || event.key === "Tab") {
+                        event.preventDefault();
+                        const picked = slashItems[selectedIndex];
+                        if (picked) pickSkill(picked.name);
+                        return;
+                      }
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        setInput("");
+                        return;
+                      }
+                    }
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      send();
+                    }
+                  }}
+                  placeholder={
+                    attachments.length
+                      ? "Tell the AI what to do with the image"
+                      : 'e.g. "Change the hero headline to…" or "Remove the first FAQ on the About page"'
                   }
-                }}
-                placeholder={
-                  attachments.length
-                    ? "Tell the AI what to do with the image"
-                    : 'e.g. "Change the hero headline to…" or "Remove the first FAQ on the About page"'
-                }
-                rows={1}
-                className="max-h-40 min-h-[44px] w-full resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 text-[13px] shadow-none focus-visible:ring-0 dark:bg-transparent"
-              />
-              <div className="flex items-center justify-between px-2 pb-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Attach images"
-                  title="Attach images"
-                  className="text-muted-foreground hover:text-foreground size-7 shrink-0 rounded-full"
-                  disabled={
-                    !canSend || !editToken || attachments.length >= MAX_ATTACHMENTS
-                  }
-                  onClick={dropzone.open}
-                >
-                  <Paperclip className="size-3.5" />
-                </Button>
-                <Button
-                  size="icon"
-                  aria-label={busy ? "Pause" : "Send"}
-                  title={busy ? "Pause the AI" : "Send"}
-                  className="size-7 shrink-0 rounded-full"
-                  disabled={
-                    busy
-                      ? cancelMutation.isPending || !session
-                      : !input.trim() ||
-                        sendMutation.isPending ||
-                        !canSend ||
-                        uploadsInFlight
-                  }
-                  onClick={busy ? pause : () => send()}
-                >
-                  {busy ? (
-                    cancelMutation.isPending ? (
+                  rows={1}
+                  className="max-h-40 min-h-[44px] w-full resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 text-[13px] shadow-none focus-visible:ring-0 dark:bg-transparent"
+                />
+                <div className="flex items-center justify-between px-2 pb-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Attach images"
+                    title="Attach images"
+                    className="text-muted-foreground hover:text-foreground size-7 shrink-0 rounded-full"
+                    disabled={
+                      !canSend ||
+                      !editToken ||
+                      attachments.length >= MAX_ATTACHMENTS
+                    }
+                    onClick={dropzone.open}
+                  >
+                    <Paperclip className="size-3.5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    aria-label={busy ? "Pause" : "Send"}
+                    title={busy ? "Pause the AI" : "Send"}
+                    className="size-7 shrink-0 rounded-full"
+                    disabled={
+                      busy
+                        ? cancelMutation.isPending || !session
+                        : !input.trim() ||
+                          sendMutation.isPending ||
+                          !canSend ||
+                          uploadsInFlight
+                    }
+                    onClick={busy ? pause : () => send()}
+                  >
+                    {busy ? (
+                      cancelMutation.isPending ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Square className="size-3 fill-current" />
+                      )
+                    ) : sendMutation.isPending ? (
                       <Loader2 className="size-3.5 animate-spin" />
                     ) : (
-                      <Square className="size-3 fill-current" />
-                    )
-                  ) : sendMutation.isPending ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <ArrowUp className="size-3.5" />
-                  )}
-                </Button>
-              </div>
+                      <ArrowUp className="size-3.5" />
+                    )}
+                  </Button>
+                </div>
               </div>
               {/* Soft phrasing tip: edit-like wording (change / add / remove …
                   plus the page) lets content-pilot hand the AI the right file
                   up front — faster and cheaper. Any phrasing still works. */}
               <p className="text-muted-foreground mt-1.5 px-1 text-[11px] leading-snug">
-                Tip: say what to change and where — change, add, remove,
-                update… and the page name. Or click an element in the preview
-                to point the AI at it.
+                Tip: say what to change and where — change, add, remove, update…
+                and the page name. Or click an element in the preview to point
+                the AI at it.
               </p>
             </div>
           </div>
@@ -1116,8 +1134,9 @@ function BootPane({
 }: {
   status: string;
   /** The previous session just ended this way — a fresh one is booting. */
-  ended?: "published" | "closed" | null;
+  ended?: SessionEndReason | null;
 }) {
+  const switched = ended && typeof ended === "object" ? ended.switched : null;
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
       <Loader2 className="text-primary size-5 animate-spin" />
@@ -1126,12 +1145,16 @@ function BootPane({
           ? "Published! Starting a fresh preview…"
           : ended === "closed"
             ? "Starting a fresh preview…"
-            : bootLabel(status)}
+            : switched
+              ? `Switching to "${switched}"…`
+              : bootLabel(status)}
       </p>
       <p className="text-muted-foreground/70 max-w-[230px] text-[12px] leading-relaxed">
-        {ended
-          ? "Your next edits will start from the site as it is now."
-          : "First start can take a minute or two while the preview is built."}
+        {switched
+          ? "Your next edits will go to that branch."
+          : ended
+            ? "Your next edits will start from the site as it is now."
+            : "First start can take a minute or two while the preview is built."}
       </p>
     </div>
   );
@@ -1179,7 +1202,7 @@ function UserExchange({
   return (
     <div className="flex flex-col gap-1.5">
       {/* User bubble, right-aligned */}
-      <div className="bg-primary text-primary-foreground ml-8 max-w-[85%] min-w-0 self-end rounded-2xl rounded-br-md px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
+      <div className="bg-primary text-primary-foreground ml-8 max-w-[85%] min-w-0 self-end rounded-2xl rounded-br-md px-3 py-2 text-[13px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
         <AttachmentThumbs
           attachments={message.attachments ?? []}
           srcFor={thumbSrc}
@@ -1329,7 +1352,7 @@ function AssistantBubble({
   return (
     <div
       className={cn(
-        "bg-muted mr-6 max-w-[85%] min-w-0 self-start rounded-2xl rounded-bl-md px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]",
+        "bg-muted mr-6 max-w-[85%] min-w-0 self-start rounded-2xl rounded-bl-md px-3 py-2 text-[13px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap",
         streaming && "after:ml-0.5 after:animate-pulse after:content-['▍']"
       )}
     >

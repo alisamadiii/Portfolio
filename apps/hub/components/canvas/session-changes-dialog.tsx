@@ -14,7 +14,10 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
-import { DiffDialogBody, type DiffFile } from "@/components/canvas/file-diff-dialog";
+import {
+  DiffDialogBody,
+  type DiffFile,
+} from "@/components/canvas/file-diff-dialog";
 import { GitCompare } from "@/components/icon";
 
 /**
@@ -29,7 +32,7 @@ const pilotUrl = (process.env.NEXT_PUBLIC_CONTENT_PILOT_URL ?? "").replace(
   ""
 );
 
-type SessionChanges = {
+export type SessionChanges = {
   head: string;
   base: string;
   files: Array<Required<DiffFile>>;
@@ -37,6 +40,22 @@ type SessionChanges = {
 
 export const sessionChangesQueryKey = (sessionId: string | null | undefined) =>
   ["preview-session-changes", sessionId] as const;
+
+/** Shared by the Changes dialog and the branch menu (one cache entry). */
+export const sessionChangesQueryOptions = (
+  sessionId: string,
+  editToken: string
+) => ({
+  queryKey: sessionChangesQueryKey(sessionId),
+  queryFn: async (): Promise<SessionChanges> => {
+    const res = await fetch(
+      `${pilotUrl}/api/v1/sessions/${sessionId}/changes`,
+      { headers: { Authorization: `Bearer ${editToken}` } }
+    );
+    if (!res.ok) throw new Error(`changes ${res.status}`);
+    return (await res.json()) as SessionChanges;
+  },
+});
 
 export function SessionChangesDialog({
   sessionId,
@@ -70,17 +89,7 @@ const Content = ({
   sessionId: string;
   editToken: string;
 }) => {
-  const query = useQuery({
-    queryKey: sessionChangesQueryKey(sessionId),
-    queryFn: async (): Promise<SessionChanges> => {
-      const res = await fetch(
-        `${pilotUrl}/api/v1/sessions/${sessionId}/changes`,
-        { headers: { Authorization: `Bearer ${editToken}` } }
-      );
-      if (!res.ok) throw new Error(`changes ${res.status}`);
-      return (await res.json()) as SessionChanges;
-    },
-  });
+  const query = useQuery(sessionChangesQueryOptions(sessionId, editToken));
 
   if (query.isPending) {
     return (

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "@/components/icon";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import {
   DEVICE_WIDTH,
   type CanvasDevice,
 } from "@/components/canvas/canvas-toolbar";
+import { Loader2 } from "@/components/icon";
 
 /** Same normalization as the context's preview-navigate matching. */
 const normPath = (value: string): string => {
@@ -58,8 +58,15 @@ export function PageFrame({
   }, [page.path, registerFrame, reloadKey, sessionMode]);
 
   // Session mode: the mount-time src (captured once; navigation afterwards is
-  // imperative — see the effect below).
+  // imperative — see the effect below). A branch switch swaps the session (new
+  // id, new preview origin) without a remount of this component, so recapture
+  // for the new session; the iframe key below remounts the frame itself.
   const initialSrc = useRef<string | null>(null);
+  const lastSessionId = useRef<string | null>(null);
+  if (session && session.id !== lastSessionId.current) {
+    lastSessionId.current = session.id;
+    initialSrc.current = null;
+  }
   if (sessionMode && initialSrc.current === null) {
     initialSrc.current = editSrcFor(page.url);
   }
@@ -119,9 +126,17 @@ export function PageFrame({
               </div>
             )}
             <iframe
-              key={sessionMode ? `session:${reloadKey}` : `${page.path}:${reloadKey}`}
+              key={
+                sessionMode
+                  ? `session:${session?.id}:${reloadKey}`
+                  : `${page.path}:${reloadKey}`
+              }
               ref={iframeRef}
-              src={sessionMode ? (initialSrc.current ?? undefined) : editSrcFor(page.url)}
+              src={
+                sessionMode
+                  ? (initialSrc.current ?? undefined)
+                  : editSrcFor(page.url)
+              }
               title={page.path}
               className="h-full w-full border-0"
               onLoad={() => setLoaded(true)}
