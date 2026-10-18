@@ -17,6 +17,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -174,42 +175,45 @@ export const BranchMenu = () => {
           }
         />
         <DropdownMenuContent align="start" sideOffset={6} className="w-64">
-          <DropdownMenuLabel className="text-muted-foreground text-[11px] font-medium">
-            {blockedReason ?? "Preview a branch"}
-          </DropdownMenuLabel>
-          <DropdownMenuItem
-            disabled={!canSwitch || onDefaultBranch}
-            onClick={() => switchTo(defaultBranch)}
-          >
-            <span className="flex size-4 shrink-0 items-center justify-center">
-              {onDefaultBranch && <Check className="size-3.5" />}
-            </span>
-            <span className="truncate">{defaultBranch}</span>
-            <span className="text-muted-foreground ml-auto text-[11px]">
-              live site
-            </span>
-          </DropdownMenuItem>
-          {branchesQuery.isPending && (
-            <DropdownMenuItem disabled>
-              <Loader2 className="size-3.5 animate-spin" />
-              Loading branches…
+          {/* base-ui: a GroupLabel must live inside a Menu.Group. */}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="text-muted-foreground text-[11px] font-medium">
+              {blockedReason ?? "Preview a branch"}
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              disabled={!canSwitch || onDefaultBranch}
+              onClick={() => switchTo(defaultBranch)}
+            >
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                {onDefaultBranch && <Check className="size-3.5" />}
+              </span>
+              <span className="truncate">{defaultBranch}</span>
+              <span className="text-muted-foreground ml-auto text-[11px]">
+                live site
+              </span>
             </DropdownMenuItem>
-          )}
-          {branchesQuery.data?.branches.map((name) => {
-            const current = !onDefaultBranch && session?.branch === name;
-            return (
-              <DropdownMenuItem
-                key={name}
-                disabled={!canSwitch || current}
-                onClick={() => switchTo(name)}
-              >
-                <span className="flex size-4 shrink-0 items-center justify-center">
-                  {current && <Check className="size-3.5" />}
-                </span>
-                <span className="truncate">{name}</span>
+            {branchesQuery.isPending && (
+              <DropdownMenuItem disabled>
+                <Loader2 className="size-3.5 animate-spin" />
+                Loading branches…
               </DropdownMenuItem>
-            );
-          })}
+            )}
+            {branchesQuery.data?.branches.map((name) => {
+              const current = !onDefaultBranch && session?.branch === name;
+              return (
+                <DropdownMenuItem
+                  key={name}
+                  disabled={!canSwitch || current}
+                  onClick={() => switchTo(name)}
+                >
+                  <span className="flex size-4 shrink-0 items-center justify-center">
+                    {current && <Check className="size-3.5" />}
+                  </span>
+                  <span className="truncate">{name}</span>
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={!canSwitch}
