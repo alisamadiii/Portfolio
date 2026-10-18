@@ -848,6 +848,18 @@ export function SessionChatPanel() {
 
           {/* Composer */}
           <div className="mb-8 shrink-0 border-t p-2.5">
+            {session?.provider === "gemini" &&
+              session?.geminiTier === "free" && (
+                <div className="mb-2 flex items-start gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1.5 text-[11.5px] leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+                  <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
+                  <span>
+                    Free AI plan: the provider may use your edits to improve
+                    their AI, and there is a limit of about 250,000 tokens (around 180,000 words) per
+                    minute, so keep each request short and focused. Ask your
+                    developer about upgrading for private, higher-capacity AI.
+                  </span>
+                </div>
+              )}
             <SkillChips
               skills={skills}
               disabled={busy || !canSend || sendMutation.isPending}
