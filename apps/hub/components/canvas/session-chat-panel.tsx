@@ -1208,7 +1208,7 @@ function UserExchange({
   return (
     <div className="flex flex-col gap-1.5">
       {/* User bubble, right-aligned */}
-      <div className="bg-primary text-primary-foreground ml-8 max-w-[85%] min-w-0 self-end rounded-2xl rounded-br-md px-3 py-2 text-[13px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
+      <div className="bg-primary text-primary-foreground ml-8 max-w-[85%] min-w-0 self-end rounded-lg rounded-br-sm px-3 py-2 text-[13px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
         <AttachmentThumbs
           attachments={message.attachments ?? []}
           srcFor={thumbSrc}
@@ -1358,7 +1358,7 @@ function AssistantBubble({
   return (
     <div
       className={cn(
-        "bg-muted mr-6 max-w-[85%] min-w-0 self-start rounded-2xl rounded-bl-md px-3 py-2 text-[13px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap",
+        "bg-muted mr-6 max-w-[85%] min-w-0 self-start rounded-lg rounded-bl-sm px-3 py-2 text-[13px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap",
         streaming && "after:ml-0.5 after:animate-pulse after:content-['▍']"
       )}
     >

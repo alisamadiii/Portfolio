@@ -72,7 +72,8 @@ export function AttachmentTray({
         </div>
       )}
       {items.map((item) => {
-        const pending = item.status === "preparing" || item.status === "uploading";
+        const pending =
+          item.status === "preparing" || item.status === "uploading";
         const missing =
           showMissing && item.status === "ready" && !item.description.trim();
         return (
@@ -152,7 +153,7 @@ export function AttachmentThumbs({
           src={srcFor(attachment.id)}
           alt={attachment.originalName}
           loading="lazy"
-          className="bg-primary-foreground/10 h-20 max-w-40 rounded-lg object-cover"
+          className="bg-primary-foreground/10 h-20 max-w-40 rounded-sm object-cover"
         />
       ))}
     </div>
