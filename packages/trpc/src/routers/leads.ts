@@ -13,10 +13,20 @@ import {
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
-import { lead, leadCreditLedger, leadScan } from "@workspace/drizzle/schema";
+import {
+  lead,
+  leadCreditLedger,
+  leadScan,
+  leadWorkspace,
+} from "@workspace/drizzle/schema";
 import type { LeadStatus } from "@workspace/drizzle/schema";
 
-import { authenticatedProcedure, baseProcedure, createTRPCRouter } from "../init";
+import {
+  adminProcedure,
+  authenticatedProcedure,
+  baseProcedure,
+  createTRPCRouter,
+} from "../init";
 import {
   debitCredits,
   ensureSignupGrant,
@@ -1072,4 +1082,145 @@ export const leadsRouter = createTRPCRouter({
         .where(eq(lead.id, row.id));
       return { success: true };
     }),
+
+  // "Today's visits" workspace — admin-only, Ali's in-person canvassing tool.
+  // Leads picked across any scan, route-ordered client-side from live GPS.
+  workspace: createTRPCRouter({
+    // leadIds currently in the workspace — drives the add/remove button state.
+    ids: adminProcedure.query(async ({ ctx }) => {
+      const rows = await db
+        .select({ leadId: leadWorkspace.leadId })
+        .from(leadWorkspace)
+        .where(eq(leadWorkspace.userId, ctx.session.user.id));
+      return rows.map((r) => r.leadId);
+    }),
+
+    // Every stop with its lead details; route ordering happens in the UI.
+    list: adminProcedure.query(async ({ ctx }) => {
+      return db
+        .select({
+          id: leadWorkspace.id,
+          leadId: leadWorkspace.leadId,
+          scanId: lead.scanId,
+          name: lead.name,
+          address: lead.address,
+          phone: lead.phone,
+          website: lead.website,
+          websiteDead: lead.websiteDead,
+          socialOnly: lead.socialOnly,
+          mapsUrl: lead.mapsUrl,
+          category: lead.category,
+          status: lead.status,
+          lat: leadWorkspace.lat,
+          lng: leadWorkspace.lng,
+          visitStatus: leadWorkspace.visitStatus,
+          outcome: leadWorkspace.outcome,
+          visitedAt: leadWorkspace.visitedAt,
+          createdAt: leadWorkspace.createdAt,
+        })
+        .from(leadWorkspace)
+        .innerJoin(lead, eq(leadWorkspace.leadId, lead.id))
+        .where(eq(leadWorkspace.userId, ctx.session.user.id))
+        .orderBy(desc(leadWorkspace.createdAt));
+    }),
+
+    // Add a lead to the workspace. Geocodes once from the stored placeId;
+    // a geocode failure is non-fatal (the stop adds with null coords).
+    add: adminProcedure
+      .input(z.object({ leadId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.session.user.id;
+        const [row] = await db
+          .select({ placeId: lead.placeId })
+          .from(lead)
+          .where(
+            and(
+              eq(lead.id, input.leadId),
+              eq(lead.userId, userId),
+              eq(lead.unlocked, true)
+            )
+          )
+          .limit(1);
+        if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+
+        let lat: number | null = null;
+        let lng: number | null = null;
+        try {
+          const details = await getPlaceDetails(row.placeId);
+          if (details?.location?.latitude != null) {
+            lat = details.location.latitude;
+            lng = details.location.longitude ?? null;
+          }
+        } catch {
+          // Geocode is best-effort — add the stop regardless.
+        }
+
+        await db
+          .insert(leadWorkspace)
+          .values({ userId, leadId: input.leadId, lat, lng })
+          .onConflictDoNothing();
+        return { success: true };
+      }),
+
+    remove: adminProcedure
+      .input(z.object({ leadId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db
+          .delete(leadWorkspace)
+          .where(
+            and(
+              eq(leadWorkspace.userId, ctx.session.user.id),
+              eq(leadWorkspace.leadId, input.leadId)
+            )
+          );
+        return { success: true };
+      }),
+
+    markVisited: adminProcedure
+      .input(z.object({ id: z.number(), visited: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        await db
+          .update(leadWorkspace)
+          .set({
+            visitStatus: input.visited ? "visited" : "pending",
+            visitedAt: input.visited ? new Date() : null,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(leadWorkspace.id, input.id),
+              eq(leadWorkspace.userId, ctx.session.user.id)
+            )
+          );
+        return { success: true };
+      }),
+
+    setOutcome: adminProcedure
+      .input(z.object({ id: z.number(), outcome: z.string().max(5000) }))
+      .mutation(async ({ input, ctx }) => {
+        await db
+          .update(leadWorkspace)
+          .set({ outcome: input.outcome || null, updatedAt: new Date() })
+          .where(
+            and(
+              eq(leadWorkspace.id, input.id),
+              eq(leadWorkspace.userId, ctx.session.user.id)
+            )
+          );
+        return { success: true };
+      }),
+
+    // Clear everything already visited — reset for the next day.
+    clearVisited: adminProcedure.mutation(async ({ ctx }) => {
+      await db
+        .delete(leadWorkspace)
+        .where(
+          and(
+            eq(leadWorkspace.userId, ctx.session.user.id),
+            eq(leadWorkspace.visitStatus, "visited")
+          )
+        );
+      return { success: true };
+    }),
+  }),
 });

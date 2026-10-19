@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Loader2,
   Lock,
+  MapPin,
   Phone,
   Play,
   ScanSearch,
@@ -56,6 +57,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Textarea } from "@workspace/ui/components/textarea";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { queryClient, useTRPC } from "@workspace/trpc/client";
 
@@ -230,6 +232,66 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
       },
     })
   );
+  // Admin-only "today's visits" workspace. The ids query is admin-gated, so
+  // for non-admins it errors (retry off) and the feature stays hidden.
+  const workspaceIds = useQuery({
+    ...trpc.leads.workspace.ids.queryOptions(),
+    retry: false,
+  });
+  const isAdmin = workspaceIds.isSuccess;
+  const workspaceSet = new Set(workspaceIds.data ?? []);
+  const invalidateWorkspace = () => {
+    queryClient.invalidateQueries({
+      queryKey: trpc.leads.workspace.ids.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.leads.workspace.list.queryKey(),
+    });
+  };
+  const addToWorkspace = useMutation(
+    trpc.leads.workspace.add.mutationOptions({
+      onSuccess: () => {
+        invalidateWorkspace();
+        toast.success("Added to workspace");
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
+  const removeFromWorkspace = useMutation(
+    trpc.leads.workspace.remove.mutationOptions({
+      onSuccess: () => {
+        invalidateWorkspace();
+        toast.success("Removed from workspace");
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
+  const workspaceBusy =
+    addToWorkspace.isPending || removeFromWorkspace.isPending;
+  const workspaceButton = (leadId: number, labeled = false) => {
+    const inWs = workspaceSet.has(leadId);
+    return (
+      <button
+        type="button"
+        title={inWs ? "In workspace" : "Add to workspace"}
+        disabled={workspaceBusy}
+        onClick={() =>
+          inWs
+            ? removeFromWorkspace.mutate({ leadId })
+            : addToWorkspace.mutate({ leadId })
+        }
+        className={cn(
+          "btn-pill h-9 text-sm [&_svg]:size-4",
+          labeled ? "w-full font-semibold" : "size-9 shrink-0",
+          inWs ? "btn-dark" : "btn-light"
+        )}
+      >
+        <MapPin />
+        {labeled && (inWs ? "In workspace" : "Add to workspace")}
+      </button>
+    );
+  };
+
   const unlock = useMutation(
     trpc.leads.unlock.mutationOptions({
       onSuccess: (result) => {
@@ -515,7 +577,10 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                   </TableCell>
                   <TableCell>{websiteBadge(lead)}</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    {statusSelect(lead)}
+                    <div className="flex items-center gap-2">
+                      {statusSelect(lead)}
+                      {isAdmin && workspaceButton(lead.id)}
+                    </div>
                   </TableCell>
                 </TableRow>
                 )
@@ -540,6 +605,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
               niche={scan.data?.query ?? ""}
               city={scan.data?.city ?? ""}
               statusSelect={statusSelect(openLead, "default")}
+              workspaceAction={isAdmin ? workspaceButton(openLead.id, true) : null}
               onSaveNotes={(notes) =>
                 updateNotes.mutate({ id: openLead.id, notes })
               }
@@ -603,6 +669,7 @@ const LeadSheet = ({
   niche,
   city,
   statusSelect,
+  workspaceAction,
   onSaveNotes,
   onInspect,
 }: {
@@ -610,6 +677,7 @@ const LeadSheet = ({
   niche: string;
   city: string;
   statusSelect: React.ReactNode;
+  workspaceAction: React.ReactNode;
   onSaveNotes: (notes: string) => void;
   onInspect: (website: string) => void;
 }) => {
@@ -707,6 +775,8 @@ const LeadSheet = ({
             <Phone /> Call {lead.phone}
           </a>
         )}
+
+        {workspaceAction}
 
         {!started && (
           <button

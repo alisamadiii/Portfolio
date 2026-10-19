@@ -29,6 +29,7 @@ export type LeadCreditReason =
   | "scan"
   | "unlock"
   | "adjustment";
+export type VisitStatus = "pending" | "visited";
 
 // One Places Text Search run ("plumbers in Cape Coral, FL").
 export const leadScan = pgTable(
@@ -124,6 +125,48 @@ export const lead = pgTable(
     uqUserPlace: uniqueIndex("lead_user_place_uq").on(
       table.userId,
       table.placeId
+    ),
+  })
+);
+
+// The "today's visits" workspace: leads the user picked to drive to in
+// person, across any scan. One row per lead per user. Coords are geocoded
+// from the lead's placeId when added, so the page can route-order them
+// nearest-to-farthest without re-hitting Places.
+export const leadWorkspace = pgTable(
+  "lead_workspace",
+  {
+    id: serial("id").primaryKey(),
+
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+
+    leadId: integer("lead_id")
+      .notNull()
+      .references(() => lead.id, { onDelete: "cascade" }),
+
+    // Geocoded from the lead's placeId at add time; null if it couldn't be
+    // resolved (the stop still shows, it just sorts last on the route).
+    lat: real("lat"),
+    lng: real("lng"),
+
+    visitStatus: text("visit_status")
+      .$type<VisitStatus>()
+      .notNull()
+      .default("pending"),
+    // Free text: what happened with the client on the visit.
+    outcome: text("outcome"),
+    visitedAt: timestamp("visited_at"),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    idxWorkspaceUser: index("lead_workspace_user_idx").on(table.userId),
+    uqUserLead: uniqueIndex("lead_workspace_user_lead_uq").on(
+      table.userId,
+      table.leadId
     ),
   })
 );

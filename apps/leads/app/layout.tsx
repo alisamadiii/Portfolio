@@ -85,7 +85,7 @@ async function LeadsLayout({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           {currentUser ? (
-            <NavPills />
+            <NavPills isAdmin={currentUser.role === "admin"} />
           ) : (
             <nav className="bg-muted flex items-center gap-1 rounded-full p-1">
               <Link

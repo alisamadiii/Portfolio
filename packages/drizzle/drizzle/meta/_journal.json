@@ -50,6 +50,13 @@
       "when": 1791942097109,
       "tag": "0006_drop_media_provider",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792416086167,
+      "tag": "0007_ordinary_aaron_stack",
+      "breakpoints": true
     }
   ]
 }

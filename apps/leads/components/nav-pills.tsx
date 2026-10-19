@@ -6,14 +6,16 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "Scans" },
   { href: "/inspect", label: "Inspect" },
+  // Admin-only field tool.
+  { href: "/workspace", label: "Workspace", adminOnly: true },
 ];
 
-export const NavPills = () => {
+export const NavPills = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   const pathname = usePathname();
 
   return (
     <nav className="bg-muted flex items-center gap-1 rounded-full p-1">
-      {LINKS.map((link) => {
+      {LINKS.filter((link) => !link.adminOnly || isAdmin).map((link) => {
         const active =
           link.href === "/"
             ? pathname === "/" || pathname.startsWith("/scans")
