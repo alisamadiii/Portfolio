@@ -98,6 +98,31 @@ function buildContext(
   return lines.length ? lines.join("\n") : undefined;
 }
 
+// Turn the API's zod validation payload into something a client can act on.
+// The common one is a pasted message that blows past the length cap.
+function messageErrorText(
+  body: {
+    error?: string;
+    issues?: { code?: string; maximum?: number; path?: string[] }[];
+  } | null
+): string {
+  const issue = body?.issues?.[0];
+  if (issue) {
+    const field = issue.path?.[0];
+    if (issue.code === "too_big" && field === "content") {
+      return `Your message is too long (max ${issue.maximum?.toLocaleString() ?? ""} characters). Shorten it and try again.`;
+    }
+    if (issue.code === "too_small" && field === "content") {
+      return "Write a message before sending.";
+    }
+    if (field === "attachments") {
+      return "One of your attachments is invalid. Re-add it and try again.";
+    }
+  }
+  if (body?.error && body.error !== "Invalid body") return body.error;
+  return "Could not send your request.";
+}
+
 const shortText = (value: string, max = 40) =>
   value.length > max ? value.slice(0, max).trimEnd() + "…" : value;
 
@@ -315,8 +340,9 @@ export function SessionChatPanel() {
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as {
           error?: string;
+          issues?: { code?: string; maximum?: number; path?: string[] }[];
         } | null;
-        throw new Error(body?.error ?? "Could not send your request.");
+        throw new Error(messageErrorText(body));
       }
     },
     onSuccess: () => {
