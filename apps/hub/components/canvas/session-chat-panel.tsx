@@ -36,6 +36,7 @@ import {
   UPLOAD_MESSAGES,
   type StagedAttachment,
 } from "@/components/canvas/composer-attachments";
+import { AiInfoDialog } from "@/components/canvas/ai-info-dialog";
 import { FileDiffButton } from "@/components/canvas/file-diff-dialog";
 import { sessionChangesQueryKey } from "@/components/canvas/session-changes-dialog";
 import { SkillChips } from "@/components/canvas/skill-chips";
@@ -756,6 +757,7 @@ export function SessionChatPanel() {
       <div className="flex h-10 shrink-0 items-center gap-2 border-b px-3">
         <span className="text-[13px] font-semibold">Edit with AI</span>
         <SessionStatusPill session={session} />
+        <AiInfoDialog />
       </div>
 
       {!session ? (
