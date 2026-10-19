@@ -151,6 +151,12 @@ export const leadWorkspace = pgTable(
     lat: real("lat"),
     lng: real("lng"),
 
+    // Weekly opening schedule captured once at add time (Google Places
+    // regularOpeningHours.periods, JSON) plus the shop's UTC offset — the UI
+    // computes "open now" locally from these, no repeat Places calls.
+    openingPeriods: text("opening_periods"),
+    utcOffsetMinutes: integer("utc_offset_minutes"),
+
     visitStatus: text("visit_status")
       .$type<VisitStatus>()
       .notNull()

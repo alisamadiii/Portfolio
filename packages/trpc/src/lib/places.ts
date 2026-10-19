@@ -14,6 +14,14 @@ export interface PlaceResult {
   primaryTypeDisplayName?: { text?: string };
   businessStatus?: string;
   location?: { latitude?: number; longitude?: number };
+  utcOffsetMinutes?: number;
+  regularOpeningHours?: {
+    periods?: {
+      open?: { day?: number; hour?: number; minute?: number };
+      close?: { day?: number; hour?: number; minute?: number };
+    }[];
+    weekdayDescriptions?: string[];
+  };
 }
 
 const FIELD_MASK = [
@@ -136,6 +144,8 @@ const DETAILS_FIELD_MASK = [
   "primaryTypeDisplayName",
   "businessStatus",
   "location",
+  "utcOffsetMinutes",
+  "regularOpeningHours",
 ].join(",");
 
 function placesKey(): string {

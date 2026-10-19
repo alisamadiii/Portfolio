@@ -11,6 +11,7 @@ import {
   MapPin,
   Navigation,
   Phone,
+  RefreshCw,
   RotateCcw,
   Trash2,
 } from "lucide-react";
@@ -95,6 +96,50 @@ const directionsUrl = (stop: Stop): string => {
   return `https://www.google.com/maps/search/?api=1&query=${q}`;
 };
 
+type Period = {
+  open?: { day?: number; hour?: number; minute?: number };
+  close?: { day?: number; hour?: number; minute?: number };
+};
+
+// Open/closed right now, computed from the stored weekly schedule in the
+// shop's own timezone. null = unknown (no hours saved). Stays correct as time
+// passes with zero new Places calls: shift absolute time by the shop's UTC
+// offset, then read UTC fields to get its local day/hour/minute.
+const openState = (
+  periodsJson: string | null,
+  utcOffsetMinutes: number | null
+): boolean | null => {
+  if (!periodsJson || utcOffsetMinutes == null) return null;
+  let periods: Period[];
+  try {
+    periods = JSON.parse(periodsJson);
+  } catch {
+    return null;
+  }
+  if (!periods.length) return null;
+  const d = new Date(Date.now() + utcOffsetMinutes * 60_000);
+  const mow = d.getUTCDay() * 1440 + d.getUTCHours() * 60 + d.getUTCMinutes();
+  const week = 7 * 1440;
+  for (const p of periods) {
+    if (!p.open) continue;
+    const openMow =
+      (p.open.day ?? 0) * 1440 + (p.open.hour ?? 0) * 60 + (p.open.minute ?? 0);
+    // No close = open 24h (24/7 businesses).
+    if (!p.close) return true;
+    let closeMow =
+      (p.close.day ?? 0) * 1440 +
+      (p.close.hour ?? 0) * 60 +
+      (p.close.minute ?? 0);
+    if (closeMow <= openMow) closeMow += week; // wraps past Saturday→Sunday
+    if (
+      (mow >= openMow && mow < closeMow) ||
+      (mow + week >= openMow && mow + week < closeMow)
+    )
+      return true;
+  }
+  return false;
+};
+
 const websiteLabel = (stop: Stop): { text: string; className: string } => {
   if (!stop.website)
     return { text: "No website", className: "bg-rose-100 text-rose-600" };
@@ -158,6 +203,15 @@ export const WorkspaceView = () => {
       onError: (error) => toast.error(error.message),
     })
   );
+  const refreshDetails = useMutation(
+    trpc.leads.workspace.refreshDetails.mutationOptions({
+      onSuccess: (res) => {
+        invalidate();
+        toast.success(`Refreshed ${res.updated}/${res.total} stops`);
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
   const clearVisited = useMutation(
     trpc.leads.workspace.clearVisited.mutationOptions({
       onSuccess: () => {
@@ -206,15 +260,31 @@ export const WorkspaceView = () => {
             {usingLive ? "your current location" : "home base"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={locate}
-          disabled={locating}
-          className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
-        >
-          {locating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
-          Refresh my location
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => refreshDetails.mutate()}
+            disabled={refreshDetails.isPending || stops.length === 0}
+            title="Re-pull hours and location from Google for every stop"
+            className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+          >
+            {refreshDetails.isPending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <RefreshCw />
+            )}
+            Refresh store info
+          </button>
+          <button
+            type="button"
+            onClick={locate}
+            disabled={locating}
+            className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+          >
+            {locating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+            Refresh my location
+          </button>
+        </div>
       </div>
 
       {list.isLoading ? (
@@ -313,6 +383,7 @@ const StopCard = ({
 }) => {
   const [outcome, setOutcomeText] = useState(stop.outcome ?? "");
   const website = websiteLabel(stop);
+  const open = openState(stop.openingPeriods, stop.utcOffsetMinutes);
 
   return (
     <div className="bg-card border-border rounded-2xl border p-4">
@@ -331,6 +402,18 @@ const StopCard = ({
             >
               {website.text}
             </span>
+            {open !== null && (
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                  open
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {open ? "Open now" : "Closed"}
+              </span>
+            )}
           </div>
           {stop.address && (
             <p className="text-muted-foreground mt-0.5 text-sm break-words">

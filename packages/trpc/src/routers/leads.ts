@@ -1113,6 +1113,8 @@ export const leadsRouter = createTRPCRouter({
           status: lead.status,
           lat: leadWorkspace.lat,
           lng: leadWorkspace.lng,
+          openingPeriods: leadWorkspace.openingPeriods,
+          utcOffsetMinutes: leadWorkspace.utcOffsetMinutes,
           visitStatus: leadWorkspace.visitStatus,
           outcome: leadWorkspace.outcome,
           visitedAt: leadWorkspace.visitedAt,
@@ -1145,19 +1147,32 @@ export const leadsRouter = createTRPCRouter({
 
         let lat: number | null = null;
         let lng: number | null = null;
+        let openingPeriods: string | null = null;
+        let utcOffsetMinutes: number | null = null;
         try {
           const details = await getPlaceDetails(row.placeId);
           if (details?.location?.latitude != null) {
             lat = details.location.latitude;
             lng = details.location.longitude ?? null;
           }
+          const periods = details?.regularOpeningHours?.periods;
+          if (periods?.length) openingPeriods = JSON.stringify(periods);
+          if (details?.utcOffsetMinutes != null)
+            utcOffsetMinutes = details.utcOffsetMinutes;
         } catch {
-          // Geocode is best-effort — add the stop regardless.
+          // Geocode/hours are best-effort — add the stop regardless.
         }
 
         await db
           .insert(leadWorkspace)
-          .values({ userId, leadId: input.leadId, lat, lng })
+          .values({
+            userId,
+            leadId: input.leadId,
+            lat,
+            lng,
+            openingPeriods,
+            utcOffsetMinutes,
+          })
           .onConflictDoNothing();
         return { success: true };
       }),
@@ -1209,6 +1224,39 @@ export const leadsRouter = createTRPCRouter({
           );
         return { success: true };
       }),
+
+    // Re-pull coords + opening hours from Places for every stop (e.g. rows
+    // added before hours were captured). One detail call per stop; bounded
+    // concurrency, best-effort per row.
+    refreshDetails: adminProcedure.mutation(async ({ ctx }) => {
+      const rows = await db
+        .select({ id: leadWorkspace.id, placeId: lead.placeId })
+        .from(leadWorkspace)
+        .innerJoin(lead, eq(leadWorkspace.leadId, lead.id))
+        .where(eq(leadWorkspace.userId, ctx.session.user.id));
+
+      let updated = 0;
+      await mapLimit(rows, 5, async (r) => {
+        try {
+          const details = await getPlaceDetails(r.placeId);
+          const periods = details?.regularOpeningHours?.periods;
+          await db
+            .update(leadWorkspace)
+            .set({
+              lat: details?.location?.latitude ?? null,
+              lng: details?.location?.longitude ?? null,
+              openingPeriods: periods?.length ? JSON.stringify(periods) : null,
+              utcOffsetMinutes: details?.utcOffsetMinutes ?? null,
+              updatedAt: new Date(),
+            })
+            .where(eq(leadWorkspace.id, r.id));
+          updated++;
+        } catch {
+          // Skip rows whose Places lookup fails; leave their data as-is.
+        }
+      });
+      return { updated, total: rows.length };
+    }),
 
     // Clear everything already visited — reset for the next day.
     clearVisited: adminProcedure.mutation(async ({ ctx }) => {
