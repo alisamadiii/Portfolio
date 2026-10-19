@@ -173,7 +173,13 @@ function exportCsv(leads: UnlockedLead[], filename: string) {
   URL.revokeObjectURL(a.href);
 }
 
-export const LeadsView = ({ scanId }: { scanId: number }) => {
+export const LeadsView = ({
+  scanId,
+  isAdmin = false,
+}: {
+  scanId: number;
+  isAdmin?: boolean;
+}) => {
   const trpc = useTRPC();
 
   const searchParams = useSearchParams();
@@ -232,13 +238,15 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
       },
     })
   );
-  // Admin-only "today's visits" workspace. The ids query is admin-gated, so
-  // for non-admins it errors (retry off) and the feature stays hidden.
+  // Admin-only "today's visits" workspace. Visibility is driven by the real
+  // session role (prop); the ids query only tracks which leads are already in
+  // the workspace, and tolerates errors (e.g. table not yet migrated) by
+  // treating membership as empty so the add button still renders.
   const workspaceIds = useQuery({
     ...trpc.leads.workspace.ids.queryOptions(),
+    enabled: isAdmin,
     retry: false,
   });
-  const isAdmin = workspaceIds.isSuccess;
   const workspaceSet = new Set(workspaceIds.data ?? []);
   const invalidateWorkspace = () => {
     queryClient.invalidateQueries({
@@ -451,13 +459,14 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
               <TableHead>Rating</TableHead>
               <TableHead>Website</TableHead>
               <TableHead>Status</TableHead>
+              {isAdmin && <TableHead>Visit</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {leads.isLoading ? (
               <TableRow>
                 <TableCell
-                  colSpan={scan.data?.nearMe ? 7 : 6}
+                  colSpan={(scan.data?.nearMe ? 7 : 6) + (isAdmin ? 1 : 0)}
                   className="text-muted-foreground py-8 text-center"
                 >
                   Loading…
@@ -466,7 +475,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
             ) : !rows.length ? (
               <TableRow>
                 <TableCell
-                  colSpan={scan.data?.nearMe ? 7 : 6}
+                  colSpan={(scan.data?.nearMe ? 7 : 6) + (isAdmin ? 1 : 0)}
                   className="text-muted-foreground py-8 text-center"
                 >
                   No leads match the filters.
@@ -509,6 +518,7 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                         <Lock className="size-3" /> Locked
                       </span>
                     </TableCell>
+                    {isAdmin && <TableCell />}
                   </TableRow>
                 ) : (
                 <TableRow
@@ -577,11 +587,13 @@ export const LeadsView = ({ scanId }: { scanId: number }) => {
                   </TableCell>
                   <TableCell>{websiteBadge(lead)}</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-2">
-                      {statusSelect(lead)}
-                      {isAdmin && workspaceButton(lead.id)}
-                    </div>
+                    {statusSelect(lead)}
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {workspaceButton(lead.id)}
+                    </TableCell>
+                  )}
                 </TableRow>
                 )
               )

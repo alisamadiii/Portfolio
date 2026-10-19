@@ -17,6 +17,13 @@ import {
 import { toast } from "sonner";
 
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -24,6 +31,15 @@ import { queryClient, useTRPC } from "@workspace/trpc/client";
 
 type Stop = RouterOutputs["leads"]["workspace"]["list"][number];
 type Coord = { lat: number; lng: number };
+
+const STATUSES = [
+  "new",
+  "contacted",
+  "interested",
+  "meeting",
+  "won",
+  "lost",
+] as const;
 
 // Fallback origin when geolocation is denied — same base the near-me scans
 // use (Jacksonville, FL).
@@ -151,6 +167,20 @@ export const WorkspaceView = () => {
       onError: (error) => toast.error(error.message),
     })
   );
+  // Pipeline status lives on the lead itself — reuse the shared mutation so
+  // the scan list and dashboard cards stay in sync.
+  const updateStatus = useMutation(
+    trpc.leads.updateStatus.mutationOptions({
+      onSuccess: () => {
+        invalidate();
+        queryClient.invalidateQueries({
+          queryKey: trpc.leads.list.queryKey(),
+        });
+        queryClient.invalidateQueries({ queryKey: trpc.leads.won.queryKey() });
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
 
   const stops = list.data ?? [];
   const pending = stops.filter((s) => s.visitStatus === "pending");
@@ -220,6 +250,9 @@ export const WorkspaceView = () => {
                     onSaveOutcome={(outcome) =>
                       setOutcome.mutate({ id: stop.id, outcome })
                     }
+                    onStatusChange={(status) =>
+                      updateStatus.mutate({ id: stop.leadId, status })
+                    }
                   />
                 );
               })}
@@ -267,6 +300,7 @@ const StopCard = ({
   busy,
   onVisited,
   onSaveOutcome,
+  onStatusChange,
 }: {
   stop: Stop;
   seq: number;
@@ -275,6 +309,7 @@ const StopCard = ({
   busy: boolean;
   onVisited: () => void;
   onSaveOutcome: (outcome: string) => void;
+  onStatusChange: (status: (typeof STATUSES)[number]) => void;
 }) => {
   const [outcome, setOutcomeText] = useState(stop.outcome ?? "");
   const website = websiteLabel(stop);
@@ -343,6 +378,23 @@ const StopCard = ({
             >
               <Check /> Mark visited
             </button>
+            <Select
+              value={stop.status}
+              onValueChange={(value) => {
+                if (value) onStatusChange(value as (typeof STATUSES)[number]);
+              }}
+            >
+              <SelectTrigger size="sm" className="w-32 capitalize">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s} value={s} className="capitalize">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Textarea

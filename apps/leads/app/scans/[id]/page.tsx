@@ -14,11 +14,12 @@ export default async function ScanPage({
 
   // Data is scoped server-side regardless; this just avoids a broken shell.
   const httpCaller = createHttpCaller(await headers());
+  let role: string | null = null;
   try {
-    await httpCaller.users.getSession.query();
+    role = (await httpCaller.users.getSession.query()).role ?? null;
   } catch {
     redirect("/home");
   }
 
-  return <LeadsView scanId={Number(id)} />;
+  return <LeadsView scanId={Number(id)} isAdmin={role === "admin"} />;
 }
