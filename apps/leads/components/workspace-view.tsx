@@ -87,6 +87,13 @@ const orderRoute = (origin: Coord, stops: Stop[]): RouteStep[] => {
   return ordered;
 };
 
+// The business's Google Maps listing page (full info), not directions.
+const placeUrl = (stop: Stop): string => {
+  if (stop.mapsUrl) return stop.mapsUrl;
+  const q = encodeURIComponent(`${stop.name} ${stop.address ?? ""}`.trim());
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+};
+
 const directionsUrl = (stop: Stop): string => {
   if (stop.lat != null && stop.lng != null) {
     return `https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}`;
@@ -434,6 +441,15 @@ const StopCard = ({
               className="btn-pill btn-dark h-9 px-4 text-sm [&_svg]:size-4"
             >
               <Navigation /> Directions
+            </a>
+            <a
+              href={placeUrl(stop)}
+              target="_blank"
+              rel="noreferrer"
+              title="Open the business listing on Google Maps"
+              className="btn-pill btn-light h-9 px-4 text-sm [&_svg]:size-4"
+            >
+              <MapPin /> Maps
             </a>
             {stop.phone && (
               <a
