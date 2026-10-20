@@ -7,13 +7,12 @@ import { toast } from "sonner";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useConfig } from "@/contexts/config-context";
-import { Check, Copy, Globe } from "@/components/icon";
+import { Check, Copy } from "@/components/icon";
 import { ProjectFeatureGate } from "@/components/settings/project-paywall";
 import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
 
@@ -66,43 +65,46 @@ function GithubDomainPanel({
   );
 
   return (
-    <div className="mx-auto w-full max-w-screen-md p-6">
-      <div className="mb-1.5 flex items-center gap-2">
-        <Globe className="size-5" />
-        <h2 className="text-lg font-semibold tracking-tight">Domain</h2>
-      </div>
-      <p className="text-muted-foreground mb-6 text-sm">
-        Your site's live website URL. It's shown across the hub and used for the
-        canvas preview and the SEO base URL.
-      </p>
-
-      <div className="max-w-md space-y-1.5">
-        <Label htmlFor="website-url">Website URL</Label>
-        <Input
-          id="website-url"
-          placeholder="example.com"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && value.trim() !== current.trim()) {
-              save.mutate({ repoId, websiteUrl: value });
-            }
-          }}
-        />
-        <p className="text-muted-foreground text-[12.5px]">
-          Enter a domain like <span className="font-medium">example.com</span> —
-          we'll store it as <span className="font-medium">https://…</span>.
+    <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
+      <div>
+        <h2 className="text-[22px] font-extrabold tracking-tight">Domain</h2>
+        <p className="text-muted-foreground mt-1 text-[14px]">
+          Your site's live website URL. It's shown across the hub and used for
+          the canvas preview and the SEO base URL.
         </p>
       </div>
 
-      <div className="mt-5 max-w-md">
-        <Button
-          isLoading={save.isPending}
-          disabled={value.trim() === current.trim()}
-          onClick={() => save.mutate({ repoId, websiteUrl: value })}
-        >
-          Save
-        </Button>
+      <div className="bg-card rounded-lg border">
+        <div className="border-b p-4">
+          <h3 className="text-[16px] font-extrabold tracking-tight">
+            Website URL
+          </h3>
+          <p className="text-muted-foreground mt-1 text-[13px]">
+            Enter a domain like <span className="font-medium">example.com</span>{" "}
+            — we'll store it as <span className="font-medium">https://…</span>.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 p-4">
+          <Input
+            id="website-url"
+            placeholder="example.com"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="min-w-56 flex-1"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && value.trim() !== current.trim()) {
+                save.mutate({ repoId, websiteUrl: value });
+              }
+            }}
+          />
+          <Button
+            isLoading={save.isPending}
+            disabled={value.trim() === current.trim()}
+            onClick={() => save.mutate({ repoId, websiteUrl: value })}
+          >
+            Save
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -235,27 +237,34 @@ function UploadDomainPanel({ repoId }: { repoId: number }) {
     removeDomain.isPending;
 
   return (
-    <div className="mx-auto w-full max-w-screen-md p-6">
-      <div className="mb-1.5 flex items-center gap-2">
-        <Globe className="size-5" />
-        <h2 className="text-lg font-semibold tracking-tight">Domain</h2>
+    <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
+      <div>
+        <h2 className="text-[22px] font-extrabold tracking-tight">Domain</h2>
+        <p className="text-muted-foreground mt-1 text-[14px]">
+          Your site is always online. Give it a nicer address with a free
+          subdomain, or connect your own domain.
+        </p>
       </div>
-      <p className="text-muted-foreground mb-6 text-sm">
-        Your site is always online. Give it a nicer address with a free
-        subdomain, or connect your own domain.
-      </p>
 
       {!data ? (
-        <div className="flex justify-center py-10">
+        <div className="bg-card flex justify-center rounded-lg border py-14">
           <Spinner className="text-muted-foreground size-5" />
         </div>
       ) : (
-        <div className="space-y-8">
+        <>
           {/* Free subdomain */}
-          <section className="max-w-md space-y-1.5">
-            <Label htmlFor="free-subdomain">Free subdomain</Label>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center">
+          <div className="bg-card rounded-lg border">
+            <div className="border-b p-4">
+              <h3 className="text-[16px] font-extrabold tracking-tight">
+                Free subdomain
+              </h3>
+              <p className="text-muted-foreground mt-1 text-[13px]">
+                Pick a name and your site is live at it instantly. No DNS setup
+                needed.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 p-4">
+              <div className="flex min-w-56 flex-1 items-center">
                 <Input
                   id="free-subdomain"
                   placeholder="my-site"
@@ -269,16 +278,14 @@ function UploadDomainPanel({ repoId }: { repoId: number }) {
               </div>
               <Button
                 isLoading={setSlug.isPending}
-                disabled={
-                  busy || slugInput.trim() === (data.free?.slug ?? "")
-                }
+                disabled={busy || slugInput.trim() === (data.free?.slug ?? "")}
                 onClick={() => setSlug.mutate({ repoId, slug: slugInput })}
               >
                 Save
               </Button>
             </div>
-            {data.free ? (
-              <p className="text-muted-foreground text-[12.5px]">
+            {data.free && (
+              <div className="text-muted-foreground border-t px-4 py-3 text-[13px]">
                 Live at{" "}
                 <a
                   href={data.free.url}
@@ -288,30 +295,40 @@ function UploadDomainPanel({ repoId }: { repoId: number }) {
                 >
                   {data.free.url}
                 </a>
-              </p>
-            ) : (
-              <p className="text-muted-foreground text-[12.5px]">
-                Pick a name and your site is live at it instantly. No DNS setup
-                needed.
-              </p>
+              </div>
             )}
-          </section>
+          </div>
 
           {/* Custom domain */}
           <ProjectFeatureGate feature="Custom domain">
-            <section className="max-w-xl space-y-3">
-              <Label>Custom domain</Label>
+            <div className="bg-card rounded-lg border">
               {!data.custom ? (
                 <>
-                  <div className="flex max-w-md items-center gap-2">
+                  <div className="border-b p-4">
+                    <h3 className="text-[16px] font-extrabold tracking-tight">
+                      Custom domain
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-[13px]">
+                      Enter a subdomain like{" "}
+                      <span className="font-medium">www.yourdomain.com</span>.
+                      Root domains are not supported yet. Set up a redirect from
+                      your root domain to www at your registrar.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 p-4">
                     <Input
                       placeholder="www.yourdomain.com"
                       value={domainInput}
                       onChange={(e) => setDomainInput(e.target.value)}
+                      className="min-w-56 flex-1"
                     />
                     <Button
                       isLoading={addDomain.isPending}
-                      disabled={busy || !domainInput.trim() || !data.customDomainsConfigured}
+                      disabled={
+                        busy ||
+                        !domainInput.trim() ||
+                        !data.customDomainsConfigured
+                      }
                       onClick={() =>
                         addDomain.mutate({ repoId, domain: domainInput })
                       }
@@ -319,83 +336,103 @@ function UploadDomainPanel({ repoId }: { repoId: number }) {
                       Add
                     </Button>
                   </div>
-                  <p className="text-muted-foreground text-[12.5px]">
-                    Enter a subdomain like{" "}
-                    <span className="font-medium">www.yourdomain.com</span>.
-                    Root domains are not supported yet. Set up a redirect from
-                    your root domain to www at your registrar.
-                  </p>
                   {!data.customDomainsConfigured && (
-                    <p className="text-muted-foreground text-[12.5px]">
+                    <div className="text-muted-foreground border-t px-4 py-3 text-[13px]">
                       Custom domains are not configured on this server.
-                    </p>
+                    </div>
                   )}
                 </>
               ) : (
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="flex-1 truncate text-sm font-medium">
-                      {data.custom.domain}
-                    </span>
-                    {statusBadge(data.custom.status)}
+                <>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[16px] font-extrabold tracking-tight">
+                        {data.custom.domain}
+                      </h3>
+                      {statusBadge(data.custom.status)}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {data.custom.status === "pending" && (
+                        <Button
+                          size="sm"
+                          isLoading={verifyDomain.isPending}
+                          disabled={busy}
+                          onClick={() => verifyDomain.mutate({ repoId })}
+                        >
+                          Verify
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={
+                          data.custom.status === "pending"
+                            ? "text-destructive"
+                            : ""
+                        }
+                        isLoading={removeDomain.isPending}
+                        disabled={busy}
+                        onClick={() => removeDomain.mutate({ repoId })}
+                      >
+                        {data.custom.status === "pending" ? "Cancel" : "Remove"}
+                      </Button>
+                    </div>
                   </div>
 
                   {data.custom.status === "pending" && (
                     <>
-                      <p className="text-muted-foreground mt-3 text-[12.5px]">
-                        Add this record at your DNS provider (Namecheap,
-                        GoDaddy, or wherever your domain lives), then verify.
-                        DNS changes can take up to an hour.
+                      <p className="text-muted-foreground px-4 pt-4 text-[13px]">
+                        Add this record at your DNS provider (Namecheap, GoDaddy,
+                        or wherever your domain lives), then verify. DNS changes
+                        can take up to an hour.
                       </p>
-                      <div className="bg-muted/50 mt-2 grid grid-cols-[auto_1fr_1fr] items-center gap-x-4 gap-y-1 rounded-md p-3 text-[12.5px]">
-                        <span className="text-muted-foreground font-medium">
-                          Type
-                        </span>
-                        <span className="text-muted-foreground font-medium">
-                          Name
-                        </span>
-                        <span className="text-muted-foreground font-medium">
-                          Value
-                        </span>
-                        <span className="font-mono">{data.custom.dns.type}</span>
-                        <span className="flex min-w-0 items-center gap-1 font-mono">
-                          <span className="truncate">{data.custom.dns.name}</span>
-                          <CopyChip value={data.custom.dns.name} />
-                        </span>
-                        <span className="flex min-w-0 items-center gap-1 font-mono">
-                          <span className="truncate">{data.custom.dns.value}</span>
-                          <CopyChip value={data.custom.dns.value} />
-                        </span>
+                      <div className="p-4">
+                        <div className="overflow-hidden rounded-lg border">
+                          <div className="text-muted-foreground bg-muted/40 grid grid-cols-[4rem_1fr_1fr] gap-x-4 border-b px-4 py-2 text-[12px] font-semibold">
+                            <span>Type</span>
+                            <span>Name</span>
+                            <span>Value</span>
+                          </div>
+                          <div className="grid grid-cols-[4rem_1fr_1fr] items-center gap-x-4 px-4 py-3 text-[13px]">
+                            <span className="font-mono">
+                              {data.custom.dns.type}
+                            </span>
+                            <span className="flex min-w-0 items-center gap-1">
+                              <span className="truncate font-mono">
+                                {data.custom.dns.name}
+                              </span>
+                              <CopyChip value={data.custom.dns.name} />
+                            </span>
+                            <span className="flex min-w-0 items-center gap-1">
+                              <span className="truncate font-mono">
+                                {data.custom.dns.value}
+                              </span>
+                              <CopyChip value={data.custom.dns.value} />
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </>
                   )}
 
-                  <div className="mt-4 flex items-center gap-2">
-                    {data.custom.status === "pending" && (
-                      <Button
-                        size="sm"
-                        isLoading={verifyDomain.isPending}
-                        disabled={busy}
-                        onClick={() => verifyDomain.mutate({ repoId })}
+                  {data.custom.status === "active" && (
+                    <div className="text-muted-foreground px-4 py-3 text-[13px]">
+                      Live at{" "}
+                      <a
+                        href={`https://${data.custom.domain}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary font-medium hover:underline"
                       >
-                        Verify
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      isLoading={removeDomain.isPending}
-                      disabled={busy}
-                      onClick={() => removeDomain.mutate({ repoId })}
-                    >
-                      {data.custom.status === "pending" ? "Cancel" : "Remove"}
-                    </Button>
-                  </div>
-                </div>
+                        https://{data.custom.domain}
+                      </a>
+                    </div>
+                  )}
+                </>
               )}
-            </section>
+            </div>
           </ProjectFeatureGate>
-        </div>
+        </>
       )}
     </div>
   );
