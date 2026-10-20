@@ -162,7 +162,7 @@ export default async function Layout({
     return (
       <ErrorCard
         title="Empty repository"
-        description="Create a branch and add a _site.json file at the repo root to configure this project."
+        description="Push your site's files to this repository first — a plain index.html at the root is enough to get a preview."
       />
     );
   }

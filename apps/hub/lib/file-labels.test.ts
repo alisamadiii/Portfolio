@@ -29,6 +29,15 @@ describe("friendlyFileLabel", () => {
     expect(friendlyFileLabel("styles/theme.css")).toBe("Site styles");
   });
 
+  it("names plain .html files as pages (static repos)", () => {
+    expect(friendlyFileLabel("index.html")).toBe("Home page");
+    expect(friendlyFileLabel("about.html")).toBe("About page");
+    expect(friendlyFileLabel("team/index.html")).toBe("Team page");
+    expect(friendlyFileLabel("services/pest-control.html")).toBe(
+      "Services Pest Control page"
+    );
+  });
+
   it("falls back to a title-cased stem", () => {
     expect(friendlyFileLabel("astro.config.mjs")).toBe("Astro.config");
     expect(friendlyFileLabel("src/data/cities.ts")).toBe("Cities");

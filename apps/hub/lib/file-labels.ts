@@ -23,6 +23,13 @@ export const friendlyFileLabel = (path: string): string => {
     const page = rel.replace(/^pages\//, "").replace(/\.[^.]+$/, "");
     return page === "index" ? "Home page" : `${titleCase(page.replace(/[-_/]+/g, " "))} page`;
   }
+  if (/\.html$/.test(rel)) {
+    // Static sites: index.html / about.html / team/index.html are the pages.
+    const page = rel.replace(/\.html$/, "").replace(/\/index$/, "");
+    return page === "index" || page === ""
+      ? "Home page"
+      : `${titleCase(page.replace(/[-_/]+/g, " "))} page`;
+  }
   if (/^content\//.test(rel) || /\.mdx?$/.test(rel)) return `${titleCase(words)} (content)`;
   if (/^public\//.test(rel)) return `${file} (asset)`;
   return titleCase(words) || file;
