@@ -2,10 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -22,10 +26,10 @@ import { Github } from "@workspace/ui/icons/social";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { Blocks, Check, LockKeyhole, Plus, X } from "@/components/icon";
+import { LockKeyhole, Plus } from "@/components/icon";
 import { repoPath } from "@/lib/paths";
 
-type Repo = RouterOutputs["deploy"]["githubRepos"][number];
+type Repo = RouterOutputs["deploy"]["installationRepos"][number];
 
 export const DeployButton = () => {
   const [open, setOpen] = useState(false);
@@ -51,11 +55,11 @@ export const DeployButton = () => {
 const ImportWizard = ({ onClose }: { onClose: () => void }) => {
   const trpc = useTRPC();
 
-  const { data: conn, isLoading } = useQuery(
-    trpc.deploy.connections.queryOptions()
+  const { data: installations, isLoading } = useQuery(
+    trpc.deploy.installations.queryOptions()
   );
 
-  if (isLoading || !conn) {
+  if (isLoading || !installations) {
     return (
       <div className="flex justify-center py-16">
         <Spinner className="text-muted-foreground size-6" />
@@ -63,60 +67,45 @@ const ImportWizard = ({ onClose }: { onClose: () => void }) => {
     );
   }
 
-  if (!conn.github) {
-    return <ConnectGate github={conn.github} />;
+  // The GitHub App installation is the only import source.
+  if (!installations.length) {
+    return <ConnectGate />;
   }
 
   return <GithubImport onClose={onClose} />;
 };
 
-const ConnectGate = ({ github }: { github: boolean }) => (
-  <div>
-    <DialogHeader>
-      <DialogTitle>Connect to import</DialogTitle>
-      <DialogDescription>
-        Importing needs your GitHub account connected.
-      </DialogDescription>
-    </DialogHeader>
-    <div className="mt-4 space-y-2">
-      <GateRow label="GitHub" state={github ? "connected" : "missing"} />
+const ConnectGate = () => {
+  const trpc = useTRPC();
+  const { data: install } = useQuery(trpc.deploy.appInstallUrl.queryOptions());
+  return (
+    <div>
+      <DialogHeader>
+        <DialogTitle>Install the GitHub App</DialogTitle>
+        <DialogDescription>
+          Install our GitHub App on the repository you want to import. It only
+          needs access to the repositories you pick.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="mt-5 flex justify-end">
+        {install?.url ? (
+          <Button
+            render={
+              <a href={install.url} target="_blank" rel="noopener noreferrer">
+                <Github className="size-4" />
+                Install GitHub App
+              </a>
+            }
+          />
+        ) : (
+          <p className="text-muted-foreground text-[13.5px]">
+            The GitHub App is not configured on this server.
+          </p>
+        )}
+      </div>
     </div>
-    <div className="mt-5 flex justify-end">
-      <Button render={<a href="/integrations">Open Integrations</a>} />
-    </div>
-  </div>
-);
-
-const GateRow = ({
-  label,
-  state,
-}: {
-  label: string;
-  state: "connected" | "reconnect" | "missing";
-}) => (
-  <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-    <div className="flex items-center gap-2">
-      <Blocks className="text-muted-foreground size-4" />
-      <span className="text-[14px] font-semibold">{label}</span>
-    </div>
-    {state === "connected" ? (
-      <Badge className="bg-status-success-bg text-status-success gap-1.5 rounded-full border-transparent px-3 py-1 text-[12.5px] font-semibold">
-        <Check className="size-3" />
-        Connected
-      </Badge>
-    ) : state === "reconnect" ? (
-      <Badge variant="outline" className="gap-1.5 text-amber-600">
-        <X className="size-3" />
-        Reconnect needed
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="gap-1.5">
-        <X className="size-3" />
-        Not connected
-      </Badge>
-    )}
-  </div>
-);
+  );
+};
 
 // ─── Repo picker ─────────────────────────────────────────────────
 
@@ -129,16 +118,35 @@ const RepoPicker = ({
 }) => {
   const trpc = useTRPC();
   const [q, setQ] = useState("");
-  const { data: repos, isLoading } = useQuery(
-    trpc.deploy.githubRepos.queryOptions()
+  const { data: installations } = useQuery(
+    trpc.deploy.installations.queryOptions()
   );
+  const { data: install } = useQuery(trpc.deploy.appInstallUrl.queryOptions());
+  // One repo list per linked installation, deduped by repo id.
+  const installationRepoQueries = useQueries({
+    queries: (installations ?? []).map((inst) =>
+      trpc.deploy.installationRepos.queryOptions({
+        installationId: inst.installationId,
+      })
+    ),
+  });
+  const isLoading = installationRepoQueries.some((query) => query.isLoading);
+
   const filtered = useMemo(() => {
+    const seen = new Set<number>();
+    const list: Repo[] = [];
+    for (const query of installationRepoQueries) {
+      for (const repo of query.data ?? []) {
+        if (seen.has(repo.id)) continue;
+        seen.add(repo.id);
+        list.push(repo);
+      }
+    }
     const term = q.trim().toLowerCase();
-    const list = repos ?? [];
     return term
       ? list.filter((r) => r.fullName.toLowerCase().includes(term))
       : list;
-  }, [repos, q]);
+  }, [installationRepoQueries, q]);
 
   return (
     <div>
@@ -157,9 +165,21 @@ const RepoPicker = ({
             <Spinner className="text-muted-foreground size-5" />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground py-8 text-center text-[13.5px]">
-            No repositories found.
-          </p>
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground text-[13.5px]">
+              No repositories found.
+            </p>
+            {install?.url && (
+              <a
+                href={install.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary mt-2 inline-block text-[13px] font-medium hover:underline"
+              >
+                Install the GitHub App on more repositories
+              </a>
+            )}
+          </div>
         ) : (
           filtered.map((r) => (
             <button
@@ -178,6 +198,16 @@ const RepoPicker = ({
           ))
         )}
       </div>
+      {filtered.length > 0 && install?.url && (
+        <a
+          href={install.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-muted-foreground hover:text-foreground mt-3 block text-center text-[12.5px]"
+        >
+          Repository missing? Install the GitHub App on it.
+        </a>
+      )}
     </div>
   );
 };

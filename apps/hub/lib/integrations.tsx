@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-import { Github } from "@workspace/ui/icons/social";
-
 import { authClient } from "@workspace/auth/auth-client";
 
 // ─── Integrations registry (client side) ─────────────────────────
@@ -102,22 +100,5 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
       ),
     unlinkWarning:
       "This unlinks your whole Google account from sign-in, not just Calendar.",
-  },
-  {
-    id: "github",
-    name: "GitHub",
-    description:
-      "Connect your GitHub account with repository access for reading and updating your website's code.",
-    logo: <Github className="size-6" />,
-    connect: async (callbackURL) =>
-      toError(
-        await authClient.linkSocial({
-          provider: "github",
-          scopes: ["repo"],
-          callbackURL,
-        })
-      ),
-    unlinkWarning:
-      "This unlinks your whole GitHub account from sign-in, not just repository access.",
   },
 ];

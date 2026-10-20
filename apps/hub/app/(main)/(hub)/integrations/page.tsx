@@ -8,6 +8,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { DocumentTitle } from "@/components/document-title";
+import { GithubAppCard } from "@/components/integrations/github-app-card";
 import { IntegrationCard } from "@/components/integrations/integration-card";
 import { INTEGRATION_APPS } from "@/lib/integrations";
 
@@ -49,6 +50,7 @@ export default function IntegrationsPage() {
     <div className="space-y-10">
       <PageHeading />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <GithubAppCard />
         {INTEGRATION_APPS.map((app) => (
           <IntegrationCard
             key={app.id}

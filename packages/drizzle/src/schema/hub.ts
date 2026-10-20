@@ -185,6 +185,50 @@ export const hubProject = pgTable(
   })
 );
 
+// One row per GitHub App installation ("Ali Samadi App"). Repo→installation
+// coverage is never stored here — it's resolved live against GitHub (and
+// cached in memory), so this table only carries linking + lifecycle state.
+export const githubInstallation = pgTable(
+  "github_installation",
+  {
+    id: serial("id").primaryKey(),
+    // GitHub's installation id — what tokens are minted against.
+    installationId: integer("installation_id").notNull(),
+    // The GitHub account (user or org) the app is installed on. accountId is
+    // the stable key (logins change on rename).
+    accountLogin: text("account_login").notNull(),
+    accountId: integer("account_id").notNull(),
+    // Plain text (not pgEnum): drizzle-kit mishandles adding enum-typed columns
+    // to existing tables (see role on hubCollaborator). "User" | "Organization".
+    accountType: text("account_type").notNull(),
+    // GitHub user who clicked install (webhook sender) — used to validate an
+    // org installation claim when the account itself can't match a hub user.
+    senderGithubId: integer("sender_github_id"),
+    senderLogin: text("sender_login"),
+    // Hub user who claimed this installation via the setup callback — plays the
+    // same role as hubProject.githubConnectedUserId for projects.
+    linkedUserId: text("linked_user_id").references(() => user.id),
+    // "all" | "selected" — which repos the installation covers.
+    repositorySelection: text("repository_selection").notNull().default("selected"),
+    // Lifecycle tombstones (mirror hubProject.hidden — rows are never deleted).
+    suspendedAt: timestamp("suspended_at"),
+    removedAt: timestamp("removed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqGithubInstallationInstallationId: uniqueIndex(
+      "uq_github_installation_installation_id"
+    ).on(table.installationId),
+    idxGithubInstallationLinkedUserId: index(
+      "idx_github_installation_linked_user_id"
+    ).on(table.linkedUserId),
+    idxGithubInstallationAccountId: index(
+      "idx_github_installation_account_id"
+    ).on(table.accountId),
+  })
+);
+
 export const hubCacheFile = pgTable(
   "hub_cache_file",
   {

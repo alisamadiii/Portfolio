@@ -9,20 +9,20 @@ import { account } from "@workspace/drizzle/schema";
 
 // ─── Integrations core ───────────────────────────────────────────
 // User-level third-party app connections for the hub Integrations tab. Every
-// app rides on Better Auth's account table: social providers (google, github)
-// link with extra scopes via linkSocial — so connection status is just "does a
+// app rides on Better Auth's account table: social providers (google) link
+// with extra scopes via linkSocial — so connection status is just "does a
 // row with the right provider + scope exist" and tokens refresh through
 // auth.api.getAccessToken. Adding an app = one INTEGRATIONS entry here + a
 // client-side registry entry (+ a genericOAuth config block in @workspace/auth
-// if it's a new provider).
+// if it's a new provider). GitHub repo access is NOT an integration — it runs
+// on the GitHub App's installation tokens (lib/github-app).
 
 export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
-export const GITHUB_REPO_SCOPE = "repo";
 // Event CRUD on the user's calendars (we only touch `primary`) — narrower
 // than the full calendar scope, no calendar-list access needed.
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 
-export type IntegrationId = "google-analytics" | "google-calendar" | "github";
+export type IntegrationId = "google-analytics" | "google-calendar";
 
 type IntegrationProvider = {
   id: IntegrationId;
@@ -35,7 +35,6 @@ type IntegrationProvider = {
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
   { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
-  { id: "github", providerId: "github", requiredScope: GITHUB_REPO_SCOPE },
 ];
 
 /** The integration's token is missing/expired/unscoped — the UI must prompt a reconnect. */

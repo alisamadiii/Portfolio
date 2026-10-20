@@ -19,7 +19,7 @@ import { createHttpCaller } from "@workspace/trpc/http-caller";
 import { getServerSession } from "@/lib/session-server";
 
 import { RepoLayout } from "@/components/repo/repo-layout";
-import { GitHubAccessOverlay } from "@/components/repo/github-access-overlay";
+import { InstallAppOverlay } from "@/components/repo/install-app-overlay";
 
 /** Standalone error card (no repo/config providers available yet). */
 function ErrorCard({
@@ -82,11 +82,15 @@ export default async function Layout({
   } catch (error: any) {
     switch (error?.data?.code) {
       case "NOT_FOUND":
-        // No hub_project row for this repo — the project itself is gone.
+        // No hub_project row for this repo — the project itself is gone. The
+        // server message says exactly why (deleted vs never imported).
         return (
           <ErrorCard
             title="Project not found"
-            description="This project no longer exists in Client Hub — it may have been removed or renamed."
+            description={
+              error?.message ??
+              "This project no longer exists in Client Hub — it may have been removed or renamed."
+            }
           />
         );
       case "FORBIDDEN":
@@ -97,31 +101,57 @@ export default async function Layout({
             description="You're not a collaborator on this project. Ask the project owner to invite your email, then open it from the invitation link."
           />
         );
-      case "PRECONDITION_FAILED":
-        // An editing role (owner / full-access / content-editor / admin) has no
-        // GitHub connected. Editing requires the user's own token so commits
-        // are attributed to them; view-only collaborators never hit this —
-        // their reads ride the project owner's token.
+      case "PRECONDITION_FAILED": {
+        // The GitHub App isn't installed on this repo (or isn't configured) —
+        // getToken can't mint an installation token, so the snapshot read
+        // throws before installationStatus is ever consulted. Route to the
+        // install overlay, which polls and unlocks itself after the install.
+        const access = await caller.cms.repos.installationStatus.query({
+          repoId,
+        });
+        if (access.status === "missing") {
+          return (
+            <InstallAppOverlay
+              owner={access.owner}
+              repo={access.repo}
+              repoId={repoId}
+              installUrl={access.installUrl}
+            />
+          );
+        }
+        // Not "missing" per installationStatus, yet the snapshot read was
+        // blocked — surface the server's exact error instead of a vague hint.
         return (
           <ErrorCard
-            title="Connect your GitHub"
-            description="Connect your GitHub account — one that has access to this repository — to edit and publish this project."
-            action={{ href: "/integrations", label: "Connect GitHub" }}
-          />
-        );
-      case "UNPROCESSABLE_CONTENT":
-        // Connected to GitHub, but that account can't reach this repo. The
-        // server message names the repo and the exact remedy.
-        return (
-          <ErrorCard
-            title="GitHub access required"
+            title="GitHub App required"
             description={
               error?.message ??
-              "Your connected GitHub account can't access this repository. Ask the repository owner to add you as a collaborator on GitHub, then reconnect your GitHub."
+              "This project needs the GitHub App installed on its repository. Try again in a moment."
             }
-            action={{ href: "/integrations", label: "Reconnect GitHub" }}
           />
         );
+      }
+      case "UNPROCESSABLE_CONTENT": {
+        // The app is installed but its installation can't reach this repo
+        // (renamed, or removed from the app's repository access).
+        const install = await caller.deploy.appInstallUrl
+          .query()
+          .catch(() => ({ url: null }));
+        return (
+          <ErrorCard
+            title="GitHub App can't access this repository"
+            description={
+              error?.message ??
+              "The GitHub App's installation does not include this repository. Update the app's repository access to include it."
+            }
+            action={
+              install.url
+                ? { href: install.url, label: "Manage app access" }
+                : undefined
+            }
+          />
+        );
+      }
       default:
         throw error;
     }
@@ -142,18 +172,13 @@ export default async function Layout({
   const repo = repoInfo.repo;
   const branch = repoInfo.defaultBranch as string;
 
-  // Agency-access gate: the agency GitHub account must be a collaborator on the
-  // repo (content-pilot commits with it). If it's missing, the repo owner/admin
-  // gets a blocking (but translucent) overlay over the canvas to add it. Only
-  // admins ever see `missing`.
-  const agency = await caller.cms.repos.agencyAccess.query({ repoId });
-  const agencyGate =
-    agency.status === "missing" || agency.status === "invited"
-      ? {
-          owner: agency.owner,
-          login: agency.login,
-          invited: agency.status === "invited",
-        }
+  // Push-access gate: the GitHub App must cover the repo (every read, commit
+  // and push rides its installation token). "missing" shows a blocking (but
+  // translucent) install-app overlay that unlocks itself once installed.
+  const access = await caller.cms.repos.installationStatus.query({ repoId });
+  const installGate =
+    access.status === "missing"
+      ? { owner: access.owner, repo: access.repo, installUrl: access.installUrl }
       : null;
 
   // The v2 canvas reads everything from the root _site.json manifest; the
@@ -172,13 +197,12 @@ export default async function Layout({
     <RepoProvider repo={repoInfo}>
       <ConfigProvider value={config}>
         <RepoLayout>{children}</RepoLayout>
-        {agencyGate && (
-          <GitHubAccessOverlay
-            owner={agencyGate.owner}
-            login={agencyGate.login}
-            repo={repo}
+        {installGate && (
+          <InstallAppOverlay
+            owner={installGate.owner}
+            repo={installGate.repo}
             repoId={repoId}
-            invited={agencyGate.invited}
+            installUrl={installGate.installUrl}
           />
         )}
       </ConfigProvider>

@@ -96,11 +96,27 @@ async function pilotError(res: Response): Promise<never> {
 export async function createPreviewSession(
   repoId: number,
   requestedBy?: string,
-  branch?: string
+  branch?: string,
+  // Slug hint — lets content-pilot skip its repoId → owner/repo API lookup
+  // (required for GitHub App-only deployments, where it has no PAT to resolve
+  // a repoId it has never cloned).
+  slug?: { owner: string; repo: string },
+  // Commit identity for the session's pushes (the project owner's GitHub
+  // noreply identity, derived from the App installation). Omitted → the
+  // pilot's bot identity.
+  commitAuthor?: { name: string; email: string } | null
 ): Promise<PreviewSession> {
   const res = await pilotFetch(`/api/v1/sessions`, {
     method: "POST",
-    body: JSON.stringify({ repoId, requestedBy, branch }),
+    body: JSON.stringify({
+      repoId,
+      requestedBy,
+      branch,
+      owner: slug?.owner,
+      repo: slug?.repo,
+      commitAuthorName: commitAuthor?.name,
+      commitAuthorEmail: commitAuthor?.email,
+    }),
   });
   if (!res.ok) await pilotError(res);
   return (await res.json()) as PreviewSession;
@@ -122,6 +138,37 @@ export async function getPreviewSession(
   if (!res.ok) await pilotError(res);
   const data = (await res.json()) as { session: PreviewSession | null };
   return data.session;
+}
+
+/**
+ * Squashes the session branch into the repo's default branch as ONE commit
+ * authored by the project owner, pushed by content-pilot. Returns the new
+ * commit sha (null when the branch added nothing). Throws CONFLICT when
+ * production moved and the squash can't apply cleanly — the session and its
+ * branch stay intact.
+ */
+export async function publishPreviewSession(
+  sessionId: string
+): Promise<{ sha: string | null; changed: boolean }> {
+  const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
+    method: "POST",
+    body: JSON.stringify({ action: "publish" }),
+  });
+  if (res.status === 409) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new TRPCError({
+      code: "CONFLICT",
+      message:
+        body?.error === "merge_conflict"
+          ? "The live site changed while you were editing, so these edits can't be published automatically. Your changes are saved — please contact your developer to finish publishing them."
+          : (body?.error ?? "The session is busy. Try again in a moment."),
+    });
+  }
+  if (!res.ok) await pilotError(res);
+  const data = (await res.json()) as { sha: string | null; changed: boolean };
+  return data;
 }
 
 /** Marks a session terminal; the supervisor tears the dev server down. */

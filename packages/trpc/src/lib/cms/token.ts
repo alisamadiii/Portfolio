@@ -1,12 +1,12 @@
 /**
  * Token helper functions.
  *
- * Authorization stays local: admins access every repo, the user who connected
- * GitHub for a project gets full access to it, and everyone else needs a
- * collaborator row. The GitHub token depends on the role: editing roles
- * (admin / owner / full-access / content-editor) must have their own GitHub
- * connected so commits are attributed to them; view-only collaborators need no
- * GitHub at all — their reads ride the project owner's stored token.
+ * Authorization stays local: admins access every repo, the user who imported a
+ * project (githubConnectedUserId) gets full access to it, and everyone else
+ * needs a collaborator row. The GitHub token is always the GitHub App's
+ * installation token ("Ali Samadi App") — the app must be installed on the
+ * repo, or the hub shows the install overlay. Nobody needs a personal GitHub
+ * token; commits pass the editing user as git author where applicable.
  */
 
 import { cache } from "react";
@@ -16,23 +16,24 @@ import { TRPCError } from "@trpc/server";
 
 import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
 
-import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
+import {
+  getInstallationTokenForRepo,
+  isGithubAppConfigured,
+} from "@workspace/trpc/lib/github-app";
 import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForRepoId } from "./collaborator-access";
 import { db } from "./db";
 import { createHttpError } from "./errors";
 
-const isReconnectError = (err: unknown) =>
-  err instanceof TRPCError && err.code === "PRECONDITION_FAILED";
-
-// Get a token for a user: role is decided first (DB-only), then the token is
-// resolved to match — the caller's own GitHub for editing roles, with a
-// fallback to the project owner's token for view-only collaborators.
+// Get a token for a user: role is decided first (DB-only), then the GitHub
+// App's installation token is minted for the repo. PRECONDITION_FAILED means
+// "the app isn't installed here" — the canvas layout routes it to the
+// install-app overlay. Transient GitHub failures propagate as-is so a blip
+// never masquerades as a missing installation.
 const getToken = cache(
   async (
     user: { id: string; email: string; role?: string | null },
-    repoId: number,
-    _verifyGithubAccess: boolean = false
+    repoId: number
   ) => {
     // repoId is the project's stable, globally-unique identity. owner/repo are
     // derived from the row (display + GitHub REST), never used to decide access.
@@ -46,12 +47,23 @@ const getToken = cache(
       .where(and(eq(hubProject.repoId, repoId), eq(hubProject.hidden, false)))
       .limit(1);
 
-    const owner = project?.owner ?? "";
-    const repo = project?.repo ?? "";
+    // No visible row = the project was deleted from the hub (tombstoned) or
+    // never imported. Say so precisely — without this guard the empty
+    // owner/repo would surface as a bogus "app not installed" error.
+    if (!project) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message:
+          "This project was deleted from the hub or has not been imported yet. Import the repository to restore it.",
+      });
+    }
+
+    const owner = project.owner;
+    const repo = project.repo;
 
     // Role first — pure DB authorization, independent of GitHub.
     let role: CollaboratorRole;
-    if (isAdminUser(user) || project?.githubConnectedUserId === user.id) {
+    if (isAdminUser(user) || project.githubConnectedUserId === user.id) {
       role = "full-access";
     } else {
       const permission = await db.query.hubCollaborator.findFirst({
@@ -66,28 +78,21 @@ const getToken = cache(
       role = permission.role;
     }
 
-    // Token second. Editing roles must bring their own GitHub (commits are
-    // attributed to them); viewers fall back to the project owner's token.
-    try {
-      const token = await getIntegrationAccessToken(user.id, "github", "GitHub");
-      return { token, source: "user" as const, role, owner, repo };
-    } catch (err) {
-      if (!isReconnectError(err) || role !== "view-only") throw err;
+    // Token second: always the installation token.
+    if (!isGithubAppConfigured()) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "The GitHub App is not configured on this server.",
+      });
     }
-
-    const ownerId = project?.githubConnectedUserId;
-    if (ownerId) {
-      try {
-        const token = await getIntegrationAccessToken(ownerId, "github", "GitHub");
-        return { token, source: "owner" as const, role, owner, repo };
-      } catch {
-        // fall through to the owner-directed error below
-      }
+    const token = await getInstallationTokenForRepo(owner, repo);
+    if (!token) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: `The GitHub App is not installed on "${owner}/${repo}".`,
+      });
     }
-    throw createHttpError(
-      "The project owner's GitHub connection needs to be refreshed before this project can load.",
-      422
-    );
+    return { token, source: "installation" as const, role, owner, repo };
   }
 );
 

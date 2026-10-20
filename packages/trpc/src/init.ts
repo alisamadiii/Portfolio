@@ -13,7 +13,6 @@ import {
 import { collaboratorMatchesUser } from "./lib/cms/collaborator-access";
 import { db } from "./lib/cms/db";
 import { toTRPCError } from "./lib/cms/errors";
-import { resolveRepoToken } from "./lib/cms/repo-token";
 import { getToken } from "./lib/cms/token";
 
 export const createTRPCContext = cache(async () => {});
@@ -163,19 +162,3 @@ export const collaboratorManageProcedure = authenticatedProcedure
     return next({ ctx: { ...ctx, ...access } });
   });
 
-// Admin-only repo access. Injects the admin's own GitHub token + DB repoAccess.
-export const adminRepoProcedure = adminProcedure
-  .input(z.object({ repoId: z.number().int().positive() }))
-  .use(async ({ next, ctx, input }) => {
-    try {
-      const repoAccess = await getRepoAccessByRepoId(input.repoId);
-      const token = await resolveRepoToken(
-        repoAccess.ownerLogin,
-        repoAccess.repoName,
-        ctx.session.user.id
-      );
-      return next({ ctx: { ...ctx, token, repoAccess } });
-    } catch (error) {
-      throw toTRPCError(error);
-    }
-  });

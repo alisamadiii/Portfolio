@@ -24,7 +24,7 @@ import {
   type UseSendDomain,
   type UseSendEmailRow,
 } from "../lib/usesend";
-import { getToken } from "../lib/cms/token";
+import { assertRepoAccessByRepoId } from "../lib/cms/authz";
 
 // Emails live in the self-hosted useSend instance. Per-project scoping works
 // through the sending domain: projects with hub_project.usesend_domain_id set
@@ -115,7 +115,8 @@ async function authorizeEmailById(
     let allowed = false;
     for (const project of projects) {
       try {
-        await getToken(user, project.repoId);
+        // Pure DB access check (admin / owner / collaborator) — no GitHub.
+        await assertRepoAccessByRepoId(user, project.repoId);
         allowed = true;
         break;
       } catch {

@@ -13,80 +13,12 @@ import { resolveProjectByRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
 import { revalidateRepoCache } from "@workspace/trpc/lib/cms/revalidate";
-import { getIntegrationAccessToken } from "@workspace/trpc/lib/integrations";
+import {
+  installationForRepo,
+  isGithubAppConfigured,
+} from "@workspace/trpc/lib/github-app";
 import { db } from "@workspace/drizzle/index";
 import { hubProject, subscriptions } from "@workspace/drizzle/schema";
-
-// ─── Agency-access gate ──────────────────────────────────────────
-// A specific GitHub account (AGENCY_GITHUB_LOGIN) — the one whose PAT
-// content-pilot commits with — must be a collaborator on every client repo, or
-// the agency can't publish. The repo owner is prompted to add it.
-const ghHeaders = (token: string) => ({
-  Authorization: `Bearer ${token}`,
-  Accept: "application/vnd.github+json",
-  "X-GitHub-Api-Version": "2022-11-28",
-});
-
-/** Whether the repo has a pending invitation for the agency account (the state
- * right after `grantAgencyAccess` until the agency accepts). Needs admin on the
- * caller's token; best-effort → false on any error. */
-async function hasPendingAgencyInvite(
-  owner: string,
-  repo: string,
-  login: string,
-  token: string
-): Promise<boolean> {
-  try {
-    const res = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/invitations`,
-      { headers: ghHeaders(token) }
-    );
-    if (!res.ok) return false;
-    const invites = (await res.json()) as Array<{
-      invitee?: { login?: string };
-    }>;
-    return invites.some(
-      (i) => i.invitee?.login?.toLowerCase() === login.toLowerCase()
-    );
-  } catch {
-    return false;
-  }
-}
-
-/** Best-effort accept of a pending repo invitation from the agency account's
- * own stored token (only works when the importing user IS the agency account —
- * the invite only appears in that account's list). Never throws. */
-async function acceptAgencyInvite(repoId: number, owner: string, repo: string) {
-  try {
-    const [row] = await db
-      .select({ uid: hubProject.githubConnectedUserId })
-      .from(hubProject)
-      .where(eq(hubProject.repoId, repoId))
-      .limit(1);
-    if (!row?.uid) return;
-    const token = await getIntegrationAccessToken(row.uid, "github", "GitHub");
-    const res = await fetch(
-      "https://api.github.com/user/repository_invitations",
-      { headers: ghHeaders(token) }
-    );
-    if (!res.ok) return;
-    const invites = (await res.json()) as Array<{
-      id: number;
-      repository?: { full_name?: string };
-    }>;
-    const full = `${owner}/${repo}`.toLowerCase();
-    const match = invites.find(
-      (i) => i.repository?.full_name?.toLowerCase() === full
-    );
-    if (!match) return;
-    await fetch(
-      `https://api.github.com/user/repository_invitations/${match.id}`,
-      { method: "PATCH", headers: ghHeaders(token) }
-    );
-  } catch {
-    // Invite stays pending; the agency accepts it manually.
-  }
-}
 
 export const reposRouter = createTRPCRouter({
   /**
@@ -243,9 +175,9 @@ export const reposRouter = createTRPCRouter({
           snapshot = await getRepoSnapshot(owner, repo, token);
         } catch (snapshotError) {
           // We already confirmed the project exists (repoId resolved) and the
-          // caller has Hub access (assertRepoAccessByRepoId). So a GitHub 404/403
-          // here means the caller's own GitHub account can't reach the repo — a
-          // distinct, actionable case, NOT "repository removed".
+          // caller has Hub access (assertRepoAccessByRepoId). So a GitHub
+          // 404/403 here means the App's installation can't reach the repo —
+          // a distinct, actionable case, NOT "repository removed".
           const status =
             (snapshotError as { status?: number; statusCode?: number })
               ?.status ??
@@ -253,7 +185,7 @@ export const reposRouter = createTRPCRouter({
           if (status === 404 || status === 403) {
             throw new TRPCError({
               code: "UNPROCESSABLE_CONTENT",
-              message: `Your connected GitHub account can't access "${owner}/${repo}". You have access to this project in Client Hub, but not to its GitHub repository — ask the repository owner to add you as a collaborator on GitHub (with repository access), then reconnect your GitHub here.`,
+              message: `The GitHub App can't access "${owner}/${repo}". The repository may have been renamed or removed from the app's repository access — update the app's installation to include it.`,
             });
           }
           throw snapshotError;
@@ -284,103 +216,40 @@ export const reposRouter = createTRPCRouter({
     }),
 
   /**
-   * Is the agency GitHub account a collaborator on this repo? Uses the caller's
-   * token — GitHub's collaborator-check needs push access, so a `missing`
-   * result only reaches an admin (exactly who can fix it). Fails open: never
-   * blocks a project on a transient error or an unset AGENCY_GITHUB_LOGIN.
+   * Can the platform reach this repo? "ok" when the GitHub App's installation
+   * covers it, "missing" when the owner needs to install (or fix) the app.
+   * Fails open on transient errors — a GitHub blip never blocks a project.
    */
-  agencyAccess: authenticatedProcedure
+  installationStatus: authenticatedProcedure
     .input(z.object({ repoId: z.number().int().positive() }))
-    .query(async ({ input, ctx }) => {
-      const login = process.env.AGENCY_GITHUB_LOGIN;
-      if (!login) return { status: "ok" as const };
+    .query(async ({ input }) => {
       try {
         const project = await resolveProjectByRepoId(input.repoId);
         if (!project) return { status: "ok" as const };
         const { owner, repo } = project;
-        const { token } = await getToken(ctx.session.user, input.repoId);
-        if (!token) return { status: "ok" as const };
-        const res = await fetch(
-          `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
-          { headers: ghHeaders(token) }
-        );
-        if (res.status === 204) return { status: "ok" as const };
-        if (res.status === 404) {
-          // Not a collaborator — but an invite may already be pending.
-          const invited = await hasPendingAgencyInvite(
-            owner,
-            repo,
-            login,
-            token
-          );
-          return {
-            status: invited ? ("invited" as const) : ("missing" as const),
-            owner,
-            login,
-          };
-        }
-        if (res.status === 403) return { status: "not-admin" as const };
-        return { status: "unknown" as const };
-      } catch {
-        return { status: "unknown" as const };
-      }
-    }),
 
-  /**
-   * Add the agency GitHub account as a collaborator (permission: push) using the
-   * caller's token, then best-effort auto-accept the invitation. Requires the
-   * caller to have admin on the repo; otherwise FORBIDDEN so the UI shows the
-   * manual GitHub link.
-   */
-  grantAgencyAccess: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
-    .mutation(async ({ input, ctx }) => {
-      const login = process.env.AGENCY_GITHUB_LOGIN;
-      if (!login) return { status: "active" as const };
-      const project = await resolveProjectByRepoId(input.repoId);
-      if (!project) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
-      }
-      const { owner, repo } = project;
-      const { token } = await getToken(ctx.session.user, input.repoId);
-      if (!token) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "GitHub is not connected.",
-        });
-      }
-      const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
-        {
-          method: "PUT",
-          headers: ghHeaders(token),
-          body: JSON.stringify({ permission: "push" }),
+        if (isGithubAppConfigured()) {
+          const covering = await installationForRepo(owner, repo).catch(
+            () => null
+          );
+          if (covering) return { status: "ok" as const };
         }
-      );
-      if (res.status === 403) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "You need admin access on this repository to add a collaborator.",
-        });
+
+        // Unconfigured server = honest "missing" with no install link: getToken
+        // can't mint anything either way, so "ok" would just route the user to
+        // a dead error card instead of the overlay's "ask the owner" hint.
+        const appName = process.env.GITHUB_APP_NAME;
+        return {
+          status: "missing" as const,
+          owner,
+          repo,
+          installUrl:
+            appName && isGithubAppConfigured()
+              ? `https://github.com/apps/${appName}/installations/new`
+              : null,
+        };
+      } catch {
+        return { status: "ok" as const };
       }
-      if (!res.ok && res.status !== 204) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `GitHub returned ${res.status} while adding the collaborator.`,
-        });
-      }
-      // 204 = already a collaborator (or added directly for an org member).
-      // 201 = a pending invitation was created — try to auto-accept it, then
-      // report whether the agency account ended up active or still invited.
-      if (res.status === 204) return { status: "active" as const };
-      await acceptAgencyInvite(input.repoId, owner, repo);
-      const check = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/collaborators/${login}`,
-        { headers: ghHeaders(token) }
-      );
-      return {
-        status: check.status === 204 ? ("active" as const) : ("invited" as const),
-      };
     }),
 });

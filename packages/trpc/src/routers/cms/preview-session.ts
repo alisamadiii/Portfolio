@@ -7,6 +7,7 @@ import {
   isValidBranchName,
 } from "@workspace/trpc/lib/cms/branch-name";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
+import { installationCommitAuthor } from "@workspace/trpc/lib/github-app";
 import { requireProjectPlan } from "@workspace/trpc/lib/cms/feature-access";
 import { getBranchHeadSha } from "@workspace/trpc/lib/cms/github-cache-file";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
@@ -16,6 +17,7 @@ import {
   createPreviewSession,
   getPreviewSession,
   listLivePreviewSessions,
+  publishPreviewSession,
   resetPreviewSession,
   type PreviewSession,
 } from "@workspace/trpc/lib/content-pilot";
@@ -185,7 +187,9 @@ const leaveAndStart = async (
     return await createPreviewSession(
       ctx.repoId,
       ctx.user.name || ctx.user.email || undefined,
-      target ?? undefined
+      target ?? undefined,
+      { owner: ctx.owner, repo: ctx.repo },
+      await installationCommitAuthor(ctx.owner, ctx.repo)
     );
   } catch (error) {
     if (error instanceof TRPCError && error.message === "branch_mismatch") {
@@ -208,7 +212,10 @@ export const previewSessionRouter = createTRPCRouter({
   start: cmsWriteProcedure.mutation(async ({ ctx }) => {
     return createPreviewSession(
       ctx.repoId,
-      ctx.user.name || ctx.user.email || undefined
+      ctx.user.name || ctx.user.email || undefined,
+      undefined,
+      { owner: ctx.owner, repo: ctx.repo },
+      await installationCommitAuthor(ctx.owner, ctx.repo)
     );
   }),
 
@@ -379,10 +386,12 @@ export const previewSessionRouter = createTRPCRouter({
     }),
 
   /**
-   * Publishes the session: squash-merges its branch (preview/<id> or a named
-   * branch) into the default branch via a PR (clean one-commit history + a
-   * recoverable artifact on conflict), then deletes the branch and ends the
-   * session. Vercel deploys the merge.
+   * Publishes the session: content-pilot squashes its branch (preview/<id> or
+   * a named branch) into the default branch locally as ONE commit authored by
+   * the project owner (so git-contributor licensing like Netlify's sees a
+   * known collaborator on the deployed branch), pushes, and the hub then
+   * deletes the branch and ends the session. On a conflict nothing is lost —
+   * the branch and session stay intact.
    */
   publish: cmsFullAccessProcedure
     .input(z.object({ sessionId: z.string() }))
@@ -392,56 +401,13 @@ export const previewSessionRouter = createTRPCRouter({
         repo: ctx.repo,
       });
       const session = await sessionForRepo(ctx.repoId, input.sessionId);
-      const base = await projectDefaultBranch(ctx.repoId);
 
-      const octokit = createOctokitInstance(ctx.token);
-      let prNumber: number;
-      try {
-        const { data: pr } = await octokit.rest.pulls.create({
-          owner: ctx.owner,
-          repo: ctx.repo,
-          title: isPreviewBranch(session.branch)
-            ? `Site edits — AI session ${session.id}`
-            : `Site edits — branch ${session.branch}`,
-          head: session.branch,
-          base,
-        });
-        prNumber = pr.number;
-      } catch (error) {
-        const status = (error as { status?: number }).status;
-        const message = String((error as Error).message || "");
-        // "No commits between base and head" — the session never changed
-        // anything. Just end it cleanly.
-        if (status === 422 && /no commits/i.test(message)) {
-          await closePreviewSession(session.id, "published");
-          await deleteBranchRef(ctx.token, ctx.owner, ctx.repo, session.branch);
-          return { merged: false, sha: null };
-        }
-        throw toTRPCError(error);
-      }
+      // Throws CONFLICT when production moved under the session (the pilot
+      // restores the session branch, so nothing is lost).
+      const { sha, changed } = await publishPreviewSession(session.id);
 
-      try {
-        const { data: merge } = await octokit.rest.pulls.merge({
-          owner: ctx.owner,
-          repo: ctx.repo,
-          pull_number: prNumber,
-          merge_method: "squash",
-        });
-        await closePreviewSession(session.id, "published");
-        await deleteBranchRef(ctx.token, ctx.owner, ctx.repo, session.branch);
-        return { merged: true, sha: merge.sha };
-      } catch (error) {
-        const status = (error as { status?: number }).status;
-        if (status === 405 || status === 409) {
-          // Merge conflict: leave the PR and the session alive so nothing is
-          // lost; the developer can resolve the PR by hand.
-          throw new TRPCError({
-            code: "CONFLICT",
-            message:
-              "The live site changed while you were editing, so these edits can't be published automatically. Your changes are saved — please contact your developer to finish publishing them.",
-          });
-        }
-        throw toTRPCError(error);
-      }
+      await closePreviewSession(session.id, "published");
+      await deleteBranchRef(ctx.token, ctx.owner, ctx.repo, session.branch);
+      return { merged: changed, sha };
     }),
 });
