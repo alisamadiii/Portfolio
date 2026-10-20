@@ -111,6 +111,7 @@ export const reposRouter = createTRPCRouter({
             owner: hubProject.owner,
             repo: hubProject.repo,
             repoId: hubProject.repoId,
+            source: hubProject.source,
             private: hubProject.private,
             defaultBranch: hubProject.defaultBranch,
             updatedAt: hubProject.githubUpdatedAt,
@@ -131,6 +132,7 @@ export const reposRouter = createTRPCRouter({
           owner: row.owner,
           repo: row.repo,
           repoId: row.repoId,
+          source: row.source,
           private: row.private,
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
@@ -166,6 +168,27 @@ export const reposRouter = createTRPCRouter({
           ctx.session.user,
           input.repoId
         );
+
+        // Uploaded projects have no GitHub repo: synthesize the snapshot from
+        // the project row. One branch ('main'), always private, no cache
+        // revalidation — the files live in content-pilot's workspace.
+        if (project.source === "upload") {
+          return {
+            id: input.repoId,
+            owner,
+            ownerId: 0,
+            repo,
+            defaultBranch: project.defaultBranch,
+            branches: [project.defaultBranch],
+            isPrivate: true,
+            repoId: input.repoId,
+            myRole: role,
+            isOwner: project.githubConnectedUserId === ctx.session.user.id,
+            websiteUrl: project.websiteUrl ?? null,
+            source: "upload" as const,
+          };
+        }
+
         if (!token) throw createHttpError("Token not found", 401);
 
         // Spread copy: the snapshot is module-cached per repo and shared
@@ -208,6 +231,7 @@ export const reposRouter = createTRPCRouter({
           myRole: role,
           isOwner,
           websiteUrl: project.websiteUrl ?? null,
+          source: "github" as const,
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -226,6 +250,8 @@ export const reposRouter = createTRPCRouter({
       try {
         const project = await resolveProjectByRepoId(input.repoId);
         if (!project) return { status: "ok" as const };
+        // Uploaded projects have no GitHub repo to install anything on.
+        if (project.source === "upload") return { status: "ok" as const };
         const { owner, repo } = project;
 
         if (isGithubAppConfigured()) {

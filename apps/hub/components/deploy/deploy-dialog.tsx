@@ -26,7 +26,8 @@ import { Github } from "@workspace/ui/icons/social";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { LockKeyhole, Plus } from "@/components/icon";
+import { FolderUp, LockKeyhole, Plus } from "@/components/icon";
+import { UploadImport } from "@/components/deploy/upload-import";
 import { repoPath } from "@/lib/paths";
 
 type Repo = RouterOutputs["deploy"]["installationRepos"][number];
@@ -54,25 +55,72 @@ export const DeployButton = () => {
 
 const ImportWizard = ({ onClose }: { onClose: () => void }) => {
   const trpc = useTRPC();
+  const [source, setSource] = useState<"github" | "upload" | null>(null);
 
   const { data: installations, isLoading } = useQuery(
     trpc.deploy.installations.queryOptions()
   );
 
-  if (isLoading || !installations) {
-    return (
-      <div className="flex justify-center py-16">
-        <Spinner className="text-muted-foreground size-6" />
+  if (source === "upload") {
+    return <UploadImport onBack={() => setSource(null)} onClose={onClose} />;
+  }
+
+  if (source === "github") {
+    if (isLoading || !installations) {
+      return (
+        <div className="flex justify-center py-16">
+          <Spinner className="text-muted-foreground size-6" />
+        </div>
+      );
+    }
+    if (!installations.length) {
+      return <ConnectGate />;
+    }
+    return <GithubImport onClose={onClose} />;
+  }
+
+  return (
+    <div>
+      <DialogHeader>
+        <DialogTitle>Import a project</DialogTitle>
+        <DialogDescription>
+          Connect a GitHub repository, or upload your site's files directly.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="mt-5 grid gap-2">
+        <button
+          type="button"
+          onClick={() => setSource("github")}
+          className="hover:bg-muted flex items-center gap-3 rounded-lg border px-4 py-3.5 text-left"
+        >
+          <Github className="size-5 shrink-0" />
+          <span>
+            <span className="block text-[14px] font-medium">
+              Import from GitHub
+            </span>
+            <span className="text-muted-foreground block text-[12.5px]">
+              Pick a repository the GitHub App is installed on.
+            </span>
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSource("upload")}
+          className="hover:bg-muted flex items-center gap-3 rounded-lg border px-4 py-3.5 text-left"
+        >
+          <FolderUp className="size-5 shrink-0" />
+          <span>
+            <span className="block text-[14px] font-medium">
+              Upload a folder or zip
+            </span>
+            <span className="text-muted-foreground block text-[12.5px]">
+              No GitHub needed. We host the site and keep a live preview on.
+            </span>
+          </span>
+        </button>
       </div>
-    );
-  }
-
-  // The GitHub App installation is the only import source.
-  if (!installations.length) {
-    return <ConnectGate />;
-  }
-
-  return <GithubImport onClose={onClose} />;
+    </div>
+  );
 };
 
 const ConnectGate = () => {

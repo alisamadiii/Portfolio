@@ -25,6 +25,8 @@ const config = () => {
 export type PreviewSession = {
   id: string;
   repoId: number;
+  /** Workspace source: 'upload' = local-only (no GitHub). */
+  source?: "github" | "upload";
   owner: string;
   repo: string;
   status:
@@ -104,7 +106,10 @@ export async function createPreviewSession(
   // Commit identity for the session's pushes (the project owner's GitHub
   // noreply identity, derived from the App installation). Omitted → the
   // pilot's bot identity.
-  commitAuthor?: { name: string; email: string } | null
+  commitAuthor?: { name: string; email: string } | null,
+  // 'upload' = local-only workspace imported via /api/v1/imports: content-pilot
+  // skips the GitHub clone/push machinery entirely. Omitted = 'github'.
+  source?: "github" | "upload"
 ): Promise<PreviewSession> {
   const res = await pilotFetch(`/api/v1/sessions`, {
     method: "POST",
@@ -116,10 +121,42 @@ export async function createPreviewSession(
       repo: slug?.repo,
       commitAuthorName: commitAuthor?.name,
       commitAuthorEmail: commitAuthor?.email,
+      source,
     }),
   });
   if (!res.ok) await pilotError(res);
   return (await res.json()) as PreviewSession;
+}
+
+// ---------------------------------------------------------------------------
+// Uploaded (no-GitHub) project workspaces
+// ---------------------------------------------------------------------------
+
+/** Finalize check after the browser's zip upload: did the workspace land? */
+export async function getImport(repoId: number): Promise<{
+  exists: boolean;
+  framework: string | null;
+  liveUrl: string | null;
+}> {
+  const res = await pilotFetch(`/api/v1/imports/${repoId}`);
+  if (!res.ok) await pilotError(res);
+  return (await res.json()) as {
+    exists: boolean;
+    framework: string | null;
+    liveUrl: string | null;
+  };
+}
+
+/**
+ * Removes an uploaded project's workspace AND its always-on live site. Hard
+ * gate in project.delete — an upload project must never keep serving after
+ * its hub row is tombstoned. Throws CONFLICT while a preview session is live.
+ */
+export async function deleteImport(repoId: number): Promise<void> {
+  const res = await pilotFetch(`/api/v1/imports/${repoId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 404) await pilotError(res);
 }
 
 /** Every live session across all repos (dashboard "active sessions" list). */

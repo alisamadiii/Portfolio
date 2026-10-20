@@ -26,7 +26,8 @@ import { getVisits } from "@/lib/tracker";
 
 /** Compact repo dropdown for the floating canvas chrome (ex sidebar RepoSwitcher). */
 export function RepoMenu() {
-  const { owner, repo } = useRepo();
+  const { owner, repo, source } = useRepo();
+  const isUpload = source === "upload";
   const [recentRepos, setRecentRepos] = useState<
     Array<{ owner: string; repo: string; repoId: number; branch: string }>
   >([]);
@@ -64,7 +65,12 @@ export function RepoMenu() {
         render={
           <Button variant="ghost" className="h-9 gap-2 px-2">
             <Avatar className="size-6 rounded-md">
-              <AvatarImage src={`https://github.com/${owner}.png`} alt={owner} />
+              {!isUpload && (
+                <AvatarImage
+                  src={`https://github.com/${owner}.png`}
+                  alt={owner}
+                />
+              )}
               <AvatarFallback>{owner.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="max-w-36 truncate text-sm font-medium">
@@ -75,18 +81,20 @@ export function RepoMenu() {
         }
       />
       <DropdownMenuContent className="w-64 rounded-lg" align="start">
-        <DropdownMenuItem
-          render={
-            <a
-              href={`https://github.com/${owner}/${repo}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              View on GitHub
-              <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
-            </a>
-          }
-        />
+        {!isUpload && (
+          <DropdownMenuItem
+            render={
+              <a
+                href={`https://github.com/${owner}/${repo}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View on GitHub
+                <ArrowUpRight className="text-muted-foreground ml-auto size-3" />
+              </a>
+            }
+          />
+        )}
         <DropdownMenuItem
           render={
             <Link href="/guide">

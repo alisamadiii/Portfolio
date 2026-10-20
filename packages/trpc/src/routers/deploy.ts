@@ -7,6 +7,9 @@ import { githubInstallation, hubProject } from "@workspace/drizzle/schema";
 
 import { authenticatedProcedure, createTRPCRouter } from "../init";
 import { isAdminUser } from "../lib/authz-shared";
+import { signImportToken } from "../lib/cms/edit-token";
+import { syntheticRepoId, uploadSlug } from "../lib/cms/upload-slug";
+import { getImport } from "../lib/content-pilot";
 import { createOctokitInstance } from "../lib/cms/octokit";
 import {
   appJwt,
@@ -369,4 +372,127 @@ export const deployRouter = createTRPCRouter({
       await upsertProject(userId, ghRepo, `https://${input.domain}`);
       return { repo: ghRepo.repo, repoId: ghRepo.id };
     }),
+
+  // ─── Upload source (no GitHub) ────────────────────────────────────
+  // Netlify-style import: the user drops a folder or zip; the browser uploads
+  // it STRAIGHT to content-pilot (Vercel body caps rule out proxying) with a
+  // one-time import token minted here. The row starts hidden and is revealed
+  // by finalizeUpload once the workspace verifiably exists on the pilot.
+
+  // Step 1: reserve the project row (hidden) + mint the one-time import token.
+  importUpload: authenticatedProcedure
+    .input(z.object({ name: z.string().trim().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const secret = process.env.EDIT_TOKEN_SECRET;
+      if (!secret) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Uploads are not configured on this server.",
+        });
+      }
+      const userId = ctx.session.user.id;
+      const base = uploadSlug(input.name);
+
+      // Uniquify against uq_hub_project_owner_repo_ci under the 'uploads'
+      // pseudo-owner, then insert with a synthetic repoId. Retried on the rare
+      // id collision (uq_hub_project_repo_id).
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const repo = attempt === 0 ? base : `${base}-${attempt + 1}`;
+        const repoId = syntheticRepoId();
+        try {
+          await db.insert(hubProject).values({
+            repoId,
+            source: "upload",
+            owner: "uploads",
+            repo,
+            private: true,
+            defaultBranch: "main",
+            githubUpdatedAt: new Date(),
+            syncedAt: new Date(),
+            githubConnectedUserId: userId,
+            hidden: true,
+          });
+          return {
+            repoId,
+            name: repo,
+            importToken: signImportToken({ repoId }, secret),
+          };
+        } catch (error) {
+          // Unique violation on owner/repo or repoId — try the next suffix/id.
+          const message = error instanceof Error ? error.message : "";
+          if (!/unique|duplicate/i.test(message)) throw error;
+        }
+      }
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Could not reserve a project name. Try a different name.",
+      });
+    }),
+
+  // Step 2 (after the browser's zip upload): verify the workspace landed on
+  // content-pilot, then reveal the row and store the live URL.
+  finalizeUpload: authenticatedProcedure
+    .input(z.object({ repoId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const project = await requireOwnUploadRow(ctx.session.user, input.repoId);
+      const status = await getImport(input.repoId);
+      if (!status.exists) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "The upload did not reach the preview server. Try again.",
+        });
+      }
+      await db
+        .update(hubProject)
+        .set({
+          hidden: false,
+          websiteUrl: status.liveUrl ?? null,
+          githubUpdatedAt: new Date(),
+          syncedAt: new Date(),
+        })
+        .where(eq(hubProject.repoId, input.repoId));
+      return { repoId: input.repoId, name: project.repo };
+    }),
+
+  // Error path: drop a reserved-but-never-finalized row so the name frees up.
+  cancelUpload: authenticatedProcedure
+    .input(z.object({ repoId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      await requireOwnUploadRow(ctx.session.user, input.repoId);
+      // Hard-delete only hidden rows — a visible project goes through
+      // project.delete (billing settle + pilot cleanup).
+      await db
+        .delete(hubProject)
+        .where(
+          and(
+            eq(hubProject.repoId, input.repoId),
+            eq(hubProject.source, "upload"),
+            eq(hubProject.hidden, true)
+          )
+        );
+      return { ok: true };
+    }),
 });
+
+/** The caller's own upload-sourced row (admins pass), or a clear error. */
+async function requireOwnUploadRow(
+  user: { id: string; email: string; role?: string | null },
+  repoId: number
+) {
+  const [project] = await db
+    .select({
+      repo: hubProject.repo,
+      source: hubProject.source,
+      githubConnectedUserId: hubProject.githubConnectedUserId,
+    })
+    .from(hubProject)
+    .where(eq(hubProject.repoId, repoId))
+    .limit(1);
+  if (!project || project.source !== "upload") {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Upload not found." });
+  }
+  if (!isAdminUser(user) && project.githubConnectedUserId !== user.id) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not your upload." });
+  }
+  return project;
+}

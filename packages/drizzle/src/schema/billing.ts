@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -126,7 +127,8 @@ export const subscriptions = pgTable(
     customerCancellationComment: text("customer_cancellation_comment"),
     // ── Per-project CMS columns (null on product rows) ──
     // GitHub-stable repo id, unique per project. Survives repo rename.
-    repoId: integer("repo_id"),
+    // bigint: upload projects use synthetic ids >= 1e12.
+    repoId: bigint("repo_id", { mode: "number" }),
     // Plan tier — drives gating + home badge. Stripe rows use "paid";
     // "free"/"free_lifetime" are admin-granted with no Stripe subscription.
     plan: text("plan", { enum: ["free", "free_lifetime", "paid"] }),

@@ -41,6 +41,7 @@ const getToken = cache(
       .select({
         owner: hubProject.owner,
         repo: hubProject.repo,
+        source: hubProject.source,
         githubConnectedUserId: hubProject.githubConnectedUserId,
       })
       .from(hubProject)
@@ -76,6 +77,13 @@ const getToken = cache(
         );
       }
       role = permission.role;
+    }
+
+    // Uploaded projects have no GitHub repo and therefore no token. Role logic
+    // above still applies; GitHub-only procedures must call requireGithubToken
+    // (init.ts) which turns the null into a clear PRECONDITION_FAILED.
+    if (project.source === "upload") {
+      return { token: null, source: "upload" as const, role, owner, repo };
     }
 
     // Token second: always the installation token.

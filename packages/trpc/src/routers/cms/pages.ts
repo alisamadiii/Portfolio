@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 
-import { cmsProcedure, createTRPCRouter } from "../../init";
+import { cmsProcedure, createTRPCRouter, requireGithubToken } from "../../init";
 import { toTRPCError } from "../../lib/cms/errors";
 import { getManifest } from "../../lib/cms/manifest-store";
 import { eq } from "drizzle-orm";
@@ -83,7 +83,22 @@ export const pagesRouter = createTRPCRouter({
     .input(z.object({ branch: z.string() }))
     .query(async ({ ctx, input }) => {
       try {
-        const { token } = ctx;
+        // Uploaded projects: no GitHub, no manifest — the editor-shell loads
+        // the site root `/` once the preview session is ready (same fallback
+        // as manifest-less GitHub repos). baseUrl is the live-site URL when
+        // the project has one (static uploads), else empty — never needsDomain:
+        // an upload's domain story is the live serve, not Settings › Domain.
+        if (ctx.source === "upload") {
+          const uploadBaseUrl = await getCustomDomainBaseUrl(ctx.repoId);
+          return {
+            baseUrl: uploadBaseUrl ?? "",
+            origin: uploadBaseUrl ? new URL(uploadBaseUrl).origin : "",
+            pages: [] as CanvasPage[],
+            needsDomain: false as const,
+          };
+        }
+
+        const token = requireGithubToken(ctx);
 
         // CMS v2: tiles come straight from the cms.json manifest — one tile
         // per `pages` entry plus one table card per collection.

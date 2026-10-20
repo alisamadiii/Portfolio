@@ -30,6 +30,7 @@ import {
   cmsWriteProcedure,
   collaboratorProcedure,
   createTRPCRouter,
+  requireGithubToken,
 } from "../../init";
 
 /**
@@ -210,6 +211,20 @@ export const previewSessionRouter = createTRPCRouter({
    * mint) and publish require the plan.
    */
   start: cmsWriteProcedure.mutation(async ({ ctx }) => {
+    // Uploaded projects: local-only workspace, commits attributed to the hub
+    // user directly (there is no GitHub noreply identity to derive).
+    if (ctx.source === "upload") {
+      return createPreviewSession(
+        ctx.repoId,
+        ctx.user.name || ctx.user.email || undefined,
+        undefined,
+        { owner: ctx.owner, repo: ctx.repo },
+        ctx.user.email
+          ? { name: ctx.user.name || ctx.user.email, email: ctx.user.email }
+          : null,
+        "upload"
+      );
+    }
     return createPreviewSession(
       ctx.repoId,
       ctx.user.name || ctx.user.email || undefined,
@@ -266,8 +281,11 @@ export const previewSessionRouter = createTRPCRouter({
    * repo snapshot cache — the list changes on every create/publish.
    */
   branches: cmsProcedure.query(async ({ ctx }) => {
+    // Uploaded projects live on a single local 'main' — no branch menu.
     const defaultBranch = await projectDefaultBranch(ctx.repoId);
-    const named = (await listNamedBranches(ctx.token, ctx.owner, ctx.repo))
+    if (ctx.source === "upload") return { defaultBranch, branches: [] };
+    const token = requireGithubToken(ctx);
+    const named = (await listNamedBranches(token, ctx.owner, ctx.repo))
       .filter((name) => name !== defaultBranch)
       .sort((a, b) => a.localeCompare(b));
     return { defaultBranch, branches: named };
@@ -281,6 +299,7 @@ export const previewSessionRouter = createTRPCRouter({
   switchBranch: cmsWriteProcedure
     .input(z.object({ branch: z.string().trim().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
+      const switchCtx = { ...ctx, token: requireGithubToken(ctx) };
       const defaultBranch = await projectDefaultBranch(ctx.repoId);
       const target = input.branch === defaultBranch ? null : input.branch;
       if (target !== null && !isValidBranchName(target)) {
@@ -297,8 +316,8 @@ export const previewSessionRouter = createTRPCRouter({
           ? isPreviewBranch(current.branch)
           : current.branch === target);
       if (alreadyThere) return current;
-      await assertCanLeave(ctx, current);
-      return leaveAndStart(ctx, current, target);
+      await assertCanLeave(switchCtx, current);
+      return leaveAndStart(switchCtx, current, target);
     }),
 
   /**
@@ -309,6 +328,7 @@ export const previewSessionRouter = createTRPCRouter({
   createBranch: cmsWriteProcedure
     .input(z.object({ name: z.string().trim().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
+      const switchCtx = { ...ctx, token: requireGithubToken(ctx) };
       const defaultBranch = await projectDefaultBranch(ctx.repoId);
       if (!isValidBranchName(input.name) || input.name === defaultBranch) {
         throw new TRPCError({
@@ -317,16 +337,16 @@ export const previewSessionRouter = createTRPCRouter({
         });
       }
       const current = await getPreviewSession(ctx.repoId);
-      await assertCanLeave(ctx, current);
+      await assertCanLeave(switchCtx, current);
 
       const sha = await getBranchHeadSha(
         ctx.owner,
         ctx.repo,
         defaultBranch,
-        ctx.token,
+        switchCtx.token,
         { force: true }
       );
-      const octokit = createOctokitInstance(ctx.token);
+      const octokit = createOctokitInstance(switchCtx.token);
       try {
         await octokit.rest.git.createRef({
           owner: ctx.owner,
@@ -345,7 +365,7 @@ export const previewSessionRouter = createTRPCRouter({
         }
         throw toTRPCError(error);
       }
-      return leaveAndStart(ctx, current, input.name);
+      return leaveAndStart(switchCtx, current, input.name);
     }),
 
   /**
@@ -357,8 +377,11 @@ export const previewSessionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const session = await sessionForRepo(ctx.repoId, input.sessionId);
       await closePreviewSession(session.id, "discard");
-      if (isPreviewBranch(session.branch)) {
-        await deleteBranchRef(ctx.token, ctx.owner, ctx.repo, session.branch);
+      // Uploads have no remote refs; the local branch dies with the workspace
+      // sync on the next session.
+      if (ctx.source !== "upload" && isPreviewBranch(session.branch)) {
+        const token = requireGithubToken(ctx);
+        await deleteBranchRef(token, ctx.owner, ctx.repo, session.branch);
       }
       return { closed: true };
     }),
@@ -407,7 +430,17 @@ export const previewSessionRouter = createTRPCRouter({
       const { sha, changed } = await publishPreviewSession(session.id);
 
       await closePreviewSession(session.id, "published");
-      await deleteBranchRef(ctx.token, ctx.owner, ctx.repo, session.branch);
+      if (ctx.source === "upload") {
+        // Local-only publish: no GitHub refs to clean up. Bump the activity
+        // timestamp so the gallery sorts the freshly published site up.
+        await db
+          .update(hubProject)
+          .set({ githubUpdatedAt: new Date() })
+          .where(eq(hubProject.repoId, ctx.repoId));
+      } else {
+        const token = requireGithubToken(ctx);
+        await deleteBranchRef(token, ctx.owner, ctx.repo, session.branch);
+      }
       return { merged: changed, sha };
     }),
 });

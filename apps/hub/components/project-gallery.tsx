@@ -27,6 +27,7 @@ type Project = {
   owner: string;
   repo: string;
   repoId: number;
+  source?: string;
   private?: boolean;
   updatedAt?: string | null;
   websiteUrl?: string | null;
@@ -174,8 +175,14 @@ const ProjectCard = ({
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
             <span className="truncate">{project.repo}</span>
-            {project.private && (
-              <LockKeyhole className="size-3 shrink-0 opacity-50" />
+            {project.source === "upload" ? (
+              <span className="text-muted-foreground bg-muted shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium">
+                Uploaded
+              </span>
+            ) : (
+              project.private && (
+                <LockKeyhole className="size-3 shrink-0 opacity-50" />
+              )
             )}
           </p>
           <p className="text-muted-foreground truncate text-xs">

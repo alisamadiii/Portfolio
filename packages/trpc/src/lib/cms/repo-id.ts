@@ -34,9 +34,13 @@ async function resolveRepoId(
 // fail-open agency-gate procedures rely on that instead of throwing.
 async function resolveProjectByRepoId(
   repoId: number
-): Promise<{ owner: string; repo: string } | undefined> {
+): Promise<{ owner: string; repo: string; source: string } | undefined> {
   const [row] = await db
-    .select({ owner: hubProject.owner, repo: hubProject.repo })
+    .select({
+      owner: hubProject.owner,
+      repo: hubProject.repo,
+      source: hubProject.source,
+    })
     .from(hubProject)
     .where(eq(hubProject.repoId, repoId))
     .limit(1);

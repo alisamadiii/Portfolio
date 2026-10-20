@@ -7,6 +7,7 @@ import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
+import { deleteImport } from "@workspace/trpc/lib/content-pilot";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { settleAndCancel } from "@workspace/trpc/lib/cms/settle-subscription";
 
@@ -25,6 +26,14 @@ export const projectRouter = createTRPCRouter({
 
       // 1. Billing first — hard gate. A failed cancel/refund aborts the delete.
       await settleAndCancel(repoId);
+
+      // 1b. Uploaded projects: take the workspace AND the always-on live site
+      //     down on content-pilot — also a hard gate. A deleted project that
+      //     keeps serving 24/7 is worse than a failed delete (pilot answers
+      //     409 while an editing session is live; close it first).
+      if (ctx.source === "upload") {
+        await deleteImport(repoId);
+      }
 
       // 2. Wipe project-scoped rows (blog, subscription, collaborators), then
       //    tombstone the project + clear its GitHub fields.

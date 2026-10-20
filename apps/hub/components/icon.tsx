@@ -327,6 +327,10 @@ export function FolderPlus(props: LucideProps) {
   return <Lucide.FolderPlus {...props} />;
 }
 
+export function FolderUp(props: LucideProps) {
+  return <Lucide.FolderUp {...props} />;
+}
+
 export function Frame(props: LucideProps) {
   return <Lucide.Frame {...props} />;
 }

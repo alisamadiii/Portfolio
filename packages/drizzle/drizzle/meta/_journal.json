@@ -71,6 +71,13 @@
       "when": 1792496259196,
       "tag": "0009_omniscient_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792524240012,
+      "tag": "0010_steep_vulcan",
+      "breakpoints": true
     }
   ]
 }

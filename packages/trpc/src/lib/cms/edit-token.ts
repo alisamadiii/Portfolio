@@ -40,3 +40,28 @@ export function signEditToken(
   const sig = b64url(createHmac("sha256", secret).update(body).digest());
   return `${body}.${sig}`;
 }
+
+// 15 minutes — the upload starts right after minting; the 409-on-existing-dir
+// in content-pilot makes the token effectively single-use anyway.
+const IMPORT_TTL_SECONDS = 15 * 60;
+
+/**
+ * One-time project-import token (browser → content-pilot zip upload). Same
+ * secret and format as the edit token, but the `scope: 'import'` claim keeps
+ * the two strictly separate: content-pilot's verifyEditToken rejects any
+ * payload carrying a `scope`, and its verifyImportToken requires this one.
+ */
+export function signImportToken(
+  data: { repoId: number },
+  secret: string,
+  ttlSeconds: number = IMPORT_TTL_SECONDS
+): string {
+  const payload = {
+    repoId: data.repoId,
+    scope: "import" as const,
+    exp: Math.floor(Date.now() / 1000) + ttlSeconds,
+  };
+  const body = b64url(Buffer.from(JSON.stringify(payload)));
+  const sig = b64url(createHmac("sha256", secret).update(body).digest());
+  return `${body}.${sig}`;
+}

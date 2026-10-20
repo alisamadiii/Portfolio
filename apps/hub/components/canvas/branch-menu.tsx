@@ -65,7 +65,7 @@ export const BranchMenu = () => {
     noteSessionEnded,
     onDefaultBranch,
   } = useCanvasEditor();
-  const { myRole } = useRepo();
+  const { myRole, source } = useRepo();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -74,7 +74,10 @@ export const BranchMenu = () => {
   const branchesQuery = useQuery(
     trpc.cms.previewSession.branches.queryOptions(
       { repoId },
-      { enabled: Boolean(repoId) && canEdit, staleTime: 30_000 }
+      {
+        enabled: Boolean(repoId) && canEdit && source !== "upload",
+        staleTime: 30_000,
+      }
     )
   );
   const defaultBranch =
@@ -139,6 +142,9 @@ export const BranchMenu = () => {
         ? "The preview is still starting."
         : null;
   const canSwitch = !blockedReason && !switching;
+
+  // Uploaded projects live on a single local main — no branches to switch.
+  if (source === "upload") return null;
 
   if (!canEdit) {
     return (

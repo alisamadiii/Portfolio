@@ -58,19 +58,42 @@ export const authenticatedProcedure = baseProcedure.use(
 // resolves the caller's token for that project, and injects `user` + `token` +
 // the derived `owner`/`repo` (display + GitHub REST) into ctx. Individual
 // procedures merge their own input on top (e.g. `branch`).
+// `token` is null for uploaded projects (source 'upload') — they have no
+// GitHub repo. GitHub-only procedures call requireGithubToken below.
 export const cmsProcedure = authenticatedProcedure
   .input(z.object({ repoId: z.number().int().positive() }))
   .use(async ({ next, ctx, input }) => {
     const user = ctx.session.user;
-    const { token, role, owner, repo } = await getToken(user, input.repoId);
-    if (!token) {
+    const { token, source, role, owner, repo } = await getToken(
+      user,
+      input.repoId
+    );
+    if (!token && source !== "upload") {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Token not found" });
     }
 
     return next({
-      ctx: { ...ctx, user, token, role, owner, repo, repoId: input.repoId },
+      ctx: { ...ctx, user, token, source, role, owner, repo, repoId: input.repoId },
     });
   });
+
+/**
+ * Narrows a cms ctx token for GitHub-only procedures (branch APIs, manifest
+ * reads, ref deletes). Uploaded projects have no GitHub repo, so these
+ * features simply do not exist for them.
+ */
+export const requireGithubToken = (ctx: {
+  token: string | null;
+  source: "installation" | "upload";
+}): string => {
+  if (!ctx.token) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "This feature is not available for uploaded projects.",
+    });
+  }
+  return ctx.token;
+};
 
 // Server-to-server only: guarded by a shared secret header, never a browser session.
 export const internalProcedure = baseProcedure.use(async ({ next, ctx }) => {

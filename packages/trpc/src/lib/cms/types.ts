@@ -25,4 +25,7 @@ export interface Repo {
   myRole?: CollaboratorRole;
   /** Whether the caller is the project owner (connected GitHub for it). */
   isOwner?: boolean;
+  /** Project source: 'upload' projects have no GitHub repo (no branch menu,
+   * no github.com links). Absent = 'github'. */
+  source?: "github" | "upload";
 }

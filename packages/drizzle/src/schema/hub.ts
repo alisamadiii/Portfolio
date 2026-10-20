@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -34,7 +35,8 @@ export const hubCollaborator = pgTable(
     // reads or writes it anymore — collaborators are scoped by repoId.
     ownerId: integer("owner_id"),
     // = hubProject.repoId. Cascade handled in application code (deleteProject).
-    repoId: integer("repo_id"),
+    // bigint: upload projects use synthetic ids >= 1e12 (see deploy.importUpload).
+    repoId: bigint("repo_id", { mode: "number" }),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     branch: text("branch"),
@@ -76,7 +78,7 @@ export const hubCollaboratorInvite = pgTable(
     // = hubProject.repoId. Invites are scoped by repoId; owner/repo stay for
     // display + the destination path. Nullable only so drizzle-kit push +
     // backfill are clean on the existing table.
-    repoId: integer("repo_id"),
+    repoId: bigint("repo_id", { mode: "number" }),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -126,7 +128,13 @@ export const hubProject = pgTable(
   "hub_project",
   {
     id: serial("id").primaryKey(),
-    repoId: integer("repo_id").notNull(),
+    // GitHub's numeric repo id for source='github'; a synthetic id >= 1e12 for
+    // uploaded projects (no GitHub repo) — hence bigint.
+    repoId: bigint("repo_id", { mode: "number" }).notNull(),
+    // Where the project's files live: 'github' = App-installed repo (today's
+    // flow), 'upload' = zip/folder imported straight into content-pilot's
+    // workspace; GitHub-specific features are gated off for uploads.
+    source: text("source").notNull().default("github"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     private: boolean("private").notNull().default(false),
