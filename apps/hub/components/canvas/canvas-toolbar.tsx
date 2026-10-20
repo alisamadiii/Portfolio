@@ -2,6 +2,7 @@
 
 import {
   ExternalLink,
+  Globe,
   Lock,
   Monitor,
   RotateCw,
@@ -10,6 +11,8 @@ import {
 } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
+
+import { useRepo } from "@/contexts/repo-context";
 
 export type CanvasDevice = "desktop" | "tablet" | "mobile";
 
@@ -46,6 +49,9 @@ export function CanvasToolbar({
   /** Live AI-session preview URL for the current page, or null when no session. */
   previewUrl?: string | null;
 }) {
+  // The published site's URL (custom domain, or the pilot-hosted live site for
+  // uploaded projects) — distinct from the editing preview.
+  const { websiteUrl } = useRepo();
   return (
     <div className="flex min-w-0 items-center gap-2">
       {/* Device toggle */}
@@ -101,6 +107,20 @@ export function CanvasToolbar({
         >
           <ExternalLink className="size-3.5" />
           Preview
+        </a>
+      )}
+
+      {/* Open the published site (what visitors see) in its own tab */}
+      {websiteUrl && (
+        <a
+          href={websiteUrl}
+          target="_blank"
+          rel="noreferrer"
+          title={websiteUrl}
+          className="border-border text-muted-foreground hover:bg-muted flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors"
+        >
+          <Globe className="size-3.5" />
+          Live site
         </a>
       )}
     </div>

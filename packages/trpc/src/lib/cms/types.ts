@@ -28,4 +28,7 @@ export interface Repo {
   /** Project source: 'upload' projects have no GitHub repo (no branch menu,
    * no github.com links). Absent = 'github'. */
   source?: "github" | "upload";
+  /** The project's live website URL (custom domain, or the pilot-hosted
+   * live-site URL for uploaded projects). */
+  websiteUrl?: string | null;
 }
