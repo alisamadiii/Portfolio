@@ -2,10 +2,8 @@ import { MetadataRoute } from "next";
 import { animations } from "@/animations/registry";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Use Vercel production URL if available, otherwise fallback to localhost
-  const vercelUrl =
-    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
-  const baseUrl = vercelUrl ? `https://${vercelUrl}` : "http://localhost:3000";
+  // The site's public URL, or localhost in dev.
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {

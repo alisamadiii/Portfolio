@@ -12,9 +12,9 @@ export const maxDuration = 60;
 function getAllowedOrigins(): string[] {
   const origins: string[] = ALLOWED_ORIGINS;
 
-  // Vercel preview URLs (if using Vercel)
-  if (process.env.VERCEL_URL) {
-    origins.push(`https://${process.env.VERCEL_URL}`);
+  // Extra origin for self-hosted deploys (e.g. the Coolify app URL), when set.
+  if (process.env.EXTRA_ALLOWED_ORIGIN) {
+    origins.push(process.env.EXTRA_ALLOWED_ORIGIN);
   }
 
   // Remove duplicates and return

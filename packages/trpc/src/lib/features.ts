@@ -4,7 +4,10 @@
 // packages/trpc/scripts/seed-project-plan.mts — rerun it with the live key
 // and paste the printed id to fill the production slot.
 
-const IS_PROD = process.env.VERCEL_ENV === "production";
+// Production when the Node process runs in production mode (next build/start,
+// or the Coolify container) — NOT Vercel-specific, so self-hosting picks the
+// live Stripe prices instead of silently falling back to sandbox.
+const IS_PROD = process.env.NODE_ENV === "production";
 
 export const PRICE_IDS = IS_PROD
   ? {

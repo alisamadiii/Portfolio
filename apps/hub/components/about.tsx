@@ -26,7 +26,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import packageJson from "../package.json";
 
-const releaseRef = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
+const releaseRef = process.env.NEXT_PUBLIC_RELEASE_REF;
 const inferredTagVersion =
   releaseRef && /^v\d+\.\d+\.\d+/.test(releaseRef) ? releaseRef : undefined;
 const version =
