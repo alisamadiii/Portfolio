@@ -78,6 +78,13 @@
       "when": 1792524240012,
       "tag": "0010_steep_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792528263555,
+      "tag": "0011_funny_bushwacker",
+      "breakpoints": true
     }
   ]
 }

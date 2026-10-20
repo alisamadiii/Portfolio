@@ -43,6 +43,19 @@ function writeCache(owner: string, repo: string, url: string | null) {
   }
 }
 
+/**
+ * Drops the cached live URL for a project. Called by the Domain panel after a
+ * domain change so the old URL cannot shadow the new one for the 20-min TTL.
+ */
+export function clearWebsiteUrlCache(owner?: string, repo?: string) {
+  if (typeof window === "undefined" || !owner || !repo) return;
+  try {
+    window.localStorage.removeItem(cacheKey(owner, repo));
+  } catch {
+    // ignore
+  }
+}
+
 export type WebsiteUrlStatus = "loading" | "ready" | "missing";
 
 /**

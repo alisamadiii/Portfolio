@@ -174,6 +174,18 @@ export const hubProject = pgTable(
     // the canvas/SEO base URL. Set at import (add-project form) or directly in
     // the DB.
     websiteUrl: text("website_url"),
+    // ── Upload-project domains (null on GitHub projects) ──
+    // Free pick-a-name subdomain slug, e.g. "acme" -> acme.<preview wildcard>.
+    // content-pilot holds the serving map; this is the UI/orchestration state.
+    freeSubdomain: text("free_subdomain"),
+    // Customer-owned custom domain (full host, e.g. "www.client.com"),
+    // present from Add onward; status says pending vs live.
+    customDomain: text("custom_domain"),
+    // 'pending' (Cloudflare hostname created, waiting on the customer's CNAME)
+    // or 'active' (verified; pilot mapping + websiteUrl written).
+    customDomainStatus: text("custom_domain_status"),
+    // Cloudflare custom-hostname id for status polls and deletes.
+    customDomainCfId: text("custom_domain_cf_id"),
     // Per-client GitHub. The Better Auth user.id who imported the project — owns
     // it (access filtering + full-access role) and whose stored GitHub OAuth
     // token backstops reads/commits when there's no interactive caller. Set at

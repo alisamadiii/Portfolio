@@ -6,6 +6,10 @@ import { cmsFullAccessProcedure, createTRPCRouter } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
+import {
+  deleteCustomHostname,
+  isCloudflareSaasConfigured,
+} from "@workspace/trpc/lib/cloudflare-saas";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
@@ -30,8 +34,20 @@ export const projectRouter = createTRPCRouter({
       // 1b. Uploaded projects: take the workspace AND the always-on live site
       //     down on content-pilot — also a hard gate. A deleted project that
       //     keeps serving 24/7 is worse than a failed delete (pilot answers
-      //     409 while an editing session is live; close it first).
+      //     409 while an editing session is live; close it first). The pilot
+      //     delete also drops the domain serving map; the Cloudflare custom
+      //     hostname is removed best-effort so a CF blip never blocks delete.
       if (ctx.source === "upload") {
+        const [project] = await db
+          .select({ customDomainCfId: hubProject.customDomainCfId })
+          .from(hubProject)
+          .where(eq(hubProject.repoId, repoId))
+          .limit(1);
+        if (project?.customDomainCfId && isCloudflareSaasConfigured()) {
+          await deleteCustomHostname(project.customDomainCfId).catch((error) =>
+            console.error("[project.delete] cf hostname delete failed", error)
+          );
+        }
         await deleteImport(repoId);
       }
 
@@ -44,6 +60,10 @@ export const projectRouter = createTRPCRouter({
           hidden: true,
           websiteUrl: null,
           githubConnectedUserId: null,
+          freeSubdomain: null,
+          customDomain: null,
+          customDomainStatus: null,
+          customDomainCfId: null,
         })
         .where(eq(hubProject.repoId, repoId));
 

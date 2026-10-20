@@ -137,6 +137,7 @@ export async function getImport(repoId: number): Promise<{
   exists: boolean;
   framework: string | null;
   liveUrl: string | null;
+  domains?: string[];
 }> {
   const res = await pilotFetch(`/api/v1/imports/${repoId}`);
   if (!res.ok) await pilotError(res);
@@ -144,7 +145,38 @@ export async function getImport(repoId: number): Promise<{
     exists: boolean;
     framework: string | null;
     liveUrl: string | null;
+    domains?: string[];
   };
+}
+
+/**
+ * Registers (or replaces) a domain mapping on the pilot's serving map:
+ * `{ slug }` = the free subdomain under the preview wildcard, `{ host }` = a
+ * customer domain (called only AFTER Cloudflare verified it). The pilot
+ * answers 409 (taken, or non-static project) with a client-facing message.
+ */
+export async function setProjectDomain(
+  repoId: number,
+  body: { slug: string } | { host: string }
+): Promise<{ host: string; url: string }> {
+  const res = await pilotFetch(`/api/v1/imports/${repoId}/domains`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) await pilotError(res);
+  return (await res.json()) as { host: string; url: string };
+}
+
+/** Removes one mapping (or all of the repo's, when host is omitted). */
+export async function removeProjectDomain(
+  repoId: number,
+  host?: string
+): Promise<void> {
+  const query = host ? `?host=${encodeURIComponent(host)}` : "";
+  const res = await pilotFetch(`/api/v1/imports/${repoId}/domains${query}`, {
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 404) await pilotError(res);
 }
 
 /**
