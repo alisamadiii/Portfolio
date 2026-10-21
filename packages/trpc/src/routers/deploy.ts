@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
@@ -10,6 +10,14 @@ import { isAdminUser } from "../lib/authz-shared";
 import { signImportToken } from "../lib/cms/edit-token";
 import { syntheticRepoId, uploadSlug } from "../lib/cms/upload-slug";
 import { getImport } from "../lib/content-pilot";
+import { isUniqueViolation } from "../lib/db-errors";
+import { checkGithubRepoFramework } from "../lib/detect-framework";
+import {
+  HOSTING_VALUES,
+  type Hosting,
+  isExternalHosting,
+  normalizeWebsiteUrl,
+} from "../lib/hosting";
 import { createOctokitInstance } from "../lib/cms/octokit";
 import {
   appJwt,
@@ -51,7 +59,8 @@ async function upsertProject(
     defaultBranch: string;
     updatedAt: string | null;
   },
-  websiteUrl?: string | null
+  websiteUrl?: string | null,
+  hosting?: Hosting
 ) {
   const [existing] = await db
     .select({
@@ -79,6 +88,7 @@ async function upsertProject(
     // the project stays invisible (every listing and getToken filter hidden).
     hidden: false,
     ...(websiteUrl ? { websiteUrl } : {}),
+    ...(hosting ? { hosting } : {}),
   };
   if (existing) {
     await db
@@ -174,11 +184,13 @@ async function resolveRepoViaInstallation(
   if (!isAdmin && linked?.linkedUserId !== userId) return null;
 
   const { token } = await mintInstallationToken(covering.installationId);
-  const { data } = await createOctokitInstance(token).rest.repos.get({
+  const octokit = createOctokitInstance(token);
+  const { data } = await octokit.rest.repos.get({
     owner,
     repo,
   });
   return {
+    octokit,
     id: data.id,
     owner: data.owner.login,
     repo: data.name,
@@ -341,16 +353,16 @@ export const deployRouter = createTRPCRouter({
         }));
     }),
 
-  // GitHub source: link a repo + its live website URL (iframe preview + website_url).
+  // GitHub source: link a repo. Same hosting as uploads: the pilot builds every
+  // publish and serves it, so websiteUrl is the pilot live URL (domains are set
+  // later in the Domain panel). Only static sites get in, checked BEFORE save.
   importGithub: authenticatedProcedure
     .input(
       z.object({
         repoFullName: z.string().min(1),
-        domain: z
-          .string()
-          .trim()
-          .toLowerCase()
-          .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "Enter a valid domain."),
+        // Admin only: the live site stays on another host (push-only publish).
+        hosting: z.enum(HOSTING_VALUES).optional(),
+        websiteUrl: z.string().trim().max(255).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -369,7 +381,31 @@ export const deployRouter = createTRPCRouter({
             "Install the GitHub App on this repository (and link the installation) to import it.",
         });
       }
-      await upsertProject(userId, ghRepo, `https://${input.domain}`);
+      const check = await checkGithubRepoFramework(ghRepo.octokit, {
+        owner: ghRepo.owner,
+        repo: ghRepo.repo,
+        ref: ghRepo.defaultBranch,
+      });
+      if (!check.ok) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: check.message });
+      }
+      const hosting = isAdminUser(ctx.session.user)
+        ? (input.hosting ?? "content-pilot")
+        : "content-pilot";
+      let websiteUrl: string | null;
+      if (isExternalHosting(hosting)) {
+        websiteUrl = normalizeWebsiteUrl(input.websiteUrl ?? "");
+        if (!websiteUrl) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Enter the live website, e.g. www.example.com",
+          });
+        }
+      } else {
+        websiteUrl =
+          (await getImport(ghRepo.id).catch(() => null))?.liveUrl ?? null;
+      }
+      await upsertProject(userId, ghRepo, websiteUrl, hosting);
       return { repo: ghRepo.repo, repoId: ghRepo.id };
     }),
 
@@ -399,6 +435,22 @@ export const deployRouter = createTRPCRouter({
       for (let attempt = 0; attempt < 5; attempt++) {
         const repo = attempt === 0 ? base : `${base}-${attempt + 1}`;
         const repoId = syntheticRepoId();
+        // A deleted upload project left before hard deletes existed still
+        // holds its name as a tombstone (hidden, no owner). Uploads never
+        // re-sync, so reclaim the name. A reserved in-progress import is also
+        // hidden but keeps its owner, so it's never touched.
+        await db
+          .delete(hubProject)
+          .where(
+            and(
+              eq(hubProject.source, "upload"),
+              eq(hubProject.owner, "uploads"),
+              sql`lower(${hubProject.repo}) = lower(${repo})`,
+              eq(hubProject.hidden, true),
+              isNull(hubProject.githubConnectedUserId),
+              isNull(hubProject.customDomainCfId)
+            )
+          );
         try {
           await db.insert(hubProject).values({
             repoId,
@@ -419,8 +471,7 @@ export const deployRouter = createTRPCRouter({
           };
         } catch (error) {
           // Unique violation on owner/repo or repoId — try the next suffix/id.
-          const message = error instanceof Error ? error.message : "";
-          if (!/unique|duplicate/i.test(message)) throw error;
+          if (!isUniqueViolation(error)) throw error;
         }
       }
       throw new TRPCError({

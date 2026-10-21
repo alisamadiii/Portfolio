@@ -49,7 +49,6 @@ export type PreviewSessionInfo = {
     | "ready"
     | "restarting"
     | "paused"
-    | "needs_config"
     | "failed"
     | "closed"
     | "published"

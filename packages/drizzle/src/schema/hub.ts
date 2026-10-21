@@ -174,7 +174,13 @@ export const hubProject = pgTable(
     // the canvas/SEO base URL. Set at import (add-project form) or directly in
     // the DB.
     websiteUrl: text("website_url"),
-    // ── Upload-project domains (null on GitHub projects) ──
+    // Where the live website is served. 'content-pilot' (default): every publish
+    // builds the site on content-pilot and serves dist/. Anything else
+    // ('netlify' | 'vercel' | 'cloudflare' | 'other', GitHub projects only):
+    // publish just squashes + pushes to GitHub and that host deploys; no
+    // content-pilot build, live site or domains. Admin-set.
+    hosting: text("hosting").notNull().default("content-pilot"),
+    // ── Content Pilot hosted domains ──
     // Free pick-a-name subdomain slug, e.g. "acme" -> acme.<preview wildcard>.
     // content-pilot holds the serving map; this is the UI/orchestration state.
     freeSubdomain: text("free_subdomain"),

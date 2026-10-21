@@ -30,7 +30,9 @@ import {
 } from "../lib/domains";
 
 /**
- * Domains for uploaded projects: a free pick-a-name subdomain under the
+ * Domains for every project's live site (GitHub-linked and uploaded alike,
+ * since every project is a static build served by content-pilot): a free
+ * pick-a-name subdomain under the
  * preview wildcard (instant, ungated) and one customer-owned custom domain
  * (plan-gated) with HTTPS via Cloudflare for SaaS. The hub orchestrates:
  * Cloudflare owns certificates and verification, content-pilot owns the
@@ -39,16 +41,6 @@ import {
  * websiteUrl invariant: only rewritten on verified or explicit actions, and
  * the pilot's own `site-<id>` live URL stays derivable as the fallback.
  */
-
-const requireUpload = (ctx: { source: "installation" | "upload" }) => {
-  if (ctx.source !== "upload") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message:
-        "Domains are managed on GitHub projects via the Website URL field.",
-    });
-  }
-};
 
 const projectRow = async (repoId: number) => {
   const [project] = await db
@@ -88,7 +80,6 @@ const fallbackWebsiteUrl = async (
 export const domainsRouter = createTRPCRouter({
   /** Everything the Domain panel needs in one read. */
   status: cmsFullAccessProcedure.query(async ({ ctx }) => {
-    requireUpload(ctx);
     const project = await projectRow(ctx.repoId);
     const pilot = await getImport(ctx.repoId).catch(() => null);
 
@@ -136,8 +127,7 @@ export const domainsRouter = createTRPCRouter({
   setFreeSubdomain: cmsFullAccessProcedure
     .input(z.object({ slug: z.string().trim().toLowerCase().max(63) }))
     .mutation(async ({ ctx, input }) => {
-      requireUpload(ctx);
-      const project = await projectRow(ctx.repoId);
+        const project = await projectRow(ctx.repoId);
 
       if (!input.slug) {
         if (project.freeSubdomain) {
@@ -196,8 +186,7 @@ export const domainsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      requireUpload(ctx);
-      await requireProjectPlan(ctx.user, ctx.repoId, {
+        await requireProjectPlan(ctx.user, ctx.repoId, {
         owner: ctx.owner,
         repo: ctx.repo,
       });
@@ -248,7 +237,6 @@ export const domainsRouter = createTRPCRouter({
 
   /** Step 2: check Cloudflare; on verified, go live. */
   verifyCustomDomain: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    requireUpload(ctx);
     await requireProjectPlan(ctx.user, ctx.repoId, {
       owner: ctx.owner,
       repo: ctx.repo,
@@ -329,7 +317,6 @@ export const domainsRouter = createTRPCRouter({
 
   /** Remove/cancel the custom domain (allowed without a plan for cleanup). */
   removeCustomDomain: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    requireUpload(ctx);
     const project = await projectRow(ctx.repoId);
     if (!project.customDomain) return { removed: true };
 

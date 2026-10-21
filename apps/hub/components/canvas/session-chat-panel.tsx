@@ -56,7 +56,6 @@ import {
   MousePointerClick,
   PaintbrushSparkle,
   Paperclip,
-  Settings,
   Square,
   TriangleAlert,
   Users,
@@ -663,7 +662,6 @@ export function SessionChatPanel() {
   // Messages queue server-side while the preview boots (and revive a paused
   // session), so the composer only locks for broken/finished sessions.
   const TERMINAL_STATUSES = [
-    "needs_config",
     "failed",
     "closed",
     "published",
@@ -785,20 +783,6 @@ export function SessionChatPanel() {
           message="The preview is taking longer than expected to start. It may be having trouble booting."
           retrying={startMutation.isPending}
           onRetry={retryStart}
-        />
-      ) : session.status === "needs_config" ? (
-        <NeedsConfigPane
-          message={session.error}
-          retrying={startMutation.isPending || closeMutation.isPending}
-          onRetry={async () => {
-            // The stuck session is terminal — clear it, then start fresh so the
-            // supervisor re-reads the (now fixed) app-folder setting.
-            await closeMutation.mutateAsync({
-              repoId,
-              sessionId: session.id,
-            });
-            startMutation.mutate({ repoId });
-          }}
         />
       ) : session.status === "failed" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
@@ -1110,46 +1094,6 @@ function CapacityPane({
   );
 }
 
-/**
- * The preview needs one-time setup only an admin can do (pointing it at the
- * right app folder for repos that keep several projects). Framed as "ask your
- * admin", not an error — once the admin fixes it, "Try again" starts fresh.
- */
-function NeedsConfigPane({
-  message,
-  retrying,
-  onRetry,
-}: {
-  message: string | null;
-  retrying: boolean;
-  onRetry: () => void;
-}) {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-      <div className="flex size-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-        <Settings className="size-5" />
-      </div>
-      <h3 className="text-[15px] font-semibold tracking-tight">
-        One-time setup needed
-      </h3>
-      <p className="text-muted-foreground max-w-[250px] text-[13px] leading-relaxed">
-        {message ??
-          "This project needs a small configuration before live editing works."}{" "}
-        Please ask your site administrator to set it up — it only takes a
-        minute, and you can try again right after.
-      </p>
-      <Button size="sm" disabled={retrying} onClick={onRetry}>
-        {retrying ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <PaintbrushSparkle className="size-4" />
-        )}
-        Try again
-      </Button>
-    </div>
-  );
-}
-
 /** Preview service unreachable, or boot ran past the timeout — retryable. */
 function ErrorPane({
   message,
@@ -1431,11 +1375,9 @@ function SessionStatusPill({
       />
       {ready
         ? "Live preview"
-        : session.status === "needs_config"
-          ? "Needs setup"
-          : session.status === "paused"
-            ? "Waking"
-            : "Starting"}
+        : session.status === "paused"
+          ? "Waking"
+          : "Starting"}
     </span>
   );
 }

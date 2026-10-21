@@ -85,6 +85,13 @@
       "when": 1792528263555,
       "tag": "0011_funny_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792587874408,
+      "tag": "0012_fresh_chamber",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,7 @@ const label = (status: string | null) =>
       ? "Restarting the preview…"
       : status === "paused"
         ? "Waking your preview…"
-        : status === "failed" || status === "needs_config"
+        : status === "failed"
           ? "Preview unavailable"
           : "Starting your preview…";
 
@@ -36,7 +36,7 @@ export function CanvasLoading({ status }: { status: string | null }) {
       ? "The preview is taking longer than expected to start. It may be having trouble booting."
       : null);
   const blocked =
-    Boolean(errorText) || status === "failed" || status === "needs_config";
+    Boolean(errorText) || status === "failed";
 
   return (
     <div

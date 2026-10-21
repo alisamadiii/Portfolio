@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/contexts/config-context";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -42,6 +42,7 @@ const PRESERVED = [
 export const DangerPanel = () => {
   const trpc = useTRPC();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { config } = useConfig();
   const repo = config?.repo;
   const repoId = config?.repoId ?? 0;
@@ -52,6 +53,13 @@ export const DangerPanel = () => {
   const deleteMutation = useMutation(
     trpc.project.delete.mutationOptions({
       onSuccess: () => {
+        // The dashboard's project list is cached (5 min staleTime): drop the
+        // card now, then refetch the list so it matches the server.
+        const { queryKey } = trpc.cms.repos.listMine.queryOptions(undefined);
+        queryClient.setQueryData(queryKey, (old) =>
+          old?.filter((project) => project.repoId !== repoId)
+        );
+        void queryClient.invalidateQueries({ queryKey });
         toast.success("Project deleted.");
         router.push("/");
       },

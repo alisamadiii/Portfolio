@@ -20,15 +20,30 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { Github } from "@workspace/ui/icons/social";
 
 import { useTRPC } from "@workspace/trpc/client";
+import {
+  HOSTING_LABELS,
+  HOSTING_VALUES,
+  type Hosting,
+  isExternalHosting,
+} from "@workspace/trpc/lib/hosting";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { FolderUp, LockKeyhole, Plus } from "@/components/icon";
 import { UploadImport } from "@/components/deploy/upload-import";
+import { isAdminUser } from "@/lib/authz-shared";
 import { repoPath } from "@/lib/paths";
+import { useUser } from "@/contexts/user-context";
 
 type Repo = RouterOutputs["deploy"]["installationRepos"][number];
 
@@ -99,7 +114,7 @@ const ImportWizard = ({ onClose }: { onClose: () => void }) => {
               Import from GitHub
             </span>
             <span className="text-muted-foreground block text-[12.5px]">
-              Pick a repository the GitHub App is installed on.
+              An Astro, Vite, or plain HTML repo the GitHub App is on.
             </span>
           </span>
         </button>
@@ -114,7 +129,7 @@ const ImportWizard = ({ onClose }: { onClose: () => void }) => {
               Upload a folder or zip
             </span>
             <span className="text-muted-foreground block text-[12.5px]">
-              No GitHub needed. We host the site and keep a live preview on.
+              No GitHub needed. Astro, Vite, or plain HTML sites.
             </span>
           </span>
         </button>
@@ -266,8 +281,11 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const [repo, setRepo] = useState<Repo | null>(null);
-  const [domain, setDomain] = useState("");
+  const [hosting, setHosting] = useState<Hosting>("content-pilot");
+  const [websiteUrl, setWebsiteUrl] = useState("");
 
   const importMutation = useMutation(
     trpc.deploy.importGithub.mutationOptions({
@@ -285,9 +303,9 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
     return <RepoPicker title="Import from GitHub" onPick={setRepo} />;
   }
 
-  const host = domain.trim().toLowerCase();
+  const external = isExternalHosting(hosting);
   const canImport =
-    /^[a-z0-9.-]+\.[a-z]{2,}$/.test(host) && !importMutation.isPending;
+    !importMutation.isPending && (!external || websiteUrl.trim().length > 0);
 
   return (
     <div>
@@ -295,17 +313,47 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
         <DialogTitle>Import {repo.name}</DialogTitle>
         <DialogDescription>{repo.fullName}</DialogDescription>
       </DialogHeader>
-      <div className="mt-4 space-y-1.5">
-        <Label>Live domain</Label>
-        <Input
-          value={domain}
-          placeholder="acme.com"
-          onChange={(e) => setDomain(e.target.value)}
-        />
-        <p className="text-muted-foreground text-[12.5px]">
-          The project's website URL — used to show a live preview of the site.
-        </p>
-      </div>
+
+      {isAdmin && (
+        <div className="mt-4 space-y-3">
+          <div className="space-y-1.5">
+            <Label>Where is the live site hosted?</Label>
+            <Select
+              value={hosting}
+              onValueChange={(value) =>
+                setHosting((value as Hosting) ?? "content-pilot")
+              }
+            >
+              <SelectTrigger className="h-9 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {HOSTING_VALUES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {value === "other" ? "Other" : HOSTING_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {external && (
+            <div className="space-y-1.5">
+              <Label>Live website</Label>
+              <Input
+                value={websiteUrl}
+                placeholder="www.example.com"
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <p className="text-muted-foreground mt-4 text-[13px]">
+        {external
+          ? `Every publish pushes the changes to GitHub and ${HOSTING_LABELS[hosting]} deploys them. It must be an Astro, Vite, or plain HTML site.`
+          : "We host the site for you. It must be an Astro, Vite, or plain HTML site. Every publish builds it and pushes the changes to GitHub."}
+      </p>
       <div className="mt-6 flex items-center justify-between">
         <Button variant="ghost" onClick={() => setRepo(null)}>
           Back
@@ -316,7 +364,7 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
           onClick={() =>
             importMutation.mutate({
               repoFullName: repo.fullName,
-              domain: host,
+              ...(isAdmin ? { hosting, websiteUrl } : {}),
             })
           }
         >

@@ -2,7 +2,6 @@
 
 import {
   ExternalLink,
-  Globe,
   Lock,
   Monitor,
   RotateCw,
@@ -13,6 +12,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useRepo } from "@/contexts/repo-context";
+import { LiveSiteButton } from "@/components/canvas/live-site-status";
 
 export type CanvasDevice = "desktop" | "tablet" | "mobile";
 
@@ -110,19 +110,8 @@ export function CanvasToolbar({
         </a>
       )}
 
-      {/* Open the published site (what visitors see) in its own tab */}
-      {websiteUrl && (
-        <a
-          href={websiteUrl}
-          target="_blank"
-          rel="noreferrer"
-          title={websiteUrl}
-          className="border-border text-muted-foreground hover:bg-muted flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors"
-        >
-          <Globe className="size-3.5" />
-          Live site
-        </a>
-      )}
+      {/* Open the published site (what visitors see), or its build state */}
+      <LiveSiteButton websiteUrl={websiteUrl ?? null} />
     </div>
   );
 }

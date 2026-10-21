@@ -12,6 +12,7 @@ import { assertRepoAccessByRepoId } from "@workspace/trpc/lib/cms/authz";
 import { resolveProjectByRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
+import { parseHosting } from "@workspace/trpc/lib/hosting";
 import { revalidateRepoCache } from "@workspace/trpc/lib/cms/revalidate";
 import {
   installationForRepo,
@@ -186,6 +187,7 @@ export const reposRouter = createTRPCRouter({
             isOwner: project.githubConnectedUserId === ctx.session.user.id,
             websiteUrl: project.websiteUrl ?? null,
             source: "upload" as const,
+            hosting: parseHosting(project.hosting),
           };
         }
 
@@ -232,6 +234,7 @@ export const reposRouter = createTRPCRouter({
           isOwner,
           websiteUrl: project.websiteUrl ?? null,
           source: "github" as const,
+          hosting: parseHosting(project.hosting),
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

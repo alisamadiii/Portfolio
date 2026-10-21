@@ -10,8 +10,14 @@ import {
   deleteCustomHostname,
   isCloudflareSaasConfigured,
 } from "@workspace/trpc/lib/cloudflare-saas";
+import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { deleteImport } from "@workspace/trpc/lib/content-pilot";
+import { deleteImport, getImport } from "@workspace/trpc/lib/content-pilot";
+import {
+  HOSTING_VALUES,
+  isExternalHosting,
+  normalizeWebsiteUrl,
+} from "@workspace/trpc/lib/hosting";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { settleAndCancel } from "@workspace/trpc/lib/cms/settle-subscription";
 import { deleteUsesendDomain } from "@workspace/trpc/lib/usesend";
@@ -19,14 +25,14 @@ import { deleteUsesendDomain } from "@workspace/trpc/lib/usesend";
 export const projectRouter = createTRPCRouter({
   /**
    * Delete everything about a project — both its data and its external
-   * resources — and tombstone the hub_project row so a re-sync can't resurrect
-   * it. Runs the same for GitHub and uploaded projects.
+   * resources — and remove its hub_project row. Runs the same for GitHub and
+   * uploaded projects.
    *
    * Order is chosen so a mid-sequence failure leaves a retryable state (every
    * later step is idempotent): billing settles first as a hard gate, then the
    * external resources (Cloudflare custom hostname, useSend sending domain),
    * then the pilot teardown (which auto-closes any live session), then the
-   * hub-DB rows, then the tombstone. There is no cross-system transaction, so
+   * hub-DB rows, then the project row. There is no cross-system transaction, so
    * retrying a half-finished delete converges.
    *
    * Never touches the GitHub repo itself or the user's shared Stripe customer.
@@ -53,8 +59,8 @@ export const projectRouter = createTRPCRouter({
       await settleAndCancel(repoId);
 
       // 2. Cloudflare custom hostname (any source). Best-effort so a CF blip
-      //    never blocks the delete; on failure we KEEP customDomainCfId in the
-      //    tombstone so the handle survives for a retry.
+      //    never blocks the delete; on failure we KEEP customDomainCfId in a
+      //    hidden tombstone so the handle survives for a retry.
       let cfCleared = true;
       if (project.customDomainCfId && isCloudflareSaasConfigured()) {
         try {
@@ -90,27 +96,33 @@ export const projectRouter = createTRPCRouter({
         { repoId, owner: project.owner, repo: project.repo },
       ]);
 
-      // 6. Tombstone: keep the row (blocks re-create/re-sync) but clear every
-      //    per-project field. customDomainCfId is kept only if its CF delete
-      //    failed, so the orphan can still be cleaned later.
-      await db
-        .update(hubProject)
-        .set({
-          hidden: true,
-          websiteUrl: null,
-          githubConnectedUserId: null,
-          freeSubdomain: null,
-          customDomain: null,
-          customDomainStatus: null,
-          customDomainCfId: cfCleared ? null : project.customDomainCfId,
-          usesendDomainId: null,
-          usesendPendingDomainId: null,
-          gaPropertyId: null,
-          gaConnectedUserId: null,
-          blogEditedAt: null,
-          blogPublishedAt: null,
-        })
-        .where(eq(hubProject.repoId, repoId));
+      // 6. Remove the project row from our database (GitHub and uploaded
+      //    alike; the GitHub repo itself is never touched). Nothing re-adds
+      //    projects automatically (only an explicit import inserts), so no
+      //    tombstone is needed, and the name is free for a re-import. The one
+      //    exception: a failed Cloudflare hostname delete keeps a hidden
+      //    tombstone holding customDomainCfId, so the orphan can be cleaned.
+      if (cfCleared) {
+        await db.delete(hubProject).where(eq(hubProject.repoId, repoId));
+      } else {
+        await db
+          .update(hubProject)
+          .set({
+            hidden: true,
+            websiteUrl: null,
+            githubConnectedUserId: null,
+            freeSubdomain: null,
+            customDomain: null,
+            customDomainStatus: null,
+            usesendDomainId: null,
+            usesendPendingDomainId: null,
+            gaPropertyId: null,
+            gaConnectedUserId: null,
+            blogEditedAt: null,
+            blogPublishedAt: null,
+          })
+          .where(eq(hubProject.repoId, repoId));
+      }
 
       return { ok: true };
     } catch (error) {
@@ -120,33 +132,61 @@ export const projectRouter = createTRPCRouter({
   }),
 
   /**
-   * Set (or clear) the project's live website URL — the domain shown across the
-   * hub and used as the canvas/SEO base URL. Accepts a bare host or a full URL;
-   * stores the normalized origin (https://). Empty clears it.
+   * Where the live website is served (admin only). External hosting (Netlify,
+   * Vercel, Cloudflare, other) = publish only pushes to GitHub and that host
+   * deploys; the website URL points at the client's own site. Back to Content
+   * Pilot = the next publish builds and serves it here again.
    */
-  setWebsiteUrl: cmsFullAccessProcedure
-    .input(z.object({ websiteUrl: z.string().trim().max(255) }))
+  setHosting: cmsFullAccessProcedure
+    .input(
+      z.object({
+        hosting: z.enum(HOSTING_VALUES),
+        websiteUrl: z.string().trim().max(255).optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
+      if (!isAdminUser(ctx.user)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only an admin can change where a site is hosted.",
+        });
+      }
       try {
-        const repoId = ctx.repoId;
-        const raw = input.websiteUrl.trim();
-        let url: string | null = null;
-        if (raw) {
-          const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-          try {
-            url = new URL(withProto).origin;
-          } catch {
+        const [project] = await db
+          .select({ source: hubProject.source })
+          .from(hubProject)
+          .where(eq(hubProject.repoId, ctx.repoId))
+          .limit(1);
+        if (!project) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
+        }
+
+        let websiteUrl: string | null;
+        if (isExternalHosting(input.hosting)) {
+          if (project.source !== "github") {
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: "Enter a valid domain, e.g. example.com",
+              message:
+                "Uploaded projects are always hosted on Content Pilot. Import from GitHub to host elsewhere.",
             });
           }
+          websiteUrl = normalizeWebsiteUrl(input.websiteUrl ?? "");
+          if (!websiteUrl) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Enter the live website, e.g. www.example.com",
+            });
+          }
+        } else {
+          websiteUrl =
+            (await getImport(ctx.repoId).catch(() => null))?.liveUrl ?? null;
         }
+
         await db
           .update(hubProject)
-          .set({ websiteUrl: url })
-          .where(eq(hubProject.repoId, repoId));
-        return { websiteUrl: url };
+          .set({ hosting: input.hosting, websiteUrl })
+          .where(eq(hubProject.repoId, ctx.repoId));
+        return { hosting: input.hosting, websiteUrl };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

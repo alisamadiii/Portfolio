@@ -27,14 +27,10 @@ describe("sessionEndedOutcome", () => {
     expect(sessionEndedOutcome("paused")).toBe("dormant");
   });
 
+  // DELIBERATE CHANGE (root-only sites): 'needs_config' (admin app-folder
+  // setup) no longer exists, so it left the terminal-status list.
   it("terminal statuses end the stream for good", () => {
-    for (const status of [
-      "closed",
-      "failed",
-      "published",
-      "expired",
-      "needs_config",
-    ]) {
+    for (const status of ["closed", "failed", "published", "expired"]) {
       expect(sessionEndedOutcome(status)).toBe("closed");
     }
   });

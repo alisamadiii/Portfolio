@@ -18,6 +18,7 @@ import {
 import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
+import { HOSTING_LABELS, isExternalHosting } from "@workspace/trpc/lib/hosting";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
@@ -56,10 +57,22 @@ export function SessionActions() {
       onSuccess: (result) => {
         noteSessionEnded(result.merged ? "published" : "closed");
         invalidateSession();
+        // The toolbar's Live site button starts polling the queued build.
+        queryClient.invalidateQueries({
+          queryKey: trpc.cms.previewSession.liveSite.queryOptions({ repoId })
+            .queryKey,
+        });
+        const host = isExternalHosting(result.hosting)
+          ? HOSTING_LABELS[result.hosting]
+          : null;
         toast.success(
           result.merged
-            ? "Published! Your site is deploying now."
-            : "Nothing to publish — session closed."
+            ? host
+              ? `Published! Changes pushed to GitHub. ${host} will deploy them.`
+              : "Published! Building your site now."
+            : result.building
+              ? "Nothing new to publish. Building your site now."
+              : "Nothing to publish. Session closed."
         );
       },
       // PAYMENT_REQUIRED opens the purchase dialog instead of a toast.
@@ -89,7 +102,6 @@ export function SessionActions() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const TERMINAL_STATUSES = [
-    "needs_config",
     "failed",
     "closed",
     "published",

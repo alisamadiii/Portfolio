@@ -1,0 +1,1 @@
+ALTER TABLE "hub_project" ADD COLUMN "hosting" text DEFAULT 'content-pilot' NOT NULL;

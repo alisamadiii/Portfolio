@@ -1,26 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useTRPC } from "@workspace/trpc/client";
+import {
+  HOSTING_LABELS,
+  HOSTING_VALUES,
+  type Hosting,
+  isExternalHosting,
+} from "@workspace/trpc/lib/hosting";
 
 import { useConfig } from "@/contexts/config-context";
+import { useUser } from "@/contexts/user-context";
+import { isAdminUser } from "@/lib/authz-shared";
 import { Check, Copy } from "@/components/icon";
 import { ProjectFeatureGate } from "@/components/settings/project-paywall";
 import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
 
-/** Site Settings › Domain. GitHub projects keep the plain Website URL field;
- * uploaded projects get the free subdomain + custom domain flow. */
+/** Site Settings › Domain. Content Pilot hosted projects (the default, and
+ * every upload) get the free subdomain + custom domain flow. Projects hosted
+ * on Netlify/Vercel/Cloudflare manage their domain there, so they get a note
+ * instead. Only an admin can change where a project is hosted. */
 export function DomainPanel() {
   const trpc = useTRPC();
   const { config } = useConfig();
+  const { user } = useUser();
+  const isAdmin = isAdminUser(user);
   const repoId = config?.repoId ?? 0;
 
   const snapshot = useQuery(
@@ -34,83 +53,138 @@ export function DomainPanel() {
       </div>
     );
   }
-  if (snapshot.data.source === "upload") {
-    return <UploadDomainPanel repoId={repoId} />;
+
+  const { hosting, source, websiteUrl } = snapshot.data;
+  const hostingCard = isAdmin ? (
+    <HostingCard
+      repoId={repoId}
+      hosting={hosting}
+      websiteUrl={websiteUrl}
+      canHostElsewhere={source === "github"}
+    />
+  ) : null;
+
+  if (!isExternalHosting(hosting)) {
+    return <SiteDomainPanel repoId={repoId} top={hostingCard} />;
   }
-  return <GithubDomainPanel repoId={repoId} current={snapshot.data.websiteUrl ?? ""} />;
-}
-
-// ─── GitHub projects: plain Website URL (behavior unchanged) ─────────────────
-
-function GithubDomainPanel({
-  repoId,
-  current,
-}: {
-  repoId: number;
-  current: string;
-}) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const [value, setValue] = useState("");
-  useEffect(() => setValue(current), [current]);
-
-  const save = useMutation(
-    trpc.project.setWebsiteUrl.mutationOptions({
-      onSuccess: async () => {
-        toast.success("Website URL saved.");
-        await queryClient.invalidateQueries();
-      },
-      onError: (error) => toast.error(error.message),
-    })
-  );
 
   return (
     <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
       <div>
         <h2 className="text-[22px] font-extrabold tracking-tight">Domain</h2>
         <p className="text-muted-foreground mt-1 text-[14px]">
-          Your site's live website URL. It's shown across the hub and used for
-          the canvas preview and the SEO base URL.
+          This site is hosted on {HOSTING_LABELS[hosting]}. Its domain is
+          managed there. Every publish pushes your changes to GitHub and{" "}
+          {HOSTING_LABELS[hosting]} deploys them.
         </p>
       </div>
-
-      <div className="bg-card rounded-lg border">
-        <div className="border-b p-4">
-          <h3 className="text-[16px] font-extrabold tracking-tight">
-            Website URL
-          </h3>
-          <p className="text-muted-foreground mt-1 text-[13px]">
-            Enter a domain like <span className="font-medium">example.com</span>{" "}
-            — we'll store it as <span className="font-medium">https://…</span>.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 p-4">
-          <Input
-            id="website-url"
-            placeholder="example.com"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="min-w-56 flex-1"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && value.trim() !== current.trim()) {
-                save.mutate({ repoId, websiteUrl: value });
-              }
-            }}
-          />
-          <Button
-            isLoading={save.isPending}
-            disabled={value.trim() === current.trim()}
-            onClick={() => save.mutate({ repoId, websiteUrl: value })}
+      {hostingCard}
+      {websiteUrl && (
+        <div className="bg-card text-muted-foreground rounded-lg border px-4 py-3 text-[13px]">
+          Live at{" "}
+          <a
+            href={websiteUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary font-medium hover:underline"
           >
-            Save
-          </Button>
+            {websiteUrl}
+          </a>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-// ─── Uploaded projects: free subdomain + custom domain ───────────────────────
+/** Admin only: where the live site is served, plus its URL when external. */
+function HostingCard({
+  repoId,
+  hosting,
+  websiteUrl,
+  canHostElsewhere,
+}: {
+  repoId: number;
+  hosting: Hosting;
+  websiteUrl: string | null;
+  canHostElsewhere: boolean;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { config } = useConfig();
+  const [value, setValue] = useState<Hosting>(hosting);
+  const [url, setUrl] = useState("");
+  useEffect(() => setValue(hosting), [hosting]);
+  useEffect(() => {
+    setUrl(isExternalHosting(hosting) ? (websiteUrl ?? "") : "");
+  }, [hosting, websiteUrl]);
+
+  const save = useMutation(
+    trpc.project.setHosting.mutationOptions({
+      onSuccess: async () => {
+        toast.success("Hosting saved.");
+        clearWebsiteUrlCache(config?.owner, config?.repo);
+        await queryClient.invalidateQueries();
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
+  const external = isExternalHosting(value);
+  const dirty =
+    value !== hosting || (external && url.trim() !== (websiteUrl ?? ""));
+
+  return (
+    <div className="bg-card rounded-lg border">
+      <div className="border-b p-4">
+        <h3 className="text-[16px] font-extrabold tracking-tight">Hosting</h3>
+        <p className="text-muted-foreground mt-1 text-[13px]">
+          {canHostElsewhere
+            ? "Where the live site is served. On another host, publishing only pushes to GitHub and that host deploys it."
+            : "Uploaded projects are always hosted on Content Pilot."}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 p-4">
+        <Select
+          value={value}
+          disabled={!canHostElsewhere}
+          onValueChange={(next) => setValue((next as Hosting) ?? "content-pilot")}
+        >
+          <SelectTrigger className="h-9 w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {HOSTING_VALUES.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option === "other" ? "Other" : HOSTING_LABELS[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {external && (
+          <Input
+            placeholder="www.example.com"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="min-w-56 flex-1"
+          />
+        )}
+        <Button
+          isLoading={save.isPending}
+          disabled={!canHostElsewhere || !dirty || (external && !url.trim())}
+          onClick={() =>
+            save.mutate({
+              repoId,
+              hosting: value,
+              ...(external ? { websiteUrl: url } : {}),
+            })
+          }
+        >
+          Save
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 const CopyChip = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false);
@@ -145,7 +219,14 @@ const statusBadge = (status: "pending" | "active") =>
     </Badge>
   );
 
-function UploadDomainPanel({ repoId }: { repoId: number }) {
+function SiteDomainPanel({
+  repoId,
+  top,
+}: {
+  repoId: number;
+  /** Rendered under the heading (the admin Hosting card). */
+  top?: ReactNode;
+}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { config } = useConfig();
@@ -245,6 +326,8 @@ function UploadDomainPanel({ repoId }: { repoId: number }) {
           subdomain, or connect your own domain.
         </p>
       </div>
+
+      {top}
 
       {!data ? (
         <div className="bg-card flex justify-center rounded-lg border py-14">
