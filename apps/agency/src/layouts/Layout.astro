@@ -3,7 +3,10 @@ import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
-import { GA_MEASUREMENT_ID } from "@workspace/google-analytics/client";
+import {
+  GA_MEASUREMENT_ID,
+  GOOGLE_ADS_ID,
+} from "@workspace/google-analytics/client";
 
 import SearchPalette from "../components/SearchPalette.astro";
 
@@ -186,7 +189,7 @@ const jsonLd = {
 
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
     ></script>
-    <script is:inline define:vars={{ GA_ID }}>
+    <script is:inline define:vars={{ GA_ID, GOOGLE_ADS_ID }}>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
@@ -198,6 +201,7 @@ const jsonLd = {
       // auto page_view off — ClientRouter swaps pages without full loads, so
       // pageviews are sent manually on astro:page-load (fires on first load too).
       gtag("config", GA_ID, { send_page_view: false });
+      if (GOOGLE_ADS_ID) gtag("config", GOOGLE_ADS_ID);
       document.addEventListener("astro:page-load", () => {
         gtag("event", "page_view", {
           page_location: location.href,
