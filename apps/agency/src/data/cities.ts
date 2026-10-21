@@ -55,12 +55,12 @@ export const cities: City[] = [
       alt: "Main Street Bridge and the downtown Jacksonville skyline over the St. Johns River at golden hour",
     },
     isHeadquarters: true,
-    seoTitle: "Jacksonville Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Jacksonville Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Jacksonville web design agency based here in Duval County. Custom-coded sites on Next.js — not templates — with transparent pricing and fast launches.",
-    h1: "Web design & development in Jacksonville, Florida",
+      "Jacksonville lead generation agency based here in Duval County. Managed Google Ads and websites that turn local searches into calls and booked jobs.",
+    h1: "Lead generation and websites in Jacksonville, Florida",
     heroSub:
-      "We're not a directory listing with a Jacksonville filter — this is home. Custom-coded websites for Duval County businesses, built by the agency that lives here.",
+      "We're not a directory listing with a Jacksonville filter, this is home. We run the Google Ads and build the websites that bring Duval County businesses more calls.",
     intro:
       "Jacksonville is where Ali Samadi Agency is headquartered, which makes this the one city page on our site written from lived experience rather than research. We know the difference between a Riverside coffee shop and a Southside logistics firm because we've walked into both. Jacksonville is the largest city by area in the contiguous United States and the most populous in Florida, yet its small-business scene still runs on word of mouth — a strong website here isn't about outshining Manhattan-grade competition, it's about being the one contractor, clinic, or shop that actually looks credible when a neighbor searches. That's a winnable game, and it's the one we play for our own business in this exact market every day. When we tell you what ranks in Jacksonville, it's because our own site is ranking for it.",
     localContext:
@@ -106,12 +106,12 @@ export const cities: City[] = [
       src: "/locations/miami.webp",
       alt: "Downtown Miami skyline across Biscayne Bay",
     },
-    seoTitle: "Miami Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Miami Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Miami web design for businesses that compete in a crowded market. Custom-coded, bilingual-ready sites built on Next.js — no templates, no bloated agencies.",
-    h1: "Web design & development for Miami businesses",
+      "Miami lead generation and web design for businesses in a crowded market. Google Ads, bilingual-ready sites built to convert, and every lead tracked.",
+    h1: "Lead generation and websites for Miami businesses",
     heroSub:
-      "In a market this loud, a template site disappears. We build custom-coded, fast-loading websites that give Miami businesses an edge templates can't fake.",
+      "In a market this loud, a template site disappears and wasted ad spend adds up fast. We run Google Ads and build fast websites that turn Miami searches into customers.",
     intro:
       "No Florida market punishes a mediocre website faster than Miami. With a metro of over six million people and one of the highest rates of new business formation in the country, whatever you sell, dozens of competitors are selling it within ten miles — and the ones winning attention have invested in how they look online. That cuts both ways: Miami customers are visually literate, so a genuinely well-designed site stands out here more than it would anywhere else in the state. We build for that bar. Custom code instead of a page-builder theme means your site loads fast on a phone in traffic on the Palmetto, reads cleanly in English or Spanish, and doesn't resemble the four other businesses on your block that bought the same template. Miami rewards distinctive; we build distinctive.",
     localContext:
@@ -157,12 +157,12 @@ export const cities: City[] = [
       src: "/locations/tampa.webp",
       alt: "Tampa Riverwalk and the downtown skyline along the Hillsborough River",
     },
-    seoTitle: "Tampa Website Design & Development — Ali Samadi Agency",
+    seoTitle: "Tampa Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Tampa website design built with custom code, not drag-and-drop templates. Fast sites for Tampa Bay businesses — transparent pricing, quick launches.",
-    h1: "Website design & development for Tampa businesses",
+      "Tampa lead generation and website design for Tampa Bay businesses. Google Ads that bring in calls and fast sites that turn them into booked jobs.",
+    h1: "Lead generation and websites for Tampa businesses",
     heroSub:
-      "Tampa Bay is growing faster than almost any metro in the country. We build the kind of website that keeps up — custom-coded, fast, and easy to update yourself.",
+      "Tampa Bay is growing faster than almost any metro in the country. We run the Google Ads that reach those new customers and build the website that turns them into jobs.",
     intro:
       "Tampa has spent the last decade turning from a regional port city into one of the fastest-growing metros in America, and its business web presence hasn't caught up. Search for almost any local service in Hillsborough County and you'll find a first page full of sites built in 2015 — slow, not mobile-friendly, and running on abandoned WordPress themes. For a new or rebranding Tampa business, that's an opening. A custom-coded site that loads instantly and looks current doesn't just represent you well; it visibly outclasses most of the local competition the moment someone compares tabs. We build exactly that, and because our sites are hand-coded rather than assembled in a page builder, they stay fast as you add pages, photos, and content over the years instead of slowly rotting the way template sites do.",
     localContext:
@@ -208,10 +208,10 @@ export const cities: City[] = [
       src: "/locations/orlando.webp",
       alt: "Lake Eola fountain and the downtown Orlando skyline framed by cypress trees",
     },
-    seoTitle: "Orlando Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Orlando Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Orlando web design for the businesses behind the theme parks — custom-coded sites that win local customers and tourist traffic alike. No templates.",
-    h1: "Web design & development for Orlando businesses",
+      "Orlando lead generation and web design that wins local customers and tourist searches alike. Google Ads plus websites built to convert, every lead tracked.",
+    h1: "Lead generation and websites for Orlando businesses",
     heroSub:
       "Seventy-five million visitors a year search Orlando businesses from their hotel rooms. We build websites that capture that traffic — and the local customers who live here year-round.",
     intro:
@@ -259,12 +259,12 @@ export const cities: City[] = [
       src: "/locations/st-petersburg.webp",
       alt: "Sailboats in the downtown St. Petersburg marina on Tampa Bay at dusk",
     },
-    seoTitle: "St. Petersburg Web Design — Ali Samadi Agency",
+    seoTitle: "St. Petersburg Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "St. Petersburg web design with actual design taste — custom-coded websites for St. Pete's creative businesses, galleries, restaurants, and local services.",
-    h1: "Web design & development for St. Petersburg businesses",
+      "St. Petersburg lead generation and web design for creative businesses, restaurants, and local services. Google Ads plus well-designed sites that convert.",
+    h1: "Lead generation and websites for St. Petersburg businesses",
     heroSub:
-      "St. Pete built its identity on arts and independent business. Your website should look like it belongs here — custom-designed, not a template with your logo dropped in.",
+      "St. Pete built its identity on arts and independent business. We bring in the customers with Google Ads and send them to a website that looks like it belongs here.",
     intro:
       "St. Petersburg reinvented itself as Florida's arts city — the murals, the Dalí, the galleries along Central Avenue — and its independent business scene carries that same expectation of taste. A generic template site reads especially wrong here, where customers actively prefer local and independent over chain and corporate. The good news is the bar for standing out is aesthetic, not budgetary: a thoughtfully designed site with real typography, real photography, and fast load times immediately separates a St. Pete business from competitors who bought a theme. That's our lane. We design custom and code by hand, which means your site can actually express what makes your business worth choosing — and still hit the technical marks that get you found in Pinellas County local search, where the density of small businesses makes rankings a genuine contest.",
     localContext:
@@ -314,10 +314,10 @@ export const cities: City[] = [
       src: "/locations/fort-lauderdale.webp",
       alt: "Sunset over the Intracoastal Waterway and the Fort Lauderdale skyline",
     },
-    seoTitle: "Fort Lauderdale Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Fort Lauderdale Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Fort Lauderdale web design for marine, luxury, and professional businesses. Custom-coded websites that match a high-end clientele — no templates.",
-    h1: "Web design & development for Fort Lauderdale businesses",
+      "Fort Lauderdale lead generation and web design for marine, luxury, and professional businesses. Google Ads and high-end sites that bring in serious buyers.",
+    h1: "Lead generation and websites for Fort Lauderdale businesses",
     heroSub:
       "When your customers are buying yacht services, waterfront real estate, or high-end work of any kind, a cheap-looking website costs you real money. We build sites that match your market.",
     intro:
@@ -370,10 +370,10 @@ export const cities: City[] = [
       src: "/locations/hialeah.webp",
       alt: "Calle Ocho tile mosaic in Little Havana — the Cuban heart of greater Miami",
     },
-    seoTitle: "Hialeah Website Design — Ali Samadi Agency",
+    seoTitle: "Hialeah Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Hialeah website design for family businesses ready to grow. Bilingual-ready, custom-coded sites at honest prices — built to bring in local customers.",
-    h1: "Website design for Hialeah businesses",
+      "Hialeah lead generation and website design for family businesses ready to grow. Google Ads and bilingual-ready sites that bring in local customers.",
+    h1: "Lead generation and websites for Hialeah businesses",
     heroSub:
       "Hialeah runs on family businesses that earned their reputation the hard way. A real website makes sure new customers can find what the neighborhood already knows.",
     intro:
@@ -425,10 +425,10 @@ export const cities: City[] = [
       src: "/locations/tallahassee.webp",
       alt: "Church steeples and downtown Tallahassee towers in warm evening light",
     },
-    seoTitle: "Tallahassee Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Tallahassee Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Tallahassee web design for firms, associations, and businesses in Florida's capital. Credible, accessible, custom-coded websites — no templates.",
-    h1: "Web design & development for Tallahassee organizations",
+      "Tallahassee lead generation and web design for firms, associations, and businesses in Florida's capital. Google Ads and credible sites that convert.",
+    h1: "Lead generation and websites for Tallahassee organizations",
     heroSub:
       "In the capital, credibility is currency. We build websites for the firms, associations, and businesses that work where Florida's decisions get made.",
     intro:
@@ -480,10 +480,10 @@ export const cities: City[] = [
       src: "/locations/cape-coral.webp",
       alt: "Palm-lined waterway winding through Cape Coral",
     },
-    seoTitle: "Cape Coral Website Design — Ali Samadi Agency",
+    seoTitle: "Cape Coral Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Cape Coral website design for contractors, marine services, and local businesses riding Southwest Florida's growth. Custom-coded, fast, built to rank.",
-    h1: "Website design for Cape Coral businesses",
+      "Cape Coral lead generation and website design for contractors and local businesses riding Southwest Florida's growth. Google Ads plus sites that convert.",
+    h1: "Lead generation and websites for Cape Coral businesses",
     heroSub:
       "One of America's fastest-growing cities means a constant stream of new customers who don't know anyone yet — they're choosing businesses from Google. Be the one they find.",
     intro:
@@ -536,10 +536,10 @@ export const cities: City[] = [
       src: "/locations/port-st-lucie.webp",
       alt: "Sailboats docked at a Port St. Lucie marina under summer clouds",
     },
-    seoTitle: "Port St. Lucie Web Design — Ali Samadi Agency",
+    seoTitle: "Port St. Lucie Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Port St. Lucie web design for Treasure Coast businesses. Custom-coded sites that capture the wave of new residents searching for local services.",
-    h1: "Web design for Port St. Lucie businesses",
+      "Port St. Lucie lead generation and web design for Treasure Coast businesses. Google Ads that reach new residents and sites that turn them into customers.",
+    h1: "Lead generation and websites for Port St. Lucie businesses",
     heroSub:
       "The Treasure Coast's boomtown has more new customers than established businesses to serve them. A strong website is how you claim your share.",
     intro:
@@ -591,10 +591,10 @@ export const cities: City[] = [
       src: "/locations/pembroke-pines.webp",
       alt: "Royal palms surrounding a fountain plaza in Pembroke Pines",
     },
-    seoTitle: "Pembroke Pines Web Design — Ali Samadi Agency",
+    seoTitle: "Pembroke Pines Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Pembroke Pines web design for family-focused businesses in suburban Broward. Custom sites that win the local searches parents make every day.",
-    h1: "Web design for Pembroke Pines businesses",
+      "Pembroke Pines lead generation and web design for family-focused businesses in Broward. Google Ads and sites that win the searches parents make daily.",
+    h1: "Lead generation and websites for Pembroke Pines businesses",
     heroSub:
       "Pembroke Pines is where South Florida's families live — and family decisions start with a search. We build the sites that win pediatricians, tutors, and dinner plans.",
     intro:
@@ -646,10 +646,10 @@ export const cities: City[] = [
       src: "/locations/hollywood.webp",
       alt: "Hollywood Beach Broadwalk with palms along the Atlantic shoreline",
     },
-    seoTitle: "Hollywood FL Web Design — Ali Samadi Agency",
+    seoTitle: "Hollywood FL Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Hollywood, Florida web design — custom-coded sites for beach-to-boulevard businesses competing between two major metros. No templates, honest pricing.",
-    h1: "Web design for Hollywood, Florida businesses",
+      "Hollywood, Florida lead generation and web design for businesses competing between two metros. Google Ads and websites that turn searches into jobs.",
+    h1: "Lead generation and websites for Hollywood, Florida businesses",
     heroSub:
       "Squeezed between Miami and Fort Lauderdale, Hollywood businesses compete in two metros at once. A sharp website is how you hold your ground — and take some of theirs.",
     intro:
@@ -702,10 +702,10 @@ export const cities: City[] = [
       src: "/locations/gainesville.webp",
       alt: "A street beneath live oaks draped in Spanish moss — classic North Florida",
     },
-    seoTitle: "Gainesville Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Gainesville Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Gainesville web design for startups, practices, and businesses in UF's orbit. Modern, custom-coded websites — built fast, priced plainly.",
-    h1: "Web design & development for Gainesville businesses",
+      "Gainesville lead generation and web design for startups, practices, and businesses in UF's orbit. Google Ads and modern sites that convert.",
+    h1: "Lead generation and websites for Gainesville businesses",
     heroSub:
       "A university town expects modern. We build the kind of fast, clean, current websites that Gainesville's students, researchers, and startup crowd take seriously.",
     intro:
@@ -758,10 +758,10 @@ export const cities: City[] = [
       src: "/locations/west-palm-beach.webp",
       alt: "West Palm Beach skyline across the Intracoastal Waterway",
     },
-    seoTitle: "West Palm Beach Web Design — Ali Samadi Agency",
+    seoTitle: "West Palm Beach Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "West Palm Beach web design for finance, professional, and luxury-adjacent businesses. Custom-coded sites polished enough for Palm Beach County clientele.",
-    h1: "Web design & development for West Palm Beach businesses",
+      "West Palm Beach lead generation and web design for finance, professional, and luxury businesses. Google Ads and polished sites that bring in clients.",
+    h1: "Lead generation and websites for West Palm Beach businesses",
     heroSub:
       "Wall Street moved south, and Palm Beach County's standards came with it. We build websites polished enough for the clientele this market now serves.",
     intro:
@@ -813,10 +813,10 @@ export const cities: City[] = [
       src: "/locations/sarasota.webp",
       alt: "Sarasota bayfront with sailboats and the Ringling Bridge at dusk",
     },
-    seoTitle: "Sarasota Web Design & Development — Ali Samadi Agency",
+    seoTitle: "Sarasota Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Sarasota web design with the taste this arts town expects. Custom-coded websites for Gulf Coast businesses, galleries, and professional practices.",
-    h1: "Web design & development for Sarasota businesses",
+      "Sarasota lead generation and web design for Gulf Coast businesses, galleries, and practices. Google Ads and refined websites that turn visits into clients.",
+    h1: "Lead generation and websites for Sarasota businesses",
     heroSub:
       "A town with an opera house, a ballet, and Ringling's legacy has opinions about design. We build websites refined enough to belong here.",
     intro:

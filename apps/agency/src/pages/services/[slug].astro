@@ -66,13 +66,14 @@ const h1Head = h1Words.join(" ");
 // Simple glyphs cycled across benefit cards, matching the mockup.
 const glyphs = ["→", "◐", "◎", "✓", "✦", "●"];
 
-// "At a glance" rows are the same for every service.
-const glance = [
+// "At a glance" rows: shared defaults, overridable per service.
+const defaultGlance = [
   { k: "Team", v: "One team designs & builds" },
   { k: "Stack", v: "Astro, Next.js, React" },
   { k: "Hand-off", v: "None, same team ships it" },
   { k: "Timeline", v: "Most launch in 1 day to 2 weeks" },
 ];
+const glance = service.glance ?? defaultGlance;
 
 const num = (i: number) => String(i + 1).padStart(2, "0");
 ---
@@ -256,7 +257,7 @@ const num = (i: number) => String(i + 1).padStart(2, "0");
                 How it works
               </p>
               <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
-                How we deliver {service.name.toLowerCase()}
+                {service.processHeading ?? `How we deliver ${service.name.toLowerCase()}`}
               </h2>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px 40px;">
@@ -481,7 +482,7 @@ const num = (i: number) => String(i + 1).padStart(2, "0");
               <span style="display: flex; flex-direction: column;">
                 <span style="font-size: 18px; font-weight: 600;">Pricing</span>
                 <span style="font-size: 14px; color: rgb(103, 98, 90);"
-                  >Simple, transparent plans</span
+                  >Website + Google Ads plans</span
                 >
               </span>
               <span aria-hidden="true">→</span>

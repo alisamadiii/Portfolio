@@ -3,6 +3,13 @@
 import MockupLayout from "../layouts/MockupLayout.astro";
 import MAIN from "../html/main/about.html?raw";
 
+// Hidden while the lead-gen offer has no results to show yet.
+// Flip back to true to restore the stats strip.
+const SHOW_STATS = false;
+const body = SHOW_STATS
+  ? MAIN
+  : MAIN.replace(/<section aria-label="Agency at a glance"[\s\S]*?<\/section>/, "");
+
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/about`;
 
@@ -19,19 +26,19 @@ const schema = [
 ---
 
 <MockupLayout
-  title="About Us — Ali Samadi Agency | Custom Web Design Studio"
-  description="Ali Samadi Agency is a founder-led web design studio in Jacksonville, FL building custom Next.js websites for startups and small businesses — no templates."
+  title="About Us | Ali Samadi Agency, Jacksonville Lead Generation"
+  description="Founder-led lead generation agency in Jacksonville, FL. We run Google Ads that bring in local customers and build websites that turn them into booked jobs."
   canonical={pageUrl}
   og={{
     title: "About Us — Ali Samadi Agency",
     description:
-      "A founder-led web design studio in Jacksonville, FL building custom Next.js websites for startups and small businesses — no templates.",
+      "A founder-led lead generation agency in Jacksonville, FL: Google Ads, websites that convert, and every lead tracked.",
     url: pageUrl,
     twitterDescription:
-      "Founder-led web design studio building custom Next.js websites — no templates.",
+      "Founder-led lead generation agency: Google Ads plus the websites that convert them.",
   }}
   schema={schema}
   pageType="AboutPage"
 >
-  <Fragment set:html={MAIN} />
+  <Fragment set:html={body} />
 </MockupLayout>

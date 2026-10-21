@@ -4,23 +4,29 @@
 import Layout from "../layouts/Layout.astro";
 import "../styles/handyman.css";
 import MockupScripts from "../components/MockupScripts.astro";
-import BODY from "../html/handyman.html?raw";
+import RAW_BODY from "../html/handyman.html?raw";
+import { PLANS, FROM_PRICE, fmtPrice } from "../data/pricing";
+
+const BODY = RAW_BODY.replaceAll("{{FROM_PRICE}}", fmtPrice(FROM_PRICE)).replaceAll(
+  "{{TOP_PRICE}}",
+  fmtPrice(PLANS[PLANS.length - 1].monthly)
+);
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/handyman`;
 ---
 
 <Layout
-  title="Handyman Website Design | Sites That Book Jobs While You Work"
-  description="Custom websites for handymen and home-repair pros — built to answer questions, show your work, and drop ready-to-go estimate requests in your inbox while you're on the job."
+  title="Handyman Marketing & Lead Generation | Sites + Ads That Book Jobs"
+  description="More estimate requests for handymen and home-repair pros: Google Ads that reach nearby homeowners and a site that shows your work and books jobs."
   canonical={pageUrl}
   og={{
-    title: "Handyman Website Design — Sites That Book Jobs While You Work",
+    title: "Handyman Marketing & Lead Generation | Ali Samadi Agency",
     description:
-      "You build homes. We build the site that books the jobs — answering questions, showing your work, and sending estimate requests straight to your inbox.",
+      "You fix homes. We fill your schedule with Google Ads and a site that shows your work and sends estimate requests straight to your inbox.",
     url: pageUrl,
     twitterDescription:
-      "Handyman websites built to book jobs — show your work and get estimate requests while you're on the ladder.",
+      "Handyman marketing that books jobs: ads, a site that shows your work, and estimate requests while you're on the ladder.",
   }}
   bodyClass=""
 >

@@ -31,7 +31,7 @@ I build websites here, so I'll do the thing agencies apparently aren't supposed 
 2. Monthly subscription that bundles design, hosting, and maintenance
 3. Hourly billing, usually $50–$150/hr for professional work
 
-My own pricing, for calibration: **from $349/mo all-inclusive** — design, hosting, edits, and management bundled, and for most projects that's exactly the number — or a **one-time build you own outright**, scoped per project (a typical local build lands around **$2,500–$5,000**) with five months of hosting included.
+My own pricing, for calibration: a **website-only plan at $1,299 to build plus $100/mo** for hosting, edits, and care, or a **growth plan from $2,500/mo** that includes the website and fully managed Google Ads, with no build fee.
 
 </div>
 
@@ -75,7 +75,7 @@ What doesn't move the price, despite appearing on quotes: "brand discovery works
 The build fee is the loud number. These are the quiet ones, and over a few years they often add up to more:
 
 - **Domain name — $10–$20/year.** You buy this yourself, in your own account. Not your agency, not me. I wrote a whole post on [who should own your domain name](/blog/who-should-own-your-domain-name), and the answer is: you, always.
-- **Hosting — $5–$50/mo.** What keeps the site online. My one-time builds include the first five months, then it's an optional renewal; the monthly plan includes it always.
+- **Hosting — $5–$50/mo.** What keeps the site online. Every one of my plans includes it.
 - **SSL certificate — should be $0.** The padlock in the browser bar has been free for years. If it's a paid line on your quote, ask what else on the quote is decorative.
 - **Email sending — nearly free at small volume.** Contact-form and notification emails cost fractions of a cent. I include 1,000 emails a month and charge $1 per extra thousand.
 - **Maintenance — $50–$200/mo** is the going market rate for updates, backups, and security. On a subscription plan this is baked in; on a one-time build it's optional until something breaks, at which point it's very much not.
@@ -85,14 +85,14 @@ The build fee is the loud number. These are the quiet ones, and over a few years
 
 ## Do the math on year one, not day one
 
-Quotes lie by omission, so compare them the way your accountant would: total cost over the first year. Here's the worked example with my own numbers, using a representative $3,500 five-page build:
+Quotes lie by omission, so compare them the way your accountant would: total cost over the first year. Here's the worked example, comparing a typical agency quote with my website-only plan:
 
-| Route          | Upfront          | Monthly                                     | First year  | Year two+ |
-| -------------- | ---------------- | ------------------------------------------- | ----------- | --------- |
-| One-time build | ~$3,500 (scoped) | $0 for 5 months, then optional hosting ~$20 | **~$3,640** | ~$240     |
-| Monthly plan   | $0               | from $349 all-inclusive                     | **~$4,188** | ~$4,188   |
+| Route                          | Upfront | Monthly | First year  | Year two+ |
+| ------------------------------ | ------- | ------- | ----------- | --------- |
+| Typical build + care plan      | ~$3,500 | ~$150   | **~$5,300** | ~$1,800   |
+| My website-only plan           | $1,299  | $100    | **~$2,499** | ~$1,200   |
 
-On raw arithmetic, the one-time build wins over time, and for a site you'll mostly leave alone, it's the right call. The monthly plan earns its keep when the site is a moving target — you want changes made for you continuously, new pages as the business shifts, someone else holding the pager — and it gets you a professionally built site with no capital outlay at all. You're not buying a website at that point; you're renting a web department. Which one you need depends on whether "update the website" is a task you want to exist in your life.
+The monthly line is where quotes quietly diverge. A care plan earns its keep when the site is a moving target: you want changes made for you, new pages as the business shifts, someone else holding the pager. If the site's real job is bringing in customers, the bigger question isn't the build price at all; it's what sends people to it. That's why my growth plans bundle the website with managed Google Ads instead of charging for the build.
 
 Run the same two-route math on every quote you collect. **A $2,000 build with a mandatory $150/mo "care plan" is a $3,800 first year** — more than some quotes that looked pricier on the sticker. And a quote whose monthly lines aren't written down at all isn't a cheaper quote; it's an unfinished one.
 
@@ -102,11 +102,11 @@ Run the same two-route math on every quote you collect. **A $2,000 build with a 
 
 Here's mine, the same structure that sits on my [pricing page](/pricing) for anyone to read:
 
-- **Monthly plan: from $349/mo, all-inclusive.** Design, development, hosting, CMS, email, SEO, and ongoing changes — fully managed, no build fee. The price flexes with scope, but for the majority of projects, $349 is the number.
-- **One-time build: scoped per project, and you own it.** Design, development, and SEO included, plus your first five months of hosting. A typical local-business build lands around **$2,500–$5,000** — I'll put your exact number in writing before any work starts.
+- **Website only: $1,299 to build, then $100/mo.** Custom design and development, hosting, edits through your Client Hub, email from your own domain, and essential SEO.
+- **Growth plans: from $2,500/mo, no build fee.** The website plus fully managed Google Ads, call tracking, and a monthly report. Ad spend is paid to Google directly.
 - Simple sites go live in about a day once we've confirmed the project. Bigger builds take one to three weeks, following [my four-step web design process](/blog/web-design-process).
 
-Now the opinion, and I'll back it with numbers: **an agency that hides every number until you've booked a call is charging you what they think you'll pay, not what the work costs.** Scoping a custom build before naming its exact price is honest — every project is different. Refusing to publish even a range, an anchor, or a starting point is not. That's why my monthly price and my typical build range are right here in writing: you should be able to rule me in or out before we ever talk.
+Now the opinion, and I'll back it with numbers: **an agency that hides every number until you've booked a call is charging you what they think you'll pay, not what the work costs.** Scoping a custom build before naming its exact price is honest — every project is different. Refusing to publish even a range, an anchor, or a starting point is not. That's why my prices are right here in writing: you should be able to rule me in or out before we ever talk.
 
 So when you're collecting quotes — from me or anyone — ask for the number in writing, itemized, before work starts. Anyone who reacts badly to that request has answered a more important question than the one you asked.
 
@@ -142,7 +142,7 @@ Every plan I offer works that way by default, and it's the standard I'd hold any
 
 **Can I build a website for free?** Nearly. DIY builders run $10–$99/mo and your weekends. Reasonable for a brand-new business testing the waters; limiting once you need speed, rankings, or custom features.
 
-**How much does website maintenance cost per month?** Market rate is $50–$200/mo for hosting, backups, updates, and small changes. My one-time builds include five months of hosting with an optional renewal after; the monthly plan includes everything.
+**How much does website maintenance cost per month?** Market rate is $50–$200/mo for hosting, backups, updates, and small changes. My website-only plan covers all of it for $100/mo.
 
 **Do I own my website?** Only if the deal is structured that way — check before you sign, not after. You should hold the domain in your own account and have full access to the site itself. If the agency owns either, you're renting.
 
@@ -190,7 +190,7 @@ That's the whole answer — the market's numbers, my numbers, and the fine print
       "name": "How much does website maintenance cost per month?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Market rate is $50–$200/mo for hosting, backups, updates, and small changes. My one-time builds include five months of hosting with an optional renewal after; the monthly plan includes everything."
+        "text": "Market rate is $50–$200/mo for hosting, backups, updates, and small changes. My website-only plan covers all of it for $100/mo."
       }
     },
     {

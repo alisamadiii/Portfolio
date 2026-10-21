@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 
 import { cities } from "../data/cities";
 import { getDocsTree } from "../data/docs";
-import { fmtPrice, PRICING } from "../data/pricing";
+import { FROM_PRICE, GUARANTEE, PLANS, TERMS, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
 
 // Plain-markdown summary for LLMs / answer engines. Prices come from
 // src/data/pricing.ts so this never drifts from the site.
@@ -20,7 +20,7 @@ export const GET: APIRoute = async () => {
   const locations = cities
     .map(
       (c) =>
-        `- [Web design in ${c.name}, FL](https://www.alisamadii.com/locations/${c.slug})`
+        `- [Lead generation & web design in ${c.name}, FL](https://www.alisamadii.com/locations/${c.slug})`
     )
     .join("\n");
   const docsTree = await getDocsTree();
@@ -35,37 +35,46 @@ export const GET: APIRoute = async () => {
 
   const body = `# Ali Samadi Agency
 
-> Creative agency specializing in brand identity, web development, and digital
-> strategy. Websites and web apps built from scratch on Next.js, React, and
-> Postgres — custom, fast, and genuinely owned by the client, never templates.
-> Based in Jacksonville, FL, USA. Contact: agency@alisamadii.com.
+> Lead generation agency for local service businesses. We run the Google Ads
+> that make the phone ring, build the website that turns clicks into booked
+> jobs, and bring past customers back with email. Every call and form is
+> tracked. The client owns the site and the ad account. Based in Jacksonville,
+> FL, USA. Contact: agency@alisamadii.com.
 
 ## Pages
 
-- [Home](https://www.alisamadii.com/): services, process, work, and about.
-- [About](https://www.alisamadii.com/about): who we are, how we work, the founder.
-- [Work](https://www.alisamadii.com/work): live client sites and concept projects.
+- [Home](https://www.alisamadii.com/): how we bring in leads, plans, and FAQ.
+- [About](https://www.alisamadii.com/about): who we are, how we bring in leads, the founder.
+- [Work](https://www.alisamadii.com/work): websites built for clients and concept projects.
 - [Services](https://www.alisamadii.com/services): everything we offer.
 - [Pricing](https://www.alisamadii.com/pricing): plans and how pricing works.
 - [Contact](https://www.alisamadii.com/contact): email, booking, phone.
-- [Blog](https://www.alisamadii.com/blog): articles on how websites get built.
+- [Blog](https://www.alisamadii.com/blog): articles on Google Ads, local search, and websites that convert.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
 - [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
-- [Pest Control Websites](https://www.alisamadii.com/pest-control): custom websites for pest control companies — click-to-call, per-pest and per-city pages that rank, review walls, booking forms. ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/mo.
+- [Pest Control Lead Generation](https://www.alisamadii.com/pest-control): managed Google Ads for pest control companies plus a website with click-to-call, per-pest and per-city pages, review walls, and booking forms. From ${fmtPrice(FROM_PRICE)}/mo.
 
 ## Services
 
-- [Web development](https://www.alisamadii.com/services/web-development) — custom sites on Next.js, React, Postgres
-- [UI/UX design](https://www.alisamadii.com/services/ui-ux-design) — interfaces designed to convert
-- [Brand identity](https://www.alisamadii.com/services/brand-identity) — logo, color, typography systems
-- [SEO & analytics](https://www.alisamadii.com/services/seo-analytics) — technical SEO + AI-search readiness
-- [Website management](https://www.alisamadii.com/services/website-management) — CMS access + managed hosting
-- [Custom web apps](https://www.alisamadii.com/services/custom-web-apps) — dashboards, auth, databases
+- [Google Ads management](https://www.alisamadii.com/services/google-ads): campaigns, Local Services Ads, landing pages, call tracking, monthly optimization
+- [Web development](https://www.alisamadii.com/services/web-development): websites built to convert leads into calls and booked jobs
+- [SEO & analytics](https://www.alisamadii.com/services/seo-analytics): local search visibility and lead tracking
+- [Email newsletter](https://www.alisamadii.com/newsletter): bring past customers back for repeat business
+- [E-commerce](https://www.alisamadii.com/services/ecommerce): custom Shopify storefronts
+- [Website management](https://www.alisamadii.com/services/website-management): Client Hub editing + managed hosting
+- [UI/UX design](https://www.alisamadii.com/services/ui-ux-design): layouts designed to convert
+- [Brand identity](https://www.alisamadii.com/services/brand-identity): logo, color, typography systems
+- [Custom web apps](https://www.alisamadii.com/services/custom-web-apps): dashboards, auth, databases
 
 ## Pricing
 
-- Website as a Service (all-inclusive): ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/mo — design, development, CMS, email, SEO, and managed hosting. For local and small businesses; typical price for most projects, varies by scope.
-- Custom: fully scoped projects (admin panels, auth, databases) — contact for a quote.
+Every growth plan is a custom website plus fully managed Google Ads. ${fmtPrice(TERMS.setup)} setup, ${TERMS.minimumMonths}-month minimum, then month-to-month. Ad spend is not included; Google bills it to the client directly.
+
+${PLANS.map((p) => `- ${p.name}: ${fmtPrice(p.monthly)}/mo, manages up to ${fmtPrice(p.adSpendCap)}/mo in ad spend. ${p.features.join("; ")}.`).join("\n")}
+- ${WEBSITE_ONLY.name} (no ads): ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo. ${WEBSITE_ONLY.features.join("; ")}.
+- Custom: fully scoped projects (admin panels, auth, databases), contact for a quote.
+
+Guarantee (growth plans): ${GUARANTEE.leads} ${GUARANTEE.process} ${GUARANTEE.fine}
 
 Terms and privacy pages are always included free.
 

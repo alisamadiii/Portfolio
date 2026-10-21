@@ -5,8 +5,13 @@
 import Layout from "../layouts/Layout.astro";
 import "../styles/pest-control.css";
 import MockupScripts from "../components/MockupScripts.astro";
-import BODY from "../html/pest-control.html?raw";
-import { PRICING, fmtPrice } from "../data/pricing";
+import RAW_BODY from "../html/pest-control.html?raw";
+import { PLANS, FROM_PRICE, fmtPrice } from "../data/pricing";
+
+const BODY = RAW_BODY.replaceAll("{{FROM_PRICE}}", fmtPrice(FROM_PRICE)).replaceAll(
+  "{{TOP_PRICE}}",
+  fmtPrice(PLANS[PLANS.length - 1].monthly)
+);
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/pest-control`;
@@ -14,7 +19,7 @@ const pageUrl = `${SITE}/pest-control`;
 const faqs = [
   {
     q: "How much does a pest control website cost?",
-    a: `${fmtPrice(PRICING.setup)} to design and build it, then ${fmtPrice(PRICING.monthly)} a month. The monthly covers hosting, edits, updates, and keeping everything running. No surprise invoices, and the price is in writing before we start.`,
+    a: `The website is included in a growth plan starting at ${fmtPrice(FROM_PRICE)} a month, which also covers running your Google Ads, call tracking, hosting, and edits. No setup fee, and Google bills the ad spend to you directly.`,
   },
   {
     q: "I already have a website. Can you redesign it?",
@@ -55,10 +60,10 @@ const schema = [
   {
     "@type": "Service",
     "@id": `${pageUrl}#service`,
-    name: "Pest Control Website Design",
-    serviceType: "Web design for pest control companies",
+    name: "Pest Control Lead Generation",
+    serviceType: "Lead generation for pest control companies",
     description:
-      "Custom websites for pest control and exterminator companies: click-to-call, service area pages, review walls, and booking forms, built and managed for a flat monthly price.",
+      "Lead generation for pest control and exterminator companies: managed Google Ads plus a website with click-to-call, service area pages, review walls, and booking forms, for one monthly price.",
     provider: { "@id": `${SITE}/#organization` },
     areaServed: "US",
     url: pageUrl,
@@ -76,16 +81,16 @@ const schema = [
 ---
 
 <Layout
-  title="Pest Control Website Design | Websites That Make the Phone Ring"
-  description="Custom websites for pest control companies: click-to-call, service area pages that rank, review walls, and booking forms. Built, hosted, and managed for a flat monthly price."
+  title="Pest Control Lead Generation | Google Ads + Websites"
+  description="More pest control calls: Google Ads that catch local pest searches, sent to a site with click-to-call, service area pages, reviews, and booking forms."
   canonical={pageUrl}
   og={{
-    title: "Websites for Pest Control Companies | Ali Samadi Agency",
+    title: "Lead Generation for Pest Control Companies | Ali Samadi Agency",
     description:
-      "When someone finds a roach at 11pm, they call the first company that looks legit on their phone. We build pest control websites that win that call.",
+      "When someone finds a roach at 11pm, they call the first company that looks legit on their phone. We run the ads and build the site that win that call.",
     url: pageUrl,
     twitterDescription:
-      "Pest control websites that make the phone ring: click-to-call, city pages that rank, reviews, booking. Flat monthly price.",
+      "Pest control marketing that makes the phone ring: Google Ads, click-to-call, city pages, reviews, booking. One monthly price.",
     image: "/og/pest-control.jpg",
   }}
   schema={schema}

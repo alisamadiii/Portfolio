@@ -4,23 +4,29 @@
 import Layout from "../layouts/Layout.astro";
 import "../styles/restaurants.css";
 import MockupScripts from "../components/MockupScripts.astro";
-import BODY from "../html/restaurants.html?raw";
+import RAW_BODY from "../html/restaurants.html?raw";
+import { PLANS, FROM_PRICE, fmtPrice } from "../data/pricing";
+
+const BODY = RAW_BODY.replaceAll("{{FROM_PRICE}}", fmtPrice(FROM_PRICE)).replaceAll(
+  "{{TOP_PRICE}}",
+  fmtPrice(PLANS[PLANS.length - 1].monthly)
+);
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/restaurants`;
 ---
 
 <Layout
-  title="Restaurant Website Design | Menus, Ordering & Reservations"
-  description="Custom restaurant websites for Jacksonville and Florida — fast menus, online ordering, and reservations, built to turn visitors into tables and takeout orders."
+  title="Restaurant Marketing & Websites | Orders, Bookings, Regulars"
+  description="Restaurant marketing for Jacksonville and Florida: Google Ads, email that brings regulars back, and a website with fast menus, online ordering, and reservations."
   canonical={pageUrl}
   og={{
-    title: "Restaurant Website Design — Menus, Ordering & Reservations",
+    title: "Restaurant Marketing & Websites | Ali Samadi Agency",
     description:
-      "Custom-coded restaurant websites with fast menus, online ordering, and reservations — built to fill tables and takeout orders.",
+      "More covers, more orders, more regulars: ads, email, and a website with fast menus, online ordering, and reservations.",
     url: pageUrl,
     twitterDescription:
-      "Restaurant websites with fast menus, online ordering, and reservations.",
+      "More covers, more orders, more regulars.",
   }}
   bodyClass=""
 >

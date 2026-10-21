@@ -3,29 +3,42 @@
 // pricing-card, and dark-CTA patterns from the home/services pages. Prices come
 // from src/data/pricing.ts so the page and schema never drift.
 import MockupLayout from "../layouts/MockupLayout.astro";
-import { PRICING, fmtPrice } from "../data/pricing";
-import PRICING_CARDS from "../html/blocks/pricing-cards.html?raw";
+import GrowthPlans from "../components/GrowthPlans.astro";
+import { GUARANTEE, PLANS, TERMS, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
 import CTA from "../html/blocks/cta.html?raw";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/pricing`;
 
+const [launch, growth, scale] = PLANS;
 const faqs = [
   {
-    q: "What's included in the monthly plan?",
-    a: `For ${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/month you get design, development, hosting, email, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs. This plan is for local and small businesses; pricing varies with scope, but for most projects this is the price.`,
+    q: "Is ad spend included?",
+    a: `No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. Each tier covers a set amount of monthly spend: up to ${fmtPrice(launch.adSpendCap)} on ${launch.name}, ${fmtPrice(growth.adSpendCap)} on ${growth.name}, and ${fmtPrice(scale.adSpendCap)} on ${scale.name}.`,
   },
   {
-    q: "Why is custom quote-only?",
-    a: "Admin panels, user accounts, databases, and integrations vary too much to list a single price. We scope the work with you and send one fair, fixed quote before anything starts — no surprises later.",
+    q: "Is there a setup fee?",
+    a: `Not on growth plans. The custom website build is included, setup is ${fmtPrice(TERMS.setup)}, and you pay the monthly price from the first month. The website-only plan has a one-time ${fmtPrice(WEBSITE_ONLY.setup)} build fee.`,
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Yes. The monthly plan has no lock-in. Your code lives in your own GitHub and your domain and hosting are in your name, so you keep the site and can take it anywhere if you ever leave.",
+    q: `Why is there a ${TERMS.minimumMonths}-month minimum?`,
+    a: `Google Ads needs time to learn. The first months go into finding which searches turn into jobs, and the months after are where the cost per lead comes down. ${TERMS.minimumMonths} months gives the campaigns a fair run. After that it's month-to-month and you can cancel anytime. And if we miss the lead number we agreed on within ${GUARANTEE.days} days, you can leave early.`,
   },
   {
-    q: "Are there any hidden fees?",
-    a: "No. The setup fee and monthly price cover design, development, hosting, email, SEO basics, and ongoing updates. Larger scopes are quoted upfront in writing before we begin.",
+    q: "What's your guarantee?",
+    a: `Two of them. ${GUARANTEE.leads} And ${GUARANTEE.process.charAt(0).toLowerCase()}${GUARANTEE.process.slice(1)} ${GUARANTEE.fine}`,
+  },
+  {
+    q: "Which plan is right for me?",
+    a: `Start from your ad budget. ${launch.name} fits one focused service with up to ${fmtPrice(launch.adSpendCap)}/mo in spend. ${growth.name} fits a business selling several services, with a landing page and campaign for each. ${scale.name} fits a business covering several cities or locations. We'll recommend one on the first call.`,
+  },
+  {
+    q: "Can I get just a website, without ads?",
+    a: `Yes. The website-only plan is ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later.`,
+  },
+  {
+    q: "What happens if I leave?",
+    a: "Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. After the minimum term, the site and the account go with you.",
   },
 ];
 
@@ -41,32 +54,37 @@ const pricingSchema = [
   {
     "@type": "Service",
     "@id": `${pageUrl}#service`,
-    name: "Website Design & Development",
+    name: "Website + Google Ads Management",
     provider: { "@id": `${SITE}/#organization` },
     areaServed: "US",
     hasOfferCatalog: {
       "@type": "OfferCatalog",
-      name: "Pricing Plans",
-      itemListElement: [
-        {
-          "@type": "Offer",
-          name: "Website as a Service (All-Inclusive)",
-          description: `${fmtPrice(PRICING.setup)} + ${fmtPrice(PRICING.monthly)}/mo — design, development, CMS, email, SEO, and hosting, fully managed.`,
-          price: String(PRICING.monthly),
+      name: "Growth Plans",
+      itemListElement: PLANS.map((plan) => ({
+        "@type": "Offer",
+        name: plan.name,
+        description: `${fmtPrice(plan.monthly)}/mo: ${plan.features.join(", ")}. Ad spend billed by Google directly.`,
+        price: String(plan.monthly),
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: String(plan.monthly),
           priceCurrency: "USD",
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            price: String(PRICING.monthly),
-            priceCurrency: "USD",
-            unitCode: "MON",
-          },
+          unitCode: "MON",
         },
-        {
-          "@type": "Offer",
-          name: "Custom",
-          description: "Fully custom-scoped project — contact for a quote.",
+      })).concat({
+        "@type": "Offer",
+        name: WEBSITE_ONLY.name,
+        description: `${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo: ${WEBSITE_ONLY.features.join(", ")}. No Google Ads.`,
+        price: String(WEBSITE_ONLY.monthly),
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: String(WEBSITE_ONLY.monthly),
+          priceCurrency: "USD",
+          unitCode: "MON",
         },
-      ],
+      }),
     },
   },
   {
@@ -82,16 +100,15 @@ const pricingSchema = [
 ---
 
 <MockupLayout
-  title="Pricing — Simple, Transparent Website Plans | Ali Samadi"
-  description="Transparent pricing from Ali Samadi Agency: an all-inclusive Website as a Service plan plus custom projects quoted fairly. No hidden fees, cancel anytime."
+  title="Pricing: Website + Google Ads Plans | Ali Samadi"
+  description={`Growth plans from ${fmtPrice(launch.monthly)}/mo: a custom website plus fully managed Google Ads. No setup fee, ${TERMS.minimumMonths}-month minimum, then month-to-month.`}
   canonical={pageUrl}
   og={{
-    title: "Pricing — Ali Samadi Agency",
-    description:
-      "An all-inclusive monthly website plan plus custom projects quoted fairly. No hidden fees, cancel anytime.",
+    title: "Pricing | Ali Samadi Agency",
+    description: `Website + Google Ads from ${fmtPrice(launch.monthly)}/mo. No setup fee.`,
     url: pageUrl,
     twitterDescription:
-      "Simple, transparent website pricing — no hidden fees, cancel anytime.",
+      `Website + Google Ads from ${fmtPrice(launch.monthly)}/mo. No setup fee.`,
   }}
   schema={pricingSchema}
 >
@@ -101,15 +118,15 @@ const pricingSchema = [
       <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
         <p class="eyebrow"><span></span>Pricing</p>
         <h1 class="hero-h1" style="margin:0;max-width:16ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
-          Simple, <span style="color:rgb(194,69,31);font-style:italic;">transparent</span> pricing
+          One price for the site <span style="color:rgb(194,69,31);font-style:italic;">and the ads</span>
         </h1>
         <p style="margin:0;max-width:60ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
-          One all-inclusive monthly plan or a fully custom project. No hidden
-          fees, cancel anytime, and you own everything from day one.
+          Every growth plan includes a custom website and fully managed Google Ads.
+          Pick the tier that matches your ad budget. No setup fee.
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:8px;">
-          <a href="/quote" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;">Get a Quote <span aria-hidden="true">↗</span></a>
-          <a href="/services" class="tlink" style="display:inline-flex;align-items:center;min-height:52px;padding:0 12px;font-size:15px;font-weight:500;color:rgb(103,98,90);">See what's included →</a>
+          <a href="/quote" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;">Start a Project <span aria-hidden="true">↗</span></a>
+          <a href="/services/google-ads" class="tlink" style="display:inline-flex;align-items:center;min-height:52px;padding:0 12px;font-size:15px;font-weight:500;color:rgb(103,98,90);">How we run your ads →</a>
         </div>
       </div>
     </section>
@@ -117,10 +134,9 @@ const pricingSchema = [
     <!-- Pricing cards -->
     <section style="padding: 24px 0 72px;">
       <div class="wrap">
-        <Fragment set:html={PRICING_CARDS} />
-        <p style="margin:28px 0 0;text-align:center;font-size:14px;color:rgb(107,102,93);">
-          Prices are anchors for most projects. Final scope is confirmed in
-          writing before anything starts.
+        <GrowthPlans />
+        <p style="margin:16px 0 0;text-align:center;font-size:14px;color:rgb(107,102,93);">
+          Selling online? See our <a href="/ecommerce" class="tlink">Shopify storefront</a> offer.
         </p>
       </div>
     </section>

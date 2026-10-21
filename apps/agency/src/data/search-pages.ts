@@ -63,14 +63,14 @@ export const SEARCH_PAGES: SearchPage[] = [
   },
   {
     title: "About",
-    description: "Who we are, how we work, and the founder behind the studio.",
+    description: "Who we are, how we bring in leads, and the founder behind the agency.",
     url: "/about",
     keywords: [
       "team",
       "founder",
       "who we are",
       "story",
-      "studio",
+      "lead generation",
       "ali samadi",
     ],
   },
@@ -108,7 +108,7 @@ export const SEARCH_PAGES: SearchPage[] = [
   {
     title: "Services",
     description:
-      "Everything we offer — design, development, SEO, management, and more.",
+      "Everything we offer: Google Ads, lead tracking, websites that convert, email, and more.",
     url: "/services",
     keywords: ["what we do", "offerings", "capabilities", "help"],
   },

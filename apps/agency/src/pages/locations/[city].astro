@@ -2,7 +2,7 @@
 import MockupLayout from "../../layouts/MockupLayout.astro";
 import { cities, type City } from "../../data/cities";
 import { services } from "../../data/services";
-import { fmtPrice, PRICING } from "../../data/pricing";
+import { fmtPrice, FROM_PRICE, PLANS, TERMS } from "../../data/pricing";
 
 export function getStaticPaths() {
   return cities.map((city) => ({
@@ -39,8 +39,8 @@ const schema: Record<string, unknown>[] = [
   {
     "@type": "Service",
     "@id": `${pageUrl}#service`,
-    name: `Web Design & Development in ${city.name}, FL`,
-    serviceType: "Web design and development",
+    name: `Lead Generation & Web Design in ${city.name}, FL`,
+    serviceType: "Lead generation and web design",
     description: city.metaDescription,
     url: pageUrl,
     provider: { "@id": `${SITE}/#organization` },
@@ -102,7 +102,12 @@ const serviceBlurbs: Record<string, string> = {
   title={city.seoTitle}
   description={city.metaDescription}
   canonical={pageUrl}
-  og={{ title: city.seoTitle, description: city.metaDescription, url: pageUrl }}
+  og={{
+    title: city.seoTitle,
+    description: city.metaDescription,
+    url: pageUrl,
+    image: `/og/locations/${city.slug}.jpg`,
+  }}
   schema={schema}
   pageType="Service"
 >
@@ -240,7 +245,7 @@ const serviceBlurbs: Record<string, string> = {
             Services
           </p>
           <h2 style="margin: 0px; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;">
-            Everything a {city.name} business needs online
+            Everything a {city.name} business needs to get more customers
           </h2>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
@@ -283,21 +288,21 @@ const serviceBlurbs: Record<string, string> = {
               <span class="mono" style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9999px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; align-items: center; justify-content: center; font-size: 12px;">01</span>
               <span style="display: flex; flex-direction: column; gap: 2px;">
                 <span style="font-size: 17px; font-weight: 600;">Talk it through</span>
-                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">A video call, then a clear scope and a flat price.</span>
+                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">A video call about your services, your area, and your ad budget.</span>
               </span>
             </li>
             <li style="display: flex; gap: 16px;">
               <span class="mono" style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9999px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; align-items: center; justify-content: center; font-size: 12px;">02</span>
               <span style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="font-size: 17px; font-weight: 600;">Watch it get built</span>
-                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Live previews in your Client Hub. Simple sites ship one day after confirmation.</span>
+                <span style="font-size: 17px; font-weight: 600;">We build the site and launch the ads</span>
+                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">A custom site built to get the call, with Google Ads sending local searches to it.</span>
               </span>
             </li>
             <li style="display: flex; gap: 16px;">
               <span class="mono" style="flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9999px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; align-items: center; justify-content: center; font-size: 12px;">03</span>
               <span style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="font-size: 17px; font-weight: 600;">Own it after launch</span>
-                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Edit it yourself or let us manage it. The code is yours.</span>
+                <span style="font-size: 17px; font-weight: 600;">Track every lead, improve monthly</span>
+                <span style="font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Every call and form tied to the search behind it. You own the site and the ad account.</span>
               </span>
             </li>
           </ol>
@@ -306,21 +311,31 @@ const serviceBlurbs: Record<string, string> = {
           <div style="padding: 6px; border-radius: 24px; background: rgba(252, 132, 100, 0.14); box-shadow: rgba(252, 132, 100, 0.35) 0px 0px 0px 1px, rgba(27, 26, 23, 0.1) 0px 14px 34px;">
             <div style="border-radius: 18px; background: rgb(255, 254, 252); padding: 26px; display: flex; flex-direction: column; gap: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
-                <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">Website as a Service</h3>
-                <span class="mono" style="padding: 4px 9px; border-radius: 9999px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;">Most choose this</span>
+                <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">Website + Google Ads</h3>
+                <span class="mono" style="padding: 4px 9px; border-radius: 9999px; background: rgb(252, 132, 100); color: rgb(27, 26, 23); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;">No setup fee</span>
               </div>
               <p style="margin: 0px; display: flex; align-items: baseline; gap: 6px;">
-                <span style="font-size: 36px; line-height: 1; font-weight: 600; letter-spacing: -0.03em;">{fmtPrice(PRICING.setup)}</span>
-                <span class="mono" style="font-size: 14px; color: rgb(103, 98, 90);">+ {fmtPrice(PRICING.monthly)}/mo</span>
+                <span class="mono" style="font-size: 14px; color: rgb(103, 98, 90);">from</span>
+                <span style="font-size: 36px; line-height: 1; font-weight: 600; letter-spacing: -0.03em;">{fmtPrice(FROM_PRICE)}</span>
+                <span class="mono" style="font-size: 14px; color: rgb(103, 98, 90);">/mo</span>
               </p>
-              <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Design, development, CMS, email, SEO, and managed hosting — all-inclusive.</p>
+              <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">A custom website plus fully managed Google Ads. {fmtPrice(TERMS.setup)} setup, ad spend billed by Google directly.</p>
             </div>
           </div>
           <div class="frame">
             <div class="inner" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-              <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">Custom</h3>
-              <p style="margin: 0px; font-size: 28px; line-height: 1; font-weight: 600; letter-spacing: -0.02em;">Scoped per project</p>
-              <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">Web apps, dashboards, accounts, and databases.</p>
+              <h3 style="margin: 0px; font-size: 19px; font-weight: 600;">Plans by ad budget</h3>
+              {
+                PLANS.map((plan) => (
+                  <p style="margin: 0px; display: flex; justify-content: space-between; gap: 12px; font-size: 15px;">
+                    <span>
+                      {plan.name}
+                      <span style="color: rgb(103, 98, 90);">· ads up to {fmtPrice(plan.adSpendCap)}/mo</span>
+                    </span>
+                    <span class="mono">{fmtPrice(plan.monthly)}/mo</span>
+                  </p>
+                ))
+              }
             </div>
           </div>
           <a href="/pricing" class="tlink" style="font-size: 15px; font-weight: 500;">Compare plans in detail →</a>
@@ -401,7 +416,7 @@ const serviceBlurbs: Record<string, string> = {
           {city.name}, Florida
         </p>
         <h2 style="margin: 0px; max-width: 16ch; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; font-weight: 600; letter-spacing: -0.035em;">
-          Ready to stand out in {city.name}?
+          Ready for more {city.name} customers?
         </h2>
         <p style="margin: 0px; max-width: 520px; font-size: 18px; line-height: 1.55; color: rgb(184, 178, 167);">
           Simple pricing and a real person on the other end — Ali replies directly.

@@ -53,9 +53,12 @@ const FROM = "Free Quote <noreply@alisamadii.com>";
 const TO = "agency@alisamadii.com";
 
 const PLAN_LABELS = {
-  waas: "Website-as-a-Service ($500 setup + $284/mo)",
-  onetime: "Own-it build (priced per project)",
-  ecommerce: "E-commerce Storefront (Shopify) — $1,500 setup + $120/mo",
+  launch: "Launch: website + Google Ads ($2,500/mo)",
+  growth: "Growth: website + Google Ads ($3,500/mo)",
+  scale: "Scale: website + Google Ads ($4,500/mo)",
+  website: "Website only, no ads: $1,299 setup + $100/mo",
+  ecommerce: "E-commerce Storefront (Shopify): $1,500 setup + $120/mo",
+  newsletter: "Newsletter (quoted)",
   custom: "Custom / not sure",
 } as const;
 
@@ -64,7 +67,9 @@ const bodySchema = z.object({
   email: z.email(),
   message: z.string().min(1).max(2000),
   business: z.string().max(200).optional(),
-  plan: z.enum(["waas", "onetime", "ecommerce", "custom"]).optional(),
+  plan: z
+    .enum(["launch", "growth", "scale", "website", "ecommerce", "newsletter", "custom"])
+    .optional(),
   phone: z.string().max(40).optional(),
 });
 

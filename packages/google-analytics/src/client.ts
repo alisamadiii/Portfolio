@@ -4,12 +4,13 @@
 export { GA_MEASUREMENT_ID } from "./config";
 
 export const PLANS = [
-  "waas",
-  "onetime",
+  "launch",
+  "growth",
+  "scale",
+  "website",
   "ecommerce",
-  "custom",
   "newsletter",
-  "pest-control",
+  "custom",
 ] as const;
 export type Plan = (typeof PLANS)[number];
 

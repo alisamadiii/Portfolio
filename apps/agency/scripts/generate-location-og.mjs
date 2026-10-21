@@ -36,7 +36,7 @@ const overlay = (name) => `
   <text x="64" y="${H - 106}" font-family="Helvetica Neue, Arial, sans-serif"
     font-size="72" font-weight="650" fill="${CREAM}">${name}, Florida</text>
   <text x="64" y="${H - 56}" font-family="Helvetica Neue, Arial, sans-serif"
-    font-size="27" fill="${CREAM}" fill-opacity="0.85">Web Design &amp; Development — Ali Samadi Agency</text>
+    font-size="27" fill="${CREAM}" fill-opacity="0.85">Lead Generation &amp; Web Design · Ali Samadi Agency</text>
 </svg>`;
 
 await mkdir(resolve(appRoot, "public/og/locations"), { recursive: true });

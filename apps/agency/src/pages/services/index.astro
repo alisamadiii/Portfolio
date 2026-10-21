@@ -2,9 +2,11 @@
 // Services index — faithful translation of the mockup frame.
 // SEO/schema carried over from the previous hand-built version.
 import MockupLayout from "../../layouts/MockupLayout.astro";
-import MAIN from "../../html/main/services.html?raw";
+import RAW_MAIN from "../../html/main/services.html?raw";
+import { FROM_PRICE, fmtPrice } from "../../data/pricing";
 import { services } from "../../data/services";
 
+const MAIN = RAW_MAIN.replaceAll("{{FROM_PRICE}}", fmtPrice(FROM_PRICE));
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/services`;
 
@@ -32,16 +34,16 @@ const schema = [
 ---
 
 <MockupLayout
-  title="Web Design & Development Services in Jacksonville, FL | Ali Samadi Agency"
-  description="Everything Ali Samadi Agency offers: brand identity, Next.js web development, UI/UX design, SEO & analytics, website management, and custom web apps."
+  title="Lead Generation & Web Services in Jacksonville, FL | Ali Samadi"
+  description="Everything we offer to bring in more customers: Google Ads management, websites that convert, SEO & analytics, email newsletters, and more."
   canonical={pageUrl}
   og={{
     title: "Services — Ali Samadi Agency",
     description:
-      "Brand identity, Next.js web development, UI/UX design, SEO & analytics, website management, and custom web apps.",
+      "Google Ads, websites that convert, SEO, email newsletters, and more, for local businesses that want more leads.",
     url: pageUrl,
     twitterDescription:
-      "Brand identity, web development, UI/UX, SEO, website management, and custom web apps.",
+      "Google Ads, websites that convert, SEO, and email for local businesses that want more leads.",
   }}
   schema={schema}
 >

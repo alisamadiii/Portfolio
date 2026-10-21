@@ -21,6 +21,9 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
+      // noindex utility pages stay out of the sitemap.
+      filter: (page) =>
+        !/\/(review|newsletter\/thank-you|newsletter\/unsubscribed)\/?$/.test(page),
       // Emit a build-date lastmod so crawlers get a real freshness signal.
       serialize: (item) => ({ ...item, lastmod: new Date().toISOString() }),
     }),

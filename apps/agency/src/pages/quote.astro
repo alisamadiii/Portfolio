@@ -3,6 +3,7 @@
 // working QuoteForm (relays to the quote API) and the floating welcome video.
 import MockupLayout from "../layouts/MockupLayout.astro";
 import QuoteForm from "../components/QuoteForm.astro";
+import { FROM_PRICE, fmtPrice } from "../data/pricing";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/quote`;
@@ -20,16 +21,16 @@ const schema = [
 ---
 
 <MockupLayout
-  title="Get a Quote — Ali Samadi Agency | Free Project Estimate"
-  description="Tell us about your project and get a scope, timeline, and price — usually within a day. Website as a Service for local and small businesses at $1,299 + $100/mo, or a fully custom project."
+  title="Get a Quote | Free Lead Generation Plan | Ali Samadi Agency"
+  description={`Tell us about your business and get a plan for your website and Google Ads, usually within a day. Growth plans from ${fmtPrice(FROM_PRICE)}/mo, no setup fee.`}
   canonical={pageUrl}
   og={{
     title: "Get a Quote — Ali Samadi Agency",
     description:
-      "Tell us about your project and get a clear scope, timeline, and price — usually within a day.",
+      "Tell us about your business and get a plan for your website and Google Ads, usually within a day.",
     url: pageUrl,
     twitterDescription:
-      "Tell us about your project and get scope, timeline, and price — usually within a day.",
+      "Get a plan for your website and Google Ads, usually within a day.",
   }}
   schema={schema}
 >
@@ -39,12 +40,12 @@ const schema = [
       <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
         <p class="eyebrow"><span></span>Get a quote</p>
         <h1 class="hero-h1" style="margin:0;max-width:16ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
-          Let's price your <span style="color:rgb(194,69,31);font-style:italic;">project</span>
+          Let's plan your <span style="color:rgb(194,69,31);font-style:italic;">growth</span>
         </h1>
         <p style="margin:0;max-width:56ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
-          Share a few details and we'll come back with scope, timeline, and a
-          clear price in writing — usually within a day. No calls required, no
-          obligation.
+          Share a few details about your business and we'll come back with a
+          plan for more leads and a clear price in writing, usually within a
+          day. No calls required, no obligation.
         </p>
       </div>
     </section>
@@ -69,9 +70,10 @@ const schema = [
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:960px;font-size:16px;line-height:1.65;color:rgb(103,98,90);">
           <p style="margin:0;">
-            We read your request the same day and reply with a plan — scope,
-            timeline, and a clear price. Most projects fit the
-            <a href="/pricing" class="tlink" style="color:rgb(194,69,31);">all-inclusive plan</a>;
+            We read your request the same day and reply with a plan: where your
+            leads should come from, what the site needs, and a clear price. Most
+            businesses fit one of our
+            <a href="/pricing" class="tlink" style="color:rgb(194,69,31);">growth plans</a>;
             custom projects get a written number before any work starts.
           </p>
           <p style="margin:0;">

@@ -11,6 +11,7 @@
 // (Pexels, self-hosted, credited).
 
 import credits from "./service-image-credits.json";
+import { FROM_PRICE, GUARANTEE, PLANS, fmtPrice } from "./pricing";
 
 export interface ServiceLink {
   label: string;
@@ -35,6 +36,10 @@ export interface Service {
   /** icon = BenefitGlyph key rendered in the card's coral tile. */
   benefits: { title: string; text: string; icon?: string }[];
   process?: { title: string; text: string }[];
+  /** Overrides the default "How we deliver <name>" heading. */
+  processHeading?: string;
+  /** Overrides the default "At a glance" rows. */
+  glance?: { k: string; v: string }[];
   processCta?: { label: string; href: string };
   /** Product screenshot walkthrough — alternating image + explanation rows. */
   showcase?: {
@@ -66,106 +71,119 @@ const img = (slug: string, alt: string) => ({
 });
 
 export const services: Service[] = [
-  // ── Brand Identity ─────────────────────────────────────────────
+  // ── Google Ads ─────────────────────────────────────────────────
   {
-    slug: "brand-identity",
-    name: "Brand Identity",
-    eyebrow: "Design",
-    keyword: "brand identity design",
+    slug: "google-ads",
+    name: "Google Ads Management",
+    eyebrow: "Growth",
+    keyword: "google ads management jacksonville",
     searchKeywords: [
-      "logo",
-      "branding",
-      "colors",
-      "typography",
-      "visual identity",
-      "brand colors",
+      "ppc",
+      "pay per click",
+      "paid ads",
+      "adwords",
+      "google ads",
+      "leads",
+      "local services ads",
+      "marketing",
     ],
-    seoTitle: "Brand Identity Design Built From Your Logo | Ali Samadi",
-    metaDescription:
-      "Brand identity design that starts with your logo — we turn its colors and character into your buttons, forms, and entire website theme.",
-    h1: "Brand identity design that starts with your logo",
+    seoTitle: "Google Ads Management Jacksonville | Website + Ads Partner",
+    metaDescription: `Google Ads management in Jacksonville, paired with a custom website built to convert the clicks. Every call and form tracked. From ${fmtPrice(FROM_PRICE)}/mo, no setup fee.`,
+    h1: "Google Ads management that ends in a phone call",
     heroSub:
-      "Pick a logo you love, and we design everything else from it — the colors, typography, buttons, and forms of your website all carry its theme.",
+      "We run your Google Ads and build the website they send people to, so one partner owns every step between the search and the booked job.",
     intro:
-      "Ali Samadi Agency approaches brand identity design with one rule: the logo comes first. We generate a range of logo concepts, you choose the one that feels like your business, and that mark becomes the source of truth for everything we design. Its colors and character flow into your buttons, forms, headings, and every page of your website — so nothing looks bolted on, and everything looks like it came from the same brand. You're not approving abstract swatches; you're watching your logo become a website.",
+      "Ali Samadi Agency handles Google Ads management for Jacksonville and Florida service businesses, and we do it differently from most ad agencies: we also build the website the ads point to. That matters because most wasted ad spend isn't a bidding problem. It's a landing problem. Someone searches \"termite inspection near me\", clicks your ad, lands on a slow homepage with no clear next step, and leaves. When the same team writes the ad and builds the page behind it, the search, the promise in the ad, and the page all match, and the visitor calls. Every call and form is tracked back to the keyword that produced it, so each month we know what to cut and what to put more behind.",
     benefits: [
       {
-        title: "Your logo leads",
+        title: "Ads and site under one roof",
+        icon: "flow",
+        text: "Every campaign gets a landing page written for it. No more paying for clicks that land on a generic homepage.",
+      },
+      {
+        title: "Every lead tracked",
         icon: "target",
-        text: "The logo is the source of truth. We pull its colors and personality into a theme, and every part of your site inherits it — no guesswork, no mismatched styles.",
+        text: "Calls, forms, and booked jobs tied to the keyword and ad behind them, in GA4 and Google Ads. You see cost per lead, not just clicks.",
       },
       {
-        title: "You choose, we build",
-        icon: "spectrum",
-        text: "Instead of endless abstract revisions, you pick from a range of logo concepts. The one you choose is the one we design your entire site around.",
+        title: "Your money, your account",
+        icon: "shield",
+        text: "The Google Ads account is in your name and Google bills ad spend to you directly. We never mark up your spend.",
       },
       {
-        title: "Everything matches",
-        icon: "grid-match",
-        text: "Buttons, forms, headings, and pages all themed from the same mark — your site looks like one brand made it, because one logo drove all of it.",
-      },
-      {
-        title: "Assets you own",
-        icon: "package",
-        text: "You get the full package: logo files in every format, color codes, font choices, and a simple usage guide. No lock-in, no per-use fees.",
+        title: "Monthly optimization",
+        icon: "chart",
+        text: "Search terms reviewed, wasted keywords cut, budgets moved to what books jobs. A plain-English report every month.",
       },
     ],
     process: [
       {
-        title: "Logo concepts",
-        text: "We generate a range of logo directions and you pick the one that feels like your business. That choice sets the theme for everything that follows.",
+        title: "Audit & plan",
+        text: "We look at your services, your area, your current site, and any past ads, then agree on a starting budget.",
       },
       {
-        title: "Realistic mockups",
-        text: "We design website mockups straight from your logo — real buttons, forms, and pages carrying its colors and character, so you see the brand as it will actually look.",
+        title: "Build the site",
+        text: "A custom website and a landing page for each campaign, with call tracking and conversion tracking wired in.",
       },
       {
-        title: "Refinement",
-        text: "We iterate on the mockups until it's right, then lock the system.",
+        title: "Launch the ads",
+        text: "Campaigns built around the searches that turn into jobs, with your service area and hours set correctly.",
       },
       {
-        title: "Delivery",
-        text: "Final files in every format plus a usage guide, with the theme applied live to your website.",
+        title: "Optimize monthly",
+        text: "Cut what doesn't convert, scale what does, and walk you through the numbers on a regular call.",
       },
     ],
-    processCta: {
-      label: "Read the full process on the blog",
-      href: "/blog/web-design-process",
-    },
+    processHeading: "How we run your Google Ads",
+    glance: [
+      { k: "Includes", v: "Website + Google Ads" },
+      { k: "Setup fee", v: "None" },
+      { k: "Ad account", v: "In your name" },
+      { k: "Reporting", v: "Every call and form tracked" },
+    ],
+    processCta: { label: "See the plans", href: "/pricing" },
     faqs: [
       {
-        q: "What does brand identity design include?",
-        a: "A logo you choose from a range of concepts (with variations for different sizes and backgrounds), a color palette pulled from it with exact codes, typography choices, and a short usage guide. If we're building your website, the whole theme is applied there directly.",
+        q: "How much does Google Ads management cost?",
+        a: `Our plans run ${PLANS.map((p) => `${fmtPrice(p.monthly)}/mo (${p.name})`).join(", ")}, and every plan includes a custom website. There is no setup fee. Ad spend is separate and Google bills it to you directly.`,
       },
       {
-        q: "How long does a brand identity take?",
-        a: "Most small-business identities take one to two weeks from kickoff to final files, depending on how many revision rounds you need.",
+        q: "How much should I spend on ads?",
+        a: "It depends on your service and area, but most local service businesses start somewhere between $1,500 and $3,000 a month in ad spend. We'll recommend a starting budget on the first call and adjust it once real data comes in.",
       },
       {
-        q: "I already have a logo — can you build the rest?",
-        a: "Perfect — that's exactly how we work. Send it over and we design everything from it: colors, typography, buttons, and forms all take their theme from your logo, so everything finally matches.",
+        q: "Do you guarantee results?",
+        a: `Yes, in a way we can stand behind. ${GUARANTEE.leads} We also guarantee the basics: ${GUARANTEE.process.charAt(0).toLowerCase()}${GUARANTEE.process.slice(1)}`,
       },
       {
-        q: "Do I own the final files?",
-        a: "Completely. Once paid, all logo files, font choices, and guidelines are yours, delivered in standard formats (SVG, PNG, PDF).",
+        q: "How fast will I get leads?",
+        a: "Ads can bring in calls within days of launch. The first month or two are about learning which searches turn into jobs; cost per lead usually improves after that as we cut waste. That's why plans have a six-month minimum.",
+      },
+      {
+        q: "Do I need a new website?",
+        a: "The website is included in every plan, so you don't pay extra for it. We'll review your current site first. Usually we rebuild it, because a page built for the ad converts far better than a general homepage.",
+      },
+      {
+        q: "Who owns the Google Ads account?",
+        a: "You do. The account is created in your name and your card pays Google directly. If you ever leave, the account, its history, and the website stay with you.",
       },
     ],
     externalLinks: [
       {
-        label: "Material Design — color system fundamentals",
-        url: "https://m3.material.io/styles/color/system/overview",
+        label: "Google Ads Help: about conversion tracking",
+        url: "https://support.google.com/google-ads/answer/1722022",
       },
       {
-        label: "Nielsen Norman Group — brand experience research",
-        url: "https://www.nngroup.com/articles/brand-experience-ux/",
+        label: "Google: Local Services Ads",
+        url: "https://business.google.com/us/ad-solutions/local-service-ads/",
       },
     ],
-    related: ["web-development", "ui-ux-design"],
+    related: ["web-development", "seo-analytics", "website-management"],
     image: img(
-      "brand-identity",
-      "Handwritten branding notes — identity, logo, design, strategy, marketing"
+      "google-ads",
+      "Business owner taking a customer phone call at a desk with a laptop"
     ),
-    cta: { label: "Start your brand", href: "/pricing" },
+    cta: { label: "See pricing", href: "/pricing" },
   },
 
   // ── Web Development ────────────────────────────────────────────
@@ -183,14 +201,14 @@ export const services: Service[] = [
       "landing page",
       "developer",
     ],
-    seoTitle: "Astro Web Development Agency — Fast Local Business Sites",
+    seoTitle: "Web Development Agency for Lead Generation Websites | Ali Samadi",
     metaDescription:
-      "Web development agency building fast, static websites on Astro — instant page loads, SEO built in, and content you edit yourself. From $100/mo.",
-    h1: "A web development agency that builds fast Astro websites",
+      "Web development agency building fast websites that turn ad clicks and searches into calls and booked jobs. Call tracking, SEO, and edits included.",
+    h1: "A web development agency that builds websites to convert leads",
     heroSub:
-      "Local-business websites built on Astro — pre-rendered static pages, instant navigation, and SEO baked in. Custom projects get Next.js, React, and Postgres.",
+      "Your ads and searches bring the clicks. The website decides whether they become calls. We build fast pages with a clear offer, a call button on every screen, and every lead tracked.",
     intro:
-      "Ali Samadi Agency is a web development agency that builds local-business websites on Astro — and there's a reason for that choice. Astro ships almost no JavaScript: every page is pre-rendered to plain HTML and served from a global CDN, so it loads instantly and Google indexes clean markup instead of waiting on scripts. Navigation between pages is smooth and app-like, and every build generates your sitemap, structured data, and an llms.txt file so AI search engines can read your site too. You edit content through a simple dashboard, and every save goes live automatically. And when a project needs more — accounts, dashboards, a database — we build custom on Next.js, React, and Postgres.",
+      "Ali Samadi Agency is a lead generation agency, and a web development agency because the website is where leads are won or lost. We build local-business websites on Astro, and there's a reason for that choice. Astro ships almost no JavaScript: every page is pre-rendered to plain HTML and served from a global CDN, so it loads instantly and Google indexes clean markup instead of waiting on scripts. Navigation between pages is smooth and app-like, and every build generates your sitemap, structured data, and an llms.txt file so AI search engines can read your site too. You edit content through a simple dashboard, and every save goes live automatically. And when a project needs more — accounts, dashboards, a database — we build custom on Next.js, React, and Postgres.",
     benefits: [
       {
         title: "Fast because it's static",
@@ -234,7 +252,7 @@ export const services: Service[] = [
     faqs: [
       {
         q: "How much does a website cost?",
-        a: "Our all-inclusive plan for local and small businesses is $1,299 + $100/mo — where most projects land — covering design, development, hosting, CMS, email, SEO, and updates. Or reach out for a fully custom project scoped together. See the pricing page for details.",
+        a: `The website is included in every growth plan, which pairs it with fully managed Google Ads. Plans start at ${fmtPrice(FROM_PRICE)}/mo with no setup fee, covering design, development, hosting, CMS, email, SEO, and updates. See the pricing page for details.`,
       },
       {
         q: "Why Astro instead of WordPress or Wix?",
@@ -269,82 +287,6 @@ export const services: Service[] = [
       "Developer writing code on a laptop with charts on screen"
     ),
     cta: { label: "See pricing", href: "/pricing" },
-  },
-
-  // ── UI/UX Design ───────────────────────────────────────────────
-  {
-    slug: "ui-ux-design",
-    name: "UI/UX Design",
-    eyebrow: "Design",
-    keyword: "ui/ux design services",
-    searchKeywords: [
-      "design",
-      "interface",
-      "figma",
-      "user experience",
-      "mockup",
-      "redesign",
-    ],
-    seoTitle: "UI/UX Design Services That Convert — Ali Samadi Agency",
-    metaDescription:
-      "UI/UX design services for websites and web apps — clear layouts, accessible interfaces, and user journeys designed to turn visitors into customers.",
-    h1: "UI/UX design services that turn visitors into customers",
-    heroSub:
-      "Clear layouts, obvious next steps, and interfaces that feel effortless — designed around your users, not design trends.",
-    intro:
-      "Ali Samadi Agency provides UI/UX design services for websites and web applications. Good UX is mostly invisible: visitors find what they need, understand what you offer, and know exactly what to do next. We design interfaces around those journeys — grounded in usability research, accessibility standards, and conversion patterns — then build them ourselves, so nothing gets lost between the mockup and the live site.",
-    benefits: [
-      {
-        title: "Designed for the next click",
-        icon: "cursor",
-        text: "Every page has one job. We design layouts around the action you want visitors to take, and remove everything that competes with it.",
-      },
-      {
-        title: "Accessible by standard",
-        icon: "contrast",
-        text: "Readable contrast, keyboard navigation, touch-friendly targets, and reduced-motion support — accessibility guidelines applied as defaults, not add-ons.",
-      },
-      {
-        title: "Designer and developer are the same team",
-        icon: "flow",
-        text: "No handoff gap. The person designing the interface builds it, so the shipped site matches the approved design exactly.",
-      },
-      {
-        title: "Grounded in evidence",
-        icon: "chart",
-        text: "Layout and interaction decisions follow published usability research, not aesthetic guesswork.",
-      },
-    ],
-    faqs: [
-      {
-        q: "What's the difference between UI and UX design?",
-        a: "UX (user experience) is the structure — what pages exist, how journeys flow, where information lives. UI (user interface) is the surface — layout, color, type, and interactive detail. We do both as one process, because they only work together.",
-      },
-      {
-        q: "Do you redesign existing websites?",
-        a: "Yes. We audit what's underperforming, keep what works, and redesign the rest — usually without breaking your existing content or SEO.",
-      },
-      {
-        q: "Will the design work on phones?",
-        a: "Yes — most small-business traffic is mobile, so every design is built responsive and tested on real phone screens before launch. Layout, text, and buttons all adapt so the site feels just as polished on a phone as on desktop.",
-      },
-    ],
-    externalLinks: [
-      {
-        label: "Nielsen Norman Group — usability heuristics",
-        url: "https://www.nngroup.com/articles/ten-usability-heuristics/",
-      },
-      {
-        label: "W3C — Web Accessibility Initiative",
-        url: "https://www.w3.org/WAI/fundamentals/accessibility-intro/",
-      },
-    ],
-    related: ["brand-identity", "web-development"],
-    image: img(
-      "ui-ux-design",
-      "UX designer sketching interface wireframes on paper"
-    ),
-    cta: { label: "Start a project", href: "/#contact" },
   },
 
   // ── SEO & Analytics ────────────────────────────────────────────
@@ -427,6 +369,114 @@ export const services: Service[] = [
       "Analytics dashboard showing traffic charts on a screen"
     ),
     cta: { label: "See pricing", href: "/pricing" },
+  },
+
+  // ── E-commerce Websites ────────────────────────────────────────
+  {
+    slug: "ecommerce",
+    name: "E-commerce Websites",
+    eyebrow: "Engineering",
+    keyword: "ecommerce website development",
+    searchKeywords: [
+      "shopify",
+      "online store",
+      "storefront",
+      "shop",
+      "headless",
+      "ecommerce",
+      "e-commerce",
+      "store speed",
+    ],
+    seoTitle: "E-commerce Website Development for Shopify Stores | Ali Samadi",
+    metaDescription:
+      "We rebuild the storefront your Shopify customers see — a custom-designed, genuinely fast online store. Shopify keeps running checkout, inventory, and orders.",
+    h1: "E-commerce website development that makes Shopify feel custom",
+    heroSub:
+      "A unique website for your Shopify store — custom-designed to your brand, with instant page navigation. Shopify keeps handling products, inventory, and secure checkout.",
+    intro:
+      "Ali Samadi Agency offers ecommerce website development for businesses already selling on Shopify. Most Shopify stores run on a theme — and it shows: the same layouts as thousands of other shops, pages that reload on every click, and a design that never quite matches the brand. We replace only the storefront your customers see with a custom-built website on Next.js, the same technology behind major retail sites. Your Shopify admin, product catalog, inventory, and secure checkout keep working exactly as they do today — your team changes nothing about how they run the store. Customers just get a faster, better-looking place to buy.",
+    benefits: [
+      {
+        title: "Keep Shopify, lose the template",
+        icon: "flow",
+        text: "Shopify stays your engine — products, inventory, orders, and checkout all keep running there. We only replace the storefront your customers see, so nothing about running your business changes.",
+      },
+      {
+        title: "Feels instant",
+        icon: "bolt",
+        text: "Pages stream in as customers browse and the next page loads before they click. No full-page reloads between products — the store feels like an app, not a website.",
+      },
+      {
+        title: "Your brand, not a theme",
+        icon: "spectrum",
+        text: "Designed from scratch around your brand — typography, color, and layout that no theme store sells. Customers stop seeing a template and start seeing you.",
+      },
+      {
+        title: "Checkout customers already trust",
+        icon: "cart",
+        text: "Buying still happens on Shopify's secure, PCI-compliant checkout — the same flow your customers know, with all your payment methods and shipping rules intact.",
+      },
+    ],
+    process: [
+      {
+        title: "Store audit",
+        text: "We review your current theme, products, and brand, and map what the custom storefront needs — pages, collections, search, accounts.",
+      },
+      {
+        title: "Design",
+        text: "The storefront is designed around your brand, not adapted from a theme — you review real page designs before anything is built.",
+      },
+      {
+        title: "Build on your Shopify",
+        text: "We connect the new storefront to your existing store. Products, prices, and inventory sync automatically; your team keeps working in the same Shopify admin.",
+      },
+      {
+        title: "Launch & care",
+        text: "Your domain points to the new storefront and Shopify keeps powering checkout. We host, monitor, and maintain it from there.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Do I have to leave Shopify?",
+        a: "No — that's the point. Shopify keeps managing your products, inventory, orders, and checkout. We only replace the storefront your customers see with a custom-built, faster website connected to your existing store.",
+      },
+      {
+        q: "Does checkout change?",
+        a: "No. Customers still pay through Shopify's secure checkout — the same payment methods, shipping rules, and taxes you have configured today. We hand the cart to Shopify at the moment of purchase.",
+      },
+      {
+        q: "What happens to my Shopify apps?",
+        a: "Back-office apps — inventory, fulfillment, accounting, email — keep working, because they live in your Shopify admin. Theme apps (page builders, popups, review widgets embedded in the theme) are replaced by features built directly into the new storefront.",
+      },
+      {
+        q: "What does a custom Shopify storefront cost?",
+        a: "A one-time $1,500 setup covers the design and build, then $120/month covers hosting, monitoring, and maintenance. Larger catalogs or custom features are quoted before we start.",
+      },
+      {
+        q: "How long does it take?",
+        a: "Most storefronts launch in three to four weeks: about a week of design, one to two weeks of build and Shopify integration, and a final week of content, testing, and launch.",
+      },
+      {
+        q: "Will it actually be faster than my theme?",
+        a: "Yes — measurably. Themes render in Shopify's template system and reload on every click. The custom storefront pre-renders pages, streams them in, serves next-gen image formats, and preloads the next page before it's clicked. We treat Google's Core Web Vitals as a launch requirement.",
+      },
+    ],
+    externalLinks: [
+      {
+        label: "Shopify — Storefront API overview",
+        url: "https://shopify.dev/docs/api/storefront",
+      },
+      {
+        label: "web.dev — how speed affects e-commerce conversion",
+        url: "https://web.dev/case-studies/milliseconds-make-millions",
+      },
+    ],
+    related: ["web-development", "website-management"],
+    image: img(
+      "ecommerce",
+      "Laptop surrounded by shopping bags and boxes from online orders"
+    ),
+    cta: { label: "Get a quote", href: "/quote?plan=ecommerce" },
   },
 
   // ── Website Management ─────────────────────────────────────────
@@ -549,7 +599,7 @@ export const services: Service[] = [
       },
       {
         q: "What does website management cost?",
-        a: "Everything — hosting, CMS, email, SEO, updates, and support — is included in the all-inclusive plan for local and small businesses at $1,299 + $100/mo. Current numbers are on the pricing page.",
+        a: `Hosting, CMS, email, SEO, updates, and support are included in every growth plan, from ${fmtPrice(FROM_PRICE)}/mo alongside managed Google Ads. Current numbers are on the pricing page.`,
       },
       {
         q: "What if I break something?",
@@ -582,112 +632,182 @@ export const services: Service[] = [
     cta: { label: "See pricing", href: "/pricing" },
   },
 
-  // ── E-commerce Websites ────────────────────────────────────────
+  // ── UI/UX Design ───────────────────────────────────────────────
   {
-    slug: "ecommerce",
-    name: "E-commerce Websites",
-    eyebrow: "Engineering",
-    keyword: "ecommerce website development",
+    slug: "ui-ux-design",
+    name: "UI/UX Design",
+    eyebrow: "Design",
+    keyword: "ui/ux design services",
     searchKeywords: [
-      "shopify",
-      "online store",
-      "storefront",
-      "shop",
-      "headless",
-      "ecommerce",
-      "e-commerce",
-      "store speed",
+      "design",
+      "interface",
+      "figma",
+      "user experience",
+      "mockup",
+      "redesign",
     ],
-    seoTitle: "E-commerce Website Development for Shopify Stores | Ali Samadi",
+    seoTitle: "UI/UX Design Services That Convert — Ali Samadi Agency",
     metaDescription:
-      "We rebuild the storefront your Shopify customers see — a custom-designed, genuinely fast online store. Shopify keeps running checkout, inventory, and orders.",
-    h1: "E-commerce website development that makes Shopify feel custom",
+      "UI/UX design services for websites and web apps — clear layouts, accessible interfaces, and user journeys designed to turn visitors into customers.",
+    h1: "UI/UX design services that turn visitors into customers",
     heroSub:
-      "A unique website for your Shopify store — custom-designed to your brand, with instant page navigation. Shopify keeps handling products, inventory, and secure checkout.",
+      "Clear layouts, obvious next steps, and interfaces that feel effortless — designed around your users, not design trends.",
     intro:
-      "Ali Samadi Agency offers ecommerce website development for businesses already selling on Shopify. Most Shopify stores run on a theme — and it shows: the same layouts as thousands of other shops, pages that reload on every click, and a design that never quite matches the brand. We replace only the storefront your customers see with a custom-built website on Next.js, the same technology behind major retail sites. Your Shopify admin, product catalog, inventory, and secure checkout keep working exactly as they do today — your team changes nothing about how they run the store. Customers just get a faster, better-looking place to buy.",
+      "Ali Samadi Agency provides UI/UX design services for websites and web applications. Good UX is mostly invisible: visitors find what they need, understand what you offer, and know exactly what to do next. We design interfaces around those journeys — grounded in usability research, accessibility standards, and conversion patterns — then build them ourselves, so nothing gets lost between the mockup and the live site.",
     benefits: [
       {
-        title: "Keep Shopify, lose the template",
+        title: "Designed for the next click",
+        icon: "cursor",
+        text: "Every page has one job. We design layouts around the action you want visitors to take, and remove everything that competes with it.",
+      },
+      {
+        title: "Accessible by standard",
+        icon: "contrast",
+        text: "Readable contrast, keyboard navigation, touch-friendly targets, and reduced-motion support — accessibility guidelines applied as defaults, not add-ons.",
+      },
+      {
+        title: "Designer and developer are the same team",
         icon: "flow",
-        text: "Shopify stays your engine — products, inventory, orders, and checkout all keep running there. We only replace the storefront your customers see, so nothing about running your business changes.",
+        text: "No handoff gap. The person designing the interface builds it, so the shipped site matches the approved design exactly.",
       },
       {
-        title: "Feels instant",
-        icon: "bolt",
-        text: "Pages stream in as customers browse and the next page loads before they click. No full-page reloads between products — the store feels like an app, not a website.",
-      },
-      {
-        title: "Your brand, not a theme",
-        icon: "spectrum",
-        text: "Designed from scratch around your brand — typography, color, and layout that no theme store sells. Customers stop seeing a template and start seeing you.",
-      },
-      {
-        title: "Checkout customers already trust",
-        icon: "cart",
-        text: "Buying still happens on Shopify's secure, PCI-compliant checkout — the same flow your customers know, with all your payment methods and shipping rules intact.",
-      },
-    ],
-    process: [
-      {
-        title: "Store audit",
-        text: "We review your current theme, products, and brand, and map what the custom storefront needs — pages, collections, search, accounts.",
-      },
-      {
-        title: "Design",
-        text: "The storefront is designed around your brand, not adapted from a theme — you review real page designs before anything is built.",
-      },
-      {
-        title: "Build on your Shopify",
-        text: "We connect the new storefront to your existing store. Products, prices, and inventory sync automatically; your team keeps working in the same Shopify admin.",
-      },
-      {
-        title: "Launch & care",
-        text: "Your domain points to the new storefront and Shopify keeps powering checkout. We host, monitor, and maintain it from there.",
+        title: "Grounded in evidence",
+        icon: "chart",
+        text: "Layout and interaction decisions follow published usability research, not aesthetic guesswork.",
       },
     ],
     faqs: [
       {
-        q: "Do I have to leave Shopify?",
-        a: "No — that's the point. Shopify keeps managing your products, inventory, orders, and checkout. We only replace the storefront your customers see with a custom-built, faster website connected to your existing store.",
+        q: "What's the difference between UI and UX design?",
+        a: "UX (user experience) is the structure — what pages exist, how journeys flow, where information lives. UI (user interface) is the surface — layout, color, type, and interactive detail. We do both as one process, because they only work together.",
       },
       {
-        q: "Does checkout change?",
-        a: "No. Customers still pay through Shopify's secure checkout — the same payment methods, shipping rules, and taxes you have configured today. We hand the cart to Shopify at the moment of purchase.",
+        q: "Do you redesign existing websites?",
+        a: "Yes. We audit what's underperforming, keep what works, and redesign the rest — usually without breaking your existing content or SEO.",
       },
       {
-        q: "What happens to my Shopify apps?",
-        a: "Back-office apps — inventory, fulfillment, accounting, email — keep working, because they live in your Shopify admin. Theme apps (page builders, popups, review widgets embedded in the theme) are replaced by features built directly into the new storefront.",
-      },
-      {
-        q: "What does a custom Shopify storefront cost?",
-        a: "A one-time $1,500 setup covers the design and build, then $120/month covers hosting, monitoring, and maintenance. Larger catalogs or custom features are quoted before we start.",
-      },
-      {
-        q: "How long does it take?",
-        a: "Most storefronts launch in three to four weeks: about a week of design, one to two weeks of build and Shopify integration, and a final week of content, testing, and launch.",
-      },
-      {
-        q: "Will it actually be faster than my theme?",
-        a: "Yes — measurably. Themes render in Shopify's template system and reload on every click. The custom storefront pre-renders pages, streams them in, serves next-gen image formats, and preloads the next page before it's clicked. We treat Google's Core Web Vitals as a launch requirement.",
+        q: "Will the design work on phones?",
+        a: "Yes — most small-business traffic is mobile, so every design is built responsive and tested on real phone screens before launch. Layout, text, and buttons all adapt so the site feels just as polished on a phone as on desktop.",
       },
     ],
     externalLinks: [
       {
-        label: "Shopify — Storefront API overview",
-        url: "https://shopify.dev/docs/api/storefront",
+        label: "Nielsen Norman Group — usability heuristics",
+        url: "https://www.nngroup.com/articles/ten-usability-heuristics/",
       },
       {
-        label: "web.dev — how speed affects e-commerce conversion",
-        url: "https://web.dev/case-studies/milliseconds-make-millions",
+        label: "W3C — Web Accessibility Initiative",
+        url: "https://www.w3.org/WAI/fundamentals/accessibility-intro/",
       },
     ],
-    related: ["web-development", "website-management"],
+    related: ["brand-identity", "web-development"],
     image: img(
-      "ecommerce",
-      "Laptop surrounded by shopping bags and boxes from online orders"
+      "ui-ux-design",
+      "UX designer sketching interface wireframes on paper"
     ),
-    cta: { label: "Get a quote", href: "/quote?plan=ecommerce" },
+    cta: { label: "Start a project", href: "/#contact" },
+  },
+
+  // ── Brand Identity ─────────────────────────────────────────────
+  {
+    slug: "brand-identity",
+    name: "Brand Identity",
+    eyebrow: "Design",
+    keyword: "brand identity design",
+    searchKeywords: [
+      "logo",
+      "branding",
+      "colors",
+      "typography",
+      "visual identity",
+      "brand colors",
+    ],
+    seoTitle: "Brand Identity Design Built From Your Logo | Ali Samadi",
+    metaDescription:
+      "Brand identity design that starts with your logo — we turn its colors and character into your buttons, forms, and entire website theme.",
+    h1: "Brand identity design that starts with your logo",
+    heroSub:
+      "Pick a logo you love, and we design everything else from it — the colors, typography, buttons, and forms of your website all carry its theme.",
+    intro:
+      "Ali Samadi Agency approaches brand identity design with one rule: the logo comes first. We generate a range of logo concepts, you choose the one that feels like your business, and that mark becomes the source of truth for everything we design. Its colors and character flow into your buttons, forms, headings, and every page of your website — so nothing looks bolted on, and everything looks like it came from the same brand. You're not approving abstract swatches; you're watching your logo become a website.",
+    benefits: [
+      {
+        title: "Your logo leads",
+        icon: "target",
+        text: "The logo is the source of truth. We pull its colors and personality into a theme, and every part of your site inherits it — no guesswork, no mismatched styles.",
+      },
+      {
+        title: "You choose, we build",
+        icon: "spectrum",
+        text: "Instead of endless abstract revisions, you pick from a range of logo concepts. The one you choose is the one we design your entire site around.",
+      },
+      {
+        title: "Everything matches",
+        icon: "grid-match",
+        text: "Buttons, forms, headings, and pages all themed from the same mark — your site looks like one brand made it, because one logo drove all of it.",
+      },
+      {
+        title: "Assets you own",
+        icon: "package",
+        text: "You get the full package: logo files in every format, color codes, font choices, and a simple usage guide. No lock-in, no per-use fees.",
+      },
+    ],
+    process: [
+      {
+        title: "Logo concepts",
+        text: "We generate a range of logo directions and you pick the one that feels like your business. That choice sets the theme for everything that follows.",
+      },
+      {
+        title: "Realistic mockups",
+        text: "We design website mockups straight from your logo — real buttons, forms, and pages carrying its colors and character, so you see the brand as it will actually look.",
+      },
+      {
+        title: "Refinement",
+        text: "We iterate on the mockups until it's right, then lock the system.",
+      },
+      {
+        title: "Delivery",
+        text: "Final files in every format plus a usage guide, with the theme applied live to your website.",
+      },
+    ],
+    processCta: {
+      label: "Read the full process on the blog",
+      href: "/blog/web-design-process",
+    },
+    faqs: [
+      {
+        q: "What does brand identity design include?",
+        a: "A logo you choose from a range of concepts (with variations for different sizes and backgrounds), a color palette pulled from it with exact codes, typography choices, and a short usage guide. If we're building your website, the whole theme is applied there directly.",
+      },
+      {
+        q: "How long does a brand identity take?",
+        a: "Most small-business identities take one to two weeks from kickoff to final files, depending on how many revision rounds you need.",
+      },
+      {
+        q: "I already have a logo — can you build the rest?",
+        a: "Perfect — that's exactly how we work. Send it over and we design everything from it: colors, typography, buttons, and forms all take their theme from your logo, so everything finally matches.",
+      },
+      {
+        q: "Do I own the final files?",
+        a: "Completely. Once paid, all logo files, font choices, and guidelines are yours, delivered in standard formats (SVG, PNG, PDF).",
+      },
+    ],
+    externalLinks: [
+      {
+        label: "Material Design — color system fundamentals",
+        url: "https://m3.material.io/styles/color/system/overview",
+      },
+      {
+        label: "Nielsen Norman Group — brand experience research",
+        url: "https://www.nngroup.com/articles/brand-experience-ux/",
+      },
+    ],
+    related: ["web-development", "ui-ux-design"],
+    image: img(
+      "brand-identity",
+      "Handwritten branding notes — identity, logo, design, strategy, marketing"
+    ),
+    cta: { label: "Start your brand", href: "/pricing" },
   },
 
   // ── Custom Web Apps ────────────────────────────────────────────

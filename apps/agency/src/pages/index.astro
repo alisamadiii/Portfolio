@@ -5,31 +5,64 @@
 import MockupLayout from "../layouts/MockupLayout.astro";
 import QuoteForm from "../components/QuoteForm.astro";
 import GoogleReviews from "../components/GoogleReviews.astro";
+import GrowthPlans from "../components/GrowthPlans.astro";
 import MAIN from "../html/main/home.html?raw";
 import { PROJECTS } from "../data/projects";
+import { GUARANTEE, PLANS, TERMS, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
 
 const SITE = "https://www.alisamadii.com";
 
-// FAQ copy (questions match the mockup; the static mockup ships only the first
-// answer, so all four live here for the accordion + FAQPage schema).
+// Hidden while the growth-partner offer has no ad-results proof yet.
+// Flip back to true to restore the sections.
+const SHOW_CLIENT_WORK = false;
+const SHOW_REVIEWS = false;
+const SHOW_PROOF = false; // stats, testimonial, Lighthouse strip
+
+// FAQ copy: rendered into the mockup's FAQ card below and the FAQPage schema.
+const [launch, growth, scale] = PLANS;
 const faqs = [
   {
-    q: "How long does it take to launch?",
-    a: "Most single-page sites go from concept to launch in one day. Larger multi-page sites and web apps typically take one to two weeks, since one team handles design and development without hand-offs.",
+    q: "What exactly do I get?",
+    a: "More leads. We run your Google Ads so the right local searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone.",
   },
   {
-    q: "Why custom code instead of a website builder?",
-    a: "Every site is hand-built — no WordPress, Wix, or templates. Most local business sites run on Astro, which ships almost no JavaScript, so pages load fast and score high on Google's Core Web Vitals. When you need a custom API, user login, or an admin and client dashboard, we build on Next.js and React — the same custom foundation, scaled up to a full web app without a rebuild.",
+    q: "Is ad spend included?",
+    a: `No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. Each tier covers a set amount of monthly spend: up to ${fmtPrice(launch.adSpendCap)} on ${launch.name}, ${fmtPrice(growth.adSpendCap)} on ${growth.name}, and ${fmtPrice(scale.adSpendCap)} on ${scale.name}.`,
   },
   {
-    q: "What's included in the monthly plan?",
-    a: "For $1,299 + $100/month you get design, development, hosting, email, unlimited content updates, SEO basics, and support — one flat fee, cancel anytime, no hidden costs. This plan is for local and small businesses; pricing varies with scope, but for most projects this is the price.",
+    q: `Why is there a ${TERMS.minimumMonths}-month minimum?`,
+    a: `Google Ads needs time to learn. The first months go into finding which searches turn into jobs, and the months after are where the cost per lead comes down. ${TERMS.minimumMonths} months gives the campaigns a fair run. After that it's month-to-month.`,
+  },
+  {
+    q: "What's your guarantee?",
+    a: `Two of them. ${GUARANTEE.leads} And ${GUARANTEE.process.charAt(0).toLowerCase()}${GUARANTEE.process.slice(1)} ${GUARANTEE.fine}`,
+  },
+  {
+    q: "Do I own the website?",
+    a: "Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave after the minimum term, the site and the account go with you.",
+  },
+  {
+    q: "What if I already have a website?",
+    a: "We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included in every growth plan at no extra cost.",
+  },
+  {
+    q: "Can I get just a website, without ads?",
+    a: `Yes. Our website-only plan is ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later.`,
   },
   {
     q: "Do you only work with Jacksonville businesses?",
-    a: "No. We're headquartered in Jacksonville and serve businesses across Florida — Miami, Tampa, Orlando, and beyond — as well as remote clients anywhere in the US. Everything is handled online if you prefer.",
+    a: "No. We're based in Jacksonville and work with businesses across Florida, including Miami, Tampa, and Orlando, as well as anywhere in the US. Everything can be handled online.",
   },
 ];
+
+const esc = (t: string) =>
+  t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const faqItemsHtml = faqs
+  .map(
+    (f, i) =>
+      `<div${i < faqs.length - 1 ? ' style="border-bottom: 1px solid rgba(27, 26, 23, 0.07);"' : ""}><button type="button" class="faq-q" aria-expanded="${i === 0}" style="width: 100%; min-height: 64px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 0px; background: transparent; cursor: pointer; text-align: left; font-family: inherit; font-size: 17px; font-weight: 600; color: rgb(27, 26, 23);">${esc(f.q)}<span aria-hidden="true" class="mono" style="font-size: 20px; color: rgb(107, 102, 93);"><span class="sc-interp">${i === 0 ? "−" : "+"}</span></span></button><p class="fade" style="margin: 0px; padding: 0px 24px 24px; max-width: 68ch; font-size: 16px; line-height: 1.65; color: rgb(103, 98, 90);">${esc(f.a)}</p></div>`
+  )
+  .join("");
 
 const schema = [
   {
@@ -44,7 +77,7 @@ const schema = [
 ];
 
 // ── Inject real data into the ported mockup (placeholders → projects.ts) ───
-let body = MAIN;
+let body = MAIN.replace("<!--FAQ_ITEMS-->", faqItemsHtml);
 
 // 1) Lighthouse strip — Mohammad Samadi's live mobile scores (same client as
 //    the testimonial quote directly above the strip).
@@ -89,30 +122,44 @@ body = body
   .replace(/<\/main>\s*$/, "")
   .replace(/<section id="contact" class="dark"[^>]*>[\s\S]*<\/section>\s*$/, "");
 
-// 4) Google reviews slot in between Client Work and Pricing.
+// 3a) Proof strip (stats, testimonial, Lighthouse), hidden behind SHOW_PROOF.
+if (!SHOW_PROOF) {
+  body = body.replace(/<section aria-label="Proof"[\s\S]*?<\/section>/, "");
+}
+// 3b) Client Work section, hidden behind SHOW_CLIENT_WORK.
+if (!SHOW_CLIENT_WORK) {
+  body = body.replace(/<section id="work"[\s\S]*?<\/section>/, "");
+}
+
+// 4) Google reviews slot in between Client Work and Pricing; the pricing
+//    cards render from <GrowthPlans/> at the placeholder.
 const pricingAt = body.indexOf('<section id="pricing"');
-const bodyBeforeReviews = pricingAt === -1 ? body : body.slice(0, pricingAt);
-const bodyAfterReviews = pricingAt === -1 ? "" : body.slice(pricingAt);
+const bodyBeforeReviews = body.slice(0, pricingAt);
+const [bodyBeforePlans, bodyAfterPlans] = body
+  .slice(pricingAt)
+  .split("<!--GROWTH_PLANS-->");
 ---
 
 <MockupLayout
-  title="Jacksonville Web Design & Development Agency | Ali Samadi"
-  description="Ali Samadi Agency builds custom-coded websites and web apps for Jacksonville, FL businesses. Design + development in-house, transparent pricing."
+  title="Jacksonville Lead Generation Agency | Google Ads + Websites"
+  description="More calls and booked jobs for local service businesses: managed Google Ads, a website built to convert, and every lead tracked. One monthly price."
   canonical="https://www.alisamadii.com"
   og={{
-    title: "Jacksonville Web Design & Development — Ali Samadi Agency",
+    title: "Lead Generation Agency for Local Businesses | Ali Samadi Agency",
     description:
-      "Custom websites and web apps for businesses in Jacksonville and across Florida. One team owns design, code, SEO, and hosting — fast, transparent, no templates.",
+      "Google Ads, a website that converts, and email that brings customers back, for local service businesses in Jacksonville and across Florida. Every lead tracked.",
     url: "https://www.alisamadii.com",
     twitterDescription:
-      "Custom websites and web apps for Jacksonville, FL businesses — design and development under one roof.",
+      "More calls, more booked jobs, more revenue. Google Ads plus a website built to convert.",
   }}
   schema={schema}
 >
   <main id="top">
     <Fragment set:html={bodyBeforeReviews} />
-    <GoogleReviews />
-    <Fragment set:html={bodyAfterReviews} />
+    {SHOW_REVIEWS && <GoogleReviews />}
+    <Fragment set:html={bodyBeforePlans} />
+    <GrowthPlans />
+    <Fragment set:html={bodyAfterPlans} />
 
     <!-- Get in Touch — original CTA copy + contacts, now with the quote form. -->
     <section
@@ -133,13 +180,13 @@ const bodyAfterReviews = pricingAt === -1 ? "" : body.slice(pricingAt);
           <h2
             style="margin:0; font-size:clamp(36px,5vw,64px); line-height:1.02; font-weight:600; letter-spacing:-0.035em;"
           >
-            Let's create something amazing
+            Let's get your phone ringing
           </h2>
           <p
             style="margin:0; max-width:46ch; font-size:17px; line-height:1.55; color:rgb(184,178,169);"
           >
-            Tell us about your business &mdash; we'll reply with a plan and a
-            fair quote.
+            Tell us about your business and your area. We'll reply with a plan
+            for your site and your ads.
           </p>
           <div
             style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:22px 32px; margin-top:8px; width:100%; max-width:460px;"

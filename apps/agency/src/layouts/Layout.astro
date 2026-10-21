@@ -65,10 +65,19 @@ const jsonLd = {
         height: 512,
       },
       description:
-        "Web design and development agency in Jacksonville, FL building custom websites and web apps for businesses across Florida.",
+        "Lead generation agency for local service businesses in Jacksonville, FL. We run the Google Ads that make the phone ring, build the website that turns clicks into booked jobs, and bring past customers back with email.",
+      slogan: "More calls. More booked jobs.",
+      knowsAbout: [
+        "Lead generation",
+        "Google Ads",
+        "Local Services Ads",
+        "Conversion rate optimization",
+        "Email marketing",
+        "Web development",
+      ],
       email: "agency@alisamadii.com",
       telephone: "+19713828969",
-      priceRange: "$$",
+      priceRange: "$$$",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Jacksonville",
@@ -203,7 +212,7 @@ const jsonLd = {
         type Plan,
       } from "@workspace/google-analytics/client";
 
-      // Bridge for is:inline scripts (QuoteForm, NewsletterBand) — they can't
+      // Bridge for is:inline scripts (QuoteForm) — they can't
       // import modules but their window.track?.() calls stay typed.
       window.track = track;
 

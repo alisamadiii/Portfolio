@@ -1,7 +1,8 @@
 // Fetches one hero image per service from the Pexels API, optimizes it to
 // webp, and records photographer credits.
 //
-//   pnpm services:images        (from apps/agency)
+//   pnpm services:images              (from apps/agency, all services)
+//   pnpm services:images google-ads   (only the given slugs; other credits kept)
 //
 // Reads PEXELS_API_KEY from apps/agency/.env (build/prep only — the key never
 // ships to the browser). Writes:
@@ -39,13 +40,23 @@ const QUERIES = {
   "website-management": "person editing website laptop office",
   ecommerce: "online business selling clothes laptop",
   "custom-web-apps": "software engineering team whiteboard",
+  "google-ads": "small business owner phone call laptop",
 };
 
 await mkdir(resolve(appRoot, "public/services"), { recursive: true });
 
-const credits = {};
+const only = process.argv.slice(2);
+const credits = only.length
+  ? JSON.parse(
+      await readFile(
+        resolve(appRoot, "src/data/service-image-credits.json"),
+        "utf8"
+      )
+    )
+  : {};
 
 for (const [slug, query] of Object.entries(QUERIES)) {
+  if (only.length && !only.includes(slug)) continue;
   const res = await fetch(
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=landscape&per_page=5`,
     { headers: { Authorization: KEY } }

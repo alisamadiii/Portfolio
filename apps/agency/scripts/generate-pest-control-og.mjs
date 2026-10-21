@@ -38,15 +38,15 @@ const svg = `
   ${roach}
   <rect x="64" y="130" width="44" height="4" fill="${ACCENT}"/>
   <text x="64" y="178" font-family="Helvetica Neue, Arial, sans-serif"
-    font-size="21" letter-spacing="3" fill="${FOG}">WEBSITES FOR PEST CONTROL COMPANIES</text>
+    font-size="21" letter-spacing="3" fill="${FOG}">LEAD GENERATION FOR PEST CONTROL</text>
   <text x="64" y="282" font-family="Arial Narrow, Helvetica Neue, Arial, sans-serif"
-    font-size="86" font-weight="800" letter-spacing="1" fill="${BONE}">PEST CONTROL WEBSITES</text>
+    font-size="86" font-weight="800" letter-spacing="1" fill="${BONE}">PEST CONTROL MARKETING</text>
   <text x="64" y="378" font-family="Arial Narrow, Helvetica Neue, Arial, sans-serif"
-    font-size="86" font-weight="800" letter-spacing="1" fill="${ACCENT}">THAT MAKE THE PHONE RING</text>
+    font-size="86" font-weight="800" letter-spacing="1" fill="${ACCENT}">THAT MAKES THE PHONE RING</text>
   <text x="64" y="452" font-family="Helvetica Neue, Arial, sans-serif"
-    font-size="26" fill="${FOG}">Click-to-call. City pages that rank. Reviews. Booking.</text>
+    font-size="26" fill="${FOG}">Google Ads. Click-to-call. City pages. Reviews. Booking.</text>
   <text x="64" y="${H - 64}" font-family="Helvetica Neue, Arial, sans-serif"
-    font-size="26" fill="${FOG}">Ali Samadi Agency — www.alisamadii.com/pest-control</text>
+    font-size="26" fill="${FOG}">Ali Samadi Agency · www.alisamadii.com/pest-control</text>
 </svg>`;
 
 await mkdir(resolve(appRoot, "public/og"), { recursive: true });
