@@ -325,7 +325,11 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
               }
             >
               <SelectTrigger className="h-9 w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(v) =>
+                    v === "other" ? "Other" : HOSTING_LABELS[v as Hosting]
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {HOSTING_VALUES.map((value) => (

@@ -1,6 +1,8 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useConfig } from "@/contexts/config-context";
+import { useUser } from "@/contexts/user-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -20,16 +22,15 @@ import { useTRPC } from "@workspace/trpc/client";
 import {
   HOSTING_LABELS,
   HOSTING_VALUES,
-  type Hosting,
   isExternalHosting,
+  type Hosting,
 } from "@workspace/trpc/lib/hosting";
 
-import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
 import { isAdminUser } from "@/lib/authz-shared";
+import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
+
 import { Check, Copy } from "@/components/icon";
 import { ProjectFeatureGate } from "@/components/settings/project-paywall";
-import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
 
 /** Site Settings › Domain. Content Pilot hosted projects (the default, and
  * every upload) get the free subdomain + custom domain flow. Projects hosted
@@ -55,14 +56,16 @@ export function DomainPanel() {
   }
 
   const { hosting, source, websiteUrl } = snapshot.data;
-  const hostingCard = isAdmin ? (
+  // Everyone sees where the site is hosted; only an admin can change it.
+  const hostingCard = (
     <HostingCard
       repoId={repoId}
       hosting={hosting}
       websiteUrl={websiteUrl}
       canHostElsewhere={source === "github"}
+      canEdit={isAdmin}
     />
-  ) : null;
+  );
 
   if (!isExternalHosting(hosting)) {
     return <SiteDomainPanel repoId={repoId} top={hostingCard} />;
@@ -96,17 +99,20 @@ export function DomainPanel() {
   );
 }
 
-/** Admin only: where the live site is served, plus its URL when external. */
+/** Where the live site is served, plus its URL when external. Editable by
+ * an admin only; everyone else sees it read-only. */
 function HostingCard({
   repoId,
   hosting,
   websiteUrl,
   canHostElsewhere,
+  canEdit,
 }: {
   repoId: number;
   hosting: Hosting;
   websiteUrl: string | null;
   canHostElsewhere: boolean;
+  canEdit: boolean;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -138,24 +144,28 @@ function HostingCard({
       <div className="border-b p-4">
         <h3 className="text-[16px] font-extrabold tracking-tight">Hosting</h3>
         <p className="text-muted-foreground mt-1 text-[13px]">
-          {canHostElsewhere
-            ? "Where the live site is served. On another host, publishing only pushes to GitHub and that host deploys it."
-            : "Uploaded projects are always hosted on Content Pilot."}
+          {!canHostElsewhere
+            ? "Uploaded projects are always hosted on Content Pilot."
+            : canEdit
+              ? "Where the live site is served. On another host, publishing only pushes to GitHub and that host deploys it."
+              : "Where the live site is served. Only an admin can change this."}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 p-4">
         <Select
           value={value}
-          disabled={!canHostElsewhere}
-          onValueChange={(next) => setValue((next as Hosting) ?? "content-pilot")}
+          disabled={!canHostElsewhere || !canEdit}
+          onValueChange={(next) =>
+            setValue((next as Hosting) ?? "content-pilot")
+          }
         >
           <SelectTrigger className="h-9 w-44">
-            <SelectValue />
+            <SelectValue>{(v) => hostingOptionLabel(v as Hosting)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {HOSTING_VALUES.map((option) => (
               <SelectItem key={option} value={option}>
-                {option === "other" ? "Other" : HOSTING_LABELS[option]}
+                {hostingOptionLabel(option)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -165,26 +175,32 @@ function HostingCard({
             placeholder="www.example.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            disabled={!canEdit}
             className="min-w-56 flex-1"
           />
         )}
-        <Button
-          isLoading={save.isPending}
-          disabled={!canHostElsewhere || !dirty || (external && !url.trim())}
-          onClick={() =>
-            save.mutate({
-              repoId,
-              hosting: value,
-              ...(external ? { websiteUrl: url } : {}),
-            })
-          }
-        >
-          Save
-        </Button>
+        {canEdit && canHostElsewhere && (
+          <Button
+            isLoading={save.isPending}
+            disabled={!canHostElsewhere || !dirty || (external && !url.trim())}
+            onClick={() =>
+              save.mutate({
+                repoId,
+                hosting: value,
+                ...(external ? { websiteUrl: url } : {}),
+              })
+            }
+          >
+            Save
+          </Button>
+        )}
       </div>
     </div>
   );
 }
+
+const hostingOptionLabel = (value: Hosting) =>
+  value === "other" ? "Other" : HOSTING_LABELS[value];
 
 const CopyChip = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false);
@@ -285,7 +301,9 @@ function SiteDomainPanel({
             "We could not find your CNAME record yet. DNS changes can take up to an hour."
           );
         } else if (result.dns === "wrong_target") {
-          toast.info("Your CNAME points somewhere else. Check the value below.");
+          toast.info(
+            "Your CNAME points somewhere else. Check the value below."
+          );
         } else if (result.dns === "a_record") {
           toast.info(
             "We found an A record on that name. Replace it with the CNAME below."
@@ -465,9 +483,9 @@ function SiteDomainPanel({
                   {data.custom.status === "pending" && (
                     <>
                       <p className="text-muted-foreground px-4 pt-4 text-[13px]">
-                        Add this record at your DNS provider (Namecheap, GoDaddy,
-                        or wherever your domain lives), then verify. DNS changes
-                        can take up to an hour.
+                        Add this record at your DNS provider (Namecheap,
+                        GoDaddy, or wherever your domain lives), then verify.
+                        DNS changes can take up to an hour.
                       </p>
                       <div className="p-4">
                         <div className="overflow-hidden rounded-lg border">
