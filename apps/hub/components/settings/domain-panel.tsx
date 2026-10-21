@@ -35,7 +35,7 @@ import { ProjectFeatureGate } from "@/components/settings/project-paywall";
 /** Site Settings › Domain. Content Pilot hosted projects (the default, and
  * every upload) get the free subdomain + custom domain flow. Projects hosted
  * on Netlify/Vercel/Cloudflare manage their domain there, so they get a note
- * instead. Only an admin can change where a project is hosted. */
+ * instead. Only the project owner or an admin can change where it's hosted. */
 export function DomainPanel() {
   const trpc = useTRPC();
   const { config } = useConfig();
@@ -55,15 +55,15 @@ export function DomainPanel() {
     );
   }
 
-  const { hosting, source, websiteUrl } = snapshot.data;
-  // Everyone sees where the site is hosted; only an admin can change it.
+  const { hosting, source, websiteUrl, isOwner } = snapshot.data;
+  // Everyone sees where the site is hosted; the owner or an admin can change it.
   const hostingCard = (
     <HostingCard
       repoId={repoId}
       hosting={hosting}
       websiteUrl={websiteUrl}
       canHostElsewhere={source === "github"}
-      canEdit={isAdmin}
+      canEdit={isAdmin || isOwner}
     />
   );
 
@@ -100,7 +100,7 @@ export function DomainPanel() {
 }
 
 /** Where the live site is served, plus its URL when external. Editable by
- * an admin only; everyone else sees it read-only. */
+ * the project owner or an admin; everyone else sees it read-only. */
 function HostingCard({
   repoId,
   hosting,
@@ -148,7 +148,7 @@ function HostingCard({
             ? "Uploaded projects are always hosted on Content Pilot."
             : canEdit
               ? "Where the live site is served. On another host, publishing only pushes to GitHub and that host deploys it."
-              : "Where the live site is served. Only an admin can change this."}
+              : "Where the live site is served. Only the project owner can change this."}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 p-4">

@@ -132,7 +132,7 @@ export const projectRouter = createTRPCRouter({
   }),
 
   /**
-   * Where the live website is served (admin only). External hosting (Netlify,
+   * Where the live website is served (project owner or admin). External hosting (Netlify,
    * Vercel, Cloudflare, other) = publish only pushes to GitHub and that host
    * deploys; the website URL points at the client's own site. Back to Content
    * Pilot = the next publish builds and serves it here again.
@@ -145,20 +145,25 @@ export const projectRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!isAdminUser(ctx.user)) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only an admin can change where a site is hosted.",
-        });
-      }
       try {
         const [project] = await db
-          .select({ source: hubProject.source })
+          .select({
+            source: hubProject.source,
+            ownerId: hubProject.githubConnectedUserId,
+          })
           .from(hubProject)
           .where(eq(hubProject.repoId, ctx.repoId))
           .limit(1);
         if (!project) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
+        }
+        // The project owner (who imported it) or an admin; collaborators can't.
+        if (!isAdminUser(ctx.user) && project.ownerId !== ctx.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Only the project owner or an admin can change where a site is hosted.",
+          });
         }
 
         let websiteUrl: string | null;

@@ -41,9 +41,7 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { FolderUp, LockKeyhole, Plus } from "@/components/icon";
 import { UploadImport } from "@/components/deploy/upload-import";
-import { isAdminUser } from "@/lib/authz-shared";
 import { repoPath } from "@/lib/paths";
-import { useUser } from "@/contexts/user-context";
 
 type Repo = RouterOutputs["deploy"]["installationRepos"][number];
 
@@ -281,8 +279,6 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user } = useUser();
-  const isAdmin = isAdminUser(user);
   const [repo, setRepo] = useState<Repo | null>(null);
   const [hosting, setHosting] = useState<Hosting>("content-pilot");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -314,44 +310,42 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
         <DialogDescription>{repo.fullName}</DialogDescription>
       </DialogHeader>
 
-      {isAdmin && (
-        <div className="mt-4 space-y-3">
-          <div className="space-y-1.5">
-            <Label>Where is the live site hosted?</Label>
-            <Select
-              value={hosting}
-              onValueChange={(value) =>
-                setHosting((value as Hosting) ?? "content-pilot")
-              }
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue>
-                  {(v) =>
-                    v === "other" ? "Other" : HOSTING_LABELS[v as Hosting]
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {HOSTING_VALUES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {value === "other" ? "Other" : HOSTING_LABELS[value]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {external && (
-            <div className="space-y-1.5">
-              <Label>Live website</Label>
-              <Input
-                value={websiteUrl}
-                placeholder="www.example.com"
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-              />
-            </div>
-          )}
+      <div className="mt-4 space-y-3">
+        <div className="space-y-1.5">
+          <Label>Where is the live site hosted?</Label>
+          <Select
+            value={hosting}
+            onValueChange={(value) =>
+              setHosting((value as Hosting) ?? "content-pilot")
+            }
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue>
+                {(v) =>
+                  v === "other" ? "Other" : HOSTING_LABELS[v as Hosting]
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {HOSTING_VALUES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {value === "other" ? "Other" : HOSTING_LABELS[value]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      )}
+        {external && (
+          <div className="space-y-1.5">
+            <Label>Live website</Label>
+            <Input
+              value={websiteUrl}
+              placeholder="www.example.com"
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
 
       <p className="text-muted-foreground mt-4 text-[13px]">
         {external
@@ -368,7 +362,8 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
           onClick={() =>
             importMutation.mutate({
               repoFullName: repo.fullName,
-              ...(isAdmin ? { hosting, websiteUrl } : {}),
+              hosting,
+              websiteUrl,
             })
           }
         >

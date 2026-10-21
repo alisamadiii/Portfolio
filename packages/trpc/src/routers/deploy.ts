@@ -360,7 +360,7 @@ export const deployRouter = createTRPCRouter({
     .input(
       z.object({
         repoFullName: z.string().min(1),
-        // Admin only: the live site stays on another host (push-only publish).
+        // The live site stays on another host (push-only publish).
         hosting: z.enum(HOSTING_VALUES).optional(),
         websiteUrl: z.string().trim().max(255).optional(),
       })
@@ -389,9 +389,8 @@ export const deployRouter = createTRPCRouter({
       if (!check.ok) {
         throw new TRPCError({ code: "BAD_REQUEST", message: check.message });
       }
-      const hosting = isAdminUser(ctx.session.user)
-        ? (input.hosting ?? "content-pilot")
-        : "content-pilot";
+      // The importer becomes the project owner, so they choose the hosting.
+      const hosting = input.hosting ?? "content-pilot";
       let websiteUrl: string | null;
       if (isExternalHosting(hosting)) {
         websiteUrl = normalizeWebsiteUrl(input.websiteUrl ?? "");
