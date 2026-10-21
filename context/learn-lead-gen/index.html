@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lead Gen, Visually</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f6f5f3;
+    --surface: #fffefc;
+    --ink: #1b1a17;
+    --muted: #67625a;
+    --line: rgba(27, 26, 23, 0.09);
+    --accent: #fc8464;
+    --accent-ink: #c2451f;
+    --good: #2f6b3f;
+    --good-soft: rgba(47, 107, 63, 0.12);
+    --bad: #c2451f;
+    --bad-soft: rgba(194, 69, 31, 0.1);
+    --google: #4c7bf3;
+    --shadow: 0 14px 34px rgba(27, 26, 23, 0.08), 0 0 0 1px rgba(27, 26, 23, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151412;
+      --surface: #1f1d1a;
+      --ink: #ece9e2;
+      --muted: #a39d93;
+      --line: rgba(236, 233, 226, 0.1);
+      --accent-ink: #fc8464;
+      --good: #6cc183;
+      --good-soft: rgba(108, 193, 131, 0.14);
+      --bad: #ff8a6b;
+      --bad-soft: rgba(255, 138, 107, 0.12);
+      --google: #7ea0ff;
+      --shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(236, 233, 226, 0.06);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  section { padding: 88px 0; border-top: 1px solid var(--line); }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 99px; background: var(--accent); }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.025em; line-height: 1.1; }
+  h1 { font-size: clamp(40px, 7vw, 78px); font-weight: 700; }
+  h2 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; margin-top: 14px; }
+  h3 { font-size: 20px; font-weight: 600; }
+  .lead { font-size: clamp(17px, 1.8vw, 20px); color: var(--muted); max-width: 62ch; margin: 18px 0 0; }
+  .accent { color: var(--accent-ink); font-style: italic; }
+  .card {
+    background: var(--surface); border-radius: 22px; box-shadow: var(--shadow); padding: 28px;
+  }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .kid {
+    margin-top: 28px; display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px 20px; border-radius: 16px; background: var(--good-soft); color: var(--ink); font-size: 16px;
+  }
+  .kid b { color: var(--good); }
+  .kid .icon { font-size: 26px; line-height: 1; }
+
+  /* reveal */
+  .reveal { opacity: 0; transform: translateY(24px); filter: blur(6px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1), filter .8s ease; }
+  .reveal.in { opacity: 1; transform: none; filter: none; }
+
+  /* nav */
+  nav.toc {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent); border-bottom: 1px solid var(--line);
+  }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; scrollbar-width: none; }
+  nav.toc a {
+    flex: 0 0 auto; text-decoration: none; color: var(--muted); font-size: 13px; font-weight: 500;
+    padding: 6px 12px; border-radius: 99px;
+  }
+  nav.toc a:hover, nav.toc a.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+  /* hero */
+  .hero { padding: 72px 0 96px; border-top: 0; text-align: center; position: relative; overflow: hidden; }
+  .hero .lead { margin-left: auto; margin-right: auto; }
+  .funnel { margin: 48px auto 0; max-width: 560px; }
+  .funnel-row {
+    margin: 0 auto 10px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; color: #fff; font-weight: 600; transform-origin: center; animation: grow 1s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .funnel-row span.mono { font-size: 13px; opacity: .85; font-weight: 400; }
+  @keyframes grow { from { transform: scaleX(.2); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* journey */
+  .journey { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 40px; position: relative; }
+  .step {
+    background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 20px 18px; min-height: 230px;
+    display: flex; flex-direction: column; gap: 12px; position: relative; transition: transform .5s, box-shadow .5s, opacity .5s;
+    opacity: .45;
+  }
+  .step.active { opacity: 1; transform: translateY(-6px); box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+  .step .num { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); }
+  .step p { margin: 0; font-size: 14.5px; color: var(--muted); line-height: 1.5; }
+  .mock { border-radius: 12px; background: var(--bg); padding: 10px; font-size: 13px; min-height: 74px; }
+  .searchbar { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 99px; padding: 8px 12px; box-shadow: 0 0 0 1px var(--line); }
+  .caret { display: inline-block; width: 1px; height: 14px; background: var(--ink); animation: blink 1s steps(1) infinite; vertical-align: middle; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .adtag { font-size: 11px; font-weight: 700; color: var(--ink); margin-right: 6px; }
+  .adtitle { color: var(--google); font-weight: 600; font-size: 13.5px; }
+  .coin {
+    position: absolute; right: 14px; top: 14px; font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 500;
+    background: var(--bad-soft); color: var(--bad); padding: 3px 8px; border-radius: 99px; opacity: 0; transform: translateY(6px);
+    transition: .4s;
+  }
+  .step.active .coin { opacity: 1; transform: none; }
+  .phone { font-size: 30px; display: inline-block; }
+  .step.active .phone { animation: ring .5s ease-in-out 3; }
+  @keyframes ring { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+  .bar-mini { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 6px; }
+  .bar-mini i { display: block; height: 100%; width: 0; background: var(--good); transition: width 1.2s ease; }
+  .step.active .bar-mini i { width: 78%; }
+
+  /* crowd */
+  .crowd { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; margin: 26px 0 20px; }
+  .person { aspect-ratio: 3/5; opacity: 0; transform: translateY(16px) scale(.9); transition: .45s cubic-bezier(.2,.7,.2,1); }
+  .person.show { opacity: 1; transform: none; }
+  .person svg { width: 100%; height: 100%; display: block; }
+  .person .body { fill: var(--muted); opacity: .45; transition: fill .4s, opacity .4s; }
+  .person.lead .body { fill: var(--good); opacity: 1; }
+  .person.lead { transform: translateY(-8px) scale(1.08); }
+  .counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .counter { background: var(--bg); border-radius: 14px; padding: 14px 16px; }
+  .counter b { display: block; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.02em; }
+  .counter span { font-size: 12.5px; color: var(--muted); }
+  .equation {
+    margin-top: 18px; font-family: "JetBrains Mono", monospace; font-size: 15px; padding: 14px 16px; border-radius: 14px;
+    background: var(--bad-soft); color: var(--ink); text-align: center;
+  }
+
+  /* calculator */
+  .calc { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 20px; margin-top: 36px; }
+  @media (max-width: 820px) { .calc { grid-template-columns: 1fr; } }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .presets button {
+    font: inherit; font-size: 13px; padding: 7px 12px; border-radius: 99px; border: 0; cursor: pointer;
+    background: var(--bg); color: var(--ink); box-shadow: 0 0 0 1px var(--line);
+  }
+  .presets button.on { background: var(--ink); color: var(--bg); }
+  .field { margin-bottom: 20px; }
+  .field label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+  .field label output { font-family: "JetBrains Mono", monospace; color: var(--accent-ink); }
+  .field small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin-top: 8px; }
+  .chain { display: flex; flex-direction: column; gap: 10px; }
+  .link {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 14px; background: var(--bg);
+  }
+  .link .f { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--muted); }
+  .link b { font-size: 24px; letter-spacing: -0.02em; transition: color .3s; }
+  .link.promise { background: var(--ink); color: var(--bg); }
+  .link.promise .f { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+  .link.promise b { color: var(--accent); font-size: 30px; }
+  .dots { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 14px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--line); animation: pop .35s both; }
+  .dot.p { background: var(--accent); }
+  .dot.f { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+  @keyframes pop { from { transform: scale(0); } to { transform: none; } }
+  .warn { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--bad-soft); color: var(--bad); font-size: 14px; font-weight: 500; display: none; }
+  .warn.on { display: block; animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  .legend { display: flex; gap: 14px; font-size: 12.5px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+
+  /* ramp chart */
+  .ramp svg { width: 100%; height: auto; display: block; }
+  .ramp .axis { stroke: var(--line); }
+  .ramp text { fill: var(--muted); font-size: 11px; font-family: "JetBrains Mono", monospace; }
+  .ramp .curve { fill: none; stroke: var(--good); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 900; stroke-dashoffset: 900; }
+  .ramp.in .curve { animation: draw 2.4s ease forwards .3s; }
+  .ramp .area { fill: var(--good-soft); opacity: 0; }
+  .ramp.in .area { animation: fade 1s ease forwards 1.8s; }
+  .ramp .promise { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 6; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes fade { to { opacity: 1; } }
+
+  /* money */
+  .money { position: relative; display: grid; grid-template-columns: 1fr 1.2fr 1fr; align-items: center; gap: 10px; margin-top: 40px; }
+  @media (max-width: 720px) { .money { grid-template-columns: 1fr; } .money .pipes { display: none; } }
+  .node { text-align: center; padding: 22px 16px; }
+  .node .big { font-size: 40px; }
+  .node b { display: block; font-size: 18px; margin-top: 6px; }
+  .node small { color: var(--muted); font-size: 13.5px; }
+  .pipes svg { width: 100%; height: 220px; overflow: visible; }
+  .pipe { fill: none; stroke-width: 3; stroke-dasharray: 2 12; stroke-linecap: round; animation: flow 1.2s linear infinite; }
+  .pipe.fee { stroke: var(--accent); }
+  .pipe.ads { stroke: var(--google); }
+  @keyframes flow { to { stroke-dashoffset: -28; } }
+  .pipes text { font-family: "JetBrains Mono", monospace; font-size: 12px; }
+  .dest { display: flex; flex-direction: column; gap: 14px; }
+
+  /* filter */
+  .filterbox { position: relative; height: 340px; overflow: hidden; border-radius: 18px; background: var(--bg); }
+  .sieve {
+    position: absolute; left: 0; right: 0; top: 52%; height: 34px; display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 12px); opacity: .9;
+  }
+  .sieve span {
+    background: var(--ink); color: var(--bg); font-size: 12px; padding: 4px 10px; border-radius: 99px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .chip {
+    position: absolute; top: -40px; white-space: nowrap; font-size: 13px; padding: 6px 12px; border-radius: 99px;
+    background: var(--surface); box-shadow: var(--shadow); font-weight: 500;
+  }
+  .chip.good { animation: fallThrough 4.2s linear forwards; }
+  .chip.bad { animation: fallBlock 4.2s linear forwards; }
+  .chip.bad.hit { background: var(--bad-soft); color: var(--bad); text-decoration: line-through; }
+  .chip.good.past { background: var(--good-soft); color: var(--good); }
+  @keyframes fallThrough { 0% { top: -40px; } 100% { top: 360px; } }
+  @keyframes fallBlock { 0% { top: -40px; opacity: 1; } 45% { top: 128px; } 70% { top: 128px; opacity: 1; } 100% { top: 128px; opacity: 0; } }
+  .meter { height: 26px; border-radius: 99px; background: var(--bg); overflow: hidden; position: relative; margin-top: 14px; }
+  .meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--good), var(--accent)); border-radius: 99px; }
+  .meter span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: "JetBrains Mono", monospace; font-weight: 500; }
+  .paused { margin-top: 10px; font-size: 14px; color: var(--muted); min-height: 24px; }
+  .fixes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 20px; }
+  .fix { padding: 16px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); font-size: 14.5px; }
+  .fix b { display: block; margin-bottom: 4px; }
+  .fix .x { color: var(--bad); }
+
+  /* tracking */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 36px; }
+  @media (max-width: 720px) { .vs { grid-template-columns: 1fr; } }
+  .vs .card h3 { display: flex; align-items: center; gap: 10px; }
+  .row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .row:last-child { border-bottom: 0; }
+  .yes { color: var(--good); font-weight: 700; }
+  .no { color: var(--bad); font-weight: 700; }
+  .leadcard {
+    margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--bg); font-size: 14px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  }
+  .avatar { width: 34px; height: 34px; border-radius: 99px; background: var(--accent); color: #1b1a17; display: grid; place-items: center; font-weight: 700; }
+  .tagbtn { font-size: 11px; padding: 4px 8px; border-radius: 99px; background: var(--good-soft); color: var(--good); font-weight: 600; }
+  .blur { filter: blur(5px); user-select: none; }
+
+  /* guarantee */
+  .timeline { position: relative; margin-top: 40px; padding: 30px 0 10px; }
+  .track { height: 8px; border-radius: 99px; background: var(--line); position: relative; }
+  .track i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--google), var(--good)); transition: width 2.6s cubic-bezier(.4,0,.2,1); }
+  .timeline.in .track i { width: 100%; }
+  .marks { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 14px; font-size: 14px; }
+  .marks div:last-child { text-align: right; }
+  .marks b { display: block; }
+  .marks small { color: var(--muted); }
+  .outcomes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
+  @media (max-width: 720px) { .outcomes { grid-template-columns: 1fr; } }
+  .outcome { border-radius: 18px; padding: 22px; }
+  .outcome.win { background: var(--good-soft); }
+  .outcome.miss { background: var(--bad-soft); }
+  .outcome b { font-size: 18px; display: block; margin-bottom: 6px; }
+
+  /* glossary */
+  .gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 32px; }
+  .flip { perspective: 900px; height: 150px; cursor: pointer; border: 0; padding: 0; background: none; font: inherit; color: inherit; text-align: left; }
+  .flip .in2 { position: relative; width: 100%; height: 100%; transition: transform .6s cubic-bezier(.2,.7,.2,1); transform-style: preserve-3d; }
+  .flip.on .in2 { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px; padding: 18px;
+    display: flex; flex-direction: column; justify-content: center; background: var(--surface); box-shadow: var(--shadow);
+  }
+  .face.front b { font-size: 22px; letter-spacing: -0.02em; }
+  .face.front small { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .face.back { transform: rotateY(180deg); background: var(--ink); color: var(--bg); font-size: 14.5px; line-height: 1.45; }
+
+  footer { padding: 48px 0 72px; text-align: center; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+    .reveal { opacity: 1; transform: none; filter: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#journey">1 · The journey</a>
+    <a href="#clicks">2 · Clicks vs leads</a>
+    <a href="#calc">3 · Lead target</a>
+    <a href="#money">4 · Who pays what</a>
+    <a href="#waste">5 · Wasted clicks</a>
+    <a href="#tracking">6 · Tracking</a>
+    <a href="#guarantee">7 · Guarantee</a>
+    <a href="#words">8 · Words</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Lead generation, visually</p>
+    <h1 style="margin-top:16px;">From a Google search<br/>to a <span class="accent">ringing phone</span></h1>
+    <p class="lead">Everything the new offer depends on: how ads turn into calls, what a lead costs, how to pick the guarantee number, and where tracking fits. Scroll slowly.</p>
+    <div class="funnel" aria-hidden="true">
+      <div class="funnel-row" style="width:100%; background:#8a847a; animation-delay:.1s;">People who search <span class="mono">1,000s</span></div>
+      <div class="funnel-row" style="width:82%; background:var(--google); animation-delay:.35s;">See the ad <span class="mono">impressions</span></div>
+      <div class="funnel-row" style="width:60%; background:#e0915d; animation-delay:.6s;">Click it <span class="mono">you pay here</span></div>
+      <div class="funnel-row" style="width:38%; background:var(--good); animation-delay:.85s;">Call or form <span class="mono">LEAD</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- 1 JOURNEY -->
+<section id="journey">
+  <div class="wrap">
+    <p class="eyebrow reveal">1 · The journey</p>
+    <h2 class="reveal">How one lead happens</h2>
+    <p class="lead reveal">Watch the highlight move. Every lead goes through these five steps. Money only leaves the client's pocket at one of them.</p>
+
+    <div class="journey reveal" id="journeySteps">
+      <div class="step">
+        <span class="num">01 · SEARCH</span>
+        <div class="mock"><div class="searchbar">🔍 <span id="typed"></span><span class="caret"></span></div></div>
+        <p>Someone types what they need into Google.</p>
+      </div>
+      <div class="step">
+        <span class="num">02 · AD SHOWS</span>
+        <div class="mock"><span class="adtag">Sponsored</span><div class="adtitle">Jax Pest Pros · Same-Day Service</div><div style="color:var(--muted);font-size:12px;">Free inspection · 4.9★</div></div>
+        <p>Your ad appears because it matches their words. <b>Showing is free.</b></p>
+      </div>
+      <div class="step">
+        <span class="coin">−$8</span>
+        <span class="num">03 · CLICK</span>
+        <div class="mock" style="display:grid;place-items:center;font-size:30px;">👆</div>
+        <p>They click. <b>Google charges the client</b> for this click, whatever happens next.</p>
+      </div>
+      <div class="step">
+        <span class="num">04 · LANDING PAGE</span>
+        <div class="mock"><b style="font-size:13px;">Termites? We'll be there today.</b><div style="margin-top:8px;display:inline-block;background:var(--accent);color:#1b1a17;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;">📞 Call now</div></div>
+        <p>The page you built. Its only job: get the call.</p>
+      </div>
+      <div class="step">
+        <span class="num">05 · LEAD</span>
+        <div class="mock"><span class="phone">📞</span><div class="bar-mini"><i></i></div><small style="color:var(--muted);font-size:11px;">call 1:12 · tracked ✓</small></div>
+        <p>They call or send the form. <b>That's a lead.</b> Tracking records it.</p>
+      </div>
+    </div>
+
+    <div class="kid reveal"><span class="icon">🧒</span><div><b>Kid version:</b> putting up a poster is free. You only pay when someone walks to your lemonade stand. Whether they buy is up to how good your stand looks.</div></div>
+  </div>
+</section>
+
+<!-- 2 CLICKS VS LEADS -->
+<section id="clicks">
+  <div class="wrap">
+    <p class="eyebrow reveal">2 · Clicks vs leads</p>
+    <h2 class="reveal">You pay for <span class="accent">every</span> click.<br/>Only some of them call.</h2>
+    <p class="lead reveal">Ten people click the ad at $8 each. On a good page, about one of them calls. So that one call really cost $80. That's the <b>cost per lead</b>: a number you calculate, not a separate bill.</p>
+
+    <div class="card reveal" style="margin-top:32px;">
+      <div class="crowd" id="crowd"></div>
+      <div class="counters">
+        <div class="counter"><b id="cClicks">0</b><span>clicks</span></div>
+        <div class="counter"><b id="cSpent">$0</b><span>paid to Google</span></div>
+        <div class="counter"><b id="cLeads">0</b><span>leads (calls / forms)</span></div>
+      </div>
+      <div class="equation" id="cEq">cost per lead = money spent ÷ leads = …</div>
+    </div>
+
+    <div class="kid reveal"><span class="icon">🧒</span><div><b>Kid version:</b> 10 kids visit your stand and you paid your friend 80 cents in total to bring them. 1 kid buys. That buyer cost you 80 cents.</div></div>
+  </div>
+</section>
+
+<!-- 3 CALCULATOR -->
+<section id="calc">
+  <div class="wrap">
+    <p class="eyebrow reveal">3 · The lead target</p>
+    <h2 class="reveal">Pick the guarantee number <span class="accent">yourself</span></h2>
+    <p class="lead reveal">Move the sliders or tap an example. The chain on the right does the math, step by step. You always promise about <b>half</b> of the forecast.</p>
+
+    <div class="calc reveal">
+      <div class="card">
+        <div class="presets" id="presets">
+          <button data-b="3000" data-c="8" data-r="10" class="on">🐜 Pest control</button>
+          <button data-b="2000" data-c="4" data-r="8">🔨 Handyman</button>
+          <button data-b="5000" data-c="25" data-r="12">🚿 Plumber</button>
+          <button data-b="1000" data-c="15" data-r="10">⚠️ Too small</button>
+        </div>
+        <div class="field">
+          <label>Monthly ad budget <output id="oB"></output></label>
+          <small>What the client pays Google each month</small>
+          <input type="range" id="b" min="500" max="10000" step="100" />
+        </div>
+        <div class="field">
+          <label>Cost per click <output id="oC"></output></label>
+          <small>From Keyword Planner: middle of the "top of page bid" range</small>
+          <input type="range" id="c" min="1" max="40" step="0.5" />
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Clicks that become leads <output id="oR"></output></label>
+          <small>Start with 10%. Weak page or shoppers: 5–8%. Emergencies: higher</small>
+          <input type="range" id="r" min="2" max="25" step="1" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chain">
+          <div class="link"><div><div class="f">cost per click ÷ conversion rate</div>Cost per lead</div><b id="vCpl"></b></div>
+          <div class="link"><div><div class="f">budget ÷ cost per lead</div>Leads per month</div><b id="vMonth"></b></div>
+          <div class="link"><div><div class="f">leads per month × 3</div>Forecast for 90 days</div><b id="vForecast"></b></div>
+          <div class="link promise"><div><div class="f">forecast ÷ 2 (safety)</div>Lead number to promise</div><b id="vPromise"></b></div>
+        </div>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>promised</span><span><i style="background:color-mix(in srgb, var(--accent) 30%, transparent)"></i>extra you expect (your safety room)</span></div>
+        <div class="warn" id="warn">Under ~10 leads a month: too few for Google to learn and for a fair promise. Ask for a bigger budget first.</div>
+      </div>
+    </div>
+
+    <div class="card ramp reveal" id="ramp" style="margin-top:20px;">
+      <h3>Why only half? Month one is slow.</h3>
+      <p style="margin:6px 0 16px;color:var(--muted);font-size:15px;">Google spends the first weeks learning who to show the ad to. Leads start slow, then speed up. The dashed line is your promise; the green line has to cross it before day 90.</p>
+      <svg viewBox="0 0 600 220" role="img" aria-label="Cumulative leads over 90 days, starting slow and passing the promise line before day 90">
+        <line class="axis" x1="40" y1="190" x2="580" y2="190" />
+        <line class="axis" x1="40" y1="20" x2="40" y2="190" />
+        <path class="area" d="M40,190 C120,186 170,170 220,150 C300,118 420,70 580,32 L580,190 Z" />
+        <path class="curve" d="M40,190 C120,186 170,170 220,150 C300,118 420,70 580,32" />
+        <line class="promise" x1="40" y1="112" x2="580" y2="112" />
+        <text x="470" y="104">promise (½)</text>
+        <text x="476" y="26">forecast</text>
+        <text x="36" y="208">day 0</text>
+        <text x="206" y="208">30</text>
+        <text x="386" y="208">60</text>
+        <text x="556" y="208">90</text>
+        <text x="60" y="176">learning…</text>
+      </svg>
+    </div>
+
+    <div class="kid reveal"><span class="icon">🧒</span><div><b>Kid version:</b> you think you'll sell 6 cups, so you tell mom "at least 3". If you sell 6, you're a hero. If you sell 4, you still kept your word.</div></div>
+  </div>
+</section>
+
+<!-- 4 MONEY -->
+<section id="money">
+  <div class="wrap">
+    <p class="eyebrow reveal">4 · Who pays what</p>
+    <h2 class="reveal">Two separate bills</h2>
+    <p class="lead reveal">The client pays <b>you</b> for the work and pays <b>Google</b> for the clicks, with their own card. The ad budget never passes through you.</p>
+
+    <div class="money reveal">
+      <div class="card node">
+        <div class="big">🏠</div>
+        <b>Client</b>
+        <small>a pest control company</small>
+      </div>
+      <div class="pipes" aria-hidden="true">
+        <svg viewBox="0 0 300 220" preserveAspectRatio="none">
+          <path class="pipe fee" d="M0,110 C120,110 160,40 300,40" />
+          <path class="pipe ads" d="M0,110 C120,110 160,180 300,180" />
+          <text x="150" y="58" text-anchor="middle" fill="var(--accent-ink)">$2,500 / mo fee</text>
+          <text x="150" y="200" text-anchor="middle" fill="var(--google)">up to $3,000 / mo, per click</text>
+        </svg>
+      </div>
+      <div class="dest">
+        <div class="card node" style="padding:16px;"><div class="big" style="font-size:30px;">🧑‍💻</div><b>You</b><small>site, ads work, tracking, report</small><div class="mono" style="margin-top:6px;font-size:13px;color:var(--accent-ink);">$2,500 / mo fee</div></div>
+        <div class="card node" style="padding:16px;"><div class="big" style="font-size:30px;">🔎</div><b>Google</b><small>charges each click directly</small><div class="mono" style="margin-top:6px;font-size:13px;color:var(--google);">up to $3,000 / mo</div></div>
+      </div>
+    </div>
+
+    <div class="grid2 reveal" style="margin-top:20px;">
+      <div class="card"><h3>"Manages up to $3k/mo in ads"</h3><p style="margin:8px 0 0;color:var(--muted);">That's the size of the client's Google budget your plan covers. Bigger budget means more campaigns and more work, so it moves to a higher plan.</p></div>
+      <div class="card"><h3>One exception: Local Services Ads</h3><p style="margin:8px 0 0;color:var(--muted);">The "Google Guaranteed" boxes at the very top charge <b>per lead</b>, not per click. There, cost per lead really is the bill.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 WASTE -->
+<section id="waste">
+  <div class="wrap">
+    <p class="eyebrow reveal">5 · Wasted clicks</p>
+    <h2 class="reveal">What if people click but never call?</h2>
+    <p class="lead reveal">That's money gone, and stopping it is your real job. Your main tool is the <b>negative keyword</b> list: words that block bad searches before they cost anything.</p>
+
+    <div class="grid2 reveal" style="margin-top:32px;">
+      <div class="card">
+        <h3>Negative keywords at work</h3>
+        <div class="filterbox" id="filter" style="margin-top:14px;" aria-hidden="true">
+          <div class="sieve"><span>blocked: jobs · free · diy · how to · salary</span></div>
+        </div>
+        <p style="margin:12px 0 0;color:var(--muted);font-size:14px;"><span style="color:var(--good);font-weight:600;">Green</span> searches reach the ad. <span style="color:var(--bad);font-weight:600;">Red</span> ones are blocked and cost $0.</p>
+      </div>
+      <div class="card">
+        <h3>The budget is a hard cap</h3>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:15px;">You set a daily budget. When it's used, the ad stops until tomorrow. A busy day can go up to 2×, but the month never goes over daily × 30.4.</p>
+        <div class="meter" id="meter"><i></i><span id="meterTxt">$0 / $100 today</span></div>
+        <div class="paused" id="paused"></div>
+        <h3 style="margin-top:22px;">Fake clicks get refunded</h3>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:15px;">Bots, double-clicks and competitors count as <b>invalid clicks</b>. Google filters most of them and doesn't charge.</p>
+        <h3 style="margin-top:22px;">Going "viral" is free</h3>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:15px;">People sharing the website link cost nothing. You only pay for clicks on the ad itself.</p>
+      </div>
+    </div>
+
+    <div class="fixes reveal">
+      <div class="fix"><b><span class="x">✗</span> Clicks from outside the area</b>Location: "people <i>in</i> this area" only</div>
+      <div class="fix"><b><span class="x">✗</span> Ads at 2am, no one answers</b>Ad schedule: business hours</div>
+      <div class="fix"><b><span class="x">✗</span> Keyword too broad ("pest")</b>Exact and phrase match</div>
+      <div class="fix"><b><span class="x">✗</span> The page doesn't match the ad</b>Same promise, big call button</div>
+      <div class="fix"><b><span class="x">✗</span> A keyword spends with 0 leads</b>Pause it at 2–3× the target cost per lead</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 TRACKING -->
+<section id="tracking">
+  <div class="wrap">
+    <p class="eyebrow reveal">6 · Tracking</p>
+    <h2 class="reveal">Google <span class="accent">counts</span> leads.<br/>Your system <span class="accent">knows</span> them.</h2>
+    <p class="lead reveal">Start with the free Google tools. Your dashboard later fills the gaps, like who the lead was and whether they became a paying job.</p>
+
+    <div class="vs">
+      <div class="card reveal">
+        <h3>🔎 Google Ads + GA4 <span class="mono" style="font-size:12px;color:var(--good);">free · start here</span></h3>
+        <div class="row"><span class="yes">✓</span>Counts forms and calls as "conversions"</div>
+        <div class="row"><span class="yes">✓</span>Shows which keyword and ad brought each one</div>
+        <div class="row"><span class="yes">✓</span>Calculates cost per lead for you</div>
+        <div class="row"><span class="no">✗</span>No name, phone or message</div>
+        <div class="row"><span class="no">✗</span>Can't tell real leads from spam</div>
+        <div class="row"><span class="no">✗</span>Doesn't know which leads became jobs</div>
+        <div class="leadcard"><div class="avatar">?</div><div><b>1 conversion</b><div style="color:var(--muted);font-size:12.5px;">keyword: termite treatment</div></div><span class="mono" style="font-size:12px;color:var(--muted);">$80</span></div>
+      </div>
+      <div class="card reveal">
+        <h3>🧑‍💻 Your dashboard <span class="mono" style="font-size:12px;color:var(--accent-ink);">build next</span></h3>
+        <div class="row"><span class="yes">✓</span>Saves every lead: name, phone, message</div>
+        <div class="row"><span class="yes">✓</span>Stores the ad code (gclid / UTM) that brought it</div>
+        <div class="row"><span class="yes">✓</span>Qualified / spam / won / lost buttons</div>
+        <div class="row"><span class="yes">✓</span>Guarantee progress bar per client</div>
+        <div class="row"><span class="yes">✓</span>Pulls spend from the Google Ads API</div>
+        <div class="row"><span class="yes">✓</span>All clients in one view</div>
+        <div class="leadcard"><div class="avatar">M</div><div><b>Maria G. · <span class="blur">904-555-0182</span></b><div style="color:var(--muted);font-size:12.5px;">"Termites in my garage, can you come today?"</div></div><span class="tagbtn">WON $900</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 GUARANTEE -->
+<section id="guarantee">
+  <div class="wrap">
+    <p class="eyebrow reveal">7 · The guarantee</p>
+    <h2 class="reveal">Hit the number, <span class="accent">or they walk</span></h2>
+    <p class="lead reveal">Before launch you write the lead number down together. The 90-day clock starts when the ads go live.</p>
+
+    <div class="timeline reveal" id="timeline">
+      <div class="track"><i></i></div>
+      <div class="marks">
+        <div><b>Day 0</b><small>agree on the number, ads live within 14 days</small></div>
+        <div><b>Month 1</b><small>Google learns, leads are slow</small></div>
+        <div><b>Month 2</b><small>block waste, leads speed up</small></div>
+        <div><b>Day 90</b><small>count qualified leads</small></div>
+      </div>
+    </div>
+
+    <div class="outcomes reveal">
+      <div class="outcome win"><b>✓ Hit it</b>The 6-month plan continues. Your numbers become your first case study.</div>
+      <div class="outcome miss"><b>✗ Missed it</b>The client can cancel early and keep their site and ad account. <b>You refund nothing.</b></div>
+    </div>
+
+    <div class="grid2 reveal" style="margin-top:20px;">
+      <div class="card"><h3>What counts as a lead</h3><p style="margin:8px 0 0;color:var(--muted);">A tracked call of <b>60+ seconds</b>, or a real form. Not spam, not job seekers, not existing customers.</p></div>
+      <div class="card"><h3>The client's side</h3><p style="margin:8px 0 0;color:var(--muted);">Keep the agreed ad budget, don't pause the ads, and answer calls and forms during business hours.</p></div>
+      <div class="card"><h3>On-time guarantee</h3><p style="margin:8px 0 0;color:var(--muted);">Live in 14 days, every lead tracked, report by the 5th, or <b>that month is free</b>. This one costs real money, so protect your dates.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 WORDS -->
+<section id="words">
+  <div class="wrap">
+    <p class="eyebrow reveal">8 · Words</p>
+    <h2 class="reveal">Tap a card to flip it</h2>
+    <div class="gloss reveal" id="gloss"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Made for learning · Ali Samadi Agency · numbers are examples, your real numbers come after launch</div>
+</footer>
+
+<script>
+(() => {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (s, el = document) => el.querySelector(s);
+  const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+  }), { threshold: 0.15 });
+  document.querySelectorAll(".reveal, .ramp, .timeline").forEach((el) => io.observe(el));
+
+  // Active nav link
+  const links = [...document.querySelectorAll("nav.toc a")];
+  const navIo = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+  }), { rootMargin: "-45% 0px -50% 0px" });
+  document.querySelectorAll("section[id]").forEach((s) => navIo.observe(s));
+
+  // 1. Journey: step-through + typing
+  const steps = [...document.querySelectorAll("#journeySteps .step")];
+  const typed = $("#typed");
+  const queries = ["pest control jacksonville", "termite inspection near me", "exterminator open now"];
+  let si = 0, qi = 0;
+  function typeQuery(text, done) {
+    typed.textContent = "";
+    if (reduce) { typed.textContent = text; return done(); }
+    let i = 0;
+    const t = setInterval(() => { typed.textContent = text.slice(0, ++i); if (i >= text.length) { clearInterval(t); done(); } }, 55);
+  }
+  function nextStep() {
+    steps.forEach((s, i) => s.classList.toggle("active", i === si));
+    if (si === 0) {
+      typeQuery(queries[qi++ % queries.length], () => setTimeout(advance, 700));
+    } else {
+      setTimeout(advance, 2100);
+    }
+  }
+  function advance() { si = (si + 1) % steps.length; nextStep(); }
+  nextStep();
+
+  // 2. Crowd: 10 clicks, 1 lead, looping
+  const crowd = $("#crowd");
+  const personSvg = '<svg viewBox="0 0 30 50"><circle class="body" cx="15" cy="9" r="7"/><rect class="body" x="5" y="19" width="20" height="29" rx="9"/></svg>';
+  const people = Array.from({ length: 10 }, () => {
+    const d = document.createElement("div"); d.className = "person"; d.innerHTML = personSvg; crowd.appendChild(d); return d;
+  });
+  const cClicks = $("#cClicks"), cSpent = $("#cSpent"), cLeads = $("#cLeads"), cEq = $("#cEq");
+  let crowdRunning = false;
+  function runCrowd() {
+    crowdRunning = true;
+    people.forEach((p) => p.classList.remove("show", "lead"));
+    cClicks.textContent = "0"; cSpent.textContent = "$0"; cLeads.textContent = "0";
+    cEq.textContent = "cost per lead = money spent ÷ leads = …";
+    const leadAt = 3 + Math.floor(Math.random() * 6);
+    let n = 0;
+    const t = setInterval(() => {
+      people[n].classList.add("show");
+      n++;
+      cClicks.textContent = n; cSpent.textContent = money(n * 8);
+      if (n - 1 === leadAt) { people[leadAt].classList.add("lead"); cLeads.textContent = "1"; }
+      if (n === 10) {
+        clearInterval(t);
+        cEq.innerHTML = "cost per lead = $80 ÷ 1 lead = <b style='color:var(--bad)'>$80</b>";
+        setTimeout(runCrowd, 4200);
+      }
+    }, reduce ? 10 : 520);
+  }
+  const crowdIo = new IntersectionObserver((es) => { if (es[0].isIntersecting && !crowdRunning) runCrowd(); }, { threshold: 0.3 });
+  crowdIo.observe(crowd);
+
+  // 3. Calculator
+  const b = $("#b"), c = $("#c"), r = $("#r");
+  function calc() {
+    const budget = +b.value, cpc = +c.value, rate = +r.value / 100;
+    $("#oB").textContent = money(budget);
+    $("#oC").textContent = "$" + cpc.toFixed(cpc % 1 ? 2 : 0);
+    $("#oR").textContent = Math.round(rate * 100) + "%  (1 in " + Math.round(1 / rate) + ")";
+    const cpl = cpc / rate, perMonth = budget / cpl, forecast = perMonth * 3, promise = forecast / 2;
+    $("#vCpl").textContent = money(cpl);
+    $("#vMonth").textContent = Math.round(perMonth);
+    $("#vForecast").textContent = Math.round(forecast);
+    $("#vPromise").textContent = Math.round(promise) + " leads";
+    $("#warn").classList.toggle("on", perMonth < 10);
+    const dots = $("#dots"); dots.innerHTML = "";
+    const total = Math.min(Math.round(forecast), 240), prom = Math.min(Math.round(promise), 240);
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement("span");
+      d.className = "dot " + (i < prom ? "p" : "f");
+      d.style.animationDelay = (reduce ? 0 : i * 4) + "ms";
+      dots.appendChild(d);
+    }
+  }
+  function setPreset(btn) {
+    b.value = btn.dataset.b; c.value = btn.dataset.c; r.value = btn.dataset.r;
+    document.querySelectorAll("#presets button").forEach((x) => x.classList.toggle("on", x === btn));
+    calc();
+  }
+  document.querySelectorAll("#presets button").forEach((btn) => btn.addEventListener("click", () => setPreset(btn)));
+  [b, c, r].forEach((el) => el.addEventListener("input", () => {
+    document.querySelectorAll("#presets button").forEach((x) => x.classList.remove("on")); calc();
+  }));
+  setPreset($("#presets button"));
+
+  // 5. Negative keyword filter
+  const filter = $("#filter");
+  const searches = [
+    ["pest control jacksonville", 1], ["pest control jobs", 0], ["termite treatment cost", 1],
+    ["free pest inspection diy", 0], ["exterminator near me", 1], ["how to kill roaches", 0],
+    ["same day pest control", 1], ["exterminator salary", 0], ["bed bug treatment jax", 1]
+  ];
+  let fi = 0;
+  function dropChip() {
+    if (document.hidden) return;
+    const [text, good] = searches[fi++ % searches.length];
+    const el = document.createElement("div");
+    el.className = "chip " + (good ? "good" : "bad");
+    el.textContent = text;
+    el.style.left = (6 + Math.random() * 46) + "%";
+    filter.appendChild(el);
+    setTimeout(() => el.classList.add(good ? "past" : "hit"), 1900);
+    setTimeout(() => el.remove(), 4300);
+  }
+  if (!reduce) setInterval(dropChip, 1100); else dropChip();
+
+  // Budget meter
+  const meterFill = $("#meter i"), meterTxt = $("#meterTxt"), paused = $("#paused");
+  let spent = 0;
+  function tick() {
+    if (spent >= 100) {
+      paused.textContent = "⏸ Budget used. Ads paused until tomorrow.";
+      setTimeout(() => { spent = 0; paused.textContent = ""; }, 2600);
+      return;
+    }
+    spent = Math.min(100, spent + 8);
+    meterFill.style.width = spent + "%";
+    meterTxt.textContent = "$" + spent + " / $100 today";
+  }
+  if (!reduce) setInterval(tick, 450); else { spent = 100; meterFill.style.width = "100%"; meterTxt.textContent = "$100 / $100 today"; }
+
+  // 8. Glossary flip cards
+  const words = [
+    ["Click", "you pay here", "Someone tapped the ad. Google charges the client for it."],
+    ["CPC", "cost per click", "What one click costs. Find it in Keyword Planner."],
+    ["Conversion", "the goal", "A call or a form. You must set this up or Google can't learn."],
+    ["Conversion rate", "clicks → leads", "Leads ÷ clicks. 10 leads from 100 clicks = 10%."],
+    ["CPL", "cost per lead", "Ad spend ÷ leads. The number owners care about most."],
+    ["Negative keyword", "the bouncer", "Words you block, like jobs, free, DIY. They stop wasted clicks."],
+    ["Match type", "how strict", "Exact = very close, Phrase = contains it, Broad = Google guesses."],
+    ["Landing page", "where the click lands", "One service, one offer, a big call button."],
+    ["Quality Score", "Google's grade", "1–10 for keyword + ad + page. Higher = cheaper clicks."],
+    ["LSA", "Google Guaranteed", "Top-of-page ads that charge per lead, not per click."],
+    ["Call tracking", "a special number", "A number that records each call, then forwards it to the owner."],
+    ["gclid", "the click's ID", "A code Google adds to the link so a lead can be traced to its click."]
+  ];
+  const gloss = $("#gloss");
+  words.forEach(([w, s, d]) => {
+    const btn = document.createElement("button");
+    btn.className = "flip"; btn.type = "button"; btn.setAttribute("aria-label", w + ": " + d);
+    btn.innerHTML = `<div class="in2"><div class="face front"><b>${w}</b><small>${s}</small></div><div class="face back">${d}</div></div>`;
+    btn.addEventListener("click", () => btn.classList.toggle("on"));
+    gloss.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>
