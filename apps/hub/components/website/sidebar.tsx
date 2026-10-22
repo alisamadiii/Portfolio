@@ -100,7 +100,6 @@ const secondaryButtonClass =
 
 const productLinks = [
   { title: "Motion", href: urls.motion, external: true },
-  { title: "SaaS Kit", href: urls.saaskit, external: true },
   { title: "Purchases", href: "/billing?tab=purchases", external: false },
 ];
 

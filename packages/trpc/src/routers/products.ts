@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -12,7 +12,6 @@ import {
   orders,
   products,
   projectsTypeValues,
-  subscriptions,
 } from "@workspace/drizzle/schema";
 import type { ProjectType } from "@workspace/drizzle/schema";
 
@@ -77,92 +76,6 @@ export const productsRouter = createTRPCRouter({
     }),
 
   // ─── Authenticated ─────────────────────────────────────────────
-
-  listAgency: authenticatedProcedure.query(async ({ ctx }) => {
-    try {
-      const productsList = await db
-        .select()
-        .from(products)
-        .where(
-          and(
-            sql`${products.metadata}->>'project' = 'AGENCY' and (${products.metadata}->>'userId' = ${ctx.session.user.id} or ${products.metadata}->>'userId' is null or ${products.metadata}->>'userId' = '')`,
-            eq(products.isArchived, false)
-          )
-        )
-        .orderBy(asc(products.priceAmount));
-
-      return productsList.map((product) => {
-        const metadata = product.metadata as AgencyMetadata | undefined;
-        return {
-          ...product,
-          userId: metadata?.userId,
-          email: metadata?.email,
-          services: metadata?.services
-            ? (JSON.parse(metadata.services) as {
-                name: string;
-                price: number;
-              }[])
-            : [],
-        };
-      });
-    } catch (error: unknown) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to get products",
-      });
-    }
-  }),
-
-  isAgencyActive: authenticatedProcedure
-    .input(
-      z.object({
-        productId: z.string(),
-      })
-    )
-    .query(async ({ input, ctx }) => {
-      try {
-        const userId = ctx.session.user.id;
-
-        const [activeOrder] = await db
-          .select({ id: orders.id })
-          .from(orders)
-          .innerJoin(products, eq(orders.productId, input.productId))
-          .where(
-            and(
-              sql`${orders.userId} = ${userId}`,
-              eq(orders.status, "paid"),
-              sql`${products.metadata}->>'project' = 'AGENCY'`
-            )
-          )
-          .limit(1);
-
-        if (activeOrder) return true;
-
-        const [activeSub] = await db
-          .select({ id: subscriptions.id })
-          .from(subscriptions)
-          .where(
-            and(
-              eq(subscriptions.userId, userId),
-              eq(subscriptions.status, "active"),
-              // CMS website subs (repoId set) never grant product access.
-              isNull(subscriptions.repoId)
-            )
-          )
-          .limit(1);
-
-        return !!activeSub;
-      } catch (error: unknown) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to check agency status",
-        });
-      }
-    }),
 
   isPurchased: authenticatedProcedure
     .input(z.object({ project: z.enum(projectsTypeValues) }))

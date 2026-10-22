@@ -1,68 +1,9 @@
-"use client";
-
-import { useEffect } from "react";
-import Link from "next/link";
-import { useProject } from "@/hooks/use-project";
-import { useRepo } from "@/hooks/use-repo";
-
-import { Button } from "@workspace/ui/components/button";
-
-import { repoPath } from "@/lib/paths";
-import { trackVisit } from "@/lib/tracker";
-
-import { ArrowLeft } from "@/components/icon";
-import {
-  RepoHeaderProvider,
-  useRepoHeaderState,
-} from "@/components/repo/repo-header-context";
-
-function RepoHeader() {
-  const { id: repoId } = useRepo();
-  const { header, backHref, backLabel } = useRepoHeaderState();
-  const hasHeaderContent =
-    header !== null &&
-    header !== undefined &&
-    header !== false &&
-    header !== "";
-
-  if (!hasHeaderContent) return null;
-
-  return (
-    <header className="bg-background sticky top-0 z-30 flex h-14 shrink-0 items-center border-b px-4 md:px-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mr-2 shrink-0"
-        render={
-          <Link href={backHref ?? repoPath(repoId)}>
-            <ArrowLeft className="size-4" />
-            {backLabel ?? "Canvas"}
-          </Link>
-        }
-      />
-      <div className="min-w-0 flex-1">{header}</div>
-    </header>
-  );
-}
-
 export function RepoLayout({ children }: { children: React.ReactNode }) {
-  const project = useProject();
-  const { owner, repo, id: repoId } = useRepo();
-
-  useEffect(() => {
-    if (project?.owner && project?.repo && project?.branch) {
-      trackVisit(owner, repo, project.branch, repoId);
-    }
-  }, [project, owner, repo, repoId]);
-
   return (
-    <RepoHeaderProvider>
-      <div className="bg-shell flex min-h-screen flex-col">
-        <RepoHeader />
-        <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
-          {children}
-        </main>
-      </div>
-    </RepoHeaderProvider>
+    <div className="bg-shell flex min-h-screen flex-col">
+      <main className="min-w-0 flex-1 p-4 [overflow-anchor:none] md:p-8">
+        {children}
+      </main>
+    </div>
   );
 }

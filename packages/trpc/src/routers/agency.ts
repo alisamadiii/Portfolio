@@ -443,7 +443,11 @@ const adminRouter = createTRPCRouter({
         metadata,
         subscription_data: { metadata },
         allow_promotion_codes: true,
-        after_completion: { type: "redirect", redirect: { url: urls.cms } },
+        // Stripe fills {CHECKOUT_SESSION_ID}; the hub's welcome page verifies it.
+        after_completion: {
+          type: "redirect",
+          redirect: { url: `${urls.cms}/agency/success?session_id={CHECKOUT_SESSION_ID}` },
+        },
       });
       return { url: link.url };
     }),

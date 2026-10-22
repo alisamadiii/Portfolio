@@ -1,32 +1,7 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { queryClient, useTRPC } from "@workspace/trpc/client";
-
-/**
- * Custom hook for fetching customer state and subscription information
- * (DB mirror of Stripe subscriptions/orders, synced by the Stripe webhook).
- */
-export const useGetCustomerState = () => {
-  const trpc = useTRPC();
-  return useQuery(trpc.payments.getCustomerState.queryOptions());
-};
-
-/**
- * Custom hook for checking if user has access based on subscription status
- * @returns Object containing access status, current product ID, subscription ID, and query state
- */
-export const useIsUserHaveAccess = () => {
-  const customerStateQuery = useGetCustomerState();
-
-  return {
-    isUserHaveAccess: customerStateQuery.data?.isUserHaveAccess ?? false,
-    currentProductId: customerStateQuery.data?.currentPlan ?? undefined,
-    currentSubscriptionId:
-      customerStateQuery.data?.currentSubscriptionId ?? undefined,
-    ...customerStateQuery,
-  };
-};
+import { useTRPC } from "@workspace/trpc/client";
 
 /**
  * Custom hook for initiating checkout process
@@ -59,26 +34,6 @@ export const useCheckout = () => {
           return;
         }
         toast.error(error.message);
-      },
-    })
-  );
-};
-
-/**
- * Custom hook for switching subscription plan
- * @returns UseMutationResult for switching plan operation
- */
-export const useSwitchPlan = () => {
-  const trpc = useTRPC();
-
-  return useMutation(
-    trpc.payments.switchPlan.mutationOptions({
-      onSuccess: async () => {
-        // The webhook needs a beat to sync the mirror before refetching.
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        queryClient.invalidateQueries({
-          queryKey: trpc.payments.getCustomerState.queryKey(),
-        });
       },
     })
   );

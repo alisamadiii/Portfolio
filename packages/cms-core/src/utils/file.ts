@@ -4,15 +4,6 @@
 
 import slugify from "slugify";
 
-const serializedTypes = [
-  "yaml-frontmatter",
-  "json-frontmatter",
-  "toml-frontmatter",
-  "yaml",
-  "json",
-  "toml",
-];
-
 const extensionCategories: Record<string, string[]> = {
   image: [
     "jpg",
@@ -86,18 +77,6 @@ const extensionCategories: Record<string, string[]> = {
   spreadsheet: ["csv", "tsv", "ods"],
 };
 
-const getFileSize = (bytes: number, decimals: number = 2): string => {
-  if (bytes === 0) return "0 Bytes";
-
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-};
-
 const getFileExtension = (path: string): string => {
   const filename = getFileName(path);
   if (filename.startsWith(".") && !filename.includes(".", 1)) return "";
@@ -130,20 +109,6 @@ function normalizePath(path: string): string {
 
   return normalizedPathSegments.join("/");
 }
-
-const getParentPath = (path: string): string => {
-  return path === "" || path === "/"
-    ? ""
-    : path.split("/").slice(0, -1).join("/") || "";
-};
-
-const getRelativePath = (path: string, rootPath: string): string => {
-  if (!path.startsWith(rootPath)) {
-    console.error(`Path "${path}" is not within root path "${rootPath}"`);
-    return path;
-  }
-  return !rootPath ? path : path.slice(rootPath.length + 1);
-};
 
 const joinPathSegments = (segments: string[]): string => {
   return segments
@@ -193,67 +158,13 @@ const normalizeMediaPath = (path: string): string => {
   return hash ? `${withQuery}#${hash}` : withQuery;
 };
 
-const generateRandomUploadName = (extension?: string): string => {
-  const rand = Math.random().toString(36).slice(2, 10);
-  const stamp = Date.now().toString(36);
-  const ext = extension ? `.${extension.toLowerCase()}` : "";
-  return `${stamp}-${rand}${ext}`;
-};
-
-type UploadRenameMode = boolean | "safe" | "random" | undefined;
-
-const getSafeUploadName = (filename: string): string => {
-  const normalizedName = decodePathSafely(getFileName(filename || ""));
-  const extension = getFileExtension(normalizedName);
-  const baseName = extension
-    ? normalizedName.slice(0, -(extension.length + 1))
-    : normalizedName;
-
-  const safeBaseName =
-    slugify(baseName, {
-      lower: true,
-      strict: true,
-      trim: true,
-    }) || "file";
-
-  const safeExtension = extension ? `.${extension.toLowerCase()}` : "";
-  return `${safeBaseName}${safeExtension}`;
-};
-
-const getUploadFileName = (
-  filename: string,
-  rename: UploadRenameMode
-): string => {
-  if (rename === false || rename == null) return filename;
-  if (rename === "random")
-    return generateRandomUploadName(getFileExtension(filename));
-  return getSafeUploadName(filename);
-};
-
-const sortFiles = (data: Record<string, any>[]): Record<string, any>[] => {
-  return data.sort((a, b) => {
-    if (a.type === b.type) {
-      return a.name.localeCompare(b.name);
-    }
-    return a.type === "dir" ? -1 : 1;
-  });
-};
-
 export {
-  getFileSize,
   getFileExtension,
   getFileName,
-  getParentPath,
-  getRelativePath,
   normalizePath,
   normalizeMediaPath,
   isAbsoluteMediaUrl,
   joinPathSegments,
   decodePathSafely,
-  generateRandomUploadName,
-  getSafeUploadName,
-  getUploadFileName,
-  sortFiles,
   extensionCategories,
-  serializedTypes,
 };

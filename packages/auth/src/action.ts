@@ -2,28 +2,6 @@
 
 import { cookies } from "next/headers";
 
-/**
- * Checks if an environment variable exists and has a value
- * @param value - The name of the environment variable to check
- * @returns Promise<boolean> - True if the environment variable exists and has a value, false otherwise
- */
-const getEnv = async (value: string) => {
-  if (process.env[value]) {
-    return true;
-  }
-  return false;
-};
-
-const isAuthenticated = async () => {
-  const cookieStore = await cookies();
-  const secureCookieName = cookieStore.get(
-    "__Secure-better-auth.session_token"
-  )?.value;
-  const cookieName = cookieStore.get("better-auth.session_token")?.value;
-
-  return secureCookieName || cookieName;
-};
-
 const logout = async () => {
   const cookieStore = await cookies();
   const isProduction = process.env.NODE_ENV === "production";
@@ -55,4 +33,4 @@ const logout = async () => {
   });
 };
 
-export { getEnv, isAuthenticated, logout };
+export { logout };

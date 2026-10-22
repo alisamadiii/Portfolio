@@ -1,16 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { UseSendError, usesendFetch } from "@workspace/email/usesend";
-import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 
 // ─── Newsletter constants ───────────────────────────────────────
-// Double-opt-in newsletter for the agency site. Contacts land in the
-// useSend contact book below; sends go out from the dedicated
-// newsletter address so quote/transactional reputation stays separate.
+// The agency newsletter's contacts live in the useSend contact book below.
+// Signup was removed; only the unsubscribe link in sent broadcasts remains.
 
-export const FROM = "Ali Samadi Agency <newsletter@alisamadii.com>";
 export const AGENCY_SITE = "https://agency.alisamadii.com";
-export const API_SITE = "https://www.alisamadii.com";
 
 const contactBook = () => {
   const id = process.env.USESEND_CONTACT_BOOK_ID;
@@ -92,23 +88,4 @@ export const verifyToken = (token: string): string | null => {
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
 
   return email;
-};
-
-// ─── CORS ───────────────────────────────────────────────────────
-// Shared allowlist + ANY localhost/127.0.0.1 origin (any port), so local
-// dev works no matter which port the agency site runs on (4321, 5500, …).
-
-const LOCALHOST_RE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-
-const isAllowedOrigin = (origin: string) =>
-  ALLOWED_ORIGINS.includes(origin) || LOCALHOST_RE.test(origin);
-
-export const corsHeaders = (req: Request) => {
-  const origin = req.headers.get("origin");
-  return {
-    "Access-Control-Allow-Origin":
-      origin && isAllowedOrigin(origin) ? origin : "https://agency.alisamadii.com",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
 };

@@ -24,4 +24,4 @@ const handleCmsError = (error: unknown, fallbackMessage: string): string => {
   return fallbackMessage;
 };
 
-export { handleCmsError, isSubscriptionRequired, SUBSCRIPTION_REQUIRED_EVENT };
+export { handleCmsError, SUBSCRIPTION_REQUIRED_EVENT };

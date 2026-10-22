@@ -101,22 +101,6 @@ const fetchSubscriptionsForCustomer = async (customerId: string) => {
   );
 };
 
-const fetchSubscriptionStatusesForCustomer = async (customerId: string) => {
-  "use cache";
-  cacheLife("minutes");
-  // Same tag as the full subscription fetch — both derive from subscription
-  // state, so they revalidate together.
-  cacheTag("stripe", `stripe-subscriptions-${customerId}`);
-  const subs = await stripe.subscriptions.list({
-    customer: customerId,
-    limit: 100,
-  });
-  return subs.data.map((s) => ({
-    status: s.status,
-    cancelAtPeriodEnd: s.cancel_at_period_end,
-  }));
-};
-
 const fetchInvoicesForCustomer = async (customerId: string) => {
   "use cache";
   cacheLife("minutes");
@@ -271,48 +255,6 @@ export const stripeRouter = createTRPCRouter({
         customerIds.map(fetchSubscriptionsForCustomer)
       );
       return results.flat();
-    }),
-
-  adminBatchSubscriptionStatus: adminProcedure
-    .input(z.object({ emails: z.array(z.string().email()) }))
-    .query(async ({ input }) => {
-      const result: Record<string, "active" | "canceling" | "none"> = {};
-
-      await Promise.all(
-        input.emails.map(async (email) => {
-          try {
-            const customerIds = await getStripeCustomerIdsByEmail(email);
-            if (customerIds.length === 0) {
-              result[email] = "none";
-              return;
-            }
-
-            const allSubs = await Promise.all(
-              customerIds.map(fetchSubscriptionStatusesForCustomer)
-            );
-            const subs = allSubs.flat();
-
-            const hasActive = subs.some(
-              (s) => s.status === "active" && !s.cancelAtPeriodEnd
-            );
-            const hasCanceling = subs.some(
-              (s) => s.status === "active" && s.cancelAtPeriodEnd
-            );
-
-            if (hasActive) {
-              result[email] = "active";
-            } else if (hasCanceling) {
-              result[email] = "canceling";
-            } else {
-              result[email] = "none";
-            }
-          } catch {
-            result[email] = "none";
-          }
-        })
-      );
-
-      return result;
     }),
 
   adminGetStripeInvoices: adminProcedure

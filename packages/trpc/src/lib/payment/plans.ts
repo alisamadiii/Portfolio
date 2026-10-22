@@ -198,9 +198,6 @@ export const planLabel = (plan: PlanKey): string => {
   return product === "website" ? tier.label : `${PLANS[product].label} · ${tier.label}`;
 };
 
-export const planPriceLabel = (plan: PlanKey): string | null =>
-  tierDef(plan).priceLabel;
-
 /**
  * Resolves a project's entitlement from its subscription row (or none).
  * A row that isn't live, or whose price isn't in the catalog, falls back to

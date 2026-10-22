@@ -6,50 +6,6 @@ import { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { authClient } from "@workspace/auth/auth-client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-const useSignup = () => {
-  const trpc = useTRPC();
-
-  return useMutation({
-    mutationFn: async (values: {
-      email: string;
-      password: string;
-      name: string;
-    }) => {
-      const response = await authClient.signUp.email({
-        email: values.email,
-        name: values.name,
-        password: values.password,
-        metadata: {},
-        phone: "",
-        company: "",
-        address: "",
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message || response.error.statusText);
-      }
-
-      const emailOtpResponse = await authClient.emailOtp.sendVerificationOtp({
-        email: values.email,
-        type: "email-verification",
-      });
-
-      if (emailOtpResponse.error) {
-        throw new Error(
-          emailOtpResponse.error.message || emailOtpResponse.error.statusText
-        );
-      }
-
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.users.getCurrent.queryKey(),
-      });
-    },
-  });
-};
-
 /**
  * Custom hook for user sign-in functionality
  * Handles email/password authentication and session management
@@ -311,41 +267,11 @@ const useMagicLink = () => {
   });
 };
 
-const useLogout = () => {
-  const trpc = useTRPC();
-  const router = useRouter();
-
-  return useMutation({
-    mutationFn: async () => {
-      const { data, error } = await authClient.signOut();
-
-      if (error) {
-        throw new Error(error.message || error.statusText);
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      // Reset all queries except the "products" queries
-      const allQueries = queryClient.getQueryCache().getAll();
-      router.refresh();
-      allQueries.forEach((query) => {
-        const queryKey = query.queryKey;
-        // Check if the top-level key is "products"
-        if (!queryKey || queryKey === trpc.products.list.queryKey()) return;
-        queryClient.resetQueries({ queryKey });
-      });
-    },
-  });
-};
-
 export {
-  useSignup,
   useSignin,
   useMagicLink,
   useSendResetEmail,
   useResetPassword,
   useVerifyEmail,
   useResendEmailVerification,
-  useLogout,
 };

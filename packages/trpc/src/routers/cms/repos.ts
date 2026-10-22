@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -9,6 +9,7 @@ import {
 } from "@workspace/trpc/init";
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { assertRepoAccessByRepoId } from "@workspace/trpc/lib/cms/authz";
+import { isProjectOwner } from "@workspace/trpc/lib/cms/project-access";
 import { resolveProjectByRepoId } from "@workspace/trpc/lib/cms/repo-id";
 import { accessibleProjectsWhere } from "@workspace/trpc/lib/cms/accessible-projects";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
@@ -23,66 +24,6 @@ import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
 export const reposRouter = createTRPCRouter({
-  /**
-   * GitHub accounts the current user can act as. Admins act as every owner that
-   * has a project; collaborators get the distinct owners they were invited to.
-   */
-  listAccounts: collaboratorProcedure.query(async ({ ctx }) => {
-    try {
-      // Admins act as every owner that has a (non-hidden) project.
-      if (!ctx.collaborations) {
-        const owners = await db
-          .selectDistinct({ owner: hubProject.owner })
-          .from(hubProject)
-          .where(eq(hubProject.hidden, false));
-        return owners.map((o) => ({
-          login: o.owner,
-          type: "org",
-          repositorySelection: "all",
-        }));
-      }
-
-      const accountByOwner = new Map<
-        string,
-        { login: string; type: string; repositorySelection: string }
-      >();
-      for (const collaborator of ctx.collaborations) {
-        accountByOwner.set(collaborator.owner.toLowerCase(), {
-          login: collaborator.owner,
-          type: collaborator.type,
-          repositorySelection: "selected",
-        });
-      }
-
-      // Also include owners of the caller's own imported projects — the user
-      // who connected GitHub gets access without a collaborator invite, so the
-      // owner must surface here for the project to appear in the gallery.
-      const selfOwners = await db
-        .selectDistinct({ owner: hubProject.owner })
-        .from(hubProject)
-        .where(
-          and(
-            eq(hubProject.hidden, false),
-            eq(hubProject.githubConnectedUserId, ctx.session.user.id)
-          )
-        );
-      for (const { owner } of selfOwners) {
-        if (!accountByOwner.has(owner.toLowerCase())) {
-          accountByOwner.set(owner.toLowerCase(), {
-            login: owner,
-            type: "org",
-            repositorySelection: "selected",
-          });
-        }
-      }
-
-      return Array.from(accountByOwner.values());
-    } catch (error) {
-      if (error instanceof TRPCError) throw error;
-      throw toTRPCError(error);
-    }
-  }),
-
   // Every project the caller can access — derived entirely from the session.
   // No owner/keyword input: the set is small (one hub_project row per project),
   // so the account switcher and search filter it client-side.
@@ -142,6 +83,8 @@ export const reposRouter = createTRPCRouter({
           ctx.session.user,
           input.repoId
         );
+        // Importer or agency client; drives the hub's owner controls.
+        const isOwner = await isProjectOwner(ctx.session.user.id, project);
 
         // Uploaded projects have no GitHub repo: synthesize the snapshot from
         // the project row. One branch ('main'), always private, no cache
@@ -157,7 +100,7 @@ export const reposRouter = createTRPCRouter({
             isPrivate: true,
             repoId: input.repoId,
             myRole: role,
-            isOwner: project.githubConnectedUserId === ctx.session.user.id,
+            isOwner,
             websiteUrl: project.websiteUrl ?? null,
             source: "upload" as const,
             hosting: parseHosting(project.hosting),
@@ -195,10 +138,8 @@ export const reposRouter = createTRPCRouter({
           await revalidateRepoCache(owner, repo, snapshot.defaultBranch, token);
         }
 
-        // websiteUrl (thumbnail/preview + hooks) and ownership both come from the
-        // project row already loaded by assertRepoAccessByRepoId.
-        const isOwner =
-          project.githubConnectedUserId === ctx.session.user.id;
+        // websiteUrl (thumbnail/preview + hooks) comes from the project row
+        // already loaded by assertRepoAccessByRepoId.
 
         return {
           ...snapshot,

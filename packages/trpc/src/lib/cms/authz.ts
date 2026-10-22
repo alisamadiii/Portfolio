@@ -1,12 +1,11 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
-
-import { agencyClient } from "@workspace/drizzle/schema";
+import { eq } from "drizzle-orm";
 
 import { createHttpError } from "./errors";
 import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForRepoId } from "./collaborator-access";
+import { isProjectOwner, resolveProjectRole } from "./project-access";
 import { db, orgRepoTable } from "./db";
 
 // Repo lookup from the project catalog — no GitHub, no PAT. Keyed by repoId
@@ -28,8 +27,8 @@ const getRepoAccessByRepoId = async (repoId: number) => {
   };
 };
 
-// Collaborator management: admins, the user who imported the project (its
-// owner), or full-access collaborators of the repo. DB-only on purpose —
+// Collaborator management: admins, the project's owner (see project-access),
+// or full-access collaborators of the repo. DB-only on purpose —
 // invites live in the CMS dashboard, never on GitHub.
 const requireCollaboratorManageAccess = async (
   user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
@@ -38,9 +37,9 @@ const requireCollaboratorManageAccess = async (
   const isActorAdmin = isAdminUser(user);
   const repoAccess = await getRepoAccessByRepoId(repoId);
 
-  // The user who connected GitHub for this project manages it like an owner —
-  // full parity with an admin over collaborators.
-  const isActorOwner = repoAccess.githubConnectedUserId === user.id;
+  // The project's owner (importer or agency client) manages it like an
+  // admin — full parity over collaborators.
+  const isActorOwner = await isProjectOwner(user.id, repoAccess);
 
   if (!isActorAdmin && !isActorOwner) {
     const row = await db.query.hubCollaborator.findFirst({
@@ -57,9 +56,8 @@ const requireCollaboratorManageAccess = async (
   return { repoAccess, isActorAdmin, isActorOwner };
 };
 
-// Can this user read/act on this project? Admin, the importing owner
-// (githubConnectedUserId), the agency client who owns it, or any collaborator
-// of the repo. Throws 403 if not.
+// Can this user read/act on this project? See resolveProjectRole: admin,
+// owner (importer or agency client) or any collaborator. Throws 403 if not.
 const assertProjectAccess = async (
   user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
   project: {
@@ -67,21 +65,7 @@ const assertProjectAccess = async (
     githubConnectedUserId: string | null;
   }
 ) => {
-  if (isAdminUser(user)) return;
-  if (project.githubConnectedUserId && project.githubConnectedUserId === user.id)
-    return;
-  const agencyOwner = await db.query.agencyClient.findFirst({
-    where: and(
-      eq(agencyClient.repoId, project.repoId),
-      eq(agencyClient.userId, user.id)
-    ),
-    columns: { id: true },
-  });
-  if (agencyOwner) return;
-  const collaborator = await db.query.hubCollaborator.findFirst({
-    where: collaboratorMatchesUserForRepoId(user, project.repoId),
-  });
-  if (!collaborator) {
+  if (!(await resolveProjectRole(user, project))) {
     throw createHttpError("You do not have access to this project.", 403);
   }
 };

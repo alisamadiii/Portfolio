@@ -26,12 +26,6 @@ const collaboratorMatchesUserForRepoId = (
   repoId: number
 ) => and(collaboratorMatchesUser(user), eq(collaboratorTable.repoId, repoId));
 
-const collaboratorMatchesEmailForRepoId = (email: string, repoId: number) =>
-  and(
-    sql`lower(${collaboratorTable.email}) = lower(${email})`,
-    eq(collaboratorTable.repoId, repoId)
-  );
-
 const findVerifiedUserByEmail = async (email: string) => {
   return db.query.user.findFirst({
     where: and(
@@ -65,7 +59,6 @@ const bindCollaboratorInvitesToUser = async (
 
 export {
   bindCollaboratorInvitesToUser,
-  collaboratorMatchesEmailForRepoId,
   collaboratorMatchesUser,
   collaboratorMatchesUserForRepoId,
   findVerifiedUserByEmail,

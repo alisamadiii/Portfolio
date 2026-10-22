@@ -37,19 +37,4 @@ const getBasePath = async (owner: string, repo: string): Promise<string> => {
   return normalizeBasePath(row?.basePath ?? "");
 };
 
-const setBasePath = async (
-  owner: string,
-  repo: string,
-  basePath: string
-): Promise<string> => {
-  const normalized = normalizeBasePath(basePath);
-
-  await db
-    .update(orgRepoTable)
-    .set({ basePath: normalized })
-    .where(matchRepo(owner, repo));
-
-  return normalized;
-};
-
-export { getBasePath, setBasePath, normalizeBasePath };
+export { getBasePath, normalizeBasePath };

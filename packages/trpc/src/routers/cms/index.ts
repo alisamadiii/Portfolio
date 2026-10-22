@@ -6,7 +6,6 @@ import { previewSessionRouter } from "./preview-session";
 import { reposRouter } from "./repos";
 import { seoRouter } from "./seo";
 import { subscriptionRouter } from "./subscription";
-import { versionRouter } from "./version";
 
 export const cmsRouter = createTRPCRouter({
   aiEdits: aiEditsRouter,
@@ -16,5 +15,4 @@ export const cmsRouter = createTRPCRouter({
   collaborators: collaboratorsRouter,
   seo: seoRouter,
   subscription: subscriptionRouter,
-  version: versionRouter,
 });

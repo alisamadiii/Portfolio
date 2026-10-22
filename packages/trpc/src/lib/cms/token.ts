@@ -14,16 +14,15 @@ import { cache } from "react";
 import { and, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
-import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 import {
   getInstallationTokenForRepo,
   isGithubAppConfigured,
 } from "@workspace/trpc/lib/github-app";
-import { isAdminUser } from "../authz-shared";
-import { collaboratorMatchesUserForRepoId } from "./collaborator-access";
 import { db } from "./db";
 import { createHttpError } from "./errors";
+import { resolveProjectRole } from "./project-access";
 
 // Get a token for a user: role is decided first (DB-only), then the GitHub
 // App's installation token is minted for the repo. PRECONDITION_FAILED means
@@ -42,6 +41,7 @@ const getToken = cache(
         owner: hubProject.owner,
         repo: hubProject.repo,
         source: hubProject.source,
+        repoId: hubProject.repoId,
         githubConnectedUserId: hubProject.githubConnectedUserId,
       })
       .from(hubProject)
@@ -63,20 +63,12 @@ const getToken = cache(
     const repo = project.repo;
 
     // Role first — pure DB authorization, independent of GitHub.
-    let role: CollaboratorRole;
-    if (isAdminUser(user) || project.githubConnectedUserId === user.id) {
-      role = "full-access";
-    } else {
-      const permission = await db.query.hubCollaborator.findFirst({
-        where: collaboratorMatchesUserForRepoId(user, repoId),
-      });
-      if (!permission) {
-        throw createHttpError(
-          `You do not have permission to access "${owner}/${repo}".`,
-          403
-        );
-      }
-      role = permission.role;
+    const role = await resolveProjectRole(user, project);
+    if (!role) {
+      throw createHttpError(
+        `You do not have permission to access "${owner}/${repo}".`,
+        403
+      );
     }
 
     // Uploaded projects have no GitHub repo and therefore no token. Role logic

@@ -11,23 +11,6 @@ import {
   type ReadyMessage,
 } from "./bridge-protocol";
 
-export type {
-  BridgeToCmsMessage,
-  CmsToBridgeMessage,
-  ReadyMessage,
-  FieldCommitMessage,
-  FieldInputMessage,
-  FieldActivateMessage,
-  GroupInfo,
-  GroupMember,
-  GroupOpMessage,
-  LinkInfoMessage,
-  VariantOpenMessage,
-  BlogOpenMessage,
-  EditSubmittedMessage,
-  ElementPickMessage,
-} from "./bridge-protocol";
-
 /**
  * Parse a `message` event coming from a bridge iframe. Returns `null` for
  * wrong-origin or non-bridge messages. Legacy `cms-preview-ready` is
@@ -63,32 +46,12 @@ export function parseBridgeMessage(
   return data as BridgeToCmsMessage;
 }
 
-export function postToFrame(
+function postToFrame(
   win: Window | null | undefined,
   origin: string,
   msg: { type: string } & Record<string, unknown>
 ): void {
   win?.postMessage(envelope(msg), origin);
-}
-
-/** Send a field-focus in both v2 and legacy formats (old bridges only know v1). */
-export function postFocus(
-  win: Window | null | undefined,
-  origin: string,
-  path: string
-): void {
-  win?.postMessage({ type: "cms-field-focus", field: path }, origin);
-  postToFrame(win, origin, { type: "focus", path });
-}
-
-/** Push values into a page (updates every matching element except the caret host). */
-export function postSet(
-  win: Window | null | undefined,
-  origin: string,
-  values: Array<{ path: string; value: string }>
-): void {
-  if (values.length === 0) return;
-  postToFrame(win, origin, { type: "set", values });
 }
 
 /** Hide or restore the overlay's own floating launcher chrome. */
@@ -107,13 +70,4 @@ export function postPickMode(
   active: boolean
 ): void {
   postToFrame(win, origin, { type: "pick-mode", active });
-}
-
-/** Tell a page which tagged fields are editable, and how (text / media / link). */
-export function postEditable(
-  win: Window | null | undefined,
-  origin: string,
-  editable: { arm: string[]; media: string[]; link: string[] }
-): void {
-  postToFrame(win, origin, { type: "editable", ...editable });
 }

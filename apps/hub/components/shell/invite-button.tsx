@@ -31,7 +31,12 @@ import { useRepo } from "@/hooks/use-repo";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
 import { getInitialsFromName } from "@/lib/utils/avatar";
-import { ROLE_LABELS } from "@/components/collaborators";
+
+const ROLE_LABELS: Record<CollaboratorRole, string> = {
+  "full-access": "Full Access",
+  "content-editor": "Content Editor",
+  "view-only": "View Only",
+};
 
 type Collaborator = { id: number; email: string; role: CollaboratorRole };
 

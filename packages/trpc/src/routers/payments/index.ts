@@ -6,7 +6,6 @@ import { z } from "zod";
 import { resolveRedirectUrl, urls } from "@workspace/ui/lib/company";
 
 import {
-  adminProcedure,
   authenticatedProcedure,
   baseProcedure,
   createTRPCRouter,
@@ -78,52 +77,6 @@ export const paymentsRouter = createTRPCRouter({
       });
     }
   }),
-
-  getProductById: baseProcedure.input(z.string()).query(async ({ input }) => {
-    try {
-      const product = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, input))
-        .limit(1)
-        .then((result) => result[0]);
-
-      return product;
-    } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to fetch product",
-        cause: error,
-      });
-    }
-  }),
-
-  updateProduct: adminProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        product: z.object({
-          name: z.string().optional(),
-          description: z.string().optional(),
-          popular: z.boolean().optional(),
-          isArchived: z.boolean().optional(),
-          metadata: z.any().optional(),
-        }),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const { id, ...productData } = input;
-      const [updatedProduct] = await db
-        .update(products)
-        .set({
-          ...productData,
-          updatedAt: new Date(),
-        })
-        .where(eq(products.id, id))
-        .returning();
-      return updatedProduct;
-    }),
 
   // Active prices of one product, cheapest first — for multi-price products
   // (Lead Finder tiers) whose product mirror only holds the default price.
@@ -556,37 +509,4 @@ export const paymentsRouter = createTRPCRouter({
 
   // Stripe routes (flat-merged)
   ...stripeRouter._def.procedures,
-
-  // Admin endpoints
-  adminListOrders: adminProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      const dbRows = await db
-        .select({
-          order: orders,
-          productName: products.name,
-        })
-        .from(orders)
-        .leftJoin(products, eq(products.id, orders.productId))
-        .where(eq(orders.userId, input.userId))
-        .orderBy(desc(orders.createdAt));
-
-      return dbRows.map((r) => ({
-        ...r.order,
-        productName: r.productName,
-      }));
-    }),
-
-  adminGetSubscriptionDetails: adminProcedure
-    .input(z.object({ subscriptionId: z.string() }))
-    .query(async ({ input }) => {
-      try {
-        return await stripe.subscriptions.retrieve(input.subscriptionId);
-      } catch {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
-        });
-      }
-    }),
 });

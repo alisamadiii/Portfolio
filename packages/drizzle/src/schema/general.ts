@@ -5,7 +5,6 @@ import {
   index,
   integer,
   jsonb,
-  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -102,6 +101,4 @@ export const projectsTypeValues = [
   "CMS",
   "LEADS",
 ] as const;
-export const projectsTypeEnum = pgEnum("projects_type", projectsTypeValues);
-
 export type ProjectType = (typeof projectsTypeValues)[number];

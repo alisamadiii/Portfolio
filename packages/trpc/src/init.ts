@@ -6,10 +6,7 @@ import z from "zod";
 import { auth } from "@workspace/auth/auth";
 
 import { isAdminUser, roleAtLeast } from "./lib/authz-shared";
-import {
-  getRepoAccessByRepoId,
-  requireCollaboratorManageAccess,
-} from "./lib/cms/authz";
+import { requireCollaboratorManageAccess } from "./lib/cms/authz";
 import { collaboratorMatchesUser } from "./lib/cms/collaborator-access";
 import { db } from "./lib/cms/db";
 import { toTRPCError } from "./lib/cms/errors";
@@ -94,21 +91,6 @@ export const requireGithubToken = (ctx: {
   }
   return ctx.token;
 };
-
-// Server-to-server only: guarded by a shared secret header, never a browser session.
-export const internalProcedure = baseProcedure.use(async ({ next, ctx }) => {
-  const secret = process.env.INTERNAL_API_SECRET;
-  const provided = (await headers()).get("x-internal-secret");
-
-  if (!secret || provided !== secret) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Invalid internal secret",
-    });
-  }
-
-  return next({ ctx });
-});
 
 export const adminProcedure = authenticatedProcedure.use(
   async ({ next, ctx }) => {

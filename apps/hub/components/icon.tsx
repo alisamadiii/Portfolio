@@ -1,4 +1,3 @@
-import type { ComponentType } from "react";
 import * as Lucide from "lucide-react";
 import type { LucideProps } from "lucide-react";
 
@@ -23,19 +22,8 @@ import type { LucideProps } from "lucide-react";
 
 export type { LucideProps } from "lucide-react";
 
-/**
- * Any icon in this file is a plain function component, so we type the shared
- * "icon" slot loosely — a component taking LucideProps. Both these wrappers and
- * real lucide icons satisfy it.
- */
-export type LucideIcon = ComponentType<LucideProps>;
-
 export function AlertTriangle(props: LucideProps) {
   return <Lucide.AlertTriangle {...props} />;
-}
-
-export function ArrowDown(props: LucideProps) {
-  return <Lucide.ArrowDown {...props} />;
 }
 
 export function ArrowLeft(props: LucideProps) {
@@ -58,18 +46,6 @@ export function ArrowUpRight(props: LucideProps) {
   return <Lucide.ArrowUpRight {...props} />;
 }
 
-export function Asterisk(props: LucideProps) {
-  return <Lucide.Asterisk {...props} />;
-}
-
-export function Ban(props: LucideProps) {
-  return <Lucide.Ban {...props} />;
-}
-
-export function BarChart3(props: LucideProps) {
-  return <Lucide.BarChart3 {...props} />;
-}
-
 export function Blocks(props: LucideProps) {
   return (
     <svg
@@ -87,28 +63,12 @@ export function Blocks(props: LucideProps) {
   );
 }
 
-export function Bold(props: LucideProps) {
-  return <Lucide.Bold {...props} />;
-}
-
 export function BookOpen(props: LucideProps) {
   return <Lucide.BookOpen {...props} />;
 }
 
-export function BookText(props: LucideProps) {
-  return <Lucide.BookText {...props} />;
-}
-
-export function Bot(props: LucideProps) {
-  return <Lucide.Bot {...props} />;
-}
-
 export function Building2(props: LucideProps) {
   return <Lucide.Building2 {...props} />;
-}
-
-export function CalendarIcon(props: LucideProps) {
-  return <Lucide.CalendarIcon {...props} />;
 }
 
 export function Check(props: LucideProps) {
@@ -119,10 +79,6 @@ export function ChevronDown(props: LucideProps) {
   return <Lucide.ChevronDown {...props} />;
 }
 
-export function ChevronDownIcon(props: LucideProps) {
-  return <Lucide.ChevronDownIcon {...props} />;
-}
-
 export function ChevronLeft(props: LucideProps) {
   return <Lucide.ChevronLeft {...props} />;
 }
@@ -131,52 +87,16 @@ export function ChevronRight(props: LucideProps) {
   return <Lucide.ChevronRight {...props} />;
 }
 
-export function ChevronsDownUp(props: LucideProps) {
-  return <Lucide.ChevronsDownUp {...props} />;
-}
-
-export function ChevronsUpDown(props: LucideProps) {
-  return <Lucide.ChevronsUpDown {...props} />;
-}
-
-export function ChevronUp(props: LucideProps) {
-  return <Lucide.ChevronUp {...props} />;
-}
-
 export function CircleCheck(props: LucideProps) {
   return <Lucide.CircleCheck {...props} />;
-}
-
-export function CircleMinus(props: LucideProps) {
-  return <Lucide.CircleMinus {...props} />;
-}
-
-export function CirclePlus(props: LucideProps) {
-  return <Lucide.CirclePlus {...props} />;
 }
 
 export function CloudUpload(props: LucideProps) {
   return <Lucide.CloudUpload {...props} />;
 }
 
-export function Code(props: LucideProps) {
-  return <Lucide.Code {...props} />;
-}
-
-export function Columns2(props: LucideProps) {
-  return <Lucide.Columns2 {...props} />;
-}
-
-export function Columns3(props: LucideProps) {
-  return <Lucide.Columns3 {...props} />;
-}
-
 export function Copy(props: LucideProps) {
   return <Lucide.Copy {...props} />;
-}
-
-export function CornerLeftUp(props: LucideProps) {
-  return <Lucide.CornerLeftUp {...props} />;
 }
 
 export function CreditCard(props: LucideProps) {
@@ -197,39 +117,6 @@ export function CreditCard(props: LucideProps) {
   );
 }
 
-export function Database(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      {...props}
-    >
-      <title>database</title>
-      <g fill="currentColor">
-        <path
-          d="M2.75 3.5C2.33579 3.5 2 3.83579 2 4.25V8.5C2 8.92749 2.22718 9.30746 2.5867 9.62993C2.94759 9.95364 3.4632 10.2399 4.09183 10.4784C5.35093 10.9559 7.08613 11.25 9 11.25C10.9139 11.25 12.6491 10.9559 13.9082 10.4784C14.5368 10.2399 15.0524 9.95364 15.4133 9.62993C15.7728 9.30746 16 8.92749 16 8.5V4.25C16 3.83579 15.6642 3.5 15.25 3.5H2.75Z"
-          fill-opacity="0.4"
-        ></path>{" "}
-        <path
-          d="M16 11.4631C16 11.3008 15.8154 11.204 15.6767 11.2883C15.2916 11.5221 14.8709 11.7175 14.4402 11.8809C12.9714 12.438 11.0477 12.75 9 12.75C6.95227 12.75 5.02858 12.438 3.55984 11.8809C3.12912 11.7175 2.70837 11.5221 2.32335 11.2883C2.18463 11.204 2 11.3008 2 11.4631V13.75C2 14.3646 2.34809 14.8507 2.75498 15.1971C3.16484 15.546 3.71371 15.8262 4.32648 16.0468C5.55839 16.4903 7.21079 16.75 9 16.75C10.7892 16.75 12.4416 16.4903 13.6735 16.0468C14.2863 15.8262 14.8352 15.546 15.245 15.1971C15.6519 14.8507 16 14.3646 16 13.75V11.4631Z"
-          fill-opacity="0.4"
-        ></path>{" "}
-        <path d="M4.32656 1.9532C5.55849 1.50975 7.21089 1.25 9 1.25C10.7891 1.25 12.4415 1.50975 13.6734 1.9532C14.2862 2.17378 14.8351 2.45405 15.245 2.80293C15.6519 3.14928 16 3.6354 16 4.25C16 4.8646 15.6519 5.35072 15.245 5.69707C14.8351 6.04595 14.2862 6.32622 13.6734 6.5468C12.4415 6.99025 10.7891 7.25 9 7.25C7.21089 7.25 5.55849 6.99025 4.32656 6.5468C3.71378 6.32622 3.1649 6.04595 2.75502 5.69707C2.34812 5.35072 2 4.8646 2 4.25C2 3.6354 2.34812 3.14928 2.75502 2.80293C3.1649 2.45405 3.71378 2.17378 4.32656 1.9532Z"></path>
-      </g>
-    </svg>
-  );
-}
-
-export function Ellipsis(props: LucideProps) {
-  return <Lucide.Ellipsis {...props} />;
-}
-
-export function EllipsisVertical(props: LucideProps) {
-  return <Lucide.EllipsisVertical {...props} />;
-}
-
 export function ExternalLink(props: LucideProps) {
   return <Lucide.ExternalLink {...props} />;
 }
@@ -242,48 +129,12 @@ export function EyeOff(props: LucideProps) {
   return <Lucide.EyeOff {...props} />;
 }
 
-export function File(props: LucideProps) {
-  return <Lucide.File {...props} />;
-}
-
-export function FileArchive(props: LucideProps) {
-  return <Lucide.FileArchive {...props} />;
-}
-
-export function FileAudio(props: LucideProps) {
-  return <Lucide.FileAudio {...props} />;
-}
-
-export function FileClock(props: LucideProps) {
-  return <Lucide.FileClock {...props} />;
-}
-
-export function FileCode(props: LucideProps) {
-  return <Lucide.FileCode {...props} />;
-}
-
 export function FileDiff(props: LucideProps) {
   return <Lucide.FileDiff {...props} />;
 }
 
 export function FileDown(props: LucideProps) {
   return <Lucide.FileDown {...props} />;
-}
-
-export function FileIcon(props: LucideProps) {
-  return <Lucide.FileIcon {...props} />;
-}
-
-export function FileImage(props: LucideProps) {
-  return <Lucide.FileImage {...props} />;
-}
-
-export function FileSpreadsheet(props: LucideProps) {
-  return <Lucide.FileSpreadsheet {...props} />;
-}
-
-export function FileStack(props: LucideProps) {
-  return <Lucide.FileStack {...props} />;
 }
 
 export function FileText(props: LucideProps) {
@@ -307,36 +158,12 @@ export function FileText(props: LucideProps) {
   );
 }
 
-export function FileType(props: LucideProps) {
-  return <Lucide.FileType {...props} />;
-}
-
-export function FileVideo(props: LucideProps) {
-  return <Lucide.FileVideo {...props} />;
-}
-
-export function Folder(props: LucideProps) {
-  return <Lucide.Folder {...props} />;
-}
-
-export function FolderOpen(props: LucideProps) {
-  return <Lucide.FolderOpen {...props} />;
-}
-
-export function FolderPlus(props: LucideProps) {
-  return <Lucide.FolderPlus {...props} />;
-}
-
 export function FolderUp(props: LucideProps) {
   return <Lucide.FolderUp {...props} />;
 }
 
 export function Frame(props: LucideProps) {
   return <Lucide.Frame {...props} />;
-}
-
-export function Gift(props: LucideProps) {
-  return <Lucide.Gift {...props} />;
 }
 
 export function GitBranch(props: LucideProps) {
@@ -365,32 +192,8 @@ export function Globe(props: LucideProps) {
   );
 }
 
-export function GripVertical(props: LucideProps) {
-  return <Lucide.GripVertical {...props} />;
-}
-
-export function Heading1(props: LucideProps) {
-  return <Lucide.Heading1 {...props} />;
-}
-
-export function Heading2(props: LucideProps) {
-  return <Lucide.Heading2 {...props} />;
-}
-
-export function Heading3(props: LucideProps) {
-  return <Lucide.Heading3 {...props} />;
-}
-
-export function Heart(props: LucideProps) {
-  return <Lucide.Heart {...props} />;
-}
-
 export function HelpCircle(props: LucideProps) {
   return <Lucide.HelpCircle {...props} />;
-}
-
-export function Home(props: LucideProps) {
-  return <Lucide.Home {...props} />;
 }
 
 export function House(props: LucideProps) {
@@ -428,10 +231,6 @@ export function ImageOff(props: LucideProps) {
   return <Lucide.ImageOff {...props} />;
 }
 
-export function Italic(props: LucideProps) {
-  return <Lucide.Italic {...props} />;
-}
-
 export function KeyRound(props: LucideProps) {
   return <Lucide.KeyRound {...props} />;
 }
@@ -461,66 +260,6 @@ export function LayoutGrid(props: LucideProps) {
   );
 }
 
-export function Link(props: LucideProps) {
-  return <Lucide.Link {...props} />;
-}
-
-export function Link2(props: LucideProps) {
-  return <Lucide.Link2 {...props} />;
-}
-
-export function Network(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="currentColor"
-      {...props}
-    >
-      <g fill="currentColor">
-        <path
-          d="M9.75 5.25C9.75 4.83579 9.41421 4.5 9 4.5C8.58579 4.5 8.25 4.83579 8.25 5.25V8H5.25C3.73079 8 2.5 9.23079 2.5 10.75V12.25C2.5 12.6642 2.83579 13 3.25 13C3.66421 13 4 12.6642 4 12.25V10.75C4 10.0592 4.55921 9.5 5.25 9.5H8.25V12.25C8.25 12.6642 8.58579 13 9 13C9.41421 13 9.75 12.6642 9.75 12.25V9.5H12.75C13.4408 9.5 14 10.0592 14 10.75V12.25C14 12.6642 14.3358 13 14.75 13C15.1642 13 15.5 12.6642 15.5 12.25V10.75C15.5 9.23079 14.2692 8 12.75 8H9.75V5.25Z"
-          fillOpacity="0.4"
-        />
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M6.5 3.5C6.5 2.11979 7.61979 1 9 1C10.3802 1 11.5 2.11979 11.5 3.5C11.5 4.88021 10.3802 6 9 6C7.61979 6 6.5 4.88021 6.5 3.5Z"
-        />
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M6.5 14C6.5 12.6198 7.61979 11.5 9 11.5C10.3802 11.5 11.5 12.6198 11.5 14C11.5 15.3802 10.3802 16.5 9 16.5C7.61979 16.5 6.5 15.3802 6.5 14Z"
-        />
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M0.75 14C0.75 12.6198 1.86979 11.5 3.25 11.5C4.63021 11.5 5.75 12.6198 5.75 14C5.75 15.3802 4.63021 16.5 3.25 16.5C1.86979 16.5 0.75 15.3802 0.75 14Z"
-        />
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12.25 14C12.25 12.6198 13.3698 11.5 14.75 11.5C16.1302 11.5 17.25 12.6198 17.25 14C17.25 15.3802 16.1302 16.5 14.75 16.5C13.3698 16.5 12.25 15.3802 12.25 14Z"
-        />
-      </g>
-    </svg>
-  );
-}
-
-export function List(props: LucideProps) {
-  return <Lucide.List {...props} />;
-}
-
-export function Rocket(props: LucideProps) {
-  return <Lucide.Rocket {...props} />;
-}
-
-export function ListOrdered(props: LucideProps) {
-  return <Lucide.ListOrdered {...props} />;
-}
-
 export function Info(props: LucideProps) {
   return <Lucide.Info {...props} />;
 }
@@ -541,28 +280,12 @@ export function LockKeyhole(props: LucideProps) {
   return <Lucide.LockKeyhole {...props} />;
 }
 
-export function LockOpen(props: LucideProps) {
-  return <Lucide.LockOpen {...props} />;
-}
-
 export function LogOut(props: LucideProps) {
   return <Lucide.LogOut {...props} />;
 }
 
 export function Mail(props: LucideProps) {
   return <Lucide.Mail {...props} />;
-}
-
-export function Maximize2(props: LucideProps) {
-  return <Lucide.Maximize2 {...props} />;
-}
-
-export function Minimize2(props: LucideProps) {
-  return <Lucide.Minimize2 {...props} />;
-}
-
-export function Minus(props: LucideProps) {
-  return <Lucide.Minus {...props} />;
 }
 
 export function Monitor(props: LucideProps) {
@@ -581,56 +304,8 @@ export function Smartphone(props: LucideProps) {
   return <Lucide.Smartphone {...props} />;
 }
 
-export function MoreHorizontal(props: LucideProps) {
-  return <Lucide.MoreHorizontal {...props} />;
-}
-
 export function MousePointerClick(props: LucideProps) {
   return <Lucide.MousePointerClick {...props} />;
-}
-
-export function Newspaper(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      {...props}
-    >
-      <title>post</title>
-      <g fill="currentColor">
-        <path
-          d="m13.25,2H4.75c-1.5166,0-2.75,1.2334-2.75,2.75v8.5c0,1.5166,1.2334,2.75,2.75,2.75h8.5c1.5166,0,2.75-1.2334,2.75-2.75V4.75c0-1.5166-1.2334-2.75-2.75-2.75Zm-7.25,3c.5523,0,1,.4478,1,1s-.4477,1-1,1-1-.4478-1-1,.4478-1,1-1Zm3.25,8h-3.5c-.4141,0-.75-.3359-.75-.75s.3359-.75.75-.75h3.5c.4141,0,.75.3359.75.75s-.3359.75-.75.75Zm3-3h-6.5c-.4141,0-.75-.3359-.75-.75s.3359-.75.75-.75h6.5c.4141,0,.75.3359.75.75s-.3359.75-.75.75Z"
-          stroke-width="0"
-        ></path>
-      </g>
-    </svg>
-  );
-}
-
-export function NotebookPen(props: LucideProps) {
-  return <Lucide.NotebookPen {...props} />;
-}
-
-export function PanelRight(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      {...props}
-    >
-      <title>split-view</title>
-      <g fill="currentColor">
-        <path
-          d="m13.75,2.5H4.25c-1.5166,0-2.75,1.2334-2.75,2.75v7.5c0,1.5166,1.2334,2.75,2.75,2.75h9.5c1.5166,0,2.75-1.2334,2.75-2.75v-7.5c0-1.5166-1.2334-2.75-2.75-2.75ZM3,12.75v-7.5c0-.6895.5605-1.25,1.25-1.25h4.75v10h-4.75c-.6895,0-1.25-.5605-1.25-1.25Z"
-          stroke-width="0"
-        ></path>
-      </g>
-    </svg>
-  );
 }
 
 export function Pencil(props: LucideProps) {
@@ -685,52 +360,20 @@ export function Phone(props: LucideProps) {
   return <Lucide.Phone {...props} />;
 }
 
-export function PictureInPicture2(props: LucideProps) {
-  return <Lucide.PictureInPicture2 {...props} />;
-}
-
-export function Pilcrow(props: LucideProps) {
-  return <Lucide.Pilcrow {...props} />;
-}
-
 export function Plus(props: LucideProps) {
   return <Lucide.Plus {...props} />;
-}
-
-export function Quote(props: LucideProps) {
-  return <Lucide.Quote {...props} />;
-}
-
-export function RefreshCcw(props: LucideProps) {
-  return <Lucide.RefreshCcw {...props} />;
 }
 
 export function RefreshCw(props: LucideProps) {
   return <Lucide.RefreshCw {...props} />;
 }
 
-export function RemoveFormatting(props: LucideProps) {
-  return <Lucide.RemoveFormatting {...props} />;
-}
-
 export function RotateCw(props: LucideProps) {
   return <Lucide.RotateCw {...props} />;
 }
 
-export function Rows3(props: LucideProps) {
-  return <Lucide.Rows3 {...props} />;
-}
-
-export function Save(props: LucideProps) {
-  return <Lucide.Save {...props} />;
-}
-
 export function Search(props: LucideProps) {
   return <Lucide.Search {...props} />;
-}
-
-export function Send(props: LucideProps) {
-  return <Lucide.Send {...props} />;
 }
 
 export function Settings(props: LucideProps) {
@@ -757,78 +400,8 @@ export function Settings2(props: LucideProps) {
   );
 }
 
-export function SlidersHorizontal(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      {...props}
-    >
-      <title>carousel</title>
-      <g fill="currentColor">
-        <path
-          opacity="0.4"
-          d="M3.00012 13.25V4.75C3.00012 4.312 3.08572 3.8979 3.20932 3.5H2.75012C1.50942 3.5 0.500122 4.5093 0.500122 5.75V12.25C0.500122 13.4907 1.50942 14.5 2.75012 14.5H3.20932C3.08572 14.1021 3.00012 13.688 3.00012 13.25Z"
-        ></path>{" "}
-        <path
-          opacity="0.4"
-          d="M15.0001 13.25V4.75C15.0001 4.312 14.9145 3.8979 14.7909 3.5H15.2501C16.4908 3.5 17.5001 4.5093 17.5001 5.75V12.25C17.5001 13.4907 16.4908 14.5 15.2501 14.5H14.7909C14.9145 14.1021 15.0001 13.688 15.0001 13.25Z"
-        ></path>{" "}
-        <path d="M10.7501 2H7.25012C5.73134 2 4.50012 3.23122 4.50012 4.75V13.25C4.50012 14.7688 5.73134 16 7.25012 16H10.7501C12.2689 16 13.5001 14.7688 13.5001 13.25V4.75C13.5001 3.23122 12.2689 2 10.7501 2Z"></path>
-      </g>
-    </svg>
-  );
-}
-
 export function Sparkles(props: LucideProps) {
   return <Lucide.Sparkles {...props} />;
-}
-
-export function Strikethrough(props: LucideProps) {
-  return <Lucide.Strikethrough {...props} />;
-}
-
-export function Table(props: LucideProps) {
-  return <Lucide.Table {...props} />;
-}
-
-export function Table2(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      {...props}
-    >
-      <title>database</title>
-      <g fill="currentColor">
-        <path
-          d="M2.75 3.5C2.33579 3.5 2 3.83579 2 4.25V8.5C2 8.92749 2.22718 9.30746 2.5867 9.62993C2.94759 9.95364 3.4632 10.2399 4.09183 10.4784C5.35093 10.9559 7.08613 11.25 9 11.25C10.9139 11.25 12.6491 10.9559 13.9082 10.4784C14.5368 10.2399 15.0524 9.95364 15.4133 9.62993C15.7728 9.30746 16 8.92749 16 8.5V4.25C16 3.83579 15.6642 3.5 15.25 3.5H2.75Z"
-          fill-opacity="0.4"
-        ></path>{" "}
-        <path
-          d="M16 11.4631C16 11.3008 15.8154 11.204 15.6767 11.2883C15.2916 11.5221 14.8709 11.7175 14.4402 11.8809C12.9714 12.438 11.0477 12.75 9 12.75C6.95227 12.75 5.02858 12.438 3.55984 11.8809C3.12912 11.7175 2.70837 11.5221 2.32335 11.2883C2.18463 11.204 2 11.3008 2 11.4631V13.75C2 14.3646 2.34809 14.8507 2.75498 15.1971C3.16484 15.546 3.71371 15.8262 4.32648 16.0468C5.55839 16.4903 7.21079 16.75 9 16.75C10.7892 16.75 12.4416 16.4903 13.6735 16.0468C14.2863 15.8262 14.8352 15.546 15.245 15.1971C15.6519 14.8507 16 14.3646 16 13.75V11.4631Z"
-          fill-opacity="0.4"
-        ></path>{" "}
-        <path d="M4.32656 1.9532C5.55849 1.50975 7.21089 1.25 9 1.25C10.7891 1.25 12.4415 1.50975 13.6734 1.9532C14.2862 2.17378 14.8351 2.45405 15.245 2.80293C15.6519 3.14928 16 3.6354 16 4.25C16 4.8646 15.6519 5.35072 15.245 5.69707C14.8351 6.04595 14.2862 6.32622 13.6734 6.5468C12.4415 6.99025 10.7891 7.25 9 7.25C7.21089 7.25 5.55849 6.99025 4.32656 6.5468C3.71378 6.32622 3.1649 6.04595 2.75502 5.69707C2.34812 5.35072 2 4.8646 2 4.25C2 3.6354 2.34812 3.14928 2.75502 2.80293C3.1649 2.45405 3.71378 2.17378 4.32656 1.9532Z"></path>
-      </g>
-    </svg>
-  );
-}
-
-export function TextCursorInput(props: LucideProps) {
-  return <Lucide.TextCursorInput {...props} />;
-}
-
-export function Trash2(props: LucideProps) {
-  return <Lucide.Trash2 {...props} />;
-}
-
-export function TrendingUp(props: LucideProps) {
-  return <Lucide.TrendingUp {...props} />;
 }
 
 export function TriangleAlert(props: LucideProps) {
@@ -846,57 +419,7 @@ export function TriangleAlert(props: LucideProps) {
   );
 }
 
-export function Underline(props: LucideProps) {
-  return <Lucide.Underline {...props} />;
-}
-
 // Custom media-upload glyph (clone-image-dashed).
-export function Upload(props: LucideProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 18 18"
-      width="1em"
-      height="1em"
-      fill="currentColor"
-      {...props}
-    >
-      <g fill="currentColor">
-        <rect
-          x="4.5"
-          y="4.5"
-          width="12"
-          height="12"
-          rx="2.75"
-          ry="2.75"
-          opacity=".4"
-          strokeWidth="0"
-        />
-        <path
-          d="m13.6519,10.0132c-.3301-.3311-.769-.5132-1.2363-.5137h-.001c-.4673,0-.9072.1821-1.2378.5127l-5.7695,5.7649c.4886.4446,1.1315.7229,1.8428.7229h6.5c1.5166,0,2.75-1.2334,2.75-2.75v-.8887l-2.8481-2.8481Z"
-          strokeWidth="0"
-        />
-        <path
-          d="m8.25,9.5c-.6888,0-1.25-.5612-1.25-1.25s.5612-1.25,1.25-1.25,1.25.5612,1.25,1.25-.5612,1.25-1.25,1.25Z"
-          strokeWidth="0"
-        />
-        <path
-          d="m1.9482,6.9517c-.3667,0-.6875-.2695-.7412-.6431l-.1782-1.2373c-.1055-.7271.0791-1.4512.519-2.0396.4395-.5884,1.0825-.9697,1.8096-1.0747l1.2368-.1787c.4155-.0601.7905.2251.8496.6348.0591.4102-.2251.7905-.6348.8496l-1.2373.1787c-.3311.0479-.623.2212-.8228.4883-.1997.2676-.2837.5967-.2358.9272l.1782,1.2378c.0591.4102-.2251.79-.6353.8491-.0361.0054-.0723.0078-.1079.0078Z"
-          strokeWidth="0"
-        />
-        <path
-          d="m4.5,13.75v-1.4189c-.5325-.0776-.9777-.481-1.0586-1.0405l-.1787-1.2373c-.0591-.4097-.4355-.6963-.8496-.6348-.4097.0591-.6943.4395-.6348.8496l.1787,1.2368c.1045.7275.4863,1.3701,1.0747,1.8101.4354.3254.9471.5029,1.4783.5347-.0012-.0337-.0101-.0654-.0101-.0996Z"
-          strokeWidth="0"
-        />
-        <path
-          d="m8.7676,2.6914l1.2378-.1782c.3315-.0488.6597.0361.9272.2358.2671.1997.4404.4917.4883.8228l.1341.9282h1.5154l-.1651-1.1426c-.105-.7271-.4863-1.3701-1.0747-1.8096-.5884-.4404-1.313-.623-2.0396-.519l-1.2373.1782c-.4102.0591-.6943.439-.6353.8491.0586.4102.4424.6982.8491.6353Z"
-          strokeWidth="0"
-        />
-      </g>
-    </svg>
-  );
-}
-
 export function UploadCloud(props: LucideProps) {
   return <Lucide.UploadCloud {...props} />;
 }

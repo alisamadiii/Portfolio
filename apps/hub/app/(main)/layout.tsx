@@ -29,13 +29,10 @@ export default async function Layout({
   // DB access lives in the portfolio backend, so this goes over tRPC.
   await caller.cms.collaborators.bindInvites.mutate().catch(() => {});
 
-  const [current, accounts] = await Promise.all([
-    caller.users.getCurrent.query(),
-    caller.cms.repos.listAccounts.query(),
-  ]);
+  const current = await caller.users.getCurrent.query();
 
   return (
-    <SessionSeed current={current} accounts={accounts}>
+    <SessionSeed current={current}>
       <SubscriptionGateProvider>
         <ImpersonationBanner />
         {children}

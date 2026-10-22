@@ -13,21 +13,18 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 // update every reader through the same cache. Each seed runs once, in a state
 // initializer, before its children render.
 
-/** users.getCurrent + cms.repos.listAccounts, from the (main) layout. */
+/** users.getCurrent, from the (main) layout. */
 export function SessionSeed({
   current,
-  accounts,
   children,
 }: {
   current: RouterOutputs["users"]["getCurrent"];
-  accounts: RouterOutputs["cms"]["repos"]["listAccounts"];
   children: React.ReactNode;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   useState(() => {
     queryClient.setQueryData(trpc.users.getCurrent.queryKey(), current);
-    queryClient.setQueryData(trpc.cms.repos.listAccounts.queryKey(), accounts);
   });
   return children;
 }

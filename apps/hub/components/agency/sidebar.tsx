@@ -25,6 +25,7 @@ import { useEntitlement } from "@/hooks/use-plans";
 
 import { useAgency } from "@/components/agency/use-agency";
 import {
+  Blocks,
   BookOpen,
   CreditCard,
   HelpCircle,
@@ -57,6 +58,7 @@ const overviewPages: {
 
 const accountPages = [
   { title: "Account", url: "/account", icon: Settings },
+  { title: "Integrations", url: "/integrations", icon: Blocks },
   { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Guide", url: "/guide", icon: BookOpen },
 ];

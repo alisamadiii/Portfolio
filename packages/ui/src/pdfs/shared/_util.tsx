@@ -43,17 +43,6 @@ interface DividerProps {
   style?: Style | Style[];
 }
 
-interface SpacerProps {
-  size?: number;
-  style?: Style | Style[];
-}
-
-interface BulletItemProps {
-  children: ReactNode;
-  bullet?: string;
-  style?: Style | Style[];
-}
-
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
@@ -171,16 +160,8 @@ export function H3({ children, style }: TypographyProps) {
   return <Text style={style ? [s.h3, style].flat() : s.h3}>{children}</Text>;
 }
 
-export function H4({ children, style }: TypographyProps) {
-  return <Text style={style ? [s.h4, style].flat() : s.h4}>{children}</Text>;
-}
-
 export function H5({ children, style }: TypographyProps) {
   return <Text style={style ? [s.h5, style].flat() : s.h5}>{children}</Text>;
-}
-
-export function H6({ children, style }: TypographyProps) {
-  return <Text style={style ? [s.h6, style].flat() : s.h6}>{children}</Text>;
 }
 
 export function Body({ children, style }: TypographyProps) {
@@ -215,33 +196,5 @@ export function Divider({ style }: DividerProps) {
   return <View style={style ? [s.divider, style].flat() : s.divider} />;
 }
 
-export function DividerBold({ style }: DividerProps) {
-  return <View style={style ? [s.dividerBold, style].flat() : s.dividerBold} />;
-}
-
-export function BulletItem({
-  children,
-  bullet = "\u2022",
-  style,
-}: BulletItemProps) {
-  return (
-    <View style={style ? [s.bulletRow, style].flat() : s.bulletRow}>
-      <Text style={s.bulletChar}>{bullet}</Text>
-      <Text style={s.bulletText}>{children}</Text>
-    </View>
-  );
-}
-
-export function Spacer({ size = 16, style }: SpacerProps) {
-  return (
-    <View
-      style={
-        style ? [{ marginBottom: size }, style].flat() : { marginBottom: size }
-      }
-    />
-  );
-}
-
 // ─── Base Styles (for direct StyleSheet access) ──────────────────────────────
 
-export const baseStyles = s;
