@@ -11,10 +11,13 @@ import Analytics from "../components/Analytics.astro";
 const SITE = 'https://www.alisamadii.com';
 const PATH = '/';
 const url = new URL(PATH, SITE).href;
-const title = 'Jacksonville Lead Generation Agency | Google Ads + Websites';
+const title = 'Lead Generation Agency | Google Ads + Websites';
 const description =
-  'More calls and booked jobs for local service businesses: managed Google Ads, a website built to convert, and every lead tracked. One monthly price.';
+  'More calls and booked jobs for your business, wherever you sell: managed Google Ads, a website built to convert, and every lead tracked back to its source.';
 const showShippedStrip = false;
+// Prices are off the homepage for now. Flip to true to render the pricing
+// section, nav links, Offer schema and priced form labels again.
+const SHOW_PRICING = false;
 const ogImage = '/images/agency/hero-leads.webp';
 const videoSrc = '/hero-video.mp4';
 
@@ -30,17 +33,7 @@ const jsonLd = {
       "logo": "https://www.alisamadii.com/images/agency/logo.png",
       "email": "agency@alisamadii.com",
       "telephone": "+1-971-382-8969",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Jacksonville",
-        "addressRegion": "FL",
-        "addressCountry": "US"
-      },
-      "areaServed": [
-        "Jacksonville, FL",
-        "Florida",
-        "United States"
-      ]
+      "areaServed": "Worldwide"
     },
     {
       "@type": "Service",
@@ -49,9 +42,9 @@ const jsonLd = {
       "provider": {
         "@id": "https://www.alisamadii.com/#organization"
       },
-      "areaServed": "United States",
+      "areaServed": "Worldwide",
       "url": url,
-      "offers": [
+      ...(SHOW_PRICING ? { "offers": [
         {
           "@type": "Offer",
           "name": "Launch",
@@ -65,7 +58,7 @@ const jsonLd = {
             "unitText": "MONTH"
           }
         }
-      ]
+      ] } : {})
     },
     {
       "@type": "FAQPage",
@@ -75,7 +68,7 @@ const jsonLd = {
           "name": "What exactly do I get?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "More leads. We run your Google Ads so the right local searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone."
+            "text": "More leads. We run your Google Ads so the right searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone."
           }
         },
         {
@@ -88,18 +81,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          "name": "Why is there a 6-month minimum?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Google Ads needs time to learn. The first months go into finding which searches turn into jobs, and the months after are where the cost per lead comes down. 6 months gives the campaigns a fair run. After that it's month-to-month."
-          }
-        },
-        {
-          "@type": "Question",
           "name": "What's your guarantee?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours."
+            "text": "Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, walk away and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies while ad spend stays at the agreed level and leads are answered in business hours."
           }
         },
         {
@@ -107,7 +92,7 @@ const jsonLd = {
           "name": "Do I own the website?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave after the minimum term, the site and the account go with you."
+            "text": "Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave, the site and the account go with you."
           }
         },
         {
@@ -115,7 +100,7 @@ const jsonLd = {
           "name": "What if I already have a website?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included in every growth plan at no extra cost."
+            "text": "We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included at no extra cost."
           }
         },
         {
@@ -123,15 +108,17 @@ const jsonLd = {
           "name": "Can I get just a website, without ads?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Our website-only plan is $1,299 setup + $100/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our Websites page."
+            "text": SHOW_PRICING
+              ? "Yes. Our website-only plan is $1,299 setup + $100/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our Websites page."
+              : "Yes. Our website-only plan covers custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our Websites page."
           }
         },
         {
           "@type": "Question",
-          "name": "Do you only work with Jacksonville businesses?",
+          "name": "Where do you work?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. We're based in Jacksonville and work with businesses across Florida, including Miami, Tampa, and Orlando, as well as anywhere in the US. Everything can be handled online."
+            "text": "Anywhere. We work with businesses in every city and region, and everything is handled online: calls, campaigns, the website, and reporting."
           }
         }
       ]
@@ -170,7 +157,7 @@ const jsonLd = {
 <header class="topnav" style="position: sticky; top: 0; z-index: 50; padding: 14px clamp(12px, 3vw, 24px) 0">
 <nav aria-label="Main" style="max-width: 1200px; margin: 0 auto; height: 64px; padding: 0 8px 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-radius: 9999px; background: rgba(26,23,21,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 20px 40px -20px rgba(26,23,21,0.6)">
 <a href="/" class="tlink" style="display: flex; align-items: center; gap: 10px; color: #fffdfb"><img src="/images/agency/logo.png" alt="" style="width: 28px; height: 28px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 19px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span><span class="cap hide-sm" style="margin-left: 4px; padding: 3px 9px; border-radius: 9999px; background: rgba(252,132,100,0.16); color: #fc8464; font-size: 10.5px">Growth</span></a>
-<div class="hide-sm" style="display: flex; gap: 22px; font-size: 14.5px; font-weight: 600"><a href="#who" class="navlink">Who it's for</a><a href="#how" class="navlink">How it works</a><a href="#pricing" class="navlink">Pricing</a><a href="#guarantee" class="navlink">Guarantee</a><a href="#faq" class="navlink">FAQ</a></div>
+<div class="hide-sm" style="display: flex; gap: 22px; font-size: 14.5px; font-weight: 600"><a href="#who" class="navlink">Who it's for</a><a href="#how" class="navlink">How it works</a>{SHOW_PRICING && <a href="#pricing" class="navlink">Pricing</a>}<a href="#guarantee" class="navlink">Guarantee</a><a href="#faq" class="navlink">FAQ</a></div>
 <div style="display: flex; align-items: center; gap: 16px">
 <a href="tel:+19713828969" class="mono tlink hide-sm" style="font-size: 13px; color: #c9bfb5">(971) 382-8969</a>
 <a href="#contact" class="btn cta navcta" style="min-height: 48px; padding: 0 20px; font-size: 14.5px">Start a Project ↗</a>
@@ -180,7 +167,7 @@ const jsonLd = {
 <div id="mobile-menu" hidden class="mpanel" style="max-width: 1200px; margin: 8px auto 0; padding: 8px 20px 20px; border-radius: 24px; background: rgba(26,23,21,0.97); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 30px 60px -20px rgba(26,23,21,0.7); flex-direction: column">
 <a href="#who" class="mlink" data-close-menu>Who it's for<span aria-hidden="true" style="color: #fc8464">→</span></a>
 <a href="#how" class="mlink" data-close-menu>How it works<span aria-hidden="true" style="color: #fc8464">→</span></a>
-<a href="#pricing" class="mlink" data-close-menu>Pricing<span aria-hidden="true" style="color: #fc8464">→</span></a>
+{SHOW_PRICING && <a href="#pricing" class="mlink" data-close-menu>Pricing<span aria-hidden="true" style="color: #fc8464">→</span></a>}
 <a href="#guarantee" class="mlink" data-close-menu>Guarantee<span aria-hidden="true" style="color: #fc8464">→</span></a>
 <a href="#faq" class="mlink" data-close-menu>FAQ<span aria-hidden="true" style="color: #fc8464">→</span></a>
 <a href="https://hub.alisamadii.com" class="mlink" style="color: #fc8464">Already a customer? Open your app</a>
@@ -197,9 +184,9 @@ const jsonLd = {
 <HeroFlow class="hero-img" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none" />
 <div aria-hidden="true" class="hero-ov" style="position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(rgba(255,253,251,0), #fffdfb); pointer-events: none"></div>
 <div class="wrap hero-copy" style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 22px">
-<p class="pill cap" style="margin: 0; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"></span>Jacksonville lead generation agency</p>
+<p class="pill cap" style="margin: 0; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"></span>Lead generation agency</p>
 <h1 style="margin: 0; max-width: 16ch; font-size: clamp(42px, 5vw, 66px); line-height: 1.03; font-weight: 800; letter-spacing: -0.045em; color: #221f1c; text-wrap: balance">More calls, more booked jobs, <span style="color: #e0603d">more revenue.</span></h1>
-<p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.5vw, 19px); line-height: 1.55; color: #5a524b">We run the Google Ads that bring in local customers and build the website that turns them into booked jobs. Every lead tracked, one monthly price.</p>
+<p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.5vw, 19px); line-height: 1.55; color: #5a524b">We run the Google Ads that bring in customers and build the website that turns them into booked jobs. Every lead tracked back to its source.</p>
 <div class="hero-btns" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin-top: 4px">
 <a href="#contact" class="btn cta">Start a Project <span aria-hidden="true">↗</span></a>
 <a href="#video" class="btn ghost watch" data-video-open aria-haspopup="dialog"><span aria-hidden="true" class="play-dot" style="position: relative; width: 40px; height: 40px; border-radius: 9999px; background: #221f1c; color: #fffdfb; display: flex; align-items: center; justify-content: center"><svg class="play-ico" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg></span>Watch how we build</a>
@@ -220,7 +207,7 @@ const jsonLd = {
 <div aria-hidden="true" style="width: 46px"></div>
 </div>
 <div style="position: relative; aspect-ratio: 2688 / 1520; background: #f6efe6">
-<img src="/images/agency/video-poster.webp" alt="Ali Samadi Agency: Google Ads, websites that convert, and email newsletters for local businesses." style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1920" height="1086" loading="lazy" decoding="async">
+<img src="/images/agency/video-poster.webp" alt="Ali Samadi Agency: Google Ads, websites that convert, and email newsletters for growing businesses." style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1920" height="1086" loading="lazy" decoding="async">
 <div style="position: absolute; left: 0; right: 0; bottom: 5%; display: flex; align-items: center; justify-content: center">
 <button type="button" class="btn playbtn" data-video-open aria-haspopup="dialog" aria-label="Play the video: watch how we build" style="display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 20px 6px 6px; border-radius: 9999px; background: #1b1a17; color: #f6f5f3; font-size: 15px; font-weight: 600; box-shadow: 0 8px 24px rgba(27,26,23,0.22)"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #f6f5f3; color: #1b1a17; display: flex; align-items: center; justify-content: center"><svg class="play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg></span>Watch how we build <span class="mono" style="font-size: 12px; color: #a39d92">[0:30]</span></button>
 </div>
@@ -230,7 +217,6 @@ const jsonLd = {
 <div class="hide-sm vchip" style="position: absolute; z-index: 3; left: -88px; top: 18%; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center; font-size: 15px">▤</span>Website that converts</div>
 <div class="hide-sm vchip" style="position: absolute; z-index: 3; right: -76px; top: 10%; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"><span aria-hidden="true" class="mono" style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center; font-size: 11px">Ad</span>Managed Google Ads</div>
 <div class="hide-sm vchip" style="position: absolute; z-index: 3; left: -56px; bottom: -28px; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span>Every lead tracked</div>
-<div class="hide-sm vchip" style="position: absolute; z-index: 3; right: -48px; bottom: -28px; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center; font-size: 15px">✦</span>One partner, one price</div>
 </div>
 </div>
 <!-- shipped strip (hidden) -->
@@ -255,7 +241,7 @@ const jsonLd = {
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px">
 <article class="card lift" style="padding: 32px; display: flex; flex-direction: column; gap: 16px">
-<span class="cap" style="color: #c4502e">Local service pros</span>
+<span class="cap" style="color: #c4502e">Service pros</span>
 <h3 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em">“The work is good. The phone just isn't ringing enough.”</h3>
 <p style="margin: 0; font-size: 15px; color: #5a524b">We build a site made to convert and point Google Ads at it, so people searching for your service nearby find you first.</p>
 <a href="#contact" class="tlink" style="margin-top: auto; padding-top: 8px; font-size: 15px; font-weight: 700">Start a Project ↗</a>
@@ -297,8 +283,8 @@ const jsonLd = {
 </div>
 </section>
 
-<!-- PRICING (dark, premium) -->
-<section id="pricing" class="night" style="position: relative; padding: 120px 0 110px; background: #1a1715; color: #f6efe9; overflow: hidden">
+<!-- PRICING (dark, premium), hidden while SHOW_PRICING is false -->
+{SHOW_PRICING && (<section id="pricing" class="night" style="position: relative; padding: 120px 0 110px; background: #1a1715; color: #f6efe9; overflow: hidden">
 <div aria-hidden="true" style="position: absolute; left: 50%; top: -260px; width: 1100px; height: 700px; transform: translateX(-50%); border-radius: 9999px; background: radial-gradient(closest-side, rgba(252,132,100,0.28), transparent); pointer-events: none"></div>
 <div class="wrap" style="position: relative; display: flex; flex-direction: column; gap: 56px">
 <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
@@ -340,7 +326,7 @@ const jsonLd = {
 <article aria-disabled="true" style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px; opacity: 0.4; user-select: none">
 <div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Scale</h3><span class="cap" style="font-size: 10.5px; color: #a89e94">Ads up to $10K/mo</span></div>
 <p style="margin: 0; display: flex; align-items: baseline; gap: 6px"><span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">$4,500</span><span class="mono" style="font-size: 14px; color: #a89e94">/mo</span></p>
-<p style="margin: 0; font-size: 15px; color: #c9bfb5">For a business covering several cities or locations that wants the whole local search page working for it.</p>
+<p style="margin: 0; font-size: 15px; color: #c9bfb5">For a business covering several cities or locations that wants the whole search page working for it.</p>
 <ul style="margin: 0; padding: 18px 0 0; border-top: 1px solid rgba(246,239,233,0.1); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Everything in Growth</li>
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Unlimited campaigns, manages up to $10k/mo in ads</li>
@@ -352,11 +338,11 @@ const jsonLd = {
 </article>
 </div>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
-<p class="cap" style="margin: 0; color: #a89e94">$300 setup · Website included · 6-month minimum, then month-to-month · Ad spend paid to Google directly</p>
+<p class="cap" style="margin: 0; color: #a89e94">$300 setup · Website included · Month-to-month · Ad spend paid to Google directly</p>
 <p style="margin: 0; font-size: 15px; color: #c9bfb5">Just need a website, no ads? <strong style="color: #fffdfb">$1,299 + $100/mo</strong> · <a href="/websites" class="tlink" style="color: #fc8464; font-weight: 700">See website plans →</a></p>
 </div>
 </div>
-</section>
+</section>)}
 
 <!-- GUARANTEE -->
 <section id="guarantee" style="position: relative; padding: 110px 0 80px">
@@ -369,10 +355,10 @@ const jsonLd = {
 <div style="width: 100%; max-width: 640px; align-self: center">
 <article style="padding: 28px; border-radius: 20px; background: #221f1c; color: #f6efe9; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; align-items: center; gap: 12px"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #fc8464; color: #221f1c; display: flex; align-items: center; justify-content: center; font-weight: 800">✓</span><span class="cap" style="color: #fc8464">Lead guarantee · 90 days</span></div>
-<p style="margin: 0; font-size: 16px; color: #e6ddd4">Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account.</p>
+<p style="margin: 0; font-size: 16px; color: #e6ddd4">Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, walk away and keep your website and Google Ads account.</p>
 </article>
 </div>
-<p style="margin: 0; max-width: 760px; align-self: center; text-align: center; font-size: 13px; line-height: 1.55; color: #6d645c">A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours.</p>
+<p style="margin: 0; max-width: 760px; align-self: center; text-align: center; font-size: 13px; line-height: 1.55; color: #6d645c">A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies while ad spend stays at the agreed level and leads are answered in business hours.</p>
 </div>
 </div>
 </section>
@@ -382,14 +368,13 @@ const jsonLd = {
 <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start">
 <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>FAQ</p><h2 class="h2">Common questions</h2><p style="margin: 0; font-size: 16px; color: #5a524b">Still unsure? <a href="https://cal.com/alisamadii" class="tlink" style="font-weight: 700">Book a meeting ↗</a></p></div>
 <div class="card" style="flex: 999 1 560px; min-width: 0; overflow: hidden">
-<details open="" style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What exactly do I get?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">More leads. We run your Google Ads so the right local searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone.</p></details>
+<details open="" style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What exactly do I get?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">More leads. We run your Google Ads so the right searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone.</p></details>
 <details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Is ad spend included?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. The Launch plan covers up to $3,000 in monthly ad spend.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Why is there a 6-month minimum?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Google Ads needs time to learn. The first months go into finding which searches turn into jobs, and the months after are where the cost per lead comes down. 6 months gives the campaigns a fair run. After that it's month-to-month.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What's your guarantee?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Do I own the website?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave after the minimum term, the site and the account go with you.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What if I already have a website?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included in every growth plan at no extra cost.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Can I get just a website, without ads?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Yes. Our website-only plan is $1,299 setup + $100/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our <a href="/websites" class="tlink">Websites page</a>.</p></details>
-<details><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Do you only work with Jacksonville businesses?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">No. We're based in Jacksonville and work with businesses across Florida, including Miami, Tampa, and Orlando, as well as anywhere in the US. Everything can be handled online.</p></details>
+<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What's your guarantee?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, walk away and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies while ad spend stays at the agreed level and leads are answered in business hours.</p></details>
+<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Do I own the website?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave, the site and the account go with you.</p></details>
+<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What if I already have a website?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included at no extra cost.</p></details>
+<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Can I get just a website, without ads?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Yes. Our website-only plan {SHOW_PRICING ? "is $1,299 setup + $100/mo:" : "covers"} custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our <a href="/websites" class="tlink">Websites page</a>.</p></details>
+<details><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Where do you work?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Anywhere. We work with businesses in every city and region, and everything is handled online: calls, campaigns, the website, and reporting.</p></details>
 </div>
 </div>
 </section>
@@ -406,7 +391,6 @@ const jsonLd = {
 <div><dt class="cap" style="font-size: 11px; color: #6d645c">Email</dt><dd style="margin: 4px 0 0"><a href="mailto:agency@alisamadii.com" class="tlink" style="color: #221f1c; font-weight: 700">agency@alisamadii.com</a></dd></div>
 <div><dt class="cap" style="font-size: 11px; color: #6d645c">Schedule</dt><dd style="margin: 4px 0 0"><a href="https://cal.com/alisamadii" class="tlink" style="color: #221f1c; font-weight: 700">Book a Meeting ↗</a></dd></div>
 <div><dt class="cap" style="font-size: 11px; color: #6d645c">Phone</dt><dd style="margin: 4px 0 0"><a href="tel:+19713828969" class="tlink" style="color: #221f1c; font-weight: 700">+1 (971) 382-8969</a></dd></div>
-<div><dt class="cap" style="font-size: 11px; color: #6d645c">Location</dt><dd style="margin: 4px 0 0; font-weight: 700">Jacksonville, FL</dd></div>
 </dl>
 </div>
 <form id="quote-form" class="card" action="#contact" method="post" style="flex: 1 1 420px; max-width: 520px; padding: 32px; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 14px">
@@ -417,8 +401,8 @@ const jsonLd = {
 </div>
 <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700">I'm interested in
 <select class="fld" name="plan" id="quote-plan">
-<option value="launch" selected>Launch · $1,200/mo + $300 setup</option>
-<option value="website">Website only · $1,299 + $100/mo</option>
+<option value="launch" selected>{SHOW_PRICING ? "Launch · $1,200/mo + $300 setup" : "Google Ads + website"}</option>
+<option value="website">{SHOW_PRICING ? "Website only · $1,299 + $100/mo" : "Website only"}</option>
 <option value="ecommerce">E-commerce storefront</option>
 <option value="newsletter">Newsletter for my business · quoted</option>
 <option value="custom">Custom / not sure yet</option>
@@ -441,15 +425,15 @@ const jsonLd = {
 <div class="wrap" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px 40px">
 <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px">
 <a href="/" class="tlink" style="display: flex; align-items: center; gap: 10px; color: #fffdfb"><img src="/images/agency/logo.png" alt="" style="width: 28px; height: 28px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 19px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span></a>
-<p style="margin: 0; font-size: 14px">Lead generation for local businesses: Google Ads, websites that convert, and email that brings customers back.</p>
+<p style="margin: 0; font-size: 14px">Lead generation for businesses everywhere: Google Ads, websites that convert, and email that brings customers back.</p>
 </div>
 <div class="foot-r" style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px">
 <p class="cap" style="margin: 0; display: flex; align-items: center; gap: 10px; color: #fffdfb"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a"></span>Currently taking new clients</p>
-<p class="cap" style="margin: 0; font-size: 11px; color: #8a8076">© Ali Samadii LLC d/b/a Ali Samadi Agency · Jacksonville, FL</p>
+<p class="cap" style="margin: 0; font-size: 11px; color: #8a8076">© Ali Samadii LLC d/b/a Ali Samadi Agency</p>
 </div>
 </div>
 <nav aria-label="Footer" class="wrap" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(246,239,233,0.08); display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 14px">
-<a href="/websites" class="tlink" style="color: #c9bfb5">Websites</a><a href="/services" class="tlink" style="color: #c9bfb5">Services</a><a href="/pricing" class="tlink" style="color: #c9bfb5">Pricing</a><a href="/locations" class="tlink" style="color: #c9bfb5">Locations</a><a href="/about" class="tlink" style="color: #c9bfb5">About</a><a href="/work" class="tlink" style="color: #c9bfb5">Work</a><a href="/blog" class="tlink" style="color: #c9bfb5">Blog</a><a href="/contact" class="tlink" style="color: #c9bfb5">Contact</a><a href="/privacy" class="tlink" style="color: #8a8076">Privacy</a><a href="/terms" class="tlink" style="color: #8a8076">Terms</a>
+<a href="/websites" class="tlink" style="color: #c9bfb5">Websites</a><a href="/services" class="tlink" style="color: #c9bfb5">Services</a>{SHOW_PRICING && <a href="/pricing" class="tlink" style="color: #c9bfb5">Pricing</a>}<a href="/locations" class="tlink" style="color: #c9bfb5">Locations</a><a href="/about" class="tlink" style="color: #c9bfb5">About</a><a href="/work" class="tlink" style="color: #c9bfb5">Work</a><a href="/blog" class="tlink" style="color: #c9bfb5">Blog</a><a href="/contact" class="tlink" style="color: #c9bfb5">Contact</a><a href="/privacy" class="tlink" style="color: #8a8076">Privacy</a><a href="/terms" class="tlink" style="color: #8a8076">Terms</a>
 </nav>
 </footer>
 </div>

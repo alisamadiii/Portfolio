@@ -155,7 +155,7 @@ The trade is simple: less process, less cost, live in a day — in exchange for 
 
 ## What all this costs
 
-The four steps describe the work; the invoice describes the scope. My [pricing is public](/pricing) — flat numbers, no "book a call to find out" — and if you want the full market picture first, I've broken down [what a website actually costs](/blog/how-much-does-a-website-cost-jacksonville), from DIY builders to five-figure agency quotes, with my own numbers sitting in plain sight next to everyone else's. Short version: the process you just read doesn't change with the price. A one-day site and a three-week site go through the same hands and the same testing — one of them just has more pages to test.
+The four steps describe the work; the invoice describes the scope. My [pricing is public](/pricing): flat numbers, no "book a call to find out." The [website plans](/websites) spell out exactly what each one includes. Short version: the process you just read doesn't change with the price. A one-day site and a three-week site go through the same hands and the same testing — one of them just has more pages to test.
 
 ## When you should not hire me
 

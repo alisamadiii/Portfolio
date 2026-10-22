@@ -50,9 +50,9 @@ const schema = [
     name: "Managed Email Newsletter",
     serviceType: "Email newsletter management",
     description:
-      "A branded email newsletter for local businesses, sent from the business's own domain — setup, deliverability, writing, and sending managed by the agency for a flat monthly amount.",
+      "A branded email newsletter for businesses, sent from the business's own domain — setup, deliverability, writing, and sending managed by the agency for a flat monthly amount.",
     provider: { "@id": `${SITE}/#organization` },
-    areaServed: "US",
+    areaServed: "Worldwide",
     url: pageUrl,
   },
   {
@@ -68,16 +68,16 @@ const schema = [
 ---
 
 <MockupLayout
-  title="Email Newsletter for Local Businesses, Managed for You | Ali Samadi Agency"
+  title="Email Newsletter for Businesses, Managed for You | Ali Samadi Agency"
   description="A branded newsletter your customers actually read — sent from your own domain, tracked open by open. We set it up, keep it out of spam, and can even write it for you."
   canonical={pageUrl}
   og={{
-    title: "A Newsletter for Your Local Business — Ali Samadi Agency",
+    title: "A Newsletter for Your Business — Ali Samadi Agency",
     description:
       "Your customers already gave you their emails. We turn that into repeat visits — a branded newsletter on your own domain, set up and managed for a flat monthly amount.",
     url: pageUrl,
     twitterDescription:
-      "A managed newsletter for your local business — your domain, your brand, flat monthly quote.",
+      "A managed newsletter for your business — your domain, your brand, flat monthly quote.",
     image: "/og/newsletter.jpg",
   }}
   schema={schema}
@@ -92,7 +92,7 @@ const schema = [
           title: "See what's working",
           desc: "One dashboard shows every send, delivered, opened, and clicked. Bounce and complaint rates get flagged early.",
           img: "/newsletter-app/01-analytics.webp",
-          alt: "Newsletter analytics dashboard showing delivery, open, and click rates for a local business",
+          alt: "Newsletter analytics dashboard showing delivery, open, and click rates for a client newsletter",
         },
         {
           title: "Write like a doc",

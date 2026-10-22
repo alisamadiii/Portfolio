@@ -113,7 +113,7 @@ export const SEARCH_PAGES: SearchPage[] = [
     keywords: ["what we do", "offerings", "capabilities", "help"],
   },
   {
-    title: "Websites for Local Businesses",
+    title: "Websites for Small Businesses",
     description:
       "A custom website without ads: designed, built, hosted, and cared for. $1,299 setup + $100/mo.",
     url: "/websites",
@@ -144,7 +144,7 @@ export const SEARCH_PAGES: SearchPage[] = [
   {
     title: "Business Newsletter",
     description:
-      "A managed email newsletter for your local business — your domain, your brand, set up and run for you.",
+      "A managed email newsletter for your business — your domain, your brand, set up and run for you.",
     url: "/newsletter",
     keywords: [
       "newsletter",
@@ -153,7 +153,7 @@ export const SEARCH_PAGES: SearchPage[] = [
       "mailchimp",
       "campaigns",
       "subscribers",
-      "local business",
+      "small business",
     ],
   },
   {
@@ -168,13 +168,13 @@ export const SEARCH_PAGES: SearchPage[] = [
       "industry",
       "roach",
       "termite",
-      "local business website",
+      "small business website",
     ],
   },
   {
     title: "Locations",
     description:
-      "Florida cities we serve — Jacksonville, Miami, Tampa, Orlando, and more.",
+      "Florida cities we serve: Miami, Tampa, Orlando, and more.",
     url: "/locations",
     keywords: [
       "florida",

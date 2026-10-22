@@ -49,12 +49,6 @@ const QUERIES = {
   "slow-culprits": "server room data center blue lights",
   "platform-tax": "frustrated person laptop office desk",
   "mobile-speed": "person holding smartphone city street",
-  "jax-cost-hero": "calculator notebook budget planning desk",
-  "cost-snapshot": "price tags wooden table closeup",
-  "cost-levers": "sticky notes laptop planning project scope",
-  "hidden-costs": "person reviewing invoices receipts desk",
-  "published-prices": "laptop screen pricing page clean minimal",
-  "walk-away-owning": "handing keys hands ownership closeup",
   "dmg-hero": "marketing strategy planning whiteboard sticky notes",
 };
 

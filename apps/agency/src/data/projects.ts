@@ -78,7 +78,7 @@ export const PROJECTS: Project[] = [
     name: "Florida A2Z Construction",
     category: "Construction · Remodeling",
     description:
-      "Site for a Jacksonville residential construction & remodeling contractor — services, process, and free-estimate requests.",
+      "Site for a residential construction & remodeling contractor — services, process, and free-estimate requests.",
     url: "https://fla2zconstruction.com/",
     image: {
       src: "/clients/fla2z-construction.webp",

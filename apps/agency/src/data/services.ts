@@ -76,7 +76,7 @@ export const services: Service[] = [
     slug: "google-ads",
     name: "Google Ads Management",
     eyebrow: "Growth",
-    keyword: "google ads management jacksonville",
+    keyword: "google ads management",
     searchKeywords: [
       "ppc",
       "pay per click",
@@ -87,13 +87,13 @@ export const services: Service[] = [
       "local services ads",
       "marketing",
     ],
-    seoTitle: "Google Ads Management Jacksonville | Website + Ads Partner",
-    metaDescription: `Google Ads management in Jacksonville, paired with a custom website built to convert the clicks. Every call and form tracked. From ${fmtPrice(FROM_PRICE)}/mo, no setup fee.`,
+    seoTitle: "Google Ads Management | Website + Ads Partner",
+    metaDescription: `Managed ad campaigns paired with a custom website built to convert the clicks. Every call and form tracked. From ${fmtPrice(FROM_PRICE)}/mo, no setup fee.`,
     h1: "Google Ads management that ends in a phone call",
     heroSub:
       "We run your Google Ads and build the website they send people to, so one partner owns every step between the search and the booked job.",
     intro:
-      "Ali Samadi Agency handles Google Ads management for Jacksonville and Florida service businesses, and we do it differently from most ad agencies: we also build the website the ads point to. That matters because most wasted ad spend isn't a bidding problem. It's a landing problem. Someone searches \"termite inspection near me\", clicks your ad, lands on a slow homepage with no clear next step, and leaves. When the same team writes the ad and builds the page behind it, the search, the promise in the ad, and the page all match, and the visitor calls. Every call and form is tracked back to the keyword that produced it, so each month we know what to cut and what to put more behind.",
+      "Ali Samadi Agency handles Google Ads management for businesses everywhere, and we do it differently from most ad agencies: we also build the website the ads point to. That matters because most wasted ad spend isn't a bidding problem. It's a landing problem. Someone searches \"termite inspection near me\", clicks your ad, lands on a slow homepage with no clear next step, and leaves. When the same team writes the ad and builds the page behind it, the search, the promise in the ad, and the page all match, and the visitor calls. Every call and form is tracked back to the keyword that produced it, so each month we know what to cut and what to put more behind.",
     benefits: [
       {
         title: "Ads and site under one roof",
@@ -149,7 +149,7 @@ export const services: Service[] = [
       },
       {
         q: "How much should I spend on ads?",
-        a: "It depends on your service and area, but most local service businesses start somewhere between $1,500 and $3,000 a month in ad spend. We'll recommend a starting budget on the first call and adjust it once real data comes in.",
+        a: "It depends on your service and area, but most businesses start somewhere between $1,500 and $3,000 a month in ad spend. We'll recommend a starting budget on the first call and adjust it once real data comes in.",
       },
       {
         q: "Do you guarantee results?",

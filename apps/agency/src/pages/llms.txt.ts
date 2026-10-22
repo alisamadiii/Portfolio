@@ -35,11 +35,11 @@ export const GET: APIRoute = async () => {
 
   const body = `# Ali Samadi Agency
 
-> Lead generation agency for local service businesses. We run the Google Ads
+> Lead generation agency for businesses everywhere. We run the Google Ads
 > that make the phone ring, build the website that turns clicks into booked
 > jobs, and bring past customers back with email. Every call and form is
-> tracked. The client owns the site and the ad account. Based in Jacksonville,
-> FL, USA. Contact: agency@alisamadii.com.
+> tracked. The client owns the site and the ad account. Works with
+> businesses in every location, fully online. Contact: agency@alisamadii.com.
 
 ## Pages
 
@@ -51,8 +51,8 @@ export const GET: APIRoute = async () => {
 - [Contact](https://www.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://www.alisamadii.com/blog): articles on Google Ads, local search, and websites that convert.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
-- [Websites for Local Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, hosted, and cared for, editable through Client Hub. ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo.
-- [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
+- [Websites for Small Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, hosted, and cared for, editable through Client Hub. ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo.
+- [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for businesses, own domain, branded templates, writing and sending handled. Quoted per business, no published price.
 - [Pest Control Lead Generation](https://www.alisamadii.com/pest-control): managed Google Ads for pest control companies plus a website with click-to-call, per-pest and per-city pages, review walls, and booking forms. From ${fmtPrice(FROM_PRICE)}/mo.
 
 ## Services
@@ -81,7 +81,7 @@ Terms and privacy pages are always included free.
 
 ## Locations
 
-Headquartered in Jacksonville, FL; serving businesses across Florida remotely.
+Serving businesses in every location remotely. City pages below.
 
 ${locations}
 

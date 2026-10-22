@@ -12,6 +12,11 @@ export default defineConfig({
   output: "static",
   adapter: node({ mode: "standalone" }),
   trailingSlash: "never",
+  // Jacksonville pages were removed (agency no longer markets one city).
+  redirects: {
+    "/locations/jacksonville": "/locations",
+    "/blog/how-much-does-a-website-cost-jacksonville": "/blog",
+  },
   // Directory format (about/index.html) — the @astrojs/node standalone server
   // resolves prerendered routes this way. `format: "file"` (flat about.html)
   // made the server miss them and fall through to the SSR [slug] catch-all,

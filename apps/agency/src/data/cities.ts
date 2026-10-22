@@ -10,8 +10,8 @@
 // FAQ content is visible on-page AND emitted as FAQPage JSON-LD from
 // [city].astro — Google retired FAQ rich results (May 2026), but AI answer
 // engines (ChatGPT, Perplexity, AI Overviews) still parse FAQPage, so keep
-// answers self-contained. The agency is headquartered in Jacksonville; every
-// other city is served remotely and the pages say so honestly — no fake offices.
+// answers self-contained. Every city is served remotely and the pages say so
+// honestly — no fake offices.
 
 export interface City {
   slug: string;
@@ -21,8 +21,6 @@ export interface City {
   populationNote: string;
   /** sameAs for the areaServed City node — entity disambiguation. */
   wikipediaUrl: string;
-  /** True only for Jacksonville — unlocks the "based here" framing + LocalBusiness schema. */
-  isHeadquarters?: boolean;
   seoTitle: string;
   metaDescription: string;
   h1: string;
@@ -42,58 +40,6 @@ export interface City {
 }
 
 export const cities: City[] = [
-  // ── Jacksonville (HQ) ──────────────────────────────────────────
-  {
-    slug: "jacksonville",
-    name: "Jacksonville",
-    county: "Duval County",
-    region: "Northeast Florida",
-    populationNote: "Florida's largest city, ~985,000 residents",
-    wikipediaUrl: "https://en.wikipedia.org/wiki/Jacksonville,_Florida",
-    image: {
-      src: "/locations/jacksonville.webp",
-      alt: "Main Street Bridge and the downtown Jacksonville skyline over the St. Johns River at golden hour",
-    },
-    isHeadquarters: true,
-    seoTitle: "Jacksonville Lead Generation & Web Design | Ali Samadi Agency",
-    metaDescription:
-      "Jacksonville lead generation agency based here in Duval County. Managed Google Ads and websites that turn local searches into calls and booked jobs.",
-    h1: "Lead generation and websites in Jacksonville, Florida",
-    heroSub:
-      "We're not a directory listing with a Jacksonville filter, this is home. We run the Google Ads and build the websites that bring Duval County businesses more calls.",
-    intro:
-      "Jacksonville is where Ali Samadi Agency is headquartered, which makes this the one city page on our site written from lived experience rather than research. We know the difference between a Riverside coffee shop and a Southside logistics firm because we've walked into both. Jacksonville is the largest city by area in the contiguous United States and the most populous in Florida, yet its small-business scene still runs on word of mouth — a strong website here isn't about outshining Manhattan-grade competition, it's about being the one contractor, clinic, or shop that actually looks credible when a neighbor searches. That's a winnable game, and it's the one we play for our own business in this exact market every day. When we tell you what ranks in Jacksonville, it's because our own site is ranking for it.",
-    localContext:
-      "Duval County's economy leans on logistics (JAXPORT and the rail hubs), healthcare (Mayo Clinic, Baptist Health), finance back-offices, military families around NAS Jax and Mayport, and a dense layer of home-services contractors serving the suburbs from Mandarin to Oceanway. Most of these businesses compete in Google Maps and local search, not national SERPs — which is exactly the kind of fight a fast, properly structured website wins.",
-    industries: ["logistics", "healthcare", "home services", "real estate"],
-    nearby: ["gainesville", "orlando", "tallahassee"],
-    faqs: [
-      {
-        q: "Can we meet in person in Jacksonville?",
-        a: "Yes. We're based in Jacksonville, so local clients can meet face to face — kickoffs, reviews, or a coffee to talk through the project. Most work still happens async through our Client Hub, but being in the same city means you can put a face to the agency.",
-      },
-      {
-        q: "Do you work with Jacksonville's military community?",
-        a: "We do. With NAS Jacksonville and Naval Station Mayport nearby, a lot of local businesses are veteran-owned or serve military families. We've built for service businesses in these corridors and understand the trust signals that audience looks for.",
-      },
-      {
-        q: "How fast can a Jacksonville business get a site live?",
-        a: "Simple sites ship in one day once the project is confirmed. Larger builds — multiple pages, CMS, custom features — are scoped upfront with a clear timeline, usually one to three weeks.",
-      },
-      {
-        q: "Do you help with Google rankings, not just the website?",
-        a: "Yes — SEO and analytics are part of what we offer. Every site ships with the technical foundation (structured data, sitemaps, fast Core Web Vitals), and we can run ongoing local SEO for Jacksonville businesses that want to climb the map pack.",
-      },
-    ],
-    searchKeywords: [
-      "jacksonville web design",
-      "jacksonville website design",
-      "web designer jacksonville fl",
-      "jax web design",
-      "duval",
-    ],
-  },
-
   // ── Miami ──────────────────────────────────────────────────────
   {
     slug: "miami",
@@ -133,7 +79,7 @@ export const cities: City[] = [
       },
       {
         q: "How does working remotely with you actually work?",
-        a: "We're headquartered in Jacksonville and work with Miami clients over video calls and our Client Hub, where you follow progress, leave feedback, and edit your own site after launch. Same state, same time zone — most clients never feel the distance.",
+        a: "We work with Miami clients over video calls and our Client Hub, where you follow progress, leave feedback, and edit your own site after launch. Most clients never feel the distance.",
       },
     ],
     searchKeywords: [
@@ -184,7 +130,7 @@ export const cities: City[] = [
       },
       {
         q: "Do you serve the whole Tampa Bay area?",
-        a: "We do — Tampa, St. Petersburg, Clearwater, Brandon, Wesley Chapel, and everywhere in between. We work remotely from Jacksonville with video calls and a Client Hub where you track everything, so your exact address in the Bay doesn't matter.",
+        a: "We do — Tampa, St. Petersburg, Clearwater, Brandon, Wesley Chapel, and everywhere in between. We work remotely with video calls and a Client Hub where you track everything, so your exact address in the Bay doesn't matter.",
       },
     ],
     searchKeywords: [
@@ -210,16 +156,16 @@ export const cities: City[] = [
     },
     seoTitle: "Orlando Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Orlando lead generation and web design that wins local customers and tourist searches alike. Google Ads plus websites built to convert, every lead tracked.",
+      "Orlando lead generation and web design that wins residents and tourist searches alike. Google Ads plus websites built to convert, every lead tracked.",
     h1: "Lead generation and websites for Orlando businesses",
     heroSub:
-      "Seventy-five million visitors a year search Orlando businesses from their hotel rooms. We build websites that capture that traffic — and the local customers who live here year-round.",
+      "Seventy-five million visitors a year search Orlando businesses from their hotel rooms. We build websites that capture that traffic — and the people who live here year-round.",
     intro:
       "Orlando businesses serve two completely different audiences at once, and most of their websites acknowledge neither. There are the seventy-five-million-plus annual visitors searching from hotel rooms and rental cars — high intent, zero local knowledge, deciding in seconds. And there are the two-and-a-half million Central Florida residents who live in Winter Park, Kissimmee, and Lake Nona and need the same dentists, gyms, and repair shops as anyone else. A tourist-facing site needs instant clarity and mobile speed; a local-facing site needs to win the map pack against entrenched competitors. We build for whichever fight your business is in — sometimes both — with custom-coded pages structured so Google understands exactly who you serve and where. Either way, the era of getting by on a slow template site ended when your competitors stopped using them.",
     localContext:
       "Beyond the parks, Orange County runs on hospitality and events anchored by the convention center — one of the busiest in the nation — plus a serious tech and simulation cluster around Lake Nona and UCF's research corridor, healthcare systems like AdventHealth and Orlando Health, and a huge base of tourism-adjacent service businesses: transportation, vacation rentals, restaurants, and entertainment. Local search competition here is among the fiercest in Florida because the customer pool is so large.",
     industries: ["hospitality", "tourism", "tech & simulation", "healthcare"],
-    nearby: ["tampa", "jacksonville", "port-st-lucie"],
+    nearby: ["tampa", "port-st-lucie", "st-petersburg"],
     faqs: [
       {
         q: "Can my site target tourists and locals at the same time?",
@@ -235,7 +181,7 @@ export const cities: City[] = [
       },
       {
         q: "Where are you located?",
-        a: "We're headquartered in Jacksonville, about two hours up I-95, and serve Orlando remotely. Calls happen over video, and our Client Hub gives you a live window into the project — progress, previews, and post-launch editing.",
+        a: "We serve Orlando remotely. Calls happen over video, and our Client Hub gives you a live window into the project — progress, previews, and post-launch editing.",
       },
     ],
     searchKeywords: [
@@ -261,7 +207,7 @@ export const cities: City[] = [
     },
     seoTitle: "St. Petersburg Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "St. Petersburg lead generation and web design for creative businesses, restaurants, and local services. Google Ads plus well-designed sites that convert.",
+      "St. Petersburg lead generation and web design for creative businesses, restaurants, and service pros. Google Ads plus well-designed sites that convert.",
     h1: "Lead generation and websites for St. Petersburg businesses",
     heroSub:
       "St. Pete built its identity on arts and independent business. We bring in the customers with Google Ads and send them to a website that looks like it belongs here.",
@@ -291,7 +237,7 @@ export const cities: City[] = [
       },
       {
         q: "Do you meet clients in St. Petersburg?",
-        a: "We work remotely from Jacksonville — video calls plus a Client Hub where you follow the build and edit your site after launch. It works smoothly enough that where we sit stops mattering by week one.",
+        a: "We work remotely: video calls plus a Client Hub where you follow the build and edit your site after launch. It works smoothly enough that where we sit stops mattering by week one.",
       },
     ],
     searchKeywords: [
@@ -345,7 +291,7 @@ export const cities: City[] = [
         a: "Yes. Fort Lauderdale's marine and real-estate markets draw international buyers, and we can structure multilingual pages with proper hreflang so each audience — and Google — gets the right version.",
       },
       {
-        q: "How do we work together if you're in Jacksonville?",
+        q: "How do we work together if you're not in town?",
         a: "Remotely, and it's smoother than it sounds: video calls for the conversations that matter, and our Client Hub for everything else — live previews, feedback, and editing your own content after launch.",
       },
     ],
@@ -372,7 +318,7 @@ export const cities: City[] = [
     },
     seoTitle: "Hialeah Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Hialeah lead generation and website design for family businesses ready to grow. Google Ads and bilingual-ready sites that bring in local customers.",
+      "Hialeah lead generation and website design for family businesses ready to grow. Google Ads and bilingual-ready sites that bring in new customers.",
     h1: "Lead generation and websites for Hialeah businesses",
     heroSub:
       "Hialeah runs on family businesses that earned their reputation the hard way. A real website makes sure new customers can find what the neighborhood already knows.",
@@ -441,7 +387,7 @@ export const cities: City[] = [
       "education",
       "healthcare",
     ],
-    nearby: ["gainesville", "jacksonville"],
+    nearby: ["gainesville", "orlando"],
     faqs: [
       {
         q: "Do you build sites for associations and government-adjacent organizations?",
@@ -482,7 +428,7 @@ export const cities: City[] = [
     },
     seoTitle: "Cape Coral Lead Generation & Web Design | Ali Samadi Agency",
     metaDescription:
-      "Cape Coral lead generation and website design for contractors and local businesses riding Southwest Florida's growth. Google Ads plus sites that convert.",
+      "Cape Coral lead generation and website design for contractors and businesses riding Southwest Florida's growth. Google Ads plus sites that convert.",
     h1: "Lead generation and websites for Cape Coral businesses",
     heroSub:
       "One of America's fastest-growing cities means a constant stream of new customers who don't know anyone yet — they're choosing businesses from Google. Be the one they find.",
@@ -543,7 +489,7 @@ export const cities: City[] = [
     heroSub:
       "The Treasure Coast's boomtown has more new customers than established businesses to serve them. A strong website is how you claim your share.",
     intro:
-      "Port St. Lucie grew from citrus groves to a quarter-million people in two generations, and unlike Florida's legacy cities it has no entrenched old-guard business establishment — the market is genuinely up for grabs. Families relocating from South Florida and the Northeast arrive in Tradition and Torino with full shopping lists: healthcare, home services, restaurants, auto care, childcare. Meanwhile the local business supply hasn't kept pace with demand, which is why so many PSL residents still drive to Stuart or West Palm for services. For a local business, that's about the friendliest competitive math in the state — but only if people can find you. We build the websites that make that happen: fast, credible, structured to rank for Treasure Coast searches, and priced plainly for owners who'd rather invest in the business than in agency retainers.",
+      "Port St. Lucie grew from citrus groves to a quarter-million people in two generations, and unlike Florida's legacy cities it has no entrenched old-guard business establishment — the market is genuinely up for grabs. Families relocating from South Florida and the Northeast arrive in Tradition and Torino with full shopping lists: healthcare, home services, restaurants, auto care, childcare. Meanwhile the local business supply hasn't kept pace with demand, which is why so many PSL residents still drive to Stuart or West Palm for services. For a business owner, that's about the friendliest competitive math in the state — but only if people can find you. We build the websites that make that happen: fast, credible, structured to rank for Treasure Coast searches, and priced plainly for owners who'd rather invest in the business than in agency retainers.",
     localContext:
       "St. Lucie County's economy is anchored by healthcare (Cleveland Clinic's growing Tradition campus), construction and trades building the city itself, the Mets' spring-training and youth-sports economy around Clover Park, and a fast-thickening layer of restaurants, medical practices, and home services along St. Lucie West and Gatlin corridors. The customer base skews to relocated families and active retirees — audiences that research everything online before spending.",
     industries: [
@@ -568,7 +514,7 @@ export const cities: City[] = [
       },
       {
         q: "How do you work with clients you never meet in person?",
-        a: "Video calls plus our Client Hub — a private portal where you watch the build progress, leave feedback on live previews, and edit your own site after launch. We're in Jacksonville; distance hasn't been a problem yet.",
+        a: "Video calls plus our Client Hub — a private portal where you watch the build progress, leave feedback on live previews, and edit your own site after launch. Distance hasn't been a problem yet.",
       },
     ],
     searchKeywords: [
@@ -618,7 +564,7 @@ export const cities: City[] = [
         a: "Yes, frequently. Practice sites need appointment requests, insurance details, provider bios, and patient-trust signals — plus the technical structure that gets you into 'near me' map results, where practices win or lose patients.",
       },
       {
-        q: "I run a small local business. Is professional web design in budget?",
+        q: "I run a small business. Is professional web design in budget?",
         a: "Our pricing is flat and public — a monthly all-inclusive plan. Small suburban businesses are our core clientele, and the pricing page shows exactly what you'd pay before you ever talk to us.",
       },
       {
@@ -678,7 +624,7 @@ export const cities: City[] = [
       },
       {
         q: "What does the process look like?",
-        a: "Kickoff call, design, build, launch — with everything visible in our Client Hub along the way. We work remotely from Jacksonville; simple sites go live in a day once the project is confirmed.",
+        a: "Kickoff call, design, build, launch — with everything visible in our Client Hub along the way. We work remotely; simple sites go live in a day once the project is confirmed.",
       },
     ],
     searchKeywords: [
@@ -718,7 +664,7 @@ export const cities: City[] = [
       "student-facing retail",
       "professional services",
     ],
-    nearby: ["jacksonville", "tallahassee", "orlando"],
+    nearby: ["tallahassee", "orlando", "tampa"],
     faqs: [
       {
         q: "Do you work with startups and early-stage companies?",
@@ -733,8 +679,8 @@ export const cities: City[] = [
         a: "Yes. Custom web apps are one of our services: dashboards, booking systems, member portals, products with auth and databases. Useful for Gainesville's research spinouts that outgrow a brochure site quickly.",
       },
       {
-        q: "Where are you based?",
-        a: "Jacksonville — about 90 minutes northeast. We work with Gainesville clients remotely through video calls and our Client Hub, and the flat pricing on our site is exactly what you pay.",
+        q: "Do you work with Gainesville clients remotely?",
+        a: "Yes. We work with Gainesville clients remotely through video calls and our Client Hub, and the flat pricing on our site is exactly what you pay.",
       },
     ],
     searchKeywords: [
@@ -790,7 +736,7 @@ export const cities: City[] = [
       },
       {
         q: "How do you keep quality high working remotely?",
-        a: "Process and visibility. Every project runs through our Client Hub — you see live previews and progress, give feedback directly on the work, and nothing launches until you've approved it. We're in Jacksonville; our standards travel fine.",
+        a: "Process and visibility. Every project runs through our Client Hub — you see live previews and progress, give feedback directly on the work, and nothing launches until you've approved it. Our standards travel fine.",
       },
     ],
     searchKeywords: [

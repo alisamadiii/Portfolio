@@ -1,5 +1,5 @@
 ---
-// /websites: the website-only offer for local businesses (no ads).
+// /websites: the website-only offer for businesses (no ads).
 // Design from the Claude Design canvas, standalone like the homepage: own
 // <html>/<head>, fonts and global styles, no ClientRouter. Prices come from
 // WEBSITE_ONLY in src/data/pricing.ts, project cards from the real client
@@ -17,8 +17,8 @@ const setup = fmtPrice(WEBSITE_ONLY.setup);
 const monthly = fmtPrice(WEBSITE_ONLY.monthly);
 const ecomSetup = fmtPrice(PRICING.ecommerce.setup);
 const ecomMonthly = fmtPrice(PRICING.ecommerce.monthly);
-const title = 'Web Design for Local Businesses | Ali Samadi Agency';
-const description = `Custom, hand-coded websites for local businesses in Jacksonville and across Florida. Easy to edit yourself, yours to keep. ${setup} + ${monthly}/mo.`;
+const title = 'Web Design for Small Businesses | Ali Samadi Agency';
+const description = `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. ${setup} + ${monthly}/mo.`;
 const ogImage = '/og/websites.jpg';
 const quoteHref = '/quote?plan=website';
 
@@ -57,10 +57,10 @@ const jsonLd = {
     },
     {
       "@type": "Service",
-      "name": "Website design for local businesses",
+      "name": "Website design for small businesses",
       "serviceType": "Web design and development",
       "provider": { "@id": `${SITE}/#organization` },
-      "areaServed": ["Jacksonville, FL", "Florida", "United States"],
+      "areaServed": "Worldwide",
       "url": url,
       "offers": [{
         "@type": "Offer",
@@ -140,7 +140,7 @@ const jsonLd = {
 
 <!-- top bar -->
 <div class="wrap" style="position: relative; height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
-<p class="mono hide-sm" style="margin: 0; font-size: 13px; color: #3d3833"><span data-clock>JACKSONVILLE, FL</span></p>
+<p class="mono hide-sm" style="margin: 0; font-size: 13px; color: #3d3833">WORKING WORLDWIDE</p>
 <div aria-hidden="true" class="dots" style="position: absolute; left: 50%; top: 0; width: min(720px, 70%); height: 200px; transform: translateX(-50%)"></div>
 <a href="/" class="tlink" style="position: relative; margin: 0 auto; display: flex; align-items: center; gap: 10px; color: #221f1c"><img src="/images/agency/logo.png" alt="" style="width: 32px; height: 32px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span></a>
 <p class="mono hide-sm" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"></span>TAKING NEW PROJECTS</p>
@@ -148,9 +148,9 @@ const jsonLd = {
 
 <!-- headline -->
 <div class="wrap" style="position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px; padding-top: 110px">
-<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span><span aria-hidden="true" style="color: #fc8464">✦</span>Web design for local businesses<span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span></p>
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span><span aria-hidden="true" style="color: #fc8464">✦</span>Web design for small businesses<span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span></p>
 <h1 style="margin: 0; max-width: 13ch; font-size: clamp(44px, 6vw, 80px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; color: #221f1c; text-wrap: balance">A website that works as hard as <span style="color: #e0603d">you do.</span></h1>
-<p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for local businesses. Live in about a day, easy to edit yourself, and yours to keep.</p>
+<p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for businesses anywhere. Live in about a day, easy to edit yourself, and yours to keep.</p>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
 <a href={quoteHref} class="btn cta">Get a free consultation</a>
 <p class="cap" style="margin: 0; color: #6d645c">{setup} + {monthly}/mo · no templates · you own it</p>
@@ -356,7 +356,7 @@ const jsonLd = {
 
 <footer style="position: relative; padding: 28px 0 120px; background: #fffdfb">
 <div class="wrap" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px">
-<p class="cap" style="margin: 0; color: #6d645c">© Ali Samadii LLC d/b/a Ali Samadi Agency · Jacksonville, FL</p>
+<p class="cap" style="margin: 0; color: #6d645c">© Ali Samadii LLC d/b/a Ali Samadi Agency</p>
 <p class="cap" style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px"><a href="/" class="tlink" style="color: #3d3833">Growth partnership</a><a href="/services" class="tlink" style="color: #3d3833">Services</a><a href="/work" class="tlink" style="color: #3d3833">Work</a><a href="/about" class="tlink" style="color: #3d3833">About</a><a href="/blog" class="tlink" style="color: #3d3833">Blog</a><a href="/contact" class="tlink" style="color: #3d3833">Contact</a><a href="/privacy" class="tlink" style="color: #3d3833">Privacy</a><a href="/terms" class="tlink" style="color: #3d3833">Terms</a></p>
 </div>
 </footer>
@@ -384,17 +384,6 @@ const jsonLd = {
 
 </div>
     <script>
-      // Live Jacksonville clock in the top bar
-      const clockEls = document.querySelectorAll<HTMLElement>('[data-clock]');
-      const tick = () => {
-        try {
-          const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' });
-          clockEls.forEach((el) => (el.textContent = 'JACKSONVILLE · ' + t.toUpperCase()));
-        } catch {}
-      };
-      tick();
-      setInterval(tick, 20000);
-
       // Mobile menu (a <details> in the floating pill): close after picking a link
       const wmenu = document.querySelector<HTMLDetailsElement>('.wmenu');
       wmenu?.querySelectorAll('a').forEach((l) => l.addEventListener('click', () => (wmenu.open = false)));

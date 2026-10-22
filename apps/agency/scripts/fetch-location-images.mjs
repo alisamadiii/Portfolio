@@ -32,7 +32,6 @@ if (!KEY) {
 // slug → [primary query, fallback query]. Smaller cities rarely have their own
 // Pexels coverage, so fallbacks lean on a representative Florida scene.
 const QUERIES = {
-  jacksonville: ["Jacksonville Florida skyline bridge", "Jacksonville Florida"],
   miami: ["Miami skyline Biscayne Bay", "Miami Florida skyline"],
   tampa: ["Tampa Florida skyline river", "Tampa Florida"],
   orlando: ["Orlando Florida skyline lake", "Orlando Florida"],

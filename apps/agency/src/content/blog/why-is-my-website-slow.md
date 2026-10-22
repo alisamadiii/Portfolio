@@ -105,7 +105,7 @@ A rebuild earns its cost when the site actually matters to your revenue — when
 
 ---
 
-So if your site feels slow, the answer usually isn't a mystery — it's a checklist. Start with the images, look hard at your hosting, and open the thing on your phone like a customer would. If you'd rather someone just build you one that's fast from the first day, that's the job: my [web design and development in Jacksonville](/locations/jacksonville) covers how I work, or the [pricing page](/pricing) has the numbers with no decoder ring required. Fast shouldn't be a premium. It should be the floor.
+So if your site feels slow, the answer usually isn't a mystery — it's a checklist. Start with the images, look hard at your hosting, and open the thing on your phone like a customer would. If you'd rather someone just build you one that's fast from the first day, that's the job: my [web design and development](/services/web-development) page covers how I work, or the [pricing page](/pricing) has the numbers with no decoder ring required. Fast shouldn't be a premium. It should be the floor.
 
 ---
 
