@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useRepo } from "@/contexts/repo-context";
+import { useRepo } from "@/hooks/use-repo";
 
 import {
   AlertDialog,

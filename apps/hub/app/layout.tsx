@@ -72,7 +72,7 @@ export default async function RootLayout({
         )}
       >
         <TRPCReactProvider>
-          <Providers user={null}>{children}</Providers>
+          <Providers>{children}</Providers>
         </TRPCReactProvider>
         <Toaster />
       </body>

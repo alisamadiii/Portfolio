@@ -22,7 +22,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency } from "@/components/agency/agency-context";
+import { useAgency } from "@/components/agency/use-agency";
 import { LEAD_STATUSES, LeadStatusBadge } from "@/components/agency/lead-status";
 import { ArrowLeft, CircleCheck, Mail, Phone, TriangleAlert } from "@/components/icon";
 

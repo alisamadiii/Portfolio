@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { ActiveSessionsBanner } from "@/components/active-sessions-banner";
 import { DocumentTitle } from "@/components/document-title";
@@ -9,7 +9,7 @@ import { ProjectGallery } from "@/components/website/project-gallery";
 // ─── Page ───────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const firstName = user?.name?.split(" ")[0];
 
   return (

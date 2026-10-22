@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { useConfig } from "@/contexts/config-context";
-import { useRepo } from "@/contexts/repo-context";
+import { useProject } from "@/hooks/use-project";
+import { useRepo } from "@/hooks/use-repo";
 
 import { Button } from "@workspace/ui/components/button";
 
@@ -46,14 +46,14 @@ function RepoHeader() {
 }
 
 export function RepoLayout({ children }: { children: React.ReactNode }) {
-  const { config } = useConfig();
+  const project = useProject();
   const { owner, repo, id: repoId } = useRepo();
 
   useEffect(() => {
-    if (config?.owner && config?.repo && config?.branch) {
-      trackVisit(owner, repo, config.branch, repoId);
+    if (project?.owner && project?.repo && project?.branch) {
+      trackVisit(owner, repo, project.branch, repoId);
     }
-  }, [config, owner, repo, repoId]);
+  }, [project, owner, repo, repoId]);
 
   return (
     <RepoHeaderProvider>

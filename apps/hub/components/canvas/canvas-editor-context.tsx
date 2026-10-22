@@ -10,8 +10,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useConfig } from "@/contexts/config-context";
-import { useRepo } from "@/contexts/repo-context";
+import { useProject } from "@/hooks/use-project";
+import { useRepo } from "@/hooks/use-repo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -182,17 +182,17 @@ export function useCanvasEditor(): CanvasEditorValue {
 }
 
 export function CanvasEditorProvider({ children }: { children: ReactNode }) {
-  const { config } = useConfig();
+  const project = useProject();
   const { myRole } = useRepo();
   // view-only collaborators get a read-only canvas: no edit token, no chat.
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const owner = config?.owner ?? "";
-  const repo = config?.repo ?? "";
-  const branch = config?.branch ?? "";
-  const repoId = config?.repoId ?? 0;
+  const owner = project?.owner ?? "";
+  const repo = project?.repo ?? "";
+  const branch = project?.branch ?? "";
+  const repoId = project?.repoId ?? 0;
   const repoBase = repoPath(repoId);
 
   const pagesQuery = useQuery(

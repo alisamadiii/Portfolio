@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useConfig } from "@/contexts/config-context";
+import { useProject } from "@/hooks/use-project";
 import {
   keepPreviousData,
   useMutation,
@@ -81,10 +81,10 @@ const PanelHeading = () => (
 
 export function EmailsPanel() {
   const trpc = useTRPC();
-  const { config } = useConfig();
+  const project = useProject();
   const { data: currentUser } = useCurrentUser();
 
-  const repoId = config?.repoId ?? 0;
+  const repoId = project?.repoId ?? 0;
   const hasProject = !!repoId;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

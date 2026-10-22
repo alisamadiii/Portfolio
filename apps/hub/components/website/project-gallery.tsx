@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useUser } from "@/contexts/user-context";
 import { useQuery } from "@tanstack/react-query";
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
@@ -184,9 +183,8 @@ const CardSkeleton = () => (
 );
 
 export function ProjectGallery() {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const trpc = useTRPC();
-  const { data: currentUser } = useCurrentUser();
 
   // Every project the caller can access, derived from the session — one call,
   // no per-account fan-out.
@@ -199,7 +197,7 @@ export function ProjectGallery() {
   const projects = (projectsQuery.data as Project[] | undefined) ?? [];
 
   const { data: sites } = useQuery(
-    trpc.websites.getMine.queryOptions(undefined, { enabled: !!currentUser })
+    trpc.websites.getMine.queryOptions(undefined, { enabled: !!user })
   );
 
   const isPending = !!user && projectsQuery.isPending;

@@ -1,17 +1,6 @@
 "use client";
 
 import * as React from "react";
-import {
-  BookOpen,
-  CreditCard,
-  HelpCircle,
-  House,
-  Inbox,
-  LogOut,
-  Mail,
-  Megaphone,
-  Settings,
-} from "@/components/icon";
 
 import {
   Sidebar,
@@ -27,22 +16,43 @@ import {
 } from "@workspace/ui/components/sidebar";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
+import type { Feature } from "@workspace/trpc/lib/payment/plans";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-import type { Feature } from "@workspace/trpc/lib/payment/plans";
-
-import { useAgency } from "@/components/agency/agency-context";
-import { NavPages } from "@/components/nav-pages";
-import { useEntitlement } from "@/hooks/use-plans";
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
+import { useEntitlement } from "@/hooks/use-plans";
+
+import { useAgency } from "@/components/agency/use-agency";
+import {
+  BookOpen,
+  CreditCard,
+  HelpCircle,
+  House,
+  Inbox,
+  LogOut,
+  Mail,
+  Megaphone,
+  Settings,
+} from "@/components/icon";
+import { NavPages } from "@/components/nav-pages";
 
 // Pages tied to a plan feature only show when the client's tier includes it.
-const overviewPages: { title: string; url: string; icon: typeof House; feature?: Feature }[] = [
+const overviewPages: {
+  title: string;
+  url: string;
+  icon: typeof House;
+  feature?: Feature;
+}[] = [
   { title: "Home", url: "/", icon: House },
   { title: "Agency", url: "/agency", icon: Inbox, feature: "leads" },
   { title: "Marketing", url: "/marketing", icon: Megaphone, feature: "ads" },
-  { title: "Newsletter", url: "/newsletter", icon: Mail, feature: "newsletter" },
+  {
+    title: "Newsletter",
+    url: "/newsletter",
+    icon: Mail,
+    feature: "newsletter",
+  },
 ];
 
 const accountPages = [
@@ -54,10 +64,14 @@ const accountPages = [
 const menuButtonClass =
   "h-auto gap-3 rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-medium hover:bg-sidebar-foreground/8 hover:text-sidebar-accent-foreground [&>svg]:size-[19px]";
 
-export function AgencySidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AgencySidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const { repoId } = useAgency();
   const { can } = useEntitlement(repoId);
-  const pages = overviewPages.filter((page) => !page.feature || can(page.feature));
+  const pages = overviewPages.filter(
+    (page) => !page.feature || can(page.feature)
+  );
 
   return (
     <Sidebar {...props}>

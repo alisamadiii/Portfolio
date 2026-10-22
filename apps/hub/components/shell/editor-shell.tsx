@@ -22,7 +22,7 @@ import { type CanvasDevice } from "@/components/canvas/canvas-toolbar";
 import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { SettingsMode } from "@/components/settings/settings-mode";
-import { useRepo } from "@/contexts/repo-context";
+import { useRepo } from "@/hooks/use-repo";
 import { roleAtLeast } from "@/lib/authz-shared";
 
 /**

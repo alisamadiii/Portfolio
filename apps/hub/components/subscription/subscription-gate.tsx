@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -41,7 +41,7 @@ export function SubscriptionGateProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const plans = usePlans();

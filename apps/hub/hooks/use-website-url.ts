@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useConfig } from "@/contexts/config-context";
+import { useProject } from "@/hooks/use-project";
 
 const TTL_MS = 20 * 60_000; // 20 minutes
 
@@ -73,10 +73,10 @@ export function useWebsiteUrl(): {
   status: WebsiteUrlStatus;
 } {
   const trpc = useTRPC();
-  const { config } = useConfig();
-  const owner = config?.owner;
-  const repo = config?.repo;
-  const repoId = config?.repoId ?? 0;
+  const project = useProject();
+  const owner = project?.owner;
+  const repo = project?.repo;
+  const repoId = project?.repoId ?? 0;
 
   const cached = readCache(owner, repo);
 

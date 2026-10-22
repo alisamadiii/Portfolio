@@ -1,9 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ConfigProvider } from "@/contexts/config-context";
-import { RepoProvider } from "@/contexts/repo-context";
-import type { Config } from "@workspace/cms-core/types/config";
 
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -18,6 +15,7 @@ import { createHttpCaller } from "@workspace/trpc/http-caller";
 
 import { getServerSession } from "@/lib/session-server";
 
+import { ProjectSeed } from "@/components/query-seeds";
 import { RepoLayout } from "@/components/repo/repo-layout";
 import { InstallAppOverlay } from "@/components/repo/install-app-overlay";
 
@@ -167,11 +165,6 @@ export default async function Layout({
     );
   }
 
-  const owner = repoInfo.owner;
-  // The repo name is no longer in the URL — it comes back on the snapshot.
-  const repo = repoInfo.repo;
-  const branch = repoInfo.defaultBranch as string;
-
   // Push-access gate: the GitHub App must cover the repo (every read, commit
   // and push rides its installation token). "missing" shows a blocking (but
   // translucent) install-app overlay that unlocks itself once installed.
@@ -181,21 +174,10 @@ export default async function Layout({
       ? { owner: access.owner, repo: access.repo, installUrl: access.installUrl }
       : null;
 
-  // The v2 canvas reads everything from the root _site.json manifest; the
-  // ConfigProvider only carries the repo coordinates.
-  const config: Config = {
-    owner: owner.toLowerCase(),
-    repo: repo.toLowerCase(),
-    repoId,
-    branch,
-    sha: "",
-    version: "",
-    object: {},
-  };
-
+  // Hand the snapshot to React Query: useRepo() / useProject() read it from
+  // the cache, so it's there on the first render and stays live.
   return (
-    <RepoProvider repo={repoInfo}>
-      <ConfigProvider value={config}>
+    <ProjectSeed repoId={repoId} snapshot={repoInfo}>
         <RepoLayout>{children}</RepoLayout>
         {installGate && (
           <InstallAppOverlay
@@ -205,7 +187,6 @@ export default async function Layout({
             installUrl={installGate.installUrl}
           />
         )}
-      </ConfigProvider>
-    </RepoProvider>
+    </ProjectSeed>
   );
 }

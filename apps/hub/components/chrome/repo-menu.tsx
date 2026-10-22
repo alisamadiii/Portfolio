@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRepo } from "@/contexts/repo-context";
+import { useRepo } from "@/hooks/use-repo";
 import { ArrowUpRight, BookOpen, ChevronsUpDown } from "@/components/icon";
 
 import {

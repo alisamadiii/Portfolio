@@ -4,11 +4,12 @@ import { notFound } from "next/navigation";
 
 import { AdminAgencyClients } from "@/components/agency/admin-clients";
 import { DocumentTitle } from "@/components/document-title";
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+import { isAdminUser } from "@/lib/authz-shared";
 
 export default function AgencyClientsPage() {
-  const { user } = useUser();
-  if (!user?.isAdmin) notFound();
+  const user = useCurrentUser().data?.user ?? null;
+  if (!isAdminUser(user)) notFound();
 
   return (
     <div className="space-y-6">

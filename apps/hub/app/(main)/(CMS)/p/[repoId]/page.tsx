@@ -1,15 +1,15 @@
 "use client";
 
-import { useConfig } from "@/contexts/config-context";
+import { useProject } from "@/hooks/use-project";
 
-import { EditorShell } from "@/components/shell/editor-shell";
 import {
   DocumentTitle,
   formatRepoBranchTitle,
 } from "@/components/document-title";
+import { EditorShell } from "@/components/shell/editor-shell";
 
 export default function Page() {
-  const { config } = useConfig();
+  const project = useProject();
 
   // The shell renders even without a root _site.json — a missing manifest just
   // surfaces an in-editor warning badge (see EditorShell) instead of blocking
@@ -19,9 +19,9 @@ export default function Page() {
       <DocumentTitle
         title={formatRepoBranchTitle(
           "Canvas",
-          config?.owner ?? "",
-          config?.repo ?? "",
-          config?.branch ?? ""
+          project?.owner ?? "",
+          project?.repo ?? "",
+          project?.branch ?? ""
         )}
       />
       {/* Full-bleed: escape RepoLayout's main padding; own scroll surface. */}

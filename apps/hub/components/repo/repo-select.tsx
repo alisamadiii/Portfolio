@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronsUpDown, LockKeyhole, Search } from "@/components/icon";
@@ -35,16 +35,15 @@ export function RepoSelect({
 }: {
   onAccountSelect?: (account: any) => void;
 }) {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
+  const trpc = useTRPC();
+  // Seeded on the server by SessionSeed, so the first account is ready on mount.
+  const accountsQuery = useQuery(trpc.cms.repos.listAccounts.queryOptions());
 
-  const accounts = useMemo(() => {
-    if (!user) return [];
-    return user.accounts || [];
-  }, [user]);
+  const accounts = useMemo(() => accountsQuery.data ?? [], [accountsQuery.data]);
 
   const [selectedAccount, setSelectedAccount] = useState(accounts[0]);
   const [keyword, setKeyword] = useState("");
-  const trpc = useTRPC();
 
   // Session-derived: every project the caller can access. The account switcher
   // and search box filter it client-side (the set is small).

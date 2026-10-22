@@ -1,17 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
-import { LockKeyhole } from "@/components/icon";
+import { useProject } from "@/hooks/use-project";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { toast } from "sonner";
 
 import { Spinner } from "@workspace/ui/components/spinner";
 
-import { PlanCard } from "@/components/billing/plan-card";
 import { FEATURES, type Feature } from "@workspace/trpc/lib/payment/plans";
 
 import { startPlanCheckout, useEntitlement } from "@/hooks/use-plans";
+
+import { PlanCard } from "@/components/billing/plan-card";
+import { LockKeyhole } from "@/components/icon";
+
+// Headline per feature, so the lock screen sells what's behind it.
+const PITCH: Record<Feature, { title: string; body: string }> = {
+  domain: {
+    title: "Put your website on your own domain",
+    body: "Connect yourbusiness.com with SSL handled for you, so customers find you at an address they trust.",
+  },
+  emails: {
+    title: "Email from your own domain",
+    body: "Send and track every message your website sends, from an address like hello@yourbusiness.com.",
+  },
+  analytics: {
+    title: "See who visits your website",
+    body: "Visitors, top pages and where your traffic comes from, all in one place.",
+  },
+  speed: {
+    title: "Know how fast your website loads",
+    body: "Real performance scores with clear fixes, so visitors never wait.",
+  },
+  "ai-chat": {
+    title: "Edit your website by chatting",
+    body: "Describe a change, watch it happen on a live preview, then publish in one click.",
+  },
+  leads: {
+    title: "Every lead in one inbox",
+    body: "Form and call leads from your website, tracked from first click to closed deal.",
+  },
+  ads: {
+    title: "See what your ads bring in",
+    body: "Spend, clicks and leads from Google Ads, side by side.",
+  },
+  newsletter: {
+    title: "Stay in touch with your customers",
+    body: "A newsletter that brings past customers back for repeat business.",
+  },
+};
 
 /**
  * Lock screen for a feature the project's plan doesn't include. Shown instead
@@ -25,9 +62,9 @@ export const ProjectPaywall = ({
   repoId: number;
   feature: Feature;
 }) => {
-  const { user } = useUser();
-  const label = FEATURES[feature];
+  const user = useCurrentUser().data?.user ?? null;
   const [checkingOut, setCheckingOut] = useState(false);
+  const pitch = PITCH[feature];
 
   const subscribe = async () => {
     if (!user?.email) {
@@ -51,18 +88,19 @@ export const ProjectPaywall = ({
   };
 
   return (
-    <div className="flex min-h-[70dvh] items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md space-y-6">
-        <div className="space-y-1.5 text-center">
-          <p className="flex items-center justify-center gap-2 text-[15px] font-extrabold tracking-tight">
-            <LockKeyhole className="size-4" />
-            {label} is part of the website plan
-          </p>
-          <p className="text-muted-foreground text-[14.5px]">
-            Subscribe this project to unlock {label.toLowerCase()},
-            publishing, and AI editing.
-          </p>
-        </div>
+    <div className="mx-auto flex min-h-[80dvh] max-w-xl flex-col items-center px-4 py-14 sm:py-20">
+      <span className="bg-card text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold">
+        <LockKeyhole className="size-3.5" />
+        {FEATURES[feature]} · Website plan
+      </span>
+      <h2 className="mt-5 text-center text-[30px] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-[36px]">
+        {pitch.title}
+      </h2>
+      <p className="text-muted-foreground mt-3 max-w-md text-center text-[15px] text-pretty">
+        {pitch.body}
+      </p>
+
+      <div className="mt-9 w-full max-w-md drop-shadow-[0_24px_48px_rgba(224,96,61,0.18)]">
         <PlanCard
           onSubscribe={() => void subscribe()}
           isCheckingOut={checkingOut}
@@ -84,8 +122,8 @@ export const ProjectFeatureGate = ({
   feature: Feature;
   children: React.ReactNode;
 }) => {
-  const { config } = useConfig();
-  const repoId = config?.repoId ?? undefined;
+  const project = useProject();
+  const repoId = project?.repoId ?? undefined;
   const { can, isLoading } = useEntitlement(repoId);
 
   if (isLoading) {

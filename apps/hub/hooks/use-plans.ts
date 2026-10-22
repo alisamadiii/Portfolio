@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -21,7 +21,7 @@ import {
  * this only decides what to show.
  */
 export const usePlans = () => {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 

@@ -27,8 +27,8 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 
-import { useRepo } from "@/contexts/repo-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/hooks/use-repo";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 import { ROLE_LABELS } from "@/components/collaborators";
@@ -42,7 +42,7 @@ type Collaborator = { id: number; email: string; role: CollaboratorRole };
  * (or remove) Full Access.
  */
 export function InviteButton({ repoId }: { repoId: number }) {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const { myRole, isOwner } = useRepo();
   const trpc = useTRPC();
   const queryClient = useQueryClient();

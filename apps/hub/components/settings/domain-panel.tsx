@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useProject } from "@/hooks/use-project";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -38,10 +38,10 @@ import { ProjectFeatureGate } from "@/components/settings/project-paywall";
  * instead. Only the project owner or an admin can change where it's hosted. */
 export function DomainPanel() {
   const trpc = useTRPC();
-  const { config } = useConfig();
-  const { user } = useUser();
+  const project = useProject();
+  const user = useCurrentUser().data?.user ?? null;
   const isAdmin = isAdminUser(user);
-  const repoId = config?.repoId ?? 0;
+  const repoId = project?.repoId ?? 0;
 
   const snapshot = useQuery(
     trpc.cms.repos.getSnapshot.queryOptions({ repoId }, { enabled: !!repoId })
@@ -116,7 +116,7 @@ function HostingCard({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { config } = useConfig();
+  const project = useProject();
   const [value, setValue] = useState<Hosting>(hosting);
   const [url, setUrl] = useState("");
   useEffect(() => setValue(hosting), [hosting]);
@@ -128,7 +128,7 @@ function HostingCard({
     trpc.project.setHosting.mutationOptions({
       onSuccess: async () => {
         toast.success("Hosting saved.");
-        clearWebsiteUrlCache(config?.owner, config?.repo);
+        clearWebsiteUrlCache(project?.owner, project?.repo);
         await queryClient.invalidateQueries();
       },
       onError: (error) => toast.error(error.message),
@@ -245,7 +245,7 @@ function SiteDomainPanel({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { config } = useConfig();
+  const project = useProject();
 
   const status = useQuery(
     trpc.domains.status.queryOptions(
@@ -259,7 +259,7 @@ function SiteDomainPanel({
   );
 
   const afterChange = async () => {
-    clearWebsiteUrlCache(config?.owner, config?.repo);
+    clearWebsiteUrlCache(project?.owner, project?.repo);
     await queryClient.invalidateQueries();
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useConfig } from "@/contexts/config-context";
-import { useRepo } from "@/contexts/repo-context";
+import { useProject } from "@/hooks/use-project";
+import { useRepo } from "@/hooks/use-repo";
 
 import {
   Empty,
@@ -18,9 +18,9 @@ import {
 } from "@/components/document-title";
 
 export default function Page() {
-  const { config } = useConfig();
+  const project = useProject();
   const { myRole } = useRepo();
-  if (!config) throw new Error(`Configuration not found.`);
+  if (!project) throw new Error("Project not found.");
   if (myRole !== "full-access") {
     return (
       <Empty className="absolute inset-0 rounded-none border-0">
@@ -39,17 +39,17 @@ export default function Page() {
       <DocumentTitle
         title={formatRepoBranchTitle(
           "Collaborators",
-          config.owner,
-          config.repo,
-          config.branch
+          project.owner,
+          project.repo,
+          project.branch
         )}
       />
       <div className="relative flex flex-1 flex-col">
         <Collaborators
-          owner={config.owner}
-          repo={config.repo}
-          repoId={config.repoId ?? 0}
-          branch={config?.branch}
+          owner={project.owner}
+          repo={project.repo}
+          repoId={project.repoId ?? 0}
+          branch={project?.branch}
         />
       </div>
     </div>

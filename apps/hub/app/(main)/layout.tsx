@@ -3,10 +3,9 @@ import { redirect } from "next/navigation";
 import { ImpersonationBanner } from "@workspace/auth/components/impersonation-banner";
 
 import { SubscriptionGateProvider } from "@/components/subscription/subscription-gate";
-import { UserProvider } from "@/contexts/user-context";
+import { SessionSeed } from "@/components/query-seeds";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
-import { isAdminUser } from "@/lib/authz-shared";
 import { getServerSession } from "@/lib/session-server";
 
 export default async function Layout({
@@ -30,20 +29,17 @@ export default async function Layout({
   // DB access lives in the portfolio backend, so this goes over tRPC.
   await caller.cms.collaborators.bindInvites.mutate().catch(() => {});
 
-  const accounts = await caller.cms.repos.listAccounts.query();
-
-  const userWithAccounts = {
-    ...session.user,
-    isAdmin: isAdminUser(session.user),
-    accounts,
-  };
+  const [current, accounts] = await Promise.all([
+    caller.users.getCurrent.query(),
+    caller.cms.repos.listAccounts.query(),
+  ]);
 
   return (
-    <UserProvider user={userWithAccounts}>
+    <SessionSeed current={current} accounts={accounts}>
       <SubscriptionGateProvider>
         <ImpersonationBanner />
         {children}
       </SubscriptionGateProvider>
-    </UserProvider>
+    </SessionSeed>
   );
 }

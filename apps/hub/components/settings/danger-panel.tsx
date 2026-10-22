@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useConfig } from "@/contexts/config-context";
+import { useProject } from "@/hooks/use-project";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -43,9 +43,9 @@ export const DangerPanel = () => {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { config } = useConfig();
-  const repo = config?.repo;
-  const repoId = config?.repoId ?? 0;
+  const project = useProject();
+  const repo = project?.repo;
+  const repoId = project?.repoId ?? 0;
 
   const [open, setOpen] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);

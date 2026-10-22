@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { useTheme } from "next-themes";
 
 import {
@@ -35,7 +35,7 @@ export function User({
   onClick?: () => void;
   align?: "start" | "center" | "end";
 }) {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const { theme, setTheme } = useTheme();
 
   if (!user) return null;

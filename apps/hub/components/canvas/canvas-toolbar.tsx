@@ -11,7 +11,7 @@ import {
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { useRepo } from "@/contexts/repo-context";
+import { useRepo } from "@/hooks/use-repo";
 import { LiveSiteButton } from "@/components/canvas/live-site-status";
 
 export type CanvasDevice = "desktop" | "tablet" | "mobile";

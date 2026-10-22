@@ -35,8 +35,8 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+import { isAdminUser } from "@/lib/authz-shared";
 
-import { useUser } from "@/contexts/user-context";
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 
@@ -152,7 +152,7 @@ const adminPages = [
 ];
 
 export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
 
   return (
     <Sidebar {...props}>
@@ -178,7 +178,7 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavPages label="Overview" pages={overviewPages} />
         <WebsiteGroup />
         <NavPages label="Account" pages={accountPages} />
-        {user?.isAdmin && <NavPages label="Admin" pages={adminPages} />}
+        {isAdminUser(user) && <NavPages label="Admin" pages={adminPages} />}
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel className="text-sidebar-foreground/60 px-3 text-[11px] font-semibold tracking-[0.06em] uppercase">
             Support

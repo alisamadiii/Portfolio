@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/contexts/user-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   Dialog,
@@ -30,13 +29,14 @@ import { RepoSelect } from "@/components/repo/repo-select";
 // while the dialog is open (DialogPortal unmounts its content on close).
 function CmsProjects() {
   const [hasRecentVisits, setHasRecentVisits] = useState(false);
-  const { user } = useUser();
+  const trpc = useTRPC();
+  const { data: accounts } = useQuery(trpc.cms.repos.listAccounts.queryOptions());
 
   useEffect(() => {
     setHasRecentVisits(getVisits().length > 0);
   }, []);
 
-  if (!user?.accounts?.length) {
+  if (!accounts?.length) {
     return (
       <Empty className="border-0">
         <EmptyHeader>

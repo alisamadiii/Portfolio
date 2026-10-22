@@ -62,8 +62,8 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useRepo } from "@/contexts/repo-context";
-import { useUser } from "@/contexts/user-context";
+import { useRepo } from "@/hooks/use-repo";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { isAdminUser, type CollaboratorRole } from "@/lib/authz-shared";
 
 import { useRepoHeader } from "@/components/repo/repo-header-context";
@@ -205,7 +205,7 @@ export function Collaborators({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const { isOwner } = useRepo();
   const isAdmin = isAdminUser(user);
   // Admins and the project owner may grant/remove full-access collaborators.

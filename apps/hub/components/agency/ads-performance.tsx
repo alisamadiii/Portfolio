@@ -32,7 +32,7 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency } from "@/components/agency/agency-context";
+import { useAgency } from "@/components/agency/use-agency";
 import {
   formatMoney,
   lastDays,

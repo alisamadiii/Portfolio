@@ -1,6 +1,6 @@
 "use client";
 
-import { useConfig } from "@/contexts/config-context";
+import { useProject } from "@/hooks/use-project";
 
 import {
   DocumentTitle,
@@ -9,17 +9,17 @@ import {
 import { EditorShell } from "@/components/shell/editor-shell";
 
 export default function Page() {
-  const { config } = useConfig();
-  if (!config) throw new Error(`Configuration not found.`);
+  const project = useProject();
+  if (!project) throw new Error("Project not found.");
 
   return (
     <>
       <DocumentTitle
         title={formatRepoBranchTitle(
           "Canvas",
-          config.owner,
-          config.repo,
-          config.branch
+          project.owner,
+          project.repo,
+          project.branch
         )}
       />
       {/* Full-bleed: escape RepoLayout's main padding; own scroll surface. */}

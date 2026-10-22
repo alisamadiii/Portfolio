@@ -2,21 +2,11 @@
 
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-import { UserProvider } from "@/contexts/user-context";
-
-import { User } from "@/types/user";
-
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
-export function Providers({
-  children,
-  user,
-}: {
-  children: React.ReactNode;
-  user: User | null;
-}) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <NuqsAdapter>
       <ThemeProvider
@@ -25,9 +15,7 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        <UserProvider user={user}>
-          <TooltipProvider>{children}</TooltipProvider>
-        </UserProvider>
+        <TooltipProvider>{children}</TooltipProvider>
       </ThemeProvider>
     </NuqsAdapter>
   );

@@ -8,11 +8,14 @@ import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { useTRPC } from "@workspace/trpc/client";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-import { useAgency } from "@/components/agency/agency-context";
-import { StatCard, useAgencyNumbers } from "@/components/agency/ads-performance";
+import {
+  StatCard,
+  useAgencyNumbers,
+} from "@/components/agency/ads-performance";
 import { formatMoney, LeadStatusBadge } from "@/components/agency/lead-status";
-import { useUser } from "@/contexts/user-context";
+import { useAgency } from "@/components/agency/use-agency";
 import { ArrowRight, ExternalLink, Globe, Pencil } from "@/components/icon";
 import { AnalyticsPanel } from "@/components/settings/analytics-panel";
 
@@ -35,7 +38,9 @@ const WebsiteCard = () => {
           <Button
             variant="outline"
             size="sm"
-            render={<a href={websiteUrl} target="_blank" rel="noopener noreferrer" />}
+            render={
+              <a href={websiteUrl} target="_blank" rel="noopener noreferrer" />
+            }
           >
             <ExternalLink className="size-4" />
             Visit
@@ -93,10 +98,15 @@ const RecentLeads = () => {
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-semibold">
-                    {lead.name || lead.email || lead.phone || `Lead #${lead.id}`}
+                    {lead.name ||
+                      lead.email ||
+                      lead.phone ||
+                      `Lead #${lead.id}`}
                   </p>
                   <p className="text-muted-foreground text-[12.5px]">
-                    {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(lead.createdAt), {
+                      addSuffix: true,
+                    })}
                   </p>
                 </div>
                 <LeadStatusBadge status={lead.status} />
@@ -110,7 +120,7 @@ const RecentLeads = () => {
 };
 
 export function AgencyHome() {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const firstName = user?.name?.split(" ")[0];
   const { leads, ads, currency, costPerLead } = useAgencyNumbers(30);
 
@@ -132,16 +142,28 @@ export function AgencyHome() {
           Last 30 days
         </p>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard label="Leads" value={leads.data ? String(leads.data.leads) : null} />
+          <StatCard
+            label="Leads"
+            value={leads.data ? String(leads.data.leads) : null}
+          />
           <StatCard
             label="Ad spend"
             value={
-              ads.isFetching ? null : ads.data ? formatMoney(Math.round(ads.data.totals.cost * 100), currency) : "–"
+              ads.isFetching
+                ? null
+                : ads.data
+                  ? formatMoney(
+                      Math.round(ads.data.totals.cost * 100),
+                      currency
+                    )
+                  : "–"
             }
           />
           <StatCard
             label="Cost per lead"
-            value={ads.isFetching || leads.isLoading ? null : (costPerLead ?? "–")}
+            value={
+              ads.isFetching || leads.isLoading ? null : (costPerLead ?? "–")
+            }
           />
           <StatCard
             label="Won revenue"

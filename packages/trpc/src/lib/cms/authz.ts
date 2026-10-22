@@ -1,6 +1,8 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+
+import { agencyClient } from "@workspace/drizzle/schema";
 
 import { createHttpError } from "./errors";
 import { isAdminUser } from "../authz-shared";
@@ -56,7 +58,8 @@ const requireCollaboratorManageAccess = async (
 };
 
 // Can this user read/act on this project? Admin, the importing owner
-// (githubConnectedUserId), or any collaborator of the repo. Throws 403 if not.
+// (githubConnectedUserId), the agency client who owns it, or any collaborator
+// of the repo. Throws 403 if not.
 const assertProjectAccess = async (
   user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
   project: {
@@ -67,6 +70,14 @@ const assertProjectAccess = async (
   if (isAdminUser(user)) return;
   if (project.githubConnectedUserId && project.githubConnectedUserId === user.id)
     return;
+  const agencyOwner = await db.query.agencyClient.findFirst({
+    where: and(
+      eq(agencyClient.repoId, project.repoId),
+      eq(agencyClient.userId, user.id)
+    ),
+    columns: { id: true },
+  });
+  if (agencyOwner) return;
   const collaborator = await db.query.hubCollaborator.findFirst({
     where: collaboratorMatchesUserForRepoId(user, project.repoId),
   });

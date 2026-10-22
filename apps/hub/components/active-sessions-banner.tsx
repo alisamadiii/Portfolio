@@ -8,7 +8,7 @@ import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useUser } from "@/contexts/user-context";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { repoPath } from "@/lib/paths";
 
 import { Loader2, PaintbrushSparkle, X } from "@/components/icon";
@@ -19,7 +19,7 @@ import { Loader2, PaintbrushSparkle, X } from "@/components/icon";
  * forgot about should be easy to jump back into or end right here.
  */
 export function ActiveSessionsBanner() {
-  const { user } = useUser();
+  const user = useCurrentUser().data?.user ?? null;
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 

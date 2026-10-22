@@ -97,30 +97,3 @@ export function useRepoHeader(slots: Partial<RepoHeaderSlots>) {
     };
   }, [clearSlots]);
 }
-
-export function useOptionalRepoHeader(
-  slots: Partial<RepoHeaderSlots>,
-  { enabled = true }: { enabled?: boolean } = {}
-) {
-  const context = useContext(RepoHeaderContext);
-  const setSlots = context?.setSlots;
-  const clearSlots = context?.clearSlots;
-
-  useEffect(() => {
-    if (!setSlots || !enabled) return;
-
-    setSlots({
-      header: slots.header ?? null,
-      backHref: slots.backHref ?? null,
-      backLabel: slots.backLabel ?? null,
-    });
-  }, [enabled, setSlots, slots.header, slots.backHref, slots.backLabel]);
-
-  useEffect(() => {
-    if (!clearSlots || !enabled) return;
-
-    return () => {
-      clearSlots();
-    };
-  }, [clearSlots, enabled]);
-}

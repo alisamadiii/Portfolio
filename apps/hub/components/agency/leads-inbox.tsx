@@ -22,7 +22,7 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency } from "@/components/agency/agency-context";
+import { useAgency } from "@/components/agency/use-agency";
 import { NewLeadDialog } from "@/components/agency/new-lead-dialog";
 import {
   formatMoney,

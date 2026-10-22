@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 
-import { AgencyProvider } from "@/components/agency/agency-context";
+import { AgencySeed } from "@/components/query-seeds";
 
 // The Hub has two UIs: the website one (@website) and the lead-generation
 // agency one (@agency). Each slot is a full tree with its own shell, sidebar
@@ -20,5 +20,5 @@ export default async function HubLayout({
 
   if (!agencyClient) return website;
 
-  return <AgencyProvider client={agencyClient}>{agency}</AgencyProvider>;
+  return <AgencySeed agency={agencyClient}>{agency}</AgencySeed>;
 }

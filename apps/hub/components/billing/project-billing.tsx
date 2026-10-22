@@ -21,8 +21,8 @@ import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import { useConfig } from "@/contexts/config-context";
-import { useUser } from "@/contexts/user-context";
+import { useProject } from "@/hooks/use-project";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import {
   formatCurrency,
@@ -38,15 +38,15 @@ type ProjectSubscription = NonNullable<
 >;
 
 // ─── Panel (in-shell, rendered from Site Settings › Billing) ─────
-// Self-contained: resolves the current project from config, fetches its
+// Self-contained: resolves the current project (useProject), fetches its
 // subscription, and branches into the picker / manage / free views.
 
 export const ProjectBillingPanel = () => {
   const trpc = useTRPC();
-  const { config } = useConfig();
-  const { user } = useUser();
+  const project = useProject();
+  const user = useCurrentUser().data?.user ?? null;
 
-  const repoId = config?.repoId ?? 0;
+  const repoId = project?.repoId ?? 0;
   const { refresh: refreshPlans } = useEntitlement(repoId);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(

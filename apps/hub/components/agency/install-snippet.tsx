@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
 
-import { useAgency } from "@/components/agency/agency-context";
+import { useAgency } from "@/components/agency/use-agency";
 import { Copy } from "@/components/icon";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");

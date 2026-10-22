@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useConfig } from "@/contexts/config-context";
+import { useProject } from "@/hooks/use-project";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import {
@@ -203,9 +203,9 @@ const formatDuration = (seconds: number) => {
 export function AnalyticsPanel() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { config } = useConfig();
+  const project = useProject();
 
-  const repoId = config?.repoId ?? 0;
+  const repoId = project?.repoId ?? 0;
   const hasProject = !!repoId;
 
   const [range, setRange] = useState<RangeValue>("28d");

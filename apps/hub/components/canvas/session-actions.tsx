@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRepo } from "@/contexts/repo-context";
+import { useRepo } from "@/hooks/use-repo";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
