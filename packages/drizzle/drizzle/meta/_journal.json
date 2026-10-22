@@ -127,6 +127,20 @@
       "when": 1792691232292,
       "tag": "0017_tranquil_ben_urich",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792696884704,
+      "tag": "0018_dry_xavin",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792697429509,
+      "tag": "0019_big_freak",
+      "breakpoints": true
     }
   ]
 }

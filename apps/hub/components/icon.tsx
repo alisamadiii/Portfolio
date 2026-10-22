@@ -443,3 +443,15 @@ export function Inbox(props: LucideProps) {
 export function Megaphone(props: LucideProps) {
   return <Lucide.Megaphone {...props} />;
 }
+
+export function Trash(props: LucideProps) {
+  return <Lucide.Trash2 {...props} />;
+}
+
+export function Target(props: LucideProps) {
+  return <Lucide.Target {...props} />;
+}
+
+export function ChartColumn(props: LucideProps) {
+  return <Lucide.ChartColumn {...props} />;
+}

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import { agencyAdsCache } from "@workspace/drizzle/schema";
@@ -45,3 +45,10 @@ export async function cachedAds<T>(
     .catch((error) => console.error("Ads cache write failed", error));
   return data;
 }
+
+/** Drop cached responses whose key starts with `prefix`, after a change in Google Ads. */
+export const invalidateAds = (customerId: string, prefix: string) =>
+  db
+    .delete(agencyAdsCache)
+    .where(and(eq(agencyAdsCache.customerId, customerId), like(agencyAdsCache.key, `${prefix}%`)))
+    .catch((error) => console.error("Ads cache invalidate failed", error));

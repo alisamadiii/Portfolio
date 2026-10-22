@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 
 import type { AgencyLeadAdClick } from "@workspace/drizzle/schema";
 
+import type { ActionSpec, EditableFields } from "./agency/conversion-presets";
+
 // ─── Google Ads API (agency MCC) ─────────────────────────────────
 // Raw REST, no SDK. Auth is agency-level: Ali's manager (MCC) account's
 // refresh token, so client accounts linked under the MCC need no OAuth of
@@ -106,16 +108,15 @@ const normalizePhone = (phone: string) => {
   return digits.length === 10 ? `+1${digits}` : `+${digits}`;
 };
 
-// "2026-10-22 14:05:00+00:00", the format uploads require.
-const toAdsDateTime = (date: Date) =>
-  `${date.toISOString().slice(0, 19).replace("T", " ")}+00:00`;
-
-export type ClosedDeal = {
+export type ConversionUpload = {
   customerId: string;
   conversionAction: string;
-  valueCents: number;
+  /** Omitted for stages without a value (a new or qualified lead). */
+  valueCents?: number;
   currency: string;
   convertedAt: Date;
+  /** Same id twice = Google keeps one, so retries never double count. */
+  transactionId: string;
   gclid?: string | null;
   gbraid?: string | null;
   wbraid?: string | null;
@@ -123,44 +124,75 @@ export type ClosedDeal = {
   phone?: string | null;
 };
 
+const DATA_MANAGER_URL = "https://datamanager.googleapis.com/v1/events:ingest";
+
 /**
- * Report a won lead to Google Ads as a closed-deal conversion. Sends the click
- * ID when the capture script saw one, plus hashed email/phone so enhanced
- * conversions for leads can match when it didn't.
+ * Report a lead stage (new lead, qualified, closed deal) to Google Ads as an
+ * offline conversion. Google requires new integrations to use the Data Manager
+ * API for this (uploadClickConversions is closed to them), which needs the
+ * refresh token to carry the datamanager scope as well as adwords.
+ * Sends the click ID when the capture script saw one, plus hashed email/phone
+ * so enhanced conversions for leads can match when it didn't.
  */
-export async function uploadClosedDeal(deal: ClosedDeal) {
-  const userIdentifiers: Record<string, string>[] = [];
-  if (deal.email) {
-    userIdentifiers.push({ hashedEmail: sha256(normalizeEmail(deal.email)) });
+export async function uploadConversion(deal: ConversionUpload) {
+  if (!isGoogleAdsConfigured()) {
+    throw new GoogleAdsError("Google Ads API is not configured.");
   }
+
+  const userIdentifiers: Record<string, string>[] = [];
+  if (deal.email) userIdentifiers.push({ emailAddress: sha256(normalizeEmail(deal.email)) });
   const phone = deal.phone ? normalizePhone(deal.phone) : null;
-  if (phone) userIdentifiers.push({ hashedPhoneNumber: sha256(phone) });
+  if (phone) userIdentifiers.push({ phoneNumber: sha256(phone) });
 
   if (!deal.gclid && !deal.gbraid && !deal.wbraid && !userIdentifiers.length) {
-    throw new GoogleAdsError(
-      "Nothing to match on: this lead has no click ID, email or phone."
-    );
+    throw new GoogleAdsError("Nothing to match on: this lead has no click ID, email or phone.");
   }
 
-  const conversion: Record<string, unknown> = {
-    conversionAction: deal.conversionAction,
-    conversionDateTime: toAdsDateTime(deal.convertedAt),
-    conversionValue: deal.valueCents / 100,
-    currencyCode: deal.currency,
+  const event: Record<string, unknown> = {
+    eventTimestamp: deal.convertedAt.toISOString(),
+    transactionId: deal.transactionId,
   };
   // Only one click ID per conversion is allowed.
-  if (deal.gclid) conversion.gclid = deal.gclid;
-  else if (deal.gbraid) conversion.gbraid = deal.gbraid;
-  else if (deal.wbraid) conversion.wbraid = deal.wbraid;
-  if (userIdentifiers.length) conversion.userIdentifiers = userIdentifiers;
+  if (deal.gclid) event.adIdentifiers = { gclid: deal.gclid };
+  else if (deal.gbraid) event.adIdentifiers = { gbraid: deal.gbraid };
+  else if (deal.wbraid) event.adIdentifiers = { wbraid: deal.wbraid };
+  if (userIdentifiers.length) event.userData = { userIdentifiers };
+  if (deal.valueCents) {
+    event.conversionValue = deal.valueCents / 100;
+    event.currency = deal.currency;
+  }
 
-  const res = await ads<{ partialFailureError?: { message?: string } }>(
-    `customers/${normalizeCustomerId(deal.customerId)}:uploadClickConversions`,
-    { conversions: [conversion], partialFailure: true }
-  );
-  if (res.partialFailureError) {
+  const account = (accountId: string) => ({
+    accountType: "GOOGLE_ADS",
+    accountId: normalizeCustomerId(accountId),
+  });
+  const res = await fetch(DATA_MANAGER_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${await getAccessToken()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      destinations: [
+        {
+          operatingAccount: account(deal.customerId),
+          loginAccount: account(process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID!),
+          // "customers/1/conversionActions/2" → "2"
+          productDestinationId: deal.conversionAction.split("/").pop(),
+        },
+      ],
+      encoding: "HEX",
+      events: [event],
+    }),
+  });
+  if (res.status === 403 && (await res.clone().text()).includes("SCOPE_INSUFFICIENT")) {
     throw new GoogleAdsError(
-      res.partialFailureError.message ?? "Google Ads rejected the conversion."
+      "Google Ads refresh token is missing the datamanager scope. Mint a new one with both adwords and datamanager scopes."
+    );
+  }
+  if (!res.ok) {
+    throw new GoogleAdsError(
+      `Google Ads Data Manager error (${res.status}): ${(await res.text()).slice(0, 500)}`
     );
   }
 }
@@ -364,3 +396,145 @@ export async function listConversionActions(customerId: string) {
     type: row.conversionAction?.type ?? "",
   }));
 }
+
+// ─── Conversion actions (Marketing > Conversions) ─────────────────
+
+type ConversionActionRow = {
+  conversionAction?: {
+    resourceName?: string;
+    id?: string;
+    name?: string;
+    type?: string;
+    category?: string;
+    status?: string;
+    origin?: string;
+    primaryForGoal?: boolean;
+    countingType?: string;
+    clickThroughLookbackWindowDays?: string;
+    includeInConversionsMetric?: boolean;
+    valueSettings?: { defaultValue?: number; alwaysUseDefaultValue?: boolean };
+  };
+  metrics?: { allConversions?: number; allConversionsValue?: number };
+};
+
+/**
+ * Every non-removed conversion action with its settings, plus conversions in
+ * the range, in the last 7 days and ever (for the tracking status).
+ */
+export async function getConversionActions(customerId: string, from: string, to: string) {
+  const where = "conversion_action.status != 'REMOVED'";
+  const [actions, inRange, last7, ever] = await Promise.all([
+    query<ConversionActionRow>(
+      customerId,
+      `SELECT conversion_action.resource_name, conversion_action.id, conversion_action.name, conversion_action.type, conversion_action.category, conversion_action.status, conversion_action.origin, conversion_action.primary_for_goal, conversion_action.counting_type, conversion_action.click_through_lookback_window_days, conversion_action.include_in_conversions_metric, conversion_action.value_settings.default_value, conversion_action.value_settings.always_use_default_value FROM conversion_action WHERE ${where}`
+    ),
+    query<ConversionActionRow>(
+      customerId,
+      `SELECT conversion_action.resource_name, metrics.all_conversions, metrics.all_conversions_value FROM conversion_action WHERE ${where} AND segments.date BETWEEN '${from}' AND '${to}'`
+    ),
+    query<ConversionActionRow>(
+      customerId,
+      `SELECT conversion_action.resource_name, metrics.all_conversions FROM conversion_action WHERE ${where} AND segments.date DURING LAST_7_DAYS`
+    ),
+    query<ConversionActionRow>(
+      customerId,
+      `SELECT conversion_action.resource_name, metrics.all_conversions FROM conversion_action WHERE ${where}`
+    ),
+  ]);
+
+  const sum = (rows: ConversionActionRow[], field: "allConversions" | "allConversionsValue") => {
+    const totals = new Map<string, number>();
+    for (const row of rows) {
+      const key = row.conversionAction?.resourceName ?? "";
+      totals.set(key, (totals.get(key) ?? 0) + Number(row.metrics?.[field] ?? 0));
+    }
+    return totals;
+  };
+  const conversions = sum(inRange, "allConversions");
+  const values = sum(inRange, "allConversionsValue");
+  const recent = sum(last7, "allConversions");
+  const lifetime = sum(ever, "allConversions");
+
+  return actions.map(({ conversionAction: a = {} }) => {
+    const resourceName = a.resourceName ?? "";
+    return {
+      resourceName,
+      id: a.id ?? "",
+      name: a.name ?? "",
+      type: a.type ?? "UNKNOWN",
+      category: a.category ?? "DEFAULT",
+      status: a.status ?? "ENABLED",
+      origin: a.origin ?? "",
+      primaryForGoal: Boolean(a.primaryForGoal),
+      countingType: a.countingType ?? "ONE_PER_CLICK",
+      clickThroughLookbackWindowDays: Number(a.clickThroughLookbackWindowDays ?? 0),
+      includeInConversionsMetric: Boolean(a.includeInConversionsMetric),
+      defaultValue: Number(a.valueSettings?.defaultValue ?? 0),
+      allConversions: conversions.get(resourceName) ?? 0,
+      allConversionsValue: values.get(resourceName) ?? 0,
+      last7Days: recent.get(resourceName) ?? 0,
+      everConverted: (lifetime.get(resourceName) ?? 0) > 0,
+    };
+  });
+}
+
+/** Every action's name, including removed ones (their names stay reserved). */
+export async function listConversionActionNames(customerId: string) {
+  const rows = await query<ConversionActionRow>(
+    customerId,
+    "SELECT conversion_action.resource_name, conversion_action.name, conversion_action.status FROM conversion_action"
+  );
+  return rows.map(({ conversionAction: a = {} }) => ({
+    resourceName: a.resourceName ?? "",
+    name: a.name ?? "",
+    status: a.status ?? "",
+  }));
+}
+
+export type ConversionActionSummary = Awaited<ReturnType<typeof getConversionActions>>[number];
+
+const actionBody = (spec: ActionSpec) => ({
+  name: spec.name,
+  type: spec.type,
+  category: spec.category,
+  status: "ENABLED",
+  countingType: spec.countingType,
+  clickThroughLookbackWindowDays: spec.clickThroughLookbackWindowDays,
+  primaryForGoal: spec.primaryForGoal,
+  // Call actions must always use their default value.
+  valueSettings:
+    spec.type === "AD_CALL"
+      ? { defaultValue: spec.defaultValue || 1, alwaysUseDefaultValue: true }
+      : { defaultValue: spec.defaultValue, alwaysUseDefaultValue: false },
+  ...(spec.type === "AD_CALL" ? { phoneCallDurationSeconds: 60 } : {}),
+});
+
+async function mutateConversionActions(customerId: string, operations: unknown[]) {
+  const res = await ads<{ results?: { resourceName?: string }[] }>(
+    `customers/${normalizeCustomerId(customerId)}/conversionActions:mutate`,
+    { operations }
+  );
+  return (res.results ?? []).map((result) => result.resourceName ?? "");
+}
+
+/** Creates the actions in one request (all or nothing); returns their resource names in order. */
+export const createConversionActions = (customerId: string, specs: ActionSpec[]) =>
+  specs.length
+    ? mutateConversionActions(
+        customerId,
+        specs.map((spec) => ({ create: actionBody(spec) }))
+      )
+    : Promise.resolve([]);
+
+export const updateConversionAction = (
+  customerId: string,
+  resourceName: string,
+  update: { body: Partial<Record<keyof EditableFields | "valueSettings", unknown>>; updateMask: string }
+) =>
+  mutateConversionActions(customerId, [
+    { update: { resourceName, ...update.body }, updateMask: update.updateMask },
+  ]);
+
+/** Google keeps the action's history; it just stops counting. */
+export const removeConversionAction = (customerId: string, resourceName: string) =>
+  mutateConversionActions(customerId, [{ remove: resourceName }]);

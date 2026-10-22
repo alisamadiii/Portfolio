@@ -44,9 +44,30 @@ const overviewPages: {
   url: string;
   icon: typeof House;
   feature?: Feature;
+  items?: {
+    title: string;
+    url: string;
+    match?: (pathname: string) => boolean;
+  }[];
 }[] = [
   { title: "Home", url: "/", icon: House },
-  { title: "Agency", url: "/agency", icon: Inbox, feature: "leads" },
+  {
+    title: "Lead trackers",
+    url: "/agency",
+    icon: Inbox,
+    feature: "leads",
+    items: [
+      {
+        title: "Quote form",
+        url: "/agency",
+        // The inbox and each lead's detail page.
+        match: (pathname) =>
+          pathname === "/agency" || /^\/agency\/\d+$/.test(pathname),
+      },
+      { title: "Booking", url: "/agency/booking" },
+      { title: "Calls", url: "/agency/calls" },
+    ],
+  },
   { title: "Marketing", url: "/marketing", icon: Megaphone, feature: "ads" },
   {
     title: "Newsletter",

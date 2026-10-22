@@ -1,17 +1,28 @@
-import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { after, NextResponse } from "next/server";
+import { and, count, eq, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@workspace/drizzle/pool";
 import {
   agencyClient,
   agencyLead,
+  agencyRateLimit,
   hubProject,
   user as userTable,
   type AgencyLeadUtm,
 } from "@workspace/drizzle/schema";
 import { sendEmail } from "@workspace/email/usesend";
+import {
+  FORM_HOURLY_LIMIT,
+  IP_LIMIT,
+  MAX_BODY_BYTES,
+  MAX_FIELDS,
+  isEmail,
+  stripUrl,
+  tooFast,
+} from "@workspace/trpc/lib/agency/lead-capture";
 import { CHANNEL_LABELS, classifyLead } from "@workspace/trpc/lib/agency/lead-channel";
+import { reportLeadStage } from "@workspace/trpc/lib/agency/conversion-uploads";
 import { urls } from "@workspace/ui/lib/company";
 
 // ─── Agency lead capture ────────────────────────────────────────
@@ -37,20 +48,33 @@ export async function OPTIONS(req: Request) {
 }
 
 // ─── Rate limit ─────────────────────────────────────────────────
-// In-memory: best effort per serverless instance.
+// Fixed window in Postgres so every serverless instance shares the count.
+// The Origin check below only stops other websites; a script can fake it,
+// so this and the per-form cap are what actually limit abuse.
 
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const hits = new Map<string, number[]>();
-
-const isRateLimited = (key: string) => {
-  const now = Date.now();
-  const recent = (hits.get(key) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  hits.set(key, recent);
-  return false;
+const isRateLimited = async (key: string) => {
+  const windowStart = new Date(Date.now() - IP_LIMIT.windowMs);
+  const [row] = await db
+    .insert(agencyRateLimit)
+    .values({ key, count: 1 })
+    .onConflictDoUpdate({
+      target: agencyRateLimit.key,
+      set: {
+        // Restart the window once it has expired, otherwise count up.
+        count: sql`case when ${agencyRateLimit.windowStart} < ${windowStart} then 1 else ${agencyRateLimit.count} + 1 end`,
+        windowStart: sql`case when ${agencyRateLimit.windowStart} < ${windowStart} then now() else ${agencyRateLimit.windowStart} end`,
+      },
+    })
+    .returning({ count: agencyRateLimit.count });
+  return (row?.count ?? 0) > IP_LIMIT.max;
 };
+
+// Set by Vercel itself; x-forwarded-for's first entry can be sent by the client.
+const clientIp = (req: Request) =>
+  req.headers.get("x-real-ip") ??
+  req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ??
+  req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ??
+  "unknown";
 
 // ─── Origin check ───────────────────────────────────────────────
 
@@ -91,7 +115,9 @@ const isAllowedOrigin = (
 const short = z.string().max(500).optional();
 
 const bodySchema = z.object({
-  fields: z.record(z.string().max(100), z.string().max(5000)),
+  fields: z
+    .record(z.string().max(100), z.string().max(5000))
+    .refine((fields) => Object.keys(fields).length <= MAX_FIELDS, "Too many fields"),
   formName: short,
   pageUrl: z.string().max(2000).optional(),
   referrer: z.string().max(2000).optional(),
@@ -118,6 +144,8 @@ const bodySchema = z.object({
     .optional(),
   // Honeypot: real visitors never fill it in.
   hp: z.string().max(500).optional(),
+  // Milliseconds between page load and submit.
+  t: z.number().int().nonnegative().optional(),
 });
 
 // Common field names, matched case-insensitively against the form's inputs.
@@ -135,7 +163,7 @@ function splitFields(fields: Record<string, string>) {
     if (!value) continue;
     const k = key.toLowerCase();
     if (!picked.name && NAME_KEYS.includes(k)) picked.name = value;
-    else if (!picked.email && EMAIL_KEYS.includes(k)) picked.email = value;
+    else if (!picked.email && EMAIL_KEYS.includes(k) && isEmail(value)) picked.email = value;
     else if (!picked.phone && PHONE_KEYS.includes(k)) picked.phone = value;
     else if (!picked.message && MESSAGE_KEYS.includes(k)) picked.message = value;
     else rest[key] = value;
@@ -226,6 +254,8 @@ export async function POST(
       customDomain: hubProject.customDomain,
       freeSubdomain: hubProject.freeSubdomain,
       repo: hubProject.repo,
+      googleAdsCustomerId: agencyClient.googleAdsCustomerId,
+      googleAdsActions: agencyClient.googleAdsActions,
     })
     .from(agencyClient)
     .innerJoin(userTable, eq(userTable.id, agencyClient.userId))
@@ -240,20 +270,31 @@ export async function POST(
     return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(`${formKey}:${ip}`)) {
+  if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Submission too large" }, { status: 413, headers });
+  }
+
+  if (await isRateLimited(`form:${formKey}:${clientIp(req)}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }
     );
   }
 
-  // text/plain body (no preflight), parsed as JSON.
+  // text/plain body (no preflight), parsed as JSON. Length is checked again
+  // since content-length can be missing (chunked).
+  const raw = await req.text().catch(() => "");
+  if (raw.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Submission too large" }, { status: 413, headers });
+  }
   const parsed = bodySchema.safeParse(
-    await req
-      .text()
-      .then((text) => JSON.parse(text))
-      .catch(() => null)
+    (() => {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    })()
   );
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400, headers });
@@ -265,8 +306,24 @@ export async function POST(
     return NextResponse.json({ error: "Empty submission" }, { status: 400, headers });
   }
 
+  // A burst on one form (bots rotating IPs) is saved without emailing anyone.
+  const [recent] = await db
+    .select({ n: count() })
+    .from(agencyLead)
+    .where(
+      and(
+        eq(agencyLead.repoId, client.repoId),
+        gte(agencyLead.createdAt, new Date(Date.now() - 60 * 60 * 1000))
+      )
+    );
+
   // Spam is kept (status "spam") so a false positive can still be recovered.
-  const isSpam = Boolean(data.hp) || looksLikeSpam(`${message ?? ""} ${Object.values(rest).join(" ")}`);
+  const isSpam =
+    Boolean(data.hp) ||
+    tooFast(data.t) ||
+    (recent?.n ?? 0) >= FORM_HOURLY_LIMIT ||
+    looksLikeSpam(`${message ?? ""} ${Object.values(rest).join(" ")}`);
+  const referrer = stripUrl(data.referrer);
   const utm: AgencyLeadUtm | null =
     data.utm && Object.values(data.utm).some(Boolean) ? data.utm : null;
   const channel = classifyLead({
@@ -275,12 +332,18 @@ export async function POST(
     gbraid: data.gbraid,
     wbraid: data.wbraid,
     utm,
-    referrer: data.referrer,
+    referrer,
     siteHost: hostOf(origin) ?? hostOf(client.websiteUrl),
   });
   const clickAt = data.clickAt ? new Date(data.clickAt) : null;
   const firstTouch =
-    data.firstTouch && Object.values(data.firstTouch).some(Boolean) ? data.firstTouch : null;
+    data.firstTouch && Object.values(data.firstTouch).some(Boolean)
+      ? {
+          referrer: stripUrl(data.firstTouch.referrer) ?? undefined,
+          landing: stripUrl(data.firstTouch.landing) ?? undefined,
+          at: data.firstTouch.at,
+        }
+      : null;
 
   const [lead] = await db
     .insert(agencyLead)
@@ -294,18 +357,22 @@ export async function POST(
       message: message ?? null,
       fields: Object.keys(rest).length ? rest : null,
       formName: data.formName || null,
-      pageUrl: data.pageUrl || null,
-      referrer: data.referrer || null,
+      pageUrl: stripUrl(data.pageUrl),
+      referrer,
       utm,
       gclid: data.gclid || null,
       gbraid: data.gbraid || null,
       wbraid: data.wbraid || null,
-      landingPage: data.landingPage || null,
+      landingPage: stripUrl(data.landingPage),
       firstTouch,
       clickAt: clickAt && !Number.isNaN(clickAt.getTime()) ? clickAt : null,
       channel,
     })
-    .returning({ id: agencyLead.id });
+    .returning();
+
+  // Report the new lead to Google Ads after responding; failures are retried
+  // when the client next opens their leads.
+  if (!isSpam) after(() => reportLeadStage(client, lead!, "lead"));
 
   if (!isSpam) {
     const lines: [string, string][] = [

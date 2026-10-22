@@ -67,6 +67,14 @@ export type AgencyLeadAdClick = {
   device?: string;
 };
 
+// Conversion actions our server reports to, by lead stage ("customers/<id>/conversionActions/<id>").
+// The closed-deal action stays in googleAdsConversionAction; `calls` is tracked by Google itself.
+export type AgencyAdsActions = { lead?: string; qualified?: string; calls?: string };
+
+// Per-stage upload outcome on a lead (the closed deal keeps its own columns).
+export type AgencyLeadUpload = { at?: string; error?: string; tries?: number };
+export type AgencyLeadUploads = { lead?: AgencyLeadUpload; qualified?: AgencyLeadUpload };
+
 // One row per agency client: their single website plus Google Ads wiring.
 export const agencyClient = pgTable("agency_client", {
   id: serial("id").primaryKey(),
@@ -86,6 +94,7 @@ export const agencyClient = pgTable("agency_client", {
   googleAdsCustomerId: text("google_ads_customer_id"),
   // "customers/<id>/conversionActions/<id>" for the closed-deal import.
   googleAdsConversionAction: text("google_ads_conversion_action"),
+  googleAdsActions: jsonb("google_ads_actions").$type<AgencyAdsActions>(),
 
   // New-lead notification address; falls back to the owner's email.
   leadNotifyEmail: text("lead_notify_email"),
@@ -138,6 +147,8 @@ export const agencyLead = pgTable(
     // Offline conversion upload to Google Ads (closed deal).
     conversionUploadedAt: timestamp("conversion_uploaded_at"),
     conversionError: text("conversion_error"),
+    // New-lead and qualified uploads (Marketing > Conversions presets).
+    adsUploads: jsonb("ads_uploads").$type<AgencyLeadUploads>(),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
@@ -174,5 +185,19 @@ export const agencyAdsCache = pgTable(
       table.customerId,
       table.key
     ),
+  })
+);
+
+// Fixed-window counters for the public lead capture endpoint, shared by every
+// serverless instance (an in-memory map resets per instance).
+export const agencyRateLimit = pgTable(
+  "agency_rate_limit",
+  {
+    key: text("key").primaryKey(),
+    windowStart: timestamp("window_start").notNull().defaultNow(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => ({
+    idxWindowStart: index("agency_rate_limit_window_start_idx").on(table.windowStart),
   })
 );

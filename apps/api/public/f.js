@@ -27,6 +27,23 @@
   var MAX_AGE = 60 * 60 * 24 * 90;
   var PARAMS = ["gclid", "gbraid", "wbraid", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
   var CLICK_IDS = ["gclid", "gbraid", "wbraid"];
+  // Only these query params are kept on stored URLs; others can hold personal data.
+  var KEPT = PARAMS.concat("fbclid", "msclkid");
+  var loadedAt = Date.now();
+
+  function strip(url) {
+    try {
+      var u = new URL(url);
+      var kept = new URLSearchParams();
+      u.searchParams.forEach(function (v, k) {
+        if (KEPT.indexOf(k.toLowerCase()) !== -1) kept.append(k, v);
+      });
+      var q = kept.toString();
+      return (u.origin + u.pathname + (q ? "?" + q : "")).slice(0, 1000);
+    } catch (e) {
+      return "";
+    }
+  }
 
   function readCookie(name) {
     var match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
@@ -49,10 +66,10 @@
   var referrer = "";
   try {
     if (document.referrer && new URL(document.referrer).host !== location.host) {
-      referrer = document.referrer.slice(0, 1000);
+      referrer = strip(document.referrer);
     }
   } catch (e) {}
-  var landing = location.href.slice(0, 1000);
+  var landing = strip(location.href);
   var now = new Date().toISOString();
 
   if (!readCookie(FIRST)) writeCookie(FIRST, { referrer: referrer, landing: landing, at: now });
@@ -117,7 +134,7 @@
       var payload = {
         fields: fields,
         formName: form.getAttribute("data-lead-form") || form.getAttribute("name") || undefined,
-        pageUrl: location.href.slice(0, 2000),
+        pageUrl: strip(location.href),
         landingPage: attr.landing || undefined,
         referrer: (attr.referrer || "").slice(0, 2000) || undefined,
         firstTouch: first || undefined,
@@ -133,6 +150,7 @@
           content: attr.utm_content,
         },
         hp: hp || undefined,
+        t: Date.now() - loadedAt,
       };
 
       var button = form.querySelector('[type="submit"]');

@@ -89,8 +89,12 @@ const recorded = (lead: Lead): [string, string | null][] => [
   ],
   ["Currency", lead.currency],
   ["Won at", when(lead.wonAt)],
-  ["Reported to Google Ads at", when(lead.conversionUploadedAt)],
-  ["Google Ads upload error", lead.conversionError],
+  ["New lead reported to Google Ads at", when(lead.adsUploads?.lead?.at)],
+  ["New lead upload error", lead.adsUploads?.lead?.error ?? null],
+  ["Qualified reported to Google Ads at", when(lead.adsUploads?.qualified?.at)],
+  ["Qualified upload error", lead.adsUploads?.qualified?.error ?? null],
+  ["Closed deal reported to Google Ads at", when(lead.conversionUploadedAt)],
+  ["Closed deal upload error", lead.conversionError],
 ];
 
 const titleCase = (value: string) =>
@@ -247,7 +251,7 @@ export function LeadDetail({ id }: { id: number }) {
                   {lead.adClick?.campaignName ?? lead.utm?.campaign ?? (
                     <span className="text-muted-foreground">
                       {lead.adClickCheckedAt
-                        ? "Not found in Google Ads"
+                        ? "Not found in Google Ads (click unverified)"
                         : "Matching with Google Ads (takes a few hours)"}
                     </span>
                   )}

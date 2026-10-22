@@ -328,6 +328,10 @@ export function AdminAgencyClients() {
               {actions.error.message}
             </p>
           )}
+          <p className="text-muted-foreground text-[12px]">
+            Optional. The Lead gen preset on the client&apos;s Marketing &gt;
+            Conversions page creates and links this for you.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="client-notify">New-lead email (optional)</Label>

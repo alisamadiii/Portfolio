@@ -42,17 +42,35 @@ import { isAdminUser, roleAtLeast } from "../lib/authz-shared";
 import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
-import { ADS_TTL, cachedAds, ttlForRange } from "../lib/agency/ads-cache";
+import { ADS_TTL, cachedAds, invalidateAds, ttlForRange } from "../lib/agency/ads-cache";
+import {
+  EDITABLE_CATEGORIES,
+  MANAGED_TYPES,
+  buildUpdate,
+  findPreset,
+  planPreset,
+  type WiredActions,
+} from "../lib/agency/conversion-presets";
+import {
+  reportLeadStage,
+  reportLeadStages,
+  syncConversionUploads,
+} from "../lib/agency/conversion-uploads";
 import { enrichAdClicks } from "../lib/agency/enrich-ad-clicks";
 import { classifyLead } from "../lib/agency/lead-channel";
 import {
+  createConversionActions,
   getAdsStats,
+  getConversionActions,
   GoogleAdsError,
+  listConversionActionNames,
   isGoogleAdsConfigured,
   listConversionActions,
   listManagedAccounts,
   normalizeCustomerId,
-  uploadClosedDeal,
+  removeConversionAction,
+  updateConversionAction,
+  uploadConversion,
 } from "../lib/google-ads";
 
 // ─── Lead-generation agency ──────────────────────────────────────
@@ -140,12 +158,13 @@ async function reportWonLead(
   if (!isGoogleAdsConfigured()) return;
 
   try {
-    await uploadClosedDeal({
+    await uploadConversion({
       customerId: client.googleAdsCustomerId,
       conversionAction: client.googleAdsConversionAction,
       valueCents: lead.valueCents,
       currency: lead.currency,
       convertedAt: lead.wonAt ?? new Date(),
+      transactionId: `lead-${lead.id}-won`,
       gclid: lead.gclid,
       gbraid: lead.gbraid,
       wbraid: lead.wbraid,
@@ -208,7 +227,9 @@ const leadsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (input.page === 1) await enrichAdClicks(ctx.client);
+      if (input.page === 1) {
+        await Promise.all([enrichAdClicks(ctx.client), syncConversionUploads(ctx.client)]);
+      }
       const where = and(
         eq(agencyLead.repoId, ctx.client.repoId),
         // Spam stays out of the inbox unless asked for.
@@ -243,7 +264,7 @@ const leadsRouter = createTRPCRouter({
 
   // Counts, won value and leads per day for a date range (inclusive, UTC).
   stats: agencyProcedure.input(dateRange).query(async ({ ctx, input }) => {
-    await enrichAdClicks(ctx.client);
+    await Promise.all([enrichAdClicks(ctx.client), syncConversionUploads(ctx.client)]);
     const from = new Date(`${input.from}T00:00:00Z`);
     const to = new Date(`${input.to}T00:00:00Z`);
     to.setUTCDate(to.getUTCDate() + 1);
@@ -442,14 +463,18 @@ const leadsRouter = createTRPCRouter({
         .where(eq(agencyLead.id, current.id))
         .returning();
 
-      await reportWonLead(ctx.client, lead!);
+      await Promise.all([
+        reportWonLead(ctx.client, lead!),
+        reportLeadStage(ctx.client, lead!, "qualified"),
+      ]);
       return getLead(ctx.client.repoId, current.id);
     }),
 
   retryConversion: agencyWriteProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      await reportWonLead(ctx.client, await getLead(ctx.client.repoId, input.id));
+      const lead = await getLead(ctx.client.repoId, input.id);
+      await Promise.all([reportWonLead(ctx.client, lead), reportLeadStages(ctx.client, lead)]);
       return getLead(ctx.client.repoId, input.id);
     }),
 });
@@ -656,6 +681,214 @@ const adminRouter = createTRPCRouter({
     }),
 });
 
+// ─── Marketing > Conversions ─────────────────────────────────────
+// The client's Google Ads conversion actions: list, presets, add, edit,
+// delete, and which lead stage our server reports to each one.
+
+const conversionsProcedure = agencyProcedure.use(async ({ next, ctx }) => {
+  await requireFeature(ctx.session.user, ctx.client.repoId, "ads");
+  return next({ ctx });
+});
+
+// Changing the client's Ads account is limited to people with full access.
+const conversionsManageProcedure = conversionsProcedure.use(async ({ next, ctx }) => {
+  if (ctx.role !== "full-access") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Only the account owner can change conversion actions." });
+  }
+  const customerId = ctx.client.googleAdsCustomerId;
+  if (!customerId || !isGoogleAdsConfigured()) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No Google Ads account is linked yet." });
+  }
+  return next({ ctx: { ...ctx, customerId } });
+});
+
+const stageInput = z.enum(["lead", "qualified", "won"]);
+
+const actionFields = z.object({
+  name: z.string().trim().min(1).max(100),
+  category: z.enum(EDITABLE_CATEGORIES as [string, ...string[]]),
+  countingType: z.enum(["ONE_PER_CLICK", "MANY_PER_CLICK"]),
+  clickThroughLookbackWindowDays: z.number().int().min(1).max(90),
+  primaryForGoal: z.boolean(),
+  defaultValue: z.number().min(0).max(1_000_000),
+});
+
+const wiredActions = (client: typeof agencyClient.$inferSelect): WiredActions => ({
+  ...client.googleAdsActions,
+  won: client.googleAdsConversionAction ?? undefined,
+});
+
+/** Point a lead stage at an action (or nothing); `calls` is only remembered. */
+async function wireStage(
+  client: typeof agencyClient.$inferSelect,
+  stage: "lead" | "qualified" | "won" | "calls",
+  resourceName: string | null
+) {
+  if (stage === "won") {
+    await db
+      .update(agencyClient)
+      .set({ googleAdsConversionAction: resourceName })
+      .where(eq(agencyClient.id, client.id));
+    return;
+  }
+  await db
+    .update(agencyClient)
+    .set({
+      googleAdsActions: resourceName
+        ? sql`coalesce(${agencyClient.googleAdsActions}, '{}'::jsonb) || ${JSON.stringify({ [stage]: resourceName })}::jsonb`
+        : sql`coalesce(${agencyClient.googleAdsActions}, '{}'::jsonb) - ${stage}::text`,
+    })
+    .where(eq(agencyClient.id, client.id));
+}
+
+const adsError = (error: unknown) =>
+  error instanceof TRPCError
+    ? error
+    : new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
+
+const conversionsRouter = createTRPCRouter({
+  // Null when this client has no Google Ads account linked yet.
+  list: conversionsProcedure.input(dateRange).query(async ({ ctx, input }) => {
+    const customerId = ctx.client.googleAdsCustomerId;
+    if (!customerId || !isGoogleAdsConfigured()) return null;
+
+    const actions = await cachedAds(
+      customerId,
+      `conversions:${input.from}:${input.to}`,
+      ADS_TTL.live,
+      () => getConversionActions(customerId, input.from, input.to)
+    ).catch((error) => {
+      throw adsError(error);
+    });
+
+    // Our own uploads, per stage: count and the latest one.
+    const [uploads] = await db
+      .select({
+        lead: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null)`.mapWith(Number),
+        leadAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'lead' ->> 'at')`,
+        qualified: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'qualified' ->> 'at' is not null)`.mapWith(Number),
+        qualifiedAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'qualified' ->> 'at')`,
+        won: sql<number>`count(${agencyLead.conversionUploadedAt})`.mapWith(Number),
+        wonAt: sql<string | null>`max(${agencyLead.conversionUploadedAt})::text`,
+      })
+      .from(agencyLead)
+      .where(eq(agencyLead.repoId, ctx.client.repoId));
+
+    return {
+      customerId,
+      actions,
+      wired: wiredActions(ctx.client),
+      uploads: {
+        lead: { count: uploads?.lead ?? 0, lastAt: uploads?.leadAt ?? null },
+        qualified: { count: uploads?.qualified ?? 0, lastAt: uploads?.qualifiedAt ?? null },
+        won: { count: uploads?.won ?? 0, lastAt: uploads?.wonAt ?? null },
+      },
+      canManage: ctx.role === "full-access",
+    };
+  }),
+
+  // Idempotent: reuses actions with the same names, creates the rest, wires them all.
+  applyPreset: conversionsManageProcedure
+    .input(z.object({ presetId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const preset = findPreset(input.presetId);
+      if (!preset) throw new TRPCError({ code: "NOT_FOUND", message: "Unknown preset." });
+      try {
+        const existing = await listConversionActionNames(ctx.customerId);
+        const plan = planPreset(preset, existing);
+        const created = await createConversionActions(ctx.customerId, plan.create);
+        const wired = [
+          ...plan.reuse,
+          ...plan.create.map((action, i) => ({ key: action.key, resourceName: created[i]! })),
+        ];
+        for (const { key, resourceName } of wired) await wireStage(ctx.client, key, resourceName);
+        await invalidateAds(ctx.customerId, "conversions:");
+        return { created: plan.create.length, reused: plan.reuse.length };
+      } catch (error) {
+        throw adsError(error);
+      }
+    }),
+
+  create: conversionsManageProcedure
+    .input(
+      actionFields.extend({
+        type: z.enum(MANAGED_TYPES),
+        stage: stageInput.nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { stage, ...spec } = input;
+      try {
+        const [resourceName] = await createConversionActions(ctx.customerId, [
+          spec as Parameters<typeof createConversionActions>[1][number],
+        ]);
+        if (stage && resourceName && spec.type === "UPLOAD_CLICKS") {
+          await wireStage(ctx.client, stage, resourceName);
+        }
+        await invalidateAds(ctx.customerId, "conversions:");
+        return { resourceName };
+      } catch (error) {
+        throw adsError(error);
+      }
+    }),
+
+  update: conversionsManageProcedure
+    .input(
+      z.object({
+        resourceName: z.string(),
+        before: actionFields,
+        after: actionFields.partial(),
+        // undefined = leave wiring alone, null = unwire.
+        stage: stageInput.nullable().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      assertOwnAction(ctx.customerId, input.resourceName);
+      try {
+        const update = buildUpdate(
+          input.before as Parameters<typeof buildUpdate>[0],
+          input.after as Parameters<typeof buildUpdate>[1]
+        );
+        if (update) await updateConversionAction(ctx.customerId, input.resourceName, update);
+        if (input.stage !== undefined) {
+          await unwireAction(ctx.client, input.resourceName);
+          if (input.stage) await wireStage(ctx.client, input.stage, input.resourceName);
+        }
+        await invalidateAds(ctx.customerId, "conversions:");
+      } catch (error) {
+        throw adsError(error);
+      }
+    }),
+
+  remove: conversionsManageProcedure
+    .input(z.object({ resourceName: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      assertOwnAction(ctx.customerId, input.resourceName);
+      try {
+        await removeConversionAction(ctx.customerId, input.resourceName);
+        await unwireAction(ctx.client, input.resourceName);
+        await invalidateAds(ctx.customerId, "conversions:");
+      } catch (error) {
+        throw adsError(error);
+      }
+    }),
+});
+
+// Only actions in this client's own account can be changed.
+function assertOwnAction(customerId: string, resourceName: string) {
+  if (!new RegExp(`^customers/${normalizeCustomerId(customerId)}/conversionActions/\\d+$`).test(resourceName)) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown conversion action." });
+  }
+}
+
+/** Stop reporting any stage to this action. */
+async function unwireAction(client: typeof agencyClient.$inferSelect, resourceName: string) {
+  const wired = wiredActions(client);
+  for (const stage of ["lead", "qualified", "won", "calls"] as const) {
+    if (wired[stage] === resourceName) await wireStage(client, stage, null);
+  }
+}
+
 export const agencyRouter = createTRPCRouter({
   // Null unless the user's agency website has an active agency subscription:
   // the Hub then shows the website UI (project gallery) instead.
@@ -707,6 +940,8 @@ export const agencyRouter = createTRPCRouter({
           throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
         }
       }),
+
+    conversions: conversionsRouter,
   }),
 
   admin: adminRouter,

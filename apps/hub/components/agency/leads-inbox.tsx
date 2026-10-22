@@ -96,18 +96,18 @@ function CampaignCell({ lead }: { lead: Parameters<typeof leadCampaign>[0] }) {
       title={
         campaign.state === "pending"
           ? "Matching with Google Ads"
-          : "Campaign not found"
+          : "Ad click not verified"
       }
       content={
         <p>
           {campaign.state === "pending"
             ? "Google Ads shares which campaign and keyword a click came from a few hours after the click. It shows here once it's matched."
-            : "Google Ads had no record of this click. It can happen with test clicks, or when the ad account isn't linked to this hub."}
+            : "Google Ads had no record of this click, so we can't confirm it came from your ads. It happens with test clicks, a click ID copied into a link by hand, or when the ad account isn't linked to this hub."}
         </p>
       }
     >
       <span className="text-muted-foreground cursor-help text-[12.5px]">
-        {campaign.state === "pending" ? "Matching…" : "Not found"}
+        {campaign.state === "pending" ? "Matching…" : "Unverified"}
       </span>
     </HoverInfo>
   );
