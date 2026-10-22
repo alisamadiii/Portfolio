@@ -129,51 +129,16 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
   }
   {
     showWebsiteOnly && (
-      <article style="margin-top: 40px; padding: 6px; border-radius: 24px; background: rgba(27, 26, 23, 0.03); box-shadow: rgba(27, 26, 23, 0.04) 0px 0px 0px 1px, rgba(27, 26, 23, 0.1) 0px 14px 34px; display: flex;">
-        <div style="flex: 1 1 0%; border-radius: 18px; background: rgb(255, 254, 252); padding: 28px 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px 40px;">
-          <div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-              <h3 style="margin: 0px; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em;">
-                {WEBSITE_ONLY.name}
-              </h3>
-              <span
-                class="mono"
-                style="padding: 5px 10px; border-radius: 9999px; background: rgba(27, 26, 23, 0.05); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;"
-              >
-                No ads
-              </span>
-            </div>
-            <p style="margin: 0px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px;">
-              <span style="font-size: 36px; line-height: 1; font-weight: 600; letter-spacing: -0.03em;">
-                {fmtPrice(WEBSITE_ONLY.setup)}
-              </span>
-              <span class="mono" style="font-size: 15px; color: rgb(103, 98, 90);">
-                + {fmtPrice(WEBSITE_ONLY.monthly)}/mo
-              </span>
-            </p>
-            <p style="margin: 0px; font-size: 15px; line-height: 1.55; color: rgb(103, 98, 90);">
-              {WEBSITE_ONLY.blurb}
-            </p>
-          </div>
-          <ul style="flex: 1 1 240px; margin: 0px; padding: 0px; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.45;">
-            {WEBSITE_ONLY.features.map((f) => (
-              <li style="display: flex; gap: 10px;">
-                <span aria-hidden="true" style="color: rgb(47, 107, 63); font-weight: 600;">
-                  ✓
-                </span>
-                {f}
-              </li>
-            ))}
-          </ul>
-          <a
-            href={`/quote?plan=${WEBSITE_ONLY.id}`}
-            class="btn btn-secondary"
-            style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0px 24px; border-radius: 11px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); font-size: 15px; font-weight: 500; text-decoration: none; box-shadow: rgba(27, 26, 23, 0.22) 0px 8px 24px;"
-          >
-            Start a Project <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-      </article>
+      <p style="margin: 20px 0px 0px; text-align: center; font-size: 15px; line-height: 1.6; color: rgb(103, 98, 90);">
+        Just need a website, no ads?{" "}
+        <strong style="font-weight: 600; color: rgb(27, 26, 23);">
+          {fmtPrice(WEBSITE_ONLY.setup)} + {fmtPrice(WEBSITE_ONLY.monthly)}/mo
+        </strong>{" "}
+        &middot;{" "}
+        <a href="/websites" class="tlink" style="font-weight: 500; color: rgb(27, 26, 23);">
+          See website plans →
+        </a>
+      </p>
     )
   }
 </div>

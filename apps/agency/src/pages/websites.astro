@@ -1,0 +1,454 @@
+---
+// /websites: the website-only offer for local businesses (no ads).
+// Design from the Claude Design canvas, standalone like the homepage: own
+// <html>/<head>, fonts and global styles, no ClientRouter. Prices come from
+// WEBSITE_ONLY in src/data/pricing.ts, project cards from the real client
+// entries in src/data/projects.ts, reviews from the Elfsight Google reviews
+// widget. Every CTA routes to /quote?plan=website.
+import Analytics from "../components/Analytics.astro";
+import GoogleReviews from "../components/GoogleReviews.astro";
+import { PRICING, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
+import { PROJECTS } from "../data/projects";
+
+const SITE = 'https://www.alisamadii.com';
+const PATH = '/websites';
+const url = new URL(PATH, SITE).href;
+const setup = fmtPrice(WEBSITE_ONLY.setup);
+const monthly = fmtPrice(WEBSITE_ONLY.monthly);
+const ecomSetup = fmtPrice(PRICING.ecommerce.setup);
+const ecomMonthly = fmtPrice(PRICING.ecommerce.monthly);
+const title = 'Web Design for Local Businesses | Ali Samadi Agency';
+const description = `Custom, hand-coded websites for local businesses in Jacksonville and across Florida. Easy to edit yourself, yours to keep. ${setup} + ${monthly}/mo.`;
+const ogImage = '/og/websites.jpg';
+const quoteHref = '/quote?plan=website';
+
+const projects = ['fla2z-construction', 'mohammad-samadi', 'hazara-oregon']
+  .map((slug) => PROJECTS.find((p) => p.slug === slug))
+  .filter((p) => p !== undefined);
+
+const faqs = [
+  {
+    q: "What's included in the monthly plan?",
+    a: `Hosting, security, backups, email from your own domain, Client Hub, SEO basics, content updates, and support, all for ${monthly}/mo.`,
+  },
+  {
+    q: 'How fast can my site go live?',
+    a: 'Simple sites launch the day after you approve the design. Larger multi-page sites take one to two weeks.',
+  },
+  {
+    q: 'I already have a website. Can you redesign it?',
+    a: "Yes. We rebuild it, move your content over, and redirect old pages so you keep the rankings you've earned.",
+  },
+  {
+    q: 'Who owns the website?',
+    a: 'You do: domain, code, and content. The code lives in a repository you own.',
+  },
+];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": `${SITE}/` },
+        { "@type": "ListItem", "position": 2, "name": "Websites", "item": url },
+      ],
+    },
+    {
+      "@type": "Service",
+      "name": "Website design for local businesses",
+      "serviceType": "Web design and development",
+      "provider": { "@id": `${SITE}/#organization` },
+      "areaServed": ["Jacksonville, FL", "Florida", "United States"],
+      "url": url,
+      "offers": [{
+        "@type": "Offer",
+        "name": WEBSITE_ONLY.name,
+        "price": String(WEBSITE_ONLY.setup),
+        "priceCurrency": "USD",
+        "description": `${setup} setup + ${monthly}/mo: ${WEBSITE_ONLY.features.join(", ")}.`,
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": String(WEBSITE_ONLY.monthly),
+          "priceCurrency": "USD",
+          "unitText": "MONTH",
+        },
+      }, {
+        "@type": "Offer",
+        "name": "E-commerce Storefront",
+        "price": String(PRICING.ecommerce.setup),
+        "priceCurrency": "USD",
+        "description": `${ecomSetup} setup + ${ecomMonthly}/mo: a custom storefront on your existing Shopify.`,
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": String(PRICING.ecommerce.monthly),
+          "priceCurrency": "USD",
+          "unitText": "MONTH",
+        },
+      }],
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": faqs.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
+    },
+  ],
+};
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={url} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${SITE}${ogImage}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#fffdfb" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono&display=swap" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <Analytics clientRouter={false} />
+  </head>
+  <body>
+<div style="position: relative; background: #fffdfb; color: #221f1c; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.6; overflow: hidden">
+
+<!-- vertical column lines across the page -->
+<div aria-hidden="true" class="wrap" style="position: absolute; inset: 0 0 0 0; left: 0; right: 0; pointer-events: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<span style="border-left: 1px solid rgba(34,31,28,0.05)"></span><span style="border-left: 1px solid rgba(34,31,28,0.05)"></span><span style="border-left: 1px solid rgba(34,31,28,0.05)"></span><span style="border-left: 1px solid rgba(34,31,28,0.05); border-right: 1px solid rgba(34,31,28,0.05)"></span>
+</div>
+
+<main id="top">
+<!-- HERO -->
+<section style="position: relative; min-height: 900px; display: flex; flex-direction: column">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78%; pointer-events: none; background: radial-gradient(60% 70% at 8% 100%, rgba(252,132,100,0.55), transparent 70%), radial-gradient(55% 65% at 92% 100%, rgba(255,181,154,0.75), transparent 70%), radial-gradient(70% 55% at 50% 105%, rgba(252,132,100,0.45), transparent 70%), radial-gradient(40% 40% at 30% 80%, rgba(255,227,214,0.9), transparent 70%), radial-gradient(40% 40% at 72% 78%, rgba(255,227,214,0.9), transparent 70%), linear-gradient(to bottom, rgba(255,253,251,0), rgba(255,214,196,0.55)); filter: blur(6px)"></div>
+<img src="/images/agency/clouds.webp" alt="" aria-hidden="true" fetchpriority="high" decoding="async" style="position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; pointer-events: none" width="2752" height="1536">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 30%; background: linear-gradient(#fffdfb, rgba(255,253,251,0))"></div>
+
+<!-- top bar -->
+<div class="wrap" style="position: relative; height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<p class="mono hide-sm" style="margin: 0; font-size: 13px; color: #3d3833"><span data-clock>JACKSONVILLE, FL</span></p>
+<div aria-hidden="true" class="dots" style="position: absolute; left: 50%; top: 0; width: min(720px, 70%); height: 200px; transform: translateX(-50%)"></div>
+<a href="/" class="tlink" style="position: relative; margin: 0 auto; display: flex; align-items: center; gap: 10px; color: #221f1c"><img src="/images/agency/logo.png" alt="" style="width: 32px; height: 32px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span></a>
+<p class="mono hide-sm" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"></span>TAKING NEW PROJECTS</p>
+</div>
+
+<!-- headline -->
+<div class="wrap" style="position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px; padding-top: 110px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span><span aria-hidden="true" style="color: #fc8464">✦</span>Web design for local businesses<span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span></p>
+<h1 style="margin: 0; max-width: 13ch; font-size: clamp(44px, 6vw, 80px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; color: #221f1c; text-wrap: balance">A website that works as hard as <span style="color: #e0603d">you do.</span></h1>
+<p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for local businesses. Live in about a day, easy to edit yourself, and yours to keep.</p>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
+<a href={quoteHref} class="btn cta">Get a free consultation</a>
+<p class="cap" style="margin: 0; color: #6d645c">{setup} + {monthly}/mo · no templates · you own it</p>
+</div>
+</div>
+
+<!-- shipped strip -->
+<div class="wrap" style="position: relative; padding-top: 80px; padding-bottom: 150px; display: flex; flex-direction: column; align-items: center; gap: 22px">
+<p class="cap" style="margin: 0; color: #4a433d">Live sites we've designed &amp; built</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 40px; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: rgba(34,31,28,0.62)">
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">◐</span>Hazara Community of Oregon</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">✦</span>EmpowerHer</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">▲</span>Florida A2Z Construction</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">◆</span>Mohammad Samadi</li>
+</ul>
+</div>
+</section>
+
+<!-- BENEFITS -->
+<section id="benefits" style="position: relative; padding: 120px 0 100px">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Benefits</p>
+<h2 class="h2" style="max-width: 16ch">Everything a small business site should be</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 20px">
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-launch.webp" alt="A launch timeline moving from approved to built to live" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
+
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Live in about a day</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Simple sites launch the day after you approve. Bigger ones take one to two weeks.</p></div>
+</article>
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-edit.webp" alt="A desktop editor publishing a new headline that updates the live website" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
+
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Edit it yourself</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Change text, photos, and prices in your Client Hub on your computer. Live in about a minute.</p></div>
+</article>
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-seo.webp" alt="A local search results page with your business as the top result" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
+
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Built to be found</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Technical SEO, structured data, and fast pages from day one, ready for Google and AI search.</p></div>
+</article>
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-own.webp" alt="A website repository owned by you, linked to your domain, code and content" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
+
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">You own everything</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Domain, code, and content are yours. Leave anytime and take it all with you.</p></div>
+</article>
+</div>
+</div>
+</section>
+
+<!-- SERVICES BENTO -->
+<section id="services" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 48px">
+<div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>What's included</p><h2 class="h2" style="max-width: 14ch">One plan. The whole website.</h2></div>
+<p style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b">No add-on menus or surprise invoices. Design, build, hosting, and care are one monthly relationship.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px">
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)">
+<span class="cap" style="color: #fc8464">01 · Design &amp; build</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Custom design, hand-coded</h3>
+<p style="margin: 0; font-size: 15px; color: #c9bfb5">Designed around your business and built from scratch on a modern stack. Never a template, never a page builder.</p>
+<div style="margin-top: auto; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 8px"><span class="mono" style="padding: 5px 10px; border-radius: 9999px; background: rgba(246,239,233,0.08); font-size: 11px">Mobile-first</span><span class="mono" style="padding: 5px 10px; border-radius: 9999px; background: rgba(246,239,233,0.08); font-size: 11px">Accessible</span><span class="mono" style="padding: 5px 10px; border-radius: 9999px; background: rgba(246,239,233,0.08); font-size: 11px">Fast</span></div>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">02 · Client Hub</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Edit anything, break nothing</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Text, images, and pages in simple forms. Check uptime and every email your site sends, all in one dashboard.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">03 · SEO</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Found on Google &amp; AI search</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Sitemap, schema, meta tags, Core Web Vitals, and Search Console, set up at launch.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">04 · Hosting &amp; care</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Fast, secure, maintained</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Managed hosting, security, backups, and updates. We keep it running so you don't have to.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">05 · Email &amp; newsletter</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Email from your own domain</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Contact forms, branded email, and our <a href="/newsletter" class="tlink">newsletter platform</a> to bring customers back.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(160deg, #fff 30%, #ffe9df 100%)">
+<span class="cap" style="color: #c4502e">06 · Need more?</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Shopify stores &amp; web apps</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Custom storefronts on your Shopify, plus dashboards, logins, and databases, quoted per project.</p>
+<a href="/services" class="tlink" style="margin-top: auto; font-size: 15px; font-weight: 700">See all services →</a>
+</article>
+</div>
+</div>
+</section>
+
+<!-- HOW WE WORK -->
+<section id="how" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>How we work</p>
+<h2 class="h2" style="max-width: 15ch">From first call to live site, in three steps</h2>
+</div>
+<ol style="position: relative; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 24px">
+<li aria-hidden="true" class="hide-sm" style="position: absolute; left: 16%; right: 16%; top: 27px; border-top: 2px dashed rgba(252,132,100,0.5)"></li>
+<li style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"><span class="mono" style="width: 56px; height: 56px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 10px 24px -10px rgba(34,31,28,0.3); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c4502e">01</span><h3 style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em">Free consultation</h3><p style="margin: 0; max-width: 300px; font-size: 15px; color: #5a524b">A short call about your business. You get a clear scope and a flat price in writing.</p></li>
+<li style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"><span class="mono" style="width: 56px; height: 56px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 10px 24px -10px rgba(34,31,28,0.3); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c4502e">02</span><h3 style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em">Design &amp; build</h3><p style="margin: 0; max-width: 300px; font-size: 15px; color: #5a524b">You review real pages, not mockups. We write the copy and wire up SEO, forms, and analytics.</p></li>
+<li style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"><span class="mono" style="width: 56px; height: 56px; border-radius: 9999px; background: #fc8464; box-shadow: 0 10px 24px -8px rgba(239,108,75,0.6); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #221f1c">03</span><h3 style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em">Launch &amp; we run it</h3><p style="margin: 0; max-width: 300px; font-size: 15px; color: #5a524b">Live on your domain. Hosting, updates, and edits are covered. Just message us.</p></li>
+</ol>
+</div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 48px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Projects</p><h2 class="h2">Real sites, in use today</h2></div>
+<a href="/work" class="btn dark">See all work ↗</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px">
+{projects.map((p) => (
+<a href={p.url} target="_blank" rel="noopener" class="card lift tlink" style="color: #221f1c; padding: 10px 10px 22px; display: flex; flex-direction: column; gap: 18px"><div style="aspect-ratio: 16 / 11; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)"><img src={p.image.src} alt={p.image.alt} style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block" width="1600" height="1000" loading="lazy" decoding="async"></div><div style="padding: 0 12px; display: flex; flex-direction: column; gap: 4px"><span class="cap" style="font-size: 11px; color: #6d645c">{p.category}</span><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{p.name}</span><span style="font-size: 14px; color: #5a524b">{p.description.replace(' — ', ': ')}</span></div></a>
+))}
+</div>
+</div>
+</section>
+
+<!-- GOOGLE REVIEWS (Elfsight, lazy-loaded) -->
+<GoogleReviews />
+
+<!-- PRICING -->
+<section id="pricing" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Pricing</p>
+<h2 class="h2">Simple, flat pricing</h2>
+<p style="margin: 0; max-width: 480px; font-size: 17px; color: #5a524b">One setup fee, one flat monthly. In writing before we start, no hidden fees.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; align-items: stretch; width: 100%; max-width: 900px; margin: 0 auto">
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 0 0 2px #fc8464, 0 30px 60px -24px rgba(239,108,75,0.45)">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Website</h3><span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: #fc8464; font-size: 10.5px">No ads</span></div>
+<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">{setup}</span> <span class="mono" style="font-size: 14px; color: #6d645c">setup + {monthly}/mo</span></p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Custom design &amp; development</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Client Hub: edit anything</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Email on your domain &amp; forms</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> SEO foundations</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Hosting, security &amp; updates</li>
+</ul>
+<a href={quoteHref} class="btn cta" style="margin-top: auto; justify-content: center">Get a free consultation</a>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">E-commerce Storefront</h3><span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: rgba(34,31,28,0.06); font-size: 10.5px">For Shopify</span></div>
+<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">{ecomSetup}</span> <span class="mono" style="font-size: 14px; color: #6d645c">setup + {ecomMonthly}/mo</span></p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Custom storefront matched to your brand</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Product pages, collections, search &amp; accounts</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Shopify keeps checkout, inventory &amp; orders</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Hosting, monitoring &amp; maintenance</li>
+</ul>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+<a href="/quote?plan=ecommerce" class="btn dark" style="justify-content: center">Get a quote</a>
+<a href="/ecommerce" class="tlink" style="text-align: center; font-size: 14px; font-weight: 600">How the storefront works →</a>
+</div>
+</article>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start">
+<div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>FAQ</p><h2 class="h2">Good questions</h2></div>
+<div class="card" style="flex: 999 1 560px; min-width: 0; overflow: hidden">
+{faqs.map((f, i) => (
+<details open={i === 0} style={i < faqs.length - 1 ? 'border-bottom: 1px solid rgba(34,31,28,0.07)' : undefined}><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">{f.q}<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">{f.a}</p></details>
+))}
+</div>
+</div>
+</section>
+
+<!-- CTA with clouds -->
+<section id="contact" style="position: relative; padding: 140px 0 220px; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; pointer-events: none; background: radial-gradient(60% 70% at 8% 100%, rgba(252,132,100,0.55), transparent 70%), radial-gradient(55% 65% at 92% 100%, rgba(255,181,154,0.75), transparent 70%), radial-gradient(70% 55% at 50% 105%, rgba(252,132,100,0.45), transparent 70%), radial-gradient(40% 40% at 30% 80%, rgba(255,227,214,0.9), transparent 70%), radial-gradient(40% 40% at 72% 78%, rgba(255,227,214,0.9), transparent 70%), linear-gradient(to bottom, rgba(255,253,251,0), rgba(255,214,196,0.55)); filter: blur(6px)"></div>
+<img src="/images/agency/clouds.webp" alt="" aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; pointer-events: none" width="2752" height="1536" loading="lazy" decoding="async">
+<div class="wrap" style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a"></span>Taking new projects</p>
+<h2 style="margin: 0; max-width: 14ch; font-size: clamp(44px, 6vw, 80px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; text-wrap: balance">Let's build <span style="color: #e0603d">yours.</span></h2>
+<p style="margin: 0; max-width: 520px; font-size: 18px; color: #5a524b">A free 20-minute call. You'll leave with a plan and a flat price, whether or not you hire us.</p>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px">
+<a href={quoteHref} class="btn cta">Get a free consultation</a>
+<a href="tel:+19713828969" class="btn dark" style="min-height: 54px">+1 (971) 382-8969</a>
+</div>
+</div>
+</section>
+</main>
+
+<footer style="position: relative; padding: 28px 0 120px; background: #fffdfb">
+<div class="wrap" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px">
+<p class="cap" style="margin: 0; color: #6d645c">© Ali Samadii LLC d/b/a Ali Samadi Agency · Jacksonville, FL</p>
+<p class="cap" style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px"><a href="/" class="tlink" style="color: #3d3833">Growth partnership</a><a href="/services" class="tlink" style="color: #3d3833">Services</a><a href="/work" class="tlink" style="color: #3d3833">Work</a><a href="/about" class="tlink" style="color: #3d3833">About</a><a href="/blog" class="tlink" style="color: #3d3833">Blog</a><a href="/contact" class="tlink" style="color: #3d3833">Contact</a><a href="/privacy" class="tlink" style="color: #3d3833">Privacy</a><a href="/terms" class="tlink" style="color: #3d3833">Terms</a></p>
+</div>
+</footer>
+
+<!-- floating nav -->
+<nav aria-label="Page" style="position: fixed; z-index: 50; left: 50%; bottom: 22px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 7px; border-radius: 9999px; background: rgba(255,253,251,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 20px 40px -16px rgba(34,31,28,0.35)">
+<a href="#top" aria-label="Back to top" class="tlink" style="width: 46px; height: 46px; border-radius: 9999px; background: linear-gradient(180deg, #ff9a7c, #ef6c4b); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5)"><img src="/images/agency/logo.png" alt="" style="width: 26px; height: 26px; border-radius: 6px" width="400" height="400" loading="lazy" decoding="async"></a>
+<span class="cap hide-sm" style="display: flex; gap: 6px; padding: 0 10px">
+<a href="#benefits" class="navlink">Benefits</a><a href="#services" class="navlink">Services</a><a href="#how" class="navlink">How we work</a><a href="#projects" class="navlink">Projects</a><a href="#pricing" class="navlink">Pricing</a>
+</span>
+<details class="wmenu show-sm">
+<summary class="btn" aria-label="Menu" style="display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 9999px; background: rgba(34,31,28,0.06); color: #221f1c; font-size: 15px; font-weight: 700"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Menu</summary>
+<div class="wmenu-panel" style="position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); width: min(340px, calc(100vw - 24px)); padding: 8px 18px 16px; border-radius: 24px; background: rgba(255,253,251,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 30px 60px -20px rgba(34,31,28,0.45); display: flex; flex-direction: column">
+<a href="#benefits" class="wlink">Benefits<span aria-hidden="true">→</span></a>
+<a href="#services" class="wlink">Services<span aria-hidden="true">→</span></a>
+<a href="#how" class="wlink">How we work<span aria-hidden="true">→</span></a>
+<a href="#projects" class="wlink">Projects<span aria-hidden="true">→</span></a>
+<a href="#pricing" class="wlink">Pricing<span aria-hidden="true">→</span></a>
+<a href="#faq" class="wlink">FAQ<span aria-hidden="true">→</span></a>
+<a href="tel:+19713828969" class="wlink" style="border-bottom: 0">Call +1 (971) 382-8969<span aria-hidden="true">↗</span></a>
+</div>
+</details>
+<a href="#contact" class="btn dark">Let's talk</a>
+</nav>
+
+</div>
+    <script>
+      // Live Jacksonville clock in the top bar
+      const clockEls = document.querySelectorAll<HTMLElement>('[data-clock]');
+      const tick = () => {
+        try {
+          const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' });
+          clockEls.forEach((el) => (el.textContent = 'JACKSONVILLE · ' + t.toUpperCase()));
+        } catch {}
+      };
+      tick();
+      setInterval(tick, 20000);
+
+      // Mobile menu (a <details> in the floating pill): close after picking a link
+      const wmenu = document.querySelector<HTMLDetailsElement>('.wmenu');
+      wmenu?.querySelectorAll('a').forEach((l) => l.addEventListener('click', () => (wmenu.open = false)));
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wmenu) wmenu.open = false; });
+      document.addEventListener('click', (e) => { if (wmenu?.open && !wmenu.contains(e.target as Node)) wmenu.open = false; });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+body{margin:0;background:#fffdfb}
+*{box-sizing:border-box}
+a{color:#c4502e}
+.mono{font-family:'Fragment Mono',ui-monospace,monospace;letter-spacing:0.02em}
+.cap{font-family:'Fragment Mono',ui-monospace,monospace;font-size:12.5px;letter-spacing:0.06em;text-transform:uppercase}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding-left:clamp(20px,4vw,40px);padding-right:clamp(20px,4vw,40px)}
+.h2{margin:0;font-size:clamp(34px,4.4vw,56px);line-height:1.04;font-weight:800;letter-spacing:-0.04em;color:#221f1c;text-wrap:balance}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:9999px;background:rgba(255,255,255,0.8);box-shadow:0 0 0 1px rgba(34,31,28,0.08),0 6px 18px rgba(34,31,28,0.06)}
+.btn{cursor:pointer;border:0;font-family:inherit;text-decoration:none;transition:transform 160ms cubic-bezier(0.2,0.7,0.2,1),box-shadow 200ms,background-color 200ms,color 200ms}
+.btn:active{transform:scale(0.97)}
+.cta{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:0 28px;border-radius:9999px;background:linear-gradient(180deg,#ff9a7c 0%,#fc8464 45%,#ef6c4b 100%);color:#221f1c;font-size:16px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,0.55),0 0 0 1px rgba(196,80,46,0.35),0 12px 30px -8px rgba(239,108,75,0.6)}
+.cta:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,0.55),0 0 0 1px rgba(196,80,46,0.45),0 18px 40px -8px rgba(239,108,75,0.75)}
+.dark{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 22px;border-radius:9999px;background:#221f1c;color:#fffdfb;font-size:15px;font-weight:700}
+.dark:hover{background:#000}
+.tlink{text-decoration:none}
+.tlink:hover{text-decoration:underline;text-underline-offset:3px}
+:focus-visible{outline:2px solid #c4502e;outline-offset:3px}
+.card{border-radius:24px;background:#fff;box-shadow:0 0 0 1px rgba(34,31,28,0.06),0 1px 2px rgba(34,31,28,0.04),0 18px 40px -20px rgba(34,31,28,0.18)}
+.lift{transition:transform 260ms cubic-bezier(0.2,0.7,0.2,1),box-shadow 260ms}
+.lift:hover{transform:translateY(-4px);box-shadow:0 0 0 1px rgba(34,31,28,0.06),0 30px 60px -24px rgba(34,31,28,0.28)}
+.navlink{color:#3d3833;text-decoration:none;padding:8px 6px;border-radius:8px}
+.navlink:hover{color:#c4502e}
+.dots{background-image:radial-gradient(#221f1c 1.2px,transparent 1.6px);background-size:18px 18px;-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);opacity:0.22}
+.ph{background-color:#fbefe9;background-image:repeating-linear-gradient(135deg,rgba(34,31,28,0.04) 0 1px,transparent 1px 12px)}
+details summary{list-style:none;cursor:pointer}
+details summary::-webkit-details-marker{display:none}
+details .pm::after{content:'+'}
+details[open] .pm::after{content:'−'}
+.blink{animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+@media (prefers-reduced-motion: reduce){.blink{animation:none}}
+.show-sm{display:none !important}
+.wmenu{position:static}
+.wmenu summary{list-style:none}
+.wmenu summary::-webkit-details-marker{display:none}
+.wlink{display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid rgba(34,31,28,0.07);color:#221f1c;font-size:16px;font-weight:700;text-decoration:none}
+.wlink span{color:#c4502e}
+.wlink:hover{color:#c4502e}
+@media (max-width:860px){.hide-sm{display:none !important}.show-sm{display:block !important}}
+
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+@media (max-width:860px){
+main > section:not(:first-child){padding-top:72px !important;padding-bottom:72px !important}
+main > section:first-child{min-height:0 !important}
+}
+</style>

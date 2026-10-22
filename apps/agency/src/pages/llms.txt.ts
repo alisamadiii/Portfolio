@@ -51,6 +51,7 @@ export const GET: APIRoute = async () => {
 - [Contact](https://www.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://www.alisamadii.com/blog): articles on Google Ads, local search, and websites that convert.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
+- [Websites for Local Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, hosted, and cared for, editable through Client Hub. ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo.
 - [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for local businesses — own domain, branded templates, writing and sending handled. Quoted per business, no published price.
 - [Pest Control Lead Generation](https://www.alisamadii.com/pest-control): managed Google Ads for pest control companies plus a website with click-to-call, per-pest and per-city pages, review walls, and booking forms. From ${fmtPrice(FROM_PRICE)}/mo.
 

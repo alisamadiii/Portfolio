@@ -113,6 +113,20 @@ export const SEARCH_PAGES: SearchPage[] = [
     keywords: ["what we do", "offerings", "capabilities", "help"],
   },
   {
+    title: "Websites for Local Businesses",
+    description:
+      "A custom website without ads: designed, built, hosted, and cared for. $1,299 setup + $100/mo.",
+    url: "/websites",
+    keywords: [
+      "website",
+      "web design",
+      "website only",
+      "small business website",
+      "no ads",
+      "1299",
+    ],
+  },
+  {
     title: "E-commerce Storefront",
     description:
       "A unique website for your Shopify store — custom design, instant navigation, same secure checkout.",

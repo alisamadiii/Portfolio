@@ -31,7 +31,7 @@ I build websites here, so I'll do the thing agencies apparently aren't supposed 
 2. Monthly subscription that bundles design, hosting, and maintenance
 3. Hourly billing, usually $50–$150/hr for professional work
 
-My own pricing, for calibration: a **website-only plan at $1,299 to build plus $100/mo** for hosting, edits, and care, or a **growth plan from $2,500/mo** that includes the website and fully managed Google Ads, with no build fee.
+My own pricing, for calibration: a [website-only plan](/websites) at **$1,299 to build plus $100/mo** for hosting, edits, and care, or a **growth plan from $2,500/mo** that includes the website and fully managed Google Ads, with no build fee.
 
 </div>
 

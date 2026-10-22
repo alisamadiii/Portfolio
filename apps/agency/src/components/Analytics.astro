@@ -1,0 +1,67 @@
+---
+// GA4 + Google Ads tag and the typed track() bridge. Shared by Layout.astro
+// (ClientRouter pages) and the standalone landing pages (/, /websites), which
+// render their own <head>. Measurement IDs and the typed event lib live in
+// @workspace/google-analytics.
+import {
+  GA_MEASUREMENT_ID,
+  GOOGLE_ADS_ID,
+} from "@workspace/google-analytics/client";
+
+interface Props {
+  // ClientRouter pages send page_view on astro:page-load; standalone pages
+  // (full loads, no ClientRouter) let gtag send it automatically.
+  clientRouter?: boolean;
+}
+
+const { clientRouter = true } = Astro.props;
+const GA_ID = GA_MEASUREMENT_ID;
+---
+
+<script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+></script>
+<script is:inline define:vars={{ GA_ID, GOOGLE_ADS_ID, clientRouter }}>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  // define:vars wraps this script in an IIFE — expose gtag for the typed
+  // track() lib (@workspace/google-analytics/client).
+  window.gtag = gtag;
+  gtag("js", new Date());
+  if (clientRouter) {
+    // auto page_view off — ClientRouter swaps pages without full loads, so
+    // pageviews are sent manually on astro:page-load (fires on first load too).
+    gtag("config", GA_ID, { send_page_view: false });
+    document.addEventListener("astro:page-load", () => {
+      gtag("event", "page_view", {
+        page_location: location.href,
+        page_title: document.title,
+      });
+    });
+  } else {
+    gtag("config", GA_ID);
+  }
+  if (GOOGLE_ADS_ID) gtag("config", GOOGLE_ADS_ID);
+</script>
+<script>
+  import {
+    track,
+    PLANS,
+    type Plan,
+  } from "@workspace/google-analytics/client";
+
+  // Bridge for is:inline scripts (QuoteForm) — they can't
+  // import modules but their window.track?.() calls stay typed.
+  window.track = track;
+
+  // Delegated: every /quote?plan=... CTA site-wide (pricing cards,
+  // ecommerce page, service pages). Fire-and-forget, never blocks nav.
+  document.addEventListener("click", (e) => {
+    const a = (e.target as Element).closest?.('a[href*="/quote?plan="]');
+    if (!(a instanceof HTMLAnchorElement)) return;
+    const plan = new URL(a.href, location.origin).searchParams.get("plan");
+    if (PLANS.includes(plan as Plan))
+      track("select_plan", { plan: plan as Plan });
+  });
+</script>

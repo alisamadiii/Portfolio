@@ -3,10 +3,7 @@ import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
-import {
-  GA_MEASUREMENT_ID,
-  GOOGLE_ADS_ID,
-} from "@workspace/google-analytics/client";
+import Analytics from "../components/Analytics.astro";
 
 import SearchPalette from "../components/SearchPalette.astro";
 
@@ -41,10 +38,6 @@ const {
   pageType = "WebPage",
   bodyClass,
 } = Astro.props;
-
-// GA4 web analytics — measurement ID + typed event lib live in
-// @workspace/google-analytics.
-const GA_ID = GA_MEASUREMENT_ID;
 
 const SITE = "https://www.alisamadii.com";
 const OG_IMAGE = `${SITE}/og-image.png`;
@@ -187,49 +180,7 @@ const jsonLd = {
     <!-- Geist / Geist Mono are self-hosted via @fontsource-variable (imported
          in the frontmatter) — no render-blocking Google Fonts request. -->
 
-    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-    ></script>
-    <script is:inline define:vars={{ GA_ID, GOOGLE_ADS_ID }}>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      // define:vars wraps this script in an IIFE — expose gtag for the typed
-      // track() lib (@workspace/google-analytics/client).
-      window.gtag = gtag;
-      gtag("js", new Date());
-      // auto page_view off — ClientRouter swaps pages without full loads, so
-      // pageviews are sent manually on astro:page-load (fires on first load too).
-      gtag("config", GA_ID, { send_page_view: false });
-      if (GOOGLE_ADS_ID) gtag("config", GOOGLE_ADS_ID);
-      document.addEventListener("astro:page-load", () => {
-        gtag("event", "page_view", {
-          page_location: location.href,
-          page_title: document.title,
-        });
-      });
-    </script>
-    <script>
-      import {
-        track,
-        PLANS,
-        type Plan,
-      } from "@workspace/google-analytics/client";
-
-      // Bridge for is:inline scripts (QuoteForm) — they can't
-      // import modules but their window.track?.() calls stay typed.
-      window.track = track;
-
-      // Delegated: every /quote?plan=... CTA site-wide (pricing cards,
-      // ecommerce page, service pages). Fire-and-forget, never blocks nav.
-      document.addEventListener("click", (e) => {
-        const a = (e.target as Element).closest?.('a[href*="/quote?plan="]');
-        if (!(a instanceof HTMLAnchorElement)) return;
-        const plan = new URL(a.href, location.origin).searchParams.get("plan");
-        if (PLANS.includes(plan as Plan))
-          track("select_plan", { plan: plan as Plan });
-      });
-    </script>
+    <Analytics />
 
     <ClientRouter />
     <script is:inline>
